@@ -68,6 +68,15 @@ test("deflate reproduces every segment the Rust writer produced", () => {
   for (const row of fixture.deflate) expect(hex(deflate(fromHex(row.rawHex)))).toBe(row.deflatedHex);
 });
 
+test("deflate reproduces every vector of the Rust retained producer, the canonical matching limits included", () => {
+  const retained = JSON.parse(readFileSync(new URL("../../../../../../../🧰️framework/🔨️modules/🗜️deflate/🛫️encode/⏳️cursor/🧪️tests/🧫️fixtures/🔣️.json", here), "utf8")) as { vectors: { id: string; raw: number[]; stored: number[] }[] };
+  expect(retained.vectors.length).toBeGreaterThanOrEqual(5);
+  for (const vector of retained.vectors) {
+    expect([...deflate(Uint8Array.from(vector.raw))], vector.id).toEqual(vector.stored);
+    expect([...new Uint8Array(inflateRawSync(Uint8Array.from(vector.stored)))], vector.id).toEqual(vector.raw);
+  }
+});
+
 test("deflate output is read back by the system zlib, which also reads the Rust bytes", () => {
   for (const size of [0, 1, 3, 258, 259, 1000, 70000]) {
     const raw = Uint8Array.from([...pattern(size), ...new Uint8Array(Math.floor(size / 2))]);

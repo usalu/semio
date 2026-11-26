@@ -339,9 +339,9 @@ pub struct RetainedPaintFrame {
     pub sync_node: Option<NodeId>,
     pub node_sync: RetainedInteractiveSyncCursor,
     pub paint_node: Option<(NodeId, f32, f32)>,
-    /// 🪣️ Whether the node `paint_node` names paints into the overlay bucket — true exactly when it
-    /// sits under one of `overlay_chrome`'s roots.
-    pub paint_overlay: bool,
+    /// 🧱️ The surface hosting this frame and its current floating overlay, if any.
+    pub owner: semio_ui_theme::Level,
+    pub paint_overlay: Option<semio_ui_theme::Level>,
     /// 🧊️ The glass region of the overlay `paint_node` sits under: its content paints as that region's foreground so the translucent surface never tints it.
     pub paint_glass: Option<usize>,
     /// 🧊️ The surface glass region each `overlay_chrome` entry's `Overlays` step opened.

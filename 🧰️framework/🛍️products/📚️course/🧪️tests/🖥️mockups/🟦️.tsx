@@ -1,6 +1,7 @@
 /** ⌨️ Preview accessibility, native semantics and authoritative keyboard answer controls. */
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { Surface } from "@semio-tech/ui-react/chrome";
 import { courseText } from "@semio-tech/course-react";
 import { TaskView } from "@semio-tech/course-react/modules/run/.tsx";
 import { quizStylesheet } from "@semio-tech/course-react/stylesheet";
@@ -27,7 +28,7 @@ describe("workspace previews", () => {
   it("shows a selected coordinate, formula, reference table and workbook tabs in both languages", () => {
     const value = vectors[0]!.mockup as Mockup;
     for (const locale of ["en", "de"] as const) {
-      const view = render(<MockupView value={value} locale={locale} />);
+      const view = render(<Surface level="pane"><MockupView value={value} locale={locale} /></Surface>);
       const region = screen.getByRole("region", { name: value.caption[locale] });
       expect(region.tabIndex).toBe(0);
       expect(within(region).getByRole("table", { name: "Areas" })).toBeDefined();
@@ -36,8 +37,10 @@ describe("workspace previews", () => {
       expect(within(region).getByText("Costs")).toBeDefined();
       expect(view.container.querySelectorAll("[data-selected]")).toHaveLength(1);
       expect(view.container.querySelector("code[data-highlight]")).not.toBeNull();
-      expect(region.closest('.course-mockup[data-level="window"]')?.firstElementChild?.matches('figcaption[data-level="pane"][data-glass-chip]')).toBe(true);
-      expect(region.querySelector('.course-workbook[data-level="pane"] > .course-workbook-title[data-glass-chip][data-level="panel"]')).not.toBeNull();
+      const figure = region.closest(".course-mockup")!;
+      expect(figure.closest("[data-level]")?.getAttribute("data-level")).toBe("pane");
+      expect(figure.firstElementChild?.matches('figcaption[data-level="panel"][data-glass-chip]')).toBe(true);
+      expect(region.querySelector('.course-workbook:not([data-level]) > .course-workbook-title[data-glass-chip][data-level="panel"]')).not.toBeNull();
       expect(view.container.querySelectorAll("button,input,select")).toHaveLength(0);
       view.unmount();
     }

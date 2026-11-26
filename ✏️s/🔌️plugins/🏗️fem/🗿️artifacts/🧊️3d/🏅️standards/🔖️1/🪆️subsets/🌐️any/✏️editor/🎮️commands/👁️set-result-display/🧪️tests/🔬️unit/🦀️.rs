@@ -80,25 +80,14 @@ async fn set_result_display_from_an_unfocused_panel_is_remembered_and_sparse_3d(
     assert_eq!(sparse.window_id(), "results-shadow");
 }
 
-fn palette_view() -> semio_plugin::ViewModel {
-    semio_plugin::ViewModel {
-        window_id: Some("model-left".into()),
-        window_instances: vec![
-            semio_plugin::ViewWindowInstance { id: "model-left".into(), window_kind_id: semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL.into() },
-            semio_plugin::ViewWindowInstance { id: "results-left".into(), window_kind_id: results::FEM3D_WINDOW_RESULTS.into() },
-        ],
-        ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
-    }
-}
-
-/// 🎛️ LAW (3D): the Actions palette of the Model window speaks for the open results window, and its free-text Source accepts the name a load case carries — the Source, Mode and Mode Index it submits land in the results window's configuration instead of being refused or lost.
+/// 🎛️ LAW (3D): the Actions palette of the Results window accepts the name a load case carries as its free-text Source — the Source, Mode and Mode Index it submits land in the results window's configuration instead of being refused.
 #[semio_framework_async_macros::async_test]
-async fn result_display_from_the_model_window_palette_reaches_the_results_window_3d() {
+async fn result_display_from_the_results_window_palette_accepts_a_case_name_3d() {
     let mut app = crate::context::fem3d_demo_app().await;
     let snapshot = app.snapshot().expect("snapshot");
     let case = snapshot.load_cases.last().expect("the demo has load cases");
     let (id, name) = (case.id.clone(), case.name.clone());
-    crate::context::dispatch_in(&mut app, Fem3dCommand::SetResultDisplay(SetResultDisplay { source_id: Some(name), mode: "modal".into(), mode_index: 1, field: None, value: None, window_id: None }), palette_view()).await;
+    crate::context::dispatch(&mut app, Fem3dCommand::SetResultDisplay(SetResultDisplay { source_id: Some(name), mode: "modal".into(), mode_index: 1, field: None, value: None, window_id: None })).await;
     let config = published(&mut app).await;
     assert_eq!(config.result_source_id, Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", &id).expect("canonical identity")));
     assert_eq!((config.result_mode, config.result_mode_index), (semio_s_fem_app_surface::ResultMode::Modal, 1));
@@ -117,4 +106,13 @@ fn a_source_name_resolves_to_its_canonical_identity_3d() {
     assert_eq!(resolved(&field(&case.id.to_uppercase()), &doc).value, Some(canonical.clone()));
     assert_eq!(resolved(&field(&canonical), &doc).value, Some(canonical));
     assert_eq!(resolved(&field("no such case"), &doc).value.as_deref(), Some("no such case"));
+}
+
+/// 🪟️ LAW (3D): Set Result Display is claimed by the Results window kind alone, so the Actions palette of the Model window never lists it and the Results window does.
+#[test]
+fn set_result_display_is_offered_only_by_the_results_window_3d() {
+    let definition = semio_s_artifact_fem_3d_editor::editor::fem3d::create_fem3d_app();
+    let offers = |kind: &str| definition.window_kinds.iter().find(|window| window.id == kind).map(|window| semio_framework::window_kind_actions(&definition, window).iter().any(|action| action.id == "setResultDisplay")).expect("declared window kind");
+    assert!(offers(results::FEM3D_WINDOW_RESULTS), "the Results window offers Set Result Display");
+    assert!(!offers(semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL), "the Model window never lists it");
 }

@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, realpathSync } from "node:fs";
+import {processPidExistsV1} from "../../../🔖️identity/🟦️.ts";
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
 import protocol from "../🔣️.json" with { type: "json" };
@@ -63,7 +64,7 @@ export function testSandboxParentV1(parent?: string, declared: TestSandboxProtoc
 /** 🫀️ Tells whether a process id still exists on this host. */
 export function testProcessAliveV1(pid: number): boolean {
   if (!Number.isSafeInteger(pid) || pid < 1) return false;
-  try { process.kill(pid, 0); return true; } catch (error) { return (error as NodeJS.ErrnoException).code === "EPERM"; }
+  return processPidExistsV1(pid);
 }
 
 /** 📏️ Tells whether a path lies inside a root, comparing case-insensitively where the file system is. */

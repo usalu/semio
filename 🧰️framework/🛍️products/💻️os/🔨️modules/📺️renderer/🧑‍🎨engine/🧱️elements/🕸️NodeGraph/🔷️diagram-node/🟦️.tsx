@@ -1,3 +1,4 @@
+import { Surface } from "@semio-tech/ui-react";
 /** 🔷️ The SSR-safe diagram fallback: workflow nodes and edges mapped onto the diagram element, the workflow diagram node and the fallback surface.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | NodeGraph}, which re-exports every public name below so import specifiers stay unchanged.
@@ -91,7 +92,7 @@ function WorkflowDiagramNode({ data }: NodeProps<Node<WorkflowNodeData>>) {
   const rowHeight = 18;
   const bodyHeight = Math.max(data.height, 56 + rowCount * rowHeight);
   return (
-    <SharedBorderRow orientation="vertical" className="bg-background text-foreground" style={{ width: data.width, minHeight: bodyHeight }}>
+    <SharedBorderRow orientation="vertical" className={cn(surfaceClass, "text-foreground")} style={{ width: data.width, minHeight: bodyHeight }}>
       <SharedBorderRowCell className="px-2 py-1 text-xs font-medium">{data.label}</SharedBorderRowCell>
       <SharedBorderRowCell className="relative flex-1 flex-col items-stretch px-2 py-1 text-[0.625rem] leading-[1.125rem]">
         {Array.from({ length: rowCount }, (_, rowIndex) => {
@@ -184,10 +185,9 @@ export function DiagramGraphFallback({
   const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.node");
 
   return (
-    <div
+    <Surface
       ref={containerRef}
-      className={cn("relative h-full w-full", surfaceClass)}
-      data-level="base"
+      className="relative h-full w-full"
       onDragOver={(event) => {
         if (editable && event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME)) event.preventDefault();
       }}
@@ -300,7 +300,7 @@ export function DiagramGraphFallback({
           if (!open) setContextMenu(null);
         }}
       />
-    </div>
+    </Surface>
   );
 }
 //#endregion DiagramFallback

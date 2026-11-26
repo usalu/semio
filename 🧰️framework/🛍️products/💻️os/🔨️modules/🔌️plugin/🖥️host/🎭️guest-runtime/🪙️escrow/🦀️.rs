@@ -3,6 +3,7 @@ use super::{GuestInstance,GuestRuntimes,OwnedSemioExport};
 use semio_framework_job::{OriginalNativeBorrowed,OriginalNativeRecipientIdentity,OriginalNativeRetirement,OriginalSourceBinding,OriginalTurnFailure,StepContext};
 use semio_framework_value::{RetainedCloneProgress,ValueError};
 
+
 /// 🪪️ Runtime-sealed causal origin.
 #[derive(Clone,Copy)]
 pub struct GuestActorFailureCaptureOrigin{_private:()}
@@ -46,7 +47,7 @@ impl GuestRuntimes{
 
  /// ⚠️ Captures causal DATA only from the actual failed frozen export and the same native recipient.
  pub fn attest_original_actor_failure<T:OriginalNativeRetirement>(&self,scalar:bool,mut loan:OriginalNativeBorrowed<'_,T>,project:impl for<'a> FnOnce(&'a mut T)->Result<(&'a mut GuestInstance,&'a mut Option<GuestActorFailureCallReference>),OriginalTurnFailure>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  loan.validate_context(cx)?;let recipient=loan.recipient_identity();let(instance,out)=project(loan.value_mut())?;let Some(export)=(if scalar{self.original_scalar_export(instance,cx)?}else{self.original_unit_export(instance,cx)?})else{return Ok(false)};let tag=super::OwnedSemioExport::ALL.iter().position(|value|*value==export).ok_or_else(||failure_capture_refusal())?as u64+1;let call_kind=semio_framework_actor::ActorFailureCallKind::from_tag(tag)?;let mut reference=None;
+  loan.validate_context(cx)?;let recipient=loan.recipient_identity();let(instance,out)=project(loan.value_mut())?;let Some(export)=(if scalar{self.original_scalar_export(instance,cx)?}else{self.original_unit_export(instance,cx)?})else{return Ok(false)};let call_kind=export.actor_failure_call_kind();let tag=call_kind.tag();let mut reference=None;
   let mut receive=|header:&[u8],_:&[u8],cx:&mut StepContext<'_>|{if header.len()==184&&(&header[..4]!=b"SAF1"||header[4]!=0){return Err(failure_capture_refusal().into())}let bytes=if matches!(header.len(),184|200){&header[8..152]}else{header};let(call,_)=semio_plugin_guest_contract::original_actor_context::OriginalActorFixedReceipt::read(bytes)?;if !call.kind.is_failure_for(call_kind){return Err(failure_capture_refusal().into())}if header.len()==184&&(u64::from_le_bytes(header[152..160].try_into().unwrap())!=call.input.epoch||u64::from_le_bytes(header[160..168].try_into().unwrap())!=tag){return Err(failure_capture_refusal().into())}let actual=semio_framework_actor::RetainedTurnInput::borrow_original(cx)?;if call.input.operation!=actual.operation||call.input.generation!=actual.generation||call.input.work.clock_binding!=actual.work.clock_binding{return Err(failure_capture_refusal().into())}reference=Some(semio_framework_actor::ActorFailureCallReference{failed_epoch:call.input.epoch,call_kind});Ok(())};
   let available=if scalar{self.with_original_scalar_escrow(instance,cx,receive)?}else{let(Self::Owned(runtime),super::GuestInstanceState::Owned(state))=(self,&instance.state)else{return Err(failure_capture_refusal().into())};match(runtime.owned_original_unit_output(state,cx)?,runtime.owned_original_unit_escrow(state,cx)?){(Some(header),Some(escrow))=>{receive(header,escrow,cx)?;true},_=>false}};if !available{return Ok(false)}let reference=reference.ok_or_else(||failure_capture_refusal())?;reference.validate()?;if let Some(saved)=out.as_ref(){return Ok(saved.reference_for(recipient,cx)?==reference)}let bytes=std::mem::size_of::<Option<GuestActorFailureCallReference>>();let grant=cx.retained_grant();if (if cx.original_retirement_active(){cx.retirement_should_yield()}else{cx.should_yield()||cx.is_cancelled()})||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0||cx.fuel_remaining()==0{return Ok(false)}let captured=GuestActorFailureCallReference::captured_by(GuestActorFailureCaptureOrigin{_private:()},reference,recipient,cx)?;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);*out=Some(captured);Ok(true)
  }
@@ -82,9 +83,7 @@ impl GuestRuntimes{
  pub fn with_original_bootstrap_parts<T:OriginalNativeRetirement,U>(&self,mut loan:OriginalNativeBorrowed<'_,T>,project:impl for<'a> FnOnce(&'a mut T)->Result<(&'a mut GuestInstance,&'a mut U),OriginalTurnFailure>,cx:&mut StepContext<'_>,receive:impl for<'a> FnOnce(GuestFrozenBootstrapBorrow<'a>,&mut U,&mut StepContext<'_>)->Result<(),OriginalTurnFailure>)->Result<Option<bool>,OriginalTurnFailure>{
   loan.validate_context(cx)?;let recipient=loan.recipient_identity();let(instance,payload)=project(loan.value_mut())?;let mut delivered=false;
   let ready=self.with_original_scalar_header(instance,cx,|export,header,cx|{
-   if !matches!(export,OwnedSemioExport::AdmitActorContext|OwnedSemioExport::CloseActorContext){return Err(ValueError::invariant("bootstrap header requires its actual ActorContext export").into())}
-   if header.len()!=304{return Ok(())}
-   if header[..8]!=[83,65,66,49,1,0,48,1]{return Err(ValueError::invariant("bootstrap header changed its closed namespace").into())}
+   if !semio_plugin_interpreter_runtime::select_bootstrap(export,header)?{return Ok(())}
    let identity=GuestBootstrapHeaderIdentity{recipient,source:OriginalSourceBinding::borrow(cx),header_address:header.as_ptr()as usize,header_length:header.len(),header_epoch:u64::from_le_bytes(header[24..32].try_into().unwrap()),sequence:u64::from_le_bytes(header[280..288].try_into().unwrap()),export};
    receive(GuestFrozenBootstrapBorrow{identity,header},payload,cx)?;delivered=true;Ok(())
   })?;Ok(ready.then_some(delivered))

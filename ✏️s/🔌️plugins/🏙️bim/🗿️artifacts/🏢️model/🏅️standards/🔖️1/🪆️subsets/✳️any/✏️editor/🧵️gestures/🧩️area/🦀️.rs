@@ -6,7 +6,7 @@
 
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{angle, counter_clockwise, dist, from_point2, loop_of, rectangle, same, signed_area, P};
-use crate::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, STOREY_MISSING, TYPE_MISSING};
+use crate::editor::bim::gestures::session::{snap_mark, Pointer, Step, Tool, ToolContext, ToolEvent, STOREY_MISSING, TYPE_MISSING};
 use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
 use semio_s_artifact_bim_model_entities::editor::bim::entities::ceilings::DEFAULT_DROP;
 use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::{SpaceRoom, SpaceStatus};
@@ -221,7 +221,7 @@ impl Tool for Area {
             }
             _ => {}
         }
-        marks.extend(self.hover.as_ref().map(Mark::snap));
+        marks.extend(self.hover.as_ref().map(snap_mark));
         Preview::of(marks)
     }
 }

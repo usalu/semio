@@ -13,7 +13,8 @@ fn painting_a_uniform_number_stepper_uses_one_outer_border_and_two_dividers() {
     paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
     let total: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
-    assert_eq!(total, 8, "one control border, two dividers, and the value glyph without an icon atlas");
+    assert!(!has_solid_instance_colored(&draw, theme.background));
+    assert_eq!(total, 7, "four shared edges, two dividers and one glyph");
 }
 
 #[test]

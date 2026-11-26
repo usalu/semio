@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { builtPluginModulesRootIn, developmentRuntimeRoot, nextActivationReceipt, publishActivationReceipt, readActivationReceipt } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { activationFilesDigest } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔖️identity/🟦️.ts";
@@ -10,7 +10,7 @@ import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE } from 
 /** 🧩️ Installs staged flow extensions into the development runtime, with optional freshly compiled Jco assets under `S_G3D_COMPONENT_ROOT`.
  * @see ./wgpu-native-activate.ts */
 const workspace = process.cwd(), variant = "generation3d", profile = "prototype", renderer = process.env.S_G3D_RENDERER === "react" ? "react" : "wgpu";
-const runtime = developmentRuntimeRoot(workspace, variant, profile, renderer), install = join(runtime, "extensions"), modules = builtPluginModulesRootIn(workspace, profile);
+const runtime = process.env.S_G3D_RUNTIME_ROOT ?? developmentRuntimeRoot(workspace, variant, profile, renderer), install = join(runtime, "extensions"), modules = builtPluginModulesRootIn(workspace, profile);
 const receiptRoot = join(runtime, "activation");
 const receipt = readActivationReceipt(receiptRoot), rows = JSON.parse(readFileSync(join(modules, "../sessions/generation3d/🔌️plugins.json"), "utf8")) as { pluginId: string; directoryName: string; extends?: string }[];
 const freshRoot = process.env.S_G3D_COMPONENT_ROOT;
@@ -36,28 +36,59 @@ const plans = process.argv.slice(2).map((pluginId) => {
     }
   }
   const files = artifactFiles(source);
+  if (freshRoot) {
+    const base = "semio_s_plugin_flow_" + pluginId.slice("flow-extension-".length) + "_component";
+    const directory = join(freshRoot, base);
+    if (existsSync(join(directory, "🛂️.descriptor.semio"))) {
+      for (const name of ["🛂️.descriptor.semio", "🔣️.json", MODULE_BRIDGE_FILE, "🟨️.js"]) {
+        overrides.set(name, join(directory, name));
+      }
+    }
+    files.delete("🧾️receipt.json");
+  }
   files.delete(publicationMarker);
   for (const [name, path] of overrides) files.set(name, path);
-  return { pluginId, row, staged, output, files };
+  return { pluginId, row, staged, output, files, pending: output + ".pending-" + process.pid, previous: output + ".previous-" + process.pid };
 });
 const digests = new Map<string, string>();
-for (const { pluginId, staged, output, files } of plans) {
-  rmSync(output, { recursive: true, force: true }); mkdirSync(output, { recursive: true });
+for (const { pluginId, staged, pending, files } of plans) {
+  mkdirSync(pending, { recursive: false });
   for (const [name, from] of files) {
-    const to = join(output, name);
+    const to = join(pending, name);
     mkdirSync(dirname(to), { recursive: true });
     if (name.endsWith(".js")) writeFileSync(to, rewritePreview2ShimImportSource(readFileSync(from, "utf8"), `../..${MODULE_PLUGIN_ROUTE}/${PREVIEW2_VENDOR_RELATIVE}/`));
     else cpSync(from, to);
   }
-  digests.set(pluginId, freshRoot ? await activationFilesDigest(artifactFiles(output), new AbortController().signal) : staged.artifactSha256);
+  digests.set(pluginId, freshRoot ? await activationFilesDigest(artifactFiles(pending), new AbortController().signal) : staged.artifactSha256);
 }
-const latest = nextActivationReceipt(variant, profile, receipt.plugins.map((plugin) => ({
+const current = readActivationReceipt(receiptRoot);
+const latest = nextActivationReceipt(variant, profile, current.plugins.map((plugin) => ({
   ...plugin,
   artifactSha256: digests.get(plugin.pluginId) ?? plugin.artifactSha256,
-})), receipt);
-for (const { pluginId, row, output } of plans) {
+})), current);
+for (const { pluginId, row, pending } of plans) {
   const staged = latest.plugins.find((plugin) => plugin.pluginId === pluginId)!;
-  writeFileSync(join(output, EXTENSION_INSTALL_META), JSON.stringify({ extensionId: pluginId, directoryName: row.directoryName, version: "0.0.0-dev", label: pluginId, extends: row.extends ?? "", moduleUrl: `${MODULE_EXTENSION_ROUTE}/${row.directoryName}/${MODULE_BRIDGE_FILE}`, packageHash: staged.artifactSha256, installedAt: staged.rebuiltAt }) + "\n");
-  console.log("[DEBUG] installed development extension", pluginId, staged.artifactSha256);
+  writeFileSync(join(pending, EXTENSION_INSTALL_META), JSON.stringify({ extensionId: pluginId, directoryName: row.directoryName, version: "0.0.0-dev", label: pluginId, extends: row.extends ?? "", moduleUrl: `${MODULE_EXTENSION_ROUTE}/${row.directoryName}/${MODULE_BRIDGE_FILE}`, packageHash: staged.artifactSha256, installedAt: staged.rebuiltAt }) + "\n");
 }
-if (freshRoot) publishActivationReceipt(receiptRoot, latest);
+const swapped: typeof plans = [];
+try {
+  for (const plan of plans) {
+    if (existsSync(plan.output)) renameSync(plan.output, plan.previous);
+    try { renameSync(plan.pending, plan.output); }
+    catch (error) { if (existsSync(plan.previous)) renameSync(plan.previous,plan.output); throw error; }
+    swapped.push(plan);
+  }
+  if (freshRoot) publishActivationReceipt(receiptRoot, latest);
+} catch (error) {
+  for (const plan of swapped.reverse()) {
+    renameSync(plan.output, plan.pending);
+    if (existsSync(plan.previous)) renameSync(plan.previous, plan.output);
+  }
+  throw error;
+} finally {
+  for (const plan of plans) rmSync(plan.pending,{recursive:true,force:true});
+}
+for (const plan of plans) {
+  rmSync(plan.previous,{recursive:true,force:true});
+  console.log("[DEBUG] installed development extension",plan.pluginId,digests.get(plan.pluginId));
+}

@@ -752,7 +752,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                     let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
                     ctx.pick_clip = Some(window_rect);
                     let document_rect = kind_pane_document_rect(window_rect, self.dock.window_frames.get(&window_id), surface_kind);
-                    render_ui_document_step(&mut cursor.document, &document, document_rect, &mut ctx, window_id.as_str(), controller.as_str(), self.chrome.chrome_build.driver.drag, &mut hosts, cx)
+                    render_ui_document_step(&mut cursor.document, &document, document_rect, semio_ui_theme::Level::Window, &mut ctx, window_id.as_str(), controller.as_str(), self.chrome.chrome_build.driver.drag, &mut hosts, cx)
                 };
                 self.docs.restore_window_document(&window_id, document);
                 if !complete {

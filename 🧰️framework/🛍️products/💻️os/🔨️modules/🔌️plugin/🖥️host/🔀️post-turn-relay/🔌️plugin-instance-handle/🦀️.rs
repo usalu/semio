@@ -35,13 +35,23 @@ impl PluginInstanceHandle{
  pub async fn run_bytes_from(&mut self,kind:&'static str,input:&mut dyn GuestRelayByteSource,driver:&GuestRelayWakeDriver,out:&mut Option<GuestRelayResult>)->Result<(),GuestRelayAdmissionFailure>{self.run_provider(kind,JobInput::Bytes(input),driver,out).await}
  async fn run_provider(&mut self,kind:&'static str,mut input:JobInput<'_>,driver:&GuestRelayWakeDriver,out:&mut Option<GuestRelayResult>)->Result<(),GuestRelayAdmissionFailure>{
   if out.is_some(){return Err(refused("inference result slot is already occupied").into())}if driver.operation_abandoned(){return Err(refused("abandoned operation cannot resume borrowed input").into())}let mut guard=AbandonOnDrop{driver,armed:true};
+  let tracing=std::env::var_os("SEMIO_DEBUG_COLD_ACTION").is_some_and(|flag|flag=="1");
+  let mut last_action=None;
+  let mut occurrences=0u64;
   loop{
    let mut snapshot=None;
+   let mut action=None;
+   let mut epoch=None;
    driver.dispatch_operation_step(false,false,|cx|{with_controller(&mut self.home,cx,|runtime,instance,state,cx|{
     if state.controller.is_none(){if !pay(cx,size_of::<GuestRelayColdController>(),false)?{return Ok(())}state.controller=Some(GuestRelayColdController::new(1,kind)?)}
-    let owner=state.controller.as_ref().unwrap();if owner.kind()!=kind{return Err(refused("cold job kind changed after admission").into())}snapshot=Some(Snapshot::read(owner,runtime,instance)?);Ok(())
+    let owner=state.controller.as_ref().unwrap();if owner.kind()!=kind{return Err(refused("cold job kind changed after admission").into())}if tracing{action=Some(owner.action());epoch=owner.loan().map(|loan|loan.budget().input.epoch);}snapshot=Some(Snapshot::read(owner,runtime,instance)?);Ok(())
    })?;Ok(())})?;
    let Some(state)=snapshot else{semio_framework_async::yield_once().await;continue};
+   if let Some(action)=action{
+    if last_action!=Some(action){last_action=Some(action);occurrences=0;}
+    occurrences=occurrences.saturating_add(1);
+    if occurrences.is_power_of_two(){eprintln!("[DEBUG] cold job={kind} action={} iteration={occurrences} epoch={epoch:?} loan={} execution={} frozen={} header={} returning={} draining={}",action.label(),state.purpose.is_some(),state.execution,state.frozen.is_some(),state.header.is_some(),state.return_ready,state.draining_receipt);}
+   }
    if self.advance_escrow(driver,&state,false)?{semio_framework_async::yield_once().await;continue}
    if state.fault_route{let result=self.drive_actor_failure(driver,out).await;if result.is_ok(){guard.armed=false}return result}
    if state.fault_transferred{

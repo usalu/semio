@@ -190,3 +190,23 @@ Goal of the dev: "Get staffage running end to end. Many assets were interrupted 
 - Ticket `26/11/25/FIX-CAPACITY-ADMISSION-STARVATION-AND-RESERVATION-OVERCOMMIT` (closed): waiters older than 300 s go first; the per-session cap counts observed memory and binds only when another session waits; 29 capacity test files green.
 - About 21:02 the repo runtime restarted (warden counters reset to 0/0/0) and terminated running and queued capacity requests of MH-1, MH-5, MH-6 and MV-2; all resubmitted. Kill rule added to `📋️takeover-brief.md`.
 - MM: `saguaro-cactus` matrix finished on the new engine (252 ok, 466 MB, 5,292 s); interrupt-and-resume of the generator proven; reservation figures for the matrix and the vitest suites measured and in the brief.
+
+## Added 2026-11-25 22:10: FINAL lanes and the closing order
+
+- FINAL in this chat: MV-2 (14 clean; four plants keep depth-plate foliage in wind poses until MV-L1's recipe), MH-5 (12 clean), ML-2 (26 clean, no asset changed), ML-3 (5 plants clean; `rowan` 1:50 open, request "loft silhouette fol-6"), VOL (28 volumes, 15 findings cured, boiler node ids cured), MX-2 (engine: loft D54, font D60, print tie D59, allowlists D61, steel-column, typecheck 0 errors; pocket and body-following rules prepared, NOT landed).
+- New lane ML-4 (Fable): 40 red cases of `🧊️model-bounds` (vacuum cleaner, shopping trolley, street lamp …), cause unknown.
+- Kill incident 21:02 partly by MX-2 (pattern `lane` matched other batches' `lane.sh`); kill rule in the brief.
+- Closing order, once every batch lane is FINAL: (1) resume MX-2 to land the pocket rule and the body-following rule of `🧊️catalog-silhouette` and answer ML-3's `fol-6` request; (2) lane MV-L2 applies MV-L1's recipe to `norway-maple`, `multi-stem-birch`, `pampas-grass`, `miscanthus-grass`, `rowan` 1:50; (3) manifest sync (`🧰️silhouette/sync-manifest.py --write`); (4) full suites (`older/suite.sh`, `check-categories.sh`) and the full matrix (`🧰️matrix/MM/full.sh`) on the frozen catalog; (5) proof sheets, `K/📦️handoff.md`, close `K`, clean `U/🗑️generated`, close `U`.
+
+## Added 2026-11-26 02:30: Fable weekly limit, plan until it resets
+
+- FINAL since 22:10: MH-1, MH-2, MH-3, MH-4 (9/12; the 3 others cured by ML-5), MH-5, MH-6, ML-2, ML-3, ML-4 (asset reds cured, test reds handed to MX-3), ML-5, MU (143/145), MP (66/66 re-proven clean), MM (generator FINAL, `🧰️matrix/MM/full.sh` ready: 16 requests, about 2 to 4 h), VOL, site-mac (site end to end on the Mac), MX-2; MX-3 Job 1 done (`🧊️model-bounds` 82/82, `🧊️chain-state` 20/20, `🎨️thermal-legend` 14/14, `🕳️fill-rule` 11/11 after MU's tram write; D62 to D69).
+- 02:20: the Fable weekly limit stopped MV-L1 (resets 2026-11-28 07:00 Europe/Berlin); MA (7/13 clean) and MV-3 run on Fable as well. Per the dev's rule no other model is substituted for modelling: these lanes are resumed by message after the reset, from their saved state.
+- MV-L1 left `hawthorn` WRITTEN at 01:55 and NOT proven (first line of `multiview-MV-L1.md`); `black-alder`, `field-maple` unwritten, trials at 0 hard.
+- Open for the Fable lanes after the reset: MA (6 animals), MV-3 (willow and remaining proofs), MV-L1 (3 trees, recipe), then MV-L2 (`norway-maple`, `multi-stem-birch`, `pampas-grass`, `miscanthus-grass`, `rowan` 1:50, re-check of `rowan` 1:100/1:200 written with the pre-fix loft tool), `used-timpani-pair` 1:1000 (7 cells, request MU), `used-bentwood-dining-chairs` 1:500 (after the body-following rule).
+- Meanwhile (no Fable needed): when the running chains of MA, MV-3, MV-L1 have ended the catalog is frozen → MX-3 Job 2 (pocket and body-following rule) → manifest sync → full suites and `full.sh` as the baseline of the closing verification.
+- For the dev's review: `person-stretching` 1:50 plan passes the guard only with the right sleeve 2 mm fuller (cause not found, ML-5); `sunbather-on-towel` front 1:100 at 0.9207 against 0.92 (MU); four framework type errors in `🛂️descriptor-admission` reached through the site project (another lane's edit).
+
+## Added 2026-11-26 02:35: limit reset
+
+- The dev reported the Fable limit reset at 02:30: MV-L1, MA and MV-3 resumed by message; MV-L2 launched (Fable) for `norway-maple`, `multi-stem-birch`, `pampas-grass`, `miscanthus-grass`, `rowan` (1:50 and re-check of 1:100/1:200), `used-timpani-pair` 1:1000.

@@ -1,0 +1,4 @@
+[
+  {"op": "set", "scale": "50", "view": "plan", "id": "hand-l-body", "set": {"points": [[-0.004, -0.0275], [0.0337, -0.0409], [0.0954, -0.0411], [0.16, -0.0233], [0.16, 0.016], [0.0949, 0.0377], [0.0621, 0.0452], [0.0117, 0.0347], [-0.0036, 0.0291]]}, "why": "sync-forward 37 to 38 mm (tolerance 36) at 1:50 and 1:100: the plan prism of the left hand ended at the knuckles (u 0.14) while the side outline runs to the finger tips (u 0.178); its finger end is drawn to u 0.16 (the whole side outline as the prism leaves the plan guard, 40.6 mm against 15: the fingers curl and the thumb stands off)"},
+  {"op": "set", "scale": "100", "view": "plan", "id": "hand-l-body", "set": {"points": [[-0.004, -0.0275], [0.0337, -0.0409], [0.0954, -0.0411], [0.16, -0.0233], [0.16, 0.016], [0.0949, 0.0377], [0.0621, 0.0452], [0.0117, 0.0347], [-0.0036, 0.0291]]}}
+]

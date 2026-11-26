@@ -24,9 +24,9 @@ CARD_NAMES = {"architecture": ("Architecture", "Architektur"), "structure": ("St
 BASIS_NAMES = {"sourced": ("sourced", "belegt"), "assumed": ("assumed", "angenommen"), "inferred": ("inferred", "gefolgert")}
 
 
-def frame_box(width: float, height: float, color=MUTED, *, fill: float = 0.9, top_depth: float = 0.0):
+def frame_box(width: float, height: float, color=MUTED, *, fill: float = 1.0, top_depth: float = 0.0, glass: bool = False):
     """🔲 Dark square panel frame; a ``top_depth`` header is one glass chip across the top edge, drawing only its inner edge."""
-    return _art.window_frame(width, height, color=color, fill_opacity=fill, stroke_width=W_THIN, top_depth=top_depth, top_chips=((0, width),) if top_depth else ())
+    return _art.window_frame(width, height, color=color, fill_opacity=fill, glass=glass, stroke_width=W_THIN, top_depth=top_depth, top_chips=((0, width),) if top_depth else ())
 
 
 class Panels:

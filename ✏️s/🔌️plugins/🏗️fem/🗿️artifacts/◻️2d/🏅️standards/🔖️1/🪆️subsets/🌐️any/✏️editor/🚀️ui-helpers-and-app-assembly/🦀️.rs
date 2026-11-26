@@ -147,6 +147,7 @@ pub fn create_fem2d_app() -> semio_plugin::AppDefinition {
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", semio_s_fem_app_surface::result_display_action_args())
+            .window_kind_action_refs(results_window::WINDOW_KIND_ID, vec!["setResultDisplay".into()])
             .action_with(semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), semio_plugin::ActionKind::View, "mouse-pointer") })
             .action_with(semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegen"), semio_plugin::ActionKind::View, "mouse-pointer") })
             .action_with(semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), semio_plugin::ActionKind::View, "mouse-pointer") })

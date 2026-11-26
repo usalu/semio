@@ -7,6 +7,7 @@ use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,RetireOwned,ValueError,ValueRefusalKind};
 use crate::original_input::retire_step;
 use std::mem::ManuallyDrop;
+
 pub struct OriginalTurnOutput{
  input:Option<semio_framework_actor::RetainedTurnInput>,binding:Option<OriginalSourceBinding>,home_address:usize,source_identity:usize,capture:OriginalCallerReturnPlace,
  value:ManuallyDrop<Option<TurnResult>>,retirement:ManuallyDrop<Option<ControlledRetirement<TurnResult>>>,
@@ -38,6 +39,17 @@ impl OriginalTurnOutput{
   let value=self.value.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original turn result is absent"))?;
   let Some(source)=KernelTurnJsonSource::try_borrow(value)?else{return Ok(false)};self.encoder.advance(&source,&mut self.encoded,cx)
  }
+ /// 🪜️ Advances individually funded closure transitions within one original Source turn.
+ pub fn close_batch_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  if self.is_empty(){return Ok(true)}
+  for _ in 0..32{
+   if cx.retirement_should_yield(){return Ok(false)}
+   let before=(cx.retained_progress(),cx.fuel_remaining());
+   if self.close_step(cx)?{return Ok(true)}
+   if before==(cx.retained_progress(),cx.fuel_remaining()){return Ok(false)}
+  }
+  Ok(false)
+ }
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(cx)?;
   if !self.capture.terminal_is_empty(){if self.capture.is_admitted(){self.capture.qualify_sized(cx,self.destination(),Self::capture_bytes())?}self.capture.settle_return(cx)?;return Ok(false)}
@@ -66,6 +78,63 @@ impl Drop for OriginalTurnOutput{fn drop(&mut self){assert!(std::thread::panicki
 #[cfg(test)]mod tests{
  use super::*;use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
  fn clock()->Option<u64>{Some(100)}
+ #[test]
+ fn batched_original_turn_retirement_releases_the_same_owner_in_fewer_turns(){
+  let _arena=semio_ui_contract_values::testkit::UiArenaFixture::new();
+  let law:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+  let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(law["grant"].clone()).unwrap();
+  let run=|batched:bool|{
+   let mut caller=OriginalJobFixtureCaller::admit(OperationId(71),Generation(3),grant,clock,1000000,1000000);
+   let mut output=OriginalTurnOutput::empty();
+   let mut wire=law["result"].clone();
+   wire["uiPatches"]=law["batchedRetirement"]["uiPatches"].clone();
+   let mut value=Some(serde_json::from_value(wire).unwrap());
+   let mut epoch=0;
+   for _ in 0..256{
+    epoch+=1;
+    if caller.turn(grant,|cx|{cx.bind_original_source_epoch(epoch)?;output.capture_step(cx,|_|Ok::<_,OriginalTurnFailure>(value.take().unwrap()))}).unwrap(){break}
+   }
+   for _ in 0..100000{
+    epoch+=1;
+    let(ready,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(grant,|cx|{
+     cx.bind_original_source_epoch(epoch)?;
+     output.encode_step(cx)
+    }).unwrap());
+    let receipt=caller.receipt();
+    assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
+    if ready{break}
+   }
+   let expected=serde_json::to_vec(&Ok::<_,()>(output.get().unwrap())).unwrap();
+   assert_eq!(output.encoded().unwrap(),expected);
+   let denied=semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:0,..grant};
+   epoch+=1;
+   let result=caller.turn(denied,|cx|{cx.bind_original_source_epoch(epoch)?;cx.with_original_retirement(|cx|output.close_batch_step(cx))}).unwrap();
+   assert!(!result);
+   assert_eq!(caller.receipt(),Default::default());
+   caller.cancel().cancel_now();
+   let mut total=RetainedCloneProgress::default();
+   let mut phases=0;
+   for _ in 0..10000{
+    phases+=1;
+    epoch+=1;
+    let(done,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(grant,|cx|{
+     cx.bind_original_source_epoch(epoch)?;
+     cx.with_original_retirement(|cx|if batched{output.close_batch_step(cx)}else{output.close_step(cx)})
+    }).unwrap());
+    let receipt=caller.receipt();
+    assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
+    total=total.checked_add(receipt).unwrap();
+    if done{break}
+   }
+   assert!(output.is_empty());
+   caller.retire(grant);
+   (phases,total)
+  };
+  let (single,normal)=run(false);
+  let (batched,compressed)=run(true);
+  assert!(batched<single&&compressed.released_bytes==normal.released_bytes&&compressed.released_bytes>0);
+  eprintln!("[DEBUG] owned turn retirement calls single={single}, batched={batched}, releases={}",normal.released_bytes);
+ }
  #[test]
  fn captured_typed_turn_and_encoded_capsule_survive_denial_foreign_source_and_cancelled_paid_close(){
   let _arena=semio_ui_contract_values::testkit::UiArenaFixture::new();let law:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let grant=serde_json::from_value(law["grant"].clone()).unwrap();

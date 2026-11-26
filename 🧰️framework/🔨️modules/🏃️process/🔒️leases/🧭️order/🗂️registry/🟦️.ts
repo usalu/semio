@@ -1,4 +1,5 @@
 import {createHash} from "node:crypto";
+import {ownProcessIdentityV1,processRecordAliveV1} from "../../../🔖️identity/🟦️.ts";
 import {appendFileSync,existsSync,mkdirSync,readdirSync,readFileSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {homedir} from "node:os";
 import {dirname,isAbsolute,join} from "node:path";
@@ -8,12 +9,12 @@ import {leaseHistoryKeyV1,leaseStandingSnapshotV1,observeLeaseStandingV1,probeLe
 import standingSchema from "../../📈️standing/🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🗂️ One process's published leases for one lease directory: what it holds and what it waits for. */
-export type LeaseRegistryEntryV1=Readonly<{version:1;pid:number;startedAtMs:number;updatedAtMs:number;command:string;directory:string;session?:string;owner?:string;standing:LeaseStandingV1;holds:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number}>[];waits:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number;queued:boolean}>[];ancestry?:Readonly<Record<string,readonly number[]>>}>;
+export type LeaseRegistryEntryV1=Readonly<{version:1;pid:number;startMs?:number;startedAtMs:number;updatedAtMs:number;command:string;directory:string;session?:string;owner?:string;standing:LeaseStandingV1;holds:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number}>[];waits:readonly Readonly<{resource:string;mode:LeaseModeV1;sinceMs:number;task:number;queued:boolean}>[];ancestry?:Readonly<Record<string,readonly number[]>>}>;
 type Snapshot=Readonly<{ancestry?:Readonly<Record<string,readonly number[]>>;holds:readonly Readonly<{directory:string;resource:string;mode:LeaseModeV1;atMs:number;task:number}>[];waits:readonly Readonly<{directory:string;resource:string;mode:LeaseModeV1;sinceMs:number;task:number;queued:boolean}>[]}>;
 type Source=Readonly<{snapshot:()=>Snapshot;cycle:(nodes:readonly LeaseNodeV1[],from:string)=>LeaseCycleV1|undefined}>;
 
 const HEARTBEAT_MILLISECONDS=60000,STALE_MILLISECONDS=300000;
-const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
+const alive=(pid:number,startMs?:number):boolean=>processRecordAliveV1(pid,startMs);
 const key=(directory:string,resource:string):string=>`${directory}\0${resource}`;
 const startedAtMs=Math.round(performance.timeOrigin);
 /** 🕰️ When this process started (the operating system's start time within a few ms, so another process can verify it): the identity of its registry entry, its yield request file and its history of holds. */
@@ -41,7 +42,7 @@ export function readLeaseRegistryEntriesV1(root:string,directory:string,now:numb
  let names:string[];try{names=readdirSync(folder).filter(name=>/^\d+-\d+\.json$/u.test(name));}catch{return [];}
  for(const name of names){
   const path=join(folder,name),value=readJson(path);
-  if(!validEntry(value)||value.directory!==directory||!alive(value.pid)||now-value.updatedAtMs>STALE_MILLISECONDS){if(prune&&pid(name)!==process.pid)try{rmSync(path,{force:true});}catch{}continue;}
+  if(!validEntry(value)||value.directory!==directory||!alive(value.pid,value.startMs)||now-value.updatedAtMs>STALE_MILLISECONDS){if(prune&&pid(name)!==process.pid)try{rmSync(path,{force:true});}catch{}continue;}
   found.push(value);
  }
  return found;
@@ -148,7 +149,7 @@ function flush(directory:string):void{
   const folder=leaseRegistryFolderV1(rootNow(),directory);mkdirSync(folder,{recursive:true,mode:0o700});
   if(!written.has(directory)){writeFileSync(join(folder,"directory.json"),JSON.stringify({version:1,directory}));schedulePrune(policy);if(!exitHooked){exitHooked=true;observeLeaseStandingV1(()=>{for(const known of written)leaseRegistryV1.changed(known,policies.get(known)!);});process.once("exit",()=>{for(const known of written)try{rmSync(entryPath(known),{force:true});}catch{}});}}
   probeLeaseActivityV1();
-  const address=agentSessionAddressOfEnvironmentV1(process.env),text=JSON.stringify({version:1,pid:process.pid,startedAtMs,updatedAtMs:Date.now(),command:command(),directory,...address===undefined?{}:{session:address},...process.env[LEASE_OWNER_ENVIRONMENT_V1]?{owner:process.env[LEASE_OWNER_ENVIRONMENT_V1]}:{},standing:leaseStandingSnapshotV1(address!==undefined),holds,waits,...Object.keys(ancestry).length?{ancestry}:{}});
+  const address=agentSessionAddressOfEnvironmentV1(process.env),text=JSON.stringify({version:1,pid:process.pid,startMs:ownProcessIdentityV1().startMs,startedAtMs,updatedAtMs:Date.now(),command:command(),directory,...address===undefined?{}:{session:address},...process.env[LEASE_OWNER_ENVIRONMENT_V1]?{owner:process.env[LEASE_OWNER_ENVIRONMENT_V1]}:{},standing:leaseStandingSnapshotV1(address!==undefined),holds,waits,...Object.keys(ancestry).length?{ancestry}:{}});
   if(text.length>(policy?.registry.maximumEntryBytes??65536))throw Error("Bounded lease registry entry required");
   const temporary=`${path}.tmp`;writeFileSync(temporary,text);renameSync(temporary,path);written.add(directory);
   if(!heartbeat){heartbeat=setInterval(()=>{for(const known of written)flush(known);},HEARTBEAT_MILLISECONDS);heartbeat.unref();}

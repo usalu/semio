@@ -526,7 +526,7 @@ pub fn paint_tree_pointer_documents_in(turns: &mut PointerFixtureTurns, shell: &
                 world_resources: &mut world_resources,
                 window_id: surface,
             };
-            let done = caller.turn_funded(POINTER_DOCUMENT_TURN_WORK, |cx| render_ui_document_step(&mut cursor, document, *body, &mut ctx, surface, "s.test.tree", semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
+            let done = caller.turn_funded(POINTER_DOCUMENT_TURN_WORK, |cx| render_ui_document_step(&mut cursor, document, *body, semio_ui_theme::Level::Window, &mut ctx, surface, "s.test.tree", semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
             assert!(done || !cursor.terminal_is_fault(), "the tree pointer document faulted in phase {}", cursor.phase_name());
             if done {
                 complete = true;
@@ -582,7 +582,7 @@ pub fn paint_component_pointer_documents_in(turns: &mut PointerFixtureTurns, she
                 world_resources: &mut world_resources,
                 window_id,
             };
-            let done = caller.turn_funded(POINTER_DOCUMENT_TURN_WORK, |cx| render_ui_document_step(&mut cursor, document, *body, &mut ctx, window_id, controller_id, semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
+            let done = caller.turn_funded(POINTER_DOCUMENT_TURN_WORK, |cx| render_ui_document_step(&mut cursor, document, *body, semio_ui_theme::Level::Window, &mut ctx, window_id, controller_id, semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
             assert!(done || !cursor.terminal_is_fault(), "the component pointer document faulted in phase {}", cursor.phase_name());
             done
         });

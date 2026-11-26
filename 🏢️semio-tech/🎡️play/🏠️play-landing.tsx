@@ -180,7 +180,6 @@ export function PlayLanding({locale, renderPane}: {readonly locale: ShellLocale;
                 },
               ]}
               showFullscreenToggle={false}
-              className="ui-chrome-tint"
             />
           </div>
         )}

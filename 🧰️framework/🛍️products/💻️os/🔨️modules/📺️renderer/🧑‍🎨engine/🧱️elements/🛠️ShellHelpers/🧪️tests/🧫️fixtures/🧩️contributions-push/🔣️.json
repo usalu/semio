@@ -7,6 +7,7 @@
     "instanceId": 7
   },
   "pack": "[{\"pluginId\":\"flow-extension-brep\"},{\"pluginId\":\"flow-extension-math\"}]",
+  "joinedFailure": { "reason": "guest busy", "statuses": ["failed", "failed", "installed"], "attempts": 2 },
   "scenarios": [
     {
       "id": "overlapping-refreshes-install-once",

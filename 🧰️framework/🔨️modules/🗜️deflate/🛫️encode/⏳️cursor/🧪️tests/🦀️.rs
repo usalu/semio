@@ -128,3 +128,48 @@ fn deflate_retained_batch_depth_and_retirement_grants(){
  let grant=exact(&cursor);let initialized=eff(grant,|effect|cursor.advance(&mut pending,false,&mut output,effect)).unwrap().progress.copied_bytes;cursor.begin_close();let d=cursor.retirement_demands().unwrap();let short=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:initialized.saturating_sub(1),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:d.depth};let(step,allocated,released)=eff(short,|effect|super::tests::controlled::observe_backing(||cursor.close_step(effect).unwrap()));let refused=step.progress();let unchanged=cursor.retirement_demands().unwrap()==d;let quoted=d.copy_bytes;close(&mut cursor);
  assert_eq!(depth,expected,"reserved append depth");assert_eq!(quoted,initialized,"Copy collection payload quote");assert_eq!(refused,RetainedCloneProgress::default());assert!(unchanged);assert_eq!((allocated,released),(0,0));
 }
+
+/// 📏️ Drives one segment under exact grants and returns its stored bytes with the work the Pack charges for it: every quoted copy byte plus one bookkeeping byte per step.
+fn counted(raw: &[u8]) -> (Vec<u8>, usize) {
+    let mut cursor = RetainedDeflateEncoder::default();
+    let (mut pending, mut read, mut output, mut stored, mut work) = (None, 0, [0], Vec::new(), 0usize);
+    for _ in 0..20_000_000 {
+        if pending.is_none() && read < raw.len() { pending = Some(raw[read]); read += 1; }
+        let grant = exact(&cursor);
+        let step = eff(grant, |effect| cursor.advance(&mut pending, read == raw.len(), &mut output, effect)).unwrap();
+        work += step.progress.copied_bytes + 1;
+        stored.extend_from_slice(&output[..step.written_bytes]);
+        if step.complete { close(&mut cursor); return (stored, work); }
+    }
+    close(&mut cursor);
+    panic!("retained Deflate producer did not terminate");
+}
+
+/// 🧬️ A record-like body: a few hundred field shapes repeated with varying numbers, the structure of a typed Pack document.
+fn record_like(count: usize) -> Vec<u8> {
+    let noise = super::tests::lcg_bytes(7, count * 3);
+    let mut body = Vec::new();
+    for index in 0..count {
+        let shape = noise[index * 3] % 12;
+        body.extend_from_slice(format!("\u{1}op{shape}\u{2}operands[{}, {}]\u{3}", noise[index * 3 + 1], noise[index * 3 + 2]).as_bytes());
+        body.extend_from_slice(b"\x00\x00\x00\x00\x01\x00\x00\x00path/to/the/common/prefix/");
+    }
+    body
+}
+
+/// 🔮️ The work per input byte is bounded by the chain, nice-length and insert limits alone, never by how repetitive the input is: a probe of at most `NICE_MATCH` compared bytes costs `3` per byte plus its `6` of bookkeeping and Search step, a position costs the `24` of its input and insert, the `12` of its first Search and its Token, and a probe that ends a token consumes at least what it compared; real inputs stay under five bytes of work per chain probe and input byte.
+#[test]
+fn deflate_retained_work_per_input_byte_is_bounded_by_the_chain_and_nice_limits() {
+    let probe = 3 * NICE_MATCH + 6;
+    let worst = MAX_CHAIN * probe + 40;
+    let inputs = [b"A".repeat(70_000), b"abc".repeat(30_000), b"abcabcabbcabc".repeat(5_000), super::tests::lcg_bytes(11, 40_000), record_like(4_000), (0..60_000u32).map(|index| (index % 251) as u8).collect()];
+    let mut typical = 0usize;
+    for raw in &inputs {
+        let (stored, work) = counted(raw);
+        assert_eq!(stored, deflate(raw));
+        assert_eq!(miniz_oxide::inflate::decompress_to_vec_with_limit(&stored, raw.len()).unwrap(), *raw);
+        assert!(work <= raw.len() * worst, "{} B of work for {} input bytes", work, raw.len());
+        typical = typical.max(work.div_ceil(raw.len()));
+    }
+    assert!(typical <= 5 * MAX_CHAIN, "the heaviest corpus input costs {typical} B per input byte, above five bytes per chain probe");
+}

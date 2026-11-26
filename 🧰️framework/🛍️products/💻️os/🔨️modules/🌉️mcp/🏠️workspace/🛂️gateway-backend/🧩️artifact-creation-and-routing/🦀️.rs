@@ -66,10 +66,9 @@ impl HeadlessWorkspace {
             Some(owner.import_initial_artifact(0, artifact_id, &initial.to_string(), scope)?)
         } else { None };
         scope.enter(ActivationPhase::ReadingDocument).map_err(activation_fault)?;
-        let frames = exchange_blocking(&mut channel, 0, vec![AppCommand::ReadArtifact]).map_err(|fault| GatewayError::new(GatewayErrorCode::Internal, format!("`{}` refused ReadArtifact ({}): {}", kind.plugin_id, fault.code, fault.message)))?;
-        let (pack, spr) = match frames.into_iter().next() {
+        let reply = exchange_blocking(&mut channel, 0, vec![AppCommand::ReadArtifact]);
+        let (pack, spr) = match first_artifact_reply(reply)? {
             Some(AppFrame::Artifact { pack, spr }) => (pack, spr),
-            Some(AppFrame::Error(fault)) => return Err(GatewayError::new(GatewayErrorCode::SideEffectRejected, format!("`{}` rejected ReadArtifact ({}): {}", kind.plugin_id, fault.code, fault.message))),
             other => return Err(GatewayError::new(GatewayErrorCode::Internal, format!("`{}` answered ReadArtifact with {other:?}", kind.plugin_id))),
         };
         if let Some(imported) = imported {
@@ -79,14 +78,13 @@ impl HeadlessWorkspace {
         }
         let canonical = Self::canonical_artifact_owner(&spr, &self.installed_artifact_kinds()?)?;
         if canonical.plugin_id != kind.plugin_id || canonical.app_id != kind.app_id { return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "owner pair schema belongs to another plugin or app")); }
-        scope.checkpoint().map_err(activation_fault)?;
         let storage = store::sync::FolderEventLogStorage::new(path);
+        let mut bindings = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        scope.checkpoint().map_err(activation_fault)?;
         if !::semio_framework_async::poll::resolve_ready(storage.write_if_current(artifact_id, &canonical.schema, None, &pack, &spr)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("persisting `{artifact_id}`: {error}")))? { return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "artifact already exists")); }
-        self.plugin_artifacts
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .insert(artifact_id.to_string(), PluginArtifactBinding { schema: canonical.schema, plugin_id: kind.plugin_id.clone(), app_id: kind.app_id.clone(), surface_id: None, archive: None, document: Some(Arc::new(SessionDocumentPair { pack: pack.clone(), spr: spr.clone() })), backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)), relay: Arc::default(), used: 0 });
-        Ok((pack.len(), spr.len()))
+        let sizes = (pack.len(), spr.len());
+        bindings.insert(artifact_id.to_string(), PluginArtifactBinding { schema: canonical.schema, artifact_kind: canonical.artifact_kind, plugin_id: canonical.plugin_id, app_id: canonical.app_id, surface_id: None, archive: None, document: Some(Arc::new(SessionDocumentPair { pack, spr })), backbone: None, backbone_blocked_by: None, relayed: Arc::default(), relay: Arc::default(), used: 0 });
+        Ok(sizes)
     }
 
     /// 📤️ `artifact_id`'s real exported bytes for one of the owning app's OUT ports, produced by that
@@ -95,14 +93,43 @@ impl HeadlessWorkspace {
     /// come back verbatim.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn export_artifact_media(&self, plugin_id: &str, artifact_id: &str, port: &str) -> Result<(Vec<u8>, Vec<u8>, String), GatewayError> {
+        self.export_artifact_media_scoped(plugin_id, artifact_id, port, &ActivationScope::detached())
+    }
+
+    /// ⏳️ Answers cancellation promptly while the registered callback observes the export worker settle.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn export_artifact_media_cancellably(self: &Arc<Self>, plugin_id: &str, artifact_id: &str, port: &str, scope: ActivationScope, settled: impl FnOnce(Result<(), GatewayError>) + Send + 'static) -> Result<(Vec<u8>, Vec<u8>, String), GatewayError> {
+        let plugin_id = plugin_id.to_string();
+        let artifact_id = artifact_id.to_string();
+        let port = port.to_string();
+        self.run_activation_job(scope, move |workspace, scope| {
+            let outcome = workspace.export_artifact_media_scoped(&plugin_id, &artifact_id, &port, scope).and_then(|media| {
+                scope.checkpoint().map_err(activation_fault)?;
+                Ok(media)
+            });
+            settled(outcome.as_ref().map(|_| ()).map_err(Clone::clone));
+            outcome
+        })
+    }
+
+    /// 🧭️ Uses the activated session owner and preserves the bytes returned by its declared port.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn export_artifact_media_scoped(&self, plugin_id: &str, artifact_id: &str, port: &str, scope: &ActivationScope) -> Result<(Vec<u8>, Vec<u8>, String), GatewayError> {
+        scope.checkpoint().map_err(activation_fault)?;
         let (pack, spr) = self.read_artifact_bytes(artifact_id)?.ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}")))?;
         let app_id = self.plugin_artifact_binding(artifact_id).map(|binding| binding.app_id);
-        let mut channel = self.open_session_artifact_channel(plugin_id, app_id.as_deref())?;
-        let frames = exchange_blocking(&mut channel, 0, vec![AppCommand::ExportMedia { port: port.to_string(), document: pack, document_spr: spr }])
-            .map_err(|fault| GatewayError::new(GatewayErrorCode::Internal, format!("`{plugin_id}` refused ExportMedia on `{port}` ({}): {}", fault.code, fault.message)))?;
-        match frames.into_iter().next() {
+        let channel = self.open_session_artifact_channel_scoped(plugin_id, app_id.as_deref(), scope)?;
+        let reply = match channel {
+            ArtifactChannels::Plugin(mut channel) => channel.export_media_scoped(0, port.to_string(), pack, spr, scope).map(|frame| vec![frame]),
+            ArtifactChannels::ShellDirect(mut channel) => {
+                scope.enter(ActivationPhase::ReadingDocument).map_err(activation_fault)?;
+                channel.exchange_scoped(0, AppCommand::ExportMedia { port: port.to_string(), document: pack, document_spr: spr }, scope)
+                    .and_then(|frames| { scope.checkpoint()?; Ok(frames) })
+            }
+            _ => return Err(GatewayError::new(GatewayErrorCode::Internal, "the session has no export owner")),
+        };
+        match first_artifact_reply(reply)? {
             Some(AppFrame::Exported { port, descriptor, data }) => Ok((descriptor, data, port)),
-            Some(AppFrame::Error(fault)) => Err(GatewayError::new(GatewayErrorCode::SideEffectRejected, format!("`{plugin_id}` rejected ExportMedia on `{port}` ({}): {}", fault.code, fault.message))),
             other => Err(GatewayError::new(GatewayErrorCode::Internal, format!("`{plugin_id}` answered ExportMedia with {other:?}"))),
         }
     }

@@ -1,4 +1,5 @@
 import {execFile} from "node:child_process";
+import {processPidExistsV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import {existsSync,readFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import type {ProcessFactsV1} from "../🟦️.ts";
@@ -21,7 +22,7 @@ export type DoctorPortsV1=Readonly<{
 
 /** 🧟️ Asks the operating system whether a process still exists; a process we may not signal still exists. */
 export function doctorPidAliveV1(pid:number):boolean{
- try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}
+ return processPidExistsV1(pid);
 }
 
 /** 📖️ Reads a small JSON file; a missing, oversized or malformed file reads as `undefined`. */

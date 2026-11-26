@@ -43,10 +43,10 @@ test("authenticated publish and restore report the same immutable neutral manife
   const running=await startRemoteCacheServerV1({directory:cache,host:"127.0.0.1",port:0,maximumBytes:2**28,maximumEntryBytes:2**24,maximumAgeDays:30,defaultInstance:instance,tokens:{},validation:"complete",fleet:{group,root:server,storeRoot:store,inGroup:"sealed"}});
   servers.push(running);
   const endpoint=running.url,admin=loadFleetSignerV1(server,"admin")!;
-  await publishFleetCacheFactsV1({admin,storeRoot:store,directory:cache,group,instance,port:running.port,endpoints:[endpoint],transport:"sealed"});
+  await publishFleetCacheFactsV1({admin,storeRoot:store,directory:cache,group,instance,port:running.port,transport:"sealed"});
   const facts=await Bun.file(join(store,"v1","fleet","cache.json")).json();
   for(const root of [producer,consumer,partial]){
-   writeFileSync(fleetCacheLocalPathV1(root),JSON.stringify({version:1,fetchedAtMs:Date.now(),checkedAtMs:Date.now(),selectedEndpoint:endpoint,facts}));
+   writeFileSync(fleetCacheLocalPathV1(root),JSON.stringify({version:1,fetchedAtMs:Date.now(),checkedAtMs:Date.now(),selectedEndpoint:endpoint,candidates:[endpoint],selectedExecution:null,facts}));
    await seed(root,ringFiles(6));
   }
   const a=createMockHost(producer,{language}),b=createMockHost(consumer,{language}),identity=await a.host.identity(),scope=row.scope==="all"?undefined:row.scope;

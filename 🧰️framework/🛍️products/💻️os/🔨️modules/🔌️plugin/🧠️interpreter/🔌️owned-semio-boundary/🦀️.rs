@@ -118,6 +118,54 @@ pub enum OwnedSemioExport {
 }
 
 impl OwnedSemioExport {
+    /// 🪪️ Identifies the authored failure call associated with this actual Core export.
+    pub const fn actor_failure_call_kind(self) -> semio_framework_actor::ActorFailureCallKind {
+        use semio_framework_actor::ActorFailureCallKind;
+        match self {
+            Self::Allocate => ActorFailureCallKind::Allocate,
+            Self::Deallocate => ActorFailureCallKind::Deallocate,
+            Self::Checkpoint => ActorFailureCallKind::Checkpoint,
+            Self::Restore => ActorFailureCallKind::Restore,
+            Self::Describe => ActorFailureCallKind::Describe,
+            Self::ChannelVersion => ActorFailureCallKind::ChannelVersion,
+            Self::CancelJob => ActorFailureCallKind::CancelJob,
+            Self::StartJob => ActorFailureCallKind::StartJob,
+            Self::AdmitActorInput => ActorFailureCallKind::AdmitActorInput,
+            Self::PublishActorFailure => ActorFailureCallKind::PublishActorFailure,
+            Self::ReadActorFailure => ActorFailureCallKind::ReadActorFailure,
+            Self::BorrowActorFailure => ActorFailureCallKind::BorrowActorFailure,
+            Self::AcknowledgeActorFailureChunk => ActorFailureCallKind::AcknowledgeActorFailureChunk,
+            Self::AcknowledgeActorFailure => ActorFailureCallKind::AcknowledgeActorFailure,
+            Self::StepJob => ActorFailureCallKind::StepJob,
+            Self::ReadJobOutput => ActorFailureCallKind::ReadJobOutput,
+            Self::AcknowledgeJobOutput => ActorFailureCallKind::AcknowledgeJobOutput,
+            Self::CloseJobs => ActorFailureCallKind::CloseJobs,
+            Self::BorrowJobOutput => ActorFailureCallKind::BorrowJobOutput,
+            Self::AcknowledgeJobOutputChunk => ActorFailureCallKind::AcknowledgeJobOutputChunk,
+            Self::Poll => ActorFailureCallKind::Poll,
+            Self::AdmitActorContext => ActorFailureCallKind::AdmitActorContext,
+            Self::CloseActorContext => ActorFailureCallKind::CloseActorContext,
+            Self::CloseActorOutput => ActorFailureCallKind::CloseActorOutput,
+            Self::PackSchemaHash => ActorFailureCallKind::PackSchemaHash,
+            Self::Genesis => ActorFailureCallKind::Genesis,
+            Self::PrintMirror => ActorFailureCallKind::PrintMirror,
+            Self::ApplyOps => ActorFailureCallKind::ApplyOps,
+            Self::ReplayEnvelopes => ActorFailureCallKind::ReplayEnvelopes,
+            Self::SqliteSchema => ActorFailureCallKind::SqliteSchema,
+            Self::SqliteExport => ActorFailureCallKind::SqliteExport,
+            Self::SqliteImport => ActorFailureCallKind::SqliteImport,
+            Self::SqliteRetirement => ActorFailureCallKind::SqliteRetirement,
+            Self::SqliteClose => ActorFailureCallKind::SqliteClose,
+            Self::SqliteTakeFile => ActorFailureCallKind::SqliteTakeFile,
+            Self::SqliteTakePayload => ActorFailureCallKind::SqliteTakePayload,
+        }
+    }
+
+    /// 🔎️ Selects the actual owned export for an authored failure call kind.
+    pub fn from_actor_failure_call_kind(kind: semio_framework_actor::ActorFailureCallKind) -> Option<Self> {
+        Self::ALL.into_iter().find(|export| export.actor_failure_call_kind() == kind)
+    }
+
     /// ♻️ Names guest exports permitted to spend an authenticated original retirement loan.
     pub const fn is_original_retirement(self) -> bool {
         use OwnedSemioExport::*;
@@ -357,6 +405,26 @@ impl OwnedSemioInstance {
 #[cfg(test)]
 mod actor_failure_arity_tests{
  use super::*;
+ #[test]
+ fn actor_failure_selector_round_trips_every_authored_export(){
+  use semio_framework_actor::ActorFailureCallKind;
+  let law:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/📡️failure-arity/call-kinds.json")).unwrap();
+  let mut checked=std::collections::BTreeSet::new();
+  for row in law["crossings"].as_array().unwrap(){
+   let tag=row["tag"].as_u64().unwrap();
+   let kind=ActorFailureCallKind::from_tag(tag).unwrap();
+   let export=OwnedSemioExport::from_actor_failure_call_kind(kind).unwrap();
+   assert_eq!(format!("{kind:?}"),row["kind"].as_str().unwrap());
+   assert_eq!(export.core_name(),row["coreExport"].as_str().unwrap());
+   assert_eq!(export.actor_failure_call_kind(),kind);
+   assert_eq!(export.actor_failure_call_kind().tag(),tag);
+   assert!(checked.insert(export));
+  }
+  assert_eq!(checked,OwnedSemioExport::ALL.into_iter().collect());
+  for tag in law["unrecognizedTags"].as_array().unwrap(){
+   assert!(ActorFailureCallKind::from_tag(tag.as_u64().unwrap()).is_err());
+  }
+ }
  #[test]
  fn actual_owned_exports_keep_actor_failure_selectors_distinct_from_jobs(){
   let law:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/📡️failure-arity/🔣️.json")).unwrap();

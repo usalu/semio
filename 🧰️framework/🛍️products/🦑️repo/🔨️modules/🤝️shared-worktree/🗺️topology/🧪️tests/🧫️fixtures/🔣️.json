@@ -5,9 +5,9 @@
   "worktree": {"linux": "~/semio", "macos": "~/Documents/semio", "windows": "C:\\semio"},
   "storeMount": {"linux": "/mnt/semio-store", "macos": "/Volumes/semio-store", "windows": "S:\\"},
   "groups": [
-   {"id": "a1", "nfs": {"host": "nfs.a1.example.test", "export": "/srv/store-a"}, "server": {"platform": "linux", "protocol": "nfs", "network": "10.1.0.0/24"}, "cache": {"endpoint": "http://cache.a1.example.test:6090", "instance": "main"}, "peers": {"b2": "/mnt/peers/b2", "c3": "/mnt/peers/c3"}},
-   {"id": "b2", "nfs": {"host": "nfs.b2.example.test", "export": "/Users/Shared/store-b"}, "server": {"platform": "macos", "protocol": "nfs", "network": "10.2.0.0/16"}, "cache": {"endpoint": "http://cache.b2.example.test:7000", "instance": "main"}, "peers": {"a1": "/mnt/peers/a1", "c3": "/mnt/peers/c3"}},
-   {"id": "c3", "nfs": {"host": "nfs.c3.example.test", "export": "/store-c"}, "server": {"platform": "windows", "protocol": "nfs", "network": "10.3.0.0/24", "directory": "C:\\store-c"}, "cache": {"endpoint": "https://cache.c3.example.test", "instance": "main"}, "peers": {"a1": "/mnt/peers/a1", "b2": "/mnt/peers/b2"}}
+   {"id": "a1", "roles": {"store": "a1-server", "cache": "a1-server", "scheduler": "a1-server", "relay": "a1-server"}, "ports": {"cache": 6090, "scheduler": 8980, "worker": 8981}, "nfs": {"export": "/srv/store-a"}, "server": {"platform": "linux", "protocol": "nfs", "network": "10.1.0.0/24"}, "cache": {"instance": "main"}, "peers": {"b2": "/mnt/peers/b2", "c3": "/mnt/peers/c3"}},
+   {"id": "b2", "roles": {"store": "b2-server", "cache": "b2-server", "scheduler": "b2-server", "relay": "b2-server"}, "ports": {"cache": 7000, "scheduler": 8980, "worker": 8981}, "nfs": {"export": "/Users/Shared/store-b"}, "server": {"platform": "macos", "protocol": "nfs", "network": "10.2.0.0/16"}, "cache": {"instance": "main"}, "peers": {"a1": "/mnt/peers/a1", "c3": "/mnt/peers/c3"}},
+   {"id": "c3", "roles": {"store": "c3-server", "cache": "c3-server", "scheduler": "c3-server", "relay": "c3-server"}, "ports": {"cache": 443, "scheduler": 8980, "worker": 8981}, "nfs": {"export": "/store-c"}, "server": {"platform": "windows", "protocol": "nfs", "network": "10.3.0.0/24", "directory": "C:\\store-c"}, "cache": {"instance": "main"}, "peers": {"a1": "/mnt/peers/a1", "b2": "/mnt/peers/b2"}}
   ],
   "replica": {"pollMilliseconds": 250, "scanSeconds": 90, "debounceMilliseconds": 150, "retentionDays": 14, "bootstrapMinutes": 60, "compaction": {"automatic": false, "snapshotEvents": 100000, "safetyHours": 3, "staleHours": 12, "catchUpEvents": 20000}}
  },
@@ -39,8 +39,12 @@
   {"name": "windows server with a multi-segment share name", "path": ["groups", 2, "nfs", "export"], "value": "/srv/store-c"},
   {"name": "macos server exporting outside the user and volume folders", "path": ["groups", 1, "nfs", "export"], "value": "/srv/store-b"},
   {"name": "missing cache section", "path": ["groups", 0, "cache"], "remove": true},
-  {"name": "cache endpoint with another scheme", "path": ["groups", 0, "cache", "endpoint"], "value": "ftp://cache.a1.example.test"},
-  {"name": "cache endpoint with a path", "path": ["groups", 0, "cache", "endpoint"], "value": "http://cache.a1.example.test:6090/x"},
+  {"name": "cache endpoint is never committed", "path": ["groups", 0, "cache", "endpoint"], "value": "http://cache.a1.example.test:6090"},
+  {"name": "nfs host is never committed", "path": ["groups", 0, "nfs", "host"], "value": "nfs.a1.example.test"},
+  {"name": "missing roles", "path": ["groups", 0, "roles"], "remove": true},
+  {"name": "role that is not an origin id", "path": ["groups", 0, "roles", "store"], "value": "Studio Mac.local"},
+  {"name": "store role held by an origin of another group", "path": ["groups", 0, "roles", "store"], "value": "b2-server"},
+  {"name": "missing relay role", "path": ["groups", 0, "roles", "relay"], "remove": true},
   {"name": "export that is not absolute", "path": ["groups", 1, "nfs", "export"], "value": "srv/store-b"},
   {"name": "group mounting itself", "path": ["groups", 0, "peers", "a1"], "value": "/mnt/peers/a1"},
   {"name": "missing peer", "path": ["groups", 0, "peers", "c3"], "remove": true},

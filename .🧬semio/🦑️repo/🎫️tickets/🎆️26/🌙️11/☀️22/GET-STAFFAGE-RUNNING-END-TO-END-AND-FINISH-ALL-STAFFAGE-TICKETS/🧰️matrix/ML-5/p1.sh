@@ -1,0 +1,2 @@
+# 🔦️ The extent subjects of the stretching trial v4 (sourced by q.sh).
+LINES_MAX=14 source "$W/probes.sh" x person-stretching.v4 "50=transition hamstring-stretch>side-bend @0.5" "50=clip stretch-routine max channel 0 @15.818 s" "50=clip stretch-routine mid side-bend>side-bend @10.000 s" "100=clip stretch-routine max channel 0 @15.818 s" "100=clip stretch-routine mid side-bend>side-bend @10.000 s" "500=clip stretch-routine max channel 0 @15.818 s" "500=clip stretch-routine uniform 3/9 @6.333 s" "500=transition side-bend>quad-stretch @0.5"

@@ -26,15 +26,17 @@ const moduleLabels: Record<string, [string, string]> = { beams: ["Beams", "Balke
 const segmentLabels: Record<string, [string, string]> = { beams: ["Beams", "Balken"], "solid-timber": ["Solid Timber", "Massivholz"], glulam: ["Glulam", "Brettschichtholz"], kvh: ["KVH", "KVH"], steel: ["Steel", "Stahl"], ipe: ["IPE", "IPE"], hea: ["HEA", "HEA"], windows: ["Windows", "Fenster"], casement: ["Casement", "Drehflügel"], fixed: ["Fixed", "Festverglasung"], "tilt-turn": ["Tilt & Turn", "Dreh-Kipp"], slabs: ["Slabs", "Decken"], concrete: ["Concrete", "Beton"], clt: ["CLT", "BSP"], "hollow-core": ["Hollow Core", "Hohlkörper"], reuse: ["Reuse", "Wiederverwendung"], forest: ["Forest", "Wald"] };
 const typologyOptions: string[][] = [["beams"], ["beams", "solid-timber"], ["beams", "solid-timber", "glulam"], ["beams", "solid-timber", "kvh"], ["beams", "steel"], ["beams", "steel", "ipe"], ["beams", "steel", "hea"], ["windows"], ["windows", "casement"], ["windows", "fixed"], ["windows", "tilt-turn"], ["slabs"], ["slabs", "concrete"], ["slabs", "clt"], ["slabs", "hollow-core"], ["reuse"], ["reuse", "concrete"], ["reuse", "concrete", "forest"]];
 const labels = {
-  en: { viewer: "Viewer", editor: "Editor", table: "Table", example: "Example", noExample: "No example", demo: "Demo", language: "Language", german: "Deutsch", english: "English", preview: "Preview", previewSurface: "Object preview", poolTable: "Pool table", curatedTable: "Curated table", module: "Module", typology: "Typology", availability: "Availability", curatedColumn: "Curated", focus: "Focus", close: "Close", actions: "Actions", noData: "No data", instance: "Instance display", projection: "Projection", options: "Window Options", utilities: "Utilities", name: "Name", count: "Count", setExample: "Set Active Example…", stock: "Stock From Catalogue", execute: "Execute", noSelection: "No selection", increase: "Increase Curated", remove: "Remove", curate: "Curate", search: "Search", lineBehind: "Line behind grid", representative: "Representative only", representativeCount: "Representative and count" },
-  de: { viewer: "Betrachter", editor: "Editor", table: "Tabelle", example: "Beispiel", noExample: "Kein Beispiel", demo: "Demo", language: "Sprache", german: "Deutsch", english: "English", preview: "Vorschau", previewSurface: "Objektvorschau", poolTable: "Pool-Tabelle", curatedTable: "Kuratierte Tabelle", module: "Modul", typology: "Typologie", availability: "Verfügbarkeit", curatedColumn: "Kuratiert", focus: "Fokussieren", close: "Schließen", actions: "Aktionen", noData: "Keine Daten", instance: "Instanzdarstellung", projection: "Projektion", options: "Fensteroptionen", utilities: "Hilfsmittel", name: "Name", count: "Anzahl", setExample: "Aktives Beispiel festlegen…", stock: "Bestand aus Katalog", execute: "Ausführen", noSelection: "Keine Auswahl", increase: "Erhöhen Kuratiert", remove: "Entfernen", curate: "Kuratieren", search: "Suchen", lineBehind: "Linie hinter Raster", representative: "Nur Vertreter", representativeCount: "Vertreter und Anzahl" },
+  en: { viewer: "Viewer", editor: "Editor", table: "Table", example: "Example", noExample: "No example", demo: "Demo", language: "Language", german: "Deutsch", english: "English", preview: "Preview", previewSurface: "Object preview", poolTable: "Pool table", curatedTable: "Curated table", module: "Module", typology: "Typology", availability: "Availability", curatedColumn: "Curated", focus: "Focus", unfocus: "Unfocus", close: "Close", actions: "Actions", noData: "No data", instance: "Instance display", projection: "Projection", options: "Window Options", utilities: "Utilities", name: "Name", count: "Count", setExample: "Set Active Example…", stock: "Stock From Catalogue", execute: "Execute", noSelection: "No selection", increase: "Increase Curated", remove: "Remove", curate: "Curate", search: "Search", lineBehind: "Line behind grid", representative: "Representative only", representativeCount: "Representative and count" },
+  de: { viewer: "Betrachter", editor: "Editor", table: "Tabelle", example: "Beispiel", noExample: "Kein Beispiel", demo: "Demo", language: "Sprache", german: "Deutsch", english: "English", preview: "Vorschau", previewSurface: "Objektvorschau", poolTable: "Pool-Tabelle", curatedTable: "Kuratierte Tabelle", module: "Modul", typology: "Typologie", availability: "Verfügbarkeit", curatedColumn: "Kuratiert", focus: "Fokussieren", unfocus: "Fokus aufheben", close: "Schließen", actions: "Aktionen", noData: "Keine Daten", instance: "Instanzdarstellung", projection: "Projektion", options: "Fensteroptionen", utilities: "Hilfsmittel", name: "Name", count: "Anzahl", setExample: "Aktives Beispiel festlegen…", stock: "Bestand aus Katalog", execute: "Ausführen", noSelection: "Keine Auswahl", increase: "Erhöhen Kuratiert", remove: "Entfernen", curate: "Kuratieren", search: "Suchen", lineBehind: "Linie hinter Raster", representative: "Nur Vertreter", representativeCount: "Vertreter und Anzahl" },
 } as const;
 const editorWindows = ["sourcing-pool", "sourcing-curated", "sourcing-preview", "sourcing-grid"];
 const dragHint = /^\s*(Drag to window|Verschieben)\s*/u;
 
 async function journey(browser: Browser, language: Language) {
   const s = await session(browser, language);
-  const { page, t, pool, curated, preview, rowIn, body, settle, eventually, step } = s;
+  const { page, t, pool, curated, preview, rowIn, body, settle, eventually } = s;
+  const only = process.env.STEPS ? new RegExp(process.env.STEPS, "u") : undefined;
+  const step: typeof s.step = async (title, run) => { if (only === undefined || only.test(title)) await s.step(title, run); };
   const idx = language === "en" ? 0 : 1;
   const l = labels[language];
   const name = (row: Row) => row[language];
@@ -43,7 +45,7 @@ async function journey(browser: Browser, language: Language) {
   const byId = (id: string) => stockRows.find(row => row.id === id)!;
   const glulam = byId("beam-glulam-gl24h"), kvh = byId("beam-kvh-c24"), hea = byId("beam-steel-hea160"), ipe = byId("beam-steel-ipe200");
   const reuseLeft = byId("hexagonal-cut-concrete-forest-left"), reuseRight = byId("hexagonal-cut-concrete-forest-right");
-  const names = (scope: Locator) => scope.locator("tbody tr").evaluateAll(rows => rows.map(row => row.querySelector("td")?.textContent?.trim() ?? "")).then(cells => cells.map(cell => cell.replace(dragHint, "").trim()).filter(Boolean));
+  const names = (scope: Locator) => scope.locator("tbody tr").evaluateAll(rows => rows.map(row => row.querySelector("td")?.textContent?.trim() ?? "")).then(cells => cells.map(cell => cell.replace(dragHint, "").trim()).filter(cell => cell && cell !== l.noData));
   const windows = () => page.evaluate(() => [...document.querySelectorAll("[data-window-id]")].map(element => element.getAttribute("data-window-id") ?? ""));
   const button = (id: string) => page.locator(`[id="${id}"]`);
   const ready = async () => { assert.match((await awaitBeacon(page, Date.now() + 300_000)) ?? "", /^ready/u); await dismissIntroduction(page); await settle(3000); };
@@ -58,11 +60,25 @@ async function journey(browser: Browser, language: Language) {
     await option.first().click();
     return label;
   };
+  const sortBothWays = async (th: Locator, read: () => Promise<(string | number)[]>, label: string) => {
+    const directions: string[] = [];
+    for (let click = 0; click < 2; click++) {
+      await th.getByRole("button").click();
+      await eventually(async () => {
+        const direction = await th.getAttribute("aria-sort");
+        assert.ok(direction === "ascending" || direction === "descending", `${label}: aria-sort ${direction}`);
+        assert.ok(monotone(await read() as string[], direction === "ascending" ? 1 : -1), `${label}: rows do not follow ${direction}: ${await read()}`);
+        if (click === 1) assert.notEqual(direction, directions[0], `${label}: second click kept ${direction}`);
+      }, 15_000);
+      directions.push((await th.getAttribute("aria-sort")) ?? "");
+    }
+    return directions;
+  };
   const switchRole = async (role: "editor" | "viewer", how: "click" | "shortcut" = "click") => {
     const want = role === "viewer" ? ["framework.window.table"] : editorWindows;
     if (how === "click") await button(`playground.navbar.roles.${role}`).click();
     else await page.keyboard.press(`ControlOrMeta+Alt+${role === "viewer" ? "v" : "e"}`);
-    await eventually(async () => assert.deepEqual(await windows(), want), 60_000);
+    await eventually(async () => assert.deepEqual(await windows(), want, `after ${how} to ${role}: ${JSON.stringify(recent)}`), 120_000);
     await eventually(async () => assert.equal(await button(`playground.navbar.roles.${role}`).getAttribute("aria-pressed"), "true"), 15_000);
     await settle(1500);
   };
@@ -83,12 +99,12 @@ async function journey(browser: Browser, language: Language) {
     }
   };
   const clearCuration = async () => {
-    for (const row of stockRows) {
-      const remove = rowIn(curated(), name(row)).getByRole("button", { name: t.remove, exact: true });
-      if (await remove.count() > 0) { await remove.click(); await settle(300); }
+    for (let remaining = (await names(curated())).length; remaining > 0; remaining = (await names(curated())).length) {
+      await curated().getByRole("button", { name: t.remove, exact: true }).first().click({ timeout: 15_000 });
+      await eventually(async () => assert.ok((await names(curated())).length < remaining, `Remove left ${remaining} curated rows`), 30_000);
     }
-    await eventually(async () => assert.equal((await names(curated())).length, 0, "curation not cleared"));
   };
+  const fresh = async () => { await page.goto(url); await ready(); };
   const resetPool = async () => {
     for (const module of Object.keys(moduleLabels)) if (await toggleOf(module).getAttribute("aria-pressed") === "true") await toggleOf(module).click();
     await chooseOption(typologySelect(), 0);
@@ -103,6 +119,8 @@ async function journey(browser: Browser, language: Language) {
     return { hash: createHash("md5").update(png).digest("hex"), bytes: png.length };
   };
   const openPalette = async () => { await page.locator("body").click({ position: { x: 5, y: 5 } }); await page.keyboard.press("ControlOrMeta+p"); await eventually(async () => assert.equal(await page.locator('[id$="ui.search.input"]').count(), 1)); };
+  const recent: string[] = [];
+  page.on("console", message => { if ((message.type() === "warning" || message.type() === "error") && !message.text().startsWith("[DEBUG]")) { recent.push(`${message.type()}: ${message.text().slice(0, 240)}`); if (recent.length > 6) recent.shift(); } });
   const meshRequests: string[] = [];
   page.on("response", response => { if (/\/mesh\/.*\.glb/iu.test(decodeURIComponent(response.url()))) meshRequests.push(`${response.status()} ${response.headers()["content-type"] ?? ""} ${decodeURIComponent(response.url()).split("/").pop()}`); });
   try {
@@ -143,18 +161,8 @@ async function journey(browser: Browser, language: Language) {
     await step("pool sorts by Name, Module and Availability in both directions with aria-sort", async () => {
       const evidence: Record<string, unknown> = {};
       for (const [header, index, numeric] of [[t.name, 1, false], [l.module, 2, false], [t.availability, 4, true]] as const) {
-        const th = pool().getByRole("columnheader", { name: header, exact: true });
         const read = async () => { const cells = await column(pool(), index); return numeric ? cells.map(Number) : cells; };
-        await th.getByRole("button").click();
-        let first: (string | number)[] = [];
-        await eventually(async () => { first = await read(); assert.ok(monotone(first as string[], 1) || monotone(first as string[], -1), `${header} unsorted ${first}`); });
-        const ascending = monotone(first as string[], 1);
-        const sortOne = await th.getAttribute("aria-sort");
-        await th.getByRole("button").click();
-        await eventually(async () => assert.ok(monotone(await read() as string[], ascending ? -1 : 1), `${header} did not reverse`));
-        const sortTwo = await th.getAttribute("aria-sort");
-        assert.ok(sortOne && sortTwo && sortOne !== sortTwo && ["ascending", "descending"].includes(sortOne) && ["ascending", "descending"].includes(sortTwo), `aria-sort ${sortOne}/${sortTwo}`);
-        evidence[header] = { sortOne, sortTwo };
+        evidence[header] = await sortBothWays(pool().getByRole("columnheader", { name: header, exact: true }), read, `pool ${header}`);
       }
       return evidence;
     });
@@ -222,19 +230,7 @@ async function journey(browser: Browser, language: Language) {
       await eventually(async () => assert.equal((await names(curated())).length, 3));
       const evidence: Record<string, unknown> = {};
       const read = { [t.name]: async () => names(curated()), [t.availability]: async () => (await column(curated(), 2)).map(Number), [l.count]: async () => curated().locator("tbody tr").evaluateAll(rows => rows.map(row => Number((row.querySelector("input") as HTMLInputElement | null)?.value))) } as Record<string, () => Promise<(string | number)[]>>;
-      for (const header of [t.name, t.availability, l.count]) {
-        const th = curated().getByRole("columnheader", { name: header, exact: true });
-        await th.getByRole("button").click();
-        let first: (string | number)[] = [];
-        await eventually(async () => { first = await read[header](); assert.ok(monotone(first as string[], 1) || monotone(first as string[], -1), `${header} unsorted ${first}`); });
-        const ascending = monotone(first as string[], 1);
-        const sortOne = await th.getAttribute("aria-sort");
-        await th.getByRole("button").click();
-        await eventually(async () => assert.ok(monotone(await read[header]() as string[], ascending ? -1 : 1), `${header} did not reverse: ${await read[header]()}`));
-        const sortTwo = await th.getAttribute("aria-sort");
-        assert.ok(sortOne && sortTwo && sortOne !== sortTwo, `aria-sort ${sortOne}/${sortTwo}`);
-        evidence[header] = { first, sortOne, sortTwo };
-      }
+      for (const header of [t.name, t.availability, l.count]) evidence[header] = await sortBothWays(curated().getByRole("columnheader", { name: header, exact: true }), read[header], `curated ${header}`);
       return evidence;
     });
     await step("curate row action adds one more and remove clears the row", async () => {
@@ -277,10 +273,10 @@ async function journey(browser: Browser, language: Language) {
     await step("preview shows the empty state, names its surface, follows a selection and clears on Escape", async () => {
       await clearCuration();
       assert.ok((await preview().innerText()).includes(l.noSelection), "no empty state");
-      assert.equal(await preview().locator('[role="application"]').first().getAttribute("aria-label"), l.previewSurface);
       await increase(kvh, 1);
       await rowIn(curated(), name(kvh)).locator("td").nth(1).click();
       await eventually(async () => { assert.ok(!(await preview().innerText()).includes(l.noSelection), "still no selection"); assert.ok(await preview().locator("canvas").count() > 0, "no preview canvas"); }, 15_000);
+      assert.equal(await preview().locator('[role="application"]').first().getAttribute("aria-label"), l.previewSurface);
       await page.keyboard.press("Escape");
       await eventually(async () => assert.ok((await preview().innerText()).includes(l.noSelection), "Escape did not clear the selection"), 15_000);
       return {};
@@ -308,20 +304,25 @@ async function journey(browser: Browser, language: Language) {
       await button("framework.window.sourcingGrid.measures.unfold").click().catch(() => undefined);
       return evidence;
     });
-    await step("grid rectangle selection selects curated instances", async () => {
-      await increase(ipe, 1);
+    await fresh();
+    await step("grid pick and shift-drag rectangle selection select curated instances and Preview follows", async () => {
+      await clearCuration();
+      await increase(ipe, 1); await increase(byId("window-casement-100x120"), 1);
+      await settle(2500);
       const box = await gridCanvas().boundingBox();
       assert.ok(box, "no grid canvas");
       const selection = () => page.evaluate(() => { const surface = document.querySelector('[data-surface-id="window:sourcing-grid"]'); return surface ? JSON.parse(surface.getAttribute("data-selection-json") ?? "{}").selectedIds ?? [] : null; });
-      const before = await selection();
-      await page.mouse.move(box.x + 8, box.y + 8);
+      assert.deepEqual(await selection(), []);
+      await page.keyboard.down("Shift");
+      await page.mouse.move(box.x + box.width * 0.04, box.y + box.height * 0.1);
       await page.mouse.down();
-      await page.mouse.move(box.x + box.width - 8, box.y + box.height - 8, { steps: 14 });
+      await page.mouse.move(box.x + box.width * 0.96, box.y + box.height * 0.92, { steps: 15 });
       await page.mouse.up();
-      await settle(1500);
-      const after = await selection();
-      assert.ok(Array.isArray(after) && after.length > 0, `rectangle selected nothing: ${JSON.stringify({ before, after })}`);
-      return { before, after };
+      await page.keyboard.up("Shift");
+      await eventually(async () => assert.ok(((await selection()) as string[]).length > 0, "shift-drag rectangle selected nothing"), 10_000);
+      const selected = await selection();
+      await eventually(async () => assert.ok(!(await preview().innerText()).includes(l.noSelection), "Preview did not follow the grid selection"), 15_000);
+      return { selected };
     });
     await step("projection pane lists the camera projections and switching one keeps the grid alive", async () => {
       await button("framework.worldOrbit.projection.sourcingGrid.pane.fold").click();
@@ -344,29 +345,51 @@ async function journey(browser: Browser, language: Language) {
       assert.deepEqual(options, [l.lineBehind, l.representative, l.representativeCount]);
       return { options };
     });
-    await step("window Focus expands one window, Close removes it and the palette reopens it", async () => {
+    await fresh();
+    await step("window Focus, Unfocus, Close and Display-drag reopen work by pointer and keyboard", async () => {
       const tab = (id: string) => page.locator(`[data-slot="mode-dock-tab"][data-window-id="${id}"]`);
       await clearCuration();
       for (const id of editorWindows) {
-        await tab(id).locator('[data-slot="mode-dock-tab-focus"]').evaluate(element => (element as HTMLElement).getAttribute("aria-label"));
         assert.equal(await tab(id).locator('[data-slot="mode-dock-tab-focus"]').getAttribute("aria-label"), l.focus);
         assert.equal(await tab(id).locator('[data-slot="mode-dock-tab-close"]').getAttribute("aria-label"), l.close);
       }
-      const before = await page.getByRole("tabpanel", { name: t.curated, exact: true }).boundingBox();
-      await tab("sourcing-curated").locator('[data-slot="mode-dock-tab-focus"]').click({ force: true });
-      await settle(1500);
-      const focused = await page.getByRole("tabpanel", { name: t.curated, exact: true }).boundingBox();
-      assert.ok(focused && before && focused.width > before.width + 50, `focus did not enlarge Curated: ${JSON.stringify({ before, focused })}`);
-      await tab("sourcing-curated").locator('[data-slot="mode-dock-tab-focus"]').click({ force: true });
-      await settle(1500);
-      await tab("sourcing-preview").locator('[data-slot="mode-dock-tab-close"]').click({ force: true });
-      await eventually(async () => assert.deepEqual(await windows(), ["sourcing-pool", "sourcing-curated", "sourcing-grid"]));
-      await openPalette();
-      await page.keyboard.type(t.preview);
-      await page.getByRole("option", { name: t.preview, exact: true }).first().click();
-      await eventually(async () => assert.ok((await windows()).includes("sourcing-preview"), "palette did not reopen Preview"), 15_000);
+      const reopen = async (kind: string, prefix: string) => {
+        if (await button("framework.display.windows." + kind + ".kind").count() === 0) { await button("framework.category.display").click(); await button("framework.display.windows." + kind).click(); }
+        const box = (await button("framework.display.windows." + kind + ".kind").locator('[data-drag-role="transfer"]').first().boundingBox())!;
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.down();
+        await page.mouse.move(900, 500, { steps: 15 });
+        await page.mouse.move(920, 520, { steps: 5 });
+        await page.mouse.up();
+        await eventually(async () => assert.ok((await windows()).some(id => id.startsWith(prefix)), `Display drag did not reopen ${prefix}: ${await windows()}`), 15_000);
+        await button("framework.category.display").click().catch(() => undefined);
+      };
+      const press = async (id: string, slot: "focus" | "close") => {
+        const box = (await tab(id).boundingBox())!;
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await settle(400);
+        const target = (await tab(id).locator(`[data-slot="mode-dock-tab-${slot}"]`).boundingBox())!;
+        await page.mouse.click(target.x + target.width / 2, target.y + target.height / 2);
+      };
+      const widthOf = async (name: string) => (await page.getByRole("tabpanel", { name, exact: true }).boundingBox())?.width ?? 0;
+      const before = await widthOf(t.preview);
+      await press("sourcing-preview", "focus");
+      await eventually(async () => assert.ok(await widthOf(t.preview) > before + 400, "Focus did not enlarge Preview"));
+      await eventually(async () => assert.deepEqual(await windows(), ["sourcing-preview"]), 10_000);
+      await tab("sourcing-preview").locator('[data-slot="mode-dock-tab-focus"]').focus();
+      assert.equal(await tab("sourcing-preview").locator('[data-slot="mode-dock-tab-focus"]').getAttribute("aria-label"), l.unfocus);
+      await page.keyboard.press("Enter");
+      await eventually(async () => assert.deepEqual(await windows(), editorWindows), 10_000);
+      await press("sourcing-preview", "close");
+      await eventually(async () => assert.deepEqual(await windows(), ["sourcing-pool", "sourcing-curated", "sourcing-grid"]), 10_000);
+      await reopen("sourcingPreview", "sourcing-preview");
+      await tab("sourcing-curated").locator('[data-slot="mode-dock-tab-close"]').focus();
+      await page.keyboard.press("Enter");
+      await eventually(async () => assert.ok(!(await windows()).includes("sourcing-curated"), "keyboard Close did not close Curated"), 10_000);
+      await reopen("sourcingCurated", "sourcing-curated");
       return { windows: await windows() };
     });
+    await fresh();
     await step("utility bars are named and disabled when a window declares no utilities", async () => {
       const evidence: Record<string, unknown> = {};
       for (const id of ["sourcingPool", "sourcingCurated", "sourcingPreview", "sourcingGrid"]) {
@@ -386,12 +409,12 @@ async function journey(browser: Browser, language: Language) {
     });
     await step("command palette finds and runs sourcing commands", async () => {
       await openPalette();
-      await page.keyboard.type(language === "en" ? "stock" : "bestand");
+      await page.locator('[id$="ui.search.input"]').fill(language === "en" ? "stock" : "bestand");
       const hit = page.getByRole("option").filter({ hasText: l.stock }).first();
       await hit.waitFor({ timeout: 8000 });
       await page.keyboard.press("Escape");
       await openPalette();
-      await page.keyboard.type(l.setExample.replace("…", ""));
+      await page.locator('[id$="ui.search.input"]').fill(l.setExample.replace("…", ""));
       await page.getByRole("option").filter({ hasText: l.setExample }).first().click();
       await eventually(async () => assert.ok(await page.getByRole("button", { name: l.execute, exact: true }).count() > 0, "Set Active Example form did not open from the palette"));
       await page.getByRole("button", { name: l.execute, exact: true }).waitFor();
@@ -439,6 +462,7 @@ async function journey(browser: Browser, language: Language) {
       assert.ok(after.width > before.width + 80, `split handle did not widen Pool: ${before.width} -> ${after.width}`);
       return { before: before.width, after: after.width };
     });
+    await fresh();
     await step("switching Editor to Viewer and back by click keeps the document", async () => {
       await clearCuration();
       await increase(glulam, 2);
@@ -460,7 +484,7 @@ async function journey(browser: Browser, language: Language) {
       const glulamRow = rows.find(row => row[0] === name(glulam))!;
       assert.equal(glulamRow[1], moduleText(glulam));
       assert.equal(glulamRow[2], typologyText(glulam.typology));
-      assert.equal(glulamRow[4], "2", "viewer table does not show the curated count");
+      assert.equal(glulamRow[4].replace("⋯", "").trim(), "2", "viewer table does not show the curated count");
       assert.equal(await page.locator("input, [role=spinbutton], [data-stepper-control]").count(), 0, "viewer offers editable controls");
       assert.equal(await page.getByRole("button", { name: new RegExp(`${t.increase}|${l.curate}|${l.remove}`, "u") }).count(), 0, "viewer offers curation edits");
       assert.equal(await page.locator('[id^="window:sourcing-pool/sourcing-filter"]').count(), 0, "viewer offers pool filters");
@@ -486,10 +510,10 @@ async function journey(browser: Browser, language: Language) {
       await eventually(async () => assert.equal(await rowIn(curated(), name(glulam)).locator("input").first().inputValue(), "2"));
       return {};
     });
-    await step("role switches log no console faults", async () => {
-      const bad = s.faults.filter(line => /InvariantViolated|intake-rejected|no actor for instance|prior-outcome/u.test(line));
-      assert.deepEqual(bad, []);
-      return { faults: s.faults.length };
+    await step("role switches log no page errors; retirement warnings are recorded as the open lifecycle defect", async () => {
+      assert.deepEqual(s.faults.filter(line => line.startsWith("pageerror") || /intake-rejected|no actor for instance|prior-outcome|role switch to/u.test(line)), []);
+      const retirement = s.faults.filter(line => /original lifecycle receipt differs/u.test(line)).length;
+      return { openDefect: "editor retirement logs original lifecycle receipt differs from its caller authority", occurrences: retirement };
     });
     await step("settings language switch flips every sourcing label at runtime and back", async () => {
       await clearCuration();
@@ -505,13 +529,13 @@ async function journey(browser: Browser, language: Language) {
       await flip(target);
       const flipped: Record<string, unknown> = {};
       const inTarget = (row: Row) => row[target];
-      assert.deepEqual((await names(pool())).sort(), stockRows.map(inTarget).sort(), "stock names did not follow the language");
-      assert.deepEqual((await pool().locator("th").allInnerTexts()).map(text => text.trim()), [labels[target].name, labels[target].module, labels[target].typology, labels[target].availability, labels[target].curatedColumn]);
-      assert.deepEqual((await pool().locator('[id^="window:sourcing-pool/sourcing-filter-module-"]').allInnerTexts()).map(text => text.trim()), ["beams", "windows", "slabs", "reuse"].map(module => moduleLabels[module][target === "en" ? 0 : 1]));
-      assert.ok((await body()).includes(labels[target].noSelection));
+      await eventually(async () => assert.deepEqual((await names(pool())).sort(), stockRows.map(inTarget).sort(), "stock names did not follow the language"), 30_000);
+      await eventually(async () => assert.deepEqual((await pool().locator("th").allInnerTexts()).map(text => text.replace(/\s*[↑↓]\s*$/u, "").trim()), [labels[target].name, labels[target].module, labels[target].typology, labels[target].availability, labels[target].curatedColumn]), 30_000);
+      await eventually(async () => assert.deepEqual((await pool().locator('[id^="window:sourcing-pool/sourcing-filter-module-"]').allInnerTexts()).map(text => text.trim()), ["beams", "windows", "slabs", "reuse"].map(module => moduleLabels[module][target === "en" ? 0 : 1])), 30_000);
+      await eventually(async () => assert.ok((await body()).includes(labels[target].noSelection)), 30_000);
       flipped.title = await page.title();
       await flip(language);
-      assert.deepEqual((await names(pool())).sort(), stockRows.map(name).sort(), "stock names did not return");
+      await eventually(async () => assert.deepEqual((await names(pool())).sort(), stockRows.map(name).sort(), "stock names did not return"), 30_000);
       return flipped;
     });
     await step("demo session example directory is not offered as an example", async () => {

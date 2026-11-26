@@ -68,3 +68,13 @@ rustflags = ["-Z", "threads=0", "-C", "linker-features=+lld", "-C", "link-self-c
 RUST_MIN_STACK = "67108864"
 # 🧭️ The compile-time build mode `env!("SEMIO_BUILD_MODE")` reads. Repository launchers issue it explicitly (`prototype` or `release`) and win over this default (`force = false`); a plain `cargo` run therefore compiles without a manual export.
 SEMIO_BUILD_MODE = { value = "prototype", force = false }
+
+# 🪟️ Compile the five BIM window owners within the library worker's memory grant.
+[profile.dev.package.semio-s-artifact-bim-model-kit]
+opt-level = 1
+codegen-units = 64
+
+# 🧬️ Keep BIM record code generation within the library worker memory grant.
+[profile.dev.package.semio-s-artifact-bim-model-schema]
+opt-level = 1
+codegen-units = 64

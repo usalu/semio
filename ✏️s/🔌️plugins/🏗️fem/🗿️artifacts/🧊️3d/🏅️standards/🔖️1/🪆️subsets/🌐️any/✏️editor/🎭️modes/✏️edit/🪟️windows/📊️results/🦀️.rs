@@ -280,7 +280,7 @@ fn results_scene(doc: &Fem3dSnapshot, window: &Fem3dResultsWindowConfig, interac
 }
 
 fn results_scene_with_visual(doc: &Fem3dSnapshot, window: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, scale: f64, stress: Option<&HashMap<String, f64>>, visual: Option<&semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dPageVisualLease>, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    let (meshes_json, instances_json) = fem3d_scene_parts(doc, displacements, scale, stress).map_err(|_| semio_plugin::PluginAssemblyError::new("fem3d.scene-identity", "FEM3d scene target identity refused"))?;
+    let (meshes_json, instances_json) = fem3d_scene_parts(doc, displacements, scale, stress, locale).map_err(|_| semio_plugin::PluginAssemblyError::new("fem3d.scene-identity", "FEM3d scene target identity refused"))?;
     let gumball = semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model::config::Fem3dGumballConfig { move_axes: false, move_planes: false, rotate: false, scale_axes: false, scale_uniform: false };
     let mut scene = semio_plugin::world3d_scene(semio_s_artifact_fem_3d_scene::viewport::scene_camera_json(&window.camera), meshes_json, instances_json, fem3d_selection_json(doc, interaction, false, &gumball), &semio_plugin::WorldSunConfig::default());
     scene.domain_id = Some(FEM3D_INTERACTION_DOMAIN.into());

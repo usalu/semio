@@ -1,5 +1,4 @@
-import {registeredToolExecutableV1} from "../../../../../🧰️tools/🏃️run/🟦️.ts";
-/** 🧵️ Contract: the scheduler hands rustc the front-end thread count the run was admitted, not the cores of the host. Cargo's authored `-Z threads=0` becomes the admitted parallelism, a larger count is capped to it, a smaller one stays, both spellings are read and nothing changes without a grant. The real scheduler binary runs a stand-in rustc that prints its arguments; the verdict of every language-agnostic corpus case (`./🔣️.json`) must equal the independent Python oracle (`./🐍️.py`). Measured on one 2.7 MB crate (opt-level 0, debuginfo 1, 256 codegen units, fresh incremental cache, load 23 to 35): 1 thread 181 s wall / 129 s CPU / 2.9 GB peak, 4 threads 119 s / 132 s / 5.4 GB, 10 threads (`-Z threads=0`) 90 s / 143 s / 5.2 GB. */
+/** 🧵️ Contract: the scheduler hands rustc the front-end thread count the run was admitted, not the cores of the host. Cargo's authored `-Z threads=0` becomes the admitted parallelism, a larger count is capped to it, a smaller one stays, both spellings are read and ungranted compilers use one thread. The real scheduler binary runs a stand-in rustc that prints its arguments; the verdict of every language-agnostic corpus case (`./🔣️.json`) must equal the independent Python oracle (`./🐍️.py`). Measured on one 2.7 MB crate (opt-level 0, debuginfo 1, 256 codegen units, fresh incremental cache, load 23 to 35): 1 thread 181 s wall / 129 s CPU / 2.9 GB peak, 4 threads 119 s / 132 s / 5.4 GB, 10 threads (`-Z threads=0`) 90 s / 143 s / 5.2 GB. */
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {chmodSync,closeSync,existsSync,mkdirSync,mkdtempSync,openSync,readdirSync,readFileSync,rmSync,writeFileSync,writeSync} from "node:fs";
@@ -12,16 +11,17 @@ import {requireTestToolV1} from "../../../../../🧪️testing/🧰️toolchain/
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";
 
-const manifest=resolve(fileURLToPath(new URL("../../📦️packages/🦀️rust/Cargo.toml",import.meta.url))),oracle=fileURLToPath(new URL("./🐍️.py",import.meta.url));
+const source=fileURLToPath(new URL("../../🦀️.rs",import.meta.url)),oracle=fileURLToPath(new URL("./🐍️.py",import.meta.url));
 
 const scratchRoot=()=>process.env.SEMIO_TEST_ARTIFACT_DIR?resolve(process.env.SEMIO_TEST_ARTIFACT_DIR):tmpdir();
 let builtScheduler:string|undefined;
 function schedulerBinary(scratch:string):string{
  if(process.env.SEMIO_TEST_SCHEDULER)return process.env.SEMIO_TEST_SCHEDULER;
  if(builtScheduler&&existsSync(builtScheduler))return builtScheduler;
- const built=spawnSync(registeredToolExecutableV1("cargo"),["build","--release","--manifest-path",manifest,"--bins"],{cwd:scratch,env:{...process.env,CARGO_TARGET_DIR:join(scratch,"target")},encoding:"utf8"});
+ const binary=join(scratch,process.platform==="win32"?"semio-build-scheduler.exe":"semio-build-scheduler");
+ const built=spawnSync("repo",["tools","exec","rustc","--","--edition=2024","--crate-name","semio_build_scheduler","-Cdebuginfo=0",source,"-o",binary],{encoding:"utf8"});
  expect(built.status,built.stderr).toBe(0);
- return builtScheduler=join(scratch,"target","release","semio-build-scheduler");
+ return builtScheduler=binary;
 }
 
 test("the corpus is closed by its schema and agrees with the independent Python oracle",()=>{
@@ -34,7 +34,7 @@ test("the corpus is closed by its schema and agrees with the independent Python 
 });
 
 test("the scheduler binary hands the stand-in rustc exactly the corpus arguments",()=>{
- if(process.platform==="win32"||!existsSync(manifest))return;
+ if(process.platform==="win32"||!existsSync(source))return;
  const scratch=mkdtempSync(join(scratchRoot(),"ft-"));
  try{
   const scheduler=schedulerBinary(scratch);
@@ -53,7 +53,11 @@ test("the scheduler binary hands the stand-in rustc exactly the corpus arguments
   expect(bounded.stdout).not.toContain("threads=0");
   expect(existsSync(argfile+"."+"semio-threads-"+String(bounded.pid))||readdirSync(scratch).some(name=>name.includes("semio-threads")),"the bounded copy is removed after rustc ended").toBe(false);
   const free=spawnSync(scheduler,[expanding,"@"+argfile],{env:{...process.env,SEMIO_BUILD_BROKER:undefined,SEMIO_BUILD_PASS:undefined,SEMIO_COMPILER_PARALLELISM:undefined} as NodeJS.ProcessEnv,encoding:"utf8"});
-  expect(free.stdout,"without a grant nothing changes").toContain("threads=0");
+  expect(free.stdout,"a fallback compile keeps one front-end thread").toContain("threads=1");
+  writeFileSync(argfile,"--crate-type=cdylib\n-Zthreads=0\nlib.rs\n");
+  const final=spawnSync(scheduler,[expanding,"@"+argfile],{env:{...process.env,SEMIO_BUILD_BROKER:undefined,SEMIO_BUILD_PASS:undefined,SEMIO_COMPILER_PARALLELISM:"4"} as NodeJS.ProcessEnv,encoding:"utf8"});
+  expect(final.status,final.stderr).toBe(0);
+  expect(final.stdout).toContain("-Zthreads=1");expect(final.stdout).toContain("no-parallel-backend");
  }finally{rmSync(scratch,{recursive:true,force:true});}
 },180000);
 

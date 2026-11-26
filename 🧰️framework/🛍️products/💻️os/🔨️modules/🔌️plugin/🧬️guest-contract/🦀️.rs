@@ -39,6 +39,8 @@ pub enum PluginHostError {
     Json(String),
     NativeIo(semio_framework_value::ValueError),
     OriginalTurn(Box<semio_framework_job::OriginalTurnFailure>),
+    ProducerRefusal { kind: semio_framework_value::ValueRefusalKind, message: String },
+    WithCleanupFailure { primary: Box<PluginHostError>, cleanup: Box<PluginHostError> },
     Wasmtime(String),
     Plugin(String),
     IoRouteConflict(Box<IoRouteConflict>),
@@ -60,7 +62,10 @@ impl std::fmt::Display for PluginHostError {
             Self::Io(error) => write!(formatter, "io: {error}"),
             Self::Json(error) => write!(formatter, "json: {error}"),
             Self::NativeIo(error)=>write!(formatter,"native io: {error}"),
+            Self::OriginalTurn(error) if error.receipt_refusal.is_some() || error.context_refusal.is_some() || error.work_refusal.is_some() => write!(formatter, "{error:?}"),
             Self::OriginalTurn(error)=>formatter.write_str(error.primary.message()),
+            Self::ProducerRefusal { message, .. } => formatter.write_str(message),
+            Self::WithCleanupFailure { primary, cleanup } => write!(formatter, "{primary}; cleanup: {cleanup}"),
             Self::Wasmtime(message) => write!(formatter, "wasmtime: {message}"),
             Self::Plugin(message) => write!(formatter, "plugin: {message}"),
             Self::IoRouteConflict(conflict) => write!(formatter, "io route conflict for {:?}: {} already owns it; {} cannot replace it", conflict.key, conflict.existing_plugin, conflict.incoming_plugin),
@@ -72,11 +77,24 @@ impl std::fmt::Display for PluginHostError {
     }
 }
 
+impl PluginHostError {
+    /// 🧭️ Exposes the issued value kind when it stands alone at the host boundary.
+    pub fn value_refusal_kind(&self) -> Option<semio_framework_value::ValueRefusalKind> {
+        match self {
+            Self::NativeIo(error) => Some(error.kind),
+            Self::ProducerRefusal { kind, .. } => Some(*kind),
+            Self::OriginalTurn(error) if error.receipt_refusal.is_none() && error.context_refusal.is_none() && error.work_refusal.is_none() => error.primary_value().map(|value| value.kind),
+            _ => None,
+        }
+    }
+}
+
 impl std::error::Error for PluginHostError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Io(error) => Some(error),
             Self::NativeIo(error)=>Some(error),
+            Self::WithCleanupFailure { primary, .. } => Some(primary.as_ref()),
             _ => None,
         }
     }

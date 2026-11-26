@@ -1,5 +1,5 @@
 /** 🚀️ Shell plumbing, effect dispatch: the host effect dispatcher that encodes action and command invocations. */
-import { type Effect, type HostEffectDispatchScope, hostEffectInvocationV1, resolveUiDirtyScope, type UiDirtyScope } from "@semio-tech/framework";
+import { type HostEffectDispatchScope, hostEffectInvocationV1, type InvocationResponse } from "@semio-tech/framework";
 import { causalOrderKeyV1, type InputProvenanceV1 } from "../../../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import { type ActiveSession, type LoadedProgramState } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import type { ViewModel } from "../../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
@@ -9,6 +9,9 @@ import type { ViewModel } from "../../../🔌️PluginRuntime/🧷️handle-cont
  * `requestMediaFrames` `applyHostEffects` branches: dispatches `action` against the emitting program
  * instance and feeds its own `requestedEffects` back through `applyHostEffects` recursively. */
 export type EffectDispatchOne = (action: string, args?: Record<string, unknown>) => Promise<void>;
+
+/** 📥️ Publishes a deferred invocation reply to its mounted program. */
+export type EffectInvocationSink = (response: InvocationResponse, targetSession: ActiveSession) => Promise<void>;
 
 /** 🎯️ Encodes a host-effect callback as the same fully scoped JSON `ActionInvocation` every other
  * renderer action uses; pack-base64 belongs inside the worker channel, never at `handleAction`'s edge. */
@@ -61,7 +64,7 @@ export function ownedEffectInvocationV1(baseSession: ActiveSession, action: stri
 export function makeEffectDispatchOne(
   pluginEntry: LoadedProgramState,
   baseSession: ActiveSession,
-  applyEffects: (effects: readonly Effect[], baseSession: ActiveSession, uiScope?: UiDirtyScope) => Promise<void>,
+  applyResponse: EffectInvocationSink,
   isCurrent: () => boolean,
   resolveViewState: (session: ActiveSession) => ViewModel,
   provenance?: Pick<InputProvenanceV1, "causedBy" | "windowId">,
@@ -75,7 +78,7 @@ export function makeEffectDispatchOne(
     const response = isAppCommand && pluginEntry.handle.handleCommand
       ? await pluginEntry.handle.handleCommand(baseSession.instanceId, encodeEffectCommandInvocation(targetSession, action, args), viewState, dispatch)
       : await pluginEntry.handle.handleAction(baseSession.instanceId, encodeEffectActionInvocation(targetSession, action, args), viewState, dispatch);
-    if (isCurrent()) await applyEffects(response.requestedEffects ?? [], targetSession, resolveUiDirtyScope(response.uiScope));
+    if (isCurrent()) await applyResponse(response, targetSession);
   };
 }
 //#endregion ShellHelpers

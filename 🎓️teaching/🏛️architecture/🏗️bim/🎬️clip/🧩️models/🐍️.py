@@ -250,7 +250,7 @@ class Beat4_PartialModels(_moving.RefreshMoving, _visuals.ClipScene):
     def _chip(self, string, point, color=INK, size=17.0, anchor="c"):
         """🔲 A short framed text."""
         label = self.text(string, (0, 0, 0), size=size, color=color)
-        frame = frame_box(label.width + 0.3, 0.38, color)
+        frame = frame_box(label.width + 0.3, 0.38, color, glass=True)
         return _drafting.place(VGroup(frame, label.move_to(frame)), point, anchor)
 
     def _lines(self, strings, point, *, size=16.2, color=MUTED, pitch=0.25, width=None, anchor="l"):
@@ -495,7 +495,7 @@ class Beat4_PartialModels(_moving.RefreshMoving, _visuals.ClipScene):
         pset = next(name for name, props in _model.element("W-S")["psets"].items() if "LoadBearing" in props)
         flag = _model.information("W-S", "LoadBearing", language)
         roof = self._roof_note((1.2, -1.75, 0))
-        chip = VGroup(frame_box(5.9, 0.95, GOOD).move_to((RIGHT, -0.72, 0)),
+        chip = VGroup(frame_box(5.9, 0.95, GOOD, glass=True).move_to((RIGHT, -0.72, 0)),
                       self.text(f"{pset}.LoadBearing = {'TRUE' if flag['value'] else 'FALSE'}", (RIGHT, -0.55, 0), size=17.5, color=GOOD, width=5.5),
                       self.label("infill on the concrete frame: it carries no load", "Ausfachung am Betonrahmen: sie trägt keine Last", (RIGHT, -0.9, 0), size=16.2, color=MUTED, width=5.5))
         link = segments([(cut + (0.05, 0.0, 0), (x0 - 0.2, y0 - height / 2, 0)), (cut + (0.05, 0.0, 0), (x0 - 0.2, y0 + height / 2, 0))], DATA, 1.0, 0.6)
@@ -515,7 +515,7 @@ class Beat4_PartialModels(_moving.RefreshMoving, _visuals.ClipScene):
         flag = _model.information(_model.role("column_example"), "LoadBearing", self.language())
         pset = next(name for name, props in _model.element(_model.role("column_example"))["psets"].items() if "LoadBearing" in props)
         piloti_note = self._legend((0.95, -0.38, 0), piloti=True)
-        chip = VGroup(frame_box(5.9, 0.46, GOOD).move_to((RIGHT, -0.85, 0)),
+        chip = VGroup(frame_box(5.9, 0.46, GOOD, glass=True).move_to((RIGHT, -0.85, 0)),
                       self.text(f"{pset}.LoadBearing = {'TRUE' if flag['value'] else 'FALSE'}", (RIGHT, -0.85, 0), size=16.2, color=GOOD, width=5.0))
         c2 = next(item for item in self.geometry["pilotis"] if item["tag"] == _model.role("column_example"))
         top = struct.at(c2["x"], c2["y"], c2["top"])

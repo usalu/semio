@@ -105,7 +105,7 @@ export async function verifyPrintPipelineSourcesV1(): Promise<void> {
   assert.match(thesisSource, /\\clist_if_in:nVT \{ thesis, phd \} \\l_semio_type_tl \{ \\semio_thesis_validate: \}/);
   assert.match(thesisSource, /\\AddToHook\{cmd\/makemainmatter\/before\}\{[\s\S]*?\\semio_thesis_numbering_restore:/);
 
-  assert.match(thesisSource, /\\bool_gset_true:N \\g_semio_cover_geometry_bool\s*\\group_begin:[\s\S]*?\\setlength\{\\parskip\}\{0pt\}[\s\S]*?\\end\{WindowArrangement\}\s*\\par\s*\\group_end:\s*\\semio_cover_geometry_restore:/);
+  assert.match(thesisSource, /\\semio_cover_geometry_begin:\s*\\group_begin:[\s\S]*?\\setlength\{\\parskip\}\{0pt\}[\s\S]*?\\end\{WindowArrangement\}\s*\\par\s*\\group_end:\s*\\semio_cover_geometry_restore:/);
   assert.match(thesisSource, /\\cs_new_protected:Npn \\semio_thesis_signature_line: \{\s*\\par\s*\\group_begin:[\s\S]*?\\SemioSans[\s\S]*?\\@author\s*\\par\s*\\group_end:/);
 
   const loader = readFileSync(join(latexRoot, "semio-viz-charts.sty"), "utf8");
@@ -114,7 +114,7 @@ export async function verifyPrintPipelineSourcesV1(): Promise<void> {
   const tableSource = readFileSync(join(latexRoot, "semio-table.sty"), "utf8");
     const headingTrackSource = windowSource.slice(windowSource.indexOf("\\newcount\\semio@chrome@heading@level"), windowSource.indexOf("\\newsavebox{\\semio@window@cap@slot}"));
     assert.match(readFileSync(join(latexRoot, "semio.cls"), "utf8"), /\\RequirePackage\[style=\\semio@citestyle,backend=bibtex,sorting=nyt,backref=true\]\{biblatex\}/);
-    assert.match(readFileSync(join(latexRoot, "semio-components.sty"), "utf8"), /\\NewDocumentCommand\{\\makecoverpages\}\{\}\{%[\s\S]*?\\newgeometry\{[^}]+\}\s*\\thispagestyle\{empty\}/);
+    assert.match(readFileSync(join(latexRoot, "semio-components.sty"), "utf8"), /\\NewDocumentCommand\{\\makecoverpages\}\{\}\{%[\s\S]*?\\semio_cover_geometry_begin:/);
     assert.match(headingTrackSource, /\\semio@chrome@heading@level=99\\relax/);
     assert.match(headingTrackSource, /\\ifnum\\semio@chrome@heading@candidate@level<\\semio@chrome@heading@level[\s\S]*?\\global\\semio@chrome@heading@level=\\semio@chrome@heading@candidate@level/);
     assert.match(headingTrackSource, /\\ifnum\\semio@chrome@heading@candidate@level=\\semio@chrome@heading@level[\s\S]*?\\semio@chrome@heading@set\{#2\}%[\s\S]*?\\else[\s\S]*?\\global\\let\\semio@nav@short@pending\\relax[\s\S]*?\\expandafter\\markright\\expandafter\{\\semio@chrome@heading\}/);

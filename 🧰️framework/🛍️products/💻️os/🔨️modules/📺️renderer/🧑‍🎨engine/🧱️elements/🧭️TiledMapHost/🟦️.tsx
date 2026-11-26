@@ -1,3 +1,4 @@
+import { Surface } from "@semio-tech/ui-react";
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/TiledMapHost/component.tsx
 /** 🗺️ `TiledMapHost` — tiled-map `ComponentSceneHost`: drives the map wasm session
@@ -30,9 +31,9 @@ export function TiledMapHost(props: ComponentSceneHostProps) {
 
   return (
     <div ref={containerRef} className="semio-tiled-map-host absolute inset-0 box-border min-h-0 min-w-0 overflow-hidden select-none" data-surface-id={node.surfaceId} style={{ touchAction: "none" }}>
-      <canvas key={renderAttempt} ref={canvasRef} role="application" aria-label={mapLabel} aria-hidden={rendererUnavailable || undefined} tabIndex={rendererUnavailable ? -1 : 0} onKeyDown={onMapKeyDown} className="absolute inset-0 block size-full touch-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring" />
+      <canvas key={renderAttempt} ref={canvasRef} role="application" aria-label={mapLabel} aria-hidden={rendererUnavailable || undefined} tabIndex={rendererUnavailable ? -1 : 0} onKeyDown={onMapKeyDown} style={rendererUnavailable ? { visibility: "hidden" } : undefined} className="absolute inset-0 block size-full touch-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring" />
       {rendererUnavailable ? (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-background p-2 text-center">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 p-2 text-center">
           <p role="alert" className="text-sm text-muted-foreground">{canvasUnavailableLabel}</p>
           <Button icon="rotate-ccw" text={retryLabel} onClick={retryRenderer} />
         </div>
@@ -41,7 +42,7 @@ export function TiledMapHost(props: ComponentSceneHostProps) {
       {marqueeOverlay?.shape === "polygon" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} /> : null}
       <ContextMenuController title={contextMenuTitleLabel} open={contextMenu.open} position={contextMenu.position} items={contextMenu.items} onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))} />
       {popupFeature && !rendererUnavailable ? (
-        <div ref={popupRef} className={cn("pointer-events-none absolute z-10 max-w-56 -translate-x-1/2 -translate-y-full px-2 py-1.5", floatingMenuSurfaceClass)} data-level="menu" data-glass-chip="" data-border-probe-art="" style={{ left: 0, top: 0 }}>
+        <Surface overlay level="menu" fill="glass" ref={popupRef} className={cn("pointer-events-none absolute z-10 max-w-56 -translate-x-1/2 -translate-y-full px-2 py-1.5", floatingMenuSurfaceClass)} data-border-probe-art="" style={{ left: 0, top: 0 }}>
           {(() => {
             const meta = overlayIndex.meta.get(popupFeature.kind)?.get(popupFeature.id);
             const title = meta?.label ?? popupFeature.id;
@@ -55,7 +56,7 @@ export function TiledMapHost(props: ComponentSceneHostProps) {
               </div>
             );
           })()}
-        </div>
+        </Surface>
       ) : null}
     </div>
   );

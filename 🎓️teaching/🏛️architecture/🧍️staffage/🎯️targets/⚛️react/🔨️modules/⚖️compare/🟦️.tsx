@@ -55,7 +55,7 @@ function ComparePaneCard(props: PaneProps): ReactElement {
   const previewPose = useMemo(() => asset === undefined ? undefined : { kind: "pose", pose: asset.presentation.defaultPose } as const, [asset]);
   const resolution = useMemo(() => (asset === undefined ? undefined : resolveViewpoint(asset, pane.viewpoint, scale, language)), [asset, pane.viewpoint, scale, language]);
   return (
-    <Column as="section" aria-labelledby={`compare-pane-${index}`} data-compare-pane={index} className="min-w-0 flex-1 bg-panel">
+    <Column as="section" aria-labelledby={`compare-pane-${index}`} data-compare-pane={index} className="min-w-0 flex-1">
       <Bar>
         <Cell className="flex-1">
           <h2 id={`compare-pane-${index}`} className="m-0 font-serif text-lg leading-tight">

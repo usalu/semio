@@ -11,7 +11,7 @@ use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::io::e
 use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSurface, SurfaceKind};
 #[cfg(test)]
 use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::EnvelopeSpace;
-use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::{ModelInference, model_graph::{instance, kinds}};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
 use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gbxml::codec::{attr, element, leaf, number, quantity};
@@ -70,7 +70,7 @@ pub struct MaterialRow {
 pub struct ConstructionRow {
     pub xml: String,
     pub name: String,
-    pub u_value: f64,
+    pub u_value: Option<f64>,
     pub layers: Vec<String>,
 }
 
@@ -92,6 +92,7 @@ pub struct ZoneRow {
     pub name: String,
     pub heating: Option<f64>,
     pub cooling: Option<f64>,
+    pub outdoor_air: Option<f64>,
 }
 
 /// 🏠️ A space.
@@ -136,7 +137,7 @@ pub struct SurfaceRow {
     pub site: String,
     pub kind: &'static str,
     pub exposed: bool,
-    pub construction: Option<String>,
+    pub construction: String,
     pub u_value: Option<f64>,
     pub spaces: Vec<String>,
     pub azimuth: f64,
@@ -160,6 +161,7 @@ pub struct Plan {
     pub zones: Vec<ZoneRow>,
     pub spaces: Vec<SpaceRow>,
     pub surfaces: Vec<SurfaceRow>,
+    pub space_boundaries: BTreeMap<String, Vec<(String, Vec<P3>)>>,
     pub zone_of: BTreeMap<String, String>,
     pub storeys: BTreeMap<String, String>,
     pub buildings: BTreeMap<String, String>,
@@ -200,8 +202,8 @@ fn opening_type(kind: SurfaceKind) -> &'static str {
 fn condition_type(heating: Option<f64>, cooling: Option<f64>) -> &'static str {
     match (heating.is_some(), cooling.is_some()) {
         (true, true) => "HeatedAndCooled",
-        (true, false) => "HeatedOnly",
-        (false, true) => "CooledOnly",
+        (true, false) => "Heated",
+        (false, true) => "Cooled",
         (false, false) => "Unconditioned",
     }
 }
@@ -228,21 +230,22 @@ pub const STAGES: &[Stage] = &[("zones", zones), ("spaces", spaces), ("construct
 
 pub fn zones(b: &mut Build<'_>) {
     let model = b.model;
-    let mut groups: BTreeMap<(String, Option<u64>, Option<u64>), Vec<&str>> = BTreeMap::new();
+    let mut groups: BTreeMap<(String, [Option<u64>; 3]), Vec<&str>> = BTreeMap::new();
     for space in b.inferred.energy_envelopes.keys() {
         let conditions = model.space_conditions.get(space);
         let key = |value: Option<f64>| value.map(f64::to_bits);
         let authored = model.spaces.get(space).and_then(|row| row.zone.clone()).filter(|zone| model.zones.contains_key(zone));
         let owner = authored.unwrap_or_else(|| format!(":{space}"));
-        groups.entry((owner, key(conditions.and_then(|row| row.heating_setpoint)), key(conditions.and_then(|row| row.cooling_setpoint)))).or_default().push(space.as_str());
+        let settings = conditions.map_or([None; 3], |row| [row.heating_setpoint, row.cooling_setpoint, row.ventilation_rate].map(key));
+        groups.entry((owner, settings)).or_default().push(space.as_str());
     }
     let mut variants: BTreeMap<&str, usize> = BTreeMap::new();
-    for (owner, _, _) in groups.keys() {
+    for (owner, _) in groups.keys() {
         *variants.entry(owner.as_str()).or_default() += 1;
     }
     let mut seen: BTreeMap<&str, usize> = BTreeMap::new();
     let mut rows = Vec::new();
-    for ((owner, heating, cooling), members) in &groups {
+    for ((owner, [heating, cooling, outdoor_air]), members) in &groups {
         let index = seen.entry(owner.as_str()).or_default();
         *index += 1;
         let base = match model.zones.get(owner) {
@@ -252,7 +255,7 @@ pub fn zones(b: &mut Build<'_>) {
         let name = if variants[owner.as_str()] > 1 && model.zones.contains_key(owner) { format!("{base} ({index})") } else { base };
         let cad = if variants[owner.as_str()] > 1 && model.zones.contains_key(owner) { format!("{owner}#{index}") } else { owner.trim_start_matches(':').to_string() };
         let xml = b.plan.names.id("zone", &cad);
-        rows.push((members.clone(), ZoneRow { xml, cad, name, heating: heating.map(f64::from_bits), cooling: cooling.map(f64::from_bits) }));
+        rows.push((members.clone(), ZoneRow { xml, cad, name, heating: heating.map(f64::from_bits), cooling: cooling.map(f64::from_bits), outdoor_air: outdoor_air.map(f64::from_bits) }));
     }
     for (members, row) in rows {
         for member in members {
@@ -368,7 +371,7 @@ pub fn constructions(b: &mut Build<'_>) {
                     .unwrap_or_else(|| format!("{} surface", surface.kind.name()));
                     let rounded = round9(u_value);
                     let xml = b.plan.names.id("construction", &format!("{}-{}", located.map_or("none", |(id, _)| id), number(rounded)));
-                    b.plan.constructions.push(ConstructionRow { xml: xml.clone(), name: format!("{label} U={}", number(rounded)), u_value: rounded, layers });
+                    b.plan.constructions.push(ConstructionRow { xml: xml.clone(), name: format!("{label} U={}", number(rounded)), u_value: Some(rounded), layers });
                     by_signature.insert(signature, xml.clone());
                     xml
                 }
@@ -401,7 +404,7 @@ fn windows(b: &mut Build<'_>) {
                 let Some(u_value) = model.door_types.get(door_type).and_then(|row| row.u_value) else { continue };
                 let xml = b.plan.names.id("construction", &format!("door-{door_type}"));
                 let name = model.door_types.get(door_type).map_or_else(|| door_type.clone(), |row| row.name.clone());
-                b.plan.door_constructions.insert(door_type.clone(), ConstructionRow { xml, name: format!("{name} U={}", number(round9(u_value))), u_value: round9(u_value), layers: Vec::new() });
+                b.plan.door_constructions.insert(door_type.clone(), ConstructionRow { xml, name: format!("{name} U={}", number(round9(u_value))), u_value: Some(round9(u_value)), layers: Vec::new() });
             }
             _ => {}
         }
@@ -444,6 +447,7 @@ pub fn surfaces(b: &mut Build<'_>) {
     let space_xml: BTreeMap<String, String> = b.plan.spaces.iter().map(|row| (row.cad.clone(), row.xml.clone())).collect();
     let mut names = std::mem::take(&mut b.plan.names);
     let mut rows = Vec::new();
+    let mut unspecified = None;
     for merged in semio_s_artifact_bim_model_components::standards::v1::subsets::any::io::export::gbxml::pairing::merge(&inferred.energy_envelopes) {
         let storey = storey_of.get(merged.space).copied().unwrap_or_default();
         let turn = bearing(b.model, storey);
@@ -466,13 +470,25 @@ pub fn surfaces(b: &mut Build<'_>) {
             }
         }
         let spaces: Vec<String> = merged.spaces().iter().filter_map(|space| space_xml.get(*space).cloned()).collect();
+        let construction = b.plan.construction_of.get(&key).cloned().unwrap_or_else(|| {
+            unspecified.get_or_insert_with(|| {
+                let xml = names.id("construction", "unspecified");
+                b.plan.constructions.push(ConstructionRow { xml: xml.clone(), name: "Unspecified construction".to_owned(), u_value: None, layers: Vec::new() });
+                xml
+            }).clone()
+        });
+        let xml = names.id("surface", &merged.surface.id);
+        b.plan.space_boundaries.entry(merged.space.to_owned()).or_default().push((xml.clone(), polygon.clone()));
+        if let Some((space, other)) = merged.other {
+            b.plan.space_boundaries.entry(space.to_owned()).or_default().push((xml.clone(), polygon_of(other, turn)));
+        }
         rows.push(SurfaceRow {
-            xml: names.id("surface", &merged.surface.id),
+            xml,
             cad,
             site,
             kind,
             exposed: exposed_to_sun(kind),
-            construction: b.plan.construction_of.get(&key).cloned(),
+            construction,
             u_value: merged.surface.u_value.map(round9),
             spaces,
             azimuth: frame.azimuth(),
@@ -509,9 +525,7 @@ fn opening_node(row: &OpeningRow, azimuth: f64, tilt: f64) -> XmlNode {
 }
 
 fn surface_node(row: &SurfaceRow) -> XmlNode {
-    let mut attrs = vec![attr("id", &row.xml), attr("surfaceType", row.kind)];
-    attrs.extend(row.construction.iter().map(|id| attr("constructionIdRef", id)));
-    attrs.push(attr("exposedToSun", row.exposed));
+    let attrs = vec![attr("id", &row.xml), attr("surfaceType", row.kind), attr("constructionIdRef", &row.construction), attr("exposedToSun", row.exposed)];
     let mut children = vec![leaf("Name", Vec::new(), &row.cad[0])];
     children.extend(row.spaces.iter().map(|space| element("AdjacentSpaceId", vec![attr("spaceIdRef", space)], Vec::new())));
     children.push(rectangular(row.azimuth, row.tilt, &row.rect.corner, &row.rect));
@@ -537,16 +551,25 @@ fn space_node(row: &SpaceRow, plan: &Plan) -> XmlNode {
     children.extend(row.people.map(|value| quantity("PeopleNumber", Some("NumberOfPeople"), value)));
     children.extend(row.lighting.map(|value| quantity("LightPowerPerArea", Some("WattPerSquareMeter"), value)));
     children.extend(row.equipment.map(|value| quantity("EquipPowerPerArea", Some("WattPerSquareMeter"), value)));
-    children.extend(row.outdoor_air.map(|value| quantity("OAFlowPerArea", Some("LPerSecPerSquareM"), value)));
     children.push(leaf("CADObjectId", Vec::new(), &row.cad));
+    if let Some(boundaries) = plan.space_boundaries.get(&row.cad) {
+        children.extend(boundaries.iter().map(|(surface, polygon)| {
+            element("SpaceBoundary", vec![attr("surfaceIdRef", surface)], vec![poly_loop(polygon)])
+        }));
+    }
     element("Space", attrs, children)
 }
 
-fn construction_node(row: &ConstructionRow, layers: &BTreeMap<String, String>) -> XmlNode {
-    let _ = layers;
-    let mut children = vec![leaf("Name", Vec::new(), &row.name), quantity("U-value", Some("WPerSquareMeterK"), row.u_value)];
+fn construction_node(row: &ConstructionRow) -> XmlNode {
+    let mut attrs = vec![attr("id", &row.xml)];
+    let mut children = vec![leaf("Name", Vec::new(), &row.name)];
+    if let Some(value) = row.u_value {
+        children.push(quantity("U-value", Some("WPerSquareMeterK"), value));
+    } else {
+        attrs.push(attr("constructionIsSchematic", true));
+    }
     children.extend(row.layers.iter().map(|layer| element("LayerId", vec![attr("layerIdRef", layer)], Vec::new())));
-    element("Construction", vec![attr("id", &row.xml)], children)
+    element("Construction", attrs, children)
 }
 
 fn campus_node(plan: &Plan, model: &ModelSnapshot, inferred: &ModelInference, site_id: &str) -> Option<XmlNode> {
@@ -555,7 +578,7 @@ fn campus_node(plan: &Plan, model: &ModelSnapshot, inferred: &ModelInference, si
     let location = element(
         "Location",
         Vec::new(),
-        vec![quantity("Longitude", None, site.longitude), quantity("Latitude", None, site.latitude), quantity("Elevation", None, site.elevation), quantity("CADModelAzimuth", None, 0.0), leaf("Name", Vec::new(), &site.name)],
+        vec![leaf("ZipcodeOrPostalCode", Vec::new(), ""), quantity("Longitude", None, site.longitude), quantity("Latitude", None, site.latitude), quantity("Elevation", None, site.elevation), quantity("CADModelAzimuth", None, 0.0), leaf("Name", Vec::new(), &site.name)],
     );
     let mut children = vec![location];
     for (building_id, building) in model.buildings.iter().filter(|(_, building)| building.site == site_id) {
@@ -569,7 +592,7 @@ fn campus_node(plan: &Plan, model: &ModelSnapshot, inferred: &ModelInference, si
             inner.push(element("BuildingStorey", vec![attr("id", plan.storeys.get(storey_id).map_or("", String::as_str))], vec![leaf("Name", Vec::new(), &storey.name), quantity("Level", None, round9(level))]));
         }
         inner.extend(spaces.into_iter().map(|row| space_node(row, plan)));
-        children.push(element("Building", vec![attr("id", building_xml)], inner));
+        children.push(element("Building", vec![attr("id", building_xml), attr("buildingType", "Unknown")], inner));
     }
     children.extend(plan.surfaces.iter().filter(|row| row.site == site_id).map(surface_node));
     Some(element("Campus", vec![attr("id", xml)], std::iter::once(leaf("Name", Vec::new(), &site.name)).chain(children).collect()))
@@ -587,7 +610,7 @@ pub fn document(plan: &Plan, model: &ModelSnapshot, inferred: &ModelInference) -
         inner.extend(row.g_value.map(|value| leaf("SolarHeatGainCoeff", vec![attr("unit", "Fraction"), attr("solarIncidentAngle", "0")], &number(value))));
         children.push(element("WindowType", vec![attr("id", &row.xml)], inner));
     }
-    children.extend(plan.constructions.iter().chain(plan.door_constructions.values()).map(|row| construction_node(row, &plan.layers)));
+    children.extend(plan.constructions.iter().chain(plan.door_constructions.values()).map(construction_node));
     let by_layer: BTreeMap<&String, &MaterialRow> = plan.layers.iter().filter_map(|(material, layer)| plan.materials.values().find(|row| row.xml == *material).map(|row| (layer, row))).collect();
     for (layer, row) in &by_layer {
         children.push(element("Layer", vec![attr("id", layer)], vec![element("MaterialId", vec![attr("materialIdRef", &row.xml)], Vec::new())]));
@@ -608,12 +631,12 @@ pub fn document(plan: &Plan, model: &ModelSnapshot, inferred: &ModelInference) -
     }
     for row in &plan.zones {
         let mut inner = vec![leaf("Name", Vec::new(), &row.name)];
+        inner.extend(row.outdoor_air.map(|value| quantity("OAFlowPerArea", Some("LPerSecPerSquareM"), value)));
         inner.extend(row.heating.map(|value| quantity("DesignHeatT", Some("C"), value)));
         inner.extend(row.cooling.map(|value| quantity("DesignCoolT", Some("C"), value)));
         inner.push(leaf("CADObjectId", Vec::new(), &row.cad));
         children.push(element("Zone", vec![attr("id", &row.xml)], inner));
     }
-    children.push(element("DocumentHistory", Vec::new(), vec![element("ProgramInfo", vec![attr("id", "program-semio")], vec![leaf("CompanyName", Vec::new(), "semio"), leaf("ProductName", Vec::new(), "semio BIM"), leaf("Platform", Vec::new(), &model.project.name)])]));
     element(
         "gbXML",
         vec![attr("xmlns", NAMESPACE), attr("version", VERSION), attr("useSIUnitsForResults", "true"), attr("temperatureUnit", "C"), attr("lengthUnit", "Meters"), attr("areaUnit", "SquareMeters"), attr("volumeUnit", "CubicMeters")],
@@ -647,14 +670,16 @@ pub fn inferred_to_gbxml(model: &ModelSnapshot, inferred: &ModelInference) -> Re
     Ok((text, plan.notes))
 }
 
-/// 📤️ The gbXML text of `model` plus a note per item that could not be written: the inference comes from the shared session.
+const GBXML_FIELDS: u64 = kinds::ENERGY | kinds::LEVELS;
+
+/// 📤️ The gbXML text of `model` and the items excluded from the thermal envelope.
 pub fn export_gbxml(model: &ModelSnapshot) -> Result<(String, Vec<String>), String> {
-    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| inferred_to_gbxml(model, inferred)).map_err(|error| error.to_string())?
+    instance::probe::<GBXML_FIELDS, _>(None, model, |inferred| inferred_to_gbxml(model, inferred)).map_err(|error| error.to_string())?
 }
 
 /// 📊️ The canonical JSON table of the export of `model` (see [`tables`]): the table the lxml, shapely and numpy oracle measures from the written file.
 pub fn export_table(model: &ModelSnapshot) -> Result<String, String> {
-    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| plan_of(model, inferred).map(|plan| tables::table_json(&plan, model))).map_err(|error| error.to_string())?
+    instance::probe::<GBXML_FIELDS, _>(None, model, |inferred| plan_of(model, inferred).map(|plan| tables::table_json(&plan, model))).map_err(|error| error.to_string())?
 }
 
 /// 🧵️ An export that runs one [`STAGES`] entry per step, so a job can report how far it is and stop between two stages; it keeps the plan and no borrow of the inference.

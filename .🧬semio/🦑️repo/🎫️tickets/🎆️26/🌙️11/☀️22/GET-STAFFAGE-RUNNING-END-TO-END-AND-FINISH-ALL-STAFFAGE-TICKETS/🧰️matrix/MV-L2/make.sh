@@ -1,0 +1,9 @@
+#!/bin/zsh
+# 🏭️ The repair of one asset of round MV-L2, the last step of its chain (after the make scripts of the lanes before: `../MV-2/make.sh`, `../ML-3/make-rowan.sh`, `../MU`), idempotent, inside the grant of the worker: `timpani.ts --write` for `used-timpani-pair`; for a plant `tube.ts --ops tube/<id>.json --write` when that file exists (slender strokes as the lofts of their tubes, their plates removed), `../MV-3/body.ts --ops body/<id>.json --write` when that file exists (one rounded body per foliage part in the place of its plates), `../MV-3/anchors.ts --ops anchors/<id>.json --write` when that file exists (anchors on the drawing of their bone). It prints the digest of the catalog file before and after. make.sh <id>
+source "${0:A:h}/env.sh"
+a="$1"; f="$(ls "$C"/*/"$a"/🔣️.json)"; mkdir -p "$GEN/log"; b="$(shasum -a 256 "$f" | cut -c1-16)"; cd "$T"
+if [[ "$a" == used-timpani-pair ]]; then timeout 600 "$B" "$W/timpani.ts" "$a" --write 2>&1 | tail -1 | cut -c1-200; fi
+if [[ -f "$W/tube/$a.json" ]]; then timeout 1800 "$B" "$W/tube.ts" "$a" --ops "$W/tube/$a.json" --write > "$GEN/log/$a-make-tube.log" 2>&1; echo "tube exit $? $(tail -2 "$GEN/log/$a-make-tube.log" | cut -c1-160 | tr '\n' ';')"; fi
+if [[ -f "$W/body/$a.json" ]]; then timeout 1800 "$B" "$U/🧰️matrix/MV-3/body.ts" "$a" --ops "$W/body/$a.json" --write > "$GEN/log/$a-make-body.log" 2>&1; echo "body exit $? $(tail -2 "$GEN/log/$a-make-body.log" | cut -c1-160 | tr '\n' ';')"; fi
+if [[ -f "$W/anchors/$a.json" ]]; then timeout 3000 "$B" "$U/🧰️matrix/MV-3/anchors.ts" "$a" --ops "$W/anchors/$a.json" --write > "$GEN/log/$a-make-anchors.log" 2>&1; echo "anchors exit $? $(tail -2 "$GEN/log/$a-make-anchors.log" | cut -c1-160 | tr '\n' ';')"; fi
+echo "$a catalog file $b -> $(shasum -a 256 "$f" | cut -c1-16) ($(wc -c < "$f" | tr -d ' ') bytes)"

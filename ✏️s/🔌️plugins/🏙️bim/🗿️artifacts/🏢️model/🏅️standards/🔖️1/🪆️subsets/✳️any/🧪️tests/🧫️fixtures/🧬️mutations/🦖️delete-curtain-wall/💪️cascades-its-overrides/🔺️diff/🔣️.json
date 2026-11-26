@@ -1,1 +1,20 @@
-{}
+{
+  "curtain_walls": {
+    "cw-1": {
+      "entry": "Deleted"
+    }
+  },
+  "curtain_panel_overrides": {
+    "ov-1": {
+      "entry": "Deleted"
+    },
+    "ov-2": {
+      "entry": "Deleted"
+    }
+  },
+  "openings": {
+    "o-1": {
+      "entry": "Deleted"
+    }
+  }
+}

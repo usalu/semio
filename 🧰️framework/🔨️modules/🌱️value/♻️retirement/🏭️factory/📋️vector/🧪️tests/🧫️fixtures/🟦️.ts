@@ -8,8 +8,8 @@ test("original vector issuer and refusal work follow the independent transition 
   const rows = db.query(`SELECT work FROM (
     SELECT 1 AS ordinal, 1 AS work UNION ALL
     SELECT 2, 1 UNION ALL
-    SELECT 3, CASE WHEN ? THEN 2 ELSE 4 END UNION ALL
-    SELECT 4, 4
+    SELECT 3, 1 UNION ALL
+    SELECT 4, CASE WHEN ? THEN 3 ELSE 5 END
   ) ORDER BY ordinal`).all(fixture.refuseFirst ? 1 : 0) as { work: number }[];
   expect(rows.map(row => row.work)).toEqual(fixture.initialWork);
   db.close();

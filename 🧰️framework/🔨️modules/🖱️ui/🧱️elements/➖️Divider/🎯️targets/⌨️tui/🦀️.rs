@@ -5,7 +5,7 @@
 use semio_ui_tui_core::cell::CellBuffer;
 use semio_ui_tui_core::geometry::{Pos, Rect};
 use semio_ui_tui_core::text::display_width;
-use semio_ui_tui_core::theme::{Role, Surface, Theme};
+use semio_ui_tui_core::theme::{Role, Theme};
 use crate::widget::DividerState;
 
 /// ➖️ Turns the vertical wall cell on either side of the rule into `├` / `┤` (heavy `┣` / `┫`), so a divider meeting a window's outline joins it instead of stopping against a `│`.
@@ -25,7 +25,7 @@ fn join_walls(buf: &mut CellBuffer, rect: Rect) {
 }
 
 pub fn paint_divider(d: &DividerState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
-    let bg = buf.get(rect.x, rect.y).map_or(theme.surface(Surface::Base), |c| c.bg);
+    let bg = buf.owner_background();
     let fg = theme.role(Role::BorderNormal);
     buf.hline(Pos { x: rect.x, y: rect.y }, rect.width, '\u{2500}', fg, bg);
     join_walls(buf, rect);

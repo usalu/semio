@@ -89,7 +89,9 @@ pub(super) fn paint_input_node_step(
             let result = retained_fixed_output_budgeted(draw, if file_chrome.is_some() { 64 } else { RETAINED_NODE_FIXED_OUTPUT_ITEMS }, |draw| {
                 push_control_border(draw, frame, theme, if refused { theme.error } else if ringed || focus_ring_visible(flags) { theme.selected } else { theme.border_normal }, theme.input_bg, if refused { semio_ui_draw_contract::SharedBorderState::Invalid } else if ringed || focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
                 if let Some((swatch, color, _)) = swatch {
-                    draw.push_solid([swatch.x, swatch.y, swatch.w, swatch.h], color);
+                    if color.a > 0.0 {
+                        draw.push_solid([swatch.x, swatch.y, swatch.w, swatch.h], color);
+                    }
                     if let Some((caption, _)) = file_chrome {
                         draw_text_on(draw, atlas, caption, swatch.x + theme.padding_standard, swatch.y + swatch.h * 0.65, theme.font_size_small, theme.text);
                     }

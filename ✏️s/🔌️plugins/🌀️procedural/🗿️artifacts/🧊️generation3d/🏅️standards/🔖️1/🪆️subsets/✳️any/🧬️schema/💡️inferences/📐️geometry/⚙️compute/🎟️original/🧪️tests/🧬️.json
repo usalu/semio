@@ -13,7 +13,8 @@
     "cancelledScratchConserved",
     "plane",
     "line",
-    "translation"
+    "translation",
+    "solids"
   ],
   "properties": {
     "version": {
@@ -302,6 +303,55 @@
         },
         "metadataPreserved": {
           "const": true
+        }
+      }
+    },
+    "solids": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "inputs",
+          "bounds",
+          "faces",
+          "volume"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "brep.primitive.box",
+              "brep.primitive.sphere"
+            ]
+          },
+          "inputs": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 3,
+            "additionalProperties": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "bounds": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "$ref": "#/definitions/vector"
+            }
+          },
+          "faces": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "volume": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
         }
       }
     }

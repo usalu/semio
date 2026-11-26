@@ -3,6 +3,7 @@ import {createHash} from "node:crypto";
 import {spawn} from "node:child_process";
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {join,resolve} from "node:path";
+import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
 import {startRemoteCacheServerV1,type RemoteCacheServerV1} from "../../../../../../🏗️build/🌐️remote-cache/🖥️server/🟦️.ts";
 import {cargoScratchBaseV1} from "../../../🧪️tests/🏖️scratch/🟦️.ts";
@@ -13,9 +14,9 @@ import {leakedRootKindsV1,parseRootHintV1,rootHintBytesV1,rootHintKeyV1,rootPath
 process.env.SEMIO_UNIT_CACHE_UPLOADER_IDLE_MS="1500";
 
 /** 🌳️ A unit whose compiled bytes hold a real directory that its source never names (a procedural macro that writes the caller's manifest directory into the program) is shared between machines whose directories are equal and between those only: the producer publishes a root hint beside the neutral key and the unit under a key that names the directories; a machine at another root builds it itself. The units without such a directory stay shared among all roots, and a unit built through the fleet equals a clean local build byte for byte. */
-const here=fileURLToPath(new URL(".",import.meta.url)),script=resolve(here,"../../../📜️script.ts"),counter=resolve(here,"../🔢️count/🟦️.ts"),fleet=FLEET_POLICY_V1,base=cargoScratchBaseV1(),cargo=process.env.SEMIO_TEST_CARGO??"cargo";
+const here=fileURLToPath(new URL(".",import.meta.url)),script=resolve(here,"../../../📜️script.ts"),counter=resolve(here,"../🔢️count/🟦️.ts"),fleet=FLEET_POLICY_V1,cargo=process.env.SEMIO_TEST_CARGO??"cargo";
 const scratch:string[]=[],servers:RemoteCacheServerV1[]=[];
-const directory=(label:string)=>{const path=realpathSync(mkdtempSync(join(base,"rt-"+label+"-")));scratch.push(path);return path;};
+const directory=(label:string,base=cargoScratchBaseV1())=>{const path=realpathSync(mkdtempSync(join(base,"rt-"+label+"-")));scratch.push(path);return path;};
 afterAll(async()=>{for(const server of servers)await server.stop().catch(()=>{});if(!process.env.SEMIO_TEST_KEEP)for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 const sha=(text:string)=>createHash("sha256").update(text).digest("hex");
 
@@ -30,8 +31,15 @@ test("the root hint is an action result of one closed shape, keyed by the neutra
  expect(ROOT_KINDS_V1).not.toContain("lane");
 });
 
+test("the leak scan finds split UTF-8 paths and refuses unreadable compiler outputs",()=>{
+ const dir=directory("split",tmpdir()),path=join(dir,"unit.rlib"),root="/équipe/🧰️framework";
+ writeFileSync(path,Buffer.concat([Buffer.alloc(64*1024-2),Buffer.from(root),Buffer.alloc(80*1024)]));
+ expect(leakedRootKindsV1([path],{workspace:root})?.kinds).toEqual(["workspace"]);
+ expect(leakedRootKindsV1([join(dir,"missing.rlib")],{workspace:root})?.kinds).toEqual(["unreadable"]);
+});
+
 test("the leak scan names which of the machine's directories a compiled output holds, in every spelling, and ignores dependency files",()=>{
- const dir=directory("scan"),real=join(dir,"real");mkdirSync(real);
+ const dir=directory("scan",tmpdir()),real=join(dir,"real");mkdirSync(real);
  writeFileSync(join(dir,"a.rmeta"),Buffer.concat([Buffer.from("xx"),Buffer.from(real+"/src/lib.rs"),Buffer.from("yy")]));writeFileSync(join(dir,"b.rlib"),"clean");writeFileSync(join(dir,"c.d"),real);
  expect(leakedRootKindsV1([join(dir,"c.d"),join(dir,"b.rlib")],{manifest:real})).toBeUndefined();
  const found=leakedRootKindsV1([join(dir,"b.rlib"),join(dir,"a.rmeta")],{manifest:real,cwd:join(dir,"other"),lane:"/lane/x/long"});

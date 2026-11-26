@@ -448,8 +448,8 @@ export function TaskManagerPanel({ rows, onAction, runtimeAttached = true }: Tas
       id: "actions",
       header: labels.columns.actions,
       cell: "row",
-      className: "sticky right-0 z-panel bg-background",
-      headerClassName: "px-single sticky right-0 z-panel bg-background",
+      className: "sticky right-0 z-panel ui-surface",
+      headerClassName: "px-single sticky right-0 z-panel ui-surface",
       accessor: (row) => (
         <SharedBorderRow edges={["left", "right"]} className="w-full">
           <Button type="button" variant="outline" icon="pause" aria-label={`${labels.actions.suspend}: ${row.actorId}`} onClick={() => onAction("suspend", row.actorId)} />

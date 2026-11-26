@@ -31,10 +31,21 @@ test("the policy and the verdict are closed by the schema and the corpus by its 
   expect(entry.budgetMegabytes,`${entry.crate}|${entry.target} declares at most 10 percent headroom`).toBeLessThanOrEqual(Math.ceil(entry.measuredMegabytes*1.1));
   expect(entry.budgetMegabytes,`${entry.crate}|${entry.target} stays below the cap share of the physical memory`).toBeLessThan(Math.floor(policy.classes["16g"].hostMegabytes*6000/10000));
  }
- expect(policy.carving.find(entry=>entry.crate==="semio_hub_sourcing_component")).toMatchObject({measuredMegabytes:5519,budgetMegabytes:5600});
+ expect(policy.carving.find(entry=>entry.crate==="semio_hub_cad_component")).toMatchObject({measuredMegabytes:8036,budgetMegabytes:8500});
+ expect(policy.carving.filter(entry=>/^semio_(hub_sourcing_component|s_plugin_sourcing_(beams|slabs|windows)_component)$/u.test(entry.crate)),"the sourcing closure finals are carved under the final budget").toEqual([]);
  expect(policy.carving.find(entry=>entry.crate==="semio_hub_sourcing")).toMatchObject({measuredMegabytes:4273,budgetMegabytes:4500});
- for(const [crate,measured,budget] of [["semio_hub_stdio",8953,9450],["semio_hub_stdio_component",8792,9300],["semio_hub_stdio_office",7939,8400],["semio_hub_space_component",5055,5300],["semio_s_artifact_stdio_pdf_model",3330,3500],["semio_s_artifact_bim_model_snapshot",2772,2900]] as const)expect(policy.carving.find(entry=>entry.crate===crate&&entry.target==="wasm32-wasip2"),crate).toMatchObject({measuredMegabytes:measured,budgetMegabytes:budget});
+ for(const [crate,measured,budget] of [["semio_hub_stdio",8953,9450],["semio_hub_stdio_component",9306,9820],["semio_hub_stdio_office_component",4231,4470],["semio_hub_stdio_office",7939,8400],["semio_hub_space_component",5055,5300],["semio_hub_process_component",8944,9800],["semio_s_artifact_stdio_pdf_model",3525,3720],["semio_s_artifact_bim_model_snapshot",3016,3190],["semio_s_artifact_fem_2d_model",1549,1640]] as const)expect(policy.carving.find(entry=>entry.crate===crate&&entry.target==="wasm32-wasip2"),crate).toMatchObject({measuredMegabytes:measured,budgetMegabytes:budget});
  for(const entry of policy.carving)expect(entry.budgetMegabytes,`${entry.crate} fits one heavy job on a 16 GB host: hub aggregate and component units (semio_hub_*, built only under the single-slot resource guard) up to 10000 MB, everything else up to 9000 MB`).toBeLessThanOrEqual(entry.crate.startsWith("semio_hub_")?10000:9000);
+ for(const family of policy.families){
+  expect(family.budgetMegabytes,`${family.family} budgets at least its class measurement`).toBeGreaterThanOrEqual(family.measuredMegabytes);
+  expect(family.budgetMegabytes,`${family.family} declares at most 10 percent over its class measurement`).toBeLessThanOrEqual(Math.ceil(family.measuredMegabytes*1.1));
+  expect(family.budgetMegabytes,`${family.family} stays below the cap share of the physical memory`).toBeLessThan(Math.floor(policy.classes["16g"].hostMegabytes*6000/10000));
+  expect(family.measuredMegabytes).toBeGreaterThan(policy.classes["16g"].libraryMegabytes);
+  expect(family.source.length).toBeGreaterThan(0);
+  expect(()=>new RegExp(family.pattern,"u")).not.toThrow();
+ }
+ expect(new Set(policy.families.map(family=>family.family)).size).toBe(policy.families.length);
+ for(const entry of policy.carving)expect(policy.families.some(family=>family.target===entry.target&&new RegExp(`^(?:${family.pattern})$`,"u").test(entry.crate)),`${entry.crate} is listed once: a family member has no entry of its own`).toBe(false);
  expect(UNIT_CEILING_POLICY_V1).toBe(policy);
  expect(()=>unitCeilingVerdictV1({...policy,workerClass:"nope"},[])).toThrow("Unknown worker class");
 });
@@ -55,7 +66,7 @@ test("the runtime ceiling of every corpus command line equals the independent Py
  expect(expected).toHaveLength(corpus.commands.length);
  expect(corpus.commands.map(item=>runtimeCeilingOfCommandV1(policy,item.command))).toEqual(expected);
  const by=(id:string)=>runtimeCeilingOfCommandV1(policy,corpus.commands.find(item=>item.id===id)!.command);
- expect(by("listed-final-declared-budget")).toEqual({unit:"semio_hub_sourcing_component|wasm32-wasip2",kind:"final",megabytes:5600,listed:true,measuredMegabytes:5519});
+ expect(by("listed-final-declared-budget")).toEqual({unit:"semio_hub_cad_component|wasm32-wasip2",kind:"final",megabytes:8500,listed:true,measuredMegabytes:8036});
  expect(by("listed-hub-sourcing-equals-form")).toMatchObject({megabytes:4500,listed:true});
  expect(by("unlisted-final-budget")).toEqual({unit:"semio_new_hub|wasm32-wasip2",kind:"final",megabytes:4096,listed:false});
  expect(by("listed-crate-other-target-is-unlisted")).toMatchObject({megabytes:1536,listed:false});
@@ -65,10 +76,15 @@ test("the runtime ceiling of every corpus command line equals the independent Py
  expect(by("listed-hub-space-component-final-declared-budget")).toEqual({unit:"semio_hub_space_component|wasm32-wasip2",kind:"final",megabytes:5300,listed:true,measuredMegabytes:5055});
  expect(by("listed-hub-aggregate-above-previous-budget-still-library")).toMatchObject({kind:"library",megabytes:9450,listed:true});
  expect(by("listed-hub-office-aggregate-dual-crate-type-is-final")).toMatchObject({kind:"final",megabytes:8400,listed:true});
- expect(by("listed-hub-stdio-component-final-declared-budget")).toEqual({unit:"semio_hub_stdio_component|wasm32-wasip2",kind:"final",megabytes:9300,listed:true,measuredMegabytes:8792});
- expect(by("unlisted-hub-stdio-office-component-final-until-measured"),"no entry without a measurement: the final ceiling holds until it is measured").toEqual({unit:"semio_hub_stdio_office_component|wasm32-wasip2",kind:"final",megabytes:4096,listed:false});
- expect(by("listed-pdf-model-drifted-budget")).toMatchObject({megabytes:3500,measuredMegabytes:3330});
- expect(by("listed-bim-model-snapshot-library-declared-budget")).toMatchObject({kind:"library",megabytes:2900,measuredMegabytes:2772});
+ expect(by("listed-hub-stdio-component-final-declared-budget")).toEqual({unit:"semio_hub_stdio_component|wasm32-wasip2",kind:"final",megabytes:9820,listed:true,measuredMegabytes:9306});
+ expect(by("listed-hub-stdio-office-component-final-declared-budget")).toEqual({unit:"semio_hub_stdio_office_component|wasm32-wasip2",kind:"final",megabytes:4470,listed:true,measuredMegabytes:4231});
+ expect(by("listed-fem-2d-model-just-above-library-ceiling")).toEqual({unit:"semio_s_artifact_fem_2d_model|wasm32-wasip2",kind:"library",megabytes:1640,listed:true,measuredMegabytes:1549});
+ expect(by("listed-ifc-catalog-entities-shard-00"),"a shard without an entry of its own gets the budget of its family, not the library ceiling").toEqual({unit:"semio_s_artifact_stdio_ifc4x3_add2_catalog_entities_00|wasm32-wasip2",kind:"library",megabytes:3470,listed:true,measuredMegabytes:3282});
+ expect(by("unmatched-ifc-name-stays-unlisted"),"a name that is no shard of the family matches no pattern").toEqual({unit:"semio_s_artifact_stdio_ifc4x3_add2_catalog_entities_extra|wasm32-wasip2",kind:"library",megabytes:1536,listed:false});
+ expect(by("family-wrong-target-is-unlisted")).toMatchObject({megabytes:1536,listed:false});
+ expect(by("listed-ifc2x3-family-variance")).toEqual({unit:"semio_s_artifact_stdio_ifc2x3_catalog_entities_00|wasm32-wasip2",kind:"library",megabytes:3630,listed:true,measuredMegabytes:3440});
+ expect(by("listed-pdf-model-drifted-budget")).toMatchObject({megabytes:3720,measuredMegabytes:3525});
+ expect(by("listed-bim-model-snapshot-library-declared-budget")).toMatchObject({kind:"library",megabytes:3190,measuredMegabytes:3016});
  for(const id of ["unlisted-test-executable-host","unlisted-bin-host","unlisted-staticlib-wasm"])expect(by(id),id).toMatchObject({kind:"final",megabytes:4096,listed:false});
  expect(compileUnitOfCommandV1("rustc --crate-name a --crate-type rlib --crate-type cdylib")).toEqual({crate:"a",target:"host",types:["rlib","cdylib"]});
  for(const item of corpus.commands){const ceiling=runtimeCeilingOfCommandV1(policy,item.command);if(ceiling)expect(ceiling.megabytes,item.id).toBeGreaterThanOrEqual(ceiling.kind==="final"?policy.classes["16g"].finalMegabytes:policy.classes["16g"].libraryMegabytes);}

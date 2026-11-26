@@ -394,7 +394,7 @@
       "id": "retained typed depth",
       "operation": "cloneDepth",
       "kind": "depthLimit",
-      "message": "retained box clone structural depth limit exceeded",
+      "message": "nested clone requires enclosing depth",
       "path": [
         "body",
         3,
@@ -402,7 +402,7 @@
       ],
       "expected": {
         "kind": "depthLimit",
-        "display": "body.3.field.retained box clone structural depth limit exceeded"
+        "display": "body.3.field.nested clone requires enclosing depth"
       }
     },
     {

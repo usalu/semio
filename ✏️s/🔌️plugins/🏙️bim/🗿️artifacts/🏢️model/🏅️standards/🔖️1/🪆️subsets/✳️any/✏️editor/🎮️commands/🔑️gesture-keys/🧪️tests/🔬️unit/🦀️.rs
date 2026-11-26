@@ -32,7 +32,7 @@ async fn each_command_is_one_key_of_the_gesture() {
 #[semio_framework_async_macros::async_test]
 async fn every_key_binds_an_existing_command_and_no_key_is_bound_twice() {
     for (keys, action) in KEYBINDINGS {
-        let command = semio_s_artifact_bim_model_bim::editor::bim::BimModelApp::command_from_action(action, None, None).unwrap_or_else(|error| panic!("{keys}: {}", error.message));
+        let command = semio_s_artifact_bim_model_bim::editor::bim::BimModelApp::command_from_action(action, &mut None, &mut None).unwrap_or_else(|error| panic!("{keys}: {}", error.message));
         assert!(semio_s_artifact_bim_model_bim::editor::bim::BIM_TOOL_IDS.contains(&command.command_id()), "{action} is a registered tool");
     }
     let all = semio_s_artifact_bim_model_bim::editor::bim::all_keybindings();

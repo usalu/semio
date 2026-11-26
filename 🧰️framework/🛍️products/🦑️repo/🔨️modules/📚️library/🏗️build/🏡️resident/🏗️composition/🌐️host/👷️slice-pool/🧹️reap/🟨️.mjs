@@ -1,6 +1,7 @@
 /** 🧹 Processes a slice worker thread started belong to the thread, which cannot be told to stop them once it is terminated, so the pool tracks them itself: pids the worker reports, processes carrying the load's token in their environment (children inherit it; POSIX), and on Windows the new children of the service while no other load runs. A victim and all its descendants are interrupted, then killed after a grace period, as a process group where it leads one (POSIX) or with the system's process-tree termination (Windows). The token also lets a restarted service find what a dead service left behind.
  * @see ../🟨️.mjs */
 import {execFileSync} from "node:child_process";
+import {processPidExistsV1} from "../../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs"
 import {readFileSync,readdirSync} from "node:fs";
 
 export const SLICE_JOB_VARIABLE_V1="SEMIO_SLICE_JOB";
@@ -47,7 +48,7 @@ export function withDescendantsV1(table,roots){
 }
 
 /** 🧹 A reaper over a process table; a graph service or its launcher (`repo service host run` in its command line), other than the one this pool belongs to, and everything below it is never a victim, even when it was started by a command a slice worker ran and so carries the token of that load and sits in its process tree: a service outlives the load that happened to start it. `list` and `send` are injectable (tests, platforms). */
-export function createReaperV1({list=listProcessesV1,send=signalProcessTreeV1,graceMilliseconds=SLICE_GRACE_MILLISECONDS_V1,alive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error?.code==="EPERM";}}}={}){
+export function createReaperV1({list=listProcessesV1,send=signalProcessTreeV1,graceMilliseconds=SLICE_GRACE_MILLISECONDS_V1,alive=pid=>processPidExistsV1(pid)}={}){
  const victims=(table,scope)=>{
   const present=new Set(table.map(row=>row.pid)),roots=new Set([...scope.pids??[]].filter(pid=>present.has(pid)&&pid!==process.pid));
   for(const row of table)if(row.pid!==process.pid&&scope.match?.(row))roots.add(row.pid);
@@ -73,7 +74,7 @@ export function createReaperV1({list=listProcessesV1,send=signalProcessTreeV1,gr
 }
 
 /** 🪦 Accepts the rows whose token names a service that is no longer alive. */
-export const deadServiceRowV1=(alive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error?.code==="EPERM";}})=>row=>row.token!==undefined&&!alive(Number(row.token.split(".")[0]));
+export const deadServiceRowV1=(alive=pid=>processPidExistsV1(pid))=>row=>row.token!==undefined&&!alive(Number(row.token.split(".")[0]));
 
 /** 📣 For worker code: tells the pool about a child it just started. */
 export const reportChildV1=(port,child)=>{if(child.pid!==undefined)port.postMessage({type:"child",pid:child.pid});return child;};

@@ -16,7 +16,7 @@ function themeColorInputRow(id: string, label: string, hex: string, onChange: (h
   return {
     id,
     label,
-    control: <SharedBorderRow className="shrink-0"><input id={id} type="color" data-shared-border-cell="" className={cn(borderElementClass, "h-small w-16 shrink-0 bg-background")} value={hex} onChange={(event) => onChange(event.target.value)} /></SharedBorderRow>,
+    control: <SharedBorderRow className="shrink-0"><input id={id} type="color" data-shared-border-cell="" className={cn(borderElementClass, "h-small w-16 shrink-0 bg-transparent")} value={hex} onChange={(event) => onChange(event.target.value)} /></SharedBorderRow>,
   };
 }
 
@@ -174,7 +174,7 @@ function buildThemeAppearanceGroupItems(host: SettingsHostApi, appearance: Theme
                 <input
                   type="color"
                   data-shared-border-cell=""
-                  className={cn(borderElementClass, "h-small w-10 shrink-0 bg-background")}
+                  className={cn(borderElementClass, "h-small w-10 shrink-0 bg-transparent")}
                   value={hex}
                   aria-label={paintKey}
                   aria-describedby={describedBy}

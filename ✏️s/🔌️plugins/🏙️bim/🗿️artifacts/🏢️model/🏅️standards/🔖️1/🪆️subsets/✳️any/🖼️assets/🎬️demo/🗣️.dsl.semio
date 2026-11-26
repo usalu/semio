@@ -1,7 +1,22 @@
 semio bim.model.dsl v1
-schema="s.bim.model@1"
+schema="s.bim.model@1" supports={
+}
+load-cases={
+}
+loads={
+}
 project {
   name="Demo House" description="" author="" organization="" phase-names=[ ]
+}
+option-groups={
+}
+design-options={
+}
+worksets={
+}
+element-options={
+}
+element-worksets={
 }
 materials={
   m-brick={ name=Brick category=masonry density=1800 conductivity=0.8 specific-heat=900

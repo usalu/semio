@@ -27,12 +27,12 @@ pub struct RetainedDeflateEncoder {
     head: PagedList<HeadSlot, HASH_SIZE>, previous: PagedList<u32, WINDOW_SIZE>, bytes: PagedList<u8, HISTORY>,generation:u32,
     phase: RetainedDeflatePhase, initialize: u8, initialized: usize,
     received: usize, position: usize, finished_input: bool,
-    candidate: u32, chain: usize, matched: usize, best: usize, distance: usize, insert_end: usize,
+    candidate: u32, chain: usize, matched: usize, best: usize, distance: usize, insert_end: usize, consume_end: usize,
     buffer: u64, bits: u32, written: usize,
 }
 
 impl Default for RetainedDeflateEncoder {
-    fn default() -> Self { Self { head: PagedList::empty(), previous: PagedList::empty(), bytes: PagedList::empty(),generation:1, phase: RetainedDeflatePhase::Initialize, initialize: 0, initialized: 0, received: 0, position: 0, finished_input: false, candidate: u32::MAX, chain: 0, matched: 0, best: 0, distance: 0, insert_end: 0, buffer: 3, bits: 3, written: 0 } }
+    fn default() -> Self { Self { head: PagedList::empty(), previous: PagedList::empty(), bytes: PagedList::empty(),generation:1, phase: RetainedDeflatePhase::Initialize, initialize: 0, initialized: 0, received: 0, position: 0, finished_input: false, candidate: u32::MAX, chain: 0, matched: 0, best: 0, distance: 0, insert_end: 0, consume_end: 0, buffer: 3, bits: 3, written: 0 } }
 }
 
 fn page_error(error: PagedListError) -> ValueError { ValueError::literal(match error.kind { PagedListRefusalKind::AllocationFailed => ValueRefusalKind::AllocationFailed, PagedListRefusalKind::OwnershipLimit => ValueRefusalKind::OwnershipLimit, PagedListRefusalKind::InvariantViolated => ValueRefusalKind::InvariantViolated }, error.reason) }
@@ -94,7 +94,7 @@ impl RetainedDeflateEncoder {
     /// 🔁️ Reuses paid matching pages for a fresh independent segment without a whole-buffer reset.
     pub fn restart(&mut self) -> Result<(), ValueError> {
         if !self.is_complete() { return Err(invalid("Deflate restart requires complete output custody")); }
-        self.generation=self.generation.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"Deflate matching generation exceeds retained width"))?;self.phase = RetainedDeflatePhase::Input; self.received = 0; self.position = 0; self.finished_input = false; self.candidate = u32::MAX; self.chain = 0; self.matched = 0; self.best = 0; self.distance = 0; self.insert_end = 0; self.buffer = 3; self.bits = 3; self.written = 0; Ok(())
+        self.generation=self.generation.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"Deflate matching generation exceeds retained width"))?;self.phase = RetainedDeflatePhase::Input; self.received = 0; self.position = 0; self.finished_input = false; self.candidate = u32::MAX; self.chain = 0; self.matched = 0; self.best = 0; self.distance = 0; self.insert_end = 0; self.consume_end = 0; self.buffer = 3; self.bits = 3; self.written = 0; Ok(())
     }
     /// ✍️ Advances one funded frontier and leaves unaccepted input with its original owner.
     pub fn advance(&mut self, pending: &mut Option<u8>, input_complete: bool, output: &mut [u8], effect: Effect<'_,'_>) -> Result<RetainedDeflateProgress, ValueError> {
@@ -132,16 +132,16 @@ impl RetainedDeflateEncoder {
                 let equal = self.matched < maximum && self.at(self.candidate as usize + self.matched) == self.at(self.position + self.matched);
                 progress.copied_bytes = if self.matched < maximum { 2 } else { 0 };
                 if equal { self.matched += 1; }
-                if !equal || self.matched == maximum { if self.matched > self.best { self.best = self.matched; self.distance = self.position - self.candidate as usize; } if self.matched==maximum{self.phase=RetainedDeflatePhase::Token;}else{self.candidate = self.previous[self.candidate as usize % WINDOW_SIZE]; self.chain += 1; self.phase = RetainedDeflatePhase::Search; progress.copied_bytes += 4;} }
+                if !equal || self.matched == maximum { if self.matched > self.best { self.best = self.matched; self.distance = self.position - self.candidate as usize; } if self.matched==maximum||self.best>=NICE_MATCH{self.phase=RetainedDeflatePhase::Token;}else{self.candidate = self.previous[self.candidate as usize % WINDOW_SIZE]; self.chain += 1; self.phase = RetainedDeflatePhase::Search; progress.copied_bytes += 4;} }
             }
             RetainedDeflatePhase::Token => {
                 let consumed = if self.best >= MIN_MATCH { let length = length_index_for(self.best as u16); self.literal(257 + length); self.bits((self.best as u16 - LENGTH_BASE[length]) as u32, u32::from(LENGTH_EXTRA[length])); let distance = distance_index_for(self.distance as u32); self.bits((distance as u32).reverse_bits() >> 27, 5); self.bits(self.distance as u32 - DIST_BASE[distance], u32::from(DIST_EXTRA[distance])); self.best }
                 else { self.literal(usize::from(self.at(self.position))); progress.copied_bytes = 1; 1 };
-                self.insert_end = self.position + consumed; self.phase = RetainedDeflatePhase::Insert;
+                self.consume_end = self.position + consumed; self.insert_end = if consumed > MAX_INSERT { self.position + 1 } else { self.consume_end }; self.phase = RetainedDeflatePhase::Insert;
             }
             RetainedDeflatePhase::Insert => {
                 if self.received - self.position >= MIN_MATCH { let hash = hash3(self.at(self.position), self.at(self.position + 1), self.at(self.position + 2));let head=self.head[hash]; self.previous[self.position % WINDOW_SIZE] =if head.generation==self.generation{head.position}else{u32::MAX}; self.head[hash] =HeadSlot{position:self.position as u32,generation:self.generation}; progress.copied_bytes = 23; }
-                self.position += 1; if self.position == self.insert_end { self.phase = RetainedDeflatePhase::Input; }
+                self.position += 1; if self.position == self.insert_end { self.position = self.consume_end; self.phase = RetainedDeflatePhase::Input; }
             }
             RetainedDeflatePhase::Finish => { self.literal(256); self.phase = RetainedDeflatePhase::Complete; }
             _ => return Err(invalid("Deflate retained work frontier is invalid")),

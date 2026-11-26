@@ -372,7 +372,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         let captured=actor.as_ref().filter(|owner|owner.original_is_untouched()).and_then(ControlledRetirement::original).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original window publication requires its paid actor capture"))?;
         if self.actor.as_ref().is_none_or(|opened|opened.0.as_str()!=captured.as_str()){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original window actor differs from its opened session"));}
         let live=self.borrow(&original.window_id).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original captured window partition is absent"))?;
-        if !authority.matches_committed(&live){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original window authority is stale"));}
+        if !authority.matches_committed(&live){return Err(stale_window_authority());}
         let frame=size_of::<TypedWindowConfigPublication<O>>();
         let copied_bytes=[frame,size_of::<WindowConfigMutation>(),size_of::<FactoryBoxedValue<O::Mutation>>(),size_of::<O::Mutation>()].into_iter().try_fold(0usize,usize::checked_add).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original window constructor copy overflow"))?;
         let retained_capacity_bytes=frame.checked_add(size_of::<O::Mutation>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original window constructor capacity overflow"))?;
@@ -581,3 +581,17 @@ pub use initialization::{WindowConfigInitialization,WindowConfigInitializationOw
 
 #[path="🔒️epoch/🦀️.rs"]
 mod original_epoch;
+
+/// 🛑️ The benign refusal of a begin whose captured window root a newer commit superseded; the mounted operation cancels as `interactive-job.stale` instead of failing the turn.
+pub(crate) fn stale_window_authority()->ValueError{ValueError::literal(ValueRefusalKind::Canceled,"original window authority is stale")}
+
+#[cfg(test)]
+mod stale_authority_law{
+    use super::*;
+    #[test]
+    fn a_superseded_window_root_is_a_cancellation_never_an_invalid_value(){
+        let refusal=stale_window_authority();
+        assert_eq!(refusal.kind,ValueRefusalKind::Canceled);
+        assert_eq!(refusal.to_string(),"original window authority is stale");
+    }
+}

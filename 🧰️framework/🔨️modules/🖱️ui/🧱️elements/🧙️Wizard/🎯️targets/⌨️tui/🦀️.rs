@@ -7,7 +7,7 @@ use semio_ui_tui_core::event::{mods, Key, KeyEvent, MouseEvent};
 use semio_ui_tui_core::geometry::{Pos, Rect};
 use semio_ui_tui_core::rows::{paint_scroll_bar, row_style, ListModel, Pointer};
 use semio_ui_tui_core::text::{display_width, elide, Elision};
-use semio_ui_tui_core::theme::{Role, Surface, Theme};
+use semio_ui_tui_core::theme::{Role, Theme};
 use semio_ui_tui_core::signal::{CursorShape, CursorSpec, WidgetSignal};
 
 /// 🪄 Filterable option list for stepped command building.
@@ -125,7 +125,7 @@ pub fn paint_wizard(w: &WizardState, theme: &Theme, rect: Rect, buf: &mut CellBu
     if rect.width == 0 || rect.height == 0 {
         return;
     }
-    let bg = theme.surface(Surface::Window);
+    let bg = buf.owner_background();
     let muted = theme.role(Role::MutedForeground);
     let ellipsis = theme.glyphs.ellipsis();
     buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), bg));

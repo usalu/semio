@@ -1,0 +1,9 @@
+# Ordinary opening input
+
+The headless host sends a single ordinary InstanceOpen with the request first, then purpose, app, actor, configuration, assets, capability grants and quotas. The actual Note and WFC descriptors have an empty configuration and asset list, one unexpired capability with a zero token, and default quotas. The typed path recognizes this wire and the zero-grant form. Other shapes and escaped or non-ASCII text continue through the existing general receiver.
+
+The receiver borrows the original wire for its lexical pass. It validates the quoted activation generation, integer instance and request sequence, and all eleven Poll limits. It preflights copy, capacity, release, depth, items and work before creating the event. It places the vectors and strings directly in the original Poll owner and records their actual capacity for normal retirement. The neutral fixtures compare against Serde. A native law compares the exact typed event and paid retirement with a semantically identical general JSON input.
+
+The previous independently matched opening control consumed 724,118,885 instructions during first Input admission. The ticket’s Wasm probe accepts `--host-event-order` to replay the actual stream order with a new candidate. The original guest build and the queued rebuild are distinct. Rebuilt SDK timing remains to be measured.
+
+The first rebuilt Note component was replayed with the host’s actual request-first event order and the eleven tuple limits. The repository interpreter agreed with the independent Bun engine on all 25 calls, 19 memory reads and both input receipts. The two input admissions used 616,102,124 interpreter instructions and 551 clock imports in total. This is the comparison baseline for the guest that contains the direct ordinary-open receiver.

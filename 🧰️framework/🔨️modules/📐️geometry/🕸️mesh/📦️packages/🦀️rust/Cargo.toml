@@ -21,6 +21,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-geometry-primitives = { path="../../../⚙️engine/📦️packages/🦀️rust" }
 semio-framework-geometry-vector = { path="../../../➗️vector/📦️packages/🦀️rust" }
 semio-framework-geometry-bulge = { path="../../../🌙️bulge/📦️packages/🦀️rust" }

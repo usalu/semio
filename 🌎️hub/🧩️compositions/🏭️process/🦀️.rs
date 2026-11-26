@@ -1,18 +1,31 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+use semio_hub_process_editor_app::{Process3dEditorApp, ProcessEditorApps};
+use semio_hub_process_viewer_app::{Process3dViewerApp, ProcessViewerApps};
 use semio_plugin::__semio_dispatch_PluginApp;
 use semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_plugin::plugin_app_close_prelude::*;
 use semio_plugin::{ExecutionMode, Plugin, PluginApp};
 use semio_plugin::PluginBuilder;
-use semio_plugin_instance_construction::OriginalVcsApp;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the process editor and viewer surfaces.
     pub enum ProcessApps: PluginApp {
-        Process3dEditor(OriginalVcsApp<EditorApp<semio_s_artifact_process_process3d_editor::Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
-        Process3dViewer(OriginalVcsApp<ViewerApp<semio_s_artifact_process_process3d_viewer::Process3dViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
+        Process3dEditor(ProcessEditorApps),
+        Process3dViewer(ProcessViewerApps),
+    }
+}
+
+impl From<Process3dEditorApp> for ProcessApps {
+    fn from(app: Process3dEditorApp) -> Self {
+        Self::Process3dEditor(app.into())
+    }
+}
+
+impl From<Process3dViewerApp> for ProcessApps {
+    fn from(app: Process3dViewerApp) -> Self {
+        Self::Process3dViewer(app.into())
     }
 }
 //#endregion 🗃️Apps

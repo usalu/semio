@@ -1,3 +1,4 @@
+import { Surface } from "@semio-tech/ui-react";
 /** 🎯️ Connect rubber band, voxel preview, attraction lines, status panes, engagement preview, suggestion menu items, marquee and click picking math, and the camera, introduction and hit-stamp bridges.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | World3dHost}, which re-exports every public name below so import specifiers stay unchanged.
@@ -144,17 +145,16 @@ export function WorldComputeStatusPane({
   if (idle) {
     if (!status.hint) return <div className="sr-only" data-slot="world-compute-status" data-compute-phase={status.phase} role="status" aria-busy={undefined} />;
     return (
-      <div data-glass-chip="" className={cn("pointer-events-none flex items-center gap-single px-single py-half text-xs text-muted-foreground", glassClass)} data-level="pane" data-slot="world-compute-status" data-compute-phase={status.phase} role="status" aria-busy={undefined}>
+      <Surface level="chip" className="pointer-events-none flex items-center gap-single px-single py-half text-xs text-muted-foreground" data-slot="world-compute-status" data-compute-phase={status.phase} role="status" aria-busy={undefined}>
         <span data-slot="world-compute-hint">{status.hint}</span>
-      </div>
+      </Surface>
     );
   }
   if (!labels) return <div className="sr-only" data-slot="world-compute-status" data-compute-phase={status.phase} data-language-required="" role="status" aria-busy={status.computing ? "true" : undefined} />;
   return (
-    <div
-      data-glass-chip=""
-      className={cn("pointer-events-auto flex items-center gap-single px-single py-half text-xs", glassClass)}
-      data-level="pane"
+    <Surface
+      level="chip" 
+      className="pointer-events-auto flex items-center gap-single px-single py-half text-xs"
       data-slot="world-compute-status"
       data-compute-phase={status.phase}
       data-compute-cancellable={status.cancellable ? "" : undefined}
@@ -176,7 +176,7 @@ export function WorldComputeStatusPane({
           {labels.cancel}
         </button>
       ) : null}
-    </div>
+    </Surface>
   );
 }
 
@@ -446,15 +446,11 @@ export function resolveMarqueeInstanceIds(
 }
 
 /** 🎯️ Screen pixels a click may miss a projected box by and still pick it — thin columns project a few pixels wide. */
-export const WORLD3D_PICK_TOLERANCE_PX = 3;
+export const WORLD3D_PICK_TOLERANCE_PX = 4;
 
-/** 🖱️ Whether a host-local click sits inside the axis-aligned screen box of projected mesh corners, grown by `tolerancePx`. */
-export function world3dProjectedAabbContainsClick(
-  click: { readonly x: number; readonly y: number },
-  corners: readonly (readonly [number, number])[],
-  tolerancePx: number = WORLD3D_PICK_TOLERANCE_PX,
-): boolean {
-  if (corners.length === 0) return false;
+/** 📏️ Screen distance from a click to the axis-aligned box of projected corners; zero inside, `Infinity` without corners. */
+export function world3dProjectedAabbGap(click: { readonly x: number; readonly y: number }, corners: readonly (readonly [number, number])[]): number {
+  if (corners.length === 0) return Infinity;
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
@@ -465,19 +461,31 @@ export function world3dProjectedAabbContainsClick(
     if (x > maxX) maxX = x;
     if (y > maxY) maxY = y;
   }
-  return click.x >= minX - tolerancePx && click.x <= maxX + tolerancePx && click.y >= minY - tolerancePx && click.y <= maxY + tolerancePx;
+  return Math.hypot(Math.max(minX - click.x, 0, click.x - maxX), Math.max(minY - click.y, 0, click.y - maxY));
 }
 
-/** 🖱️ Nearest projected AABB that contains the click; empty space returns null. */
+/** 🖱️ Whether a host-local click sits inside the axis-aligned screen box of projected mesh corners, grown by `tolerancePx`. */
+export function world3dProjectedAabbContainsClick(
+  click: { readonly x: number; readonly y: number },
+  corners: readonly (readonly [number, number])[],
+  tolerancePx: number = WORLD3D_PICK_TOLERANCE_PX,
+): boolean {
+  return world3dProjectedAabbGap(click, corners) <= tolerancePx;
+}
+
+/** 🖱️ Best projected AABB for the click: boxes containing it beat padded near-misses, then the nearest box edge, then the camera depth; empty space returns null. */
 export function resolveClickInstanceIdFromProjected(
   click: { readonly x: number; readonly y: number },
   candidates: readonly { readonly id: string; readonly corners: readonly (readonly [number, number])[]; readonly depth: number }[],
 ): string | null {
   let bestId: string | null = null;
+  let bestGap = Infinity;
   let bestDepth = Infinity;
   for (const candidate of candidates) {
-    if (!world3dProjectedAabbContainsClick(click, candidate.corners)) continue;
-    if (candidate.depth < bestDepth) {
+    const gap = world3dProjectedAabbGap(click, candidate.corners);
+    if (gap > WORLD3D_PICK_TOLERANCE_PX) continue;
+    if (gap < bestGap || (gap === bestGap && candidate.depth < bestDepth)) {
+      bestGap = gap;
       bestDepth = candidate.depth;
       bestId = candidate.id;
     }

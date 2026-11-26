@@ -34,6 +34,11 @@ pub fn bytes(relative: &str) -> &'static [u8] {
     leaked(relative)
 }
 
+#[path = "../../🧬️retained-clone/🧬️contract/🧪️tests/⏱️effect/🦀️.rs"]
+pub mod effect;
+pub(crate) use semio_framework_value::retained_clone::*;
+pub(crate) use semio_framework_value_clone_source::RetainedCloneClose;
+
 #[path = "../../♻️retirement/🧪️tests/🔬️unit/🦀️.rs"]
 mod original_retirement_integration_tests;
 

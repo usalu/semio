@@ -1,0 +1,12 @@
+{
+  "artifactId":"note-one", "kind":"s.note.note", "pluginId":"note",
+  "cases":[
+    {"status":"SUCCEEDED","matches":true},
+    {"status":"CANCELLED","matches":false},
+    {"status":"RUNNING","matches":false},
+    {"status":"SUCCEEDED","artifactId":"note-two","matches":false},
+    {"status":"SUCCEEDED","kind":"s.wfc.bitmap","matches":false},
+    {"status":"SUCCEEDED","pluginId":"wfc","matches":false},
+    {"status":"SUCCEEDED","isError":true,"matches":false}
+  ]
+}

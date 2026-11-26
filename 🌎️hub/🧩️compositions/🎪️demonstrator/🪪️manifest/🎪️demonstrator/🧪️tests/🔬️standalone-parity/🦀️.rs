@@ -1,5 +1,7 @@
 use super::*;
-use semio_plugin::ArtifactApp;
+use semio_hub_process_router::plugin as process;
+use semio_plugin::{ArtifactApp, ArtifactEditor, ArtifactViewer};
+use semio_plugin_instance_construction::OriginalVcsApp;
 use std::collections::BTreeSet;
 
 fn test_bundle() -> Plugin<DemonstratorApps> {
@@ -59,7 +61,7 @@ fn every_foreign_surface_is_defined_exactly_like_its_standalone_host() {
     let bundle = test_bundle();
     let mut matched = BTreeSet::new();
     for (owner, found) in [
-        ("process", assert_surfaces_match(&bundle, &standalone("process", semio_hub_process::plugin::plugin()))),
+        ("process", assert_surfaces_match(&bundle, &standalone("process", process::plugin()))),
         ("sourcing", assert_surfaces_match(&bundle, &standalone("sourcing", semio_hub_sourcing::plugin::plugin()))),
     ] {
         assert!(!found.is_empty(), "standalone {owner} host contributes no surface to the bundle");
@@ -69,12 +71,12 @@ fn every_foreign_surface_is_defined_exactly_like_its_standalone_host() {
     assert_eq!(matched, foreign_ids(&bundle), "every foreign bundle surface has exactly one standalone host");
 }
 
-/// 🌱️ The member roster is the app's own: each bundled surface type is the exact variant its standalone fleet enum carries.
+/// 🌱️ The standalone fleets carry the same app types and member rosters as the bundled surfaces.
 #[test]
-fn every_bundled_surface_type_is_the_variant_its_standalone_fleet_carries() {
+fn every_standalone_fleet_carries_its_bundled_app_and_member_roster() {
     fn carried<Variant, Fleet: From<Variant>>() {}
-    carried::<EditorSurfaceApp<Process3dPlayApp>, semio_hub_process::plugin::ProcessApps>();
-    carried::<ViewerSurfaceApp<Process3dViewer>, semio_hub_process::plugin::ProcessApps>();
+    carried::<OriginalVcsApp<EditorApp<Process3dPlayApp>, <Process3dPlayApp as ArtifactEditor>::Members>, process::ProcessApps>();
+    carried::<OriginalVcsApp<ViewerApp<Process3dViewer>, <Process3dViewer as ArtifactViewer>::Members>, process::ProcessApps>();
     carried::<EditorSurfaceApp<SourcingCurationApp>, semio_hub_sourcing::SourcingApps>();
     carried::<ViewerSurfaceApp<SourcingViewer>, semio_hub_sourcing::SourcingApps>();
 }
@@ -98,7 +100,7 @@ fn every_bundled_surface_declares_an_original_action_producer() {
 fn bundle_asks_for_the_capabilities_its_standalone_hosts_ask_for() {
     let bundle = test_bundle();
     let hosts = [
-        standalone("process", semio_hub_process::plugin::plugin()).descriptor_extras().capability_requests.clone(),
+        standalone("process", process::plugin()).descriptor_extras().capability_requests.clone(),
         standalone("sourcing", semio_hub_sourcing::plugin::plugin()).descriptor_extras().capability_requests.clone(),
     ];
     let asked: BTreeSet<String> = hosts.iter().flatten().map(|request| request.id.0.clone()).collect();

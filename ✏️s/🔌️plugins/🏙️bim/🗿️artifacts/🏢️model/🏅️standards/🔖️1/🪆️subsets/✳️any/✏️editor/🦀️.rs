@@ -221,7 +221,7 @@ macro_rules! tool_proofs {
             artifact_schema: "s.bim.model@1",
             factory: "BimCommandJobFactory",
             factory_type: BimCommandJobFactory,
-            contract: ToolExecutionContract::bounded_first_step(BIM_BOUNDED_RAW_BYTES, BIM_BOUNDED_WORK_ITEMS, 1, 262_144, 7_500),
+            contract: semio_plugin::ToolExecutionContract::bounded_first_step(BIM_BOUNDED_RAW_BYTES, BIM_BOUNDED_WORK_ITEMS, 1, 262_144, 7_500),
             tools: [$($id),+]
         }
     };

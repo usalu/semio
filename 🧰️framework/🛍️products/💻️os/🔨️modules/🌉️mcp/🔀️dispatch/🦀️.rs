@@ -16,6 +16,9 @@ use semio_os_mcp_port::policy::{AgentPrincipal, ApprovalGate, AutoApprovePolicy,
 use semio_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
 use semio_os_mcp_schema::schema::{compile_validator, untrusted_capability_output, validate};
 
+#[path = "💡️inference-reply.rs"]
+mod inference_reply;
+
 //#region 🔖️ActionAdapter
 
 /// 🗳️ What one parked approval settled to inside `invoke_uncached` — the adapter's own narrow view
@@ -96,12 +99,7 @@ impl ActionAdapter {
         let mut channel = self.channel.lock().expect("artifact channel lock poisoned");
         let frames = exchange_blocking(&mut **channel, instance, vec![AppCommand::Infer(command)]).map_err(|fault| map_fault(&fault))?;
         drop(channel);
-        match frames.into_iter().next() {
-            Some(AppFrame::Inferred { inference_schema, complete, payload }) => Ok(InferenceOutcome { inference_schema, complete, payload }),
-            Some(AppFrame::Error(fault)) => Err(map_fault(&fault)),
-            Some(other) => Err(GatewayError::new(GatewayErrorCode::Internal, format!("`{requested_schema}` answered with {other:?} instead of an inference result"))),
-            None => Err(GatewayError::new(GatewayErrorCode::Internal, format!("`{requested_schema}` produced no reply frame"))),
-        }
+        inference_reply::accept_inference_reply(&requested_schema, frames.into_iter().next())
     }
 
     /// 🔌 Binds the sole workspace-owned remote history implementation before serving tools.

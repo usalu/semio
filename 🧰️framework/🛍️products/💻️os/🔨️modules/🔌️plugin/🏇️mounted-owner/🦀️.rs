@@ -44,8 +44,8 @@ impl MountedOwnerPolicyV1 {
         Self { preparation: grant, maintenance: grant, close: grant }
     };
 
-    /// 📐️ The largest indivisible per-step copy demand any retained owner posts, measured: a store-replacement member open (377,696 B), a member record receive (277,538 B) and a history-replay preparation step (33,976 B). A host grant below it leaves archive loads, undo and time travel unfundable forever.
-    pub const LARGEST_INDIVISIBLE_STEP_COPY_BYTES: usize = 377_696;
+    /// 📐️ The largest indivisible per-step copy demand any retained owner posts, measured: a mounted Drawing job close (688,784 B), a store-replacement member open (377,696 B), a member record receive (277,538 B) and a history-replay preparation step (33,976 B). A host grant below it leaves archive loads, undo and time travel unfundable forever.
+    pub const LARGEST_INDIVISIBLE_STEP_COPY_BYTES: usize = 688_784;
 
     /// 🪜️ Smallest power-of-two copy grant (never below 32 KiB) that covers one indivisible step demand.
     pub const fn covering_copy_bytes(demand: usize) -> usize {

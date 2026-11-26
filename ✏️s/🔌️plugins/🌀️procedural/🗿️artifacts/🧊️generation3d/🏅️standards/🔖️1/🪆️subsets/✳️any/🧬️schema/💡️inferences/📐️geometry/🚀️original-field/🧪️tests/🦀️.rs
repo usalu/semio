@@ -20,7 +20,7 @@ fn snapshot(law:&serde_json::Value)->Generation3dSnapshot{
  snapshot.host_snapshot.synapses=law["wires"].as_array().unwrap().iter().enumerate().map(|(i,row)|SynapseSpec{id:i.to_string(),from:row["from"].as_str().unwrap().into(),from_port:row["fromPort"].as_str().unwrap().into(),to:row["to"].as_str().unwrap().into(),to_port:row["toPort"].as_str().unwrap().into()}).collect();snapshot
 }
 fn key(widget:&Widget)->&String{match widget{Widget::Neuron{id,..}|Widget::InputSlider{id,..}=>id,_=>unreachable!()}}
-fn field(input:&GeometryInput<'_>,key:&String,parents:&[Arc<WidgetEvaluation>],pending:&mut Option<Box<dyn InferencePending>>,cx:&mut StepContext<'_>)->Result<ComputeStep<Arc<WidgetEvaluation>>,OriginalTurnFailure>{Generation3dGeometry::compute_step(input,key,parents,pending,cx).map_err(|failure|match failure{InferenceWorkFailure::Original(original)=>original,_=>panic!("original field returned a flattened refusal")})}
+fn field(input:&GeometryInput<'_>,key:&String,parents:&[Arc<WidgetEvaluation>],pending:&mut Option<Box<dyn InferencePending>>,cx:&mut StepContext<'_>)->Result<ComputeStep<Arc<WidgetEvaluation>>,OriginalTurnFailure>{Generation3dGeometry::compute_step(input,input.snapshot,key,parents,pending,cx).map_err(|failure|match failure{InferenceWorkFailure::Original(original)=>original,_=>panic!("original field returned a flattened refusal")})}
 fn close_pending(pending:&mut Option<Box<dyn InferencePending>>,caller:&mut OriginalJobFixtureCaller,stock:RetainedCloneGrant,born:&mut usize,released:&mut usize){
  for _ in 0..100000{if pending.is_none(){break}accounted(caller,stock,born,released,|cx|{let owner=pending.as_mut().unwrap();if !owner.close_original(cx)?||cx.should_yield(){return Ok(())}let bytes=owner.original_box_release_bytes().unwrap();let grant=cx.retained_grant();if grant.maximum_release_bytes<bytes||grant.maximum_items==0||grant.maximum_depth==0{return Ok(())}post(cx,RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})?;pending.take();Ok(())});}assert!(pending.is_none());
 }
@@ -28,6 +28,16 @@ fn close_pending(pending:&mut Option<Box<dyn InferencePending>>,caller:&mut Orig
 #[test]
 fn original_geometry_inferred_field_resolves_real_graph_and_closes_every_dynamic_owner(){
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️.json")).unwrap();let c=&law["originalCaller"];let stock=grant(c);let mut caller=OriginalJobFixtureCaller::admit(OperationId(c["operation"].as_u64().unwrap()),Generation(c["generation"].as_u64().unwrap()),stock,clock,c["deadlineMicros"].as_u64().unwrap(),c["fuel"].as_u64().unwrap());let(snapshot,source_heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||snapshot(&law));let original=source_heap.requested_bytes-source_heap.released_bytes;let catalogue=catalogue();let input=GeometryInput::new(&snapshot,catalogue,&NativeGeometryComputeContext);let mut born=0;let mut released=0;let mut outputs:[Option<Arc<WidgetEvaluation>>;9]=std::array::from_fn(|_|None);
+ assert_eq!(law["engine"]["sourceOwner"], "retainedSnapshot");
+ let second_view = GeometryInput::new(&snapshot, catalogue, &NativeGeometryComputeContext);
+ assert!(!std::ptr::eq(&input, &second_view));
+ for view in [&input, &second_view] {
+     assert_eq!(Generation3dGeometry::source_identity(view, &snapshot), std::ptr::from_ref(&snapshot) as usize);
+     caller.turn(stock, |cx| {
+         assert!(Generation3dGeometry::validate_source(view, &snapshot, cx).is_ok());
+         Ok(())
+     }).unwrap();
+ }
  for i in 0..9{
   let key=key(&snapshot.host_snapshot.widgets[i]);let(previous,current)=outputs.split_at_mut(i);let parents=match i{1=>previous[0].as_slice(),3=>previous[2].as_slice(),4|7=>previous[1].as_slice(),8=>previous[7].as_slice(),_=>&[]};let mut pending=None;
   let before=caller.cumulative_receipt();let outcome=accounted(&mut caller,Default::default(),&mut born,&mut released,|cx|field(&input,key,parents,&mut pending,cx));assert!(matches!(outcome,ComputeStep::Working{fuel_used:0,..}));assert!(pending.is_none());assert_eq!(before,caller.cumulative_receipt());let mut progress=0.0;
@@ -88,7 +98,7 @@ fn original_geometry_cyclic_plan_publishes_real_localized_faults_on_same_caller(
 #[test]
 fn original_geometry_cyclic_fault_keeps_partial_utf8_on_refusal_and_paid_cancel(){
  let law:serde_json::Value=serde_json::from_str(include_str!("🔄️cycle/🧫️.json")).unwrap();let caller_law:serde_json::Value=serde_json::from_str(include_str!("🧫️.json")).unwrap();let c=&caller_law["originalCaller"];let stock=grant(c);let mut caller=OriginalJobFixtureCaller::admit(OperationId(c["operation"].as_u64().unwrap()),Generation(c["generation"].as_u64().unwrap()),stock,clock,c["deadlineMicros"].as_u64().unwrap(),c["fuel"].as_u64().unwrap());let(snapshot,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||snapshot(&law));let original=heap.requested_bytes-heap.released_bytes;let input=GeometryInput::new(&snapshot,catalogue(),&NativeGeometryComputeContext);let key=key(&snapshot.host_snapshot.widgets[0]);let mut pending=None;let mut born=0;let mut released=0;
- let run=|pending:&mut Option<Box<dyn InferencePending>>,cx:&mut StepContext<'_>|Generation3dGeometry::compute_cyclic_step(&input,key,pending,cx).map_err(|failure|match failure{InferenceWorkFailure::Original(original)=>original,_=>panic!("full original cyclic field failure")});
+ let run=|pending:&mut Option<Box<dyn InferencePending>>,cx:&mut StepContext<'_>|Generation3dGeometry::compute_cyclic_step(&input,input.snapshot,key,pending,cx).map_err(|failure|match failure{InferenceWorkFailure::Original(original)=>original,_=>panic!("full original cyclic field failure")});
  for _ in 0..100000{let result=accounted(&mut caller,stock,&mut born,&mut released,|cx|run(&mut pending,cx));assert!(matches!(result,ComputeStep::Working{..}));if pending.as_mut().unwrap().as_any_mut().downcast_mut::<OriginalGeometryPending>().unwrap().owner.original().unwrap().fault.is_some(){break}}
  let before=caller.cumulative_receipt();assert!(matches!(accounted(&mut caller,RetainedCloneGrant{maximum_capacity_bytes:0,..stock},&mut born,&mut released,|cx|run(&mut pending,cx)),ComputeStep::Working{fuel_used:0,..}));assert_eq!(before,caller.cumulative_receipt());
  for _ in 0..100000{let result=accounted(&mut caller,stock,&mut born,&mut released,|cx|run(&mut pending,cx));assert!(matches!(result,ComputeStep::Working{..}));if pending.as_mut().unwrap().as_any_mut().downcast_mut::<OriginalGeometryPending>().unwrap().owner.original().unwrap().fault.as_ref().unwrap().progress()>3.0/7.0{break}}

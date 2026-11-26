@@ -21,6 +21,7 @@ use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::sn
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Point2, SpaceBoundary, Vertex};
 use semio_framework_2d::booleans::{BooleanOperation, BooleanProgress};
 use semio_framework_2d::regions::{offset_regions, region_boolean, OffsetJoin, Region};
+use semio_framework_2d::retirement::BlockingTurns;
 use semio_framework_2d::Vec2;
 use semio_framework_geometry::bulge::band_loop;
 use semio_framework_geometry::loops;
@@ -141,7 +142,7 @@ fn regions_of(obstacles: &[Obstacle]) -> Vec<Region> {
 }
 
 fn run(control: &mut dyn FnMut(&BooleanProgress) -> bool, operation: BooleanOperation, subject: &[Region], clip: &[Region]) -> Vec<Region> {
-    region_boolean(operation, subject, clip, control).unwrap_or_default()
+    region_boolean(operation, subject, clip, control, &mut BlockingTurns::new(1 << 20)).unwrap_or_default()
 }
 
 pub fn inside(ring: &[Vec2], point: Vec2) -> bool {
@@ -267,7 +268,7 @@ fn finish(snapshot: &ModelSnapshot, storey: &str, level: &StoreyLevel, shape: Sh
     let control = &mut |_: &BooleanProgress| true;
     let Some(region) = shape.region else { return SpaceRoom::refused(shape.status, shape.point, level.elevation) };
     let columns_area: f64 = if columns.is_empty() { 0.0 } else { run(control, BooleanOperation::Intersection, std::slice::from_ref(&region), columns).iter().map(Region::area).sum() };
-    let grown = offset_regions(std::slice::from_ref(&region), CONTACT_GROWTH, OffsetJoin::Miter { limit: 2.0 }, control).unwrap_or_default();
+    let grown = offset_regions(std::slice::from_ref(&region), CONTACT_GROWTH, OffsetJoin::Miter { limit: 2.0 }, control, &mut BlockingTurns::new(1 << 20)).unwrap_or_default();
     let reach = bounds_of(grown.iter().flat_map(|part| part.outer.iter()));
     let bounding_walls: Vec<String> = obstacles
         .iter()

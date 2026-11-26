@@ -1,3 +1,4 @@
+import {ownProcessIdentityV1,processRecordAliveV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs"
 import{randomBytes}from"node:crypto";
 import{mkdir,open,readFile,rm}from"node:fs/promises";
 import{join}from"node:path";
@@ -223,18 +224,18 @@ export function createQueuedClaimLeasePortV1({acquire,tryAcquire,acquireFresh,di
 
 /** 🔒️ A reference lease port over lock files for tests and non repository runtimes: acquisition is `open(wx)`, the lock of a dead process is replaced, waiting polls with backoff and honours the abort signal. */
 export function createFileClaimLeasePortV1(directory,{sleep=defaultSleep}={}){
- const alive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error?.code==="EPERM";}};
+ const alive=(pid,startMs)=>processRecordAliveV1(pid,startMs);
  const pathOf=name=>join(directory,Buffer.from(name).toString("base64url").slice(-P.lockNameCharacters)+".lock");
  const holderOf=async path=>{try{return JSON.parse(await readFile(path,"utf8"));}catch{return undefined;}};
  async function tryHold(name){
   const path=pathOf(name),mark=randomBytes(8).toString("hex");
   await mkdir(directory,{recursive:true});
   for(let round=0;round<3;round++){
-   try{const file=await open(path,"wx");try{await file.writeFile(JSON.stringify({pid:process.pid,mark}));}finally{await file.close();}return{release(){holderOf(path).then(held=>{if(held?.mark===mark)return rm(path,{force:true});}).catch(()=>{});}};}
+   try{const file=await open(path,"wx");try{await file.writeFile(JSON.stringify({pid:process.pid,startMs:ownProcessIdentityV1().startMs,mark}));}finally{await file.close();}return{release(){holderOf(path).then(held=>{if(held?.mark===mark)return rm(path,{force:true});}).catch(()=>{});}};}
    catch(error){
     if(error?.code!=="EEXIST")throw error;
     const held=await holderOf(path);
-    if(held&&alive(held.pid))return undefined;
+    if(held&&alive(held.pid,held.startMs))return undefined;
     if(held===undefined&&round===0){await sleep(5);continue;}
     const again=await holderOf(path);if(again?.mark===held?.mark)await rm(path,{force:true});
    }
@@ -244,7 +245,7 @@ export function createFileClaimLeasePortV1(directory,{sleep=defaultSleep}={}){
  async function hold(name,{signal}={}){for(let delay=2;;delay=Math.min(delay*2,50)){aborted(signal);const held=await tryHold(name);if(held)return held;await sleep(delay,signal);}}
  async function wait(name,{signal,timeoutMs}={}){
   const path=pathOf(name),end=timeoutMs===undefined?Infinity:Date.now()+timeoutMs;
-  for(let delay=2;;delay=Math.min(delay*2,50)){aborted(signal);const held=await holderOf(path);if(!held||!alive(held.pid))return true;if(Date.now()>=end)return false;await sleep(Math.min(delay,Math.max(1,end-Date.now())),signal);}
+  for(let delay=2;;delay=Math.min(delay*2,50)){aborted(signal);const held=await holderOf(path);if(!held||!alive(held.pid,held.startMs))return true;if(Date.now()>=end)return false;await sleep(Math.min(delay,Math.max(1,end-Date.now())),signal);}
  }
  return Object.freeze({tryHold,hold,wait});
 }

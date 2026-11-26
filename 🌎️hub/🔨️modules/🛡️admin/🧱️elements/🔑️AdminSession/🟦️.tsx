@@ -275,7 +275,7 @@ export function AdminAccessGate(): React.ReactElement {
               <p className={status === "unauthorized" ? "text-sm text-destructive" : "text-sm text-muted-foreground"}>
                 {t(unreachable ? "admin.session.unreachableDescription" : probing ? "admin.session.probing" : "admin.session.error")}
               </p>
-              {command && <code className="bg-muted px-single py-single text-xs break-words">{command}</code>}
+              {command && <code className="text-xs break-words">{command}</code>}
               {unreachable && <p className="text-sm text-muted-foreground">{t("admin.session.unreachableHint")}</p>}
             </div>
           }

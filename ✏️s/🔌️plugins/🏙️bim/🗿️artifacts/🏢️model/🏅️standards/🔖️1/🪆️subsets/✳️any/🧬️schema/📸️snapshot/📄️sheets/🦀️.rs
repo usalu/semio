@@ -2,7 +2,7 @@
 //! written. Pure, total and read-only: a refusal names the field below the record and carries the message.
 //! 📎 https://en.wikipedia.org/wiki/ISO_216
 
-use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{IsoSize, Orientation, Paper, Point2, ViewCrop, ViewKind};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Paper, Point2, ViewCrop, ViewKind};
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use crate::standards::v1::subsets::any::schema::snapshot::entities::{Sheet, SheetRevision, Viewport};
 
@@ -13,37 +13,13 @@ pub const MIN_VIEWPORT_SCALE: u32 = 1;
 /// 📏️ The largest scale denominator a viewport accepts (1:1000).
 pub const MAX_VIEWPORT_SCALE: u32 = 1_000;
 
-/// 📏️ The scale denominator of a new viewport.
-pub const DEFAULT_VIEWPORT_SCALE: u32 = 100;
+pub use super::entities::DEFAULT_VIEWPORT_SCALE;
 
 /// 📐️ The shortest side of a custom paper in millimetres.
 pub const MIN_PAPER_SIDE: f64 = 50.0;
 
 /// 📐️ The longest side of a custom paper in millimetres.
 pub const MAX_PAPER_SIDE: f64 = 10_000.0;
-
-impl Sheet {
-    /// 📄️ A sheet with the conventions of a new one: A3 landscape, no title block text.
-    pub fn standard(number: &str, name: &str) -> Self {
-        Self { number: number.into(), name: name.into(), paper: Paper::iso(IsoSize::A3), orientation: Orientation::Landscape, project: String::new(), drawn_by: String::new(), checked_by: String::new(), date: String::new(), revision: String::new(), scale_label: String::new() }
-    }
-
-    /// 📐️ The (width, height) of the paper in millimetres as it lies: the long side is the width for a landscape sheet and the height for a portrait one.
-    pub fn size(&self) -> (f64, f64) {
-        let (long, short) = self.paper.sides();
-        match self.orientation {
-            Orientation::Landscape => (long, short),
-            Orientation::Portrait => (short, long),
-        }
-    }
-}
-
-impl Viewport {
-    /// 🖼️ A viewport of `view` on `sheet` with the conventions of a new one: 1:100, no crop, titled by its view.
-    pub fn standard(sheet: &str, view: &str, position: Point2) -> Self {
-        Self { sheet: sheet.into(), view: view.into(), position, scale: DEFAULT_VIEWPORT_SCALE, crop: None, label: None }
-    }
-}
 
 /// 🔎️ Whether a view of `kind` draws on paper: the plans, sections and elevations do, the cameras are rendered by the 3D window.
 pub fn view_is_drawn(kind: ViewKind) -> bool {

@@ -8,6 +8,7 @@
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { CatalogIcon as Icon } from "../🔣️Icons/🟦️.tsx";
+import { useLevel, useSurface } from "../🌈️Surface/🟦️.tsx";
 import { WindowChrome, windowChromeTitleChipClass } from "../🗂️WindowChrome/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -57,7 +58,7 @@ export type OverviewCardProps = OverviewCardSectionProps | OverviewCardButtonPro
 const CARD_STACK_DATA = { "data-overview-card-stack": "", "data-shared-border-hover": "" } as const;
 
 /** 💳️ The overview card of semio's landing pages (play, the demonstrator, the quizzes): the design system's
- * {@link WindowChrome} at dialog level, never `active`, with the title in a glass chip on its top row and actions in glass chips on its bottom row, both inside the frame.
+ * {@link WindowChrome} on its enclosing surface, never `active`, with the title in a glass chip on its top row and actions in glass chips on its bottom row, both inside the frame.
  * Sharp corners, glass and the 1 px frame come from the chrome: the card is one rectangle, the title chip and the footer chips are glass overlays inside it above the body, and the body keeps the chip row clearance. The stack stays transparent through
  * `data-overview-card-stack`, and its outline is emphasised while the pointer is over the card.
  *
@@ -65,10 +66,13 @@ const CARD_STACK_DATA = { "data-overview-card-stack": "", "data-shared-border-ho
  * @see https://www.w3.org/WAI/ARIA/apg/practices/landmark-regions/ — sections named by their heading */
 export function OverviewCard(props: OverviewCardProps): React.ReactElement {
   const { slot, icon, title, titleAdornment, children, footerLeft, footerRight, className, bodyClassName, contentClassName, flush = false, data } = props;
+  const level = useLevel();
+  const owner = useSurface();
   const Heading = props.as === "section" ? (`h${props.headingLevel ?? 2}` as const) : "span";
   const chrome = (
     <WindowChrome
-      level="dialog"
+      level={level}
+      bodySurfaceFill={owner?.level === "dialog" && owner.fill === "none" ? "glass" : "inherit"}
       active={false}
       stackSlot={`${slot}-stack`}
       stackDataAttrs={CARD_STACK_DATA}

@@ -3,7 +3,8 @@ import { cleanup, render } from "@testing-library/react";
 import { JSDOM } from "jsdom";
 import { afterEach, describe, expect, it } from "vitest";
 import { WindowChrome, measureWindowFrameMetrics, windowFrameChipLevel } from "./🟦️.tsx";
-import { LEVELS, useLevel, useSurface } from "../🌈️Surface/🟦️.tsx";
+import { SharedBorderRow } from "../🪢️SharedBorderRow/🟦️.tsx";
+import { LEVELS, Surface, useLevel, useSurface } from "../🌈️Surface/🟦️.tsx";
 import { windowFrameLines, windowFrameOutline } from "./shared-border.ts";
 import { Window } from "../🪟️Window/🟦️.tsx";
 import { Layout } from "../📐️Layout/🟦️.tsx";
@@ -63,6 +64,12 @@ describe("🔲️ a window chrome stack is one rectangle with chip overlays insi
     expect(container.querySelectorAll(".ui-surface")).toHaveLength(1);
   });
 
+  it("paints ordinary windows once, including when a hosted window is the frame body", () => {
+    const { container } = render(<WindowChrome level="window" body={<Window id="hosted-surface">Body</Window>} />);
+    expect(container.querySelectorAll(".ui-surface")).toHaveLength(1);
+    expect(container.querySelector('[data-slot="window"]')?.className).toContain("bg-transparent");
+  });
+
   it("docks the cap row to the bottom edge for bottom-anchored panels", () => {
     const { container } = render(<WindowChrome capDock="bottom" titleChips={<span>t</span>} body={<p>b</p>} />);
     const row = container.querySelector<HTMLElement>('[data-slot="window-chrome-cap"]')!;
@@ -114,6 +121,25 @@ describe("🪜️ the chip level is one elevation above the content surface", ()
       expect(chip.textContent).toBe("pane/pane/glass");
       expect(chip.closest("[data-level]")?.getAttribute("data-level")).toBe("pane");
     }
+  });
+
+  it.each(LEVELS)("shares the %s owner with in-flow content and paints each independent chip", owner => {
+    const { container } = render(
+      <Surface level={owner}>
+        <Surface data-slot="ordinary" />
+        <SharedBorderRow overlay="chip">
+          <Surface data-slot="chip-content"><SurfaceProbe region="row" /></Surface>
+          <Surface level="chip"><SurfaceProbe region="nested" /></Surface>
+        </SharedBorderRow>
+      </Surface>
+    );
+    const first = windowFrameChipLevel(owner);
+    const second = windowFrameChipLevel(first);
+    expect(container.querySelector('[data-slot="ordinary"]')?.classList.contains("bg-transparent")).toBe(true);
+    expect(container.querySelector('[data-slot="chip-content"]')?.classList.contains("bg-transparent")).toBe(true);
+    expect([...container.querySelectorAll(".ui-glass[data-glass-chip]")].map(chip => chip.getAttribute("data-level"))).toEqual([first, second]);
+    expect(container.querySelector('[data-region="row"]')?.textContent).toBe([first, first, "glass"].join("/"));
+    expect(container.querySelector('[data-region="nested"]')?.textContent).toBe([second, second, "glass"].join("/"));
   });
 
   it("gives the title of a chip-only frame the glass surface", () => {

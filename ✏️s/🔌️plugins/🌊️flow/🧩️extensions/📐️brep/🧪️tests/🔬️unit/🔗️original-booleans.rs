@@ -20,7 +20,7 @@ fn original_partial_rotated_box_booleans_publish_one_closed_prism() {
     for (index,row) in fixture["cases"].as_array().unwrap().iter().enumerate(){
         let session=Session::new();
         let registry=neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity=flow_extension_sdk::geometry::GeometryWorkIdentity{operation:99120+index as u64,generation:17};
+        let identity=semio_os_flow_geometry::GeometryWorkIdentity{operation:99120+index as u64,generation:17};
         let mut caller=OriginalJobFixtureCaller::admit(OperationId(identity.operation),Generation(17),stock(),||Some(1000),1500,131072);
         let (mut born,mut free)=(0,0);
         let mut stock_box=|spec:&serde_json::Value|{
@@ -115,7 +115,7 @@ fn original_intersect_preserves_authored_planes_of_rotated_shared_axis_boxes() {
     for (index, row) in rows.enumerate() {
         let session = Session::new();
         let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 99067 + index as u64, generation: 17 };
+        let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 99067 + index as u64, generation: 17 };
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(17), stock(), || Some(1000), 1500, 131072);
         let (mut born, mut free) = (0, 0);
         let [a, b] = ["a", "b"].map(|port| {
@@ -265,7 +265,7 @@ fn original_intersect_preserves_authored_planes_of_rotated_shared_axis_boxes() {
 
 #[test]
 fn original_axial_booleans_publish_exact_solids_and_retire_cancelled_work() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_framework_3d_brep_surface::Surface;
     use semio_s_spatial_kernel_semio_session::{read_channel_number,read_geometry,read_xyz,text_dictionary,vector_dictionary};
@@ -436,7 +436,7 @@ fn original_axial_booleans_publish_exact_solids_and_retire_cancelled_work() {
 
 #[test]
 fn original_sphere_cut_preserves_operands_and_handles_cavity_empty_and_disjoint_results() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_surface::Surface;
     use semio_framework_3d_brep_vector::Pnt3;
     use semio_s_spatial_kernel_semio_session::{read_channel_number,read_geometry,vector_dictionary};
@@ -538,7 +538,7 @@ fn original_sphere_cut_preserves_operands_and_handles_cavity_empty_and_disjoint_
 
 #[test]
 fn original_overlapping_sphere_booleans_share_a_signed_native_rim_and_previews() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_curve::Curve3;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_framework_3d_brep_surface::Surface;
@@ -659,7 +659,7 @@ fn original_overlapping_sphere_booleans_share_a_signed_native_rim_and_previews()
 
 #[test]
 fn original_sphere_clips_keep_exact_spherical_bands_and_planar_disks(){
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_curve::Curve3;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_framework_3d_brep_surface::Surface;
@@ -792,7 +792,7 @@ fn original_sphere_clips_keep_exact_spherical_bands_and_planar_disks(){
 
 #[test]
 fn original_mixed_and_parallel_cylinder_booleans_keep_exact_axial_profiles() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_framework_3d_brep_surface::Surface;
     use semio_s_spatial_kernel_semio_session::{read_channel_number,read_geometry,vector_dictionary};
@@ -912,7 +912,7 @@ fn original_mixed_and_parallel_cylinder_booleans_keep_exact_axial_profiles() {
 
 #[test]
 fn original_box_bores_publish_exact_blind_floors_and_closed_void_shells() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_framework_3d_brep_surface::Surface;
     use semio_s_spatial_kernel_semio_session::{read_channel_number,read_geometry,vector_dictionary};

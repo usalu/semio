@@ -757,6 +757,7 @@ dependencies = [
  "semio-framework-geometry-skeleton",
  "semio-framework-geometry-solids",
  "semio-framework-geometry-vector",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -770,6 +771,9 @@ dependencies = [
 [[package]]
 name = "semio-framework-geometry-primitives"
 version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
 
 [[package]]
 name = "semio-framework-geometry-skeleton"
@@ -786,6 +790,7 @@ dependencies = [
  "semio-framework-geometry-bulge",
  "semio-framework-geometry-primitives",
  "semio-framework-geometry-vector",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -8607,6 +8612,7 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-fem-3d-engine",
+ "semio-s-artifact-fem-3d-io",
  "semio-s-artifact-fem-3d-model",
  "semio-s-artifact-fem-3d-scene",
  "semio-s-fem-analyses-assembly",
@@ -11977,7 +11983,6 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-dwg-geometry",
- "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-write",
  "semio-s-artifact-stdio-gltf-model",

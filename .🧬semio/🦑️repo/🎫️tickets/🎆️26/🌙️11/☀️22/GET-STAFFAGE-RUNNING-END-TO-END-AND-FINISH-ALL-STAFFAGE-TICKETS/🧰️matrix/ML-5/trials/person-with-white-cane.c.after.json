@@ -1,0 +1,245 @@
+[
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "elevation",
+  "id": "cane-shaft",
+  "set": {
+   "points": [
+    [
+     0.19,
+     -0.025
+    ],
+    [
+     0.942,
+     -0.025
+    ],
+    [
+     0.942,
+     0.025
+    ],
+    [
+     0.19,
+     0.025
+    ]
+   ]
+  },
+  "why": "the cane strip 50 mm wide: the 75 mm strip closed the slit between the boots that the body leaves open"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "elevation",
+  "id": "cane-band-tip",
+  "set": {
+   "points": [
+    [
+     0.942,
+     -0.025
+    ],
+    [
+     1.216,
+     -0.025
+    ],
+    [
+     1.216,
+     0.025
+    ],
+    [
+     0.942,
+     0.025
+    ]
+   ]
+  },
+  "why": "the cane strip 50 mm wide: the 75 mm strip closed the slit between the boots that the body leaves open"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "elevation",
+  "id": "cane-grip",
+  "set": {
+   "points": [
+    [
+     -0.072,
+     -0.025
+    ],
+    [
+     0.19,
+     -0.025
+    ],
+    [
+     0.19,
+     0.025
+    ],
+    [
+     -0.072,
+     0.025
+    ]
+   ]
+  },
+  "why": "the cane strip 50 mm wide: the 75 mm strip closed the slit between the boots that the body leaves open"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "front",
+  "id": "cane-shaft",
+  "set": {
+   "points": [
+    [
+     0.19,
+     -0.025
+    ],
+    [
+     0.942,
+     -0.025
+    ],
+    [
+     0.942,
+     0.025
+    ],
+    [
+     0.19,
+     0.025
+    ]
+   ]
+  },
+  "why": "the cane strip 50 mm wide: the 75 mm strip closed the slit between the boots that the body leaves open"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "front",
+  "id": "cane-band-tip",
+  "set": {
+   "points": [
+    [
+     0.942,
+     -0.025
+    ],
+    [
+     1.216,
+     -0.025
+    ],
+    [
+     1.216,
+     0.025
+    ],
+    [
+     0.942,
+     0.025
+    ]
+   ]
+  },
+  "why": "the cane strip 50 mm wide: the 75 mm strip closed the slit between the boots that the body leaves open"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "front",
+  "id": "cane-grip",
+  "set": {
+   "points": [
+    [
+     -0.072,
+     -0.025
+    ],
+    [
+     0.19,
+     -0.025
+    ],
+    [
+     0.19,
+     0.025
+    ],
+    [
+     -0.072,
+     0.025
+    ]
+   ]
+  },
+  "why": "the cane strip 50 mm wide: the 75 mm strip closed the slit between the boots that the body leaves open"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "plan",
+  "id": "cane-shaft",
+  "set": {
+   "points": [
+    [
+     0.19,
+     -0.025
+    ],
+    [
+     0.942,
+     -0.025
+    ],
+    [
+     0.942,
+     0.025
+    ],
+    [
+     0.19,
+     0.025
+    ]
+   ]
+  },
+  "why": "the cane strip 50 mm wide: the 75 mm strip closed the slit between the boots that the body leaves open"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "plan",
+  "id": "cane-band-tip",
+  "set": {
+   "points": [
+    [
+     0.942,
+     -0.025
+    ],
+    [
+     1.216,
+     -0.025
+    ],
+    [
+     1.216,
+     0.025
+    ],
+    [
+     0.942,
+     0.025
+    ]
+   ]
+  },
+  "why": "the cane strip 50 mm wide: the 75 mm strip closed the slit between the boots that the body leaves open"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "plan",
+  "id": "cane-grip",
+  "set": {
+   "points": [
+    [
+     -0.072,
+     -0.025
+    ],
+    [
+     0.19,
+     -0.025
+    ],
+    [
+     0.19,
+     0.025
+    ],
+    [
+     -0.072,
+     0.025
+    ]
+   ]
+  },
+  "why": "the cane strip 50 mm wide: the 75 mm strip closed the slit between the boots that the body leaves open"
+ }
+]

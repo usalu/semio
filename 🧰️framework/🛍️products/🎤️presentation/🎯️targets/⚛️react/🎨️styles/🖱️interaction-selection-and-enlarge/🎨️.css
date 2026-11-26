@@ -151,7 +151,7 @@
 	align-items: center;
 	justify-content: center;
 	box-sizing: border-box;
-	background: color-mix(in oklab, var(--base) 94%, transparent);
+	background: var(--surface-bg);
 }
 
 .reveal .presentation-interactive-disposition--enlarged {

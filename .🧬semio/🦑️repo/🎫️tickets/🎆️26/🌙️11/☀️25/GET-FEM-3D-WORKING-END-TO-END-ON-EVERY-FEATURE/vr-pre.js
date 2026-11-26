@@ -1,0 +1,11 @@
+const RA="C:/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/GET-FEM-3D-WORKING-END-TO-END-ON-EVERY-FEATURE/🗑️generated/vr/";
+const rs=async(n)=>{await page.screenshot({path:RA+n+".png"});return n;};
+const crypto2=await import("node:crypto");
+const vpBox=async()=>await page.locator('[aria-label="Model view"]').boundingBox();
+const vpH=async()=>{const b=await vpBox();const buf=await page.screenshot({clip:{x:b.x,y:b.y,width:b.width,height:b.height}});return crypto2.createHash("md5").update(buf).digest("hex").slice(0,8);};
+const vpWait=async(h0,max=8000)=>{const t=Date.now();while(Date.now()-t<max){if(await vpH()!==h0)return Date.now()-t;await page.waitForTimeout(400);}return -1;};
+const sel=async()=>(await page.getByRole("tree").last().innerText().catch(()=>"")).replace(/\n+/g," | ").slice(0,160);
+const cons=()=>{};
+const itxt=async()=>(await page.getByRole("tree").last().innerText().catch(()=>"")).replace(/\n+/g," | ");
+const waitI=async(rx,max=15000,step=400)=>{const t=Date.now();while(Date.now()-t<max){const s=await itxt();if(rx.test(s))return {ms:Date.now()-t,txt:s.slice(0,120)};await page.waitForTimeout(step);}return {ms:-1,txt:(await itxt()).slice(0,120)};};
+const idOf=(s)=>{const m=s.match(/ID ([^|]+?) \|/);return m?m[1].trim():null;};

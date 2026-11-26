@@ -134,8 +134,8 @@ describe("inbound request seam", () => {
       signal: controller.signal,
       onProgress: ({ turns }) => { if (turns === 2) controller.abort(); },
     });
-    expect(answer).toEqual({ status: "cancelled", turns: 3 });
-    expect(submit).toHaveBeenCalledTimes(3);
+    expect(answer).toEqual({ status: "cancelled", turns: 2 });
+    expect(submit).toHaveBeenCalledTimes(2);
   });
 
   it.each(inboundRequestFixture.driveBudgetRows)("$name", async (row) => {
@@ -252,6 +252,16 @@ describe("extension invocation across the door", () => {
 });
 
 describe("a surface cancel aborts the in-flight extension request", () => {
+  it("refuses a cancelled request before activating the extension guest", async () => {
+    const activate = vi.fn();
+    const actor = createRequestActor({
+      state: { requestActor: null, inboundRequestSeq: 0n } as never, pluginId: "flow-extension-brep",
+      registry: { activate } as never, captureExtensionCompletion: vi.fn(),
+    });
+    await expect(actor.invoke("evaluate", "{}", { signal: AbortSignal.abort() })).rejects.toBeInstanceOf(SemioFaultError);
+    expect(activate).not.toHaveBeenCalled();
+  });
+
   /** 🛑️ A door over a guest that PARKS: it reports `more-work` forever and never responds, which is
    * the only shape an abort can be observed on — `driveInboundRequest` reads its signal at turn
    * boundaries, so a guest that answers on turn 1 is never cancellable by construction. */

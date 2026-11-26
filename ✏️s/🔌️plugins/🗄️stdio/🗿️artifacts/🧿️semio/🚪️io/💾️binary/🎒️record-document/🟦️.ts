@@ -352,7 +352,9 @@ const DIST_EXTRA = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 
 const WINDOW = 32768;
 const MIN_MATCH = 3;
 const MAX_MATCH = 258;
-const MAX_CHAIN = 128;
+const MAX_CHAIN = 16;
+const NICE_MATCH = 32;
+const MAX_INSERT = 16;
 const HASH_BITS = 15;
 
 function canonicalCodes(lengths: number[]): number[] {
@@ -376,7 +378,7 @@ function tableIndex(bases: number[], value: number): number {
   return 0;
 }
 
-/** 🗜️ The pack's one deflate: a single fixed-Huffman block over a greedy hash-chain LZ77 (3..258 byte matches, 32 KiB window, 128 probes). Pinned by its own specification so equal input is equal output in every language. */
+/** 🗜️ The pack's one deflate: a single fixed-Huffman block over a greedy hash-chain LZ77 (3..258 byte matches, 32 KiB window, at most the chain-limit probes per position, none after a match of the nice length, and only the first position of a match longer than the insert limit enters the chains). Pinned by its own specification so equal input is equal output in every language. */
 export function deflate(raw: Uint8Array): Uint8Array {
   const out: number[] = [];
   let buffer = 0;
@@ -422,6 +424,7 @@ export function deflate(raw: Uint8Array): Uint8Array {
           bestLength = length;
           bestDistance = i - candidate;
         }
+        if (bestLength >= NICE_MATCH) break;
         candidate = prev[candidate]!;
         chain += 1;
       }
@@ -433,7 +436,7 @@ export function deflate(raw: Uint8Array): Uint8Array {
       index = tableIndex(DIST_BASE, bestDistance);
       huffman(DISTANCE_CODES[index]!, 5);
       if (DIST_EXTRA[index]! > 0) write(bestDistance - DIST_BASE[index]!, DIST_EXTRA[index]!);
-      for (let at = i; at < i + bestLength; at += 1) insert(at);
+      for (let at = i; at < i + (bestLength <= MAX_INSERT ? bestLength : 1); at += 1) insert(at);
       i += bestLength;
     } else {
       huffman(LITERAL_CODES[raw[i]!]!, LITERAL_LENGTHS[raw[i]!]!);

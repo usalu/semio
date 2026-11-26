@@ -13,7 +13,7 @@ fn shell_source_face(session:&Session,stock:&semio_framework_3d_brep_engine::Geo
 
 #[test]
 fn original_cylindrical_shell_keeps_native_cap_selection_and_exact_wall_topology(){
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_framework_3d_brep_surface::Surface;
     use semio_s_spatial_kernel_semio_session::{point_dictionary,read_channel_number,read_geometry,vector_dictionary};

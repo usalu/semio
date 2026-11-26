@@ -98,11 +98,10 @@ pub struct HistoryColumn {
 }
 semio_framework_value::artifact_retire_struct!(HistoryColumn { checkpoint_id, timestamp, labels, authors, parent_checkpoint_id, description, lane, alternative_ids });
 
-/// 🌿️ The branched alternatives of `envelope`: every listed alternative but the trunk, whose checkpoints are the main line
+/// 🌿️ The branched alternatives of `envelope`: every stored alternative; the implicit trunk is never a row, its checkpoints are the main line
 /// the history view draws on lane 0.
 pub fn branched_alternatives<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> impl Iterator<Item = &Alternative> {
-    let trunk = semio_os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone()));
-    envelope.vcs.alternatives.iter().filter(move |alternative| alternative.id != trunk)
+    envelope.vcs.alternatives.iter()
 }
 
 pub async fn checkpoint_alternatives<'a, P, Mutation>(envelope: &'a ArtifactEnvelope<P, Mutation>, checkpoint_id: &str) -> Vec<&'a Alternative> {

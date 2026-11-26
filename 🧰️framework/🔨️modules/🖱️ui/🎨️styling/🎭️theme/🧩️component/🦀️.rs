@@ -288,7 +288,7 @@ fn from_chrome(chrome: &ChromePalette, outcome: &OutcomePalette, diagram: &Diagr
         accent_foreground: Rgba::from_token(&chrome.accent_foreground),
         button: Rgba::from_token(&chrome.level_window),
         button_hover: Rgba::from_token(&chrome.hover_interactive_fill),
-        input_bg: Rgba::from_token(&chrome.base),
+        input_bg: Rgba::TRANSPARENT,
         separator: Rgba::from_token(&chrome.border_normal),
         selected: Rgba::from_token(&chrome.active_base),
         canvas_clear: Rgba::from_token(&chrome.base),

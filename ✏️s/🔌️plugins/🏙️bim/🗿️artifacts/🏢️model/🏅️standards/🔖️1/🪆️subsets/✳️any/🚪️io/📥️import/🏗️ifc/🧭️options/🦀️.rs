@@ -9,7 +9,8 @@ use semio_s_artifact_stdio_contract::part21::Part21Value;
 /// 🏘️ Groups precede option children; malformed authored references are reported.
 pub fn read(i: &mut Import<'_>) {
     for kind in ["DesignOptionGroup", "DesignOption", "Workset"] {
-        for (instance, args) in i.doc.rows("IFCGROUP").into_iter().filter(|(_, args)| text(args, 4) == kind) {
+        let proxies = i.doc.rows("IFCPROXY").into_iter().filter(|(_, args)| args.get(7).and_then(Part21Value::as_enum) == Some("GROUP"));
+        for (instance, args) in i.doc.rows("IFCGROUP").into_iter().chain(proxies).filter(|(_, args)| text(args, 4) == kind) {
             let rows = authoring_of(&i.doc, instance.id);
             let name = text(args, 2);
             let id = label(&rows, "Id").filter(|id| semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(&i.model, id).is_none()).unwrap_or_else(|| Import::unused(&format!("group-{}", Import::slug(&name)), |id| semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(&i.model, id).is_some()));
@@ -34,7 +35,7 @@ pub fn read(i: &mut Import<'_>) {
         for entity in refs(args, 4) {
             let Some(id) = i.ids.get(&entity).filter(|id| elements.contains(*id)).cloned() else { continue; };
             let members = if options { &mut i.model.element_options } else { &mut i.model.element_worksets };
-            if members.insert(id.clone(), ElementMembership { target: group.clone() }).is_some() { i.notes.push(format!("Multiple IFC memberships for {id}; later assignment chosen")); }
+            if members.cold_insert(id.clone(), ElementMembership { target: group.clone() }).is_some() { i.notes.push(format!("Multiple IFC memberships for {id}; later assignment chosen")); }
         }
     }
 }

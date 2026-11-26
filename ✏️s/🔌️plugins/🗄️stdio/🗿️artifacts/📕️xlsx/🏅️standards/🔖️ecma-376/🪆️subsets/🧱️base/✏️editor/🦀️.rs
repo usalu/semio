@@ -141,6 +141,19 @@ pub(crate) fn parse_xlsx_cell_value(text: &str, locale: Option<Locale>) -> XlsxC
     }
 }
 
+/// 🌐️ Rewrites one typed cell draft into the canonical invariant spelling the edit command carries, because the bounded native reducer has no session locale: a number in the input language's notation becomes its invariant number text, and text that only the invariant notation would read as a number stays literal text behind an apostrophe, so `1,5` is 1.5 in German, `1.5` is text in German and `1,5` is text in English whatever path reduces the command.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn xlsx_canonical_cell_text(text: &str, locale: &str) -> String {
+    let Some(locale) = Locale::parse(locale) else {
+        return text.to_string();
+    };
+    match parse_xlsx_cell_value(text, Some(locale)) {
+        XlsxCellValue::Number(number) => format_xlsx_number(number, None),
+        XlsxCellValue::InlineString(literal) if literal == text && parse_xlsx_number(text, None).is_some() => format!("'{text}"),
+        _ => text.to_string(),
+    }
+}
+
 /// 🔐️ Binds a draft to its typed value and the text of its addressed shared-string entry.
 pub(crate) fn xlsx_cell_revision(value: &XlsxCellValue, shared_strings: &[String]) -> String {
     use semio_plugin::app::DocumentWindowKit;
@@ -313,7 +326,7 @@ impl ArtifactEditor for XlsxEditor {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
             "set-cell" => {
                 let edit = semio_s_artifact_stdio_contract::window_kit_stable_cell_edit(args)?;
-                Ok(XlsxEditorCommand::SetCell { sheet_name: edit.sheet_name, row: edit.row, column: edit.column, revision: edit.revision, value: edit.value })
+                Ok(XlsxEditorCommand::SetCell { sheet_name: edit.sheet_name, row: edit.row, column: edit.column, revision: edit.revision, value: xlsx_canonical_cell_text(&edit.value, &edit.locale) })
             }
             other => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.xlsx.unhandled-action"), format!("unknown xlsx editor action '{other}'"))),
         })
@@ -330,7 +343,7 @@ impl ArtifactEditor for XlsxEditor {
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_plugin::app::InteractionView<'_>,
-        view_state: Option<&semio_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
@@ -338,7 +351,7 @@ impl ArtifactEditor for XlsxEditor {
             let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
             return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
         };
-        xlsx_set_cell_emit(doc.snapshot, command, view_state.map(|view| view.locale))
+        xlsx_set_cell_emit(doc.snapshot, command, None)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {

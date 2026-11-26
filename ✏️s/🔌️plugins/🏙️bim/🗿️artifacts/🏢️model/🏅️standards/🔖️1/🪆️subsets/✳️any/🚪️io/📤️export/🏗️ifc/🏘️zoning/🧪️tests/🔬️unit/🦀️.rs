@@ -51,8 +51,8 @@ fn members(document: &Part21Document, group: u64) -> Vec<String> {
 #[test]
 fn a_zone_is_an_ifc_zone_named_by_its_name_typed_by_its_category_with_pset_zone_common() {
     let document = document(&zoned());
-    assert_eq!(count(&document, "IFCZONE"), 3);
-    for (name, category, id) in [("Day zone", "Ventilation", "z-day"), ("Night zone", "Fire compartment", "z-night"), ("Empty zone", "Tenant", "z-empty")] {
+    assert_eq!(count(&document, "IFCZONE"), 2);
+    for (name, category, id) in [("Day zone", "Ventilation", "z-day"), ("Night zone", "Fire compartment", "z-night")] {
         let zone = instance_of(&document, "IFCZONE", name);
         assert_eq!(string(zone.entity("IFCZONE").expect("a zone"), 4).as_deref(), Some(category), "the category is the object type of {name}");
         assert_eq!(properties(&document, zone.id, "Pset_ZoneCommon").get("Reference").map(String::as_str), Some(id));
@@ -62,17 +62,20 @@ fn a_zone_is_an_ifc_zone_named_by_its_name_typed_by_its_category_with_pset_zone_
 #[test]
 fn a_zone_groups_exactly_its_spaces_through_one_assignment_and_an_empty_zone_has_none() {
     let document = document(&zoned());
-    let (day, night, empty) = (instance_of(&document, "IFCZONE", "Day zone").id, instance_of(&document, "IFCZONE", "Night zone").id, instance_of(&document, "IFCZONE", "Empty zone").id);
+    let (day, night, empty) = (instance_of(&document, "IFCZONE", "Day zone").id, instance_of(&document, "IFCZONE", "Night zone").id, instance_of(&document, "IFCPROXY", "Empty zone").id);
     assert_eq!(members(&document, day), ["sp-1"]);
     assert_eq!(members(&document, night), ["sp-2"]);
     assert!(members(&document, empty).is_empty());
+    let proxy = instance_of(&document, "IFCPROXY", "Empty zone").entity("IFCPROXY").unwrap();
+    assert_eq!(proxy[7].as_enum(), Some("GROUP"));
+    assert_eq!(properties(&document, empty, "Semio_Authoring")["Category"], "Tenant");
     assert_eq!(count(&document, "IFCRELASSIGNSTOGROUP"), 2, "an empty zone writes no relation");
 }
 
 #[test]
-fn an_area_scheme_is_a_group_of_type_area_scheme_carrying_its_rule_and_no_members() {
+fn an_ifc2x3_area_scheme_is_a_group_proxy_carrying_its_rule() {
     let document = document(&zoned());
-    let schemes: Vec<_> = rows(&document, "IFCGROUP").into_iter().filter(|(_, args)| string(args, 4).as_deref() == Some("AreaScheme")).collect();
+    let schemes: Vec<_> = rows(&document, "IFCPROXY").into_iter().filter(|(_, args)| args[7].as_enum() == Some("GROUP") && string(args, 4).as_deref() == Some("AreaScheme")).collect();
     assert_eq!(schemes.len(), 2);
     let (net, args) = schemes.iter().find(|(_, args)| string(args, 2).as_deref() == Some("Net use area")).expect("the net scheme");
     assert_eq!(string(args, 2).as_deref(), Some("Net use area"));

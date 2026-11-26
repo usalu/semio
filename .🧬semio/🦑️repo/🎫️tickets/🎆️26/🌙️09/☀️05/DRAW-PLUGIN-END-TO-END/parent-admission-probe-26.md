@@ -1,0 +1,5 @@
+# Parent Memory Admission Probe
+
+`repo tools exec --light bun -- <ticket>/parent-admission-probe-26.ts` passed against the live source interfaces. It starts an actual admission broker with an 8 MiB synthetic parent allowance and no compiler. A cold component-final request predicted 6144 MiB: the probe returned `wait: true`, the admission socket returned `parent-memory` with the exact 8 MiB allowance, and the broker recorded no running compiler. A fleet-only pass likewise returned `fleet-placement`, recorded placement failure and admitted no local compiler.
+
+The same executable invokes the actual component job-slot scheduler with an 8 MiB shared parent allowance and 32 MiB synthetic local peak. Local-only placement refused with the correct numeric requirement and allowance; a one-MiB fleet footprint ran only in the fleet slot; a synthetic fleet placement failure refused the local retry. No compiler, worker or build is spawned. This directly tests the policy and socket owners together in one executable; it does not prove the production driver's live parent-capacity handoff or actual remote execution, which require their own integration evidence.

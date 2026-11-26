@@ -1,1 +1,27 @@
-{}
+{
+  "beams": {
+    "b-b": {
+      "entry": "Created",
+      "value": {
+        "storey": "st-ground",
+        "beam_type": "bt-40x60",
+        "axis": {
+          "Arc": {
+            "start": {
+              "x": 0.0,
+              "y": 3.0
+            },
+            "end": {
+              "x": 4.0,
+              "y": 3.0
+            },
+            "bulge": 0.4
+          }
+        },
+        "top_offset": -0.2,
+        "phase": "New",
+        "name": "Arc beam"
+      }
+    }
+  }
+}

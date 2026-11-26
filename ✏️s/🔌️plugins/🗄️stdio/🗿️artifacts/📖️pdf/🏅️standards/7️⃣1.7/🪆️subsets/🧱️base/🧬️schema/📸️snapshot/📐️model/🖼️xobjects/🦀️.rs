@@ -2,7 +2,7 @@
 
 use super::colour_and_graphics_state::PdfColorSpace;
 use super::content_operators::PdfOp;
-use super::object_model::{PdfDictEntry, PdfMatrix, PdfRect, PDF_IDENTITY_MATRIX};
+use semio_s_artifact_stdio_pdf_model_object::{PdfDictEntry, PdfMatrix, PdfRect, PDF_IDENTITY_MATRIX};
 
 //#region 🔖️XObjects
 /// 🖼️ An image body is its native packed rows (§8.9.3) or an admitted foreign image.

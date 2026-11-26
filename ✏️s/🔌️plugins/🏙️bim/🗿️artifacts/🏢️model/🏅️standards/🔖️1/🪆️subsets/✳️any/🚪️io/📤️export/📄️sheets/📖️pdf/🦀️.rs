@@ -221,6 +221,7 @@ pub fn pdf_page(layout: &SheetLayout, drawings: &BTreeMap<&str, &ViewLinework>, 
 }
 
 /// 📖️ A PDF written page by page: [`SheetsPdf::begin`] lowers the document (fonts, info) and yields the header, every [`SheetsPdf::page`] appends the bytes of one sheet, [`SheetsPdf::finish`] closes the file.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct SheetsPdf {
     stream: DocumentStream,
     bytes: Vec<u8>,

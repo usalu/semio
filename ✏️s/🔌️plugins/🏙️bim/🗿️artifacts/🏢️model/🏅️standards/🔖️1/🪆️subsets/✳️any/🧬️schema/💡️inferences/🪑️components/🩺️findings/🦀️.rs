@@ -11,6 +11,7 @@ use crate::standards::v1::subsets::any::schema::inferences::mep::{MepValue, CONN
 use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
 use semio_framework_2d::booleans::BooleanOperation;
 use semio_framework_2d::regions::{region_boolean, Region};
+use semio_framework_2d::retirement::BlockingTurns;
 use semio_framework_geometry::loops::{self, Vertex as Corner};
 use semio_framework_geometry::Point;
 use std::collections::BTreeSet;
@@ -41,7 +42,7 @@ fn footprint_region(value: &ComponentValue) -> Region {
 }
 
 fn overlap_area(a: &Region, b: &Region) -> f64 {
-    region_boolean(BooleanOperation::Intersection, std::slice::from_ref(a), std::slice::from_ref(b), &mut |_| true).map_or(0.0, |rows| rows.iter().map(Region::area).sum())
+    region_boolean(BooleanOperation::Intersection, std::slice::from_ref(a), std::slice::from_ref(b), &mut |_| true, &mut BlockingTurns::new(1 << 20)).map_or(0.0, |rows| rows.iter().map(Region::area).sum())
 }
 
 fn depth_behind_face(value: &ComponentValue) -> f64 {

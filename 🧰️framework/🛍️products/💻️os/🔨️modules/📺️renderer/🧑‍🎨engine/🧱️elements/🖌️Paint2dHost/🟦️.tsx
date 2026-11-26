@@ -1,3 +1,4 @@
+import { Surface } from "@semio-tech/ui-react";
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/Paint2dHost/component.tsx
 /** 🖌️ `Paint2dHost` — raster-2d `ComponentSceneHost`: drives a `paint2d`-shaped scene through
@@ -24,7 +25,7 @@ import {
   type SelectionMarqueeMethod,
   SelectionMarquee,
   CanvasPickMenu,
-  type ContextMenuItem, cn, glassClass, SharedBorderRow, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
+  type ContextMenuItem, SharedBorderRow, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { createDemandFrameScheduler, frameDemandingSessionV1 } from "@semio-tech/framework/canvas/react-renderer";
 import { GestureRecognizer, type ComponentSceneHostProps, type Paint2dScene, type ActionDescriptor, type MergeMode, type UiComponentSceneNode, type PluginContextMenuRequest, type ContextMenuItemSpec } from "@semio-tech/framework";
@@ -204,7 +205,7 @@ type Paint2dMarqueeOverlay =
  * `z-20`, the full-bleed pointer overlay at `z-30` — inside its own stacking context, so they can never paint over
  * the window chrome or a floating pane beside it. Without it the `z-30` overlay hit-tested above both raster
  * windows' `Actions` chips inside `s` (ticket 26/09/23 S15); same law as `NODE_GRAPH_HOST_CLASS`. */
-export const PAINT_2D_HOST_CLASS = "semio-paint-2d-canvas-surface isolate relative h-full min-h-[24rem] w-full ui-surface";
+export const PAINT_2D_HOST_CLASS = "semio-paint-2d-canvas-surface isolate relative h-full min-h-[24rem] w-full";
 
 function Paint2dCanvasSurface({
   node,
@@ -699,7 +700,7 @@ function Paint2dCanvasSurface({
   //#endregion Pointer
 
   return (
-    <div ref={containerRef} className={PAINT_2D_HOST_CLASS} data-level="base" data-controller-id={node.controllerId} data-surface-id={node.surfaceId} data-view-mode={scene.viewMode} data-layers-json={paintWitness.layersJson} data-assets-json={paintWitness.assetsJson}>
+    <Surface ref={containerRef} className={PAINT_2D_HOST_CLASS} data-controller-id={node.controllerId} data-surface-id={node.surfaceId} data-view-mode={scene.viewMode} data-layers-json={paintWitness.layersJson} data-assets-json={paintWitness.assetsJson}>
       <Paint2dWasmCanvas sessionFactory={sessionFactory} onSessionReady={onSessionReady} />
       {attachError ? (
         <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">
@@ -732,7 +733,7 @@ function Paint2dCanvasSurface({
           if (!open) setContextMenu(null);
         }}
       />
-    </div>
+    </Surface>
   );
 }
 //#endregion Paint2dCanvasSurface
@@ -803,11 +804,11 @@ function Paint2dWasmCanvas({ sessionFactory, onSessionReady }: { readonly sessio
   return (
     <div ref={containerRef} className="absolute inset-0">
       <canvas ref={canvasRef} className="block h-full w-full touch-none" />
-      {text&&progress.pending&&<SharedBorderRow data-level="menu" data-glass-chip="" className={cn("absolute bottom-2 left-2 z-50 items-center gap-2 p-2 text-sm",glassClass)} role="status">
+      {text&&progress.pending&&<SharedBorderRow overlay="chip" className="absolute bottom-2 left-2 z-50 items-center gap-2 p-2 text-sm" role="status">
         <span>{text.rendering}</span><progress aria-label={text.rendering} max={Math.max(1,progress.total)} value={progress.completed}/>
         <button {...sharedBorderlessBoxProps} type="button" onClick={()=>cancelRef.current()}>{text.cancel}</button>
       </SharedBorderRow>}
-      {text&&progress.error&&<SharedBorderRow data-level="menu" data-glass-chip="" className={cn("absolute bottom-2 left-2 z-50 p-2 text-sm",glassClass)} role="alert">{text.failed}: {progress.error}</SharedBorderRow>}
+      {text&&progress.error&&<SharedBorderRow overlay="chip" className="absolute bottom-2 left-2 z-50 p-2 text-sm" role="alert">{text.failed}: {progress.error}</SharedBorderRow>}
     </div>
   );
 }

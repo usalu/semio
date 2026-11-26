@@ -1,5 +1,6 @@
 import {clearPinnedAuthorityV1} from "../../../📥️inputs/🔏️revision/🟨️.mjs";
-import {reconcileBuildOwnerRegistry} from "../../🧾️registry-consistency/🟦️.ts";
+import {explainOwnerlessRoot,reconcileBuildOwnerRegistry} from "../../🧾️registry-consistency/🟦️.ts";
+import {buildRepairCommandV1} from "../../../⚙️operations/🔤️options/🟦️.ts";
 import {GRAPH_LIMITS_V1} from "../../🔐️authority/🟦️.ts";
 import {readBuildOwnerRegistryV1} from "../../🚪️admission/🟦️.ts";
 import graphSchema from "../../🧬️schema/🔣️.json" with{type:"json"};
@@ -24,6 +25,11 @@ function adoptOwnerRegistryRootsV1(root:string,roots:readonly string[]):boolean{
   return result.added.length>0||result.removed.length>0;
 }
 
+/** 🧹️ Adds a row for every crate or project manifest of the tree that has none (additions only: no row is removed, moved or renamed), under the registry lock, so one fault repairs every ownerless crate a peer wrote by hand instead of one per read round. */
+function adoptOwnerlessCratesV1(root:string):boolean{
+  return reconcileBuildOwnerRegistry(root,{write:true,additionsOnly:true}).added.length>0;
+}
+
 /** 🤝️ Reconciles missing or vanished owners named in the inference fault and reports whether a row changed. */
 export function adoptPendingBuildOwnersV1(root:string,message:string):boolean{
   return adoptOwnerRegistryRootsV1(root,[...pendingOwnerRootsV1(message),...vanishedOwnerRootsV1(message)]);
@@ -32,7 +38,7 @@ export function adoptPendingBuildOwnersV1(root:string,message:string):boolean{
 /** 🧱️ The typed refusal of a read whose dependency still names an owner root without a row at the final check, in English and German; its text is declared by the graph schema.
  * @see ../../🧬️schema/🔣️.json */
 export function ownerRegistryRefusalV1(input:{roots:readonly string[];rounds:number;moved:boolean;cause:unknown}):Error{
-  const text=graphSchema.definitions.OwnerRegistryRefusal.const,fill=(template:string)=>template.replace("{roots}",input.roots.join(", ")).replace("{rounds}",String(input.rounds)).replace("{moved}",String(input.moved)).replace("{cause}",String((input.cause as Error)?.message??input.cause).slice(0,400));
+  const text=graphSchema.definitions.OwnerRegistryRefusal.const,fill=(template:string)=>template.replace("{roots}",input.roots.join(", ")).replace("{rounds}",String(input.rounds)).replace("{moved}",String(input.moved)).replace("{command}",buildRepairCommandV1("build-owners-sync")).replace("{cause}",String((input.cause as Error)?.message??input.cause).slice(0,400));
   return Object.assign(new Error(fill(text.en)+" | "+fill(text.de),{cause:input.cause}),{code:text.code,roots:[...input.roots]});
 }
 
@@ -75,9 +81,17 @@ export async function withOwnerRegistryCustodyV1<T>(signal:AbortSignal,hold:(con
  * @see ../♻️pass-reuse/🟦️.ts */
 export type RegistryCarryV1=Readonly<{takenMemo:TakenMemoV1}>;
 
-/** 🧭️ Retries a refused native-owner lookup when the registry changed or reconciliation repaired the named roots, carrying the taken memo of the read from one attempt to the next. */
+/** 🔎️ The reasons the repair of a refused read left each named root without a row, plus the error the repair itself met (it is never swallowed), so the refusal says what stands in the way. */
+function registryRepairCauseV1(root:string,roots:readonly string[],fault:Error,failure:unknown):Error{
+  const reasons=roots.map(path=>{try{return path+": "+explainOwnerlessRoot(root,path);}catch(error){return path+": "+(error as Error).message;}});
+  const repair=failure===undefined?"":"; the repair failed: "+((failure as Error)?.message??String(failure));
+  return Object.assign(new Error("["+reasons.join("; ")+repair+"] "+fault.message),{cause:fault});
+}
+
+/** 🧭️ Retries a refused native-owner lookup when the registry changed or reconciliation repaired the named roots, carrying the taken memo of the read from one attempt to the next. The first refusal of a read also adds every other ownerless crate of the tree (one sweep, additions only), and only a round that added no row counts against the repair budget, so peers adding crates by hand never exhaust it. */
 export async function settleOwnerRegistryV1<T>(root:string,attempt:(carried:RegistryCarryV1)=>Promise<T>,options:{aborted?:()=>boolean;say?:(line:string)=>void}={}):Promise<T>{
   const {readBuildOwnerRegistrySourceV1}=await import("../../📥️inference/🟨️.mjs"),carried:RegistryCarryV1=Object.freeze({takenMemo:createReadTakenMemoV1()});
+  let stalled=0,swept=false;
   for(let round=0;;round++){
     const before=readBuildOwnerRegistrySourceV1(root);
     try{return await attempt(carried);}
@@ -87,8 +101,7 @@ export async function settleOwnerRegistryV1<T>(root:string,attempt:(carried:Regi
       const roots=[...new Set([...pending,...vanished])];
       if(roots.length===0||options.aborted?.())throw fault;
       const current=readBuildOwnerRegistrySourceV1(root,"current");
-      let moved=current!==before,adopted=false;
-      if(round>=GRAPH_LIMITS_V1.repairRounds)throw ownerRegistryRefusalV1({roots,rounds:round,moved,cause:fault});
+      let moved=current!==before,adopted=false,failure:unknown;
       let unresolved:readonly string[]=roots;
       try{
         const {owners}=readBuildOwnerRegistryV1(JSON.parse(current));
@@ -96,12 +109,14 @@ export async function settleOwnerRegistryV1<T>(root:string,attempt:(carried:Regi
         unresolved=[...pending.filter(path=>!owned(path)),...vanished.filter(owned)];
         if(unresolved.length<roots.length)moved=true;
       }catch{moved=true;}
-      try{adopted=adoptOwnerRegistryRootsV1(root,moved?unresolved:roots);}catch{}
+      try{adopted=adoptOwnerRegistryRootsV1(root,moved?unresolved:roots);}catch(problem){failure=problem;}
+      if(!swept&&pending.length>0){swept=true;try{adopted=adoptOwnerlessCratesV1(root)||adopted;}catch(problem){failure??=problem;}}
       if(!moved&&!adopted)moved=readBuildOwnerRegistrySourceV1(root,"current")!==before;
-      if(!moved&&!adopted)throw ownerRegistryRefusalV1({roots,rounds:round,moved,cause:fault});
+      stalled=adopted?0:stalled+1;
+      if(!moved&&!adopted||stalled>GRAPH_LIMITS_V1.repairRounds)throw ownerRegistryRefusalV1({roots,rounds:round,moved,cause:registryRepairCauseV1(root,roots,fault,failure)});
       clearPinnedAuthorityV1();
       emitGraphPassNoticeV1({round:round+1,moved:roots.length,evicted:0,heap:0});
-      options.say?.("[graph-repair] "+JSON.stringify({round:round+1,registry:"followed",roots,adopted,moved})+"\n");
+      options.say?.("[graph-repair] "+JSON.stringify({round:round+1,registry:"followed",roots,adopted,moved,...(failure===undefined?{}:{failure:(failure as Error)?.message??String(failure)})})+"\n");
     }
   }
 }

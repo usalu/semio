@@ -32,7 +32,8 @@ fn original_visible_inverse_receives_original_affected_value_and_closes_every_pa
     let rules: serde_json::Value = serde_json::from_str(include_str!("../🔣️.json")).unwrap();
     let law = &rules["visibilityLaw"];
     let cuts = law["cancelAfterTurns"].as_array().unwrap().iter().map(|cut| cut.as_u64().unwrap());
-    let factory = store::os_store::document_store_owners::BoundedArtifactRetirementFactory::<DrawingMutation>::new();
+    let factory: std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DrawingMutation>> =
+        std::sync::Arc::new(store::os_store::document_store_owners::BoundedArtifactRetirementFactory::new());
     let context = RetainedMutationCloseContext { mutations: &factory };
     let grant = grant();
     for cut in cuts.chain([100000]) {

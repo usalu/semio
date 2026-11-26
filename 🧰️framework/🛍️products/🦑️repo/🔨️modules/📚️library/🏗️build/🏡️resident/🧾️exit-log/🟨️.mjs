@@ -1,3 +1,4 @@
+import {processPidExistsV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs";
 import{appendFileSync,readFileSync,renameSync,statSync,writeFileSync}from"node:fs";
 import{join}from"node:path";
 
@@ -42,7 +43,7 @@ export function readCgroupEventsV1(path,read=file=>readFileSync(file,"utf8")){
 }
 
 /** 🔎️ Names why the service behind `directory` is gone: the reason its last exit row gives; a launchd start that names no process yet is still starting within `starting` milliseconds, else (its last row is a start whose process is gone) a kill without a trace with the cgroup's `oom_kill` count; otherwise nothing is known. */
-export function explainServiceLossV1(directory,{alive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error.code==="EPERM";}},events=readCgroupEventsV1,now=Date.now(),starting=STARTING_MILLISECONDS}={}){
+export function explainServiceLossV1(directory,{alive=pid=>processPidExistsV1(pid),events=readCgroupEventsV1,now=Date.now(),starting=STARTING_MILLISECONDS}={}){
  const rows=readServiceExitRowsV1(directory),last=rows.at(-1);
  if(!last)return"the service left no exit record";
  if(last.event==="exit"){

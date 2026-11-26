@@ -3,7 +3,7 @@
 
 \RequirePackage{expl3}
 \RequirePackage{xparse}
-\RequirePackage{semio-tokens}
+\RequirePackage{semio-page}
 \RequirePackage{semio-fonts}
 
 \providecolor{semio-chrome-light-panel}{HTML}{c9c8bd}
@@ -57,6 +57,7 @@
   \str_case:VnF \l_semio_theme_tl {
     { dark } {
       \colorlet{semio-chrome-base}{semio-chrome-dark-base}
+      \semio@page@theme{dark}
       \colorlet{semio-chrome-window}{semio-chrome-dark-window}
       \colorlet{semio-chrome-pane}{semio-chrome-dark-pane}
       \colorlet{semio-chrome-canvas}{semio-chrome-dark-canvas}
@@ -71,6 +72,7 @@
     }
   } {
     \colorlet{semio-chrome-base}{semio-chrome-light-base}
+    \semio@page@theme{light}
     \colorlet{semio-chrome-window}{semio-chrome-light-window}
     \colorlet{semio-chrome-pane}{semio-chrome-light-pane}
     \colorlet{semio-chrome-canvas}{semio-chrome-light-canvas}
@@ -87,11 +89,6 @@
 
 \cs_new_protected:Npn \semio_theme_apply: {
   \semio_chrome_apply_aliases:
-  \str_if_eq:VnTF \l_semio_theme_tl { dark } {
-    \pagecolor{semio-dark}
-  } {
-    \pagecolor{semio-light}
-  }
   \color{semio-chrome-text-normal}
 }
 
@@ -713,7 +710,7 @@
 % between the column sides; it bleeds a little so no anti-aliased seam is left.
 \newcommand{\semio@frame@erase}{%
   \nointerlineskip
-  \moveright\semio@stroke@hairline\hbox{\smash{\textcolor{semio-chrome-canvas}{\vrule width\dimexpr\columnwidth-2\dimexpr\semio@stroke@hairline\relax\relax height\dimexpr\semio@stroke@hairline+.15pt\relax depth.15pt}}\vrule width\z@ height\semio@stroke@hairline}%
+  \moveright\semio@stroke@hairline\hbox{\smash{\textcolor{semio-chrome-interior}{\vrule width\dimexpr\columnwidth-2\dimexpr\semio@stroke@hairline\relax\relax height\dimexpr\semio@stroke@hairline+.15pt\relax depth.15pt}}\vrule width\z@ height\semio@stroke@hairline}%
 }
 % ✂️ A bottom edge that is shared with whatever follows, or closed by the footer
 % rule when it ends the text area. Every edge records where it is shipped; on the

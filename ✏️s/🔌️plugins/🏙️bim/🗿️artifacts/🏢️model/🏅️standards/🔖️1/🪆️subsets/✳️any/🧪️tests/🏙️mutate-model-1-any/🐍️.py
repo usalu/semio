@@ -30,7 +30,7 @@ AFTER = ("📸️snapshot", "➡️after", "🔣️.json")
 MUTATION = ("🦠️mutation", "🔣️.json")
 DIFF = ("🔺️diff", "🔣️.json")
 OUTCOME = ("🎯️outcome", "🔣️.json")
-LEAF_SCHEMA_ROOT = ("..", "..", "🧬️schema", "🧬️mutations")
+LEAF_SCHEMA_ROOT = ("..", "..", "..", "🧬️schema", "🧬️mutations")
 LEAF_SCHEMA = ("🧬️schema", "🔣️.json")
 SCALAR_SECTIONS = ("project",)
 UNDECLARED = "x-undeclared-member"
@@ -91,7 +91,7 @@ def row_at(before_path, params=None):
     leaf = os.path.basename(os.path.dirname(directory))
     fixtures = os.path.dirname(os.path.dirname(directory))
     schema_path = os.path.join(fixtures, *LEAF_SCHEMA_ROOT, leaf, *LEAF_SCHEMA)
-    return Row(directory, read_json(schema_path), registry_of(os.path.join(fixtures, "..")))
+    return Row(directory, read_json(schema_path), registry_of(os.path.join(fixtures, "..", "..")))
 
 
 # endregion 🔖️Reading
@@ -177,7 +177,7 @@ def declared(diff):
             found[(section, None)] = {"entry": "Patched", "fields": set(members)}
             continue
         for identity, record in members.items():
-            found[(section, identity)] = {"entry": record["entry"], "fields": {key for key in record if key != "entry"}}
+            found[(section, identity)] = {"entry": record["entry"], "fields": set(record.get("value", {}))}
     return found
 
 
@@ -185,6 +185,10 @@ def problems_of(row):
     """🔬️ Every disagreement between the libraries and the committed quintet; empty when they agree."""
     problems = []
     before, after = normal(row.before), normal(row.after)
+    for section in set(before) | set(after):
+        if isinstance(before.get(section, after.get(section)), dict):
+            before.setdefault(section, {})
+            after.setdefault(section, {})
     patch = jsonpatch.make_patch(before, after)
     operations = patch.patch
     if normal(patch.apply(before)) != after:
@@ -216,11 +220,24 @@ def problems_of(row):
         if claim["entry"] != expect:
             problems.append("%s: RFC 6902 classifies the record %s, the typed diff says %s" % (key, expect, claim["entry"]))
         elif expect == "Patched" and section == "properties":
-            written = row.diff[section][identity]["assigned"]
+            written = row.diff[section][identity]["value"]["assigned"]
             if set(written) != fact["fields"]:
                 problems.append("%s: RFC 6902 changes property sets %s, the typed diff assigns %s" % (key, sorted(fact["fields"]), sorted(written)))
             if normal(assigned(row.before[section].get(identity), written)) != normal(row.after[section].get(identity)):
                 problems.append("%s: applying the assigned patch to the before-record does not give the after-record" % (key,))
+            continue
+        elif expect == "Patched" and section == "classifications":
+            written = row.diff[section][identity]["value"]["assigned"]
+            if set(written) != fact["fields"]:
+                problems.append("%s: RFC 6902 changes classifications %s, the typed diff assigns %s" % (key, sorted(fact["fields"]), sorted(written)))
+            merged = dict(row.before.get(section, {}).get(identity, {}))
+            for name, value in written.items():
+                if value is None:
+                    merged.pop(name, None)
+                else:
+                    merged[name] = value
+            if normal(merged) != normal(row.after.get(section, {}).get(identity, {})):
+                problems.append("%s: applying the classification patch does not give the after-record" % (key,))
             continue
         elif expect == "Patched" and claim["fields"] != fact["fields"]:
             problems.append("%s: RFC 6902 changes fields %s, the typed diff carries %s" % (key, sorted(fact["fields"]), sorted(claim["fields"])))
@@ -229,7 +246,7 @@ def problems_of(row):
                 problems.append("%s: a Deleted entry carries fields %s" % (key, sorted(claim["fields"])))
             continue
         moved_record = row.after[section] if identity is None else row.after[section][identity]
-        written = row.diff[section] if identity is None else row.diff[section][identity]
+        written = row.diff[section] if identity is None else row.diff[section][identity].get("value", {})
         wanted = moved_record if expect == "Created" else {name: moved_record.get(name) for name in claim["fields"]}
         got = {name: member for name, member in written.items() if name != "entry"} if expect == "Created" or identity is None else claimed(written, moved_record)
         if normal(got) != normal(wanted):
@@ -332,7 +349,10 @@ def main(arguments):
             row = row_at(before)
             checked += 1
             kind = re.sub(r"^[^a-z0-9]+", "", leaf)
-            failures += ["%s/%s: %s" % (leaf, scenario, problem) for problem in problems_of(row) + payload_problems(row, kind)]
+            try:
+                failures += ["%s/%s: %s" % (leaf, scenario, problem) for problem in problems_of(row) + payload_problems(row, kind)]
+            except (AssertionError, KeyError) as error:
+                failures.append("%s/%s: %s" % (leaf, scenario, error))
     for failure in failures:
         print("[FAIL] %s" % failure)
     print("jsonpatch %s, deepdiff %s, jsonschema: %d quintet(s), %s" % (jsonpatch.__version__, deepdiff.__version__, checked, "%d problem(s)" % len(failures) if failures else "oracle agrees"))

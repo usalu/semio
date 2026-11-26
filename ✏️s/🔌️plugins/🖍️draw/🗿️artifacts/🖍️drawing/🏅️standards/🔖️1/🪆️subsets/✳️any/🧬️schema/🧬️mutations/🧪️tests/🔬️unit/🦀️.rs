@@ -133,7 +133,7 @@ async fn dispatch_registers_semantic_descriptors() {
     register_drawing_mutation_descriptors(::semio_framework_schema_state::StateClass::Artifact).expect("mutation descriptor registration");
     for kind in DrawingMutation::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
-        assert_eq!(kind.entity, match kind.kind { "update-path-geometry" => "path", "update-text" => "text", "set-group-isolation" => "group", "drag-layers" | "rotate-layers" | "scale-layers" => "layers", "drag-path-points" => "path-points", _ => "layer" });
+        assert_eq!(kind.entity, match kind.kind { "set-artboard" => "artboard", "update-image" => "image", "set-shape-coordinate" => "shape", "import-image-asset" | "remove-image-asset" => "image-asset", "update-path-geometry" => "path", "update-text" => "text", "set-group-isolation" => "group", "drag-layers" | "rotate-layers" | "scale-layers" => "layers", "drag-path-points" => "path-points", _ => "layer" });
     }
     assert_eq!(DrawingMutation::kinds().len(), KINDS.len());
 }
@@ -275,6 +275,8 @@ async fn replay_history_edit(base: &DrawingSnapshot, log: &[DrawingMutation], in
     if !report.blocks_finalize() {
         store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
         assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
+    } else {
+        result.retire_unscheduled().expect("refused history releases its replay state");
     }
     store::os_store::test_support::close_plain_test_store(&mut store);
     report

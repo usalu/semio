@@ -116,7 +116,7 @@ pub const LABEL_SIZE: f64 = 3.5;
 pub fn sheet() -> String {
     let strokes: String = STROKE_WIDTHS.iter().map(|(class, width)| format!("      .{class}{{stroke-width:{width}}}\n")).collect();
     format!(
-        "\n      .plan{{font-family:sans-serif}}\n      path{{stroke:#000;stroke-linecap:round;stroke-linejoin:round;fill:none}}\n{strokes}      .hidden{{stroke-dasharray:1.5 0.75}}\n      path.region{{fill-rule:evenodd}}\n      path.region.cut{{fill:#1a1a1a}}\n      path.region.projection{{fill:#e6e6e6}}\n      text{{fill:#000;stroke:none;font-size:{TAG_SIZE}px}}\n      text.title{{font-size:{TITLE_SIZE}px;font-weight:bold}}\n      text.space-tag{{text-anchor:middle}}\n      text.grid-label{{font-size:{LABEL_SIZE}px;text-anchor:middle;dominant-baseline:central}}\n    "
+        "\n      .plan{{font-family:sans-serif;font-size:{TAG_SIZE}px}}\n      path{{stroke:#000;stroke-linecap:round;stroke-linejoin:round;fill:none}}\n{strokes}      .hidden{{stroke-dasharray:1.5 0.75}}\n      path.region{{fill-rule:evenodd}}\n      path.region.cut{{fill:#1a1a1a}}\n      path.region.projection{{fill:#e6e6e6}}\n      text{{fill:#000;stroke:none}}\n      text.title{{font-size:{TITLE_SIZE}px;font-weight:bold}}\n      text.space-tag{{text-anchor:middle}}\n      text.grid-label{{font-size:{LABEL_SIZE}px;text-anchor:middle;dominant-baseline:central}}\n    "
     )
 }
 

@@ -7,6 +7,8 @@ import subprocess
 import sys
 import tempfile
 import time
+import re
+from collections import Counter
 
 ticket = Path(__file__).resolve().parent
 with tempfile.TemporaryDirectory(dir=ticket / "🗑️generated") as directory:
@@ -17,7 +19,8 @@ with tempfile.TemporaryDirectory(dir=ticket / "🗑️generated") as directory:
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
         port = sock.getsockname()[1]
-    command = [sys.executable, "-m", "http.server", str(port), "--bind", "127.0.0.1", "--directory", directory] if "--baseline" in sys.argv else [sys.executable, str(ticket / "static-origin.py"), directory, str(port)]
+    access_log = site / "requests.log"
+    command = [sys.executable, "-m", "http.server", str(port), "--bind", "127.0.0.1", "--directory", directory] if "--baseline" in sys.argv else [sys.executable, str(ticket / "static-origin.py"), directory, str(port), str(access_log)]
     with subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) as process:
         try:
             for _ in range(100):
@@ -40,6 +43,11 @@ with tempfile.TemporaryDirectory(dir=ticket / "🗑️generated") as directory:
                     conn.close()
             with ThreadPoolExecutor(max_workers=48) as pool:
                 list(pool.map(fetch, range(96)))
+            if "--baseline" not in sys.argv:
+                lines = access_log.read_text(encoding="utf-8")
+                assert Counter(re.findall(r'"GET (/[^ ]+) HTTP/1\.1" ([0-9]{3}) ', lines)) == {
+                    ("/guest.wasm", "200"): 96, ("/tile.pbf", "200"): 96, ("/gone", "404"): 96,
+                }
         finally:
             process.terminate()
             process.wait()

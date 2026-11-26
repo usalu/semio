@@ -25,6 +25,7 @@ import {casPinClosuresV1} from "../📂️areas/🟦️.ts";
 import {releaseCasPinsV1} from "../📌️pins/🟦️.ts";
 import {casUsageV1} from "../🗃️store/📏️usage/🟦️.ts";
 import {CAS_MESSAGES_V1,CAS_POLICY_V1,casTextV1,requireCasPolicyV1,type CasPolicyV1,type CasRoleV1} from "../🧬️schema/🟦️.ts";
+import {ownProcessIdentityV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 const directories:string[]=[];
 const scratch=(name:string):string=>{const path=mkdtempSync(join(tmpdir(),`cas-${name}-`));directories.push(path);return path;};
@@ -301,7 +302,6 @@ test("adoption makes equal finished files of two workspaces one stored object, l
  const objects=readdirSync(join(root,"v1","o")).flatMap(shard=>readdirSync(join(root,"v1","o",shard)));expect(objects.length).toBe(2);
  const python=spawnSync(testPythonV1()??"python3",["-I","-c",`
 import hashlib,json,os,sys
-import {ownProcessIdentityV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 roots=json.loads(sys.argv[1]);groups={}
 for r in roots:
   for d,_,fs in os.walk(r):

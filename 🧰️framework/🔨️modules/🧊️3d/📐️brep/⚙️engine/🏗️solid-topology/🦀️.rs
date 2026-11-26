@@ -14,6 +14,15 @@ use semio_framework_value::{RetainedAllocationEffect, RetainedCloneGrant as Gran
 use semio_framework_value::retained_clone::retained_clone_grant_admits;
 use std::mem::{size_of, take};
 
+#[path = "🍩️sector-boundary/🦀️.rs"]
+pub mod sector_boundary;
+#[path = "🌗️spherical-cap-boundary/🦀️.rs"]
+pub mod spherical_cap_boundary;
+#[path = "🟠️rounded-box-boundary/🦀️.rs"]
+pub mod rounded_box_boundary;
+#[path = "✂️clip-boundary/🦀️.rs"]
+pub mod clip_boundary;
+
 #[path = "🔁️mapped-boundary/🦀️.rs"]
 pub mod mapped_boundary;
 

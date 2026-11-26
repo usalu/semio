@@ -7,7 +7,7 @@ use semio_os_mcp_foundation::base64_codec::encode_base64;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_os_mcp_foundation::reports::RevisionStamp;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_os_mcp_port::channel_port::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, Fault, InferCommand, PreparedOps, action_input_arguments};
+use semio_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, ActivationPhase, ActivationScope, AppCommand, AppFrame, ArtifactChannel, Fault, InferCommand, PreparedOps, action_input_arguments};
 
 /// 🔢️ Every `AppCommand` variant's own leading `seq`, as a place to WRITE. The kernel envelope's [Design notes](README.md#source-notes-12).
 #[cfg(not(target_arch = "wasm32"))]
@@ -375,6 +375,30 @@ pub fn bind_inference_document(declared: &semio_framework::ContributedInferenceM
 
 #[cfg(not(target_arch = "wasm32"))]
 impl PluginArtifactChannel {
+    /// 📤️ Loads the original pair before reading the real guest's media under the same caller scope.
+    pub fn export_media_scoped(&mut self, instance: u32, port: String, document: Vec<u8>, document_spr: Vec<u8>, scope: &ActivationScope) -> Result<AppFrame, Fault> {
+        let outcome = self.drive_export_media(instance, port, document, document_spr, scope);
+        match outcome {
+            Err(fault) if fault.code == ACTIVATION_CANCELLED_FAULT_CODE => Err(self.settle_instance_cancellation(instance, fault)),
+            outcome => outcome,
+        }
+    }
+
+    fn drive_export_media(&mut self, instance: u32, port: String, document: Vec<u8>, document_spr: Vec<u8>, scope: &ActivationScope) -> Result<AppFrame, Fault> {
+        self.ensure_export_instance(instance, scope)?;
+        self.session_documents.remove(&instance);
+        scope.enter(ActivationPhase::LoadingDocument)?;
+        self.load_archive_carrier(instance, store::DocumentArchivePack { parent_pack: document, parent_spr: document_spr, members: Vec::new() }, scope)?;
+        scope.enter(ActivationPhase::ReadingDocument)?;
+        let frame = self.exchange_one_real_scoped(instance, store::AppCommand::MediaOut { seq: 0, port, request: Vec::new() }, scope)?;
+        scope.checkpoint()?;
+        match frame {
+            store::AppFrame::Media { port, descriptor, data, .. } => Ok(AppFrame::Exported { port, descriptor, data }),
+            store::AppFrame::Error { fault, .. } => Err(decode_guest_fault(&fault)),
+            other => Err(Self::not_wired("ExportMedia/MediaOut", format!("unexpected real AppFrame variant {other:?}"))),
+        }
+    }
+
     /// 📖️ The guest session's live canonical `pack`/`spr` pair — one synchronous guest turn, no reply to wait on.
     pub fn read_artifact_pair(&mut self, instance: u32) -> Result<(Vec<u8>, Vec<u8>), Fault> {
         match self.exchange_one_real(instance, store::AppCommand::ReadDocument { seq: 0 })? {
@@ -392,7 +416,7 @@ impl ArtifactChannel for PluginArtifactChannel {
         if commands.len() != 1 {
             return Err(Self::not_wired("exchange", format!("expected exactly one command, received {}", commands.len())));
         }
-        if !matches!(commands.first(), Some(AppCommand::Infer(_))) {
+        if !matches!(commands.first(), Some(AppCommand::Infer(_) | AppCommand::ExportMedia { .. })) {
             self.ensure_instance(instance)?;
         }
         let mut frames = Vec::with_capacity(commands.len());
@@ -476,15 +500,7 @@ impl ArtifactChannel for PluginArtifactChannel {
                     store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
                     other => return Err(Self::not_wired("TransactionRedo", format!("unexpected real AppFrame variant {other:?}"))),
                 },
-                AppCommand::ExportMedia { port, document, document_spr } => {
-                    self.session_documents.remove(&instance);
-                    self.load_document_archive(instance, &document, &document_spr, &ActivationScope::detached())?;
-                    match self.exchange_one_real(instance, store::AppCommand::MediaOut { seq: 0, port: port.clone(), request: Vec::new() })? {
-                        store::AppFrame::Media { port, descriptor, data, .. } => AppFrame::Exported { port, descriptor, data },
-                        store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
-                        other => return Err(Self::not_wired("ExportMedia/MediaOut", format!("unexpected real AppFrame variant {other:?}"))),
-                    }
-                }
+                AppCommand::ExportMedia { port, document, document_spr } => self.export_media_scoped(instance, port, document, document_spr, &ActivationScope::detached())?,
                 AppCommand::ReadArtifact => {
                     let (pack, spr) = self.read_artifact_pair(instance)?;
                     AppFrame::Artifact { pack, spr }

@@ -122,7 +122,7 @@ pub struct DrawingMutationCandidateAuthority {
     pub preflight_mutation: std::mem::ManuallyDrop<Option<DrawingMutationDigestAuthority>>,
     pub preflight_digest: Option<store::ArtifactStoreInitializationDigest>,
     pub workset: Option<DrawingMutationWorksetPlan>,
-    pub overlay: Option<DrawingMutationOverlayPatch>,
+    pub(super) overlay: Option<DrawingMutationOverlayPatch>,
     pub locator: Option<DrawingLayerLocator>,
     pub primary: Option<DrawingLayerAddress>,
     pub secondary: Option<DrawingLayerAddress>,
@@ -140,7 +140,7 @@ pub struct DrawingMutationCandidateAuthority {
     pub rebuild_target: Option<Option<DrawingLayerAddress>>,
     pub rebuild_role: Option<DrawingContainerRebuildRole>,
     pub rebuild_close_phase: u8,
-    pub source_undo: Option<DrawingContainerSourceUndo>,
+    pub(super) source_undo: Option<DrawingContainerSourceUndo>,
     pub container_reverse: std::mem::ManuallyDrop<Option<Vec<DrawingLayerNode>>>,
     pub container_output: std::mem::ManuallyDrop<Option<Vec<DrawingLayerNode>>>,
     pub overlay_pages: std::mem::ManuallyDrop<Option<Vec<String>>>,
@@ -166,6 +166,12 @@ impl DrawingMutationCandidateAuthority {
         let (arena_pool, arena_slot, arena_generation, owner) = borrow_drawing_mutation_arena_from(pool)?;
         Ok(Self::from_arena(replacement, arena_pool, arena_slot, arena_generation, owner))
     }
+
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn has_bound_overlay(&self) -> bool { self.overlay.is_some() }
+
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn has_source_undo(&self) -> bool { self.source_undo.is_some() }
 
     pub fn from_arena(replacement: Option<semio_framework_job::ReplacementIdentity>, arena_pool: std::sync::Arc<DrawingMutationArenaPool>, arena_slot: usize, arena_generation: u64, owner: DrawingMutationArenaOwner) -> Self {
         Self {
@@ -318,6 +324,7 @@ impl DrawingMutationCandidateAuthority {
     }
 
     pub fn prepare_native_text(&mut self, source: RetainedCloneRef<'_, DrawingNativeText>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+        if self.clone_text_work.is_closed() { return Ok(true); }
         if self.text_clone.is_none() {
             *self.text_clone = Some(DrawingTextCloneAuthority::new());
             cx.consume_fuel(1);

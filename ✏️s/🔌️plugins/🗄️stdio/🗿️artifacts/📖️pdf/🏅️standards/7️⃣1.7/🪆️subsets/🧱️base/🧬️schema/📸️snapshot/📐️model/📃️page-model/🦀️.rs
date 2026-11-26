@@ -1,14 +1,13 @@
 //! 📃️ Page of the PDF document model: the page record with its defaults and accessors. See [`super`].
 
 use super::annotations_and_forms::PdfAnnotation;
-use super::content_operators::{PdfOp, PdfTextArrayItem, PdfTextString};
-use super::object_model::{PdfDictEntry, PdfRect};
-use super::xobjects::PdfTransparencyGroup;
+use semio_s_artifact_stdio_pdf_model_graphics::{PdfOp, PdfTextArrayItem, PdfTextString, PdfTransparencyGroup};
+use semio_s_artifact_stdio_pdf_model_object::{PdfDictEntry, PdfRect};
 
 //#region 🔖️PageModel
 /// 📄️ One page (§7.7.3.3, Table 30) -- inherited `/MediaBox`/`/CropBox`/`/Rotate` already
 /// applied (§7.7.3.4). `content` is the concatenation of the page's content streams as typed
-/// operators whose resource names are the document-level ids ([`PdfSnapshot::fonts`], images,
+/// operators whose resource names are the document-level ids (`PdfSnapshot::fonts`, images,
 /// forms, …); the page's own `/Resources` dictionary is regenerated from them on write.
 #[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

@@ -77,7 +77,7 @@ INTERPOLATION_LETTER = {"linear": "l", "step": "s", "cubicSpline": "c"}
 LETTER_INTERPOLATION = {letter: kind for kind, letter in INTERPOLATION_LETTER.items()}
 
 DOCUMENT_SCHEMA = "stdio.semio.animation"
-DSL_PREAMBLE = "semio s.stdio.semio.animation.dsl v1"
+DSL_PREAMBLE = "semio stdio.semio.animation.dsl v1"
 
 WALK_DSL = "asset://🚶️walk/🗣️.dsl.semio"
 

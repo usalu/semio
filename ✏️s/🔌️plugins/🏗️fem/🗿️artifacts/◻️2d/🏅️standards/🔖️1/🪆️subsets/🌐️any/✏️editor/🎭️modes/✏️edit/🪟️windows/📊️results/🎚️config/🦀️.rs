@@ -301,9 +301,12 @@ pub fn addressed_window_id<C>(
     if let Some(captured) = captured {
         return Ok(captured);
     }
-    let results = |window: &&semio_plugin::ViewWindowInstance| window.window_kind_id == kind_id;
-    let own = view.window_id.as_deref().and_then(|id| view.window_instances.iter().filter(results).find(|window| window.id == id));
-    own.or_else(|| view.window_instances.iter().find(results)).map(|window| window.id.clone()).ok_or_else(|| semio_plugin::Fault::from("fem.window.required: no FEM 2D results window is open"))
+    let id = view.window_id.as_deref().ok_or_else(|| semio_plugin::Fault::from("fem.window.required: command has no addressed window instance"))?;
+    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_plugin::Fault::from("fem.window.stale: addressed window instance is not open"))?;
+    if kind != kind_id {
+        return Err(semio_plugin::Fault::from("fem.window.kind: the result display belongs to a results window; run it from the Results window"));
+    }
+    Ok(id.to_string())
 }
 
 /// 🎚️ The whole-record publication into one exact results-window partition.

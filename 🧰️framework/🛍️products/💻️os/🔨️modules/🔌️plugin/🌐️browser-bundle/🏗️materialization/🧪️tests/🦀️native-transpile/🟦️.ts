@@ -37,7 +37,7 @@ for (const row of cases.cases) {
       writeFileSync(component, await componentNew(await componentEmbed({ dummy: true, witPath: join(work, "wit") }), []));
       const reference = join(work, "jco"), native = join(work, "native");
       const jcoBin = join(repoRoot, "node_modules", ".bin", "jco");
-      const jco = spawnSync(process.execPath, [jcoBin, "transpile", component, "-o", reference, "-q", "--name", row.name_option, ...row.maps.flatMap((map) => ["--map", map])], { encoding: "utf8" });
+      const jco = spawnSync(process.execPath, [jcoBin, "transpile", component, "-o", reference, "-q", "--name", row.name_option, "--instantiation", "async", ...row.maps.flatMap((map) => ["--map", map])], { encoding: "utf8" });
       expect(jco.status).toBe(0);
       const ours = spawnSync(binary!, [...nativeTranspileArgsV1(component, native, row.name_option, row.maps)], { encoding: "utf8" });
       expect(ours.stderr).toBe("");

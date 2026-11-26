@@ -18,6 +18,11 @@ export type Level = "base" | "window" | "pane" | "panel" | "dialog" | "menu";
 /** 📚️ Every {@link Level}, ordered base..menu (Storybook/tests). */
 export const LEVELS: readonly Level[] = ["base", "window", "pane", "panel", "dialog", "menu"] as const;
 
+/** 🪜️ The surface immediately above its owner, capped at the menu level. */
+export function surfaceLevelAbove(level: Level): Level {
+  return LEVELS[Math.min(LEVELS.indexOf(level) + 1, LEVELS.length - 1)]!;
+}
+
 const LevelContext = reactHostPort.createContext<Level>("base");
 
 /** 🎈️ Sets the current UI depth level for descendant chrome. */
@@ -49,13 +54,6 @@ export function getLevelZClass(level: Level): string {
   }
 }
 
-/** 🧱️ Opaque per-level fill — background-color only, no blur (see `[data-level]` cascade in 🎨️ui.css). */
-
-/** 🎨️ Whether a base-floor chrome row (navbar/footer/canvas/mode-body) must paint its own
- * {@link surfaceClass}, or stay transparent so Layout's one continuous base surface shows through.
- * Nested same-level paints are the "navbar ≠ canvas ≠ footer" bug class — one base floor, one fill. */
-/** 🌫️ Fullscreen scrim; host element must carry `data-level="dialog"` for correct tint. */
-
 /** 🪟️ Which fill a painted surface uses — maps 1:1 to {@link surfaceClass}/{@link glassClass}/{@link veilClass}. */
 export type SurfaceFill = "surface" | "glass" | "veil";
 
@@ -79,11 +77,7 @@ export interface SurfaceScopeValue {
 
 const SurfaceContext = reactHostPort.createContext<SurfaceScopeValue | null>(null);
 
-/** 🔓️ Opens a {@link LevelProvider} and records the level's fill for descendants — the "you
- * are already inside a painted surface" signal that {@link Surface} uses to warn on accidental
- * double-painting. Prefer {@link Surface} for a DOM-backed level root; use `SurfaceScope` directly
- * only when the level root isn't a plain `<div>` (e.g. `WindowChrome`, which stamps `data-level`
- * on its own stack element). */
+/** 🔓️ Records the level and fill owned by a frame, overlay or other non-div surface root. */
 export const SurfaceScope: React.FC<{
   readonly level: Level;
   readonly fill?: SurfaceFill | "none";
@@ -100,27 +94,21 @@ export function useSurface(): SurfaceScopeValue | null {
 }
 
 export interface SurfaceProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "className"> {
-  readonly level: Level;
+  readonly level?: Level | "chip";
   readonly fill?: SurfaceFill | "none";
+  readonly overlay?: boolean;
   readonly className?: string;
 }
 
-/** 🏠️ The one reusable "level root" primitive: stamps `data-level`, paints exactly one
- * {@link SurfaceFill}, and opens a {@link SurfaceScope} for its children. This is the enforcement
- * mechanism for "one level = one appearance" — a component that needs a new painted surface uses
- * `Surface` (or `SurfaceScope` + the fill class, for `WindowChrome`-style non-div roots) instead of
- * hand-composing `data-level` + a fill class, so nested same-level surfaces are structurally
- * visible via {@link useSurface} rather than silently drifting. Dev-only: warns when nested inside
- * an ancestor already painting the same level (that ancestor already painted — the "3 different
- * backgrounds in one dialog" bug class). */
-export const Surface = reactHostPort.forwardRef<HTMLDivElement, SurfaceProps>(({ level, fill = "surface", className, children, ...rest }, ref) => {
+/** 🏠️ Shares a painted owner with in-flow descendants. Independent overlays can paint at the same level. */
+export const Surface = reactHostPort.forwardRef<HTMLDivElement, SurfaceProps>(({ level, fill = level === "chip" ? "glass" : "surface", overlay = false, className, children, ...rest }, ref) => {
   const parent = useSurface();
-  if (process.env.NODE_ENV !== "production" && parent && parent.level === level && parent.fill !== "none" && fill !== "none") {
-    console.warn(`Surface: nested "${level}" surface painted inside an ancestor Surface already painting "${level}" — one level must render one appearance. Pass fill="none" on the inner Surface, or remove it and let the ancestor's fill show through.`);
-  }
+  const ambient = useLevel();
+  const resolved = level === "chip" ? surfaceLevelAbove(ambient) : level ?? ambient;
+  const sharesOwner = level !== "chip" && !overlay && parent?.level === resolved && parent.fill !== "none";
   return (
-    <div ref={ref} data-level={level} className={cn(fill === "none" ? undefined : surfaceFillClass(fill), className)} {...rest}>
-      <SurfaceScope level={level} fill={fill}>
+    <div ref={ref} data-level={resolved} data-glass-chip={level === "chip" ? "" : undefined} className={cn(sharesOwner || fill === "none" ? "bg-transparent" : surfaceFillClass(fill), className)} {...rest}>
+      <SurfaceScope level={resolved} fill={sharesOwner ? parent.fill : fill}>
         {children}
       </SurfaceScope>
     </div>

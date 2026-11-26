@@ -1,5 +1,6 @@
 import{graphMemoryAllocationV1,GRAPH_MEMORY_POLICY_V1,hostMemoryMegabytesV1}from"../../../../../🧠️memory/🟨️.mjs";
 import { createBoundedCacheV1 } from "../../../../../🧊️bounded/🟨️.mjs";
+import {processPidExistsV1} from "../../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs";
 import { readProcessFootprintBytesV1 } from "../../../../../🧠️memory/🦶️footprint/🟨️.mjs";
 import { PLAN_STAGE_POLICY_V1, farmAloneCapV1 } from "../../../../../🧠️memory/🪜️plan-stage/🟨️.mjs";
 import {noticeLanguagesV1} from "../../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
@@ -152,7 +153,7 @@ export function createFarmTemporaryDirectoryV1(kind, { directory = realpathSync(
 }
 
 /** 🫀️ Whether a process id still names a process: only the answer "no such process" counts as gone, so a platform that cannot tell keeps the directory. */
-export function farmProcessAliveV1(pid) { try { process.kill(pid, 0); return true; } catch (error) { return error?.code !== "ESRCH"; } }
+export function farmProcessAliveV1(pid) { return processPidExistsV1(pid); }
 
 const liveChildrenV1 = createBoundedCacheV1({ name: "inference:live-children", maxEntries: 4096, maxBytes: 4096 });
 let exitHookedV1 = false;

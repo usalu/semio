@@ -3,7 +3,9 @@ import {mkdir,readdir,readFile,rename,rm,stat,writeFile} from "node:fs/promises"
 import {dirname,join} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {platformClassV1} from "../../🪪️graph-state/🌍️platform-class/🟦️.ts";
+import {networkInterfaces} from "node:os";
 import {fleetCacheFactsPathV1,parseFleetCacheFactsV1} from "../🛰️fleet/🟦️.ts";
+import {collectFleetAddressesV1,connectFleetEndpointV1,fleetEndpointCandidatesV1,readFleetAddressSetV1} from "../../../../🤝️shared-worktree/🗺️topology/🧭️addresses/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🧭️ The header of a read that a group server asks of a peer group: the answering server never reads through to its own peers, so two groups cannot ask each other in a circle. */
@@ -39,28 +41,29 @@ export function requireFleetPeerShapeV1(definition:"Request"|"Answer"|"Path",val
  if(errors.length)throw Error(`${message}: ${errors[0]}`);
 }
 
-/** 🌐️ The endpoints of a peer group by its attested facts (`<peer store>/v1/fleet/cache.json`, as published by its group server and copied by the relay) followed by the endpoints that the topology lists for the link; none when neither exists. */
+/** 🌐️ The endpoints of a peer group, from its attested facts (`<peer store>/v1/fleet/cache.json`, as published by its group server and copied by the relay) and the addresses that its server origin published in its store (`<peer store>/v1/origins/<origin>/addresses.json`), ordered by the one policy of `🧭️addresses` (same subnet first), followed by the endpoints that the topology lists for the link; none when neither exists. */
 export async function fleetPeerEndpointsV1(peerStore:string|undefined,listed:readonly string[]=[]):Promise<readonly string[]>{
  let attested:readonly string[]=[];
- if(peerStore!==undefined)try{attested=parseFleetCacheFactsV1(await readFile(fleetCacheFactsPathV1(peerStore),"utf8")).cache.endpoints;}catch{attested=[];}
+ if(peerStore!==undefined)try{const facts=parseFleetCacheFactsV1(await readFile(fleetCacheFactsPathV1(peerStore),"utf8")),published=await readFleetAddressSetV1(peerStore,facts.publisher.origin);attested=fleetEndpointCandidatesV1({set:published?.set,local:collectFleetAddressesV1(networkInterfaces()),port:facts.publisher.port});}catch{attested=[];}
  return [...new Set([...attested,...listed])];
 }
 
-/** 🛰️ The direct route: a read request to the first endpoint of the peer that answers, signed by the caller's `fetch` (the group server signs with its own `cache-read` key); the answer is bounded in size and time. */
+/** 🛰️ The direct route: a read request to the first endpoint of the peer that answers, found by `connectFleetEndpointV1` (the one failover policy of the fleet: the read itself is the probe, so nothing is asked twice; the endpoint that answered last time is tried first), signed by the caller's `fetch` (the group server signs with its own `cache-read` key); the answer is bounded in size and time. */
 export function directPeerTransportV1(options:Readonly<{group:string;endpoints:()=>Promise<readonly string[]>;fetch:typeof fetch;maximumBytes:number}>):FleetPeerTransportV1{
+ let preferred:string|undefined;
  return Object.freeze<FleetPeerTransportV1>({group:options.group,kind:"direct" as const,async routed(){return(await options.endpoints()).length>0;},async get(path,signal){
   requireFleetPeerShapeV1("Path",path,"Readable cache path required");
-  for(const endpoint of await options.endpoints()){
-   let response:Response;
-   try{response=await options.fetch(endpoint+path,{signal,headers:{[FLEET_HOP_HEADER_V1]:"1"}});}catch{continue;}
-   if(response.status===404){await response.body?.cancel();return {status:404};}
-   if(response.status!==200){await response.body?.cancel();return {status:response.status};}
-   const length=Number(response.headers.get("content-length"));
-   if(Number.isFinite(length)&&length>options.maximumBytes){await response.body?.cancel();return {status:413};}
-   const bytes=new Uint8Array(await response.arrayBuffer());
-   return bytes.byteLength>options.maximumBytes?{status:413}:{status:200,bytes};
-  }
-  return {status:503};
+  const all=await options.endpoints(),candidates=preferred!==undefined&&all.includes(preferred)?[preferred,...all.filter(endpoint=>endpoint!==preferred)]:all;
+  let response:Response|undefined;
+  const found=await connectFleetEndpointV1({candidates,signal,probe:async(endpoint,own)=>{try{response=await options.fetch(endpoint+path,{signal:AbortSignal.any([own,signal]),headers:{[FLEET_HOP_HEADER_V1]:"1"}});return true;}catch{return false;}}});
+  if(found===undefined||response===undefined){preferred=undefined;return {status:503};}
+  preferred=found.endpoint;
+  if(response.status===404){await response.body?.cancel();return {status:404};}
+  if(response.status!==200){await response.body?.cancel();return {status:response.status};}
+  const length=Number(response.headers.get("content-length"));
+  if(Number.isFinite(length)&&length>options.maximumBytes){await response.body?.cancel();return {status:413};}
+  const bytes=new Uint8Array(await response.arrayBuffer());
+  return bytes.byteLength>options.maximumBytes?{status:413}:{status:200,bytes};
  }});
 }
 

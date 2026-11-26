@@ -37,6 +37,14 @@ name = "binding_cancellation_law"
 path = "../../💡️inference/🧪️tests/⏱️binding-cancellation-law/🦀️.rs"
 
 [[test]]
+name = "folder_reopen"
+path = "../../🏠️workspace/🧪️tests/📂️folder-reopen/🦀️.rs"
+
+[[test]]
+name = "export_cancellation"
+path = "../../🗿️artifact/🧪️tests/⏱️export-cancellation/🦀️.rs"
+
+[[test]]
 name = "compile_cancellation_law"
 path = "../../🏠️workspace/🧪️tests/⏱️compile-cancellation-law/🦀️.rs"
 

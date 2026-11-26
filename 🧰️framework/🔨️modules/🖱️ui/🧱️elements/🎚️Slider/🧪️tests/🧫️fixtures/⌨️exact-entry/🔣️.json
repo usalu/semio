@@ -3,6 +3,10 @@
   "initial": 0.5,
   "typed": "0.75",
   "expected": 0.75,
+  "publication": [
+    { "typed": "0.75", "events": [{ "phase": "commit", "value": 0.75 }] },
+    { "typed": "1.5", "events": [{ "phase": "commit", "value": 1.5 }] }
+  ],
   "keys": [
     "Enter",
     "F2",

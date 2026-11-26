@@ -23,6 +23,7 @@ pub enum Mark {
 
 /// 🗣️ The headings a sheet prints, in the language of the export: the name of every title block cell and the four revision columns.
 #[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct TitleLabels {
     pub project: String,
     pub number: String,

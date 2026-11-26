@@ -294,6 +294,7 @@ pub(super) fn paint_card_stack_node_step(
     bounds: Rect,
     presence: &UiPresence,
     pointer: Option<(f32, f32)>,
+    owner: Level,
 ) -> RetainedNodePaintStep {
     let geometry = card_stack_geometry(tree, id, bounds, atlas, theme);
     let row = f64::from(theme.control_height);
@@ -308,7 +309,7 @@ pub(super) fn paint_card_stack_node_step(
         let items = semio_ui_wgpu_light::card_stack::card_stack_paint_items(&frames);
         let result = retained_fixed_output_budgeted(draw, items, |draw| {
             use semio_ui_draw_contract::SharedBorderState;
-            semio_ui_wgpu_light::card_stack::paint_card_stack(draw, &frames, theme.stroke_hairline, theme.chip_glass(semio_ui_theme::Level::Dialog), |index| {
+            semio_ui_wgpu_light::card_stack::paint_card_stack(draw, &frames, theme.stroke_hairline, theme.chip_glass(owner), |index| {
                 let card = &geometry[index];
                 let routed_hover = hovered.map_or(card.routed_hover, |owner| owner == Some(index));
                 if !card.disabled && (card.authored_hover || routed_hover) {

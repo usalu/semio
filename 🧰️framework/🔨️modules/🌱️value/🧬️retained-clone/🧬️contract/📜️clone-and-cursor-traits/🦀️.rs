@@ -14,6 +14,14 @@ pub trait RetainedClone: RetireOwned + Send + Sync + Sized + 'static {
     const NATIVE_CURSOR_SEED:Option<NativeSeedTemplate<Self::Cursor>>=None;
     /// 🌱️ Constructs only fixed inline metadata; this seed cannot allocate, call out or unwind.
     fn retained_clone_cursor() -> Self::Cursor;
+    /// 🔭️ Visits a field's demand interface at its payload's compilation boundary.
+    fn query_record_field(row: &record::RetainedRecordRow<Self>, source: Option<RetainedCloneRef<'_, Self>>, visit: &mut dyn FnMut(&dyn record::RetainedRecordQuery)) {
+        visit(&record::RetainedRecordField::new(row, source));
+    }
+    /// 🛠️ Visits the same field's funded operations at its payload's compilation boundary.
+    fn drive_record_field(row: &mut record::RetainedRecordRow<Self>, source: Option<RetainedCloneRef<'_, Self>>, visit: &mut dyn FnMut(&mut dyn record::RetainedRecordDrive)) {
+        visit(&mut record::RetainedRecordFieldMut::new(row, source));
+    }
     /// 📋️ Returns only fixed native Copy evidence; this query must be pure, nonallocating, callback-free and nonunwinding.
     fn native_copy()->Option<RetainedCopy<Self>>{None}
 

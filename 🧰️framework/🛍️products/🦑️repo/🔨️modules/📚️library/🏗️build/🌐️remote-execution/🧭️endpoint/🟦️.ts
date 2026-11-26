@@ -30,3 +30,14 @@ export async function resolveRemoteExecutionSchedulerV1(input:Readonly<{environm
   return {url:remoteExecutionWorkerApiV1(endpoint,remoteExecutionPortsV1(input.environment,view?.ports).worker),schedulerFrom:"derived"};
  }catch{return undefined;}
 }
+
+/** 🔎️ Why no scheduler endpoint resolves, one line in English and German (the detail of a `no-endpoint` decline): no checkout known, no readable copy of the fleet facts, no scheduler published, or no address of the scheduler origin answered. Synchronous, reads the local copy only. */
+export function explainRemoteExecutionEndpointAbsenceV1(input:Readonly<{environment:Environment;root?:string}>):string{
+ const root=input.root??fleetCacheRootV1(input.environment);
+ if(root===undefined)return "no fleet checkout is known (SEMIO_WORKSPACE_ROOT) / kein Flotten-Checkout bekannt (SEMIO_WORKSPACE_ROOT)";
+ const copy=readLocalFleetCacheFactsV1(root);
+ if(copy===undefined)return "no readable copy of the fleet facts (.cache/f/cache-facts.json) / keine lesbare Kopie der Flottenfakten (.cache/f/cache-facts.json)";
+ const execution=copy.facts.execution;
+ if(execution===undefined)return "the fleet facts publish no scheduler / die Flottenfakten veröffentlichen keinen Scheduler";
+ return `no address of ${execution.origin} answers on port ${execution.port} / keine Adresse von ${execution.origin} antwortet am Port ${execution.port}`;
+}

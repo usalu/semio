@@ -5,6 +5,7 @@
  */
 import { namedPoses } from "../../🔎️search/🟦️.ts";
 import { useRef, type KeyboardEvent, type ReactElement } from "react";
+import { useLevel, windowFrameChipLevel } from "@semio-tech/ui-react/chrome";
 import type { Asset, Clip, ClipEvent, Text } from "@teaching/staffage";
 import { useArchive } from "../../🧭️context/🟦️.tsx";
 import { Cell, Column, Note, Section, SectionTitle, SharedBorderRowCell, Tag, cn } from "../../🪟️chrome/🟦️.tsx";
@@ -28,7 +29,7 @@ function CardGroup(props: { readonly label: string; readonly cards: readonly Car
   return (
     <Column role="radiogroup" aria-label={props.label}>
       {props.cards.map((card, at) => (
-        <button key={card.id} ref={(element) => void (refs.current[at] = element)} type="button" role="radio" aria-checked={card.id === props.checked} tabIndex={at === index ? 0 : -1} data-card={card.id} onKeyDown={(event) => onKey(event, at)} data-shared-border-cell="" onClick={() => props.onPick(card.id)} className={cn("flex min-w-0 flex-col items-start gap-single border-0 p-double text-left transition-colors motion-reduce:transition-none", card.id === props.checked ? "bg-active-base text-active-foreground" : "bg-panel hover:bg-hover-panel")}>
+        <button key={card.id} ref={(element) => void (refs.current[at] = element)} type="button" role="radio" aria-checked={card.id === props.checked} tabIndex={at === index ? 0 : -1} data-card={card.id} onKeyDown={(event) => onKey(event, at)} data-shared-border-cell="" onClick={() => props.onPick(card.id)} className={cn("flex min-w-0 flex-col items-start gap-single border-0 p-double text-left transition-colors motion-reduce:transition-none", card.id === props.checked ? "bg-active-base text-active-foreground" : "hover:bg-hover-interactive-fill")}>
           <span className="flex w-full items-baseline justify-between gap-single">
             <span className="text-sm font-semibold">{card.title[language]}</span>
             {card.badge === undefined ? null : <Tag className="bg-current/15 text-current">{card.badge}</Tag>}
@@ -72,6 +73,7 @@ export function ClipTimeline(props: { readonly asset: Asset; readonly clip: Clip
   const { asset, clip, timeS, onSeek } = props;
   const { t, language } = useArchive();
   const { durationS, fps } = clip;
+  const markerLevel = windowFrameChipLevel(useLevel());
   const pct = (at: number): string => `${(Math.min(Math.max(at, 0), durationS) / durationS) * 100}%`;
   const trackName = (target: string): string => {
     const [kind, id = "", field = ""] = target.split(":");
@@ -91,7 +93,7 @@ export function ClipTimeline(props: { readonly asset: Asset; readonly clip: Clip
     <Section aria-labelledby="detail-timeline" data-section="timeline">
       <SectionTitle id="detail-timeline">{t("detail.timeline.title", { clip: clip.title[language] })}</SectionTitle>
       <SharedBorderRowCell className="px-double py-single"><input type="range" aria-label={t("detail.timeline.label")} aria-describedby="detail-timeline-help" aria-valuetext={`${num(timeS, language)} s`} min={0} max={durationS} step={1 / fps} value={Math.min(Math.max(timeS, 0), durationS)} onChange={(event) => seek(Number(event.target.value))} className="min-h-6 w-full accent-[var(--accent)]" /></SharedBorderRowCell>
-      <div role="group" aria-label={t("detail.timeline.events")} data-shared-border-cell="" data-border-probe-art="" onClick={(event) => { const box = event.currentTarget.querySelector("[data-track]")?.getBoundingClientRect(); if (box !== undefined && box.width > 0 && !(event.target instanceof Element && event.target.closest("[data-event]"))) seek(((event.clientX - box.left) / box.width) * durationS); }} className="bg-panel px-double py-single">
+      <div role="group" aria-label={t("detail.timeline.events")} data-shared-border-cell="" data-border-probe-art="" onClick={(event) => { const box = event.currentTarget.querySelector("[data-track]")?.getBoundingClientRect(); if (box !== undefined && box.width > 0 && !(event.target instanceof Element && event.target.closest("[data-event]"))) seek(((event.clientX - box.left) / box.width) * durationS); }} className="px-double py-single">
         <div data-track="" className="relative mx-[calc(var(--staffage-marker)/2)]">
         <div className="relative h-6" aria-hidden="true">
           {frames <= 150 ? Array.from({ length: frames + 1 }, (_, frame) => <span key={frame} className="absolute top-0 h-1.5 border-l border-border" style={{ left: pct(frame / fps) }} />) : null}
@@ -102,7 +104,7 @@ export function ClipTimeline(props: { readonly asset: Asset; readonly clip: Clip
         </div>
         <div className="relative mt-single h-[calc(var(--staffage-marker)+0.25rem)]" data-row="events">
           {clip.events.map((event, at) => (
-            <button key={at} type="button" data-shared-border-frame="" data-event={event.kind} aria-label={label(event)} title={label(event)} onClick={() => seek(event.t)} className="absolute top-0 min-h-[var(--staffage-marker)] min-w-[var(--staffage-marker)] -translate-x-1/2 border border-border bg-background text-xs leading-none" style={{ left: pct(event.t) }}>
+            <button key={at} type="button" data-shared-border-frame="" data-level={markerLevel} data-glass-chip="" data-event={event.kind} aria-label={label(event)} title={label(event)} onClick={() => seek(event.t)} className="ui-glass absolute top-0 min-h-[var(--staffage-marker)] min-w-[var(--staffage-marker)] -translate-x-1/2 border-0 text-xs leading-none" style={{ left: pct(event.t) }}>
               <span aria-hidden="true">{EVENT_GLYPHS[event.kind]}</span>
             </button>
           ))}

@@ -32,9 +32,8 @@ fn tile(id: &str) -> crate::FigureTileDraft {
 }
 
 fn snapshot_of(ids: &[&str]) -> PresentationSnapshot {
-    let mut snapshot = default_presentation_snapshot();
-    snapshot.tiles = ids.iter().map(|id| tile(id)).collect();
-    snapshot
+    let tiles: Vec<_> = ids.iter().map(|id| tile(id)).collect();
+    crate::presentation_snapshot_with_tiles(&crate::default_figure_tile_source(), &tiles)
 }
 
 fn ids(snapshot: &PresentationSnapshot) -> Vec<&str> {
@@ -61,7 +60,7 @@ fn positional_tile_delta_applies_inverts_and_sums_at_a_middle_row() {
     sum.absorb(relocate);
     sum.absorb(remove);
     assert_eq!(protocol::apply_diff_cold(&sum, &base).expect("valid sum"), removed);
-    let inverse = protocol::DiffAlgebra::inverse(&sum, &base);
+    let inverse = protocol::ColdDiffAlgebra::inverse(&sum, &base);
     assert_eq!(protocol::apply_diff_cold(&inverse, &removed).expect("valid inverse"), base);
 }
 

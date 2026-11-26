@@ -1,0 +1,20 @@
+[
+ {"scale": "50", "bone": "tail-1", "paint": "tail-1", "replace": ["tail-1"]},
+ {"scale": "50", "bone": "tail-2", "paint": "tail-2", "replace": ["tail-2"]},
+ {"scale": "50", "bone": "tail-3", "paint": "tail-3", "replace": ["tail-3"]},
+ {"scale": "50", "bone": "tail-4", "paint": "tail-4", "replace": ["tail-4"]},
+ {"scale": "100", "bone": "tail-1", "paint": "tail-1", "replace": ["tail-1"]},
+ {"scale": "100", "bone": "tail-2", "paint": "tail-2", "replace": ["tail-2"]},
+ {"scale": "100", "bone": "tail-3", "paint": "tail-3", "replace": ["tail-3"]},
+ {"scale": "100", "bone": "tail-4", "paint": "tail-4", "replace": ["tail-4"]},
+ {"scale": "200", "bone": "tail-1", "paint": "tail-1", "replace": ["tail-1"]},
+ {"scale": "200", "bone": "tail-2", "paint": "tail-2", "replace": ["tail-2"]},
+ {"scale": "200", "bone": "tail-3", "paint": "tail-3", "replace": ["tail-3"]},
+ {"scale": "200", "bone": "tail-4", "paint": "tail-4", "replace": ["tail-4"]},
+ {"scale": "500", "bone": "tail-1", "paint": "tail-upper", "replace": ["tail-1"]},
+ {"scale": "500", "bone": "tail-3", "paint": "tail-upper", "replace": ["tail-3"]},
+ {"scale": "500", "bone": "tail-2", "paint": "tail-upper", "replace": ["tail-2", "tail-upper"], "views": ["front", "plan"]},
+ {"scale": "500", "bone": "tail-2", "paint": "tail-upper", "replace": ["tail-2", "tail-upper"], "views": ["elevation"]},
+ {"scale": "500", "bone": "tail-4", "paint": "tail-lower", "replace": ["tail-4", "tail-lower"], "views": ["front", "plan"]},
+ {"scale": "500", "bone": "tail-4", "paint": "tail-lower", "replace": ["tail-4", "tail-lower"], "views": ["elevation"]}
+]

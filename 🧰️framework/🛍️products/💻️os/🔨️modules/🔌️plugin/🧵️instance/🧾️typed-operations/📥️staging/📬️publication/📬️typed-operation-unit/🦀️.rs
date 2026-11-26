@@ -155,22 +155,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             } else {
                 "typed-operation pending publication rejected a stale immutable document root"
             };
-            let demand = semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of_val(&mounted.terminal_fault), depth: 1, ..Default::default() };
-            cx.with_original_retirement(|cx| {
-                semio_framework_job::close_original_retained_step(cx, demand, |_| {
-                    mounted.terminal_fault = Some(semio_plugin_decl_app::borrowed_report(
-                        FaultOrigin::Framework, "interactive-job.stale", semio_framework::Severity::Error,
-                        message, false,
-                    ));
-                    mounted.cancellation_lease.as_ref().expect("claimed publication lease").cancel();
-                    semio_framework_value::RetainedWorkOutcome {
-                        work: 1,
-                        result: Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })),
-                    }
-                })?;
-                Ok(())
-            })?;
-            return Ok(());
+            return self.cancel_stale_publication(mounted, cx, message);
         }
         if mounted.pending_artifact_publication.is_none() && matches!(mounted.publication.as_ref(),Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))if emit.has_artifact_mutations()||!emit.config_mutations.is_empty()||!emit.draft_mutations.is_empty()||!emit.window_config_mutations.is_empty()) && mounted.admit_actor_capture(retained,cx)? {return Ok(());}
         if let Some(pending) = mounted.pending_artifact_publication.as_mut() {
@@ -504,7 +489,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     return Ok(());
                 } else if !emit.window_config_mutations.is_empty() {
                     let authority = mounted.window_config_authority.as_ref().ok_or_else(|| plugin_sdk_fault("window config emission requires one exact captured ViewModel window authority"))?;
-                    if let Some((publication,ownership))=self.stores.window_config_store.admit_begin(mounted.operation.operation,&mut mounted.actor_capture,&mut emit.window_config_mutations,authority,retained).map_err(|error|error.into_fault())? {
+                    let begun=match self.stores.window_config_store.admit_begin(mounted.operation.operation,&mut mounted.actor_capture,&mut emit.window_config_mutations,authority,retained){Err(error) if error.kind==semio_framework_value::ValueRefusalKind::Canceled=>return self.cancel_stale_publication(mounted,cx,"typed-operation window configuration root went stale before its begin was admitted"),other=>other.map_err(|error|error.into_fault())?};
+                    if let Some((publication,ownership))=begun {
                         mounted.publication_ownership_progress=Some((retained,ownership));
                         mounted.pending_artifact_publication=Some(PendingArtifactStorePublication::WindowConfig(publication));
                     }
@@ -599,6 +585,25 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             }
         };
         mounted.reserve_result_intent(intent,cx)?;Ok(())
+    }
+    /// 🛑️ Cancels one mounted publication whose captured root a newer commit superseded, as a benign `interactive-job.stale` terminal fault.
+    fn cancel_stale_publication(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, cx: &mut semio_framework_job::StepContext<'_>, message: &'static str) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+            let demand = semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of_val(&mounted.terminal_fault), depth: 1, ..Default::default() };
+            cx.with_original_retirement(|cx| {
+                semio_framework_job::close_original_retained_step(cx, demand, |_| {
+                    mounted.terminal_fault = Some(semio_plugin_decl_app::borrowed_report(
+                        FaultOrigin::Framework, "interactive-job.stale", semio_framework::Severity::Error,
+                        message, false,
+                    ));
+                    mounted.cancellation_lease.as_ref().expect("claimed publication lease").cancel();
+                    semio_framework_value::RetainedWorkOutcome {
+                        work: 1,
+                        result: Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })),
+                    }
+                })?;
+                Ok(())
+            })?;
+            return Ok(());
     }
     fn advance_mounted_genesis_replacement(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         use semio_plugin_decl_app::tool_contract::ArtifactBoundedToolFault;

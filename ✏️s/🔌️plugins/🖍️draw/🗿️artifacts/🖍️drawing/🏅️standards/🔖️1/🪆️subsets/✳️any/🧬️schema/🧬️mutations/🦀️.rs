@@ -26,7 +26,6 @@ use semio_s_artifact_draw_drawing_structure::remove_image_asset::mutation::Remov
 #[cfg_attr(any(test, feature = "testkit"), serde(tag = "mutation", rename_all = "camelCase"))]
 #[mutations(snapshot = DrawingSnapshot, diff = semio_s_artifact_draw_drawing_diff::DrawingDiff, schema = "drawing.drawing", reference = DrawingSnapshot, reference_diff = semio_s_artifact_draw_drawing_diff::DrawingDiff)]
 pub enum DrawingMutation {
-    SetArtboard(SetArtboard),
     SetLayerVisible(SetLayerVisible),
     SetLayerLocked(SetLayerLocked),
     SetLayerOpacity(SetLayerOpacity),
@@ -53,6 +52,7 @@ pub enum DrawingMutation {
     SetShapeCoordinate(SetShapeCoordinate),
     ImportImageAsset(ImportImageAsset),
     RemoveImageAsset(RemoveImageAsset),
+    SetArtboard(SetArtboard),
 }
 //#endregion 🔖️Mutations
 use semio_s_artifact_draw_drawing_style::update_text::mutation::update_text;
@@ -233,7 +233,6 @@ mod tests;
 /// catalog` below is what keeps this list honest against the enum, since the framework never parses
 /// Rust.
 pub const KINDS: &[&str] = &[
-    "set-artboard",
     "set-layer-visible",
     "set-layer-locked",
     "set-layer-opacity",
@@ -260,6 +259,7 @@ pub const KINDS: &[&str] = &[
     "set-shape-coordinate",
     "import-image-asset",
     "remove-image-asset",
+    "set-artboard",
 ];
 //#endregion 🔖️Kinds
 

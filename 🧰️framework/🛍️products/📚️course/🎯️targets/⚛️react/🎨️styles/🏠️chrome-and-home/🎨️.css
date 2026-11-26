@@ -136,7 +136,6 @@
   align-items: center;
   gap: var(--spacing-single);
   padding: 0 var(--spacing-single);
-  background: var(--base);
   color: var(--foreground);
   font-size: 0.75rem;
 }
@@ -194,7 +193,6 @@
 .course-page-picker {
   display: flex;
   flex: none;
-  background: var(--base);
   color: var(--foreground);
 }
 
@@ -205,6 +203,7 @@
 }
 
 .course-page-picker > select {
+  background: transparent;
   flex: 1;
   min-inline-size: 0;
 }

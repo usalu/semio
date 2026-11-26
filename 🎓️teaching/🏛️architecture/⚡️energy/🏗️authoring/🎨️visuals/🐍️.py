@@ -46,12 +46,7 @@ def chip_glass(level: str = "window", appearance: str = "dark") -> tuple[str, fl
     return paint["fill"], paint["alpha"]
 
 
-@lru_cache(maxsize=None)
-def _frame_fill(level: str, appearance: str) -> str:
-    """🎨 Resolve the body paint from the same elevation ramp as the chip."""
-    return _surface.surface_paint(level, appearance=appearance)["fill"]
-
-
+surface_fill = _surface.surface_fill
 CHROME_CHIP_FILL, CHROME_CHIP_OPACITY = chip_glass()
 CHROME_FOREGROUND = _theme.CHROME_FOREGROUND
 
@@ -190,7 +185,7 @@ def frame_chips(
 
 def window_frame(
     width: float, height: float, *, top_depth: float = 0, top_chips=(), bottom_depth: float = 0, bottom_chips=(),
-    color: str = P_PRIMARY, fill_opacity: float = 0.88, glass: bool = False, stroke_width: float = CHROME_BORDER,
+    color: str = P_PRIMARY, fill_opacity: float = 1.0, glass: bool = False, stroke_width: float = CHROME_BORDER,
     fill_color: str | None = None, level: str = "window", appearance: str = "dark",
 ):
     """🔲 Build one rectangular chrome polygon (``glass``: the surface of a free-standing chip, one level above what it lies on); its chips are translucent glass overlays inside the top and bottom edge, spans measured from the left edge in scene units.
@@ -198,7 +193,7 @@ def window_frame(
     """
     from manim import Polygon
 
-    tint, opacity = chip_glass(level, appearance) if glass else (fill_color or _frame_fill(level, appearance), fill_opacity)
+    tint, opacity = chip_glass(level, appearance) if glass else (fill_color or surface_fill(level, appearance), fill_opacity)
     border = _surface.border_ink(appearance) if top_chips or bottom_chips else color
     frame = Polygon(
         *[np.array([x * UI_PIXEL - width / 2, height / 2 - y * UI_PIXEL, 0.0]) for x, y in window_frame_outline(width / UI_PIXEL, height / UI_PIXEL, inset=0)],
@@ -1106,7 +1101,7 @@ def icon_glyph(kind: str, *, color=P_WHITE, width: float = 0.65):
 def cloud_glyph(content, *, pad=(0.42, 0.36), color=P_WHITE):
     """📋 Architectural annotation frame sized to its typeset contents."""
     return window_frame(content.width + 2 * pad[0], content.height + 2 * pad[1],
-                        color=color, fill_opacity=1).move_to(content)
+                        color=color, glass=True).move_to(content)
 
 
 def cloud_trail(cloud, target, *, n: int = 3, color=P_WHITE):
@@ -2039,7 +2034,7 @@ def caption_bar(text_de: str, *, font_size: int | None = None, color: str = P_WH
         )
     bg = window_frame(
         label.width + 4 * UI_SPACING, label.height + 2 * UI_SPACING,
-        color=color, fill_opacity=0.88,
+        color=color, glass=True,
     )
     bg.move_to(label.get_center())
     bg._layout_zone = "caption_box"

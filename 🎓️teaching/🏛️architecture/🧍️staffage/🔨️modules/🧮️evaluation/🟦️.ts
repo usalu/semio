@@ -609,6 +609,22 @@ function displacement(kin: Chain3, bone: Slug, length: number): { readonly origi
 /** 🌟️ The depth a flat front or plan shape is carried at: the height (plan) or the forward position (front) of the middle of its elevation twin (same id, same bone) at rest, so a rigid part far from the bone origin pivots about its true place; without a twin the rest position of the bone origin (author such a part as a solid instead). */
 type DepthProfile = (key: number) => number;
 
+const REST_ELEVATION = new WeakMap<Shape, readonly (readonly Point[])[]>();
+
+/** 🪵️ The side elevation of a shape of the elevation at rest in world metres, as the depth twins read it: the rings of a flat shape carried by the rest frame of its bone, the outline of a `loft` as the 3D carry of the rest chain projects it (a `solid` is not a twin: its profile is not a flat stroke and the people and rigid assets that carry one are measured with the flat strokes of their bone alone), so a foliage mass drawn as the same loft in the three views is the twin of the flat leaf strokes of its bone as an authored flat outline is. */
+function restElevation(asset: Asset, shape: Shape): readonly (readonly Point[])[] {
+  let rings = REST_ELEVATION.get(shape);
+  if (rings === undefined) {
+    const world = restWorld(asset);
+    const rest = restOf(asset);
+    rings = shape.kind === "loft"
+      ? placeShape(asset, shape, world, "elevation", false, { now: rest, rest }).rings
+      : flattenGeometry(shape).rings.map((ring) => ring.map((p) => apply(world[shape.bone]!, p.x, p.y)));
+    REST_ELEVATION.set(shape, rings);
+  }
+  return rings;
+}
+
 const DEPTH_SAMPLES = 48;
 const DEPTHS = new WeakMap<Shape, DepthProfile | null>();
 
@@ -618,7 +634,7 @@ function depthProfile(asset: Asset, shape: Shape, twins: ReadonlyMap<string, rea
   const sources = twins?.get(`${shape.id} ${shape.bone}`) ?? twins?.get(`* ${shape.bone}`);
   const rest = restWorld(asset)[shape.bone]!;
   const plan = viewpoint === "plan";
-  const rings = (sources ?? []).flatMap((source) => flattenGeometry(source).rings.map((ring) => ring.map((p) => apply(rest, p.x, p.y))));
+  const rings = (sources ?? []).flatMap((source) => restElevation(asset, source));
   const keys = rings.flat().map((p) => (plan ? p.x : p.y));
   if (keys.length === 0) {
     DEPTHS.set(shape, null);
@@ -1045,7 +1061,7 @@ function evaluatedState(asset: Asset, query: EvaluationQuery, selector: Represen
     if (twins === undefined) {
       twins = new Map();
       for (const shape of geometry.elevation) {
-        if (shape.solid !== undefined || shape.kind === "loft") continue;
+        if (shape.solid !== undefined) continue;
         twins.set(`${shape.id} ${shape.bone}`, [shape]);
         if (shape.role !== "ground") twins.set(`* ${shape.bone}`, [...(twins.get(`* ${shape.bone}`) ?? []), shape]);
       }

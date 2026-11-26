@@ -37,14 +37,24 @@ pub struct InferenceCursor<K> {
     pub(super) original_phase:OriginalInferencePhase,
     pub(super) original_edge:usize,
     pub(super) original_parent_count:usize,
+    pub(super) original_cache: Option<usize>,
+    pub(super) original_fingerprint: Option<DepHash>,
+    pub(super) original_cache_lookup: usize,
+    pub(super) original_cache_vacancy: Option<usize>,
+    pub(super) original_row_hit: bool,
+    pub(super) original_hits: usize,
 }
 
 #[derive(Default)]
-pub(super) enum OriginalInferencePhase{#[default] CountParents,ReserveParents,CopyParents,Compute,ClosePending,CloseParents,Publish,Advance}
+pub(super) enum OriginalInferencePhase {
+    #[default] Fingerprint, CloseFingerprint, FoldParents, FindCached, CopyCached,
+    CountParents, ReserveParents, CopyParents, Compute, ClosePending, CloseParents,
+    CacheOutput, Publish, Advance,
+}
 
 impl<K> Default for InferenceCursor<K> {
     fn default() -> Self {
-        Self { plan: None, next: 0, hashes: HashMap::new(), pending: None, progress: 0.0, cancelled: false, original_caller:None,original_field_source:None,original_scope:None,original_plan:None,original_phase:Default::default(),original_edge:0,original_parent_count:0 }
+        Self { plan: None, next: 0, hashes: HashMap::new(), pending: None, progress: 0.0, cancelled: false, original_caller:None,original_field_source:None,original_scope:None,original_plan:None,original_phase:Default::default(),original_edge:0,original_parent_count:0,original_cache:None,original_fingerprint:None,original_cache_lookup:0,original_cache_vacancy:None,original_row_hit:false,original_hits:0 }
     }
 }
 

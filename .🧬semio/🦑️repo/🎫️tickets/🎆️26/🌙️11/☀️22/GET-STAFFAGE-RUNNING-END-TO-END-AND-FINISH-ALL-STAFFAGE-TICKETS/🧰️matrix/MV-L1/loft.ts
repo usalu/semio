@@ -1,11 +1,12 @@
-/** 🌳️ Draws the front and the plan of every foliage mass as ONE real body, as the last step of the chain of a plant: `bun loft.ts <id|file.json> [--save ops.json | --ops ops.json] [--out file] [--write] [--scales 50,100] [--only bone,bone] [--slack 0.04] [--step 16] [--no-fill]`.
+/** 🌳️ Draws every foliage mass as ONE real body in the three views, as the last step of the chain of a plant: `bun loft.ts <id|file.json> [--save ops.json | --ops ops.json] [--out file] [--write] [--scales 50,100] [--only bone,bone] [--slack 0.04] [--views elevation,front,plan] [--step 16] [--speck 1] [--no-fill]`.
  *
- * A foliage mass has a body already: the ellipsoids of its bone in the volume of each scale (`volumes.<scale>.body`), from whose silhouette its three outlines were drawn. The flat front and plan outline of a mass is one sheet at one depth and foreshortens when the wind turns its bone; the depth plates `mvc-*` and the sheets `-mvs` of `../MV-1/carry.ts` mend the extents but show cuts, notches and slivers. This tool replaces the closed body outline of the bone in the front and in the plan by one `loft` shape (same id, paint order, role, tone, region and material) whose body is the union of those ellipsoids, so the engine turns the body itself and every view is its true projection at every pose and clip instant, as one outline:
+ * A foliage mass has a body already: the ellipsoids of its bone in the volume of each scale (`volumes.<scale>.body`), from whose silhouette its three outlines were drawn. The flat front and plan outline of a mass is one sheet at one depth and foreshortens when the wind turns its bone; the depth plates `mvc-*` and the sheets `-mvs` of `../MV-1/carry.ts` mend the extents but show cuts, notches and slivers. This tool replaces the closed body outline of the bone in the side elevation, the front and the plan (`--views` for fewer) by one `loft` shape per view (same id, paint order, role, tone, region and material) whose body is the union of those ellipsoids, so the engine turns the body itself and every view is its true projection at every pose and clip instant, as one outline:
  * - an ellipsoid is a bead of parallel elliptic sections across the viewing direction (`loftsOf`): its equator, one section at the latitude the contour reaches at the largest turn of the bone over every subject of the matrix (poses, clip instants, transitions; further sections every `step` degrees when the bone turns more) on either side, and a point at each pole, so a bead costs the engine two to four convex hulls; ellipsoids that no turn of the bone shows beyond the others (by `slack` millimetres of paper) are left out (`needed`);
- * - a gap that the ellipsoids of a mass leave open inside its silhouette at some turn (the authored outline of the mass is drawn without such holes) is closed by a filling ellipsoid `fillers` puts behind it, as large as the gap and never seen beyond the silhouette of the mass at any turn; a hole the authored outline draws itself stays open;
- * - the beads of a mass hang on one thread of 0.6 micrometres, which the engine leaves out of the union. Ellipsoids that touch no other of their mass are a second loft `<id>-<n>`, which the depiction merges with the first (same bone and region);
- * - every other shape of the bone (open strokes) and the side elevation stay as authored: the elevation outline turns rigidly in its own plane, which is the true side view of the same body.
- * A bone is converted when it has ellipsoids at the scale and exactly one closed flat body outline in the view. The run prints, per scale, view and bone, how far the silhouette of the body is from the authored outline at rest (extent and largest boundary distance) and the time of one evaluation. `--save` writes the shapes as absolute values to an ops file; `--ops` applies such a file: it removes every `mvc-*` plate and every suffix `-mvs`, then sets the listed shapes in the place of the shape of the same bone and id, so the step is idempotent and runs after `../MV-1/make.sh` whatever that step wrote.
+ * - a gap that the ellipsoids of a mass leave open inside its silhouette at some turn is closed by a filling ellipsoid `fillers` puts into it, as large as the gap and never seen beyond the silhouette of the mass at any turn; a hole the authored outline draws itself stays as drawn in the default pose;
+ * - the beads of a mass hang on one thread of 0.6 micrometres, which the engine leaves out of the union. Ellipsoids that touch no other of their mass hang on the same thread (a second loft of the same mass would draw its own outline inside the first);
+ * - after that the engine itself draws every subject of the matrix: a hole of a loft smaller than `speck` millimetres of paper (the engine draws 32 points per section, so three ellipsoids that just meet can leave a dot) gets a ball of at least `BALL` millimetres of paper radius (the dot between three ellipsoids that just meet wanders with the turn, a ball of its own size would be needed at every instant; at most `SPECK_MOST` per mass and view; at a depth of the mass where it is not seen beyond the silhouette of the mass at any turn and lies in no authored opening at rest; a pinhole of at most `PIN` millimetres of paper that finds no such place takes a ball of its own size that only touches the edge of an authored opening at rest), up to five passes;
+ * - every other shape of the bone (open strokes) stays as authored. The side elevation takes the loft too (README "Loft shapes": the same body stands in the three views; since D66 of 2026-11-25 a loft of the elevation is the depth twin of the flat strokes of its bone): an authored elevation outline is up to the generalisation of the scale away from the body, and the three lofts agree by construction.
+ * A bone is converted when it has ellipsoids at the scale and exactly one closed flat body outline in the view; the plates and sheets of every other bone (limbs) stay as they are. The run prints, per scale, the time of one evaluation, the holes the engine still draws how far the extent of the body is from the authored outline in the default pose, and `LOST` for a mass the engine draws smaller than its ellipsoids reach there (it must not appear). `--save` writes the shapes as absolute values to an ops file; `--ops` applies such a file: for every bone it lists it removes the `mvc-*` plates of that bone, then sets the listed lofts in the place of the body outline of the same bone and id (and removes any other loft of the bone), so the step is idempotent and runs after `../MV-1/make.sh` whatever that step wrote.
  * @see ../MV-1/carry.ts — the plates this tool replaces
  * @see ../../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts — `loftRings`, the sections the engine draws
  * @see ../../🧰️silhouette/R4-P/preserve.ts — the writer that keeps every untouched byte */
@@ -22,7 +23,7 @@ const { evaluate, flattenGeometry } = await import(join(S, "🔨️modules", "�
 const { unionPolygons } = await import(join(S, "🔨️modules", "🔺️polygon", "🟦️.ts"));
 const { project, lookingOf } = await import(join(S, "🔨️modules", "🎨️depiction", "🔭️views", "🟦️.ts"));
 
-type View = "front" | "plan";
+type View = "elevation" | "front" | "plan";
 type V3 = [number, number, number];
 type Ellipsoid = { id: string; c: V3; a: [V3, V3, V3] };
 const args = process.argv.slice(2);
@@ -39,14 +40,20 @@ const tolerance: number = engine.toleranceM(asset);
 const PLATE = "mvc-";
 const SHEET = "-mvs";
 const COMMON = ["id", "bone", "role", "z", "filled", "tone", "region", "regions", "material", "hatch", "penMm"];
-const VIEWS: readonly View[] = ["front", "plan"];
+const VIEWS: readonly View[] = (flag("views")?.split(",") as View[] | undefined) ?? ["elevation", "front", "plan"];
 const SEGMENTS = 32;
 const THREAD = 3e-7;
 const TURN = 2e-5;
 const STEP = Number(flag("step") ?? 16);
 const FILL = !args.includes("--no-fill");
 const FILL_ROUNDS = 6;
+const FILL_MOST = 40;
 const FACETS = 48;
+const LEAST = 4;
+const SPECK_MOST = 40;
+const PIN = 0.5;
+const BALL = 0.5;
+const SPECK = Number(flag("speck") ?? 1);
 const authored = Object.keys(asset.representations).filter((key) => engine.authoredOf(asset, key) !== undefined && (scales === undefined || scales.includes(key)));
 const rest = restFrames(asset.rig) as Record<string, { frame: { o: V3; u: V3; v: V3; w: V3 } }>;
 const round = (n: number): number => Math.round(n * 1e5) / 1e5;
@@ -54,12 +61,19 @@ const mm = (m: number): string => (m * 1000).toFixed(0);
 const baseId = (id: string): string => (id.endsWith(SHEET) ? id.slice(0, -SHEET.length) : id);
 const sheetOf = (shape: any): boolean => shape.kind !== "loft" && shape.kind !== "member" && shape.solid === undefined && shape.role === "body" && shape.filled === true && flattenGeometry(shape).closed === true;
 
-/** 🧹️ The geometry without the depth plates and without the sheet suffix. */
-function strip(geometry: any): void {
-  for (const view of VIEWS) {
-    geometry[view] = geometry[view].filter((shape: any) => !String(shape.id).startsWith(PLATE));
-    for (const shape of geometry[view]) if (String(shape.id).endsWith(SHEET)) shape.id = baseId(shape.id);
-  }
+/** 🧹️ One view of a geometry without the depth plates of a bone; the plates of every other bone (limbs) stay, and so does the suffix `-mvs` of the leaf strokes of the bone: a stroke without a twin of its id is carried at the depth of the elevation silhouette of its bone vertex by vertex, a stroke with one at a single depth (`field-maple` 1:50 `storm`: the strokes of `fol-limb-c1` 355 mm beyond the mass in the plan without the suffix). */
+function strip(geometry: any, view: View, bone: string): void {
+  geometry[view] = geometry[view].filter((shape: any) => !(shape.bone === bone && String(shape.id).startsWith(PLATE)));
+}
+
+/** 📌️ Sets the lofts of a mass in a view: the plates of the bone go, the lofts stand where the body outline with the id of the first one stood (with or without the sheet suffix), and every other loft of the bone goes. */
+function place(geometry: any, view: View, bone: string, shapes: readonly any[]): void {
+  strip(geometry, view, bone);
+  const list: any[] = geometry[view];
+  const at = list.findIndex((shape) => shape.bone === bone && baseId(shape.id) === shapes[0].id && (shape.kind === "loft" || sheetOf(shape)));
+  if (at < 0) throw new Error(`${view}: no shape "${shapes[0].id}" on bone "${bone}" to set`);
+  const others = (part: any[]): any[] => part.filter((shape) => !(shape.bone === bone && shape.kind === "loft"));
+  geometry[view] = [...others(list.slice(0, at)), ...shapes.map((shape) => structuredClone(shape)), ...others(list.slice(at + 1))];
 }
 
 /** 🧭️ The unit quaternion of the rotation with the columns `x`, `y`, `z`. */
@@ -177,18 +191,41 @@ function facets(k: Conic): P2[] {
   return Array.from({ length: FACETS }, (_, i) => { const [p, q] = [Math.cos((2 * Math.PI * i) / FACETS), Math.sin((2 * Math.PI * i) / FACETS)]; return { x: k.x + l00 * p, y: k.y + l10 * p + l11 * q }; });
 }
 
-/** 🩹️ The filling ellipsoids of a mass in one view: at every turn of the bone the silhouette of the ellipsoids is united; a hole of it (not one the authored outline draws: `open` tells for a point of the rest drawing) gets an ellipsoid at the depth of the ellipsoids around it, as wide as the hole plus a tenth along its two principal directions and as deep as it is narrow. A filling that would be seen beyond the silhouette of the mass at any turn is shrunk by a sixth up to five times and then given up; the rounds end when no turn shows a hole. Returns the fillings and the number of holes left. */
-function fillers(list: readonly Ellipsoid[], across: V3, up: V3, n: V3, turns: readonly number[], pad: number, open: (x: number, y: number) => boolean): { fills: Ellipsoid[]; left: number } {
+/** 🩹️ The filling ellipsoids of a mass in one view: at every turn of the bone, the largest turn first, the silhouette of the ellipsoids and the fillings so far is united; a hole of it gets an ellipsoid about the box of the hole along its two principal directions, as deep as it is narrow, at the depth of the ellipsoids around it. A filling is refused when it would be seen beyond the silhouette of the mass at any turn (by more than `pad`), when it covers more of the holes of the bare ellipsoids at any turn than 1.3 times the hole it is made for or stands free in a hole that the ellipsoids and the fillings so far leave at any turn (a circle in an opening), or when at rest it covers a part of a hole the authored outline draws itself (`open`, relative to the bone origin): the default pose keeps its drawing. A refused filling is tried at 0.85, 0.7, 0.6 and 0.5 of its size and, for a mass with authored openings, at the other depths of the mass (the depth moves its place in the rest drawing, not in the turned one), so an authored opening closes when the wind turns the mass and no crescent with tails is left of it; an opening too large to hide a filling at rest stays open at every turn. At most `FILL_MOST` fillings and `FILL_ROUNDS` rounds. Returns the fillings and the largest number of holes left at one turn. */
+function fillers(list: readonly Ellipsoid[], across: V3, up: V3, n: V3, turns: readonly number[], pad: number, open: readonly P2[][]): { fills: Ellipsoid[]; left: number } {
   const axes = (turn: number): [V3, V3, V3] => { const [c, s] = [Math.cos(turn), Math.sin(turn)]; const back = (p: V3): V3 => [c * p[0] + s * p[1], -s * p[0] + c * p[1], p[2]]; return [back(across), back(up), back(n)]; };
-  const outer = turns.map((turn) => sorted(unionPolygons(list.map((e) => facets(seen(e, across, up, turn))))).outlines);
-  const shown = (e: Ellipsoid): boolean => turns.some((turn, t) => facets(seen(e, across, up, turn)).some((p) => !outer[t]!.some((ring) => inside(p, ring))));
+  const bare = turns.map((turn) => sorted(unionPolygons(list.map((e) => facets(seen(e, across, up, turn))))));
   const fills: Ellipsoid[] = [];
+  let state: { count: number; holes: P2[][][] } = { count: 0, holes: bare.map((part) => part.holes) };
+  const gaps = (t: number): P2[][] => {
+    if (state.count !== fills.length) state = { count: fills.length, holes: turns.map((turn) => sorted(unionPolygons([...list, ...fills].map((e) => facets(seen(e, across, up, turn))))).holes) };
+    return state.holes[t]!;
+  };
+  const order = turns.map((_, t) => t).sort((a, b) => Math.abs(turns[b]!) - Math.abs(turns[a]!));
+  const shown = (e: Ellipsoid, room: number): boolean => turns.some((turn, t) => {
+    const k = seen(e, across, up, turn);
+    const keep = Math.max(0, 1 - (2 * pad) / Math.sqrt(Math.min(k.xx, k.yy)));
+    const ring = facets(k);
+    const at = (p: P2, f: number): P2 => ({ x: k.x + (p.x - k.x) * f, y: k.y + (p.y - k.y) * f });
+    if ([at(ring[0]!, 0), ...ring.map((p) => at(p, keep))].some((p) => !bare[t]!.outlines.some((outline) => inside(p, outline)))) return true;
+    const probes = [at(ring[0]!, 0), ...[0.33, 0.66, 0.97].flatMap((f) => ring.filter((_, i) => i % 4 === 0).map((p) => at(p, f)))];
+    const covered = (probes.filter((p) => bare[t]!.holes.some((hole) => inside(p, hole))).length / probes.length) * Math.PI * Math.sqrt(k.xx * k.yy - k.xy * k.xy);
+    if (covered > room) return true;
+    return gaps(t).some((hole) => [at(ring[0]!, 0), ...ring].every((p) => inside(p, hole)));
+  });
+  const opened = (e: Ellipsoid): boolean => {
+    const k = seen(e, across, up, 0);
+    const ring = [{ x: k.x, y: k.y }, ...facets(k)];
+    return open.some((hole) => ring.some((p) => inside(p, hole)) || hole.some((p) => inside(p, ring.slice(1))));
+  };
   const given = new Set<string>();
   let left = 0;
   for (let round = 0; round < FILL_ROUNDS; round++) {
     left = 0;
     let added = 0;
-    for (const [t, turn] of turns.entries()) {
+    for (const t of order) {
+      const turn = turns[t]!;
+      if (fills.length >= FILL_MOST) break;
       const all = [...list, ...fills];
       const conics = all.map((e) => seen(e, across, up, turn));
       const [x, y, z] = axes(turn);
@@ -200,30 +237,37 @@ function fillers(list: readonly Ellipsoid[], across: V3, up: V3, n: V3, turns: r
         for (const p of hole) { sxx += (p.x - m.x) ** 2; sxy += (p.x - m.x) * (p.y - m.y); syy += (p.y - m.y) ** 2; }
         const angle = Math.atan2(2 * sxy, sxx - syy) / 2;
         const [d1, d2] = [{ x: Math.cos(angle), y: Math.sin(angle) }, { x: -Math.sin(angle), y: Math.cos(angle) }];
-        const reach = (d: P2): number => Math.max(...hole.map((p) => Math.abs((p.x - m.x) * d.x + (p.y - m.y) * d.y))) * 1.1 + pad;
-        const [h1, h2] = [reach(d1), reach(d2)];
         const around = all.filter((_, i) => { const k = conics[i]!; const det = k.xx * k.yy - k.xy * k.xy; return hole.some((p) => Math.abs(Math.sqrt((k.yy * (p.x - k.x) ** 2 - 2 * k.xy * (p.x - k.x) * (p.y - k.y) + k.xx * (p.y - k.y) ** 2) / det) - 1) < 0.04); });
         const depth = (around.length > 0 ? around : all).reduce((sum, e, _, group) => sum + dot(e.c, z) / group.length, 0);
-        const c = plus(plus(times(x, m.x), y, m.y), z, depth);
-        const make = (f: number): Ellipsoid => ({ id: `fill-${fills.length + 1}`, c, a: [times(plus(times(x, d1.x), y, d1.y), h1 * f), times(plus(times(x, d2.x), y, d2.y), h2 * f), times(z, Math.min(h1, h2) * f)] });
-        const rest0 = { x: dot(c, across), y: dot(c, up) };
-        let fill: Ellipsoid | undefined;
-        if (!open(rest0.x, rest0.y)) for (let f = 1, tries = 0; tries < 6 && fill === undefined; f *= 5 / 6, tries++) if (!shown(make(f))) fill = make(f);
-        if (fill === undefined) { given.add(key); left++; continue; }
-        fills.push(fill);
+        const reach = list.flatMap((e) => { const far = Math.hypot(...e.a.map((axis) => dot(axis, z))); return [dot(e.c, z) - far, dot(e.c, z) + far]; });
+        const depths = [depth, ...Array.from({ length: 13 }, (_, i) => Math.min(...reach) + ((Math.max(...reach) - Math.min(...reach)) * (i + 0.5)) / 13).sort((a, b) => Math.abs(a - depth) - Math.abs(b - depth))];
+        const size = Math.abs(areaOf(hole));
+        const room = 1.3 * size + 4 * pad * pad;
+        const fit = (part: readonly P2[]): Ellipsoid | undefined => {
+          if (part.length < 2) return undefined;
+          const box = [d1, d2].map((d) => { const at = part.map((p) => p.x * d.x + p.y * d.y); return [Math.min(...at), Math.max(...at)] as const; });
+          const centre = { x: ((box[0]![0] + box[0]![1]) / 2) * d1.x + ((box[1]![0] + box[1]![1]) / 2) * d2.x, y: ((box[0]![0] + box[0]![1]) / 2) * d1.y + ((box[1]![0] + box[1]![1]) / 2) * d2.y };
+          const [h1, h2] = box.map(([low, high]) => ((high - low) / 2) * 1.1 * Math.SQRT2 + pad) as [number, number];
+          const make = (f: number, deep: number): Ellipsoid => ({ id: `fill-${fills.length + 1}`, c: plus(plus(times(x, centre.x), y, centre.y), z, deep), a: [times(plus(times(x, d1.x), y, d1.y), h1 * f), times(plus(times(x, d2.x), y, d2.y), h2 * f), times(z, Math.min(h1, h2) * f)] });
+          for (const f of [1, 0.85, 0.7, 0.6, 0.5]) for (const deep of open.length === 0 ? [depth] : depths) if (!shown(make(f, deep), room) && !opened(make(f, deep))) return make(f, deep);
+          return undefined;
+        };
+        const whole = fills.length >= FILL_MOST ? undefined : fit(hole);
+        if (whole === undefined) { given.add(key); left++; continue; }
+        fills.push(whole);
         added++;
       }
     }
     if (added === 0) break;
   }
-  left = turns.reduce((sum, turn) => sum + sorted(unionPolygons([...list, ...fills].map((e) => facets(seen(e, across, up, turn))))).holes.length, 0);
+  left = Math.max(...turns.map((turn) => sorted(unionPolygons([...list, ...fills].map((e) => facets(seen(e, across, up, turn))))).holes.length));
   return { fills, left };
 }
 
-/** 🧵️ The lofts of the ellipsoids of one mass in one view, `n` the viewing direction in the frame of the bone: every ellipsoid is a bead of parallel elliptic sections across the viewing direction: the equator, sections up to the latitude its contour reaches at the largest of the `turns` of the bone (three degrees more, at least four, a section every `STEP` degrees) and a point at each pole; the beads of a mass hang on one thread of 0.6 micrometres, which the union of the engine leaves out, through a point common to every two beads that touch. Every turn of the thread is at most a right angle between two of its points, so no section folds over the next. Beads that touch no other bead of their mass are a loft of their own. */
+/** 🧵️ The lofts of the ellipsoids of one mass in one view, `n` the viewing direction in the frame of the bone: every ellipsoid is a bead of parallel elliptic sections across the viewing direction: the equator, sections up to the latitude its contour reaches at the largest of the `turns` of the bone (three degrees more, at least `LEAST`, a section every `STEP` degrees). The contour of an ellipsoid with the axes A seen along n is the great circle across A⁻¹n (not Aᵀn, which the first loft tool used: its eleven sections hid the error, with three sections an oblique ellipsoid was drawn up to 216 mm short, `hawthorn` 1:200 `fol-5`; the run reports such a loss as `LOST`) and a point at each pole; the beads of a mass hang on one thread of 0.6 micrometres, which the union of the engine leaves out, through a point common to every two beads that touch; a bead that touches none is reached straight through the air, where the thread has no area either, so a mass is always ONE loft. Every turn of the thread is at most a right angle between two of its points, so no section folds over the next. */
 function loftsOf(ellipsoids: readonly Ellipsoid[], n: V3, turns: readonly number[]): any[][] {
   const bead = (e: Ellipsoid): any[] => {
-    const m0 = e.a.map((axis) => dot(axis, n)) as V3;
+    const m0 = e.a.map((axis) => dot(axis, n) / dot(axis, axis)) as V3;
     const reach = Math.hypot(...m0);
     const m = times(m0, 1 / reach);
     const out = (y: V3): V3 => plus(plus(times(e.a[0], y[0]), e.a[1], y[1]), e.a[2], y[2]);
@@ -235,8 +279,8 @@ function loftsOf(ellipsoids: readonly Ellipsoid[], n: V3, turns: readonly number
     const rotation = quaternion(x, y, cross(x, y));
     const grow = 2 / (1 + Math.cos(Math.PI / SEGMENTS));
     const shift = out(m);
-    const reached = Math.max(...turns.map((turn) => { const [c, s] = [Math.cos(turn), Math.sin(turn)]; const mt = unit(e.a.map((axis) => dot(axis, [c * n[0] + s * n[1], -s * n[0] + c * n[1], n[2]])) as V3); return (Math.acos(Math.max(-1, Math.min(1, dot(m, mt)))) * 180) / Math.PI; }));
-    const widest = Math.min(80, Math.max(4, reached + 3));
+    const reached = Math.max(...turns.map((turn) => { const [c, s] = [Math.cos(turn), Math.sin(turn)]; const mt = unit(e.a.map((axis) => dot(axis, [c * n[0] + s * n[1], -s * n[0] + c * n[1], n[2]]) / dot(axis, axis)) as V3); return (Math.acos(Math.max(-1, Math.min(1, dot(m, mt)))) * 180) / Math.PI; }));
+    const widest = Math.min(80, Math.max(LEAST, reached + 3));
     const count = Math.ceil(widest / STEP);
     const rings = [-90, ...Array.from({ length: 2 * count + 1 }, (_, i) => (widest * (i - count)) / count), 90];
     return rings.map((degrees) => {
@@ -266,6 +310,7 @@ function loftsOf(ellipsoids: readonly Ellipsoid[], n: V3, turns: readonly number
     const last = (): V3 => sections[sections.length - 1]!.at as V3;
     const thread = (p: V3): void => { sections.push({ at: fine(p), rx: THREAD, ry: THREAD }); };
     const walk = (to: V3, then: V3): void => {
+      if (Math.hypot(...minus(to, last())) < 60 * TURN) for (let i = 0; i < 4; i++) thread(plus(last(), heading, 20 * TURN));
       for (const p of turned(last(), heading, unit(minus(to, last())))) thread(p);
       heading = unit(minus(to, last()));
       thread(plus(to, heading, -10 * TURN));
@@ -290,29 +335,22 @@ function loftsOf(ellipsoids: readonly Ellipsoid[], n: V3, turns: readonly number
       }
     };
     visit(root);
+    while (left.size > 0) visit([...left].sort((p, q) => weight(ellipsoids[q]!) - weight(ellipsoids[p]!))[0]!);
     while (sections.length > 0 && sections[sections.length - 1]!.rotation === undefined) sections.pop();
     lofts.push(sections);
   }
   return lofts;
 }
 
-/** 🔧️ The ops applied to the asset: plates and suffixes removed, the listed shapes set in the place of the shape of their bone and id (further lofts of a mass after its first). */
+/** 🔧️ The ops applied to the asset: per scale, view and bone the listed lofts are set by {@link place}. */
 function applyOps(target: any, ops: any): number {
   let count = 0;
-  for (const key of Object.keys(target.representations)) {
-    const geometry = target.representations[key].geometry;
-    if (geometry === undefined) continue;
-    strip(geometry);
-    for (const view of VIEWS) {
-      const wanted: any[] = ops[key]?.[view] ?? [];
-      for (const shape of wanted) {
-        const at = geometry[view].findIndex((known: any) => known.bone === shape.bone && known.id === shape.id);
-        const after = geometry[view].findLastIndex((known: any) => known.bone === shape.bone && known.kind === "loft");
-        if (at >= 0) geometry[view][at] = structuredClone(shape);
-        else if (after >= 0) geometry[view].splice(after + 1, 0, structuredClone(shape));
-        else throw new Error(`${target.id} 1:${key} ${view}: no shape "${shape.id}" on bone "${shape.bone}" to set`);
-        count++;
-      }
+  for (const key of Object.keys(ops)) for (const view of VIEWS) {
+    const wanted: any[] = ops[key]?.[view] ?? [];
+    for (const bone of new Set<string>(wanted.map((shape) => shape.bone))) {
+      const shapes = wanted.filter((shape) => shape.bone === bone);
+      place(target.representations[key].geometry, view, bone, shapes);
+      count += shapes.length;
     }
   }
   return count;
@@ -339,79 +377,140 @@ if (opsFile !== undefined) {
       high = Math.max(high, angle);
       askew = Math.max(askew, Math.acos(Math.min(1, w.x * r.w[0] + w.y * r.w[1] + w.z * r.w[2])));
     }
-    const steps = Math.max(1, Math.ceil((high - low) / 0.05));
+    const steps = Math.max(1, Math.ceil((high - low) / 0.02));
     turns.set(bone.id, [0, ...Array.from({ length: steps + 1 }, (_, i) => low + ((high - low) * i) / steps)]);
     if (bone.id.startsWith("fol")) console.log(`turn ${bone.id}: ${((low * 180) / Math.PI).toFixed(1)} to ${((high * 180) / Math.PI).toFixed(1)} degrees over ${states.length} subjects, lateral axis off by at most ${((askew * 180) / Math.PI).toFixed(2)} degrees`);
   }
-  const made: { key: string; view: View; bone: string; id: string; sheet: any }[] = [];
+  type Item = { key: string; view: View; bone: string; common: any; sheet: P2[][]; beads: Ellipsoid[]; fills: Ellipsoid[]; n: V3; across: V3; up: V3; open: P2[][]; pad: number };
+  const items: Item[] = [];
+  const paperOf = (view: View): { ax: V3; ay: V3; looking: V3 } => {
+    const paper = [{ x: 1, y: 0, z: 0 }, { x: 0, y: 1, z: 0 }, { x: 0, y: 0, z: 1 }].map((axis) => project(view, axis));
+    const looking = lookingOf(view);
+    return { ax: paper.map((p) => p.x) as V3, ay: paper.map((p) => p.y) as V3, looking: [looking.x, looking.y, looking.z] };
+  };
+  const build = (item: Item): number[] => {
+    const lofts = loftsOf([...item.beads, ...item.fills], item.n, turns.get(item.bone)!);
+    const shapes = lofts.map((sections, index) => ({ ...item.common, id: index === 0 ? item.common.id : `${item.common.id}-${index + 1}`, kind: "loft", sections }));
+    for (const shape of shapes) loftShapeIssues(shape as any, `${item.key} ${item.view} ${item.bone}`, (path: string, code: string, en: string) => { const at = Number(/sections\[(\d+)\]/u.exec(path)?.[1] ?? 0); console.log(`ISSUE ${code} ${path} ${en} ${JSON.stringify(shape.sections.slice(Math.max(0, at - 3), at + 3))}`); });
+    place(result.representations[item.key].geometry, item.view, item.bone, shapes);
+    ((ops[item.key] ??= {})[item.view] ??= []).splice(0, Infinity, ...ops[item.key][item.view].filter((shape: any) => shape.bone !== item.bone), ...shapes);
+    return lofts.map((sections) => sections.length);
+  };
   for (const key of authored) {
     const geometry = result.representations[key].geometry;
-    strip(geometry);
     const body: any[] = asset.volumes?.[key]?.body ?? [];
-    const slack = (SLACK / 1000) * Number(key);
+    const pad = (SLACK / 1000) * Number(key);
     for (const view of VIEWS) {
       for (const bone of [...new Set<string>(geometry[view].map((shape: any) => shape.bone))]) {
         if (only !== undefined && !only.includes(bone)) continue;
-        const list: any[] = geometry[view];
         const ellipsoids = body.filter((solid) => solid.bone === bone && solid.kind === "ellipsoid" && solid.weights === undefined);
-        const sheets = list.filter((shape) => shape.bone === bone && sheetOf(shape));
-        const lofted = list.filter((shape) => shape.bone === bone && shape.kind === "loft");
-        if (ellipsoids.length === 0 || body.some((solid) => solid.bone === bone && solid.kind !== "ellipsoid" && solid.role === "body") || (sheets.length !== 1 && lofted.length === 0)) continue;
+        const sheets = (geometry[view] as any[]).filter((shape) => shape.bone === bone && !String(shape.id).startsWith(PLATE) && sheetOf(shape));
+        if (ellipsoids.length === 0 || body.some((solid) => solid.bone === bone && solid.kind !== "ellipsoid" && solid.role === "body") || sheets.length !== 1) continue;
         const f = rest[bone]!.frame;
         const local = (d: V3): V3 => [dot(d, f.u), dot(d, f.v), dot(d, f.w)];
-        const paper = [{ x: 1, y: 0, z: 0 }, { x: 0, y: 1, z: 0 }, { x: 0, y: 0, z: 1 }].map((axis) => project(view, axis));
-        const looking = lookingOf(view);
-        const [n, across, up] = [[looking.x, looking.y, looking.z], paper.map((p) => p.x), paper.map((p) => p.y)].map((d) => local(d as V3)) as [V3, V3, V3];
-        const all = ellipsoids.map(ellipsoidOf);
-        const beads = needed(all, across, up, turns.get(bone)!, slack);
-        const first = sheets[0] ?? lofted[0]!;
+        const { ax, ay, looking } = paperOf(view);
+        const [n, across, up] = [looking, ax, ay].map(local) as [V3, V3, V3];
+        const beads = needed(ellipsoids.map(ellipsoidOf), across, up, turns.get(bone)!, pad);
+        const sheet = structuredClone(sheets[0]);
         const origin = project(view, { x: f.o[0], y: f.o[1], z: f.o[2] });
-        const drawn: P2[][] = sheets.length === 1 ? flattenGeometry(sheets[0]).rings : [];
-        const open = (x: number, y: number): boolean => sorted(drawn).holes.some((ring) => inside({ x: x + origin.x, y: y + origin.y }, ring));
-        const filled = FILL ? fillers(beads, across, up, n, turns.get(bone)!, slack, open) : { fills: [], left: 0 };
-        const lofts = loftsOf([...beads, ...filled.fills], n, turns.get(bone)!);
-        const shapes = lofts.map((sections, n) => ({ ...Object.fromEntries(Object.keys(first).filter((name) => COMMON.includes(name)).map((name) => [name, first[name]])), id: n === 0 ? first.id : `${first.id}-${n + 1}`, kind: "loft", sections }));
-        for (const shape of shapes) loftShapeIssues(shape as any, `${key} ${view} ${bone}`, (path: string, code: string, en: string) => console.log(`ISSUE ${code} ${path} ${en}`));
-        const kept = list.filter((shape) => shape !== first && !lofted.includes(shape));
-        kept.splice(list.slice(0, list.indexOf(first)).filter((shape) => kept.includes(shape)).length, 0, ...shapes);
-        geometry[view] = kept;
-        ((ops[key] ??= {})[view] ??= []).push(...shapes);
-        if (sheets.length === 1) made.push({ key, view, bone, id: first.id, sheet: sheets[0] });
-        console.log(`${key} ${view} ${bone}: ${ellipsoids.length} ellipsoids, ${beads.length} drawn + ${filled.fills.length} filling${filled.left > 0 ? `, ${filled.left} HOLES LEFT` : ""} -> ${lofts.length} loft${lofts.length > 1 ? "s" : ""} "${first.id}" with ${lofts.map((sections) => sections.length).join(" + ")} sections`);
+        const authoredRings: P2[][] = (flattenGeometry(sheet).rings as P2[][]).map((ring) => ring.map((p) => (view === "elevation" ? { x: p.x * dot(f.u, ax) + p.y * dot(f.v, ax), y: p.x * dot(f.u, ay) + p.y * dot(f.v, ay) } : { x: p.x - origin.x, y: p.y - origin.y })));
+        const open = sorted(authoredRings).holes;
+        const filled = FILL ? fillers(beads, across, up, n, turns.get(bone)!, pad, open) : { fills: [], left: 0 };
+        strip(geometry, view, bone);
+        const common = { ...Object.fromEntries(Object.keys(sheets[0]).filter((name) => COMMON.includes(name)).map((name) => [name, sheets[0][name]])), id: baseId(sheets[0].id) };
+        const item: Item = { key, view, bone, common, sheet: authoredRings.map((ring) => ring.map((p) => ({ x: p.x + origin.x, y: p.y + origin.y }))), beads, fills: filled.fills, n, across, up, open, pad };
+        items.push(item);
+        const counts = build(item);
+        console.log(`${key} ${view} ${bone}: ${ellipsoids.length} ellipsoids, ${beads.length} drawn + ${filled.fills.length} filling, ${open.length} authored opening${open.length === 1 ? "" : "s"}, at most ${filled.left} hole${filled.left === 1 ? "" : "s"} at one turn -> ${counts.length} loft${counts.length > 1 ? "s" : ""} "${common.id}" with ${counts.join(" + ")} sections`);
       }
     }
   }
+  const speck = (SPECK / 1000);
+  const drawnOf = new Map<Item, { count: number; outlines: { outlines: P2[][]; holes: P2[][] }[] }>();
+  const silhouettes = (item: Item): { outlines: P2[][]; holes: P2[][] }[] => {
+    const known = drawnOf.get(item);
+    if (known !== undefined && known.count === item.fills.length) return known.outlines;
+    const outlines = turns.get(item.bone)!.map((turn) => sorted(unionPolygons([...item.beads, ...item.fills].map((e) => facets(seen(e, item.across, item.up, turn))))));
+    drawnOf.set(item, { count: item.fills.length, outlines });
+    return outlines;
+  };
   for (const key of authored) {
     const selector = engine.scaleSelector(Number(key));
-    const pose = { kind: "pose", pose: asset.presentation.defaultPose };
-    const t0 = performance.now();
-    const state = evaluate(result, pose, selector);
-    const shapes = { front: state.shapes.front, plan: state.shapes.plan };
-    const t1 = performance.now();
-    const timed = asset.poses.map((entry: any) => { const t = performance.now(); const posed = evaluate(result, { kind: "pose", pose: entry.id }, selector); const rings = [...posed.shapes.front, ...posed.shapes.plan].filter((shape: any) => shape.shape.kind === "loft").map((shape: any) => shape.rings.length); return `${entry.id} ${(performance.now() - t).toFixed(0)} ms, ${rings.reduce((a: number, b: number) => a + b, 0) - rings.length} holes or parts`; });
-    console.log(`1:${key}: ${timed.join("; ")}`);
-    let worst = { extent: 0, boundary: 0, at: "" };
-    for (const item of made.filter((entry) => entry.key === key)) {
-      const rings: { x: number; y: number }[][] = shapes[item.view].filter((shape: any) => shape.shape.bone === item.bone && shape.shape.kind === "loft").flatMap((shape: any) => shape.rings);
-      const drawn: { x: number; y: number }[][] = flattenGeometry(item.sheet).rings;
-      const box = (list: { x: number; y: number }[][]): number[] => { const p = list.flat(); return [Math.min(...p.map((q) => q.x)), Math.max(...p.map((q) => q.x)), Math.min(...p.map((q) => q.y)), Math.max(...p.map((q) => q.y))]; };
-      const [a, b] = [box(rings), box(drawn)];
-      const extent = Math.max(...a.map((value, i) => Math.abs(value - b[i]!)));
-      const distance = (p: { x: number; y: number }, list: { x: number; y: number }[][]): number => {
-        let best = Infinity;
-        for (const ring of list) for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-          const [u, v] = [ring[i]!, ring[j]!];
-          const [dx, dy] = [v.x - u.x, v.y - u.y];
-          const t = dx * dx + dy * dy === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - u.x) * dx + (p.y - u.y) * dy) / (dx * dx + dy * dy)));
-          best = Math.min(best, Math.hypot(p.x - u.x - t * dx, p.y - u.y - t * dy));
+    const mine = items.filter((item) => item.key === key);
+    const queries: any[] = engine.subjects(asset, Number(key)).map((subject: any) => subject.query);
+    for (let pass = 0; pass < 5; pass++) {
+      const t0 = performance.now();
+      const found = new Map<Item, Ellipsoid[]>();
+      let holes = 0, worst = 0, blocked = 0, capped = 0;
+      for (const query of queries) {
+        const state = evaluate(result, query, selector);
+        for (const item of mine) {
+          const drawn: P2[][][] = state.shapes[item.view].filter((entry: any) => entry.shape.bone === item.bone && entry.shape.kind === "loft").map((entry: any) => entry.rings);
+          const { ax, ay, looking } = paperOf(item.view);
+          const frame = state.bones[item.bone].frame;
+          const [o, u, v, w] = [frame.o, frame.u, frame.v, frame.w].map((p: any) => [p.x, p.y, p.z] as V3) as [V3, V3, V3, V3];
+          const mean = item.beads.reduce((sum, e) => plus(sum, e.c, 1 / item.beads.length), [0, 0, 0] as V3);
+          const deep = dot(plus(plus(plus(o, u, mean[0]), v, mean[1]), w, mean[2]), looking);
+          const parts = drawn.map(sorted);
+          const own = parts.flatMap((part) => part.holes.filter((hole) => !parts.some((other) => other !== part && other.outlines.some((outline) => inside(middle(hole), outline)))));
+          const gaps = parts.length > 1 ? sorted(unionPolygons(parts.flatMap((part) => part.outlines))).holes.filter((hole) => !parts.some((part) => part.outlines.some((outline) => inside(middle(hole), outline)))) : [];
+          for (const hole of [...own, ...gaps]) {
+            const m = middle(hole);
+            holes++;
+            const extent = Math.max(Math.max(...hole.map((p) => p.x)) - Math.min(...hole.map((p) => p.x)), Math.max(...hole.map((p) => p.y)) - Math.min(...hole.map((p) => p.y)));
+            if (extent > speck * Number(key)) continue;
+            worst = Math.max(worst, extent);
+            let radius = Math.max(extent * 0.65 + item.pad, (BALL / 1000) * Number(key));
+            const ball = (shift: number): Ellipsoid => { const world = minus(plus(plus(times(ax, m.x), ay, m.y), looking, deep + shift), o); return { id: "speck", c: [dot(world, u), dot(world, v), dot(world, w)], a: [[radius, 0, 0], [0, radius, 0], [0, 0, radius]] }; };
+            let edge = false;
+            const sound = (e: Ellipsoid): boolean => {
+              const k = seen(e, item.across, item.up, 0);
+              const probes = [{ x: k.x, y: k.y }, ...facets(k)];
+              if (item.open.some((ring) => (edge ? probes.every((p) => inside(p, ring)) : probes.some((p) => inside(p, ring))))) return false;
+              return !turns.get(item.bone)!.some((turn, t) => {
+                const round = facets(seen(e, item.across, item.up, turn));
+                const { outlines, holes } = silhouettes(item)[t]!;
+                return round.some((p) => !outlines.some((outline) => inside(p, outline))) || holes.some((hole) => round.every((p) => inside(p, hole)));
+              });
+            };
+            const shifts = item.open.length === 0 ? [0] : Array.from({ length: 81 }, (_, i) => (i % 2 === 0 ? 1 : -1) * Math.ceil(i / 2) * 0.05);
+            let fill = shifts.map(ball).find(sound);
+            if (fill === undefined) { radius = extent * 0.5 + item.pad / 2; fill = shifts.map(ball).find(sound); }
+            if (fill === undefined && extent <= (PIN / 1000) * Number(key)) { edge = true; fill = shifts.map(ball).find(sound); }
+            if (fill === undefined) {
+              blocked++;
+              const k0 = seen(ball(0), item.across, item.up, 0);
+              if (pass === 0) console.log(`no place 1:${key} ${item.view} ${item.bone} ${JSON.stringify(query)}: hole of ${mm(extent)} mm; at rest in an authored opening: ${item.open.some((ring) => inside({ x: k0.x, y: k0.y }, ring))}`);
+              continue;
+            }
+            const known = found.get(item) ?? [];
+            if (known.some((other) => Math.hypot(...minus(other.c, fill.c)) < radius)) continue;
+            if (item.fills.filter((other) => other.id === "speck").length + known.length >= SPECK_MOST) { capped++; continue; }
+            found.set(item, [...known, fill]);
+          }
         }
-        return best;
-      };
-      const boundary = Math.max(...drawn.flat().map((p) => distance(p, rings)), ...rings.flat().map((p) => distance(p, drawn)));
-      console.log(`rest ${key} ${item.view} ${item.bone}: silhouette of the body against the authored outline: extent ${mm(extent)} mm, boundary ${mm(boundary)} mm, ${rings.length} ring${rings.length === 1 ? "" : "s"} (authored ${drawn.length})`);
-      if (boundary > worst.boundary) worst = { extent, boundary, at: `${item.view} ${item.bone}` };
+      }
+      console.log(`1:${key} pass ${pass + 1}: ${queries.length} subjects in ${((performance.now() - t0) / 1000).toFixed(0)} s (${((performance.now() - t0) / queries.length).toFixed(0)} ms each); ${holes} holes seen over all subjects, ${[...found.values()].flat().length} specks (largest ${mm(worst)} mm) to fill, ${blocked} without a place, ${capped} beyond the ${SPECK_MOST} of their mass`);
+      if (found.size === 0) break;
+      for (const [item, fills] of found) { item.fills.push(...fills); build(item); }
     }
-    console.log(`1:${key}: one evaluation of front and plan ${(t1 - t0).toFixed(0)} ms; worst boundary distance at rest ${mm(worst.boundary)} mm (${worst.at})`);
+    const state = evaluate(result, { kind: "pose", pose: asset.presentation.defaultPose }, selector);
+    let far = { extent: 0, at: "" };
+    for (const item of mine) {
+      const rings: P2[][] = state.shapes[item.view].filter((entry: any) => entry.shape.bone === item.bone && entry.shape.kind === "loft").flatMap((entry: any) => entry.rings);
+      const box = (list: P2[][]): number[] => { const p = list.flat(); return [Math.min(...p.map((q) => q.x)), Math.max(...p.map((q) => q.x)), Math.min(...p.map((q) => q.y)), Math.max(...p.map((q) => q.y))]; };
+      const [a, b] = [box(rings), box(item.sheet)];
+      const extent = Math.max(...a.map((value, i) => Math.abs(value - b[i]!)));
+      if (extent > far.extent) far = { extent, at: `${item.view} ${item.bone}` };
+const now = state.bones[item.bone].frame;
+      const r = rest[item.bone]!.frame;
+      const turn = Math.atan2(now.u.x * r.v[0] + now.u.y * r.v[1] + now.u.z * r.v[2], now.u.x * r.u[0] + now.u.y * r.u[1] + now.u.z * r.u[2]);
+      const o = project(item.view, now.o);
+      const c = box(item.beads.map((e) => facets(seen(e, item.across, item.up, turn)).map((p) => ({ x: p.x + o.x, y: p.y + o.y }))));
+      const lost = Math.max(...a.map((value, i) => Math.abs(value - c[i]!)));
+      if (lost > 0.01) console.log(`LOST 1:${key} ${item.view} ${item.bone}: the engine draws ${a.map((value) => value.toFixed(3)).join(" ")}, the ellipsoids reach ${c.map((value) => value.toFixed(3)).join(" ")} (${mm(lost)} mm)`);
+    }
+    console.log(`1:${key}: extent of the body against the authored outline in the default pose: at most ${mm(far.extent)} mm (${far.at})`);
   }
   const save = flag("save");
   if (save !== undefined) {

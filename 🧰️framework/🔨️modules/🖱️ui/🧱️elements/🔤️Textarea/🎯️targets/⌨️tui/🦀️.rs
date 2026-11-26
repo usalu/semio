@@ -5,7 +5,7 @@ use semio_ui_tui_core::event::{mods, Key, KeyEvent, MouseButton, MouseEvent, Mou
 use semio_ui_tui_core::geometry::{Pos, Rect};
 use semio_ui_tui_core::signal::{CursorShape, CursorSpec, WidgetSignal};
 use semio_ui_tui_core::text::{boundary_at_or_before, display_width, clusters as graphemes, next_boundary, previous_boundary};
-use semio_ui_tui_core::theme::{Role, Surface, Theme};
+use semio_ui_tui_core::theme::{Role, Theme};
 
 const MAXIMUM_BYTES: usize = 1_048_576;
 const HISTORY_BYTES: usize = 16_777_216;
@@ -156,7 +156,7 @@ pub fn editor_cursor(editor: &EditorState, rect: Rect) -> Option<CursorSpec> {
 }
 
 pub fn paint_editor(editor: &EditorState, theme: &Theme, rect: Rect, buffer: &mut CellBuffer, _focused: bool) {
-    let bg = theme.surface(Surface::Panel); buffer.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), bg));
+    let bg = buffer.owner_background(); buffer.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), bg));
     let (top, left) = viewport(editor, rect);
     let (selection_start, selection_end) = editor.selection();
     let mut byte = 0;

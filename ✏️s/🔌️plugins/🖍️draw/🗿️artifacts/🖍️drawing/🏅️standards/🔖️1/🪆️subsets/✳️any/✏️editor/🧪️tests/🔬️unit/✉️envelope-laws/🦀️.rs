@@ -4,6 +4,10 @@ use super::*;
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 
 fn drawing_envelope_wire() -> Vec<u8> {
+    drawing_envelope_with(true, true)
+}
+
+fn drawing_envelope_with(asset: bool, edit: bool) -> Vec<u8> {
     use semio_os_kernel::os_pack::snapshot::ArtifactPack;
 
     let mut snapshot = default_drawing_document("drawing-retained-load", None);
@@ -16,12 +20,14 @@ fn drawing_envelope_wire() -> Vec<u8> {
         _ => unreachable!("retained Drawing fixture group remains exact"),
     };
     snapshot.layers.push(group);
-    snapshot.assets.insert(semio_framework_value::paged::PagedUtf8::from("image-a"), semio_s_artifact_draw_drawing_model::DrawingImageAsset { width: 1, height: 1, samples: vec![[0,0,0,0];1].into() });
+    if asset {
+        snapshot.assets.insert(semio_framework_value::paged::PagedUtf8::from("image-a"), semio_s_artifact_draw_drawing_model::DrawingImageAsset { width: 1, height: 1, samples: vec![[0,0,0,0];1].into() });
+    }
     let snapshot_pack = snapshot.encode_pack();
     let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let mutation = DrawingMutation::RenameLayer(semio_s_artifact_draw_drawing_metadata::rename_layer::mutation::RenameLayer { layer_id: retained_target.clone().into(), new_name: "Retained Path".into() });
     let mutation_hex = semio_s_artifact_draw_drawing_mutations::binary::encode_op(&mutation).expect("Drawing fixture mutation pack").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    let wire = serde_json::to_vec(&serde_json::json!({
+    let mut envelope = serde_json::json!({
         "schema": DRAWING_DOCUMENT_SCHEMA,
         "id": "drawing-retained-load",
         "vcs": {
@@ -41,8 +47,9 @@ fn drawing_envelope_wire() -> Vec<u8> {
         },
         "editMessages": [],
         "conflicts": []
-    }))
-    .expect("schema-first Drawing fixture envelope");
+    });
+    if !edit { envelope["vcs"]["edits"] = serde_json::json!([]); }
+    let wire = serde_json::to_vec(&envelope).expect("schema-first Drawing fixture envelope");
     semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_wallet().close_owned(snapshot);
     wire
 }
@@ -77,6 +84,24 @@ pub(super) async fn drive_drawing_load(app: &mut DrawingAppFixture, handle: semi
         std::thread::yield_now();
     }
     panic!("Drawing retained envelope load did not reach terminal")
+}
+
+#[semio_framework_async_macros::async_test]
+async fn drawing_envelope_accepts_assets_without_edits() {
+    let mut app = drawing_app().await;
+    let handle = admit_drawing_envelope(&mut app, &drawing_envelope_with(true, false));
+    assert_eq!(drive_drawing_load(&mut app, handle).await, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+    assert!(app.acknowledge_artifact_store_replacement(handle).unwrap());
+    assert_eq!(app.snapshot().unwrap().assets.len(), 1);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn drawing_envelope_accepts_edits_without_assets() {
+    let mut app = drawing_app().await;
+    let handle = admit_drawing_envelope(&mut app, &drawing_envelope_with(false, true));
+    assert_eq!(drive_drawing_load(&mut app, handle).await, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+    assert!(app.acknowledge_artifact_store_replacement(handle).unwrap());
+    assert_eq!(app.history_snapshot().await.unwrap().edit_count, 1);
 }
 
 #[semio_framework_async_macros::async_test]

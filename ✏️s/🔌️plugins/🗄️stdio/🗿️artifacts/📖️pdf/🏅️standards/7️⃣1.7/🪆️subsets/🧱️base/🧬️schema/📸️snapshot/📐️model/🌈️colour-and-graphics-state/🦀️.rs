@@ -1,7 +1,7 @@
 //! 🌈️ Colour and graphics state of the PDF document model: the colour spaces, functions, shadings, patterns, soft masks, extended graphics states and the named colour space and property resources. See [`super`].
 
 use super::content_operators::{PdfLineCap, PdfLineJoin, PdfOp};
-use super::object_model::{PdfDictEntry, PdfMatrix, PdfRect, PDF_IDENTITY_MATRIX};
+use semio_s_artifact_stdio_pdf_model_object::{PdfDictEntry, PdfMatrix, PdfRect, PDF_IDENTITY_MATRIX};
 
 //#region 🔖️Colour
 /// 🌈 A colour space (§8.6). `Named` refers to an entry of the current resource dictionary's

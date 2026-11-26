@@ -16,10 +16,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Navbar, type NavbarItem } from "../🔝️Navbar/🟦️.tsx";
 import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { interactiveActiveFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
-import { shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
 import { chromeStatusBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
-import { useSurface, LevelProvider } from "../🌈️Surface/🟦️.tsx";
+import { Surface } from "../🌈️Surface/🟦️.tsx";
 import { type UiStatus } from "@semio-tech/ui-styling";
 import type { WindowLayoutDropZone, WindowLayoutNode } from "@semio-tech/ui-layout";
 import type { ControlIcon } from "../🔣️Icons/🟦️.tsx";
@@ -46,18 +45,14 @@ const canvasStageStyle = { top: "var(--layout-clearance-top, 0px)", bottom: "var
  * the canvas rectangle on its bottom edge instead of occupying a band below it.
  **/
 export const Canvas: React.FC<{ children: React.ReactNode; id?: string; status?: UiStatus; bottomChips?: CanvasBottomChips }> = ({ children, id, status = "idle", bottomChips }) => {
-  const parent = useSurface();
-  const bgClass = shellFloorFillClass(parent);
   const busy = status === "loading" || status === "waiting";
   return (
-    <LevelProvider level="base">
-      <div id={id} data-slot="canvas" data-level="base" data-ui-status={busy ? status : undefined} className={cn("relative box-border h-full w-full p-0", bgClass, chromeStatusBorderClass(status))}>
-        <div data-slot="canvas-stage" className="absolute inset-x-0" style={canvasStageStyle}>
-          {busy ? <CanvasSkeleton /> : children}
-          <CanvasBottomChipRow chips={bottomChips} />
-        </div>
+    <Surface id={id} data-slot="canvas" data-ui-status={busy ? status : undefined} className={cn("relative box-border h-full w-full p-0", chromeStatusBorderClass(status))}>
+      <div data-slot="canvas-stage" className="absolute inset-x-0" style={canvasStageStyle}>
+        {busy ? <CanvasSkeleton /> : children}
+        <CanvasBottomChipRow chips={bottomChips} />
       </div>
-    </LevelProvider>
+    </Surface>
   );
 };
 
@@ -98,7 +93,7 @@ export const MODE_CANVAS_INSET_CLASS = "p-0";
 //#endregion 🧭️ModeRender
 /** 🪟️ Golden-Layout-style docking mode shell with tab stacks, drag-dock, resize, maximize, and close. */
 const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, onWindowClose, onWindowOpenInNewWindow, layout, onLayoutChange, onTemplateDrop, children, className = "", mobile = false }) => {
-  const { stackDropElementsRef, setLayoutState, setMaximizedStackPath, modeBodyRef, dropZoneRef, setDropZone, setPendingDrag, pendingDrag, dragState, dragLayoutSnapshotRef, layoutStateRef, setDragState, axisGroupRefsRef, axisGroupElementsRef, setTemplateDrag, templateDrag, windowsById, dropZone, layoutState, maximizedStackPath, modeT, modeBodyFillClass } = useModeLayoutState({ windows, layout, onLayoutChange, activeWindowId });
+  const { stackDropElementsRef, setLayoutState, setMaximizedStackPath, modeBodyRef, dropZoneRef, setDropZone, setPendingDrag, pendingDrag, dragState, dragLayoutSnapshotRef, layoutStateRef, setDragState, axisGroupRefsRef, axisGroupElementsRef, setTemplateDrag, templateDrag, windowsById, dropZone, layoutState, maximizedStackPath, modeT } = useModeLayoutState({ windows, layout, onLayoutChange, activeWindowId });
   const { refreshDropZone, finishDrag, closeWindow, toggleMaximize, registerStackDropTargets, startTabDrag, clearPendingDrag, activateWindow, deactivateActiveWindow, handleCanvasBackgroundPointerDown } = useModeWindowCallbacks({ stackDropElementsRef, activeWindowId, setLayoutState, onActiveWindowChange, onWindowClose, setMaximizedStackPath, modeBodyRef, dropZoneRef, setDropZone, setPendingDrag });
   const { clearTemplateDragPreview, onAxisLayoutChanged, onJoinCornerResize, registerAxisGroup, registerAxisElement } = useModeDragEffectsAndAxisCallbacks({ pendingDrag, dragState, dragLayoutSnapshotRef, layoutStateRef, setDragState, setPendingDrag, refreshDropZone, finishDrag, dropZoneRef, setDropZone, setLayoutState, axisGroupRefsRef, axisGroupElementsRef, setTemplateDrag, templateDrag });
   const { canMaximize, previewDragState, tabInsertPreview, draggedInsertTabs, noopDrag, handleExternalTemplateDragOver, handleExternalTemplateDrop, draggedPreviewTitle, draggedPreviewIconId } = useModeTemplateDropAndPreview({ stackDropElementsRef, modeBodyRef, onTemplateDrop, clearTemplateDragPreview, setTemplateDrag, refreshDropZone, templateDrag, dragState, windowsById, dropZone, layoutState });
@@ -106,34 +101,31 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   useDragActive(!mobile && Boolean(previewDragState));
   return (
     <div data-slot="mode" data-mobile={mobile ? "true" : undefined} data-dragging={previewDragState ? "true" : undefined} data-maximized-path={maximizedStackPath ? modePathKey(maximizedStackPath) : undefined} className={cn("relative flex h-full min-h-0 w-full flex-col", className)}>
-      <LevelProvider level="base">
-        <div
-          ref={modeBodyRef}
-          data-slot="mode-body"
-          data-level="base"
-          className={cn("relative box-border flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden", modeBodyFillClass, MODE_CANVAS_INSET_CLASS)}
-          onPointerDownCapture={handleCanvasBackgroundPointerDown}
-          onDragOver={!mobile && onTemplateDrop ? handleExternalTemplateDragOver : undefined}
-          onDrop={!mobile && onTemplateDrop ? handleExternalTemplateDrop : undefined}
-        >
-          {!hasWindows ? (
-            <div data-slot="mode-empty" className="flex flex-1 items-center justify-center p-large text-center text-sm text-muted-foreground">
-              {emptyShellNotice}
-            </div>
-          ) : (
-            body
-          )}
-          {!mobile && previewDragState ? (
-            <>
-              <DragGhost x={previewDragState.x} y={previewDragState.y}>
-                {draggedPreviewIconId ? <Icon icon={draggedPreviewIconId} size="small" className="shrink-0" /> : null}
-                <span className="truncate">{draggedPreviewTitle}</span>
-              </DragGhost>
-              <ModeDropPlaces stacks={stackDropElementsRef} host={modeBodyRef} zone={dropZone} />
-            </>
-          ) : null}
-        </div>
-      </LevelProvider>
+      <Surface
+        ref={modeBodyRef}
+        data-slot="mode-body"
+        className={cn("relative box-border flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden", MODE_CANVAS_INSET_CLASS)}
+        onPointerDownCapture={handleCanvasBackgroundPointerDown}
+        onDragOver={!mobile && onTemplateDrop ? handleExternalTemplateDragOver : undefined}
+        onDrop={!mobile && onTemplateDrop ? handleExternalTemplateDrop : undefined}
+      >
+        {!hasWindows ? (
+          <div data-slot="mode-empty" className="flex flex-1 items-center justify-center p-large text-center text-sm text-muted-foreground">
+            {emptyShellNotice}
+          </div>
+        ) : (
+          body
+        )}
+        {!mobile && previewDragState ? (
+          <>
+            <DragGhost x={previewDragState.x} y={previewDragState.y}>
+              {draggedPreviewIconId ? <Icon icon={draggedPreviewIconId} size="small" className="shrink-0" /> : null}
+              <span className="truncate">{draggedPreviewTitle}</span>
+            </DragGhost>
+            <ModeDropPlaces stacks={stackDropElementsRef} host={modeBodyRef} zone={dropZone} />
+          </>
+        ) : null}
+      </Surface>
     </div>
   );
 };

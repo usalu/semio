@@ -52,7 +52,7 @@ from semio_repo_test import Adapter, Context, Outcome, digest
 
 
 # region 🔖️Carrier
-DSL_PREAMBLE = "semio s.stdio.semio.image.dsl v1"
+DSL_PREAMBLE = "semio stdio.semio.image.dsl v1"
 
 COLORSPACE_LETTER = {"rgb": "r", "rgba": "a", "grayscale": "g", "grayscaleAlpha": "y", "indexed": "i"}
 LETTER_COLORSPACE = {letter: name for name, letter in COLORSPACE_LETTER.items()}

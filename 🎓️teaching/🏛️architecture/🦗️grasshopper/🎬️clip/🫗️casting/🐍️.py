@@ -630,7 +630,7 @@ class Beat4_Casting(_live_scene.RefreshMoving, _visuals.ClipScene):
         group = _mn.VGroup()
         for index, (head, body) in enumerate(cards):
             centre = SHEET_AT + np.array([0, 1.5 - index * 1.45, 0])
-            box = _art.window_frame(6.2, 1.15, color=GOOD, stroke_width=1.6, fill_color="#FFFFFF", fill_opacity=0.9, top_depth=0.52, top_chips=((0, 6.2),), appearance="light").move_to(centre)
+            box = _art.window_frame(6.2, 1.15, color=GOOD, stroke_width=1.6, top_depth=0.52, top_chips=((0, 6.2),), appearance="light").move_to(centre)
             badge = self.badge(str(index + 1), centre + np.array([-2.75, 0.315, 0]), color=INK_GREEN, size=SMALL, filled=True)
             group.add(box, badge, self.text(head, centre + np.array([-2.3, 0.315, 0]), size=19.2, color=_canvas.TEXT, anchor="l", width=5.2),
                       self.text(body, centre + np.array([-2.3, -0.2, 0]), size=SMALL, color=INK_GREY, anchor="l", width=5.2))

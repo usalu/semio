@@ -225,7 +225,6 @@ pub fn theme_from_document(document: &ThemeDocument, dark: bool) -> Theme {
         let base = paint("base", theme.background);
         let foreground = paint("foreground", theme.text);
         theme.background = base;
-        theme.input_bg = base;
         theme.canvas_clear = base;
         theme.text = foreground;
         theme.muted = paint("muted", theme.muted);

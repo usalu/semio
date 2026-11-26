@@ -1,0 +1,14 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["kind", "compound", "code", "message"],
+    "properties": {
+      "kind": {"enum":[null, "work", "ownership", "allocation", "depth", "cancel", "invalid", "unsupported", "invariant"]},
+      "compound": {"type":"boolean"},
+      "code": {"enum":["BUDGET_EXCEEDED", "CANCELLED", "SIDE_EFFECT_REJECTED"]},
+      "message": {"type":"string"}
+    }
+  }
+}

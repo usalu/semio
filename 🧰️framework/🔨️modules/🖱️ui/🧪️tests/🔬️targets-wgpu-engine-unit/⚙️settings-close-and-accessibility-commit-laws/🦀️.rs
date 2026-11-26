@@ -3,7 +3,7 @@
 //#region 🔖️FacadeTests
 /// ⚙️ The actual Puzzle3D Settings payload enters through `UiDocumentTree`, completes the
 /// production frame ladder, publishes all four controls and retains the clipped outer border,
-/// two dividers, catalog icons and value text.
+/// two dividers, catalog icons and value text on the owning surface.
 #[test]
 fn puzzle3d_settings_document_completes_retained_paint() {
     let law = puzzle3d_settings_law();
@@ -18,7 +18,7 @@ fn puzzle3d_settings_document_completes_retained_paint() {
     let mut draw = DrawList::default();
     let mut ready = false;
     for _ in 0..262_144 {
-        match ui.frame_into_step::<RecordingSceneHost>(window_id, body, &mut atlas, Some(&icons), None, &mut draw, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
+        match ui.frame_into_step::<RecordingSceneHost>(window_id, body, semio_ui_theme::Level::Window, &mut atlas, Some(&icons), None, &mut draw, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
             UiFrameStep::Pending => {}
             UiFrameStep::Ready => {
                 ready = true;
@@ -49,8 +49,8 @@ fn puzzle3d_settings_document_completes_retained_paint() {
         let clip = semio_ui_draw_contract::ScissorRect::from_rect(bounds, body.h);
         let clipped: Vec<_> = draw.layers.iter().filter(|layer| layer.scissor == Some(clip)).flat_map(|layer| layer.ui_instances.iter()).collect();
         let solids: Vec<_> = clipped.iter().copied().filter(|instance| instance.params[2] == semio_ui_draw_contract::KIND_SOLID).collect();
-        assert_eq!(solids.len(), 7, "{key} retains one five-quad border and two clipped dividers when neither side is hovered");
-        assert!(solids.iter().any(|instance| rect_matches(instance.rect, bounds)), "{key} retains the outer background");
+        assert_eq!(solids.len(), 6, "{key} retains four outer edges and two clipped dividers when neither side is hovered");
+        assert!(!solids.iter().any(|instance| rect_matches(instance.rect, bounds)), "{key} inherits the owning background");
         let [minus, value_segment, plus] = semio_ui_wgpu_layout::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, ui.theme.stroke_hairline);
         assert!(!solids.iter().any(|instance| rect_matches(instance.rect, value_segment)), "{key} center is transparent and borderless");
         let hair = ui.theme.stroke_hairline;

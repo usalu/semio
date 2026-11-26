@@ -4,8 +4,8 @@ use semio_framework_artifact_flow_flow::FlowMutation;
 #[path="🔍️serde/🦀️.rs"]mod serde_oracle;
 use semio_os_flow_operators::registry::{flow_operator_registry,install_flow_extension_manifest,uninstall_flow_extension,lock_flow_extension_registry_for_test,drain_flow_extension_registry_retirements};
 use neural_engine::ColdRetire;
-use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OriginalTurnFailure,StepContext,OperationId,Generation,close_original_retained_step};
-use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome};
+use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OriginalTurnFailure,StepContext,OperationId,Generation,close_original_effect_step};
+use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,OriginalRetirementFailure};
 use semio_framework_value::retained_clone::RetainedCloneClose;
 fn clock()->Option<u64>{Some(1000)}
 fn native<T>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,g:RetainedCloneGrant,run:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->T{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(g,decoder,run));let p=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));result.unwrap()}
@@ -29,7 +29,7 @@ fn original_authoring_matches_actual_host_all_six_operations_and_cancel_custody(
   install_flow_extension_manifest(descriptor["manifest"]["pluginId"].as_str().unwrap(),manifest).expect("actual authored extension manifest");installed.push(metadata["id"].as_str().unwrap().to_owned());
  }
  let law:serde_json::Value=serde_json::from_str(include_str!("📁️profiles.json")).unwrap();
- let infos:Arc<HistoryFoldIndex<String,OperatorInfo>>=Arc::new(flow_operator_registry().operator_infos().map(|info|(info.id.clone(),info.clone())).collect());
+ let infos:semio_framework_value_ordered::ordered::SharedOwner<HistoryFoldIndex<String,OperatorInfo>>=semio_framework_value_ordered::ordered::SharedOwner::from_cold(flow_operator_registry().operator_infos().map(|info|(info.id.clone(),info.clone())).collect());
  for operation in law["operations"].as_array().unwrap().iter().map(|v|v.as_str().unwrap()){
   let source=source(&infos,operation);let pointer=source.widgets.as_ptr();let descriptor=if let Some(descriptor)=law["descriptors"].get(operation){serde_json::from_value(descriptor.clone()).unwrap()}else{WidgetDescriptor::InputNote{id:match operation{"addTrimmed"=>Some("\u{2003} original \n\t".into()),"addBlank"=>Some(" ".repeat(5000)),_=>None},text:Some("new".into())}};let options=semio_os_flow_host_core::authoring_layout::DagLayoutOptions::default();
   let request=match operation{
@@ -66,13 +66,13 @@ fn original_authoring_matches_actual_host_all_six_operations_and_cancel_custody(
     }
     if let Some(outcome)=output.as_ref(){match(&outcome.result,&expected){(Ok(leaves),Ok(()))=>{assert_eq!(leaves,&host.pending_leaves,"{operation}");let ours:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(leaves)).unwrap();let oracle=serde_oracle::leaves(&host.pending_leaves);assert_eq!(ours,oracle);if let Some(expected)=law["sliderFields"].get(operation){let FlowMutation::AddWidget(semio_framework_artifact_flow_flow::AddWidget{widget:Widget::InputSlider{value,min,max,step,..},..})=&leaves[0]else{panic!("authored slider is the first domain leaf")};for(actual,expected)in [*value,*min,*max,*step].into_iter().zip(expected.as_array().unwrap()){assert_eq!(actual,expected.as_f64().unwrap(),"{operation}")}}},(Err(actual),Err(expected))=>assert_eq!(actual.to_string(),expected.to_string(),"{operation}"),_=>panic!("genuine authoring result mismatch for {operation}")}}
     if cancel.is_none(){assert!(output.is_some(),"{operation} original caller opportunity exhausted")}
-    work.begin_close();for turn in 0..10000{if work.terminal_is_empty(){break}native(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|{let d=work.next_close_demands(g.maximum_copy_bytes)?;close_original_retained_step(cx,d,|grant|work.close_step(grant))?;Ok(())}));assert!(turn+1<10000)}
+    work.begin_close();for turn in 0..10000{if work.terminal_is_empty(){break}native(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|{let d=work.next_close_demands(g.maximum_copy_bytes)?;close_original_effect_step(cx,d,|effect|{let grant=effect.grant();RetainedWorkPoll::Complete(work.close_step(grant,effect))})?;Ok(())}));assert!(turn+1<10000)}
     assert!(work.terminal_is_empty());drop(work);let mut close=RetainedCloneClose::default();
-    for turn in 0..10000{if output.is_none()&&close.is_empty(){break}native(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|{let d=close.next_owner_demands::<FlowAuthoringOutcome>(output.is_some(),&None,g.maximum_copy_bytes)?;close_original_retained_step(cx,d,|grant|if close.is_empty(){let turn=close.begin_granted(&mut output,grant);RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}else{close.step_granted(grant)})?;Ok(())}));assert!(turn+1<10000)}
+    for turn in 0..10000{if output.is_none()&&close.is_empty(){break}native(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|{let d=close.next_owner_demands::<FlowAuthoringOutcome>(output.is_some(),&None,g.maximum_copy_bytes)?;close_original_effect_step(cx,d,|effect|if close.is_empty(){let turn=close.begin_granted(&mut output,effect);RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::<OriginalRetirementFailure>::into),work:turn.work})}else{close.step_granted(g.maximum_copy_bytes,effect)})?;Ok(())}));assert!(turn+1<10000)}
     while !decoder.terminal_is_empty(){caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(g.maximum_copy_bytes)?;decoder.close_on_source(cx)?;Ok(())})).unwrap();}caller.retire(g);
    }
   }
   assert!(host.retire_cold().is_ok(),"genuine authoring oracle closes");source.retire_cold();
  }
- let Ok(infos)=Arc::try_unwrap(infos)else{panic!("actual host catalogue snapshot retains a live alias")};infos.retire_cold();for extension in installed{uninstall_flow_extension(&extension).expect("actual extension fixture closes");}assert_eq!(drain_flow_extension_registry_retirements(),0);
+ infos.retire_cold();for extension in installed{uninstall_flow_extension(&extension).expect("actual extension fixture closes");}assert_eq!(drain_flow_extension_registry_retirements(),0);
 }

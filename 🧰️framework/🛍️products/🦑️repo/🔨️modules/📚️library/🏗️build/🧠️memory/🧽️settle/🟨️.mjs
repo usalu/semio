@@ -59,7 +59,6 @@ export async function registerRetainedCollectionsV1(){
 
 /** 🔎️ Logs, between two waves of one read, the managed and resident megabytes and the bounded caches that hold the most bytes, so the log names what a wave leaves behind; quiet on a machine without a plan limit. */
 export function reportRetainedGraphMemoryV1({ports=createMemoryPortsV1(),resident=()=>process.memoryUsage().rss,environment=process.env,report=stderrLine,limitBytes=planStageLimitBytesV1(environment),stats=retainedCollectionsV1}={}){
- if(quiet(environment,limitBytes))return;
  const caches=stats().filter(row=>row.entries>0).sort((a,b)=>b.bytes-a.bytes||b.entries-a.entries).slice(0,SETTLE_POLICY_V1.censusCaches).map(row=>row.name+" "+row.entries+" entries "+megabytes(row.bytes)+" MB").join(", ")||"-";
  for(const line of renderSettleMessageV1("retained",{managed:megabytes(ports.sample()),resident:megabytes(resident()),caches},environment))report(line);
 }

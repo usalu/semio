@@ -642,8 +642,8 @@
      "de": "Worker: {ready} bereit, {working} arbeiten, {idle} untätig, {silent} still, {offline} offline, {absent} ohne Eintrag"
     },
     "workers.row": {
-     "en": "  {origin} {platform}: {state}, stage {stage} ({index}/{count}), attempt {attempts}, record {record}, machine {machine}; memory {memory}{tree}{mapping}{recent}{refusal}",
-     "de": "  {origin} {platform}: {state}, Stufe {stage} ({index}/{count}), Versuch {attempts}, Eintrag {record}, Maschine {machine}; Speicher {memory}{tree}{mapping}{recent}{refusal}"
+     "en": "  {origin} {platform}: {state}, stage {stage} ({index}/{count}), attempt {attempts}, record {record}, machine {machine}; memory {memory}{tree}{mapping}{recent}{host}{refusal}",
+     "de": "  {origin} {platform}: {state}, Stufe {stage} ({index}/{count}), Versuch {attempts}, Eintrag {record}, Maschine {machine}; Speicher {memory}{tree}{mapping}{recent}{host}{refusal}"
     },
     "workers.recent": {
      "en": ", last {hours} h in this stage: {parts} ({duration} run)",
@@ -696,6 +696,10 @@
     "workers.mapping.kind.exclusive": {"en": "exclusive", "de": "exklusiver"},
     "workers.mapping.step.slot": {"en": "owner slot of the process", "de": "Eigentümerplatz des Prozesses"},
     "workers.mapping.step.grant": {"en": "lease grant", "de": "Lease-Zuteilung"},
+    "workers.host.ok": {"en": ", host name ok ({label})", "de": ", Rechnername in Ordnung ({label})"},
+    "workers.host.duplicate": {"en": ", host name {label} is also on {others}: run `repo fleet hostname apply` on this machine", "de": ", Rechnername {label} liegt auch auf {others}: auf dieser Maschine `repo fleet hostname apply` ausführen"},
+    "workers.host.named-as": {"en": ", host name {label} belongs to {others}: run `repo fleet hostname apply` on this machine", "de": ", Rechnername {label} gehört zu {others}: auf dieser Maschine `repo fleet hostname apply` ausführen"},
+    "workers.host.unknown": {"en": ", host name unknown (nothing published yet)", "de": ", Rechnername unbekannt (noch nichts veröffentlicht)"},
     "workers.refusal": {
      "en": ", {reason}",
      "de": ", {reason}"
@@ -709,8 +713,8 @@
      "de": "offline"
     },
     "workers.state.silent": {
-     "en": "silent",
-     "de": "still"
+     "en": "stale readiness beat",
+     "de": "Bereitschaftsschlag veraltet"
     },
     "workers.state.working": {
      "en": "working",
@@ -729,8 +733,16 @@
      "de": "Worker {origin} zeigte {age} lang kein Lebenszeichen; sein Eintrag sagt noch {recorded} in Stufe {stage} und ist veraltet"
     },
     "finding.worker-silent": {
-     "en": "worker {origin} lives but wrote no readiness record for {age} although it is {recorded} in stage {stage}",
-     "de": "Worker {origin} lebt, schrieb aber {age} lang keinen Bereitschaftseintrag, obwohl er {recorded} in Stufe {stage} ist"
+     "en": "worker {origin} lives but its readiness beat is stale: no readiness record for {age} although it is {recorded} in stage {stage}",
+     "de": "Worker {origin} lebt, aber sein Bereitschaftsschlag ist veraltet: {age} lang kein Bereitschaftseintrag, obwohl er {recorded} in Stufe {stage} ist"
+    },
+    "finding.worker-host-name-duplicate": {
+     "en": "worker {origin}: its host name {label} is also carried by {others}; run `repo fleet hostname apply` on that machine",
+     "de": "Worker {origin}: sein Rechnername {label} trägt auch {others}; auf dieser Maschine `repo fleet hostname apply` ausführen"
+    },
+    "finding.worker-host-name-named-as": {
+     "en": "worker {origin}: its host name {label} is the name of {others}; run `repo fleet hostname apply` on that machine",
+     "de": "Worker {origin}: sein Rechnername {label} ist der Name von {others}; auf dieser Maschine `repo fleet hostname apply` ausführen"
     },
     "finding.worker-absent": {
      "en": "worker {origin} is enrolled but showed no sign of life and never wrote a readiness record",
@@ -3537,6 +3549,7 @@
     "recordAgeSeconds": {"type": ["integer", "null"], "minimum": 0},
     "heartbeatAgeSeconds": {"type": ["integer", "null"], "minimum": 0},
     "refusal": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["code", "en", "de"], "properties": {"code": {"type": "string"}, "en": {"type": "string"}, "de": {"type": "string"}}}]},
+    "hostName": {"description": "The state of the operating system host name of the machine as its published address set says: `ok`, `duplicate` (another origin carries the same label, named in `others`), `named-as` (the machine carries the semantic name of another origin, named in `others`) or `unknown` (no published set or no usable label). Never an identity; the way out is `repo fleet hostname apply` on that machine.", "anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["state", "label", "others"], "properties": {"state": {"enum": ["ok", "duplicate", "named-as", "unknown"]}, "label": {"type": ["string", "null"]}, "others": {"type": "array", "items": {"type": "string"}}}}]},
     "tree": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["reference", "files", "onlyThere", "onlyHere", "stale", "verdict"], "properties": {"reference": {"type": "string"}, "files": {"type": "integer", "minimum": 0}, "onlyThere": {"type": "integer", "minimum": 0}, "onlyHere": {"type": "integer", "minimum": 0}, "stale": {"type": "boolean"}, "verdict": {"enum": ["ok", "off", "retired", "missing", "stale", "lagging", "diverged"]}}}]},
     "recent": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["hours", "ok", "failed", "stalled", "timedOut", "seconds"], "properties": {"hours": {"type": "integer", "minimum": 1}, "ok": {"type": "integer", "minimum": 0}, "failed": {"type": "integer", "minimum": 0}, "stalled": {"type": "integer", "minimum": 0}, "timedOut": {"type": "integer", "minimum": 0}, "seconds": {"type": "integer", "minimum": 0}}}]},
     "mapping": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["taken", "waiting", "step", "longestWaitedSeconds", "holderKind", "holderPid", "holderCommand", "holderSeconds", "queued", "sharedGrants", "sharedWaitedSeconds", "sharedLongestSeconds", "exclusiveHeldSeconds", "ageSeconds"], "properties": {"taken": {"type": ["integer", "null"], "minimum": 0}, "waiting": {"type": "integer", "minimum": 0}, "step": {"enum": ["slot", "grant", null]}, "longestWaitedSeconds": {"type": "integer", "minimum": 0}, "holderKind": {"enum": ["shared", "exclusive", null]}, "holderPid": {"type": ["integer", "null"]}, "holderCommand": {"type": ["string", "null"]}, "holderSeconds": {"type": ["integer", "null"], "minimum": 0}, "queued": {"type": ["integer", "null"], "minimum": 0}, "sharedGrants": {"type": "integer", "minimum": 0}, "sharedWaitedSeconds": {"type": "integer", "minimum": 0}, "sharedLongestSeconds": {"type": "integer", "minimum": 0}, "exclusiveHeldSeconds": {"type": "integer", "minimum": 0}, "ageSeconds": {"type": "integer", "minimum": 0}}}]}
@@ -3597,6 +3610,7 @@
     "heartbeatAgeSeconds": {"type": ["integer", "null"], "minimum": 0},
     "refusal": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["code", "en", "de"], "properties": {"code": {"type": "string"}, "en": {"type": "string"}, "de": {"type": "string"}}}]},
     "memory": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WorkerMemory"}]},
+    "hostName": {"description": "The state of the operating system host name of the machine as its published address set says: `ok`, `duplicate` (another origin carries the same label, named in `others`), `named-as` (the machine carries the semantic name of another origin, named in `others`) or `unknown` (no published set or no usable label). Never an identity; the way out is `repo fleet hostname apply` on that machine.", "anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["state", "label", "others"], "properties": {"state": {"enum": ["ok", "duplicate", "named-as", "unknown"]}, "label": {"type": ["string", "null"]}, "others": {"type": "array", "items": {"type": "string"}}}}]},
     "tree": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["reference", "files", "onlyThere", "onlyHere", "stale", "verdict"], "properties": {"reference": {"type": "string"}, "files": {"type": "integer", "minimum": 0}, "onlyThere": {"type": "integer", "minimum": 0}, "onlyHere": {"type": "integer", "minimum": 0}, "stale": {"type": "boolean"}, "verdict": {"enum": ["ok", "off", "retired", "missing", "stale", "lagging", "diverged"]}}}]},
     "recent": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["hours", "ok", "failed", "stalled", "timedOut", "seconds"], "properties": {"hours": {"type": "integer", "minimum": 1}, "ok": {"type": "integer", "minimum": 0}, "failed": {"type": "integer", "minimum": 0}, "stalled": {"type": "integer", "minimum": 0}, "timedOut": {"type": "integer", "minimum": 0}, "seconds": {"type": "integer", "minimum": 0}}}]},
     "mapping": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["taken", "waiting", "step", "longestWaitedSeconds", "holderKind", "holderPid", "holderCommand", "holderSeconds", "queued", "sharedGrants", "sharedWaitedSeconds", "sharedLongestSeconds", "exclusiveHeldSeconds", "ageSeconds"], "properties": {"taken": {"type": ["integer", "null"], "minimum": 0}, "waiting": {"type": "integer", "minimum": 0}, "step": {"enum": ["slot", "grant", null]}, "longestWaitedSeconds": {"type": "integer", "minimum": 0}, "holderKind": {"enum": ["shared", "exclusive", null]}, "holderPid": {"type": ["integer", "null"]}, "holderCommand": {"type": ["string", "null"]}, "holderSeconds": {"type": ["integer", "null"], "minimum": 0}, "queued": {"type": ["integer", "null"], "minimum": 0}, "sharedGrants": {"type": "integer", "minimum": 0}, "sharedWaitedSeconds": {"type": "integer", "minimum": 0}, "sharedLongestSeconds": {"type": "integer", "minimum": 0}, "exclusiveHeldSeconds": {"type": "integer", "minimum": 0}, "ageSeconds": {"type": "integer", "minimum": 0}}}]}

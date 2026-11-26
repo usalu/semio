@@ -61,9 +61,9 @@ fn line_id(store: &DemoStore, name: &str) -> String {
     store.envelope().vcs.alternatives.iter().find(|alternative| alternative.name == name).map(|alternative| alternative.id.clone()).unwrap_or_else(|| panic!("no alternative named {name}"))
 }
 
-/// 🗂️ The names of the alternatives a replica lists, the trunk's empty name first once it has a checkpoint.
+/// 🗂️ The names of the alternatives a replica lists: the implicit trunk's empty name first, then the named ones.
 fn listed(store: &DemoStore) -> Vec<String> {
-    store.envelope().vcs.alternatives.iter().map(|alternative| alternative.name.clone()).collect()
+    std::iter::once(String::new()).chain(store.envelope().vcs.alternatives.iter().map(|alternative| alternative.name.clone())).collect()
 }
 
 /// 📦️ What a replica's head projects, in the corpus's words.
@@ -291,7 +291,7 @@ async fn the_ledgers_list_their_facts_in_log_order_whatever_order_the_events_arr
         (vcs.changes.iter().map(|change| change.id.clone()).collect::<Vec<_>>(), vcs.checkpoints.iter().map(|checkpoint| checkpoint.id.clone()).collect::<Vec<_>>(), vcs.alternatives.iter().map(|alternative| (alternative.id.clone(), alternative.name.clone())).collect::<Vec<_>>())
     };
     let expected = facts(&reloaded(&a, "spr").await);
-    assert_eq!(expected.2.iter().map(|(_, name)| name.as_str()).collect::<Vec<_>>(), ["", "red", "blue"], "the log lists the trunk, then the alternatives as they were registered");
+    assert_eq!(expected.2.iter().map(|(_, name)| name.as_str()).collect::<Vec<_>>(), ["red", "blue"], "the log lists the alternatives as they were registered; the trunk is implicit");
     assert_eq!((expected.0.len(), expected.1.len()), (2, 2));
     assert_eq!((facts(&a), facts(&b)), (expected.clone(), facts(&reloaded(&b, "spr").await)), "each author lists what its own pair restores");
     let log = a.event_log().expect("the whole log");

@@ -145,7 +145,8 @@ async fn an_isolated_compile_writes_the_precompiled_entry_its_host_engine_loads(
     let (engine, _pooling_active) = build_shared_engine(cfg).await.expect("engine builds");
     let cache_dir = std::env::temp_dir().join(format!("semio-isolated-compile-test-{}", std::process::id()));
     let cache_path = compiled_cache_path(&cache_dir, &shared_engine_config_hash(&cfg, false).await, &[4u8; 32]).await;
-    compile_component_isolated(&cfg.to_isolated_arg(), minimal_component_without_actor_world(), &cache_path).expect("isolated compile succeeds");
+    let bytes = minimal_component_without_actor_world();
+    compile_component_isolated(&cfg.to_isolated_arg(), bytes, bytes.len(), &cache_path).expect("isolated compile succeeds");
     assert_eq!(std::fs::read(&cache_path).expect("cache entry written"), engine.precompile_component(minimal_component_without_actor_world()).expect("precompile"), "the entry is the engine's precompiled serialization");
     assert!(!compiled_cache_scratch_path(&cache_path, std::process::id()).exists(), "no scratch file is left behind");
     assert!(load_compiled_component(&engine, &cache_path).await.is_some(), "the host engine loads the entry");

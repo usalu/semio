@@ -15,7 +15,7 @@ import {readCargoPreparationProgramContextV1,readCargoPreparationSourceEditV1,ad
 import {cargoPreparationWitnessHoldsV1,cargoPriorListingV1,cargoStatTextV1,observeCargoPhysicalV1,type CargoPriorListingV1,type CargoPhysicalObservationsV1,type CargoPhysicalOperationKindV1} from "./🛠️preparation/👁️witness/🟦️.ts";
 import custodySchema from "./🛠️preparation/🧾️custody/🧬️schema/🔣️.json" with { type: "json" };
 import invocationSchema from "./🧬️schema/🏃️invocation/🔣️.json" with { type: "json" };
-import { existsSync, lstatSync, readdirSync, readFileSync, writeFileSync, type Dirent } from "node:fs";
+import { existsSync, lstatSync, readdirSync, readFileSync, renameSync, writeFileSync, type Dirent } from "node:fs";
 import workspaceModule from "../🟨️.cjs";
 import { runToolSyncV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 import { runtimeCommandNameV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
@@ -381,7 +381,7 @@ function publishMembership(root: string, owner: CargoWorkspaceScope, mode: "chec
     after=after.slice(0,start)+replacement+after.slice(end);
   }
   if(readFileSync(physical(root,owner.manifest),"utf8")!==source)throw Error(`Cargo workspace changed during member discovery: ${owner.manifest}`);
-  writeFileSync(path,after);return true;
+  runtimeParseTomlV1(after);const temporary=`${path}.${process.pid}.tmp`;writeFileSync(temporary,after);renameSync(temporary,path);return true;
 }
 
 export type CargoPreparationV1 = Readonly<{ script: string; command: readonly string[] }>;

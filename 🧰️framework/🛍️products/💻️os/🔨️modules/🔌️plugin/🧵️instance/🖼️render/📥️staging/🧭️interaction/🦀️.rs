@@ -177,7 +177,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// [`InteractionRevalidateOrigin::DocumentChange`] pass exists precisely to prune ids the document
     /// no longer has, while a [`InteractionRevalidateOrigin::Pick`] pass carries ids a user or an app
     /// just named and may never drop them silently — see [`interaction_selection_loss_v1`].
-    async fn revalidate_and_persist_interaction_state(&mut self, combined: protocol::InteractionState, _meta: &ActionMeta, origin: InteractionRevalidateOrigin, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<protocol::InteractionState, Fault> {
+    async fn revalidate_and_persist_interaction_state(&mut self, combined: protocol::InteractionState, origin: InteractionRevalidateOrigin, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<protocol::InteractionState, Fault> {
         let mut outlines: Vec<protocol::InteractionOutline> = Vec::new();
         for def in self.tools.registry.interactions().await {
             outlines.push(def.outline().await);
@@ -220,11 +220,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// ([`interaction_after_document_change_v1`]), so a whole-document replacement cannot leave the
     /// replaced document's pick standing in `interaction.selection(..)` — which is what every app
     /// command that reads a selection (`deleteSelection`, the transform verbs) would then act on.
-    pub async fn revalidate_interaction_on_document_change(&mut self, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub async fn revalidate_interaction_on_document_change(&mut self, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         if self.tools.registry.interactions().await.next().is_none() {
             return Ok(());
         }
-        self.revalidate_and_persist_interaction_state(self.interaction.interaction_state(&*self.stores).await, meta, InteractionRevalidateOrigin::DocumentChange, identity).await?;
+        self.revalidate_and_persist_interaction_state(self.interaction.interaction_state(&*self.stores).await, InteractionRevalidateOrigin::DocumentChange, identity).await?;
         Ok(())
     }
 
@@ -261,7 +261,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let (overlay, leftover_ids) = leftover_after_app_selection_write_v1(self.interaction.interaction_leftover_selection.as_ref(), &self.interaction.interaction_leftover_ids, &state, &domains);
         self.interaction.interaction_leftover_selection = overlay;
         self.interaction.interaction_leftover_ids = leftover_ids;
-        self.revalidate_and_persist_interaction_state(state, meta, InteractionRevalidateOrigin::Pick, identity).await?;
+        self.revalidate_and_persist_interaction_state(state, InteractionRevalidateOrigin::Pick, identity).await?;
         Ok(())
     }
 
@@ -465,7 +465,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if let Some(permit) = permit {
             self.stores.validate_framework_reserved_commit(X::reserved_action_refusal(&*self.time_travel, &*self.tool_runs, action), action, permit).await?;
         }
-        self.revalidate_and_persist_interaction_state(state, meta, InteractionRevalidateOrigin::Pick, identity).await?;
+        self.revalidate_and_persist_interaction_state(state, InteractionRevalidateOrigin::Pick, identity).await?;
         if let Some(permit) = permit {
             if permit.lease.is_cancelled().await {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{action}' was cancelled before interaction publication")));

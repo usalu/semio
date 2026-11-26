@@ -51,6 +51,8 @@ fn a_sub_entity_without_a_main_entity_stands_in_for_its_owner_and_a_stronger_bin
     let rows = report(&[("a.m", "m1", 130.0)]);
     let lit = highlight_owners(fragment(&["m1:web", "m1:flange"]), &rows, Part::Entity("m1"));
     assert_eq!(lit.entities.iter().map(|e| e.utilisation.is_some()).collect::<Vec<_>>(), vec![true, false]);
+    let exact = highlight_owners(fragment(&["m1:web", "m1", "m1:flange"]), &rows, Part::Entity("m1"));
+    assert_eq!(exact.entities.iter().map(|e| e.utilisation.is_some()).collect::<Vec<_>>(), vec![false, true, false]);
     let mut again = lit.clone();
     again.entities[0].utilisation = Some(UtilisationBinding { check_id: "own".into(), ratio: 5.0, status: CheckStatus::Fail, per_station: None, stale: false });
     let kept = highlight_owners(again, &rows, Part::Entity("m1"));

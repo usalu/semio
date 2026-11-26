@@ -17,8 +17,11 @@ mod tests {
         assert!(index.contains("<title lang=\"en\">Animate Presentation</title>"));
         assert!(index.contains("animate.presentation.deck"));
         assert!(index.contains("semio_s_plugin_animate.js"));
-        assert!(index.contains("data-level=\"window\""));
-        assert!(index.contains("data-window-frame-content"));
+        let root = index.split("<main").nth(1).unwrap().split('>').next().unwrap();
+        let canvas = index.split("<canvas").nth(1).unwrap().split('>').next().unwrap();
+        assert!(root.contains("data-level=\"base\""));
+        assert!(canvas.contains("data-level=\"window\""));
+        assert!(canvas.contains("data-window-frame-content"));
         let style = fs::read_to_string(output.join("styles.css")).expect("styles.css");
         assert!(style.contains("--level-shade-step:"));
         assert!(style.contains("border: var(--presentation-hairline) solid var(--border-normal-color)"));
@@ -45,6 +48,9 @@ mod tests {
         let bundle = compile_scene_to_assets("demo123", &output).await.expect("compile scene");
         assert_eq!(bundle.scene_hash, "demo123");
         assert!(bundle.mp4.as_ref().is_some_and(|path| path.exists()));
+        let frame = fs::read(bundle.last_frame.expect("last frame")).expect("frame bytes");
+        let image = semio_framework_pixels::decode_png(&frame).expect("decoded frame");
+        assert_eq!(&image.pixels[..4], &[6, 26, 31, 255]);
         let _ = fs::remove_dir_all(&output);
     }
 }

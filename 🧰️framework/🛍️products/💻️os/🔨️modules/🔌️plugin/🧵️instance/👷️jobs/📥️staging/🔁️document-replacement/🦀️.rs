@@ -59,6 +59,10 @@ impl<A: ArtifactApp> ToolOperations<A> {
     pub fn admit_document_window_reset(&mut self, pending: &mut PendingReserved<A>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if pending.pending_document_window_admission.is_none(){let mut source=None;if !cx.original_source_parent()?.admit_loan(&mut source,cx)?{return Ok(false)}*pending.pending_document_window_admission=Some(DocumentWindowResetAdmission{source:std::mem::ManuallyDrop::new(source),generation:None,committed:false,returning:false});return Ok(false)}
         let admission=pending.pending_document_window_admission.as_ref().unwrap();admission.validate(self.tool_cancellations.scope_generation(),cx)?;if admission.committed{return Ok(false)}if admission.generation.is_some(){return Ok(true)}
+        if !self.tool_cancellations.ready(){
+            self.tool_cancellations.admit_step(cx.original_source_parent()?,cx)?;
+            return Ok(false)
+        }
         if !self.tool_cancellations.renew_scope_generation(cx)?{return Ok(false)}pending.pending_document_window_admission.as_mut().unwrap().generation=Some(self.tool_cancellations.scope_generation());Ok(false)
     }
 }

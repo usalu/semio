@@ -203,7 +203,7 @@ pub async fn ui_history_panel(
     let actions_builder = tree_section(ui_label(text_of(semio_plugin_command::lifted_command::HistoryPanelText::Actions), "history-panel.actions-label")?).default_open(true);
     let actions_builder = actions_builder.try_id("framework.history.actions").map_err(|_| ui_assembly_error("history-panel.actions-id"))?;
     let actions_section = actions_builder.try_children(action_items).map_err(|_| ui_assembly_error("history-panel.actions"))?.try_build().map_err(|_| ui_assembly_error("history-panel.actions-build"))?;
-    let alternatives_section = if history.alternatives.is_empty() {
+    let alternatives_section = if history.alternatives.len() <= 1 {
         None
     } else {
         Some(tree_window_section(&windows, "framework.history.alternatives", ui_label(text_of(semio_plugin_command::lifted_command::HistoryPanelText::Alternatives), "history-panel.alternatives-label")?, true, &history.alternatives, |alternative| {

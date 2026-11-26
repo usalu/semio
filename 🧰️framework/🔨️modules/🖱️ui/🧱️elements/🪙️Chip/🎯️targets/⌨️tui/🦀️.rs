@@ -4,12 +4,12 @@
 
 use semio_ui_tui_core::cell::{Cell, CellBuffer};
 use semio_ui_tui_core::geometry::{Pos, Rect};
-use semio_ui_tui_core::theme::{Role, Surface, Theme};
+use semio_ui_tui_core::theme::{Role, Theme};
 use crate::widget::ChipState;
 
 /// 🧊️ Paints the terminal capability fallback as opaque cells because a TUI has no backdrop compositor.
 pub fn paint_chip(c: &ChipState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
-    let bg = if c.on { theme.role(Role::Accent) } else { theme.surface(Surface::Panel) };
+    let bg = if c.on { theme.role(Role::Accent) } else { buf.chip_background(theme) };
     let fg = if c.on { theme.role(Role::AccentForeground) } else { theme.role(Role::MutedForeground) };
     buf.fill_rect(rect, Cell::blank(fg, bg));
     let text = format!(" {} ", c.label);

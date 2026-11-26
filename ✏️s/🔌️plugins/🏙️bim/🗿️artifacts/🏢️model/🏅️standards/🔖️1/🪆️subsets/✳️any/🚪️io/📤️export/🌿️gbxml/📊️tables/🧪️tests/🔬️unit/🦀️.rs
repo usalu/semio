@@ -24,11 +24,11 @@ fn the_table_keys_every_space_and_surface_by_its_cad_id() {
 }
 
 #[test]
-fn the_roof_without_data_has_no_construction_or_u_value_and_the_totals_add_the_types() {
+fn the_roof_with_schematic_construction_omits_unknown_u_value_and_the_totals_add_the_types() {
     let table = table();
     let roof = &table[table.find("\"sp/c1\":{").expect("the roof")..];
     let roof = &roof[..roof.find("\"openings\"").expect("its openings")];
-    assert!(!roof.contains("u_value") && !roof.contains("construction"), "{roof}");
+    assert!(!roof.contains("u_value") && roof.contains("Unspecified construction"), "{roof}");
     assert!(table.contains("\"by_type\":{") && table.contains("\"Roof\":9.99"), "{table}");
 }
 

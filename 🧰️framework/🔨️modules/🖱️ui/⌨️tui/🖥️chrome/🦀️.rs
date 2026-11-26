@@ -6,7 +6,7 @@ use semio_ui_tui_core::docking::WindowStackCorner;
 use crate::navbar::paint_navbar;
 use crate::scene::{AxisState, Node, NodeContent, NodeId, Scene};
 use semio_ui_tui_core::text::{display_width, elide_end};
-use semio_ui_tui_core::theme::{GlyphSet, Role, Status, Surface, Theme};
+use semio_ui_tui_core::theme::{GlyphSet, Role, Status, Theme};
 use semio_ui_tui_core::signal::WidgetSignal;
 use crate::window::{paint_window_chips, paint_window_frame};
 
@@ -184,7 +184,7 @@ impl ChromeState {
             ChromeState::Navbar(n) => paint_navbar(n, theme, rect, buf, emphasized),
             ChromeState::Footer(f) => paint_footer(f, theme, rect, buf, emphasized),
             ChromeState::Canvas => {
-                buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), theme.surface(Surface::Base)));
+                buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), buf.owner_background()));
             }
             ChromeState::Window(w) => paint_window_frame(w, theme, rect, buf, emphasized),
         }

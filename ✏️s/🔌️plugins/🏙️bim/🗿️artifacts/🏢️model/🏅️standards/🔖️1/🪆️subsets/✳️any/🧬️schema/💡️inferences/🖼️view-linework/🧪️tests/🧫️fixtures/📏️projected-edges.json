@@ -1,0 +1,7 @@
+[
+  {"name": "column in front of wall", "rectangles": [[2, 0, 4, 2], [0, 0, 6, 1]], "visible": 18, "hidden": 2},
+  {"name": "nested aligned walls", "rectangles": [[0, 0, 6.3, 3], [0.3, 0, 6, 3]], "visible": 18.6, "hidden": 6},
+  {"name": "coincident", "rectangles": [[0, 0, 2, 2], [0, 0, 2, 2]], "visible": 8, "hidden": 0},
+  {"name": "disjoint", "rectangles": [[0, 0, 2, 2], [3, 1, 5, 4]], "visible": 18, "hidden": 0},
+  {"name": "three overlapping solids", "rectangles": [[0, 1, 2, 3], [1, 0, 3, 2], [0, 0, 2, 2]], "visible": 16, "hidden": 4}
+]

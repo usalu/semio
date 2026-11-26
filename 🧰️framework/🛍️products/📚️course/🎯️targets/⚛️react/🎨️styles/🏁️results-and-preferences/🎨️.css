@@ -100,7 +100,7 @@
   min-height: max(1.5rem, calc(7 * var(--ui-spacing)));
   padding: 0 var(--spacing-double);
   border: var(--stroke-hairline) solid var(--border-normal-color);
-  background: var(--base);
+  background: transparent;
   color: var(--foreground);
   font: inherit;
 }
@@ -119,10 +119,11 @@
 }
 
 .course-backdrop {
-  background: color-mix(in srgb, var(--base) 60%, transparent);
-  -webkit-backdrop-filter: blur(0.5rem) saturate(1.45);
-  backdrop-filter: blur(0.5rem) saturate(1.45);
   overscroll-behavior: contain;
+}
+
+.course-access-tint {
+  background: color-mix(in srgb, var(--surface-bg, var(--base)) 60%, transparent);
 }
 
 /* 🎖️ The badge strip of the overview's card: one row of equal cells that share their dividers and the card's edges. */

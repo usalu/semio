@@ -28,20 +28,20 @@ async fn an_opened_instance_acts_as_its_admitted_actor_across_reload_and_on_the_
 
     let mut reader = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("reader".into()), mounted_policy, &mut identity).await;
     PluginApp::bind_actor(&mut reader, "reader").await;
-    artifact_app_laws::load_document(&mut reader, &app.document_pack().await.expect("document pack"), &mut identity).await.expect("pack reload");
+    artifact_app_laws::load_document(&mut reader, &app.document_pack().await.expect("document pack"), &mut identity, cx).await.expect("pack reload");
     reader.render_ctx().refresh_cache().await.expect("the reloaded log backfills");
-    assert_eq!((reader.store.local_actor_id(), head(&reader).0), (&protocol::ActorId("reader".into()), 2), "a reload keeps the instance's actor although the history ends in another author's edit");
-    history_verb(&mut reader, "reader", "undo", None, mounted_policy, &mut identity).await;
-    assert_eq!((head(&reader).0, reader.store.applied_edit_ids().len()), (2, 2), "an undo never takes back another author's edit");
-    let pure_head = reader.store.snapshot().expect("the reloaded head").encode_pack();
-    PluginApp::hydrate_pure_head(&mut reader, &pure_head).await.expect("the head-only lane hydrates");
-    assert_eq!(reader.store.local_actor_id(), &protocol::ActorId("reader".into()), "a head-only hydrate keeps the instance's actor");
+    assert_eq!((reader.stores.store.local_actor_id(), head(&reader).0), (&protocol::ActorId("reader".into()), 2), "a reload keeps the instance's actor although the history ends in another author's edit");
+    history_verb(&mut reader, "reader", "undo", None, mounted_policy, &mut identity, cx).await;
+    assert_eq!((head(&reader).0, reader.stores.store.applied_edit_ids().len()), (2, 2), "an undo never takes back another author's edit");
+    let pure_head = reader.stores.store.snapshot().expect("the reloaded head").encode_pack();
+    PluginApp::hydrate_pure_head(&mut reader, &pure_head, cx).await.expect("the head-only lane hydrates");
+    assert_eq!(reader.stores.store.local_actor_id(), &protocol::ActorId("reader".into()), "a head-only hydrate keeps the instance's actor");
 
     let own = app.render_ctx().history_patch(true).await.expect("history patch").upserts.into_iter().find(|row| row.author.as_deref() == Some("ada")).expect("the instance's own row").seq;
-    history_verb(&mut app, "ada", "revertToCommand", Some(DslValue::object([("entrySeq".to_string(), DslValue::uint(own))])), mounted_policy, &mut identity).await;
+    history_verb(&mut app, "ada", "revertToCommand", Some(DslValue::object([("entrySeq".to_string(), DslValue::uint(own))])), mounted_policy, &mut identity, cx).await;
     assert_eq!(app.stores.store.local_actor_id(), &protocol::ActorId("ada".into()), "the revert route acts as the reverting actor");
     assert!(app.stores.store.applied_edit_ids().iter().any(|id| *id == other), "a revert never takes back another actor's edit");
-    history_verb(&mut app, "grace", "undo", None, mounted_policy, &mut identity).await;
+    history_verb(&mut app, "grace", "undo", None, mounted_policy, &mut identity, cx).await;
     pump_until(&mut app, "the undo lands", |app| !app.stores.store.local_step_pending(), mounted_policy, &mut identity,cx).await;
     assert!(!app.stores.store.applied_edit_ids().iter().any(|id| *id == other), "an undo takes back the acting actor's own edit");
     close(&mut reader,cx);
@@ -69,7 +69,7 @@ async fn a_remote_edit_while_editing_keeps_the_draft_and_accept_replays_it_too()
     let actor = text(&fixture["actor"]).to_string();
     let (mut local, mut local_probe) = replica(&fixture, "remote-while-editing-local", &actor, true, mounted_policy, &mut identity).await;
     let (mut remote, mut remote_probe) = replica(&fixture, "remote-while-editing-remote", "remote", false, mounted_policy, &mut identity).await;
-    relay(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity).await;
+    relay(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity, cx).await;
     for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } })] {
         let result = run_step(&mut local, &fixture, &step, mounted_policy, &mut identity,cx).await.expect("a verb result");
         assert_eq!(rejected(&result), None, "{step}: {:?}", result.output);
@@ -90,23 +90,23 @@ async fn a_remote_edit_while_editing_keeps_the_draft_and_accept_replays_it_too()
     let wire = local.render_ctx().history_patch(true).await.expect("history patch").upserts.into_iter().flat_map(|row| row.mutations).find(|mutation| mutation.mutation_id == arrived).expect("the remote edit is a history row");
     assert!(wire.pending && wire.label.resolve(Terminology::Native, Locale::En) == "Set count to 9", "the remote edit is downstream and not applied in the preview: {wire:?}");
     let seq = local.render_ctx().history_patch(true).await.expect("history patch").upserts.iter().find(|entry| entry.mutations.iter().any(|mutation| mutation.mutation_id == arrived)).map(|entry| entry.seq).expect("the history row of the remote edit");
-    let body = render_history_window(&mut local, seq, 0, 8).await;
+    let body = render_history_window(&mut local, seq, 0, 8, cx).await;
     let row = find_node(&body, &format!("framework.history.mutation.{arrived}")).unwrap_or_else(|| panic!("the mutation row of the remote edit: {body}"));
     assert!(row.to_string().contains("Not applied while editing"), "the row says so in words: {row}");
-    assert!(render_body(&mut local).await.contains("count=1 label=b"), "the preview stays the state before the edited mutation with the draft");
+    assert!(render_body(&mut local,cx).await.contains("count=1 label=b"), "the preview stays the state before the edited mutation with the draft");
 
-    let typed = verb(&mut local, &fixture, "historyEditInput", vec![("path".into(), DslValue::String("/value".into())), ("value".into(), DslValue::String("c".into())), ("generation".into(), DslValue::uint(u64::from(generation)))], mounted_policy, &mut identity).await;
+    let typed = verb(&mut local, &fixture, "historyEditInput", vec![("path".into(), DslValue::String("/value".into())), ("value".into(), DslValue::String("c".into())), ("generation".into(), DslValue::uint(u64::from(generation)))], mounted_policy, &mut identity, cx).await;
     assert_eq!(rejected(&typed), None, "the user's next input, stamped with the generation from before the base move, is not stale");
 
-    let accepted = verb(&mut local, &fixture, "historyEditAccept", Vec::new(), mounted_policy, &mut identity).await;
+    let accepted = verb(&mut local, &fixture, "historyEditAccept", Vec::new(), mounted_policy, &mut identity, cx).await;
     assert_eq!(rejected(&accepted), None, "{:?}", accepted.output);
     pump_until(&mut local, "the replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying, mounted_policy, &mut identity,cx).await;
     let status = local.time_travel.status().expect("a reviewing session");
     assert_eq!((status.review, status.blocking, status.accepted_count), (Some(semio_framework::kernel::HistoryTimeTravelReview::Ready), false, 1), "the replay over the remote edit is clean");
-    assert!(render_body(&mut local).await.contains("count=9 label=c"), "the reviewed head holds the draft and the remote edit");
+    assert!(render_body(&mut local,cx).await.contains("count=9 label=c"), "the reviewed head holds the draft and the remote edit");
 
     for (action, args) in [("historyEditFinalize", Vec::new()), ("historyEditCommit", vec![("choice".to_string(), DslValue::String("overwrite".into()))])] {
-        let result = verb(&mut local, &fixture, action, args, mounted_policy, &mut identity).await;
+        let result = verb(&mut local, &fixture, action, args, mounted_policy, &mut identity, cx).await;
         assert_eq!(rejected(&result), None, "{action}: {:?}", result.output);
     }
     assert_eq!(head(&local), (9, "c".to_string()), "the overwrite lands on the remote edit");
@@ -140,41 +140,41 @@ async fn a_session_edge_republishes_every_window_only_when_the_shown_document_sw
     let full = |result: &InvocationResult| matches!(result.ui_scope, UiDirtyScope::Full);
     let history_only = |result: &InvocationResult| matches!(&result.ui_scope, UiDirtyScope::Partial { window_bodies, panel_bodies, .. } if window_bodies.is_empty() && panel_bodies.len() == 1 && panel_bodies[0] == FRAMEWORK_HISTORY_BODY_KEY);
     let mutation = seeded_mutation(&app, 1);
-    let begun = verb(&mut app, &fixture, "historyEditBegin", vec![("mutationId".into(), DslValue::String(mutation))], mounted_policy, &mut identity).await;
+    let begun = verb(&mut app, &fixture, "historyEditBegin", vec![("mutationId".into(), DslValue::String(mutation))], mounted_policy, &mut identity, cx).await;
     assert!(rejected(&begun).is_none() && full(&begun), "opening shows the preview in every window: {:?}", begun.ui_scope);
-    let drafted = verb(&mut app, &fixture, "historyEditInput", vec![("path".into(), DslValue::String("/value".into())), ("value".into(), DslValue::String("b".into()))], mounted_policy, &mut identity).await;
+    let drafted = verb(&mut app, &fixture, "historyEditInput", vec![("path".into(), DslValue::String("/value".into())), ("value".into(), DslValue::String("b".into()))], mounted_policy, &mut identity, cx).await;
     assert!(rejected(&drafted).is_none() && full(&drafted), "a draft is a new preview: {:?}", drafted.ui_scope);
-    let accepted = verb(&mut app, &fixture, "historyEditAccept", Vec::new(), mounted_policy, &mut identity).await;
+    let accepted = verb(&mut app, &fixture, "historyEditAccept", Vec::new(), mounted_policy, &mut identity, cx).await;
     assert!(rejected(&accepted).is_none() && history_only(&accepted), "an accepted draft keeps its preview while it replays: {:?}", accepted.ui_scope);
-    assert!(render_body(&mut app).await.contains("count=1 label=b"), "the preview stays while the replay runs");
+    assert!(render_body(&mut app,cx).await.contains("count=1 label=b"), "the preview stays while the replay runs");
     pump_until(&mut app, "the replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying, mounted_policy, &mut identity,cx).await;
-    assert!(render_body(&mut app).await.contains("count=5 label=b"), "the review shows the replayed head");
+    assert!(render_body(&mut app,cx).await.contains("count=5 label=b"), "the review shows the replayed head");
 
-    let prompted = verb(&mut app, &fixture, "historyEditFinalize", Vec::new(), mounted_policy, &mut identity).await;
+    let prompted = verb(&mut app, &fixture, "historyEditFinalize", Vec::new(), mounted_policy, &mut identity, cx).await;
     assert!(rejected(&prompted).is_none() && history_only(&prompted), "the finalize prompt swaps no document: {:?}", prompted.ui_scope);
     assert_eq!(app.time_travel.session().stage, TimeTravelStage::Choosing);
-    let back = verb(&mut app, &fixture, "historyEditBack", Vec::new(), mounted_policy, &mut identity).await;
+    let back = verb(&mut app, &fixture, "historyEditBack", Vec::new(), mounted_policy, &mut identity, cx).await;
     assert!(rejected(&back).is_none() && history_only(&back), "leaving the prompt swaps no document: {:?}", back.ui_scope);
 
     let first = seeded_mutation(&app, 0);
     for (action, args) in [("historyEditBegin", vec![("mutationId".to_string(), DslValue::String(first))]), ("historyEditInput", vec![("path".to_string(), DslValue::String("/value".into())), ("value".to_string(), DslValue::uint(7))]), ("historyEditAccept", Vec::new())] {
-        let result = verb(&mut app, &fixture, action, args, mounted_policy, &mut identity).await;
+        let result = verb(&mut app, &fixture, action, args, mounted_policy, &mut identity, cx).await;
         assert_eq!(rejected(&result), None, "{action}: {:?}", result.output);
     }
-    let cancelled = verb(&mut app, &fixture, "historyEditCancelReplay", Vec::new(), mounted_policy, &mut identity).await;
+    let cancelled = verb(&mut app, &fixture, "historyEditCancelReplay", Vec::new(), mounted_policy, &mut identity, cx).await;
     assert!(rejected(&cancelled).is_none() && full(&cancelled), "a cancelled replay leaves its preview for the head reviewed last: {:?}", cancelled.ui_scope);
-    assert!(render_body(&mut app).await.contains("count=5 label=b"), "the cancelled review shows the head reviewed last");
-    let rerun = verb(&mut app, &fixture, "historyEditRerun", Vec::new(), mounted_policy, &mut identity).await;
+    assert!(render_body(&mut app,cx).await.contains("count=5 label=b"), "the cancelled review shows the head reviewed last");
+    let rerun = verb(&mut app, &fixture, "historyEditRerun", Vec::new(), mounted_policy, &mut identity, cx).await;
     assert!(rejected(&rerun).is_none() && history_only(&rerun), "a replay run again keeps the head reviewed last: {:?}", rerun.ui_scope);
     assert_eq!(app.time_travel.session().stage, TimeTravelStage::Replaying);
-    let replaying = render_body(&mut app).await;
+    let replaying = render_body(&mut app,cx).await;
     assert!(replaying.contains("count=5 label=b") && !replaying.contains(text(&fixture["committedBody"])), "no window falls back to the committed document while it replays again: {replaying}");
     pump_until(&mut app, "the replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying, mounted_policy, &mut identity,cx).await;
-    assert!(render_body(&mut app).await.contains("count=5 label=b"), "the review shows the replayed head");
+    assert!(render_body(&mut app,cx).await.contains("count=5 label=b"), "the review shows the replayed head");
 
-    let exited = verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
+    let exited = verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity, cx).await;
     assert!(rejected(&exited).is_none() && full(&exited), "leaving shows the committed document in every window: {:?}", exited.ui_scope);
-    assert!(render_body(&mut app).await.contains(text(&fixture["committedBody"])));
+    assert!(render_body(&mut app,cx).await.contains(text(&fixture["committedBody"])));
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     close(&mut app,cx);
 
@@ -184,10 +184,10 @@ async fn a_session_edge_republishes_every_window_only_when_the_shown_document_sw
 
 //#region 🚫️RowWithdraw
 /// 📍️ The rendered mutation row of seeded edit `index`, its history row opened as a host window shows it.
-async fn seeded_mutation_node(app: &mut ToyApp, index: usize) -> Value {
+async fn seeded_mutation_node(app: &mut ToyApp, index: usize,cx:&mut semio_framework_job::StepContext<'_>) -> Value {
     let id = seeded_mutation(app, index);
     let seq = app.render_ctx().history_patch(true).await.expect("history patch").upserts.iter().find(|entry| entry.mutations.iter().any(|mutation| mutation.mutation_id == id)).map(|entry| entry.seq).expect("the history row of the seeded edit");
-    let body = render_history_window(app, seq, 0, 8).await;
+    let body = render_history_window(app, seq, 0, 8, cx).await;
     find_node(&body, &format!("framework.history.mutation.{id}")).cloned().unwrap_or_else(|| panic!("the mutation row of seeded edit {index}: {body}"))
 }
 
@@ -208,42 +208,42 @@ async fn a_mutation_row_offers_withdraw_and_restore_takes_an_accepted_draft_back
     let generation = app.stores.store.generation();
     let (first, target) = (seeded_mutation(&app, 0), seeded_mutation(&app, 3));
     let enabled = |verb: &str, label: &str| (verb.to_string(), label.to_string(), false, None);
-    let idle = seeded_mutation_node(&mut app, 3).await;
+    let idle = seeded_mutation_node(&mut app, 3, cx).await;
     assert_eq!(row_actions(&idle), vec![enabled("historyEditBegin", "Edit"), enabled("historyEditWithdraw", "Withdraw")], "Edit stays first, Withdraw follows: {idle}");
     assert_eq!((idle["component"]["target"]["args"]["mutationId"].as_str(), idle["component"]["target"]["activation"].as_str()), (Some(target.as_str()), Some("historyEditBegin")), "one row target for both actions: {idle}");
     let wire = seeded_mutation_row(&mut app, 3).await;
     assert!(wire.editable && wire.withdrawable && !wire.withdrawn, "the wire row is withdrawable");
 
-    let withdrawn = app.handle_action("historyEditWithdraw", Some(&dsl(&idle["component"]["target"]["args"])), &meta(&fixture), &mut identity).await.expect("the row's Withdraw dispatches");
+    let withdrawn = dispatch(&mut app, "historyEditWithdraw", Some(dsl(&idle["component"]["target"]["args"])), &meta(&fixture), mounted_policy, &mut identity, cx).await.expect("the row's Withdraw dispatches");
     assert_eq!(rejected(&withdrawn), None, "{:?}", withdrawn.output);
     let session = app.time_travel.session();
     assert_eq!((session.stage, session.pending.as_ref().map(|pending| (pending.target.mutation.0.clone(), pending.replacement.clone()))), (TimeTravelStage::Editing, Some((target.clone(), protocol::InputReplacement::Withdrawn))), "the session opens on a withdrawn draft");
-    assert_eq!((render_body(&mut app).await.contains("count=1 label=a"), app.stores.store.generation()), (true, generation), "the preview is the state before the mutation; the store is untouched");
-    let editing = row_actions(&seeded_mutation_node(&mut app, 3).await);
+    assert_eq!((render_body(&mut app,cx).await.contains("count=1 label=a"), app.stores.store.generation()), (true, generation), "the preview is the state before the mutation; the store is untouched");
+    let editing = row_actions(&seeded_mutation_node(&mut app, 3, cx).await);
     assert_eq!((editing[0].2, editing[0].3.as_deref().is_some_and(|reason| reason.starts_with("Blocked")), &editing[1]), (true, true, &enabled("historyEditWithdraw", "Withdraw")), "the withdrawn draft blocks Edit; Withdraw stays the editor's own: {editing:?}");
-    let other = row_actions(&seeded_mutation_node(&mut app, 0).await);
+    let other = row_actions(&seeded_mutation_node(&mut app, 0, cx).await);
     assert!(other.iter().all(|action| action.2 && action.3.as_deref().is_some_and(|reason| reason.starts_with("Blocked"))), "another row names the open draft: {other:?}");
-    let blocked = verb(&mut app, &fixture, "historyEditWithdraw", vec![("mutationId".into(), DslValue::String(first.clone()))], mounted_policy, &mut identity).await;
+    let blocked = verb(&mut app, &fixture, "historyEditWithdraw", vec![("mutationId".into(), DslValue::String(first.clone()))], mounted_policy, &mut identity, cx).await;
     assert_eq!(rejected(&blocked), Some("timeTravel.blocked"), "the verb refuses what the row disables");
 
-    verb(&mut app, &fixture, "historyEditAccept", Vec::new(), mounted_policy, &mut identity).await;
+    verb(&mut app, &fixture, "historyEditAccept", Vec::new(), mounted_policy, &mut identity, cx).await;
     assert_eq!(app.time_travel.session().stage, TimeTravelStage::Replaying);
-    let replaying = row_actions(&seeded_mutation_node(&mut app, 0).await);
+    let replaying = row_actions(&seeded_mutation_node(&mut app, 0, cx).await);
     assert!(replaying.iter().all(|action| action.2 && action.3.as_deref() == Some("Not possible right now")), "a running replay disables Edit and Withdraw, naming why: {replaying:?}");
     pump_until(&mut app, "the replay completes", |app| app.time_travel.session().stage != TimeTravelStage::Replaying, mounted_policy, &mut identity,cx).await;
     let status = app.time_travel.status().expect("a session is open");
     assert_eq!((status.accepted_count, status.blocking, status.next_problem.is_none()), (1, false, true), "the withdrawal replays clean");
-    assert_eq!(row_actions(&seeded_mutation_node(&mut app, 3).await), vec![enabled("historyEditBegin", "Edit"), enabled("historyEditRestore", "Restore")], "an accepted draft offers Restore in Withdraw's place");
-    assert_eq!(row_actions(&seeded_mutation_node(&mut app, 0).await), vec![enabled("historyEditBegin", "Edit"), enabled("historyEditWithdraw", "Withdraw")], "the review withdraws other rows again");
+    assert_eq!(row_actions(&seeded_mutation_node(&mut app, 3, cx).await), vec![enabled("historyEditBegin", "Edit"), enabled("historyEditRestore", "Restore")], "an accepted draft offers Restore in Withdraw's place");
+    assert_eq!(row_actions(&seeded_mutation_node(&mut app, 0, cx).await), vec![enabled("historyEditBegin", "Edit"), enabled("historyEditWithdraw", "Withdraw")], "the review withdraws other rows again");
     let wire = seeded_mutation_row(&mut app, 3).await;
     assert!(wire.withdrawn && !wire.withdrawable && wire.edited, "the replayed row reads withdrawn and is no longer withdrawable");
-    let unaccepted = verb(&mut app, &fixture, "historyEditRestore", vec![("mutationId".into(), DslValue::String(first.clone()))], mounted_policy, &mut identity).await;
+    let unaccepted = verb(&mut app, &fixture, "historyEditRestore", vec![("mutationId".into(), DslValue::String(first.clone()))], mounted_policy, &mut identity, cx).await;
     assert_eq!(rejected(&unaccepted), Some("timeTravel.illegal"), "a mutation without an accepted draft has nothing to restore");
 
-    let restored = verb(&mut app, &fixture, "historyEditRestore", vec![("mutationId".into(), DslValue::String(target.clone()))], mounted_policy, &mut identity).await;
+    let restored = verb(&mut app, &fixture, "historyEditRestore", vec![("mutationId".into(), DslValue::String(target.clone()))], mounted_policy, &mut identity, cx).await;
     assert_eq!(rejected(&restored), None, "{:?}", restored.output);
     assert!(app.time_travel.status().is_none(), "restoring the only accepted draft leaves history editing");
-    assert_eq!((render_body(&mut app).await.contains(text(&fixture["committedBody"])), app.stores.store.generation()), (true, generation), "zero trace: the committed document, the store untouched");
+    assert_eq!((render_body(&mut app,cx).await.contains(text(&fixture["committedBody"])), app.stores.store.generation()), (true, generation), "zero trace: the committed document, the store untouched");
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     close(&mut app,cx);
 

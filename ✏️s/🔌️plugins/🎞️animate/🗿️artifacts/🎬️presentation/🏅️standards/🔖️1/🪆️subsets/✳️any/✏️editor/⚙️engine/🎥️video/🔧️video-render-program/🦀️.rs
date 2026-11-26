@@ -8,7 +8,8 @@
 use crate::editor::animate::engine::camera::camera::Camera;
 use crate::editor::animate::engine::config::config::AnimateConfig;
 use crate::editor::animate::engine::scene::sobject::Sobject;
-use crate::editor::animate::engine::video::renderer::{color_from_style, scene_affine, CapturedFrame};
+use crate::editor::animate::engine::scene::scene::CapturedFrame;
+use crate::editor::animate::engine::video::renderer::{color_from_style, scene_affine};
 use geometry::PathEl;
 use semio_framework::kernel::{VideoRenderOp, VideoRenderPath, VideoRenderProgram, VideoRenderRun, VideoRenderScene, VIDEO_RENDER_PROGRAM_SCHEMA};
 use std::collections::HashMap;

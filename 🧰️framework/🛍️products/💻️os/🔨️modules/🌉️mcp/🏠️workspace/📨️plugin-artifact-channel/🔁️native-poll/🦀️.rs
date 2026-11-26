@@ -7,7 +7,13 @@ use semio_framework_value::ValueRefusalKind;
 use semio_plugin_host::GuestRelayNativeOrigin;
 use semio_plugin_host_poll::{EventJsonSource, GuestPollNoReceiverState, GuestPollSession, GuestPollSessionStatus, OriginalNativeDecodePolicy};
 
+#[path = "⚠️actor-failure.rs"]
+mod actor_failure;
+
 const POLL_STEPS_PER_YIELD: usize = 32;
+
+#[derive(Clone, Copy)]
+pub(super) enum PollPurpose { Lifecycle, Command }
 
 pub(super) type NativePoll = GuestPollSession<KernelPollOutput, GuestPollNoReceiverState>;
 
@@ -27,9 +33,13 @@ impl PluginArtifactChannel {
     }
 
     pub(super) fn with_native_turn<T>(&mut self, instance: u32, events: &[Event], receive: impl FnOnce(&mut Self, &TurnResult) -> Result<T, Fault>) -> Result<T, Fault> {
+        self.with_native_turn_scoped(instance, events, &ActivationScope::detached(), receive)
+    }
+
+    pub(super) fn with_native_turn_scoped<T>(&mut self, instance: u32, events: &[Event], scope: &ActivationScope, receive: impl FnOnce(&mut Self, &TurnResult) -> Result<T, Fault>) -> Result<T, Fault> {
         if self.closing_instances.contains(&instance) { return Err(Self::not_wired("guest poll", "instance still holds a closing Source")); }
         let mut poll = self.instances.remove(&instance).ok_or_else(|| Self::not_wired("guest poll", format!("no open instance {instance}")))?;
-        let result = poll_turn(&mut poll, events, &ActivationScope::detached(), std::time::Instant::now() + COMMAND_RESUME_WALL_BUDGET, |output| receive(self, output));
+        let result = poll_turn(&mut poll, PollPurpose::Command, events, scope, std::time::Instant::now() + COMMAND_RESUME_WALL_BUDGET, |output| receive(self, output));
         self.instances.insert(instance, poll);
         result
     }
@@ -61,40 +71,51 @@ fn next_poll_phase(poll: &mut NativePoll, scope: &ActivationScope, deadline: std
 }
 
 /// 👂️ Borrows the received kernel output before acknowledging it back to its own Source.
-pub(super) fn poll_turn<T>(poll: &mut NativePoll, events: &[Event], scope: &ActivationScope, deadline: std::time::Instant, receive: impl FnOnce(&TurnResult) -> Result<T, Fault>) -> Result<T, Fault> {
-    next_poll_phase(poll, scope, deadline, NativePoll::next_input_step)?;
-    let (ordinary, page) = match events {
-        [page @ (Event::CommandIngressPage { .. } | Event::ColdDocumentPairPage(_))] => (&[][..], Some(page)),
-        _ => (events, None),
-    };
-    let events = EventJsonSource(ordinary);
-    let input = poll.event_input(&events, page).map_err(|error| PluginArtifactChannel::not_wired("guest poll input", error))?;
-    let input = std::pin::pin!(input);
+pub(super) fn poll_turn<T>(poll: &mut NativePoll, purpose: PollPurpose, events: &[Event], scope: &ActivationScope, deadline: std::time::Instant, receive: impl FnOnce(&TurnResult) -> Result<T, Fault>) -> Result<T, Fault> {
     let mut receive = Some(receive);
-    let mut result = None;
-    let mut steps_since_yield = 0;
     loop {
-        scope.checkpoint()?;
-        let status = poll.drive_step(input.as_ref(), &mut |output, _, _| {
-            if let Some(receive) = receive.take() {
-                result = Some(match &output.result.status {
-                    semio_framework::kernel::TurnStatus::Faulted(detail) => Err(decode_guest_fault(detail)),
-                    _ => receive(&output.result),
-                });
-            }
-            Ok(true)
-        });
-        match status {
-            GuestPollSessionStatus::Complete => return result.unwrap_or_else(|| Err(poll_fault(poll, status))),
-            GuestPollSessionStatus::Pending | GuestPollSessionStatus::Delivered if std::time::Instant::now() < deadline => {
-                steps_since_yield += 1;
-                if steps_since_yield == POLL_STEPS_PER_YIELD {
-                    std::thread::yield_now();
-                    steps_since_yield = 0;
+        next_poll_phase(poll, scope, deadline, NativePoll::next_input_step)?;
+        let (ordinary, page) = match events {
+            [page @ (Event::CommandIngressPage { .. } | Event::ColdDocumentPairPage(_))] => (&[][..], Some(page)),
+            _ => (events, None),
+        };
+        let source = EventJsonSource(ordinary);
+        let input = poll.event_input(&source, page).map_err(|error| PluginArtifactChannel::not_wired("guest poll input", error))?;
+        let input = std::pin::pin!(input);
+        let mut result = None;
+        let mut steps_since_yield = 0;
+        loop {
+            scope.checkpoint()?;
+            let status = poll.drive_step(input.as_ref(), &mut |output, _, _| {
+                if let Some(receive) = receive.take() {
+                    result = Some(match &output.result.status {
+                        semio_framework::kernel::TurnStatus::Faulted(detail) => Err(decode_guest_fault(detail)),
+                        _ => receive(&output.result),
+                    });
                 }
+                Ok(true)
+            });
+            match status {
+                GuestPollSessionStatus::Complete => {
+                    if let Some(bytes) = poll.take_actor_fault_bytes() {
+                        if result.is_some() { return Err(PluginArtifactChannel::not_wired("guest failure", "turn returned both a kernel output and an actor failure")); }
+                        actor_failure::retry_lifecycle(&bytes, matches!(purpose, PollPurpose::Lifecycle).then_some(events))?;
+                        scope.checkpoint()?;
+                        if std::time::Instant::now() >= deadline { return Err(poll_deadline_fault(poll)); }
+                        break;
+                    }
+                    return result.unwrap_or_else(|| Err(poll_fault(poll, status)));
+                },
+                GuestPollSessionStatus::Pending | GuestPollSessionStatus::Delivered if std::time::Instant::now() < deadline => {
+                    steps_since_yield += 1;
+                    if steps_since_yield == POLL_STEPS_PER_YIELD {
+                        std::thread::yield_now();
+                        steps_since_yield = 0;
+                    }
+                }
+                GuestPollSessionStatus::Pending | GuestPollSessionStatus::Delivered => return Err(poll_deadline_fault(poll)),
+                status => return Err(poll_fault(poll, status)),
             }
-            GuestPollSessionStatus::Pending | GuestPollSessionStatus::Delivered => return Err(poll_deadline_fault(poll)),
-            status => return Err(poll_fault(poll, status)),
         }
     }
 }

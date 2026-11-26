@@ -224,6 +224,13 @@ fn a_native_card_stack_lays_out_abutting_frames_and_paints_each_shared_line_once
 
     let mut draw = paint_retained_node_for_test(&tree, root, &theme, &mut atlas);
     assert_eq!(draw.glass_regions.len(), 3, "two title chips and one footer chip are glass overlays");
+    for owner in [semio_ui_theme::Level::Window, semio_ui_theme::Level::Pane, semio_ui_theme::Level::Panel, semio_ui_theme::Level::Dialog, semio_ui_theme::Level::Menu] {
+        let presentation = RetainedPaintPresentation { owner, ..Default::default() };
+        let output = paint_retained_node_with_presentation_for_test(&tree, root, &theme, &mut atlas, presentation);
+        let expected = theme.chip_glass(owner);
+        assert_eq!(output.glass_regions.len(), 3);
+        assert!(output.glass_regions.iter().all(|region| region.tint == expected.tint && region.alpha == expected.alpha));
+    }
     for (region, frame) in draw.glass_regions.iter().zip([a, a, b]) {
         assert!(region.rect[0] >= frame.x - 0.01 && region.rect[1] >= frame.y - 0.01 && region.rect[0] + region.rect[2] <= frame.x + frame.width + 0.01 && region.rect[1] + region.rect[3] <= frame.y + frame.height + 0.01, "chip glass {:?} leaves its frame {frame:?}", region.rect);
     }

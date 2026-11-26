@@ -3,6 +3,10 @@
 use super::*;
 use crate::{OperatorPlanAdmission,ColdOwner, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Schema, ValueRetirement,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
+#[path="schema-plan.rs"]
+mod schema_plan;
+#[path="variadic-signature.rs"]
+mod variadic_signature;
 
 //#region 🧪️SharedRegistry
 const WORK:u64=1<<16;

@@ -56,7 +56,7 @@ test("A request that no shrink can serve ends with a named error past the starve
   const shrunk=await withHostCapacityV1({...base,request:asked(4096,300),environment:{LANG:"en_US.UTF-8"},write:line=>lines.push(line)},async handle=>handle.reservedMegabytes);
   expect(shrunk).toBeGreaterThanOrEqual(300);expect(shrunk).toBeLessThanOrEqual(3000-2048);
   const started=Date.now(),message=await withHostCapacityV1({...base,request:asked(4096,3000),environment:{LANG:"en_US.UTF-8"},write:()=>undefined},async()=>"").catch((error:Error)=>error.message);
-  expect(message).toContain("held by");expect(message).toContain("command needs at least 3000 MB");
+  expect(message).toContain("held by holder (running, 1 job(s),");expect(message).toContain("command needs at least 3000 MB");
   expect(Date.now()-started,"the wait ended at the bound, not later").toBeLessThan(20_000);
  });
 },60_000);

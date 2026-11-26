@@ -12,6 +12,7 @@ use crate::standards::v1_7::subsets::base::modules::lower::*;
 /// 🎛️ Writer choices that do not change the typed model (so the default keeps `lift ∘ lower`
 /// the identity).
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct LowerOptions {
     /// ✂️ Subset embedded TrueType programs to the glyphs the document shows.
     pub subset_fonts: bool,
@@ -62,6 +63,7 @@ impl FontTable for Lowering<'_> {
 
 /// 📦 What lowering a document yields: its objects, the catalog reference and the info
 /// reference (both already inside `objects`).
+#[derive(semio_framework_value::RetireOwned)]
 pub struct LoweredDocument {
     pub objects: Vec<PdfIndirectObject>,
     pub root: ObjRef,

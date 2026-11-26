@@ -11,6 +11,7 @@ use semio_plugin_instance_extension::InstanceExtension;
 use store::{MemberFactory, Mutation, MutationDiff, SpaceMember};
 use protocol::{OpBinary, OpText};
 use semio_plugin_time_travel::TimeTravelOwners;
+use super::TimeTravelExtension;
 use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 use semio_plugin_window_config::WindowConfigOwner;
 use semio_ui_contract::*;

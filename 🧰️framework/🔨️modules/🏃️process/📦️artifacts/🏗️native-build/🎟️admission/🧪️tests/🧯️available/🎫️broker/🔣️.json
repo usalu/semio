@@ -1,0 +1,16 @@
+{
+  "scripts": [
+    { "package": "alpha", "version": "1.0.0", "peakMiB": 400 },
+    { "package": "beta", "version": "1.0.0", "peakMiB": 2000 },
+    { "package": "beta", "version": "2.0.0", "peakMiB": 700 }
+  ],
+  "source": {
+    "files": {
+      "build.rs": "mod setup;\nfn main() { setup::run(); }\n",
+      "setup.rs": "pub fn run() {}\n",
+      "lib.rs": "pub fn unrelated() {}\npub fn bulk() {}\n"
+    },
+    "mountedLines": 3,
+    "fallbackLines": 5
+  }
+}

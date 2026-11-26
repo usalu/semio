@@ -23,7 +23,7 @@ async function snapshotPair(session: McpClientSessionV1, artifactId: string) {
 }
 
 /** 💡️ Isolates the real WFC tool path when Note blocks the combined journey. */
-async function probeWfc(session: McpClientSessionV1, checkInitial: boolean): Promise<readonly McpClientStep[]> {
+async function probeWfc(session: McpClientSessionV1, checkInitial: boolean, discoveryOnly: boolean): Promise<readonly McpClientStep[]> {
   const steps: McpClientStep[] = [];
   const record = (step: string, ok: boolean, wire: unknown) => {
     const detail = JSON.stringify(wire)?.slice(0, 800) ?? "No response payload";
@@ -40,11 +40,15 @@ async function probeWfc(session: McpClientSessionV1, checkInitial: boolean): Pro
   await session.notify("notifications/initialized", {});
   const context = await session.call("context_resolve", { locale: pins.caller.locale });
   if (!record("wfc: headless context", !context.isError && context.structuredContent?.channel === "headless", context.structuredContent)) return steps;
-  const listed = await session.call("inference_list", {});
+  const listed = await session.call("inference_list", { inferenceSchema: pins.inferenceSchema });
   const declared = listed.structuredContent?.declared as readonly { artifactKind: string; inferenceSchema: string; payload?: { outputSchema?: string } }[] | undefined;
   const service = declared?.find(row => row.artifactKind === pins.inferenceArtifactKind && row.inferenceSchema === pins.inferenceSchema);
   const outputSchema = service?.payload?.outputSchema;
   if (!record("wfc: pinned inference discovery", !listed.isError && Boolean(outputSchema), service ?? listed.structuredContent)) return steps;
+  if (discoveryOnly) {
+    console.log(`[DEBUG] WFC inference service ${JSON.stringify(service)}`);
+    return steps;
+  }
   let artifactId = `mcp-wfc-${Date.now().toString(36)}`;
   if (checkInitial) {
     const malformed = { ...initialFixture.solve, input: { ...initialFixture.solve.input, pixels: initialFixture.invalidPixels } };
@@ -112,7 +116,9 @@ const entry = mcpServerEntries(workspace).semio;
 const catalog = takeMcpPluginCatalog(entry.args.slice(4), workspace);
 if (!catalog.env.SEMIO_PLUGIN_CATALOG) throw Error("Explicit catalog required");
 const { plugins } = readNativeCatalogV1(JSON.parse(await readFile(join(catalog.env.SEMIO_PLUGIN_CATALOG, "🦀️catalog.json"), "utf8")));
-const nativeArgs = withMcpHostDriverPolicy(["stdio", ...catalog.args, "--folder", folder, "--no-bridge", "--auto-approve", "all"]);
+const folderArgument = catalog.args.indexOf("--folder");
+if (folderArgument < 0) throw Error("The configured native launcher requires a folder argument");
+const nativeArgs = withMcpHostDriverPolicy(["stdio", ...catalog.args.with(folderArgument + 1, folder), "--no-bridge", "--auto-approve", "all"]);
 const models = [];
 let descriptor;
 try {
@@ -139,10 +145,13 @@ try {
   for (const pluginId of one ? [one] : selected) {
     const plugin = plugins.find(row => row.pluginId === pluginId);
     if (!plugin) throw Error(`No catalog owner for ${pluginId}`);
-    const modelRoot = join(root, "browser", mode, "components", componentModelDirectoryKeyV1(plugin.cratePath));
-    await mkdir(modelRoot, { recursive: true });
+    const prefix = "--verified-" + pluginId + "=";
+    const supplied = flags.find(flag => flag.startsWith(prefix))?.slice(prefix.length);
+    const modelRoot = supplied ? resolve(supplied) : join(root, "browser", mode, "components", componentModelDirectoryKeyV1(plugin.cratePath));
+    if (!modelRoot.startsWith(generated + sep)) throw Error("A model in the ticket generated directory is required");
     const component = join(modelRoot, "📦️component.wasm");
-    if (!reuse || only) {
+    if (!supplied && (!reuse || only)) {
+      await mkdir(modelRoot, { recursive: true });
       const linked = join(generated, "native-guests", "wasm32-wasip2", "debug", plugin.wasmOut);
       const maximumBytes = 512 * 1024 ** 2;
       if ((await stat(linked)).size > maximumBytes) {
@@ -212,7 +221,7 @@ try {
         const trace = flags.includes("--backtrace") ? setInterval(() => flushStderr(false), 1_000).unref() : undefined;
         try {
           const steps = probe === pins.inferencePluginId
-            ? await probeWfc(session, flags.includes("--check-initial"))
+            ? await probeWfc(session, flags.includes("--check-initial"), flags.includes("--discovery-only"))
             : await driveOsMcpClientSessionV1(session, pins, async () => descriptor?.manifest.apps.find((app: { id: string }) => app.id === pins.caller.appId), observeNote);
           if (steps.some(step => !step.ok)) flushStderr(true);
           if (!steps.some(step => step.step === "os: history_redo (mutation restored)" && step.ok)) return { steps };

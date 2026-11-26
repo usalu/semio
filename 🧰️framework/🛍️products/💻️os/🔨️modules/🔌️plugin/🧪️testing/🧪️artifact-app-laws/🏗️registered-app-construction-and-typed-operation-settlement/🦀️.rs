@@ -229,7 +229,15 @@ pub enum TypedOperationFixtureOwnershipReceipt {
     Maintenance { grant: RetainedCloneGrant, progress: RetainedCloneProgress },
 }
 
+pub struct FixtureDownload {
+    pub filename: String,
+    pub mime_type: String,
+    pub encoding: Option<String>,
+    pub data: Vec<u8>,
+}
+
 pub struct TypedOperationFixtureReceipt {
+    pub downloads: Vec<FixtureDownload>,
     pub ownership_receipts: Vec<TypedOperationFixtureOwnershipReceipt>,
     pub lanes: Vec<TypedOperationResultLane>,
     pub effects: Vec<semio_framework::kernel::Effect>,
@@ -280,7 +288,7 @@ pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiv
 /// history edit (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, forms frozen-press law).
 pub async fn settle_registered_typed_operation_within<P: PluginApp>(app: &mut P, receiver: u32, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,maximum_turns:usize) -> Result<(TypedOperationFixtureReceipt, usize), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let mut turns=0;
-    let mut receipt = TypedOperationFixtureReceipt { ownership_receipts: Vec::new(), lanes: Vec::new(), effects: Vec::new(), events: Vec::new(), ui_scope: None, ui_scopes: Vec::new(), completions: 0, completion_operations: Vec::new(), revisions: Vec::new(), history_patches: Vec::new(), resume_outcomes: Vec::new(), composed: Vec::new() };
+    let mut receipt = TypedOperationFixtureReceipt { downloads: Vec::new(), ownership_receipts: Vec::new(), lanes: Vec::new(), effects: Vec::new(), events: Vec::new(), ui_scope: None, ui_scopes: Vec::new(), completions: 0, completion_operations: Vec::new(), revisions: Vec::new(), history_patches: Vec::new(), resume_outcomes: Vec::new(), composed: Vec::new() };
     let (fresh_fuel,fresh_grant)=(OriginalFixtureCaller::turn_fuel(),cx.retained_grant());let(mut idle,maximum_idle)=(0usize,OriginalFixtureCaller::maximum_idle_turns());
     crate::artifact_app_laws::ensure_fixture_cancellation_issuer(app,cx)?;
     retain_registered_ownership_receipts(app, mounted_policy, &mut receipt)?;
@@ -313,9 +321,21 @@ pub async fn settle_registered_typed_operation_within<P: PluginApp>(app: &mut P,
         while let Some(mut page) = crate::artifact_app_laws::take_fixture_result_page(app,receiver,mounted_policy.preparation)? {
             let lane = page.lane;
             let fault = (lane == TypedOperationResultLane::Fault).then(|| semio_plugin_decl_app::tool_contract::decode_typed_operation_fault_page(page.bytes()));
+            let download = (lane == TypedOperationResultLane::Download).then(|| {
+                serde_json::from_slice::<(String, String, Option<String>, usize)>(page.bytes()).expect("segmented download header")
+            });
             let token = crate::artifact_app_laws::close_fixture_result_page(&mut page, mounted_policy.close);
             if !app.acknowledge_typed_operation_result(token)? {
                 return Err(semio_framework::Fault::from("registered fixture typed operation rejected its exact result ACK").into());
+            }
+            if let Some((filename, mime_type, encoding, length)) = download {
+                let mut data = Vec::new();
+                while let Some(chunk) = app.take_segmented_download_chunk(token.operation).await? {
+                    assert!(!chunk.is_empty() && chunk.len() <= length - data.len(), "download chunk exceeds its declared extent or makes no progress");
+                    data.extend_from_slice(&chunk);
+                }
+                assert_eq!(data.len(), length, "download closed before its declared extent");
+                receipt.downloads.push(FixtureDownload { filename, mime_type, encoding, data });
             }
             receipt.lanes.push(lane);
             if let Some(fault) = fault { return Err(fault.into()); }

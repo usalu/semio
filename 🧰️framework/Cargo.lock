@@ -5077,6 +5077,7 @@ dependencies = [
  "semio-framework-3d-brep-construction",
  "semio-framework-3d-brep-curve",
  "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-solid-topology",
  "semio-framework-3d-brep-spline-construction",
  "semio-framework-3d-brep-surface",
  "semio-framework-3d-brep-tolerance",
@@ -5937,6 +5938,7 @@ dependencies = [
  "semio-framework-geometry-skeleton",
  "semio-framework-geometry-solids",
  "semio-framework-geometry-vector",
+ "semio-framework-value",
  "serde_json",
 ]
 
@@ -5954,6 +5956,7 @@ name = "semio-framework-geometry-primitives"
 version = "0.1.0"
 dependencies = [
  "kurbo 0.13.1",
+ "semio-framework-value",
  "serde_json",
 ]
 
@@ -5973,6 +5976,7 @@ dependencies = [
  "semio-framework-geometry-bulge",
  "semio-framework-geometry-primitives",
  "semio-framework-geometry-vector",
+ "semio-framework-value",
  "serde_json",
 ]
 
@@ -9859,13 +9863,16 @@ dependencies = [
  "semio-framework-io-base64",
  "semio-framework-test-fixtures",
  "semio-framework-value",
+ "semio-framework-value-clone-source",
  "semio-framework-value-clone-source-testing",
+ "semio-framework-value-control-contract",
  "semio-framework-value-factory",
  "semio-framework-value-ordered",
  "semio-framework-value-paged-list",
  "semio-framework-value-read",
  "semio-framework-value-retirement",
  "semio-framework-value-testing-allocator",
+ "semio-framework-value-testing-effect-bank",
  "serde",
  "serde_json",
 ]

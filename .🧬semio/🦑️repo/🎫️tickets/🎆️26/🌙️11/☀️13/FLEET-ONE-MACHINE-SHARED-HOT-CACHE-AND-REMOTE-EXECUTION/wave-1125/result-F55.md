@@ -1,0 +1,12 @@
+# F55 result: parent heap growth of the whole read (02:40)
+## Findings
+- The running read (pid 8462, started 01:24) logs NO `largest collections` line, although F36's code is on disk since 19:31: `reportRetainedGraphMemoryV1` returned early through `quiet(env, limitBytes)`; the whole read has no plan limit (limitBytes Infinity) and no SEMIO_GRAPH_PHASES, so F36's diagnostics were silent by design. Fixed (always prints, one line per wave).
+- Heap census series of the live log (after forced GC): managed 3.27 GB / external 1.74 GB / 36.4 M objects / 15.9 M strings -> 3.90 / 2.03 / 46.2 M / 19.3 M over the last ~7 waves; process 5.4 -> 6.6 GB (grant 3072). Strings and arrays dominate: live row data, not garbage.
+- Retainers found by code (cannot be measured without a heap snapshot of the live process, signalling it is forbidden, and a scratch whole read does not fit: 10 GB available, load 54):
+  1. `discoverBuildGraphPartV1` returned `dispose: () => rowLog.close()` created inside the read function; `carry.disposers` keeps it to the seal, so every wave pinned that function's whole scope (stubs of all owners, `nodeRows`, `derivedFacts` incl. the re-derived test facts with row support arrays, `part`, `files`). Fixed: module-level `disposerOfRowLogV1`.
+  2. Every wave's row log (kept to the seal, ~110 waves for 5300 owners) kept its unflushed text (up to 4 MB of JSON line strings) and offset/length typed arrays with doubling slack. Fixed: `rowLog.settle()` (flush + trim) at the end of each part read. The key table (20 B x slack per distinct row) stays; it is the next candidate if `external` still grows (name it from the new line: `memory:...`/`part:nodeRows`).
+- Not proven: before/after parent heap per wave and identical sealed result (no read available to run both; code lands for the next read). Tests: row-log 9/0 (new settle test: rows readable after settle, later rows join), flat-memory 1/0, settle 5/1 (known flaky REAL heap).
+## Owners per minute: farm not used
+Every wave logs `graph: inferring 48 projects in this process (memory)` (8 times in the log; also `251` at start): the project farm is declined because the parent already holds more than its grant, so 48 owners are time-sliced on one thread; 0 farm workers. So growth causes slowness: flat parent -> farm engages again. Also load 54, 10 GB free, kernel time dominated (F30).
+## Next read: check
+`largest collections` per wave; if a name grows 100+ MB per wave, fix by it. Expect farm lines `workers` > 0 once the parent stays under the grant.

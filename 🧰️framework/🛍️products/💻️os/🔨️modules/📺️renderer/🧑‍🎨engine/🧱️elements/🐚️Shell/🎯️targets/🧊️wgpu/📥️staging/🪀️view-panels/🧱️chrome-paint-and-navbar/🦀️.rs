@@ -35,7 +35,6 @@ pub fn paint_footer_presence_cells(draw: &mut DrawList, atlas: &mut FontAtlas, i
     let cell_w = if cells.is_empty() { 0.0 } else { (rect.w - hair * (cells.len() + 1) as f32) / cells.len() as f32 };
     let size = theme.font_size_small;
     let ring = hair * 2.0;
-    draw.push_solid([rect.x, rect.y, rect.w, rect.h], theme.input_bg);
     for edge in [[rect.x, rect.y, rect.w, hair], [rect.x, rect.y + rect.h - hair, rect.w, hair], [rect.x, rect.y, hair, rect.h], [rect.x + rect.w - hair, rect.y, hair, rect.h]] {
         draw.push_solid(edge, theme.border_normal);
     }
@@ -58,13 +57,13 @@ pub fn paint_footer_presence_cells(draw: &mut DrawList, atlas: &mut FontAtlas, i
                 if *is_agent {
                     let badge_rect = Rect::new(inner.x + inner.w - badge_d - hair, inner.y + inner.h - badge_d - hair, badge_d, badge_d);
                     draw.push_rounded([badge_rect.x, badge_rect.y, badge_rect.w, badge_rect.h], theme.presence_color(*color), badge_d * 0.5);
-                    draw.push_rounded([badge_rect.x + hair, badge_rect.y + hair, badge_rect.w - hair * 2.0, badge_rect.h - hair * 2.0], theme.input_bg, badge_d * 0.5);
+                    draw.push_rounded([badge_rect.x + hair, badge_rect.y + hair, badge_rect.w - hair * 2.0, badge_rect.h - hair * 2.0], theme.surface(semio_ui_theme::Level::Menu), badge_d * 0.5);
                     chrome_icon(draw, icons, "bot", badge_rect.x + hair, badge_rect.y + hair, (badge_d - hair * 2.0).max(0.0), theme.text);
                 }
                 if let Some(badge) = badge {
                     let badge_rect = Rect::new(inner.x + inner.w - badge_d - hair, inner.y + hair, badge_d, badge_d);
                     draw.push_rounded([badge_rect.x, badge_rect.y, badge_rect.w, badge_rect.h], theme.presence_color(*color), badge_d * 0.5);
-                    draw.push_rounded([badge_rect.x + hair, badge_rect.y + hair, badge_rect.w - hair * 2.0, badge_rect.h - hair * 2.0], theme.input_bg, badge_d * 0.5);
+                    draw.push_rounded([badge_rect.x + hair, badge_rect.y + hair, badge_rect.w - hair * 2.0, badge_rect.h - hair * 2.0], theme.surface(semio_ui_theme::Level::Menu), badge_d * 0.5);
                     let badge_size = badge_d * 0.7;
                     let bx = badge_rect.x + (badge_rect.w - atlas.measure_text(badge, badge_size).0) * 0.5;
                     chrome_text(draw, atlas, input, theme, badge, bx, badge_rect.y + (badge_rect.h + badge_size) * 0.5 - 1.0, badge_size, theme.text);

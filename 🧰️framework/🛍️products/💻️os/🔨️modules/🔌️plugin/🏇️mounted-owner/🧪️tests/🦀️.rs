@@ -465,7 +465,7 @@ fn the_interactive_copy_grant_covers_the_largest_indivisible_step_with_power_of_
     let demand = MountedOwnerPolicyV1::LARGEST_INDIVISIBLE_STEP_COPY_BYTES;
     let grant = MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance.maximum_copy_bytes;
     assert!(grant >= demand && grant.is_power_of_two(), "grant {grant} must cover demand {demand}");
-    for measured in [33_976usize, 277_538, 377_696] {
+    for measured in [33_976usize, 277_538, 377_696, 688_784] {
         assert!(grant >= measured, "grant {grant} must fund the measured step {measured}");
     }
     assert_eq!(MountedOwnerPolicyV1::covering_copy_bytes(1), 32_768);

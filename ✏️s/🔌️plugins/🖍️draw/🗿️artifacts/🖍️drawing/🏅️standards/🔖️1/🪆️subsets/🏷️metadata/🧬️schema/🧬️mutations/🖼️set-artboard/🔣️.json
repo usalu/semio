@@ -7,7 +7,7 @@
   "aggregateVariant": "SetArtboard",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-artboard",
-  "binaryTag": 27,
+  "binaryTag": 26,
   "invertibility": "explicit-mutation",
   "diffParticipation": "apply-only",
   "outcomeClasses": [

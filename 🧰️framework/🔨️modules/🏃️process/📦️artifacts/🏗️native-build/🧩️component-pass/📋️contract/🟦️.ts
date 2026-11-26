@@ -49,5 +49,7 @@ export function admitNativeBuildPlanV1(value: unknown): NativeBuildPlanV1 {
   if (new Set(plan.passes.map((pass) => pass.id)).size !== plan.passes.length) throw Error("Invalid native build plan: duplicate pass id");
   for (const pass of plan.passes) if (new Set(pass.packages.map((row) => row.name)).size !== pass.packages.length) throw Error(`Invalid native build plan: duplicate package in ${pass.id}`);
   if (new Set((plan.jobs ?? []).map((job) => job.id)).size !== (plan.jobs ?? []).length) throw Error("Invalid native build plan: duplicate job id");
+  const jobs = new Set((plan.jobs ?? []).map(job => `job:${job.id}`));
+  for (const dependency of Object.values(plan.stageAfter ?? {}).flat()) if (dependency.startsWith("job:") && !jobs.has(dependency)) throw Error(`Invalid native build plan: unknown stage dependency ${dependency}`);
   return plan;
 }

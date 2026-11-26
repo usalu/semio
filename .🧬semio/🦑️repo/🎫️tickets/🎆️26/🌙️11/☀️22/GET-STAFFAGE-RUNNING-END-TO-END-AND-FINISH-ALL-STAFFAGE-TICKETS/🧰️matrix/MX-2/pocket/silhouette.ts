@@ -327,14 +327,14 @@ export function clipTriangle(t: readonly Vec[], axis: number, plane: number, kee
 }
 
 /** ✏️ The 2D shapes of one viewpoint as the slender solids follow them: the bone, whether the shape is closed and filled, its rings and the pen width in metres at the scale (the shape's own `penMm`, else the pen of its role). */
-export type Drawn = readonly { readonly bone: string; readonly material?: string; readonly closed: boolean; readonly filled: boolean; readonly rings: readonly Ring[]; readonly penM: number }[];
+export type Drawn = readonly { readonly bone: string; readonly material?: string; readonly body?: boolean; readonly closed: boolean; readonly filled: boolean; readonly rings: readonly Ring[]; readonly penM: number }[];
 
 const DRAWN = new WeakMap<object, Drawn>();
 
 /** ✏️ {@link Drawn} of the evaluated shapes of one viewpoint at 1:`scale`, memoised per array. */
-export function drawnOf(evaluated: readonly { readonly shape: { readonly bone?: string; readonly material?: string; readonly role: string; readonly penMm?: number; readonly filled?: boolean }; readonly rings: readonly Ring[]; readonly closed: boolean }[], scale: number, pens: Readonly<Record<string, number | null>>): Drawn {
+export function drawnOf(evaluated: readonly { readonly shape: { readonly kind?: string; readonly bone?: string; readonly material?: string; readonly role: string; readonly penMm?: number; readonly filled?: boolean }; readonly rings: readonly Ring[]; readonly closed: boolean }[], scale: number, pens: Readonly<Record<string, number | null>>): Drawn {
   let hit = DRAWN.get(evaluated);
-  if (hit === undefined) DRAWN.set(evaluated, (hit = evaluated.map((s) => ({ bone: s.shape.bone ?? "", ...(s.shape.material === undefined ? {} : { material: s.shape.material }), closed: s.closed, filled: s.shape.filled !== false, rings: s.rings, penM: (((s.shape.penMm ?? pens[s.shape.role]) ?? 0) * scale) / 1000 }))));
+  if (hit === undefined) DRAWN.set(evaluated, (hit = evaluated.map((s) => ({ bone: s.shape.bone ?? "", ...(s.shape.material === undefined ? {} : { material: s.shape.material }), ...(s.shape.kind === "loft" ? { body: true } : {}), closed: s.closed, filled: s.shape.filled !== false, rings: s.rings, penM: (((s.shape.penMm ?? pens[s.shape.role]) ?? 0) * scale) / 1000 }))));
   return hit;
 }
 
@@ -390,6 +390,19 @@ export function followedWidth(bone: string | undefined, centre: readonly Point[]
   return width;
 }
 
+/** 🫧️ Whether a `loft` shape of the bone (and material), filled and closed, is the body of a slender solid itself (a drawing that carries the sections of the solid; any other filled shape is compared at the width it is drawn with): nine tenths of the points of its projected centre line lie inside the shape or within half the true width of its outline. A `loft` or `member` drawn from the sections of the solid is such a shape: the reference is then the solid as it is (its projected triangles, tapering included), not a stroke of one width. */
+export function drawsBody(bone: string | undefined, centre: readonly Point[], drawn: Drawn, material: string | undefined, truthM: number): boolean {
+  const inside = (p: Point, ring: readonly Point[]): boolean => {
+    let odd = false;
+    for (let i = 0, k = ring.length - 1; i < ring.length; k = i++) {
+      const [a, b] = [ring[k]!, ring[i]!];
+      if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) odd = !odd;
+    }
+    return odd;
+  };
+  return drawn.some((d) => d.bone === bone && d.body === true && d.closed && d.filled && d.rings.length > 0 && (material === undefined || d.material === undefined || d.material === material) && centre.filter((p) => d.rings.some((ring) => inside(p, ring)) || distanceToPolylines(p, polylines(d)) <= truthM / 2).length >= 0.9 * centre.length);
+}
+
 /** 🧵️ The strokes a slender solid is drawn as (C24 refined): per copy of its `repeat`, its centre line (curved or closed as the solid is, see {@link centreLineOf}; a straight principal axis where the mesh gives none) widened to the width of the 2D shape it follows ({@link followedWidth}), else to its true projected width, and where no drawing is given to the larger of the pen of its role and that true width. One quadrilateral per segment of the centre line, like the strokes of the drawing. */
 export function strokesOf(view: Viewpoint, solid: World, drawn?: Drawn): readonly Ring[] {
   const per = solid.copyVertices ?? solid.positions.length / 3;
@@ -408,6 +421,10 @@ export function strokesOf(view: Viewpoint, solid: World, drawn?: Drawn): readonl
     const step = Math.max(1, Math.ceil(vertices.length / 300));
     const offsets = vertices.filter((_, i) => i % step === 0).map((v) => Math.min(...segments.map(([a, b]) => distanceToPolylines(v, [[a, b]])))).sort((x, y) => x - y);
     const truth = Math.max(1e-4, 2 * (offsets[Math.floor(0.9 * (offsets.length - 1))] ?? 0));
+    if (drawn !== undefined && drawsBody(solid.bone, centre, drawn, solid.material, truth)) {
+      for (let t = 0; t + 2 < local.length; t += 3) out.push([0, 1, 2].map((k) => vertices[local[t + k]!]!));
+      continue;
+    }
     const followed = drawn === undefined ? undefined : followedWidth(solid.bone, centre, drawn, solid.material, truth);
     const width = followed ?? (drawn === undefined ? Math.max(solid.penM ?? 0, truth) : truth);
     for (const [a, b] of segments) out.push(strokeQuad(a, b, width));

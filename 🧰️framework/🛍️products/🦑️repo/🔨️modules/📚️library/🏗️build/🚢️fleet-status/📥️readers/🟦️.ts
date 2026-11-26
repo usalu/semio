@@ -11,7 +11,7 @@ import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {fleetTextV1} from "../🟦️.ts";
 import type {HostWardenMirrorV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🟦️.ts";
-import type {FleetBazelSlotFactV1,FleetCapacityWaiterFactV1,FleetCasFactV1,FleetOffloadFactV1,FleetFactsV1,FleetGrantFactV1,FleetHolderFactV1,FleetLanguageV1,FleetSealedEntryFactV1,FleetWorkerMappingV1,FleetWorkerMemoryV1,FleetWorkerTreeV1,FleetSourceV1,FleetStandingFactV1,FleetWaiterFactV1} from "../🟦️.ts";
+import type {FleetBazelSlotFactV1,FleetCapacityWaiterFactV1,FleetCasFactV1,FleetOffloadFactV1,FleetFactsV1,FleetGrantFactV1,FleetHolderFactV1,FleetLanguageV1,FleetSealedEntryFactV1,FleetWorkerHostNameV1,FleetWorkerMappingV1,FleetWorkerMemoryV1,FleetWorkerTreeV1,FleetSourceV1,FleetStandingFactV1,FleetWaiterFactV1} from "../🟦️.ts";
 
 /** 📥️ The readers of the fleet status: each one asks an existing status reader of the build (leases, capacity, Bazel slots, cache ledger, sealed store, graph generation pointer) and turns the answer into the facts the aggregation reads. A reader never takes a lease, never loads the graph and never writes; a reader that fails is reported in `sources` and leaves its section out.
  * @see ../🟦️.ts the aggregation, ../🧬️schema/🔣️.json the facts */
@@ -139,6 +139,18 @@ export async function readFleetLoadV1(context:FleetReaderContextV1):Promise<Part
  return fleet===undefined?{}:{fleet};
 }
 
+/** 🏷️ The host name state of every given origin from the address sets the machines published in the fleet store: `duplicate` when another origin published the same label (or the label with macOS's conflict suffix), `named-as` when the label is the semantic name of another origin, `unknown` without a set or a usable label. Read-only; only the `hostLabel` of each published set is read, so a set from an agent that is not updated yet still counts; the same gate the agents run before they advertise.
+ * @see ../../../../🤝️shared-worktree/🗺️topology/🧭️addresses/🟦️.ts */
+export async function readFleetHostNamesV1(store:string,origins:readonly string[]):Promise<ReadonlyMap<string,FleetWorkerHostNameV1>>{
+ const {fleetAdvertiseGateV1}=await import("../../../../🤝️shared-worktree/🗺️topology/🧭️addresses/🟦️.ts"),base=join(store,"v1","origins"),names=(()=>{try{return readdirSync(base).filter(name=>/^[a-z][a-z0-9-]{0,63}$/u.test(name)).slice(0,512);}catch{return [];}})(),labels=names.map(origin=>{try{const label=(JSON.parse(readFileSync(join(base,origin,"addresses.json"),"utf8")) as {hostLabel?:unknown}).hostLabel;return {origin,hostLabel:typeof label==="string"&&/^[a-z0-9][a-z0-9-]{0,62}$/u.test(label)?label:null};}catch{return {origin,hostLabel:null};}});
+ return new Map(origins.map(origin=>{
+  const label=labels.find(row=>row.origin===origin)?.hostLabel??null;
+  if(label===null)return [origin,{state:"unknown",label:null,others:[]}];
+  const gate=fleetAdvertiseGateV1({origin,hostLabel:label,others:labels});
+  return [origin,gate.namedAs!==null?{state:"named-as",label,others:[gate.namedAs]}:gate.duplicates.length>0?{state:"duplicate",label,others:gate.duplicates}:{state:"ok",label,others:[]}];
+ }) as [string,FleetWorkerHostNameV1][]);
+}
+
 /** 🩺️ Workers: every origin of the fleet store judged by the age of its readiness record and of the heartbeats of its machine, so a receipt that claims `running` with no live writer shows as offline; nothing without a fleet store. */
 export async function readFleetWorkersV1(context:FleetReaderContextV1):Promise<Partial<FleetFactsV1>>{
  const [{readReadyWorkersV1,READY_OFFLINE_SECONDS_V1},{fleetStoreRootV1}]=await Promise.all([import("../../🌐️remote-execution/🛰️sidecar/🚦️ready/🩺️workers/🟦️.ts"),import("../../🌐️remote-cache/🛰️fleet/🟦️.ts")]);
@@ -146,8 +158,8 @@ export async function readFleetWorkersV1(context:FleetReaderContextV1):Promise<P
  if(store===undefined||store==="")return {};
  const rows=readReadyWorkersV1({store,nowMs:context.now()});
  if(rows.length===0)return {};
- const trees=await readWorkerTreesV1(store,context),at=context.now();
- return {workers:{offlineSeconds:READY_OFFLINE_SECONDS_V1,rows:rows.map(row=>{const mapping=readWorkerMappingV1(join(store,"v1","origins",row.origin,"slice-memory.json"),at,policy.readers.maximumMemoryRecordBytes,policy.readers.mappingFreshSeconds);return{...row,...trees?.has(row.origin)?{tree:trees.get(row.origin)!}:{},...mapping===undefined?{}:{mapping}};})}};
+ const trees=await readWorkerTreesV1(store,context),at=context.now(),hosts=await readFleetHostNamesV1(store,rows.map(row=>row.origin));
+ return {workers:{offlineSeconds:READY_OFFLINE_SECONDS_V1,rows:rows.map(row=>{const mapping=readWorkerMappingV1(join(store,"v1","origins",row.origin,"slice-memory.json"),at,policy.readers.maximumMemoryRecordBytes,policy.readers.mappingFreshSeconds);return{...row,...trees?.has(row.origin)?{tree:trees.get(row.origin)!}:{},hostName:hosts.get(row.origin)!,...mapping===undefined?{}:{mapping}};})}};
 }
 
 /** 🔒️ The mapping grant queue a worker's graph read published in its `slice-memory.json` (`sources.owners.presence.mappingQueue`, the owners taken beside it): undefined for a missing, oversized, torn, stale or unrelated file, never throws. @see ../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔒️mapping/🟦️.ts */

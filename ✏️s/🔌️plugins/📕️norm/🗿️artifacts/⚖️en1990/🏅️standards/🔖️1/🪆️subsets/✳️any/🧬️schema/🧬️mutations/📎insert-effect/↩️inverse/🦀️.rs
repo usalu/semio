@@ -5,5 +5,12 @@ use crate::remove_effect::RemoveEffect;
 use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 
 pub fn inverse<Op>(payload: &InsertEffect, base: &En1990Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_effect::RemoveEffect> {
-    Ok(vec![Op::from(RemoveEffect { index: payload.index.unwrap_or(usize::MAX).min(base.effects.len()) })])
+    Ok(match previous(payload, base) {
+        Some(inverse) => vec![Op::from(inverse)],
+        None => Vec::new(),
+    })
+}
+
+fn previous(payload: &InsertEffect, base: &En1990Snapshot) -> Option<crate::remove_effect::RemoveEffect> {
+    Some(RemoveEffect { index: payload.index.unwrap_or(usize::MAX).min(base.effects.len()) })
 }

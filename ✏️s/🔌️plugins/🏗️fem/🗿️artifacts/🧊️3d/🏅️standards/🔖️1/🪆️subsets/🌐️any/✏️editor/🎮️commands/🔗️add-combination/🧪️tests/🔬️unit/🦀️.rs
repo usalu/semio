@@ -7,11 +7,11 @@ use crate::context::dispatch;
 use crate::context::fem3d_demo_app;
 
 fn refusal(text: &str) -> String {
-    let snapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot::default();
+    let snapshot = crate::context::Retiring::new(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot::default());
     let history = semio_plugin::HistoryView::empty();
-    let doc = ArtifactView::new(&snapshot, &history);
+    let doc = ArtifactView::new(&*snapshot, &history);
     let config = NoConfig::default();
-    let fault = handle(&AddCombination { name: "ULS".into(), terms: text.into() }, &doc, &ConfigView { snapshot: &config, window: None }).expect_err("a term list the document cannot honour is refused with a fault");
+    let fault = handle(&AddCombination { name: "ULS".into(), terms: text.into() }, &doc, &ConfigView { snapshot: &config, window: None }).err().expect("a term list the document cannot honour is refused with a fault");
     format!("{fault:?}")
 }
 
@@ -66,7 +66,7 @@ async fn add_combination_accepts_the_natural_spellings_users_type_3d() {
 fn add_combination_refusals_have_complete_localized_notices_3d() {
     let table = semio_framework::fault_notice_definitions(<semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dPlayApp as semio_plugin::ArtifactEditor>::fault_notices());
     assert!(semio_framework::validate_fault_notices(&table).is_empty(), "{:?}", semio_framework::validate_fault_notices(&table));
-    let fault = |text: &str| -> semio_plugin::Fault { let snapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot::default(); parse_terms(text, &snapshot).expect_err("refused") };
+    let fault = |text: &str| -> semio_plugin::Fault { let snapshot = crate::context::Retiring::new(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot::default()); parse_terms(text, &snapshot).err().expect("refused") };
     for (text, code, english, german) in [("dead 1 2", "fem3d.combination.terms-unreadable", "could not be read", "nicht gelesen"), ("", "fem3d.combination.terms-empty", "at least one term", "mindestens einen Term"), ("ghost:1", "fem3d.combination.terms-case-unknown", "'ghost' is not a load case", "'ghost' ist kein Lastfall")] {
         let refused = fault(text);
         assert_eq!(refused.code.0.as_str(), code, "{text}");

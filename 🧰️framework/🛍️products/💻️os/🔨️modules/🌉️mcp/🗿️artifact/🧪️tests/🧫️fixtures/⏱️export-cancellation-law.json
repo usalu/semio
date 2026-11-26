@@ -1,0 +1,11 @@
+{
+  "pluginId": "note",
+  "schema": "note.document",
+  "port": "artifact:out",
+  "cases": [
+    { "id": "opening-guest", "cancelAt": "opening-guest", "after": 0, "expected": "CANCELLED" },
+    { "id": "archive-admitted", "cancelAt": "loading-document", "after": 0, "expected": "CANCELLED" },
+    { "id": "media-admitted", "cancelAt": "reading-document", "after": 0, "expected": "CANCELLED" },
+    { "id": "export-and-retry", "cancelAt": null, "after": null, "expected": "EXPORTED" }
+  ]
+}

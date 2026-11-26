@@ -14,6 +14,7 @@ use semio_os_mcp_port::channel_port::{AppFrame, HUB_EDIT_UNBOUND_FAULT_CODE, VIE
 #[derive(Clone, Debug)]
 pub struct InstalledArtifactKind {
     pub schema: String,
+    pub artifact_kind: String,
     pub plugin_id: String,
     pub app_id: String,
     pub media_out_ports: Vec<String>,

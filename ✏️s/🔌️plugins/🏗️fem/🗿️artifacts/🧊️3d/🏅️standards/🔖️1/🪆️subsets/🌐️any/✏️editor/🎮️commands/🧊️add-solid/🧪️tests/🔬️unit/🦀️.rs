@@ -14,9 +14,9 @@ fn refusal(payload: &AddSolid) -> String {
     let snapshot = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().expect("boot snapshot");
     let snapshot = crate::context::Retiring::new(snapshot);
     let history = semio_plugin::HistoryView::empty();
-    let doc = ArtifactView::new(&snapshot, &history);
+    let doc = ArtifactView::new(&*snapshot, &history);
     let config = NoConfig::default();
-    format!("{:?}", handle(payload, &doc, &ConfigView { snapshot: &config, window: None }).expect_err("an invalid solid is refused with a fault"))
+    format!("{:?}", handle(payload, &doc, &ConfigView { snapshot: &config, window: None }).err().expect("an invalid solid is refused with a fault"))
 }
 
 /// 🧊️ LAW: `addSolid` refuses an unknown material and a non-positive extent with a visible fault, and a valid material still adds the solid.
@@ -25,7 +25,9 @@ async fn add_solid_refuses_an_unknown_material_and_a_degenerate_extent() {
     assert!(refusal(&payload("unobtainium", 4.0)).contains("fem3d.solid.material-unknown"));
     let mut app = fem3d_demo_app().await;
     let material = app.snapshot().expect("snapshot").materials[0].id.as_str().to_owned();
-    assert!(refusal(&payload(&material, 0.0)).contains("fem3d.solid.extent"));
+    let boot = crate::context::Retiring::new(semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().expect("boot snapshot"));
+    let boot_material = boot.materials[0].id.as_str().to_owned();
+    assert!(refusal(&payload(&boot_material, 0.0)).contains("fem3d.solid.extent"));
     let before = app.snapshot().expect("snapshot").solids.len();
     dispatch(&mut app, Fem3dCommand::AddSolid(payload(&material, 4.0))).await;
     assert_eq!(app.snapshot().expect("snapshot").solids.len(), before + 1);
@@ -36,9 +38,9 @@ async fn add_solid_refuses_an_unknown_material_and_a_degenerate_extent() {
 fn add_solid_refusals_reach_the_shell_as_localized_notices_3d() {
     let snapshot = crate::context::Retiring::new(semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().expect("boot snapshot"));
     let history = semio_plugin::HistoryView::empty();
-    let doc = ArtifactView::new(&snapshot, &history);
+    let doc = ArtifactView::new(&*snapshot, &history);
     let config = NoConfig::default();
-    let fault = handle(&payload("unobtainium", 4.0), &doc, &ConfigView { snapshot: &config, window: None }).expect_err("refused");
+    let fault = handle(&payload("unobtainium", 4.0), &doc, &ConfigView { snapshot: &config, window: None }).err().expect("refused");
     assert_eq!(fault.code.0.as_str(), "fem3d.solid.material-unknown");
     let table = semio_framework::fault_notice_definitions(<semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dPlayApp as semio_plugin::ArtifactEditor>::fault_notices());
     assert!(semio_framework::validate_fault_notices(&table).is_empty());

@@ -2,7 +2,7 @@
  *
  * 🧱️ Child module of {@link ../🟦️.ts | useApplyHostEffects}: the effect arm of the `applyHostEffects` pass, moved verbatim. */
 import { shellDialogSessionIsCurrentV1 } from "../../🗨️dialog-origin/🟦️.ts";
-import { dialectCoordinate, type LocalizedLabel, type Effect, type UiDirtyScope } from "@semio-tech/framework";
+import { dialectCoordinate, type LocalizedLabel, type Effect } from "@semio-tech/framework";
 import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
 import { LOCAL_CATALOG_ACTIONS_V1, localCatalogAdmissionV1, localCatalogAdmitMutationV1, localCatalogDocumentIdV1, localCatalogNoticeCodeV1, localCatalogNoticeTextV1, localCatalogRehydrationArgumentsV1 } from "../../🗂️local-catalog/🟦️.ts";
 import { retireLocalDocument } from "@semio-tech/framework/config/mutations";
@@ -10,7 +10,7 @@ import { sharedDocumentOpeningRoleV1 } from "../../🧭️opening/🟦️.ts";
 import { resolveManifestLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { isShellOwnedCommandId } from "../../../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
-import { makeEffectDispatchOne } from "../../../🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
+import { makeEffectDispatchOne, type EffectInvocationSink } from "../../../🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
 import { reduceArtifactCreationProgressUiV1 } from "../../🌱️artifact-creation/🟦️.tsx";
 import { replayRefusalCodeV1, replayRefusalNoticeTextV1, type ReplayRefusalReasonV1 } from "../../📣️replay-refusal/🟦️.ts";
 import { captureSpaceArtifactCreationCatalogAuthorityV1, directoryCommandFromAction, mintDirectoryCommandRequestId, SPACE_INDEX_DOCUMENT_ID, type SpaceArtifactCreationOwnerV1, spaceArtifactCreationRequestFromAction, spaceIndexOpeningArgsV1 } from "../../🧾️space-artifact-creation/🟦️.ts";
@@ -20,12 +20,12 @@ import { shellSpaceAdministrationOpening } from "../../🏠️space-administrati
 import type { ShellCoreAfterSpawnedSession } from "../../🛫️spawned-session/🟦️.ts";
 
 /** 🎭️ Replays a shell-owned command against the directory, the space index and the artifact creation lane. */
-export async function applyReplayShellCommandEffect({ showTransientNoticeRef, uiLocaleRef, spaceAdministrationEpochRef, identityRef, ensureBackboneWorker, spaceAdministrationRef, setSpaceAdministration, openDocumentSessionsRef, shellStateRef, spaceArtifactCreationCatalogRef, spaceArtifactCreationCatalogUiRef, spaceArtifactCreationOwnersRef, setSpaceArtifactCreationUi, spaceDirectoryHistoriesRef, hostPorts, adoptSharedSpaceAccess, resolveArtifactOpeningWithActivationRef, openResolvedArtifactRef, isCurrentEffectOwner, openDocumentRef, localDataDir, writeLocalDocumentRef, recordLocalCatalogRef, loadedPluginsRef, resolvedTargetViewState, rehydratedLocalDocumentsRef, localCatalogRef, replayShellOwnedCommandRef, effect, baseSession, effectOrigin, effectOwner, applyHostEffects, core }: Pick<ShellCoreAfterSpawnedSession, "showTransientNoticeRef" | "uiLocaleRef" | "spaceAdministrationEpochRef" | "identityRef" | "ensureBackboneWorker" | "spaceAdministrationRef" | "setSpaceAdministration" | "openDocumentSessionsRef" | "shellStateRef" | "spaceArtifactCreationCatalogRef" | "spaceArtifactCreationCatalogUiRef" | "spaceArtifactCreationOwnersRef" | "setSpaceArtifactCreationUi" | "spaceDirectoryHistoriesRef" | "hostPorts" | "adoptSharedSpaceAccess" | "resolveArtifactOpeningWithActivationRef" | "openResolvedArtifactRef" | "isCurrentEffectOwner" | "openDocumentRef" | "localDataDir" | "writeLocalDocumentRef" | "recordLocalCatalogRef" | "loadedPluginsRef" | "resolvedTargetViewState" | "rehydratedLocalDocumentsRef" | "localCatalogRef" | "replayShellOwnedCommandRef"> & {
+export async function applyReplayShellCommandEffect({ showTransientNoticeRef, uiLocaleRef, spaceAdministrationEpochRef, identityRef, ensureBackboneWorker, spaceAdministrationRef, setSpaceAdministration, openDocumentSessionsRef, shellStateRef, spaceArtifactCreationCatalogRef, spaceArtifactCreationCatalogUiRef, spaceArtifactCreationOwnersRef, setSpaceArtifactCreationUi, spaceDirectoryHistoriesRef, hostPorts, adoptSharedSpaceAccess, resolveArtifactOpeningWithActivationRef, openResolvedArtifactRef, isCurrentEffectOwner, openDocumentRef, localDataDir, writeLocalDocumentRef, recordLocalCatalogRef, loadedPluginsRef, resolvedTargetViewState, rehydratedLocalDocumentsRef, localCatalogRef, replayShellOwnedCommandRef, effect, baseSession, effectOrigin, effectOwner, applyDeferredResponse, core }: Pick<ShellCoreAfterSpawnedSession, "showTransientNoticeRef" | "uiLocaleRef" | "spaceAdministrationEpochRef" | "identityRef" | "ensureBackboneWorker" | "spaceAdministrationRef" | "setSpaceAdministration" | "openDocumentSessionsRef" | "shellStateRef" | "spaceArtifactCreationCatalogRef" | "spaceArtifactCreationCatalogUiRef" | "spaceArtifactCreationOwnersRef" | "setSpaceArtifactCreationUi" | "spaceDirectoryHistoriesRef" | "hostPorts" | "adoptSharedSpaceAccess" | "resolveArtifactOpeningWithActivationRef" | "openResolvedArtifactRef" | "isCurrentEffectOwner" | "openDocumentRef" | "localDataDir" | "writeLocalDocumentRef" | "recordLocalCatalogRef" | "loadedPluginsRef" | "resolvedTargetViewState" | "rehydratedLocalDocumentsRef" | "localCatalogRef" | "replayShellOwnedCommandRef"> & {
   readonly effect: Extract<Effect, Readonly<Record<"replayShellCommand", unknown>>>;
   readonly baseSession: ActiveSession;
   readonly effectOrigin: ReturnType<ShellCoreAfterSpawnedSession["captureEffectOwner"]>["presentation"];
   readonly effectOwner: ReturnType<ShellCoreAfterSpawnedSession["captureEffectOwner"]>;
-  readonly applyHostEffects: (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<ShellCoreAfterSpawnedSession["captureEffectOwner"]>) => Promise<void>;
+  readonly applyDeferredResponse: EffectInvocationSink;
   readonly core: ShellCoreAfterSpawnedSession;
 }) {
   const { actionId, args } = effect.replayShellCommand;
@@ -197,7 +197,7 @@ export async function applyReplayShellCommandEffect({ showTransientNoticeRef, ui
         showTransientNoticeRef.current(localCatalogNoticeTextV1("kept", uiLocaleRef.current, name), "info", localCatalogNoticeCodeV1("kept"));
         const pluginEntry = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === baseSession.pluginId);
         const rehydration = localCatalogRehydrationArgumentsV1(admission);
-        if (pluginEntry && rehydration !== null) await makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null })(LOCAL_CATALOG_ACTIONS_V1.rehydrate, rehydration);
+        if (pluginEntry && rehydration !== null) await makeEffectDispatchOne(pluginEntry, baseSession, applyDeferredResponse, () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null })(LOCAL_CATALOG_ACTIONS_V1.rehydrate, rehydration);
         const seen = rehydratedLocalDocumentsRef.current.get(baseSession.instanceId);
         if (seen !== undefined) seen.add(`${admission.document.documentId}@${admission.document.admittedAtMs}`);
       }

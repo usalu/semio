@@ -119,12 +119,15 @@ pub(super) fn physical_policy(original:&super::WakeDriverState,policy:RetainedCl
  let available=operation.guest.physical_remaining(remaining)?;if retirement||operation.cleanup{return Ok(intersect(policy,available))}
  let deadline=original.root.remaining_work().absolute_deadline_us.saturating_sub(operation.reserve.maximum_microseconds);
  if original.root.clock_source()().is_none_or(|now|now>=deadline){return Err(spent("semantic deadline exhausted with original cleanup window retained"))}
- let after_reserve=consumable_remaining(available,operation.reserve.retained)?;
- let grant=policy.maximum_items;let policy=intersect(policy,after_reserve);
+ let grant=policy.maximum_items;let policy=physical_drive_balance(operation,policy,available)?;
  if policy.maximum_items==0{
   return Err(items_exhausted(ItemsLedger{issued:original.treasury.policy().operation.maximum_items,remaining:remaining.maximum_items,guest_held:remaining.maximum_items.saturating_sub(available.maximum_items),reserve:operation.reserve.retained.maximum_items,grant},Some(guest_report(original)).as_deref()))
  }
  Ok(policy)
+}
+fn physical_drive_balance(operation:&OperationBudget,policy:RetainedCloneGrant,available:RetainedCloneGrant)->Result<RetainedCloneGrant,ValueError>{
+ if operation.cleanup{return Ok(intersect(policy,available))}
+ consumable_remaining(available,operation.reserve.retained).map(|after_reserve|intersect(policy,after_reserve))
 }
 /// 📒️ The interpreter ledger and the copy the operation spent outside it, by poll stage.
 fn guest_report(original:&super::WakeDriverState)->String{
@@ -162,6 +165,19 @@ impl GuestRelayWakeDriver {
   let Ok(original)=self.original.try_lock() else { return Ok(None) };
   if original.checkout.is_some(){return Ok(None)}
   physical_policy(&original,original.treasury.policy().drive,false).map(Some)
+ }
+ /// 📊️ Observes committed balances without borrowing a turn or reading its clock.
+ pub fn original_operation_budget_diagnostic(&self)->Option<String>{
+  let original=self.original.try_lock().ok()?;
+  let operation=original.operation.as_ref()?;
+  let policy=original.root.policy();
+  let treasury=original.treasury.original_remaining();
+  let drive=operation.guest.physical_remaining(treasury).and_then(|available|physical_drive_balance(operation,original.treasury.policy().drive,available));
+  let work=original.root.fuel_remaining();
+  let ordinary_work=operation.guest.physical_fuel(work).map(|remaining|remaining.saturating_sub(operation.reserve.work_fuel));
+  let execution=original.root.execution_fuel_remaining();
+  let ordinary_execution=execution_fuel(&original,false);
+  Some(format!("treasury={treasury:?} drive={drive:?} work_remaining={work} ordinary_work={ordinary_work:?} turn_work={} execution_spent={} execution_remaining={execution} ordinary_execution={ordinary_execution:?} turn_execution={}",policy.turn_fuel,policy.operation_execution_fuel.saturating_sub(execution),policy.turn_execution_fuel))
  }
  /// 🌱️ Runs one synchronous original admission slice and returns every actual receipt before yielding.
  pub fn dispatch_admission_step(&self,requires_execution:bool,produce:impl FnOnce(Option<semio_framework_actor::OriginalGuestExecutionBudget>,&mut semio_framework_job::StepContext<'_>)->GuestRelayAdmissionCall)->Result<bool,GuestRelayAdmissionFailure>{self.dispatch_original_admission_step(requires_execution,false,false,produce)}

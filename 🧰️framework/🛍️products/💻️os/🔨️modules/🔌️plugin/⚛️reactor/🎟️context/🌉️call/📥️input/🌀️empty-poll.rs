@@ -1,5 +1,5 @@
 //! 🌀️ A canonical empty Poll builds one inline typed input from the current authenticated wire.
-use super::{ActorInput, OriginalTurnFailure, RetainedCloneProgress, StepContext};
+use super::{ActorInput, OriginalTurnFailure, RetainedCloneProgress, StepContext, poll_wire};
 use semio_framework_pack_json::JsonReadLimits;
 use semio_plugin_abi::owned_abi::{OwnedCorePollLimits, PollInput};
 use std::mem::size_of;
@@ -56,34 +56,9 @@ pub(super) fn advance(
     Ok(true)
 }
 
-fn byte(rest: &mut &[u8]) -> Option<u8> {
-    let (head, tail) = rest.split_first()?;
-    *rest = tail;
-    Some(*head)
-}
-
 fn decode(rest: &mut &[u8]) -> Option<OwnedCorePollLimits> {
-    for expected in PREFIX {
-        if byte(rest)? != *expected { return None; }
-    }
-    let mut scalars = [0; OwnedCorePollLimits::ARITY];
-    for (index, value) in scalars.iter_mut().enumerate() {
-        let first = byte(rest)?.checked_sub(b'0').filter(|&digit| digit <= 9)?;
-        *value = u64::from(first);
-        let delimiter = if index + 1 == OwnedCorePollLimits::ARITY { b']' } else { b',' };
-        loop {
-            let next = byte(rest)?;
-            if next == delimiter { break; }
-            let digit = next.checked_sub(b'0').filter(|&digit| digit <= 9)?;
-            if first == 0 { return None; }
-            *value = value.checked_mul(10)?.checked_add(u64::from(digit))?;
-        }
-    }
-    for expected in SUFFIX {
-        if byte(rest)? != *expected { return None; }
-    }
-    if !rest.is_empty() { return None; }
-    OwnedCorePollLimits::from_scalars(scalars)
+    poll_wire::take(rest, PREFIX)?;
+    poll_wire::limits(rest)
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 /** 🧱️ InkCanvasHost block views: the math renderer port with its KaTeX default and the text, table, image, math and stroke block views. */
 import * as React from "../../⚛️react-port/🟦️.ts";
-import { cn, useLabel, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
+import { cn, surfaceClass, useLabel, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 import type { InkBounds, InkCamera, InkImageAsset, InkItem, InkResizeHandle, InkTextItem, InkTextRun } from "../🧾️ink-model/🟦️.ts";
 import { inkItemBounds, inkPositiveMod, worldToScreen } from "../📐️ink-geometry/🟦️.ts";
 import { inkImageAssetDataUrl } from "../🌳️ink-document-ops/🟦️.ts";
@@ -90,7 +90,7 @@ export function InkItemView({
     "data-border-probe-art": "",
     ...sharedBorderlessBoxProps,
     "data-shared-border-state": hovered ? "hover" : selected ? "active" : undefined,
-    className: cn("bg-background/90 absolute overflow-hidden border", block.locked && "opacity-70", hidden && "pointer-events-none opacity-0"),
+    className: cn(surfaceClass, "absolute overflow-hidden border", block.locked && "opacity-70", hidden && "pointer-events-none opacity-0"),
     style: {
       left: bounds.x,
       top: bounds.y,
@@ -149,7 +149,7 @@ export function InkItemView({
     const src = asset ? inkImageAssetDataUrl(asset) : null;
     return (
       <div {...common}>
-        {src ? <img src={src} alt={block.name} className="h-full w-full object-contain" draggable={false} /> : <div className="bg-muted text-muted-foreground flex h-full w-full items-center justify-center text-xs">{block.imageKey}</div>}
+        {src ? <img src={src} alt={block.name} className="h-full w-full object-contain" draggable={false} /> : <div className="text-muted-foreground flex h-full w-full items-center justify-center text-xs">{block.imageKey}</div>}
       </div>
     );
   }
@@ -188,7 +188,7 @@ export function InkSelectionChrome({ camera, bounds, onResizePointerDown }: { re
       {INK_RESIZE_HANDLES.map((handle) => {
         const left = handle.includes("w") ? topLeft.x - 4 : handle.includes("e") ? topLeft.x + width - 4 : topLeft.x + width / 2 - 4;
         const top = handle.includes("n") ? topLeft.y - 4 : handle.includes("s") ? topLeft.y + height - 4 : topLeft.y + height / 2 - 4;
-        return <div key={handle} className="border-primary bg-background absolute z-30 h-2 w-2 border" style={{ left, top, cursor: INK_RESIZE_CURSOR[handle] }} onPointerDown={(event) => onResizePointerDown(handle, event)} />;
+        return <div key={handle} className={cn(surfaceClass, "border-primary absolute z-30 h-2 w-2 border")} style={{ left, top, cursor: INK_RESIZE_CURSOR[handle] }} onPointerDown={(event) => onResizePointerDown(handle, event)} />;
       })}
     </>
   );

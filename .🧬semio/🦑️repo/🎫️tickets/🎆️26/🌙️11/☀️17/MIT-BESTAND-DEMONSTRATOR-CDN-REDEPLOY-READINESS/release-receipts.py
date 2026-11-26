@@ -1,5 +1,6 @@
 """🧾️ Identify staged release inputs and verify the copies served by the static site."""
 import argparse
+import gzip
 import filecmp
 import hashlib
 import json
@@ -107,18 +108,25 @@ def certify_browser_cores(requests):
 def verify_recorded_cores(root, inventory):
     files = inventory["files"]
     expected = {file["path"] for file in files}
-    if {p.relative_to(root).as_posix() for p in root.rglob("*.wasm")} != expected:
-        raise ValueError(f"optimized browser core inventory differs from its successful build in {root}")
+    paths = [p for p in root.rglob("*") if p.name.endswith((".wasm", ".wasm.gz.bin"))]
+    actual = {p.relative_to(root).as_posix().removesuffix(".gz.bin"): p for p in paths}
+    if expected != actual.keys() or len(actual) != len(paths):
+        raise ValueError(f"Optimized browser core inventory differs in {root}")
     for file in files:
-        path = root / file["path"]
-        if path.is_symlink() or not path.is_file() or path.stat().st_size != file["bytes"]:
-            raise ValueError(f"optimized browser core differs from its successful build: {path}")
+        path = actual[file["path"]]
+        if path.is_symlink() or not path.is_file():
+            raise ValueError(f"Invalid browser core: {path}")
         digest = hashlib.sha256()
-        with path.open("rb") as source:
+        size = 0
+        opener = gzip.open if path.name.endswith(".gz.bin") else open
+        with opener(path, "rb") as source:
             for chunk in iter(lambda: source.read(1024 * 1024), b""):
+                size += len(chunk)
+                if size > file["bytes"]:
+                    raise ValueError(f"Browser core exceeds its recorded length: {path}")
                 digest.update(chunk)
-        if digest.hexdigest() != file["sha256"]:
-            raise ValueError(f"optimized browser core differs from its successful build: {path}")
+        if size != file["bytes"] or digest.hexdigest() != file["sha256"]:
+            raise ValueError(f"Browser core differs from its successful build: {path}")
 
 
 def core_certification_request(staged, receipt):
@@ -139,18 +147,32 @@ def record_confirmation(staged, destination, module, expected=None):
 def verify_deployed_module(staged, deployed):
     names = json.loads((staged / ".semio-artifact.json").read_bytes())["files"]
     copies = {p.relative_to(deployed).as_posix() for p in deployed.rglob("*") if p.is_file()}
-    if not isinstance(names, list) or set(names) != copies or len(names) != len(copies):
+    encoded = {name.removesuffix(".gz.bin") for name in copies if name.endswith(".wasm.gz.bin")}
+    decoded = {name.removesuffix(".gz.bin") if name.endswith(".wasm.gz.bin") else name for name in copies}
+    if not isinstance(names, list) or set(names) != decoded or len(names) != len(copies):
         raise ValueError(f"Deployed file inventory differs from the module marker in {deployed}")
-    if not any(name.endswith(".wasm") for name in copies):
+    if not any(name.endswith(".wasm") for name in decoded):
         raise ValueError(f"Deployed module has no WebAssembly in {deployed}")
-    scripts = {name for name in copies if name.endswith(".js") and deployed.parent.name == "🧩️extension-modules"}
+    bindings = {re.sub(r"\.core\d*\.wasm$", ".js", core) for core in encoded}
+    scripts = bindings | {name for name in decoded if name.endswith(".js") and deployed.parent.name == "🧩️extension-modules"}
+    uses_shard_gzip = False
     if scripts:
         helper = Path(__file__).with_name("verify-extension-imports.mjs")
-        subprocess.run(["node", str(helper), str(staged), str(deployed), *sorted(scripts)], check=True)
-    for name in sorted(copies - scripts):
+        result = subprocess.run(["repo", "tools", "exec", "--light", "node", "--", str(helper), str(staged), str(deployed), *sorted(scripts)],
+                                stdout=subprocess.PIPE, encoding="utf-8", check=True)
+        uses_shard_gzip = json.loads(result.stdout)
+        if not isinstance(uses_shard_gzip, bool):
+            raise ValueError(f"Invalid binding transport verdict for {deployed}")
+    for name in sorted(decoded - scripts - encoded):
         if not filecmp.cmp(staged / name, deployed / name, shallow=False):
             raise ValueError(f"Deployed module file differs from its staged build: {deployed / name}")
+    return uses_shard_gzip
 
+
+def verify_deployed_shard_worker(site):
+    helper = Path(__file__).with_name("verify-shard-worker.ts")
+    worker = site / "🔌️plugin-modules/🧵️shard/🟨️shard-worker.js"
+    subprocess.run(["repo", "tools", "exec", "--light", "bun", "--", str(helper), str(worker)], check=True)
 
 
 def roster(cases):
@@ -202,6 +224,7 @@ def main():
                 raise ValueError(f"{module} changed since its successful build")
             verified.append((module, expected, staged, directory, inventory))
     digests = authored_release_digests(list(dict.fromkeys(module for module, _, _, _, _ in verified)))
+    uses_shard_gzip = False
     for module, expected, staged, directory, inventory in verified:
         digest = digests[module]
         if digest != expected["semanticDescriptorSha256"]:
@@ -212,7 +235,10 @@ def main():
             if read_receipt(deployed, module) != expected:
                 raise ValueError(f"{module} site differs from its successful build")
             verify_recorded_cores(deployed.parent, inventory)
-            verify_deployed_module(staged.parent, deployed.parent)
+            if verify_deployed_module(staged.parent, deployed.parent):
+                uses_shard_gzip = True
+    if uses_shard_gzip:
+        verify_deployed_shard_worker(args.site)
 
 
 if __name__ == "__main__":

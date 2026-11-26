@@ -178,5 +178,35 @@
    "release": 1048576,
    "depth": 64
   }
+ },
+ {
+  "id": "mounted-drawing-job-close-fits-its-covering-grant",
+  "loan": {
+   "items": 64,
+   "copy": 32768,
+   "capacity": 16777216,
+   "release": 1048576,
+   "depth": 64
+  },
+  "demand": {
+   "copy": 688784,
+   "capacity": 344448,
+   "release": 0,
+   "depth": 1
+  },
+  "ceiling": {
+   "items": 64,
+   "copy": 2094757945,
+   "capacity": 2094757945,
+   "release": 2094757945,
+   "depth": 64
+  },
+  "expected": {
+   "items": 64,
+   "copy": 1048576,
+   "capacity": 16777216,
+   "release": 1048576,
+   "depth": 64
+  }
  }
 ]

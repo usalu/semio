@@ -35,6 +35,14 @@ use semio_plugin_instance_jobs::jobs_lease::OriginalToolLeaseAdmission;
 use semio_plugin_decl_views::child_view::ChildContentRetainers;
 use semio_os_kernel as store;
 
+fn reserved_identity_limit(verb: &str, max_output_bytes: usize) -> usize {
+    if matches!(verb, "undo" | "redo") {
+        max_output_bytes.saturating_add(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES)
+    } else {
+        max_output_bytes
+    }
+}
+
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
     /// 🎞️ Prepares the original media request, then mounts its producer through the stepped reserved mount until the receipt settles.
     pub async fn advance_original_reserved_media(&mut self,port:&str,media:&mut Option<semio_framework::Media>,meta:&ActionMeta,finished:&mut Option<semio_framework_job::Operation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
@@ -112,9 +120,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if decoded_items > proof.contract().max_decoded_items || !proof.admits::<A>(&admission) {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-admission"), format!("framework route '{verb}' failed its exact owner/factory/schema/contract admission")).into());
         }
-        let max_output_bytes = proof.contract().max_output_bytes;
+        let identity_limit = reserved_identity_limit(verb, proof.contract().max_output_bytes);
         let Some((operation,lease))=self.admit_original_tool_lease(verb,meta,true,cx)?else{return Ok(None)};
-        FrameworkReservedCommitPermit::new(operation,lease,max_output_bytes).map(Some).map_err(Into::into)
+        FrameworkReservedCommitPermit::new(operation,lease,identity_limit).map(Some).map_err(Into::into)
     }
 
     pub(crate) fn admit_original_tool_lease(&mut self,verb:&str,meta:&ActionMeta,keyed:bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<(semio_framework_job::Operation,ToolCancellationLease)>,semio_framework_job::OriginalTurnFailure>{
@@ -163,9 +171,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     pub fn admit_reserved_emit_producer(&mut self,verb:&str,meta:&ActionMeta,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<FrameworkReservedCommitPermit>,semio_framework_job::OriginalTurnFailure>{
         let proof=self.tools.qualified_tool_proof(&*self.stores, verb)?;
         if !matches!(proof,QualifiedToolView::FrameworkOwned(_)|QualifiedToolView::AppOwned(_)){return Err(plugin_sdk_fault("reserved producer lacks its exact registered publication proof").into())}
-        let max_output_bytes=proof.contract().max_output_bytes;
+        let identity_limit = reserved_identity_limit(verb, proof.contract().max_output_bytes);
         let Some((operation,lease))=self.admit_original_tool_lease(verb,meta,true,cx)?else{return Ok(None)};
-        FrameworkReservedCommitPermit::new(operation,lease,max_output_bytes).map(Some).map_err(Into::into)
+        FrameworkReservedCommitPermit::new(operation,lease,identity_limit).map(Some).map_err(Into::into)
     }
 
     /// 🔬️ Exercises real reserved slot admission without exporting private producer authority.

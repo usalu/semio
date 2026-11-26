@@ -8,7 +8,7 @@ use semio_ui_tui_core::cell::{Cell, CellBuffer};
 use semio_ui_tui_core::event::{mods, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
 use semio_ui_tui_core::geometry::{Pos, Rect};
 use semio_ui_tui_core::text::{boundary_at_cell, boundary_at_or_before, display_width, elide, next_boundary, previous_boundary, window_cells, Elision};
-use semio_ui_tui_core::theme::{Role, Surface, Theme};
+use semio_ui_tui_core::theme::{Role, Theme};
 use semio_ui_tui_core::signal::{CursorShape, CursorSpec, WidgetSignal};
 
 /// ✏️ A single-line text value, its cursor (a byte offset) and the hint shown while it is empty.
@@ -187,7 +187,7 @@ pub fn paint_input(i: &InputState, theme: &Theme, rect: Rect, buf: &mut CellBuff
     if rect.width == 0 || rect.height == 0 {
         return;
     }
-    let bg = theme.surface(Surface::Panel);
+    let bg = buf.owner_background();
     buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), bg));
     let line = Rect::new(rect.x, rect.y, rect.width, 1);
     if i.value.is_empty() {

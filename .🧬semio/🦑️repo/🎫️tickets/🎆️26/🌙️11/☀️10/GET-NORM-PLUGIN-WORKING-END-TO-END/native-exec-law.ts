@@ -9,7 +9,7 @@ const scenarios = [
   { name: "inherited", live: true, plan: true, code: 0 },
   { name: "undersized-browser", live: false, plan: false, code: 1 },
   { name: "stale", live: false, plan: false, code: 1 },
-  { name: "native", live: true, plan: false, code: 0 },
+  { name: "native", live: true, plan: true, code: 0 },
 ] as const;
 const mock = `
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -19,7 +19,10 @@ const id = process.env.SEMIO_HOST_CAPACITY_GRANT;
 const file = id && join(directory, "grants", id + ".json");
 const live = !!file && existsSync(file) && JSON.parse(readFileSync(file, "utf8")).reservedMegabytes >= 2048;
 const plan = !!process.env.SEMIO_HOST_CAPACITY_PLAN;
-console.log(JSON.stringify({live, plan, grants: readdirSync(join(directory, "grants")).length}));
+const planMegabytes = plan ? JSON.parse(process.env.SEMIO_HOST_CAPACITY_PLAN).memoryMegabytes : null;
+const { parentCompilerMemoryAllowanceBytesV1 } = await import(process.env.SEMIO_NATIVE_EXEC_LAW_ADMISSION);
+const allowance = parentCompilerMemoryAllowanceBytesV1(process.env) / 1048576;
+console.log(JSON.stringify({live, plan, planMegabytes, allowance, grants: readdirSync(join(directory, "grants")).length}));
 if (process.env.SEMIO_NATIVE_EXEC_LAW_WAIT) {
   process.once("SIGTERM", () => { writeFileSync(join(directory, "stopped"), ""); process.exit(0); });
   writeFileSync(join(directory, "started"), "");
@@ -30,7 +33,7 @@ if (process.env.SEMIO_NATIVE_EXEC_LAW_WAIT) {
 function fixture() {
   const directory = mkdtempSync(join(ticket, "🗑️generated/ne-"));
   const { SEMIO_HOST_CAPACITY_GRANT: _grant, SEMIO_HOST_CAPACITY_PLAN: _plan, SEMIO_HOST_CAPACITY_HANDOVER: _handover, ...rest } = process.env;
-  const env = { ...rest, SEMIO_HOST_CAPACITY_DIRECTORY: directory, NATIVE_EXEC_TARGET: "@semio-tech/norm-js:test", LANG: "en_US.UTF-8" };
+  const env = { ...rest, SEMIO_HOST_CAPACITY_DIRECTORY: directory, NATIVE_EXEC_TARGET: "@semio-tech/norm-js:test", LANG: "en_US.UTF-8", SEMIO_NATIVE_EXEC_LAW_ADMISSION: join(ticket, "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts") };
   const run = (script: string, extra: NodeJS.ProcessEnv = {}, inherited = false) => {
     const command = ["repo", join(ticket, "native-exec.ts"), directory, script];
     return Bun.spawn(
@@ -56,7 +59,7 @@ for (const row of scenarios) test(row.name + " native-exec admission", async () 
     const [exit, stdout, stderr] = await Promise.all([process.exited, new Response(process.stdout).text(), new Response(process.stderr).text()]);
     expect(exit, stderr).toBe(row.code);
     if (exit === 0) {
-      expect(JSON.parse(stdout)).toEqual({ live: row.live, plan: row.plan, grants: 1 });
+      expect(JSON.parse(stdout)).toEqual({ live: row.live, plan: row.plan, planMegabytes: row.name === "inherited" ? 2048 : 0, allowance: 2048, grants: 1 });
       expect(readdirSync(join(directory, "grants"))).toEqual([]);
     }
     else expect(stdout).toBe("");

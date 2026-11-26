@@ -7,7 +7,7 @@ fn alternative_view(store: &ArtifactStore<DemoSnapshot, DemoMutation>) -> (Vec<(
 }
 
 /// 🌳️ A new alternative preserves the trunk it branched from: after finalizing a history edit as a new alternative the
-/// trunk is listed first (empty name, localized by the UI), switching to it restores the original positions with only
+/// trunk stays implicit (never a stored row; presentations list it first with the empty name the UI localizes), switching to it restores the original positions with only
 /// unscoped and trunk-scoped supersessions, switching back restores the edited ones, the log never names the trunk,
 /// replicas holding the same events agree, and `.spr` and `.ops` reloads keep all of it.
 #[semio_framework_async_macros::async_test]
@@ -18,11 +18,11 @@ async fn a_new_alternative_preserves_the_trunk_it_branched_from() {
     let ids = operation_ids(&store);
     let trunk = store.trunk_alternative_id();
     assert_eq!(store.active_line_id(), trunk, "every document starts on its trunk");
-    assert!(store.envelope().vcs.alternatives.is_empty(), "a trunk without a checkpoint is not listed yet");
+    assert!(store.envelope().vcs.alternatives.is_empty(), "a document without a named alternative lists none");
     fixture_author(&mut store, ArtifactCommand::CreateAlternativeWithSupersede { name: "edited".into(), inputs: vec![input(&ids[0], Some(set(10)))] }).await.expect("finalize as a new alternative");
     assert_eq!(store.snapshot_ref().n, Some(12));
     let (alternatives, current) = alternative_view(&store);
-    assert_eq!(alternatives.iter().map(|(id, name, _)| (id.as_str(), name.as_str())).collect::<Vec<_>>()[0], (trunk.as_str(), ""), "the trunk is listed first");
+    assert_eq!(alternatives.iter().map(|(_, name, _)| name.as_str()).collect::<Vec<_>>(), ["edited"], "the envelope lists named alternatives only; the trunk is implicit");
     let edited = alternatives.iter().find(|(_, name, _)| name == "edited").map(|(id, _, _)| id.clone()).expect("the new alternative");
     assert_eq!(current, edited);
     fixture_author(&mut store, ArtifactCommand::SwitchAlternative { alternative_id: trunk.clone() }).await.expect("switch back to the trunk");

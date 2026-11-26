@@ -84,6 +84,12 @@ pub use primitive_preview::PrimitivePreviewJob;
 mod planar_volume;
 pub use planar_volume::{PlanarMeasureJob, WireLengthJob};
 pub use semio_framework_3d_brep_construction::primitives::SolidPrimitive;
+pub use semio_framework_3d_brep_native_registry::OwnedSolidPublication;
+
+/// 🪅️ Plans an analytic solid directly into its own funded shape body.
+pub fn plan_owned_analytic_solid(owner: usize, primitive: SolidPrimitive) -> Result<OwnedSolidPublication, semio_framework_value::ValueError> {
+    OwnedSolidPublication::new(owner, primitive, |label| semio_framework_3d_brep_native_registry::primitive_handle(b"Solid:", label))
+}
 
 #[path = "🔀️boolean-transform-and-copy/🦀️.rs"]
 mod boolean_transform_and_copy;

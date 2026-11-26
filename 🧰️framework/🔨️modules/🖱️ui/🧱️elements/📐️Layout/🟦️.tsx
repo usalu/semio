@@ -12,13 +12,13 @@ import { type UiStatus } from "@semio-tech/ui-styling";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { useFirstDraggableElementAlias } from "../🆔️ElementId/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { glassClass, surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
+import { glassClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { type PanelProps, Panel, PanelTreeUnitsPane } from "../🖼️Panel/🟦️.tsx";
 import { type PanelTabNode, usePanelTabSelection, findPanelTabNode, PanelTabBar, progressPanelTabSelection, resolvePanelBranchBodyLeaf } from "../🧭️PanelTabBar/🟦️.tsx";
 import { Scrollable } from "../📜️Scrollable/🟦️.tsx";
 import { CanvasSkeleton } from "../🦴️Skeletons/🟦️.tsx";
 import { CanvasBottomChipRow, type CanvasBottomChips } from "../🎨️Canvas/🦶️bottom-chips/🟦️.tsx";
-import { LevelProvider, SurfaceScope } from "../🌈️Surface/🟦️.tsx";
+import { Surface, SurfaceScope } from "../🌈️Surface/🟦️.tsx";
 import { chromeStatusBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { type Anchor, ANCHORS } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";
 import { publishShellChromePanelBox, safeAreaBoxFromRect } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
@@ -66,12 +66,13 @@ const LayoutMobilePanel: React.FC<LayoutMobilePanelProps> = ({ visible = false, 
   const activeTabTrees = bodyLeaf?.trees ?? null;
 
   return (
-    <LevelProvider level="panel">
+    <SurfaceScope level="panel" fill="glass">
       <PanelGhostRoot
         ref={frameRef}
         data-shared-border-frame=""
         data-slot="panel"
         data-panel="mobilePanel"
+        data-level="panel"
         data-panel-visible="true"
         data-active-tab-id={activeNode?.id}
         id={activeNode ? `framework.panelTab.${activeNode.id}` : undefined}
@@ -85,7 +86,7 @@ const LayoutMobilePanel: React.FC<LayoutMobilePanelProps> = ({ visible = false, 
           </div>
         </Scrollable>
       </PanelGhostRoot>
-    </LevelProvider>
+    </SurfaceScope>
   );
 };
 // #endregion 📱️LayoutMobilePanel
@@ -199,35 +200,33 @@ const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, subfooter, p
   return (
     <UiMobileProvider mobile={mobile}>
       <GhostProvider>
-        <div ref={rootRef} data-slot="layout" data-level="base" style={layoutFloorStyle} className={cn("relative isolate flex h-full w-full flex-col overflow-hidden", surfaceClass, className)}>
-          <SurfaceScope level="base" fill="surface">
-            {scrollCanvas ? (
-              <div data-slot="layout-scrollport" tabIndex={0}>
-                {navbar || subnavbar ? (
-                  <div ref={bindScrollBand} data-slot="layout-scroll-start" className="ui-chrome-tint">
-                    {navbar}
-                    {subnavbar}
-                  </div>
-                ) : null}
-                {middle}
-                {footer && <div ref={bindScrollBand} data-slot="layout-scroll-end" className="ui-chrome-tint">{footer}</div>}
-              </div>
-            ) : (
-              <>
-                {navbar && <div data-layout-band="start" className="relative z-[1] flex-shrink-0">{navbar}</div>}
-                {subnavbar && <div data-layout-band="start" className="relative z-[1] flex-shrink-0">{subnavbar}</div>}
-                {middle}
-                <div data-slot="layout-canvas-bleed" className={cn(bleedClassName, mobile && mobilePanel?.visible && "hidden")} style={bleedStyle}>{canvasBody}</div>
-                {footer && <div data-layout-band="end" className="relative z-[1] flex-shrink-0">{footer}</div>}
-              </>
-            )}
-            {subfooter && (
-              <div data-slot="layout-subfooter" className="flex-shrink-0">
-                {subfooter}
-              </div>
-            )}
-          </SurfaceScope>
-        </div>
+        <Surface ref={rootRef} data-slot="layout" style={layoutFloorStyle} className={cn("relative isolate flex h-full w-full flex-col overflow-hidden", className)}>
+          {scrollCanvas ? (
+            <div data-slot="layout-scrollport" tabIndex={0}>
+              {navbar || subnavbar ? (
+                <div ref={bindScrollBand} data-slot="layout-scroll-start">
+                  {navbar}
+                  {subnavbar}
+                </div>
+              ) : null}
+              {middle}
+              {footer && <div ref={bindScrollBand} data-slot="layout-scroll-end">{footer}</div>}
+            </div>
+          ) : (
+            <>
+              {navbar && <div data-layout-band="start" className="relative z-[1] flex-shrink-0">{navbar}</div>}
+              {subnavbar && <div data-layout-band="start" className="relative z-[1] flex-shrink-0">{subnavbar}</div>}
+              {middle}
+              <div data-slot="layout-canvas-bleed" className={cn(bleedClassName, mobile && mobilePanel?.visible && "hidden")} style={bleedStyle}>{canvasBody}</div>
+              {footer && <div data-layout-band="end" className="relative z-[1] flex-shrink-0">{footer}</div>}
+            </>
+          )}
+          {subfooter && (
+            <div data-slot="layout-subfooter" className="flex-shrink-0">
+              {subfooter}
+            </div>
+          )}
+        </Surface>
       </GhostProvider>
     </UiMobileProvider>
   );

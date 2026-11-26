@@ -1,0 +1,23 @@
+{
+  "title": "Fleet Monitoring With Multi-Resolution Metrics In The Dashboard",
+  "emoji": "📈",
+  "status": "open",
+  "description": "Complete monitoring of the fleet across all workers: CPU, memory, disk, compilation tasks, graph reads, cache hits (local and remote), remote execution, readiness. Multi-resolution sampling: dense recent samples, progressively squashed older windows (tiered downsampling). Minimal overhead, cross-platform (macOS, Linux, Windows), zero-touch on every worker, aggregated across the fleet via the shared store, visualized in the repo dashboard TUI. Fully end to end. Related fleet ticket: 26/11/13 FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION.",
+  "goal": "🎯runningrepo",
+  "sessions": [
+    "49855521-5ce8-4de1-b163-2916b8f96717"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-26 02:40:11",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Complete monitoring of the fleet across all workers: CPU, memory, disk, compilation tasks, graph reads, cache hits (local and remote), remote execution, readiness. Multi-resolution sampling: dense recent samples, progressively squashed older windows (tiered downsampling). Minimal overhead, cross-platform (macOS, Linux, Windows), zero-touch on every worker, aggregated across the fleet via the shared store, visualized in the repo dashboard TUI. Fully end to end. Related fleet ticket: 26/11/13 FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    }
+  ]
+}

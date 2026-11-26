@@ -29,6 +29,20 @@ enum CaptureStep {
  Copy,Header,Sre,ReceiptOrigin,ClaimOrigin,StageClaim,ClaimSlot,VerifyClaim,ClaimDelta,CommitClaim,Coverage,OriginDelta,Purpose,Scope,Bootstrap,Ledger,Journal,Complete,
 }
 
+impl CaptureStep {
+ fn advance_funded<E>(self, mut advance: impl FnMut() -> Result<bool, E>) -> Result<(), E> {
+  use CaptureStep::*;
+  let maximum = match self {
+   ClaimSlot | VerifyClaim | ClaimDelta | CommitClaim | Coverage | OriginDelta | Purpose | Scope => 32,
+   _ => 1,
+  };
+  for _ in 0..maximum {
+   if !advance()? { break; }
+  }
+  Ok(())
+ }
+}
+
 /// 🧾️ Progresses one genuine frozen header through its issued History and ledger before the caller can resume it.
 #[derive(Debug, Default)]
 pub struct GuestFrozenHistoryCapture {
@@ -60,21 +74,27 @@ impl GuestFrozenHistoryCapture {
    Complete=>return Ok(true),
    _=>{
     driver.dispatch_operation_step(false,cleanup,|cx|{
-     with_frozen_history_parts(history,producer,frontier,cx,|history,frozen,_,cx|{
-      ready=match step{
+     self.advance_local_stages(|capture,step| {
+      let mut local_ready=false;
+      let mut funded=false;
+      step.advance_funded(|| {
+      let mut paid = false;
+      let available = with_frozen_history_parts(history,producer,frontier,cx,|history,frozen,_,cx|{
+       let fuel = cx.fuel_remaining();
+       local_ready=match step{
        Copy=>{
         let length=frozen.escrow_len();
         let extent=u32::try_from(length).map_err(|_|ValueError::invariant("frozen receipt exceeds the original SRE1 width"))?;
         if !original_escrow_length_valid(extent){return Err(ValueError::invariant("frozen receipt has an invalid SRE1 extent").into())}
         let copied=GuestIssuedHistoryHome::capture_frozen_step(history,frozen,cx)?==FrozenCaptureProgress::WordsCopied;
-        if copied{self.rows=(length-ORIGINAL_ESCROW_HEADER_BYTES)/ORIGINAL_ESCROW_ROW_BYTES;}
+        if copied{capture.rows=(length-ORIGINAL_ESCROW_HEADER_BYTES)/ORIGINAL_ESCROW_ROW_BYTES;}
         copied
        },
        Header=>GuestIssuedHistoryHome::validate_header_step(history,&frozen,cx)?==HeaderValidationProgress::HeaderValidated,
        Sre=>GuestIssuedHistoryHome::validate_sre_step(history,&frozen,cx)?==SreValidationProgress::SreValidated,
        ReceiptOrigin=>GuestIssuedHistoryHome::find_receipt_origin_step(history,&frozen,loan,cx)?.is_some(),
-       ClaimOrigin=>GuestIssuedHistoryHome::find_claim_origin_step(history,&frozen,self.row,cx)?.is_some(),
-       StageClaim=>GuestIssuedHistoryHome::stage_claim_step(history,&frozen,self.row,cx)?,
+       ClaimOrigin=>GuestIssuedHistoryHome::find_claim_origin_step(history,&frozen,capture.row,cx)?.is_some(),
+       StageClaim=>GuestIssuedHistoryHome::stage_claim_step(history,&frozen,capture.row,cx)?,
        ClaimSlot=>GuestIssuedHistoryHome::find_claim_slot_step(history,&frozen,cx)?.is_some(),
        VerifyClaim=>GuestIssuedHistoryHome::verify_claim_step(history,&frozen,cx)?,
        ClaimDelta=>GuestIssuedHistoryHome::calculate_claim_delta_step(history,&frozen,cx)?,
@@ -85,15 +105,31 @@ impl GuestFrozenHistoryCapture {
        Scope=>GuestIssuedHistoryHome::validate_origin_scope_step(history,&frozen,cx)?,
        Journal=>GuestIssuedHistoryHome::commit_journal_step(history,&frozen,cx)?,
        Bootstrap|Ledger|Complete=>unreachable!(),
-      };
-      Ok(())
-     })?;
-     Ok(())
+       };
+       paid = cx.fuel_remaining() < fuel;
+       Ok(())
+      })?;
+      let stopped = if cx.original_retirement_active() { cx.retirement_should_yield() } else { cx.is_cancelled() || cx.should_yield() };
+      funded=available && paid && !stopped;
+      Ok::<_,OriginalTurnFailure>(funded && !local_ready)
+      })?;
+      Ok((local_ready,funded))
+     })
     })?;
    },
   }
   if ready{self.complete_step();}
   Ok(matches!(self.step,Complete))
+ }
+ fn advance_local_stages<E>(&mut self,mut advance:impl FnMut(&mut Self,CaptureStep)->Result<(bool,bool),E>)->Result<(),E>{
+  for _ in 0..32{
+   if matches!(self.step,CaptureStep::Bootstrap|CaptureStep::Ledger|CaptureStep::Complete){break}
+   let (ready,funded)=advance(self,self.step)?;
+   if !ready{break}
+   self.complete_step();
+   if !funded{break}
+  }
+  Ok(())
  }
  fn complete_step(&mut self){
   use CaptureStep::*;
@@ -110,6 +146,40 @@ impl GuestFrozenHistoryCapture {
 #[cfg(test)]
 mod capture_tests{
  use super::*;
+
+ #[test]
+ fn completed_capture_phases_share_only_their_funded_ordinary_turn(){
+  let corpus:serde_json::Value=serde_json::from_str(include_str!("escrow-capture.json")).unwrap();
+  for row in corpus["localPasses"].as_array().unwrap(){
+   let mut capture=GuestFrozenHistoryCapture{rows:row["rows"].as_u64().unwrap() as usize,..Default::default()};
+   let mut calls=0;
+   capture.advance_local_stages(|_,_|{
+    calls+=1;
+    Ok::<_,() >((row["park"].as_u64()!=Some(calls),calls<row["funded"].as_u64().unwrap()))
+   }).unwrap();
+   assert_eq!(calls,row["calls"].as_u64().unwrap());
+   assert_eq!(format!("{:?}",capture.step),row["expected"].as_str().unwrap());
+  }
+ }
+
+ #[test]
+ fn frozen_batches_yield_at_the_first_observed_boundary() {
+  let corpus: serde_json::Value = serde_json::from_str(include_str!("escrow-capture.json")).unwrap();
+  for row in corpus["batches"].as_array().unwrap() {
+   let step = match row["stage"].as_str().unwrap() {
+    "ClaimSlot"=>CaptureStep::ClaimSlot, "VerifyClaim"=>CaptureStep::VerifyClaim,
+    "ClaimDelta"=>CaptureStep::ClaimDelta, "CommitClaim"=>CaptureStep::CommitClaim,
+    "Coverage"=>CaptureStep::Coverage, "Header"=>CaptureStep::Header, "Ledger"=>CaptureStep::Ledger,
+    "StageClaim"=>CaptureStep::StageClaim, "Scope"=>CaptureStep::Scope, _=>unreachable!(),
+   };
+   let mut count = 0;
+   step.advance_funded::<()>(|| {
+    count += 1;
+    Ok(count < row["funded"].as_u64().unwrap() && ["ready","park","deadline","cancel"].iter().all(|field| row[*field].as_u64()!=Some(count)))
+   }).unwrap();
+   assert_eq!(Some(count), row["attempts"].as_u64(), "{}", row["name"]);
+  }
+ }
 
  #[test]
  fn every_claim_precedes_committing_the_frozen_history(){

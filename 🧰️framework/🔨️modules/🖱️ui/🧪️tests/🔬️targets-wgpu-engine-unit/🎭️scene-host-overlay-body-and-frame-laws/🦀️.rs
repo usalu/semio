@@ -221,7 +221,7 @@ fn the_frame_ladder_paints_an_open_overlays_own_surface_chrome_under_its_content
     fn settle(ui: &mut Ui, atlas: &mut FontAtlas, body: Rect) -> DrawList {
         let mut draw = DrawList::default();
         for _ in 0..262_144 {
-            match ui.frame_into_step::<RecordingSceneHost>("w", body, atlas, None, None, &mut draw, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
+            match ui.frame_into_step::<RecordingSceneHost>("w", body, semio_ui_theme::Level::Window, atlas, None, None, &mut draw, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
                 UiFrameStep::Pending => {}
                 UiFrameStep::Ready => return draw,
                 step => panic!("retained paint answered {step:?} (phase {:?})", ui.paint_frame_phase("w")),
@@ -275,7 +275,7 @@ fn a_dialog_scrim_is_the_veil_glass_and_its_surface_the_dialog_level_glass() {
     drive_layout(&mut ui, "w", body.w, body.h, &mut atlas);
     let mut draw = DrawList::default();
     for _ in 0..262_144 {
-        match ui.frame_into_step::<RecordingSceneHost>("w", body, &mut atlas, None, None, &mut draw, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
+        match ui.frame_into_step::<RecordingSceneHost>("w", body, semio_ui_theme::Level::Window, &mut atlas, None, None, &mut draw, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
             UiFrameStep::Pending => {}
             UiFrameStep::Ready => break,
             step => panic!("retained paint answered {step:?}"),
@@ -291,32 +291,51 @@ fn a_dialog_scrim_is_the_veil_glass_and_its_surface_the_dialog_level_glass() {
     assert_eq!((surface.alpha, surface.blur_px, surface.tint), (dialog.alpha, dialog.blur_px, dialog.tint));
 }
 
-/// 🔌 React's `ExtensionView`: an extension with no registered host is a muted `Extension unavailable: <id>` line on no fill, while the reserved media transport keeps its host rect and panel chrome.
+/// 🔌 An unavailable extension draws its status over the owner. A reserved media transport still reserves its declared host rectangle on that same surface.
 #[test]
-fn an_unregistered_extension_paints_reacts_unavailable_line_and_only_the_media_transport_keeps_its_panel() {
+fn unavailable_extensions_and_reserved_media_use_the_owner_surface() {
     let body = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
-    let painted = |body_key: &str| -> (DrawList, semio_ui_theme::Rgba) {
+    let host_height = 96.0;
+    let painted = |body_key: &str| -> (DrawList, Rect) {
         let mut ui = UiFixture::new(semio_ui_locale::Locale::En);
         let mut atlas = FontAtlas::builtin();
-        let slot = UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "plugin".into(), app_id: "app".into(), body_key: body_key.into(), params_json: "{}".into(), host_status: None, presence: UiPresence::default(), menu: None });
+        let slot = UiNode::ExternalSlot(UiExternalSlotNode {
+            plugin_id: "plugin".into(),
+            app_id: "app".into(),
+            body_key: body_key.into(),
+            params_json: format!(r#"{{"hostContentHeight": {host_height}}}"#),
+            host_status: None,
+            presence: UiPresence::default(),
+            menu: None,
+        });
         ui.apply_tree("w", &stack_ui(vec![slot]));
         drive_layout(&mut ui, "w", body.w, body.h, &mut atlas);
+        let tree = ui.tree("w").expect("a retained window");
+        let id = tree.children(tree.root.expect("the stack root")).next().expect("the external slot");
+        let bounds = tree.absolute_rect(id).expect("the laid-out slot");
         let mut draw = DrawList::default();
         for _ in 0..262_144 {
-            match ui.frame_into_step::<RecordingSceneHost>("w", body, &mut atlas, None, None, &mut draw, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
+            match ui.frame_into_step::<RecordingSceneHost>("w", body, semio_ui_theme::Level::Window, &mut atlas, None, None, &mut draw, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
                 UiFrameStep::Pending => {}
-                UiFrameStep::Ready => break,
+                UiFrameStep::Ready => return (draw, bounds),
                 step => panic!("retained paint answered {step:?}"),
             }
         }
-        (draw, ui.theme().panel)
+        panic!("retained paint never published the slot");
     };
-    let fills = |draw: &DrawList, panel: semio_ui_theme::Rgba| draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| instance.color == [panel.r, panel.g, panel.b, panel.a]).count();
-    let (unavailable, panel) = painted("vendor.missing@1");
-    assert_eq!(fills(&unavailable, panel), 0, "no panel fill behind the unavailable line");
-    assert!(unavailable.layers.iter().map(|layer| layer.ui_instances.len()).sum::<usize>() > 0, "the unavailable line is drawn");
-    let (media, panel) = painted(semio_ui_retained_tree::reconcile::MEDIA_TRANSPORT_EXTENSION_ID);
-    assert!(fills(&media, panel) > 0, "the reserved media transport keeps its host panel");
+    let paints_fill = |draw: &DrawList, bounds: Rect| {
+        draw.layers
+            .iter()
+            .flat_map(|layer| &layer.ui_instances)
+            .any(|instance| instance.params[2] == semio_ui_draw_contract::KIND_SOLID && rect_matches(instance.rect, bounds))
+    };
+    let (unavailable, bounds) = painted("vendor.missing@1");
+    assert!(!paints_fill(&unavailable, bounds), "the unavailable line inherits the owner's surface");
+    assert!(unavailable.layers.iter().flat_map(|layer| &layer.ui_instances).any(|instance| instance.params[2] == semio_ui_draw_contract::KIND_GLYPH), "the unavailable line is drawn");
+    let (media, bounds) = painted(semio_ui_retained_tree::reconcile::MEDIA_TRANSPORT_EXTENSION_ID);
+    assert!(bounds.h >= host_height, "the transport preserves its host reservation when the stack expands it");
+    assert!(bounds.w > 0.0, "the transport reserves visible width");
+    assert!(!paints_fill(&media, bounds), "the transport leaves the owner's surface visible");
 }
 
 #[test]
@@ -333,7 +352,7 @@ fn frame_into_step_publishes_one_atomic_candidate_only_when_ready() {
     let mut prior_progress = None;
     let mut progress_changes = 0;
     for _ in 0..262_144 {
-        match ui.frame_into_step::<RecordingSceneHost>("atomic-frame", body, &mut atlas, None, None, &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
+        match ui.frame_into_step::<RecordingSceneHost>("atomic-frame", body, semio_ui_theme::Level::Window, &mut atlas, None, None, &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
             UiFrameStep::Pending => {
                 let progress = ui.paint_frame_progress("atomic-frame").expect("pending frame progress");
                 progress_changes += usize::from(prior_progress.is_none_or(|prior| progress != prior));
@@ -366,19 +385,19 @@ fn stale_frame_rolls_back_its_unpublished_append() {
     let baseline_layers = target.layers.len();
     let mut started = false;
     for _ in 0..262_144 {
-        let demand = ui.frame_into_next_retained_demand("rollback-frame", body, &target).unwrap();
+        let demand = ui.frame_into_next_retained_demand("rollback-frame", body, semio_ui_theme::Level::Window, &target).unwrap();
         if demand.maximum_capacity_bytes > 0 && target.active_retained_append_token().is_none() {
-            let (step, receipt) = ui.frame_into_step::<RecordingSceneHost>("rollback-frame", body, &mut atlas, None, None, &mut target, Default::default());
+            let (step, receipt) = ui.frame_into_step::<RecordingSceneHost>("rollback-frame", body, semio_ui_theme::Level::Window, &mut atlas, None, None, &mut target, Default::default());
             assert!(matches!(step, UiFrameStep::Pending));
             assert_eq!(receipt.copied_items, 0);
         }
-        let (step, _) = ui.frame_into_step::<RecordingSceneHost>("rollback-frame", body, &mut atlas, None, None, &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY);
+        let (step, _) = ui.frame_into_step::<RecordingSceneHost>("rollback-frame", body, semio_ui_theme::Level::Window, &mut atlas, None, None, &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY);
         assert!(!matches!(step, UiFrameStep::Fault | UiFrameStep::Missing));
         if target.layers.len() > baseline_layers && target.active_retained_append_token().is_some() { started = true; break; }
     }
     assert!(started);
     for _ in 0..262_144 {
-        let _ = ui.frame_into_step::<RecordingSceneHost>("rollback-frame", moved, &mut atlas, None, None, &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY);
+        let _ = ui.frame_into_step::<RecordingSceneHost>("rollback-frame", moved, semio_ui_theme::Level::Window, &mut atlas, None, None, &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY);
         if target.active_retained_append_token().is_none() { break; }
     }
     assert!(target.active_retained_append_token().is_none());
@@ -399,21 +418,21 @@ fn retained_frame_progress_ignores_unchanged_scene_backpressure_and_observes_ext
     drive_layout(&mut ui, "scene-backpressure", body.w, body.h, &mut atlas);
     let mut target = DrawList::default();
     for _ in 0..262_144 {
-        assert_eq!(ui.frame_into_step("scene-backpressure", body, &mut atlas, None, Some(&mut host), &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY).0, UiFrameStep::Pending);
+        assert_eq!(ui.frame_into_step("scene-backpressure", body, semio_ui_theme::Level::Window, &mut atlas, None, Some(&mut host), &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY).0, UiFrameStep::Pending);
         if host.calls == 1 {
             break;
         }
     }
     assert_eq!(host.calls, 1, "the scene cursor reaches its bound backpressure phase");
     let after_bind = ui.paint_frame_progress("scene-backpressure").expect("bound scene progress");
-    assert_eq!(ui.frame_into_step("scene-backpressure", body, &mut atlas, None, Some(&mut host), &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY).0, UiFrameStep::Pending);
+    assert_eq!(ui.frame_into_step("scene-backpressure", body, semio_ui_theme::Level::Window, &mut atlas, None, Some(&mut host), &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY).0, UiFrameStep::Pending);
     assert_eq!(host.calls, 2);
     assert_eq!(ui.paint_frame_progress("scene-backpressure"), Some(after_bind), "Pending with the same scene and external cursor is not work");
     host.released = true;
-    assert_eq!(ui.frame_into_step("scene-backpressure", body, &mut atlas, None, Some(&mut host), &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY).0, UiFrameStep::Pending);
+    assert_eq!(ui.frame_into_step("scene-backpressure", body, semio_ui_theme::Level::Window, &mut atlas, None, Some(&mut host), &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY).0, UiFrameStep::Pending);
     assert_ne!(ui.paint_frame_progress("scene-backpressure"), Some(after_bind), "the producer's completed-work cursor is retained progress");
     for _ in 0..262_144 {
-        match ui.frame_into_step("scene-backpressure", body, &mut atlas, None, Some(&mut host), &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
+        match ui.frame_into_step("scene-backpressure", body, semio_ui_theme::Level::Window, &mut atlas, None, Some(&mut host), &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
             UiFrameStep::Pending => {}
             UiFrameStep::Ready => return,
             step => panic!("backpressure frame answered {step:?}"),
@@ -439,7 +458,7 @@ fn same_size_moved_viewport_discards_the_old_origin_candidate_before_atomic_publ
     let mut target = DrawList::default();
     let baseline = UiFramePaintCensus::of(&target);
     for _ in 0..262_144 {
-        assert_eq!(ui.frame_into_step::<RecordingSceneHost>("moved-origin", initial, &mut atlas, None, None, &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY).0, UiFrameStep::Pending);
+        assert_eq!(ui.frame_into_step::<RecordingSceneHost>("moved-origin", initial, semio_ui_theme::Level::Window, &mut atlas, None, None, &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY).0, UiFrameStep::Pending);
         let candidate_items = ui.windows.get("moved-origin").and_then(|window| window.paint_frame.as_ref()).map_or(0, |frame| UiFramePaintCensus::of(&frame.candidate).quads);
         if candidate_items > 0 {
             break;
@@ -447,7 +466,7 @@ fn same_size_moved_viewport_discards_the_old_origin_candidate_before_atomic_publ
     }
     assert_eq!(UiFramePaintCensus::of(&target), baseline, "the first-origin candidate remains unpublished");
     for _ in 0..262_144 {
-        match ui.frame_into_step::<RecordingSceneHost>("moved-origin", moved, &mut atlas, None, None, &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
+        match ui.frame_into_step::<RecordingSceneHost>("moved-origin", moved, semio_ui_theme::Level::Window, &mut atlas, None, None, &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
             UiFrameStep::Pending => assert!(target.layers.iter().flat_map(|layer| layer.ui_instances.iter().chain(layer.overlay_ui_instances.iter())).all(|instance| instance.rect[0] >= moved.x && instance.rect[1] >= moved.y), "the bounded publication appends only geometry of the accepted origin"),
             UiFrameStep::Ready => break,
             step => panic!("moved-origin frame answered {step:?}"),

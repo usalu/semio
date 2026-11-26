@@ -238,7 +238,7 @@ export function IconSelector({ id, value, onChange, disabled = false, uniform = 
         rows={activeMode === "data" || activeMode === "vector" ? 5 : 4}
         value={editorValue}
       />
-      <SharedBorderRowCell className="bg-muted/30 min-h-peta justify-center overflow-hidden">{preview}</SharedBorderRowCell>
+      <SharedBorderRowCell className="min-h-peta justify-center overflow-hidden">{preview}</SharedBorderRowCell>
       <SharedBorderRow>
         <Button className="min-w-0 flex-1 text-xs" disabled={locked} onClick={() => fileInputRef.current?.click()} type="button" variant="outline" icon="folder-open" text={importFileLabel} />
         <Button className="min-w-0 flex-1 text-xs whitespace-nowrap" disabled={locked} onClick={() => onChange("")} type="button" variant="ghost" icon="x" text={clearLabel} />

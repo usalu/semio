@@ -232,7 +232,12 @@ export const collaborationDe = {
   nullableInput: {
     clear: { label: { normal: "Leeren", beginner: "Wert leeren" } },
   },
-} satisfies Pick<UiTranslationSchema["ui"], "sync" | "ink" | "surfaceContextMenu" | "mutation" | "conflict" | "presence" | "timeTravel" | "history" | "referenceList" | "colorInput" | "nullableInput">;
+  requiredInput: {
+    missing: { label: { normal: "Pflichtfeld: Bitte einen Wert angeben.", beginner: "Pflichtfeld: Dieses Feld muss ausgefüllt werden." } },
+    invalidChoice: { label: { normal: "Ungültige Auswahl: Bitte eine der aufgeführten Optionen wählen.", beginner: "Ungültige Auswahl: Bitte eine der angebotenen Optionen auswählen." } },
+    blocked: { label: { normal: "Noch nicht ausführbar. Offene Pflichtfelder: {{fields}}", beginner: "Noch nicht ausführbar. Diese Felder fehlen noch: {{fields}}" } },
+  },
+} satisfies Pick<UiTranslationSchema["ui"], "sync" | "ink" | "surfaceContextMenu" | "mutation" | "conflict" | "presence" | "timeTravel" | "history" | "referenceList" | "colorInput" | "nullableInput" | "requiredInput">;
 
 /** 🔄️ Sync, mutation, conflict, presence and time travel labels (`en`). */
 export const collaborationEn = {
@@ -466,4 +471,9 @@ export const collaborationEn = {
   nullableInput: {
     clear: { label: { normal: "Clear", beginner: "Clear the value" } },
   },
-} satisfies Pick<UiTranslationSchema["ui"], "sync" | "ink" | "surfaceContextMenu" | "mutation" | "conflict" | "presence" | "timeTravel" | "history" | "referenceList" | "colorInput" | "nullableInput">;
+  requiredInput: {
+    missing: { label: { normal: "Required: enter a value.", beginner: "Required: this field must be filled in." } },
+    invalidChoice: { label: { normal: "Invalid choice: pick one of the listed options.", beginner: "Invalid choice: pick one of the offered options." } },
+    blocked: { label: { normal: "Cannot execute yet. Unresolved required fields: {{fields}}", beginner: "Cannot execute yet. These fields are still missing: {{fields}}" } },
+  },
+} satisfies Pick<UiTranslationSchema["ui"], "sync" | "ink" | "surfaceContextMenu" | "mutation" | "conflict" | "presence" | "timeTravel" | "history" | "referenceList" | "colorInput" | "nullableInput" | "requiredInput">;

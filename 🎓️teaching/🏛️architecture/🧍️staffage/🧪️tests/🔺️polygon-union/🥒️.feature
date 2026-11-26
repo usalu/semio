@@ -45,3 +45,8 @@ Feature: The polygon union never silently returns nothing
   Scenario: Polygons without area give an empty union and no error
     Given three collinear points
     Then the union is empty
+
+  Scenario: A mass of overlapping beads loses no ellipsoid
+    Given masses of two to seven ellipsoids, each a bead of elliptic sections 2, 4 or 13 degrees apart across a tilted view, and the convex hull of every two consecutive sections
+    When the bodies are united
+    Then the area and the extent equal those of the shapely union and the area equals that of the polygon-clipping union

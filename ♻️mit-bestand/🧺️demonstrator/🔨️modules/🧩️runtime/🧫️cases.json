@@ -22,6 +22,10 @@
     "sourcing"
   ],
   "extensionIds": [
+    "cad-extension-aec-building",
+    "cad-extension-aec-building-energy",
+    "cad-extension-aec-building-structure",
+    "cad-extension-spatial-shape",
     "flow-extension-bim",
     "flow-extension-brep",
     "flow-extension-dictionary",
@@ -32,6 +36,10 @@
     "flow-extension-primitive",
     "flow-extension-text",
     "playbook-module-procedural",
+    "process-extension-concrete",
+    "process-extension-metal",
+    "process-extension-robotic",
+    "process-extension-wood",
     "sourcing-module-beams",
     "sourcing-module-slabs",
     "sourcing-module-windows"

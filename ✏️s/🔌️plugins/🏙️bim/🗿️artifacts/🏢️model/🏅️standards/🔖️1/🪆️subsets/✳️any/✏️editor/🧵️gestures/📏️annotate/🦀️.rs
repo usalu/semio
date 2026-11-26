@@ -7,7 +7,7 @@
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Modifiers;
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan;
 use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{angle, dist, point2, same, P};
-use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED, STOREY_MISSING};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{snap_mark, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED, STOREY_MISSING};
 use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::snap::SnapHit;
 use semio_s_artifact_bim_model_entities::editor::bim::entities::notations::standard_style;
@@ -353,7 +353,7 @@ impl Tool for Annotate {
             }
             _ => {}
         }
-        marks.extend(hover.snap.as_ref().map(Mark::snap));
+        marks.extend(hover.snap.as_ref().map(snap_mark));
         if hover.snap.is_none() {
             marks.push(Mark::dot(hover.at, Style::Snap));
         }

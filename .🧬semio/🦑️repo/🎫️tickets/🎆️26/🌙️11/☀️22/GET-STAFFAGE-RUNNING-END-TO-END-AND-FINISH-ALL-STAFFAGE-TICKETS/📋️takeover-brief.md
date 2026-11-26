@@ -62,10 +62,8 @@ Source: `harvest.py` over the 111 matrix records finished since 17:48 in `U/🗑
 
 | Run | Reserve | Measured |
 | --- | --- | --- |
-| `📊️matrix.ts --assets <person, animal, rigid asset>` | **800 MB** (not 1200) | rigid 260 MB, `finned-heat-exchanger` 317 MB, `jogger` 320 to 329 MB (tree of processes), `sleeping-person` 470 MB; generator 27 MB |
-| `📊️matrix.ts --assets <tree or shrub, document below 1.5 MB>` | **1000 MB** (not 2500) | `atlas-cedar` 533 MB (before the landing) to 752 MB (stopped at a limit of 700 MB, trial engine), `saguaro-cactus` **466 MB peak** (done, 252 cells ok, 5,292 s wall on the loaded host, 2,171 processor s) |
-| `📊️matrix.ts --assets <tree, document 1.5 to 6 MB>` | **1600 MB** | `olive-tree` (3 MB) 1,204 MB before the landing, 815 MB at entry 7 of 12 on the landed engine when it was stopped at a limit |
-| `📊️matrix.ts --assets <tree, document above 6 MB>` | 2500 MB until measured | `small-leaved-lime` (23 MB) 1,579 MB at entry 10 of 12 before the landing; `weeping-willow` 1,231 MB |
+| `📊️matrix.ts --assets <person, animal, rigid asset>` | **800 MB** (not 1200) | rigid 260 MB, `finned-heat-exchanger` 317 MB, `jogger` 320 to 329 MB (tree of processes), `sleeping-person` 470 MB, `cyclist` 511 MB and `dancer` 329 MB (landed engine, `time -l`, 4,090 s and 1,580 s on the loaded host); generator 27 MB |
+| `📊️matrix.ts --assets <any tree or shrub>` | **1300 MB** (not 2500; replaces the tree figures of 09:30 and 12:00) | measured on the landed engine with `time -l` (23:20): `saguaro-cactus` 466 MB (5,292 s), `olive-tree` 770 MB (254 s), `small-leaved-lime` (23 MB document, the largest) 935 MB (2,778 s), `atlas-cedar` 975 MB (350 s). The peak does not follow the size of the document; the highest peak plus 30 % is 1300 MB |
 
 Seconds on the landed engine (median, longest): people 353 s, `sleeping-person` 2,648 s, `person-pushing-bicycle` 2,178 s; trees and shrubs 361 s, `banana-plant` 1,855 s; machinery `excavator` 902 s; furniture 27 s, 114 s; components 20 s, 84 s; appliances 9 s, 72 s. Give a `timeout` of at least 3600 s for a person or tree and 600 s for a rigid asset; one request of 2500 MB or more waits behind every smaller one, so ask for the figure of its class.
 

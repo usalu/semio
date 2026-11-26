@@ -481,7 +481,7 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
         importSignal?.throwIfAborted();
         await commitReservedToolSpawnsWhileSerialized(instanceId, actorId, settled.effects);
         return settled;
-      }), inspected.lane, dispatch?.order));
+      }), inspected.lane, dispatch?.order), inspected.adoptsTypedOperation);
       requireActorId(instanceId);
       activation.assertActive();
       const outFrames: Uint8Array[] = [];
@@ -532,7 +532,7 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
             serializeCommandIngressForActor(actorId, async () => {
               activation.assertActive();
               return settlePluginTurn(actorId, await submitTurn(actorId, [], { lane: "UserVisible", activation }), "UserVisible", new Set(), (turn) => acceptUiPatches(instanceId, turn), false, activation, call);
-            }, "UserVisible"),
+            }, "UserVisible"), false,
           );
           const frames: Uint8Array[] = [];
           const leftover = pendingCompletionEffects.get(instanceId) ?? [];

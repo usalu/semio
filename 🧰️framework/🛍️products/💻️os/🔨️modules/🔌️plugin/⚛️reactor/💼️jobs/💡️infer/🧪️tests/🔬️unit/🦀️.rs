@@ -122,16 +122,133 @@ fn an_interactive_result_forwards_the_jobs_resume_state_and_claims_no_fidelity_i
 #[doc(hidden)]
 pub fn completed_child_demands(_request:&ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
 
-/// ♻️ Every unchanged copy grant closes the original raw loan and checkpoint without recomputation.
+/// ⚙️ One paid inference turn advances multiple slices and the same raw source closes on cancellation.
+#[test]
+fn original_inference_job_batches_paid_slices_and_preserves_exact_wire(){
+    use semio_framework_actor::OriginalJobStep as JobStep;
+    use semio_plugin_decl_registry::artifact_inference::ArtifactInferenceService;
+    use semio_plugin_testing_laws::OriginalFixtureCaller;
+
+    semio_plugin_extension::artifact_inference::register_artifact_inference_service(
+        ArtifactInferenceService::new(TEST_METADATA,echo_infer,completed_child_demands)
+    ).unwrap();
+    let expected=serde_json::json!([0,1,9,127,128,255,0,42]);
+    let grant=RetainedCloneGrant{
+        maximum_items:96,maximum_copy_bytes:8192,maximum_capacity_bytes:1048576,
+        maximum_release_bytes:1048576,maximum_depth:128,
+    };
+    for cancelled in [false,true]{
+        let mut input:serde_json::Value=serde_json::from_slice(&request_bytes("original-paid-slices")).unwrap();
+        input["canonicalPayload"]=expected.clone();
+        let raw=serde_json::to_vec(&input).unwrap();
+        let pointer=raw.as_ptr();
+        let mut caller=OriginalFixtureCaller::admit().unwrap();
+        let mut cx=caller.context();
+        let mut job=OriginalInferenceJob::new(raw,None,cx.operation().0,cx.generation().0);
+        let before=cx.retained_progress();
+        let withheld=RetainedCloneGrant{maximum_items:0,..grant};
+        cx.with_retained_loan(withheld,|turn|{
+            assert!(matches!(job.step_original(turn),JobStep::Running(None)));
+            Ok(())
+        }).unwrap();
+        assert_eq!(cx.retained_progress(),before);
+        cx.with_retained_loan(grant,|turn|{
+            assert!(matches!(job.step_original(turn),JobStep::Running(None)));
+            Ok(())
+        }).unwrap();
+        let after=cx.retained_progress();
+        assert!(after.copied_items-before.copied_items>1);
+        assert!(after.copied_items-before.copied_items<=grant.maximum_items);
+        assert_eq!(job.input.as_ref().unwrap().as_ptr(),pointer);
+        if cancelled{
+            cx.cancel_token().cancel_now();
+            for _ in 0..OriginalFixtureCaller::maximum_turns(){
+                let demand=job.retirement_demands(grant.maximum_copy_bytes).unwrap();
+                let selected=RetainedCloneGrant{
+                    maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,
+                    maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth.max(1),
+                };
+                if cx.with_retained_loan(selected,|turn|job.close_step(turn)).unwrap(){break;}
+            }
+            assert!(job.terminal_drop_is_shallow());
+        }else{
+            let mut output=None;
+            for _ in 0..OriginalFixtureCaller::maximum_turns(){
+                cx.with_retained_loan(grant,|turn|{
+                    match job.step_original(turn){
+                        JobStep::Done(bytes)=>output=Some(bytes),
+                        JobStep::Failed(bytes)=>panic!("original inference refused: {}",String::from_utf8_lossy(&bytes)),
+                        _=>{},
+                    }
+                    Ok(())
+                }).unwrap();
+                if output.is_some(){break;}
+            }
+            let result:serde_json::Value=serde_json::from_slice(&output.expect("paid inference finishes")).unwrap();
+            assert_eq!(result["canonicalPayload"],expected);
+            assert_eq!(result["complete"],true);
+            assert!(job.terminal_drop_is_shallow());
+        }
+        let fuel=cx.fuel_remaining();
+        drop(cx);
+        caller.retire(fuel).unwrap();
+    }
+}
+
+/// ♻️ The original caller closes both raw sources under selected grants and observes each physical release.
 #[test]
 fn original_inference_job_close_keeps_raw_checkpoint_system_receipts_and_drop_zero(){
- use semio_framework_job::{StepBudget,StepContext,root_cancel_token};
- for copy in [1,3,64]{
-  let input=b"same raw original loan".to_vec();let checkpoint=b"same original checkpoint".to_vec();let input_ptr=input.as_ptr()as usize;let checkpoint_ptr=checkpoint.as_ptr()as usize;let original=input.capacity()+checkpoint.capacity();
-  let(mut owner,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||OriginalInferenceJob::new(input,Some(checkpoint),71,3));assert_eq!((birth.requested_bytes,birth.released_bytes),(0,0));let cancel=root_cancel_token();let mut sequence=0;
-  let zero=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:copy,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:128};let mut receipt=Default::default();let mut cx=StepContext::new(OperationId(71),Generation(3),StepBudget::new(1,u64::MAX,zero),cancel.clone(),||Some(1),&mut sequence,&mut receipt);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(&mut cx));assert!(!result.unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.input.as_ref().unwrap().as_ptr()as usize,input_ptr);assert_eq!(owner.restored.as_ref().unwrap().as_ptr()as usize,checkpoint_ptr);drop(cx);
-  let(mut born,mut freed)=(0,0);
-  for turn in 0..100000{let demand=owner.retirement_demands(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128};assert!(demand.capacity_bytes<=grant.maximum_capacity_bytes&&demand.release_bytes<=grant.maximum_release_bytes&&demand.depth<=grant.maximum_depth);let mut receipt=Default::default();let mut cx=StepContext::new(OperationId(71),Generation(3),StepBudget::new(1,u64::MAX,grant),cancel.clone(),||Some(1),&mut sequence,&mut receipt);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(&mut cx));let progress=cx.retained_progress();assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;if let Some(source)=&owner.input{assert_eq!(source.as_ptr()as usize,input_ptr)}if let Some(source)=&owner.restored{assert_eq!(source.as_ptr()as usize,checkpoint_ptr)}if result.unwrap(){break}assert!(turn<99999,"original inference close stalled copy={copy} demand={demand:?}");}
-  assert!(owner.terminal_drop_is_shallow());assert_eq!(original+born,freed);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let oracle=serde_json::json!({"source":"same raw original loan","checkpoint":"same original checkpoint","closed":true});assert_eq!(oracle["closed"],true);
- }
+    use semio_plugin_testing_laws::OriginalFixtureCaller;
+    use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+    for copy in [1,3,64]{
+        let input=b"same raw original loan".to_vec();
+        let checkpoint=b"same original checkpoint".to_vec();
+        let (input_ptr,checkpoint_ptr)=(input.as_ptr(),checkpoint.as_ptr());
+        let original=input.capacity()+checkpoint.capacity();
+        let mut caller=OriginalFixtureCaller::admit().unwrap();
+        let mut cx=caller.context();
+        let (mut owner,birth)=observe(||OriginalInferenceJob::new(input,Some(checkpoint),cx.operation().0,cx.generation().0));
+        assert_eq!((birth.requested_bytes,birth.released_bytes),(0,0));
+        let zero=RetainedCloneGrant{maximum_copy_bytes:copy,maximum_depth:128,..Default::default()};
+        let before=cx.retained_progress();
+        let (result,heap)=observe(||cx.with_retained_loan(zero,|turn|owner.close_step(turn)));
+        assert!(!result.unwrap());
+        assert_eq!(cx.retained_progress(),before);
+        assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        assert_eq!(owner.input.as_ref().unwrap().as_ptr(),input_ptr);
+        assert_eq!(owner.restored.as_ref().unwrap().as_ptr(),checkpoint_ptr);
+        let (mut born,mut freed)=(0,0);
+        for _ in 0..OriginalFixtureCaller::maximum_close_turns(){
+            let demand=owner.retirement_demands(copy).unwrap();
+            let grant=RetainedCloneGrant{
+                maximum_items:1,maximum_copy_bytes:copy.max(demand.copy_bytes),
+                maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,
+                maximum_depth:demand.depth.max(1),
+            };
+            let before=cx.retained_progress();
+            let (result,heap)=observe(||cx.with_retained_loan(grant,|turn|owner.close_step(turn)));
+            let after=cx.retained_progress();
+            let progress=RetainedCloneProgress{
+                copied_items:after.copied_items-before.copied_items,
+                copied_bytes:after.copied_bytes-before.copied_bytes,
+                retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,
+                released_bytes:after.released_bytes-before.released_bytes,
+            };
+            assert!(progress.fits(grant));
+            assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
+            born+=heap.requested_bytes;
+            freed+=heap.released_bytes;
+            if let Some(source)=&owner.input{assert_eq!(source.as_ptr(),input_ptr);}
+            if let Some(source)=&owner.restored{assert_eq!(source.as_ptr(),checkpoint_ptr);}
+            if result.unwrap(){break;}
+            assert_ne!(progress,RetainedCloneProgress::default(),"funded close stalled for copy {copy}: {demand:?}");
+        }
+        assert!(owner.terminal_drop_is_shallow());
+        assert_eq!(original+born,freed);
+        let (_,heap)=observe(||drop(owner));
+        assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        let fuel=cx.fuel_remaining();
+        drop(cx);
+        caller.retire(fuel).unwrap();
+    }
 }

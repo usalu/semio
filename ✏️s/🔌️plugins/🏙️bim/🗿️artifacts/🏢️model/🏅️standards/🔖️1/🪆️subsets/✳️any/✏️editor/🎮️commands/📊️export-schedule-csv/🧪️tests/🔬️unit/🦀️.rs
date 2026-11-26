@@ -1,23 +1,9 @@
 use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use semio_plugin::{Effect, Emit, NoConfigMutation};
-#[allow(unused_imports)]
-use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
-#[allow(unused_imports)]
-use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
-#[allow(unused_imports)]
-use semio_s_artifact_bim_model_bim::editor::bim::{BimCommand, BimModelApp};
-#[allow(unused_imports)]
-use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::csv::codec;
-#[allow(unused_imports)]
-use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::export::csv::schedule_records;
-#[allow(unused_imports)]
+use semio_plugin::{ArtifactView, Effect, Emit, NoConfig, NoConfigMutation};
 use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-#[allow(unused_imports)]
-use semio_plugin::{ArtifactView, ConfigView, EditorApp, Fault, NoConfig};
-#[allow(unused_imports)]
-use value_derive::{FromValue, ToValue};
-use semio_s_artifact_bim_model_bim::editor::bim::commands::export_schedule_csv::{CsvJob, Advance, file_name, resolve, handle, ExportScheduleCsv};
+use semio_s_artifact_bim_model_bim::editor::bim::BimCommand;
+use semio_s_artifact_bim_model_bim::editor::bim::commands::export_schedule_csv::{CsvJob, Advance, file_name, resolve, handle, ExportScheduleCsv, ScheduleCsvWork};
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{ctx, demo, run};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;
 use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::export::csv::schedule_csv;
@@ -31,6 +17,10 @@ fn scheduled() -> ModelSnapshot {
     snapshot
 }
 
+fn mounted() -> semio_plugin::ArtifactInstanceOperationOwnerHandle {
+    semio_plugin::ArtifactInstanceOperationOwnerHandle::new(Box::new(semio_plugin::plugin_app_close_prelude::EmptyArtifactInstanceOperationOwner))
+}
+
 fn downloaded(emit: &Emit<ModelMutation, NoConfigMutation>) -> (String, String, String) {
     match emit.effects.as_slice() {
         [Effect::DownloadMediaExport { filename, mime_type, data, encoding: None }] => (filename.clone(), mime_type.clone(), data.clone()),
@@ -41,7 +31,7 @@ fn downloaded(emit: &Emit<ModelMutation, NoConfigMutation>) -> (String, String, 
 fn finished(job: &mut CsvJob, snapshot: &ModelSnapshot) -> (String, Vec<&'static str>) {
     let mut stages = Vec::new();
     for _ in 0..10_000 {
-        match job.advance(snapshot).expect("a step") {
+        match job.advance_cold(snapshot, 3, 2).expect("a step") {
             Advance::Progress(stage) => stages.push(stage),
             Advance::Done(text) => return (text, stages),
         }
@@ -81,10 +71,10 @@ async fn the_command_downloads_the_csv_the_serializer_writes_for_that_schedule()
 
 #[semio_framework_async_macros::async_test]
 async fn the_job_reports_progress_in_bounded_steps_and_writes_the_same_file_as_the_one_shot_path() {
-    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = mounted();
     let snapshot = scheduled();
     let expected = schedule_csv(&snapshot, &ModelInference::infer(&snapshot).expect("infers"), "sch-walls").expect("the schedule");
-    let mut job = CsvJob::with_steps("sch-walls".into(), Some(&instance), 3, 2);
+    let mut job = CsvJob::new("sch-walls".into(), Some(&instance));
     let (text, stages) = finished(&mut job, &snapshot);
     assert_eq!(text, expected, "chunked encoding is the same document");
     assert_eq!(stages.first(), Some(&"bim-schedule-csv-infer"));
@@ -96,27 +86,115 @@ async fn the_job_reports_progress_in_bounded_steps_and_writes_the_same_file_as_t
 
 #[semio_framework_async_macros::async_test]
 async fn a_cancelled_job_leaves_the_session_correct_and_the_next_job_finishes() {
-    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = mounted();
     let snapshot = scheduled();
-    let mut cancelled = CsvJob::with_steps("sch-doors".into(), Some(&instance), 2, 1);
+    let mut cancelled = CsvJob::new("sch-doors".into(), Some(&instance));
     for _ in 0..3 {
-        cancelled.advance(&snapshot).expect("a step");
+        cancelled.advance_cold(&snapshot, 3, 2).expect("a step");
     }
-    cancelled.cancel(&snapshot);
+    cancelled.cancel_cold(&snapshot);
     let report = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::report(Some(&instance));
     assert!(report.cancelled && report.computed > 0);
     drop(cancelled);
-    let mut job = CsvJob::with_steps("sch-doors".into(), Some(&instance), 64, 64);
+    let mut job = CsvJob::new("sch-doors".into(), Some(&instance));
     let (text, _) = finished(&mut job, &snapshot);
     assert_eq!(text, schedule_csv(&snapshot, &ModelInference::infer(&snapshot).expect("infers"), "sch-doors").expect("the schedule"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_job_over_a_schedule_that_left_the_model_stops_with_a_fault() {
-    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = mounted();
     let mut snapshot = scheduled();
     let mut job = CsvJob::new("sch-doors".into(), Some(&instance));
-    job.advance(&snapshot).expect("the first step");
+    job.advance_cold(&snapshot, 3, 2).expect("the first step");
     snapshot.schedules.cold_remove("sch-doors");
-    assert_eq!(job.advance(&snapshot).expect_err("gone").code.0, "app.schedule.missing");
+    assert_eq!(job.advance_cold(&snapshot, 3, 2).expect_err("gone").code.0, "app.schedule.missing");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_original_schedule_command_drains_the_rendered_csv_and_closes() {
+    use semio_framework_job::{Generation, OperationId, OriginalJobFixtureCaller, RetainedCloneGrant, RevisionId};
+    use semio_plugin::{AppOperationContext, AppRenderOperationContext, ChildContentView, HistoryView, MountedOwnerPolicyV1};
+    use semio_plugin::retained_command::ArtifactCommandSnapshotRead;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_view_inference;
+
+    let mut snapshot = scheduled();
+    snapshot.schedules.get_mut("sch-walls").unwrap().columns[0].heading = Some("quoted, \"Tür\"\n".repeat(615));
+    let instance = mounted();
+    let revision = [7; 32];
+    let history = HistoryView::empty();
+    let render = AppRenderOperationContext { app_instance_id: 1, base_revision: RevisionId(1), canonical_base_revision: revision, generation: Generation(1), mounted_policy: MountedOwnerPolicyV1::INTERACTIVE_COMPONENT };
+    let document = ArtifactView::with_render_context(&snapshot, &history, ChildContentView::EMPTY, render, "bim-test", None).await
+        .with_committed_render_snapshot(true);
+    let expected = with_view_inference(Some(&instance), &document, |inferred| schedule_csv(&snapshot, inferred, "sch-walls").unwrap());
+    let stock = RetainedCloneGrant { maximum_items: 1 << 19, maximum_copy_bytes: 1 << 26, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 256 };
+    let grant = RetainedCloneGrant { maximum_items: 256, maximum_copy_bytes: 1 << 17, maximum_capacity_bytes: 1 << 17, maximum_release_bytes: 1 << 17, maximum_depth: 128 };
+    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "bim-test".into(), operation_id: 1, generation: 1, canonical_base_revision: revision, retained: grant, authoring_seed: String::new() };
+    let command = BimCommand::ExportScheduleCsv(ExportScheduleCsv { id: "sch-walls".into(), pressed: None });
+    let config = NoConfig::default();
+    let interaction = protocol::InteractionState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
+    let input = ArtifactCommandInputs { command: &command, snapshot: &snapshot, snapshot_owner: None, snapshot_read: ArtifactCommandSnapshotRead::unavailable(&operation), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(1), Generation(1), stock, || Some(1), 1000, 1 << 22);
+    let mut export = ScheduleCsvWork::new("exportScheduleCsv", instance.clone());
+    let mut chunks = None;
+    assert!(caller.turn(grant, |cx| semio_plugin::app::ArtifactOutputChunks::original_birth_admit(262_144, &mut chunks, cx)).expect("original output birth"));
+    assert!(caller.turn(grant, |cx| export.receive_original_output_chunks(&mut chunks, cx)).expect("original output transfer"));
+    assert!(chunks.is_none());
+    let mut stages = Vec::new();
+    let mut output = None;
+    for _ in 0..512 {
+        let mut step = None;
+        caller.turn(grant, |cx| {
+            let deadline = cx.original_absolute_deadline_us();
+            cx.with_original_work_loan(1, deadline, |cx| {
+                step = Some(export.step(&input, cx)?);
+                Ok(())
+            })
+        }).expect("original CSV turn");
+        match step.expect("one bounded work step") {
+            ArtifactCommandWorkStep::Progress { stage, .. } => stages.push(stage),
+            ArtifactCommandWorkStep::Pending { .. } => {},
+            ArtifactCommandWorkStep::CompleteDownload { download, .. } => { output = Some(download); break; }
+            _ => panic!("schedule completes through one segmented download"),
+        }
+    }
+    let output = output.expect("funded CSV completed");
+    assert_eq!(output.filename, "Wall-list-ground-first.csv");
+    assert_eq!(output.mime_type, "text/csv");
+    assert!(stages.contains(&"bim-schedule-csv-infer"));
+    assert!(stages.iter().filter(|stage| **stage == "bim-schedule-csv-encode").count() > 3);
+    assert!(output.chunks.chunks_remaining() > 1);
+    let mut csv = Vec::new();
+    while let Some(page) = output.chunks.take_chunk().expect("read original sealed CSV page") { csv.extend(page); }
+    assert_eq!(csv, expected.as_bytes());
+
+    export.begin_close();
+    for _ in 0..8192 {
+        if export.terminal_is_empty() { break; }
+        caller.retirement_turn(grant, |cx| export.close_step(cx)).expect("funded schedule retirement");
+    }
+    assert!(export.terminal_is_empty());
+
+    let mut cancelled = ScheduleCsvWork::new("exportScheduleCsv", instance.clone());
+    assert!(caller.turn(grant, |cx| semio_plugin::app::ArtifactOutputChunks::original_birth_admit(262_144, &mut chunks, cx)).expect("cancelled output birth"));
+    assert!(caller.turn(grant, |cx| cancelled.receive_original_output_chunks(&mut chunks, cx)).expect("cancelled output transfer"));
+    for _ in 0..100 {
+        assert!(matches!(caller.turn(grant, |cx| cancelled.step(&input, cx)).expect("partial CSV work"), ArtifactCommandWorkStep::Progress { .. } | ArtifactCommandWorkStep::Pending { .. }));
+    }
+    caller.cancel().cancel_now();
+    assert!(caller.turn(grant, |cx| cancelled.step(&input, cx)).is_err());
+    cancelled.begin_close();
+    for _ in 0..8192 {
+        if cancelled.terminal_is_empty() { break; }
+        caller.retirement_turn(grant, |cx| cancelled.close_step(cx)).expect("cancelled CSV owners retire");
+    }
+    assert!(cancelled.terminal_is_empty());
+
+    for _ in 0..8192 {
+        if instance.close_terminal_is_empty().expect("mounted owner observable") { break; }
+        caller.retirement_turn(grant, |cx| Ok(instance.close_inference_step(cx, grant))).expect("funded close turn").expect("mounted projection retires");
+    }
+    assert!(instance.close_terminal_is_empty().expect("mounted owner observable"));
+    caller.retire(stock);
 }

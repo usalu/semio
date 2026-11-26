@@ -9,7 +9,7 @@ fn original_dynamic_value_clone_cold_input_requires_original_authority(){
     let (mut cursor,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(DslValue::retained_clone_cursor);
     assert_eq!(std::sync::Arc::as_ptr(&source),original);
     assert_eq!(heap,(0,0),"Original dynamic cold input cannot birth a source frame under copy0/capacity0/release0 authority");
-    assert!(cursor.begin_close());let(step,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||cursor.close_step(RetainedCloneGrant {maximum_items:1,..Default::default()}).result.unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert!(cursor.terminal_is_empty());assert_eq!(std::sync::Arc::as_ptr(&source),original);assert_eq!(semio_framework_value_testing_allocator::observe_retirement_allocations(||drop(cursor)).1,(0,0));
+    let d=cursor.begin_close_demand().unwrap();crate::effect::begin_close_paid(&mut cursor,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}).result.unwrap();let turn=crate::effect::close_step(&mut cursor,RetainedCloneGrant {maximum_items:1,..Default::default()});let heap=crate::effect::heap_of(&turn);let step=turn.result.unwrap();assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert!(cursor.terminal_is_empty());assert_eq!(std::sync::Arc::as_ptr(&source),original);assert_eq!(semio_framework_value_testing_allocator::observe_retirement_allocations(||drop(cursor)).1,(0,0));
 }
 use std::sync::Arc;
 

@@ -1,0 +1,1363 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gbXML xmlns="http://www.gbxml.org/schema" version="7.03" useSIUnitsForResults="true" temperatureUnit="C"
+    lengthUnit="Meters" areaUnit="SquareMeters" volumeUnit="CubicMeters">
+  <Campus id="campus-site">
+    <Name>Plot</Name>
+    <Location>
+      <ZipcodeOrPostalCode></ZipcodeOrPostalCode>
+      <Longitude>8</Longitude>
+      <Latitude>47</Latitude>
+      <Elevation>0</Elevation>
+      <CADModelAzimuth>0</CADModelAzimuth>
+      <Name>Plot</Name>
+    </Location>
+    <Building id="building-bldg" buildingType="Unknown">
+      <Name>Building</Name>
+      <Area>63.27</Area>
+      <BuildingStorey id="storey-st-b">
+        <Name>Cellar</Name>
+        <Level>-2.6</Level>
+      </BuildingStorey>
+      <BuildingStorey id="storey-st-0">
+        <Name>Ground</Name>
+        <Level>0</Level>
+      </BuildingStorey>
+      <BuildingStorey id="storey-st-1">
+        <Name>Upper</Name>
+        <Level>3</Level>
+      </BuildingStorey>
+      <Space id="space-sp-0" zoneIdRef="zone-sp-0" conditionType="HeatedAndCooled" buildingStoreyIdRef="storey-st-0">
+        <Name>0.01 Ground</Name>
+        <Description>occupancy: Office; schedule: Office 08-18</Description>
+        <Area>21.09</Area>
+        <Volume>57.9975</Volume>
+        <PeopleNumber unit="NumberOfPeople">2.109</PeopleNumber>
+        <LightPowerPerArea unit="WattPerSquareMeter">8</LightPowerPerArea>
+        <EquipPowerPerArea unit="WattPerSquareMeter">12</EquipPowerPerArea>
+        <CADObjectId>sp-0</CADObjectId>
+        <SpaceBoundary surfaceIdRef="surface-sp-0_w1">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>2.75</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>2.75</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+        <SpaceBoundary surfaceIdRef="surface-sp-0_w2">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>0</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>2.75</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>2.75</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+        <SpaceBoundary surfaceIdRef="surface-sp-0_w3">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>0</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>0</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>2.75</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>2.75</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+        <SpaceBoundary surfaceIdRef="surface-sp-0_w4">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>0</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>2.75</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>2.75</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+        <SpaceBoundary surfaceIdRef="surface-sp-0_f1">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>0</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>0</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+        <SpaceBoundary surfaceIdRef="surface-sp-1_f1">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>2.75</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>2.75</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>2.75</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>2.75</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+      </Space>
+      <Space id="space-sp-1" zoneIdRef="zone-sp-1" conditionType="HeatedAndCooled" buildingStoreyIdRef="storey-st-1">
+        <Name>1.01 Upper</Name>
+        <Description>occupancy: Office; schedule: Office 08-18</Description>
+        <Area>21.09</Area>
+        <Volume>63.27</Volume>
+        <PeopleNumber unit="NumberOfPeople">2.109</PeopleNumber>
+        <LightPowerPerArea unit="WattPerSquareMeter">8</LightPowerPerArea>
+        <EquipPowerPerArea unit="WattPerSquareMeter">12</EquipPowerPerArea>
+        <CADObjectId>sp-1</CADObjectId>
+        <SpaceBoundary surfaceIdRef="surface-sp-1_f1">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>3</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>3</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+        <SpaceBoundary surfaceIdRef="surface-sp-1_w1">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>6</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+        <SpaceBoundary surfaceIdRef="surface-sp-1_w2">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>3</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>6</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+        <SpaceBoundary surfaceIdRef="surface-sp-1_w3">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>3</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>3</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>6</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+        <SpaceBoundary surfaceIdRef="surface-sp-1_w4">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>3</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>6</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+        <SpaceBoundary surfaceIdRef="surface-sp-1_c1">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>6</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+      </Space>
+      <Space id="space-sp-b" zoneIdRef="zone-sp-b" conditionType="Unconditioned" buildingStoreyIdRef="storey-st-b">
+        <Name>B.01 Cellar</Name>
+        <Description>occupancy: Storage</Description>
+        <Area>21.09</Area>
+        <Volume>49.5615</Volume>
+        <CADObjectId>sp-b</CADObjectId>
+        <SpaceBoundary surfaceIdRef="surface-sp-0_f1">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>-0.25</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>-0.25</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>-0.25</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>-0.25</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+        <SpaceBoundary surfaceIdRef="surface-sp-b_w1g">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>-2.6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>-2.6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>-0.25</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>-0.25</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+        <SpaceBoundary surfaceIdRef="surface-sp-b_w2g">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>-2.6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>-2.6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>-0.25</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>-0.25</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+        <SpaceBoundary surfaceIdRef="surface-sp-b_w3g">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>-2.6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>-2.6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>-0.25</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>-0.25</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+        <SpaceBoundary surfaceIdRef="surface-sp-b_w4g">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>-2.6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>-2.6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>-0.25</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>-0.25</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+        <SpaceBoundary surfaceIdRef="surface-sp-b_f1">
+          <PlanarGeometry>
+            <PolyLoop>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>-2.6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>3.85</Coordinate>
+                <Coordinate>-2.6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>5.85</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>-2.6</Coordinate>
+              </CartesianPoint>
+              <CartesianPoint>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>0.15</Coordinate>
+                <Coordinate>-2.6</Coordinate>
+              </CartesianPoint>
+            </PolyLoop>
+          </PlanarGeometry>
+        </SpaceBoundary>
+      </Space>
+    </Building>
+    <Surface id="surface-sp-0_w1" surfaceType="ExteriorWall" constructionIdRef="construction-wt-0.342465753"
+            exposedToSun="true">
+      <Name>sp-0/w1</Name>
+      <AdjacentSpaceId spaceIdRef="space-sp-0"/>
+      <RectangularGeometry>
+        <Azimuth>180</Azimuth>
+        <CartesianPoint>
+          <Coordinate>0.15</Coordinate>
+          <Coordinate>0.15</Coordinate>
+          <Coordinate>0</Coordinate>
+        </CartesianPoint>
+        <Tilt>90</Tilt>
+        <Height>2.75</Height>
+        <Width>5.7</Width>
+      </RectangularGeometry>
+      <PlanarGeometry>
+        <PolyLoop>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>2.75</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>2.75</Coordinate>
+          </CartesianPoint>
+        </PolyLoop>
+      </PlanarGeometry>
+      <CADObjectId>sp-0/w1</CADObjectId>
+    </Surface>
+    <Surface id="surface-sp-0_w2" surfaceType="ExteriorWall" constructionIdRef="construction-wt-0.342465753"
+            exposedToSun="true">
+      <Name>sp-0/w2</Name>
+      <AdjacentSpaceId spaceIdRef="space-sp-0"/>
+      <RectangularGeometry>
+        <Azimuth>90</Azimuth>
+        <CartesianPoint>
+          <Coordinate>5.85</Coordinate>
+          <Coordinate>0.15</Coordinate>
+          <Coordinate>0</Coordinate>
+        </CartesianPoint>
+        <Tilt>90</Tilt>
+        <Height>2.75</Height>
+        <Width>3.7</Width>
+      </RectangularGeometry>
+      <PlanarGeometry>
+        <PolyLoop>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>0</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>2.75</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>2.75</Coordinate>
+          </CartesianPoint>
+        </PolyLoop>
+      </PlanarGeometry>
+      <Opening id="opening-o-0" openingType="FixedWindow" windowTypeIdRef="windowtype-win">
+        <Name>o-0</Name>
+        <RectangularGeometry>
+          <Azimuth>90</Azimuth>
+          <CartesianPoint>
+            <Coordinate>1.25</Coordinate>
+            <Coordinate>0.9</Coordinate>
+          </CartesianPoint>
+          <Tilt>90</Tilt>
+          <Height>1.2</Height>
+          <Width>1.2</Width>
+        </RectangularGeometry>
+        <PlanarGeometry>
+          <PolyLoop>
+            <CartesianPoint>
+              <Coordinate>5.85</Coordinate>
+              <Coordinate>1.4</Coordinate>
+              <Coordinate>0.9</Coordinate>
+            </CartesianPoint>
+            <CartesianPoint>
+              <Coordinate>5.85</Coordinate>
+              <Coordinate>2.6</Coordinate>
+              <Coordinate>0.9</Coordinate>
+            </CartesianPoint>
+            <CartesianPoint>
+              <Coordinate>5.85</Coordinate>
+              <Coordinate>2.6</Coordinate>
+              <Coordinate>2.1</Coordinate>
+            </CartesianPoint>
+            <CartesianPoint>
+              <Coordinate>5.85</Coordinate>
+              <Coordinate>1.4</Coordinate>
+              <Coordinate>2.1</Coordinate>
+            </CartesianPoint>
+          </PolyLoop>
+        </PlanarGeometry>
+        <CADObjectId>o-0</CADObjectId>
+      </Opening>
+      <CADObjectId>sp-0/w2</CADObjectId>
+    </Surface>
+    <Surface id="surface-sp-0_w3" surfaceType="ExteriorWall" constructionIdRef="construction-wt-0.342465753"
+            exposedToSun="true">
+      <Name>sp-0/w3</Name>
+      <AdjacentSpaceId spaceIdRef="space-sp-0"/>
+      <RectangularGeometry>
+        <Azimuth>0</Azimuth>
+        <CartesianPoint>
+          <Coordinate>5.85</Coordinate>
+          <Coordinate>3.85</Coordinate>
+          <Coordinate>0</Coordinate>
+        </CartesianPoint>
+        <Tilt>90</Tilt>
+        <Height>2.75</Height>
+        <Width>5.7</Width>
+      </RectangularGeometry>
+      <PlanarGeometry>
+        <PolyLoop>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>0</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>0</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>2.75</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>2.75</Coordinate>
+          </CartesianPoint>
+        </PolyLoop>
+      </PlanarGeometry>
+      <CADObjectId>sp-0/w3</CADObjectId>
+    </Surface>
+    <Surface id="surface-sp-0_w4" surfaceType="ExteriorWall" constructionIdRef="construction-wt-0.342465753"
+            exposedToSun="true">
+      <Name>sp-0/w4</Name>
+      <AdjacentSpaceId spaceIdRef="space-sp-0"/>
+      <RectangularGeometry>
+        <Azimuth>270</Azimuth>
+        <CartesianPoint>
+          <Coordinate>0.15</Coordinate>
+          <Coordinate>3.85</Coordinate>
+          <Coordinate>0</Coordinate>
+        </CartesianPoint>
+        <Tilt>90</Tilt>
+        <Height>2.75</Height>
+        <Width>3.7</Width>
+      </RectangularGeometry>
+      <PlanarGeometry>
+        <PolyLoop>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>0</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>2.75</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>2.75</Coordinate>
+          </CartesianPoint>
+        </PolyLoop>
+      </PlanarGeometry>
+      <CADObjectId>sp-0/w4</CADObjectId>
+    </Surface>
+    <Surface id="surface-sp-0_f1" surfaceType="InteriorFloor" constructionIdRef="construction-st-1.53256705"
+            exposedToSun="false">
+      <Name>sp-0/f1</Name>
+      <AdjacentSpaceId spaceIdRef="space-sp-0"/>
+      <AdjacentSpaceId spaceIdRef="space-sp-b"/>
+      <RectangularGeometry>
+        <Azimuth>0</Azimuth>
+        <CartesianPoint>
+          <Coordinate>5.85</Coordinate>
+          <Coordinate>0.15</Coordinate>
+          <Coordinate>0</Coordinate>
+        </CartesianPoint>
+        <Tilt>180</Tilt>
+        <Height>3.7</Height>
+        <Width>5.7</Width>
+      </RectangularGeometry>
+      <PlanarGeometry>
+        <PolyLoop>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>0</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>0</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0</Coordinate>
+          </CartesianPoint>
+        </PolyLoop>
+      </PlanarGeometry>
+      <CADObjectId>sp-0/f1</CADObjectId>
+      <CADObjectId>sp-b/c1</CADObjectId>
+    </Surface>
+    <Surface id="surface-sp-1_f1" surfaceType="InteriorFloor" constructionIdRef="construction-st-1.53256705"
+            exposedToSun="false">
+      <Name>sp-1/f1</Name>
+      <AdjacentSpaceId spaceIdRef="space-sp-1"/>
+      <AdjacentSpaceId spaceIdRef="space-sp-0"/>
+      <RectangularGeometry>
+        <Azimuth>0</Azimuth>
+        <CartesianPoint>
+          <Coordinate>5.85</Coordinate>
+          <Coordinate>0.15</Coordinate>
+          <Coordinate>3</Coordinate>
+        </CartesianPoint>
+        <Tilt>180</Tilt>
+        <Height>3.7</Height>
+        <Width>5.7</Width>
+      </RectangularGeometry>
+      <PlanarGeometry>
+        <PolyLoop>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>3</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>3</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3</Coordinate>
+          </CartesianPoint>
+        </PolyLoop>
+      </PlanarGeometry>
+      <CADObjectId>sp-1/f1</CADObjectId>
+      <CADObjectId>sp-0/c1</CADObjectId>
+    </Surface>
+    <Surface id="surface-sp-1_w1" surfaceType="ExteriorWall" constructionIdRef="construction-wt-0.342465753"
+            exposedToSun="true">
+      <Name>sp-1/w1</Name>
+      <AdjacentSpaceId spaceIdRef="space-sp-1"/>
+      <RectangularGeometry>
+        <Azimuth>180</Azimuth>
+        <CartesianPoint>
+          <Coordinate>0.15</Coordinate>
+          <Coordinate>0.15</Coordinate>
+          <Coordinate>3</Coordinate>
+        </CartesianPoint>
+        <Tilt>90</Tilt>
+        <Height>3</Height>
+        <Width>5.7</Width>
+      </RectangularGeometry>
+      <PlanarGeometry>
+        <PolyLoop>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>6</Coordinate>
+          </CartesianPoint>
+        </PolyLoop>
+      </PlanarGeometry>
+      <CADObjectId>sp-1/w1</CADObjectId>
+    </Surface>
+    <Surface id="surface-sp-1_w2" surfaceType="ExteriorWall" constructionIdRef="construction-wt-0.342465753"
+            exposedToSun="true">
+      <Name>sp-1/w2</Name>
+      <AdjacentSpaceId spaceIdRef="space-sp-1"/>
+      <RectangularGeometry>
+        <Azimuth>90</Azimuth>
+        <CartesianPoint>
+          <Coordinate>5.85</Coordinate>
+          <Coordinate>0.15</Coordinate>
+          <Coordinate>3</Coordinate>
+        </CartesianPoint>
+        <Tilt>90</Tilt>
+        <Height>3</Height>
+        <Width>3.7</Width>
+      </RectangularGeometry>
+      <PlanarGeometry>
+        <PolyLoop>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>3</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>6</Coordinate>
+          </CartesianPoint>
+        </PolyLoop>
+      </PlanarGeometry>
+      <CADObjectId>sp-1/w2</CADObjectId>
+    </Surface>
+    <Surface id="surface-sp-1_w3" surfaceType="ExteriorWall" constructionIdRef="construction-wt-0.342465753"
+            exposedToSun="true">
+      <Name>sp-1/w3</Name>
+      <AdjacentSpaceId spaceIdRef="space-sp-1"/>
+      <RectangularGeometry>
+        <Azimuth>0</Azimuth>
+        <CartesianPoint>
+          <Coordinate>5.85</Coordinate>
+          <Coordinate>3.85</Coordinate>
+          <Coordinate>3</Coordinate>
+        </CartesianPoint>
+        <Tilt>90</Tilt>
+        <Height>3</Height>
+        <Width>5.7</Width>
+      </RectangularGeometry>
+      <PlanarGeometry>
+        <PolyLoop>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>3</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>3</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>6</Coordinate>
+          </CartesianPoint>
+        </PolyLoop>
+      </PlanarGeometry>
+      <Opening id="opening-o-1" openingType="FixedWindow" windowTypeIdRef="windowtype-win">
+        <Name>o-1</Name>
+        <RectangularGeometry>
+          <Azimuth>0</Azimuth>
+          <CartesianPoint>
+            <Coordinate>2.25</Coordinate>
+            <Coordinate>0.9</Coordinate>
+          </CartesianPoint>
+          <Tilt>90</Tilt>
+          <Height>1.2</Height>
+          <Width>1.2</Width>
+        </RectangularGeometry>
+        <PlanarGeometry>
+          <PolyLoop>
+            <CartesianPoint>
+              <Coordinate>3.6</Coordinate>
+              <Coordinate>3.85</Coordinate>
+              <Coordinate>3.9</Coordinate>
+            </CartesianPoint>
+            <CartesianPoint>
+              <Coordinate>2.4</Coordinate>
+              <Coordinate>3.85</Coordinate>
+              <Coordinate>3.9</Coordinate>
+            </CartesianPoint>
+            <CartesianPoint>
+              <Coordinate>2.4</Coordinate>
+              <Coordinate>3.85</Coordinate>
+              <Coordinate>5.1</Coordinate>
+            </CartesianPoint>
+            <CartesianPoint>
+              <Coordinate>3.6</Coordinate>
+              <Coordinate>3.85</Coordinate>
+              <Coordinate>5.1</Coordinate>
+            </CartesianPoint>
+          </PolyLoop>
+        </PlanarGeometry>
+        <CADObjectId>o-1</CADObjectId>
+      </Opening>
+      <CADObjectId>sp-1/w3</CADObjectId>
+    </Surface>
+    <Surface id="surface-sp-1_w4" surfaceType="ExteriorWall" constructionIdRef="construction-wt-0.342465753"
+            exposedToSun="true">
+      <Name>sp-1/w4</Name>
+      <AdjacentSpaceId spaceIdRef="space-sp-1"/>
+      <RectangularGeometry>
+        <Azimuth>270</Azimuth>
+        <CartesianPoint>
+          <Coordinate>0.15</Coordinate>
+          <Coordinate>3.85</Coordinate>
+          <Coordinate>3</Coordinate>
+        </CartesianPoint>
+        <Tilt>90</Tilt>
+        <Height>3</Height>
+        <Width>3.7</Width>
+      </RectangularGeometry>
+      <PlanarGeometry>
+        <PolyLoop>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>3</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>6</Coordinate>
+          </CartesianPoint>
+        </PolyLoop>
+      </PlanarGeometry>
+      <CADObjectId>sp-1/w4</CADObjectId>
+    </Surface>
+    <Surface id="surface-sp-1_c1" surfaceType="Roof" constructionIdRef="construction-rt-0.185528757"
+            exposedToSun="true">
+      <Name>sp-1/c1</Name>
+      <AdjacentSpaceId spaceIdRef="space-sp-1"/>
+      <RectangularGeometry>
+        <Azimuth>0</Azimuth>
+        <CartesianPoint>
+          <Coordinate>0.15</Coordinate>
+          <Coordinate>0.15</Coordinate>
+          <Coordinate>6</Coordinate>
+        </CartesianPoint>
+        <Tilt>0</Tilt>
+        <Height>3.7</Height>
+        <Width>5.7</Width>
+      </RectangularGeometry>
+      <PlanarGeometry>
+        <PolyLoop>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>6</Coordinate>
+          </CartesianPoint>
+        </PolyLoop>
+      </PlanarGeometry>
+      <CADObjectId>sp-1/c1</CADObjectId>
+    </Surface>
+    <Surface id="surface-sp-b_w1g" surfaceType="UndergroundWall" constructionIdRef="construction-wt-0.347222222"
+            exposedToSun="false">
+      <Name>sp-b/w1g</Name>
+      <AdjacentSpaceId spaceIdRef="space-sp-b"/>
+      <RectangularGeometry>
+        <Azimuth>180</Azimuth>
+        <CartesianPoint>
+          <Coordinate>0.15</Coordinate>
+          <Coordinate>0.15</Coordinate>
+          <Coordinate>-2.6</Coordinate>
+        </CartesianPoint>
+        <Tilt>90</Tilt>
+        <Height>2.35</Height>
+        <Width>5.7</Width>
+      </RectangularGeometry>
+      <PlanarGeometry>
+        <PolyLoop>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>-2.6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>-2.6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>-0.25</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>-0.25</Coordinate>
+          </CartesianPoint>
+        </PolyLoop>
+      </PlanarGeometry>
+      <CADObjectId>sp-b/w1g</CADObjectId>
+    </Surface>
+    <Surface id="surface-sp-b_w2g" surfaceType="UndergroundWall" constructionIdRef="construction-wt-0.347222222"
+            exposedToSun="false">
+      <Name>sp-b/w2g</Name>
+      <AdjacentSpaceId spaceIdRef="space-sp-b"/>
+      <RectangularGeometry>
+        <Azimuth>90</Azimuth>
+        <CartesianPoint>
+          <Coordinate>5.85</Coordinate>
+          <Coordinate>0.15</Coordinate>
+          <Coordinate>-2.6</Coordinate>
+        </CartesianPoint>
+        <Tilt>90</Tilt>
+        <Height>2.35</Height>
+        <Width>3.7</Width>
+      </RectangularGeometry>
+      <PlanarGeometry>
+        <PolyLoop>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>-2.6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>-2.6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>-0.25</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>-0.25</Coordinate>
+          </CartesianPoint>
+        </PolyLoop>
+      </PlanarGeometry>
+      <CADObjectId>sp-b/w2g</CADObjectId>
+    </Surface>
+    <Surface id="surface-sp-b_w3g" surfaceType="UndergroundWall" constructionIdRef="construction-wt-0.347222222"
+            exposedToSun="false">
+      <Name>sp-b/w3g</Name>
+      <AdjacentSpaceId spaceIdRef="space-sp-b"/>
+      <RectangularGeometry>
+        <Azimuth>0</Azimuth>
+        <CartesianPoint>
+          <Coordinate>5.85</Coordinate>
+          <Coordinate>3.85</Coordinate>
+          <Coordinate>-2.6</Coordinate>
+        </CartesianPoint>
+        <Tilt>90</Tilt>
+        <Height>2.35</Height>
+        <Width>5.7</Width>
+      </RectangularGeometry>
+      <PlanarGeometry>
+        <PolyLoop>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>-2.6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>-2.6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>-0.25</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>-0.25</Coordinate>
+          </CartesianPoint>
+        </PolyLoop>
+      </PlanarGeometry>
+      <CADObjectId>sp-b/w3g</CADObjectId>
+    </Surface>
+    <Surface id="surface-sp-b_w4g" surfaceType="UndergroundWall" constructionIdRef="construction-wt-0.347222222"
+            exposedToSun="false">
+      <Name>sp-b/w4g</Name>
+      <AdjacentSpaceId spaceIdRef="space-sp-b"/>
+      <RectangularGeometry>
+        <Azimuth>270</Azimuth>
+        <CartesianPoint>
+          <Coordinate>0.15</Coordinate>
+          <Coordinate>3.85</Coordinate>
+          <Coordinate>-2.6</Coordinate>
+        </CartesianPoint>
+        <Tilt>90</Tilt>
+        <Height>2.35</Height>
+        <Width>3.7</Width>
+      </RectangularGeometry>
+      <PlanarGeometry>
+        <PolyLoop>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>-2.6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>-2.6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>-0.25</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>-0.25</Coordinate>
+          </CartesianPoint>
+        </PolyLoop>
+      </PlanarGeometry>
+      <CADObjectId>sp-b/w4g</CADObjectId>
+    </Surface>
+    <Surface id="surface-sp-b_f1" surfaceType="SlabOnGrade" constructionIdRef="construction-st-2.07253886"
+            exposedToSun="false">
+      <Name>sp-b/f1</Name>
+      <AdjacentSpaceId spaceIdRef="space-sp-b"/>
+      <RectangularGeometry>
+        <Azimuth>0</Azimuth>
+        <CartesianPoint>
+          <Coordinate>5.85</Coordinate>
+          <Coordinate>0.15</Coordinate>
+          <Coordinate>-2.6</Coordinate>
+        </CartesianPoint>
+        <Tilt>180</Tilt>
+        <Height>3.7</Height>
+        <Width>5.7</Width>
+      </RectangularGeometry>
+      <PlanarGeometry>
+        <PolyLoop>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>-2.6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>3.85</Coordinate>
+            <Coordinate>-2.6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>5.85</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>-2.6</Coordinate>
+          </CartesianPoint>
+          <CartesianPoint>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>0.15</Coordinate>
+            <Coordinate>-2.6</Coordinate>
+          </CartesianPoint>
+        </PolyLoop>
+      </PlanarGeometry>
+      <CADObjectId>sp-b/f1</CADObjectId>
+    </Surface>
+  </Campus>
+  <WindowType id="windowtype-win">
+    <Name>Window</Name>
+    <Description>frame fraction 0.25</Description>
+    <U-value unit="WPerSquareMeterK">1.1</U-value>
+    <SolarHeatGainCoeff unit="Fraction" solarIncidentAngle="0">0.5</SolarHeatGainCoeff>
+  </WindowType>
+  <Construction id="construction-wt-0.342465753">
+    <Name>Insulated brick U=0.342465753</Name>
+    <U-value unit="WPerSquareMeterK">0.342465753</U-value>
+    <LayerId layerIdRef="layer-mat-m-200000"/>
+    <LayerId layerIdRef="layer-mat-ins-100000"/>
+  </Construction>
+  <Construction id="construction-st-1.53256705">
+    <Name>Slab 250 U=1.53256705</Name>
+    <U-value unit="WPerSquareMeterK">1.53256705</U-value>
+    <LayerId layerIdRef="layer-mat-m-250000"/>
+  </Construction>
+  <Construction id="construction-st-1.951219512">
+    <Name>Slab 250 U=1.951219512</Name>
+    <U-value unit="WPerSquareMeterK">1.951219512</U-value>
+    <LayerId layerIdRef="layer-mat-m-250000"/>
+  </Construction>
+  <Construction id="construction-rt-0.185528757">
+    <Name>Flat roof U=0.185528757</Name>
+    <U-value unit="WPerSquareMeterK">0.185528757</U-value>
+    <LayerId layerIdRef="layer-mat-ins-200000"/>
+    <LayerId layerIdRef="layer-mat-m-200000"/>
+  </Construction>
+  <Construction id="construction-wt-0.347222222">
+    <Name>Insulated brick U=0.347222222</Name>
+    <U-value unit="WPerSquareMeterK">0.347222222</U-value>
+    <LayerId layerIdRef="layer-mat-m-200000"/>
+    <LayerId layerIdRef="layer-mat-ins-100000"/>
+  </Construction>
+  <Construction id="construction-st-2.07253886">
+    <Name>Slab 250 U=2.07253886</Name>
+    <U-value unit="WPerSquareMeterK">2.07253886</U-value>
+    <LayerId layerIdRef="layer-mat-m-250000"/>
+  </Construction>
+  <Layer id="layer-mat-ins-100000">
+    <MaterialId materialIdRef="mat-ins-100000"/>
+  </Layer>
+  <Layer id="layer-mat-ins-200000">
+    <MaterialId materialIdRef="mat-ins-200000"/>
+  </Layer>
+  <Layer id="layer-mat-m-200000">
+    <MaterialId materialIdRef="mat-m-200000"/>
+  </Layer>
+  <Layer id="layer-mat-m-250000">
+    <MaterialId materialIdRef="mat-m-250000"/>
+  </Layer>
+  <Material id="mat-ins-100000">
+    <Name>Insulation 100 mm</Name>
+    <R-value unit="SquareMeterKPerW">2.5</R-value>
+    <Thickness unit="Meters">0.1</Thickness>
+    <Conductivity unit="WPerMeterK">0.04</Conductivity>
+    <Density unit="KgPerCubicM">1800</Density>
+    <SpecificHeat unit="JPerKgK">900</SpecificHeat>
+  </Material>
+  <Material id="mat-ins-200000">
+    <Name>Insulation 200 mm</Name>
+    <R-value unit="SquareMeterKPerW">5</R-value>
+    <Thickness unit="Meters">0.2</Thickness>
+    <Conductivity unit="WPerMeterK">0.04</Conductivity>
+    <Density unit="KgPerCubicM">1800</Density>
+    <SpecificHeat unit="JPerKgK">900</SpecificHeat>
+  </Material>
+  <Material id="mat-m-200000">
+    <Name>Brick 200 mm</Name>
+    <R-value unit="SquareMeterKPerW">0.25</R-value>
+    <Thickness unit="Meters">0.2</Thickness>
+    <Conductivity unit="WPerMeterK">0.8</Conductivity>
+    <Density unit="KgPerCubicM">1800</Density>
+    <SpecificHeat unit="JPerKgK">900</SpecificHeat>
+  </Material>
+  <Material id="mat-m-250000">
+    <Name>Brick 250 mm</Name>
+    <R-value unit="SquareMeterKPerW">0.3125</R-value>
+    <Thickness unit="Meters">0.25</Thickness>
+    <Conductivity unit="WPerMeterK">0.8</Conductivity>
+    <Density unit="KgPerCubicM">1800</Density>
+    <SpecificHeat unit="JPerKgK">900</SpecificHeat>
+  </Material>
+  <Zone id="zone-sp-0">
+    <Name>0.01 Ground</Name>
+    <OAFlowPerArea unit="LPerSecPerSquareM">1.5</OAFlowPerArea>
+    <DesignHeatT unit="C">20</DesignHeatT>
+    <DesignCoolT unit="C">26</DesignCoolT>
+    <CADObjectId>sp-0</CADObjectId>
+  </Zone>
+  <Zone id="zone-sp-1">
+    <Name>1.01 Upper</Name>
+    <OAFlowPerArea unit="LPerSecPerSquareM">1.5</OAFlowPerArea>
+    <DesignHeatT unit="C">20</DesignHeatT>
+    <DesignCoolT unit="C">26</DesignCoolT>
+    <CADObjectId>sp-1</CADObjectId>
+  </Zone>
+  <Zone id="zone-sp-b">
+    <Name>B.01 Cellar</Name>
+    <CADObjectId>sp-b</CADObjectId>
+  </Zone>
+</gbXML>

@@ -13,7 +13,7 @@ import {UnitKilledErrorV1,cargoSilentExitV1,createErrorCaptureV1,killedUnitsV1,u
 import {cargoUnitPackageNameV1,requireCargoCompilerOutputPathsV1} from "../📏️paths/🟦️.ts";
 import {holdLaneOfBuildDirectoryV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts";
 import {formatStampProtocolV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🟨️.mjs";
-import {nativeBuildPrerequisiteOrderV1} from "./📋️prerequisites/🟦️.ts";
+import {nativeBuildPassPrerequisitesV1,nativeBuildPrerequisiteOrderV1} from "./📋️prerequisites/🟦️.ts";
 import { nativeBuildJobAttemptLogPathV1, nativeBuildJobLogNamesV1, runNativeBuildJobAttemptsV1 } from "./🔁️job-attempts/🟦️.ts";
 import {CargoInputContinuationTransactionV1,withNestedInputOwnersRetiredV1} from "../📥️inputs/🤲️continuations/🟦️.ts";
 import type {CompletedCargoCompilationViewV1} from "../🧾️receipt/📦️retention/📥️snapshot/🟦️.ts";
@@ -50,9 +50,9 @@ import { acquireCargoBuildLeaseV1 } from "../🔒️lease/🟦️.ts";
 import {announcedCargoSourceChecksumsV1,CargoSourceAttemptV1,CargoSourceWitnessV1} from "../🧾️receipt/📎️source-witness/🟦️.ts";
 import { CargoProvenanceSessionV1, cargoConfigurationArgumentsV1, cargoProvenancePhysicalControlV1, cargoProvenanceProgressSinkV1, sharedProvenanceCustodyV1, type CargoProvenanceStagedV1 } from "../🟦️.ts";
 import { cargoBuildRunLeafV1, cargoProvenanceMerkleRootV1, cargoProvenanceRowsDigestV1, cargoProvenanceSourceV1, cargoUnitIdentityV1, cargoUnitLeafV1, type CargoDepInfoChecksumV1, type CargoProvenanceRootsV1, type CargoUnitObservationV1 } from "../🧾️receipt/🟦️.ts";
-import { ADMISSION_POLICY_V1, admissionMemoryBytesV1, appendUnitHistoryV1, admissionMemoryShareV1, admissionReserveBytesV1, buildSchedulerV1,schedulerCargoSelectionV1, compilerWrapperEnvironmentV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, startAdmissionBrokerV1, unitHistoryPathV1, unitKeyV1, unitObservationV1, unitCeilingAlarmV1, unitObservationsV1, unitOutputBytesV1, type UnitObservationV1, type UnitRecordV1 } from "../🎟️admission/🟦️.ts";
+import { ADMISSION_POLICY_V1, admissionMemoryBytesV1, appendUnitHistoryV1, admissionMemoryShareV1, admissionReserveBytesV1, buildSchedulerV1,schedulerCargoSelectionV1, compilerWrapperEnvironmentV1, parentCompilerMemoryAllowanceBytesV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, startAdmissionBrokerV1, unitHistoryPathV1, unitKeyV1, unitObservationV1, unitCeilingAlarmV1, unitObservationsV1, unitOutputBytesV1, type UnitObservationV1, type UnitRecordV1 } from "../🎟️admission/🟦️.ts";
 import { admitPassStorageV1, batchAdditionsV1, creditPresentBytesV1, describeStorageGateV1, learnedBatchBytesV1, measurePresentDepsBytesV1, readStorageGrowthV1, recordStorageGrowthV1, storageGrowthKeyV1, type StorageGrowPortV1 } from "./💾️storage-gate/🟦️.ts";
-import { componentFleetChargeV1, componentJobsLimitV1, componentPassPeakMegabytesV1, describeFleetComponentJobsV1, describeLocalComponentJobsV1, nativeBuildPassOffloadableV1, planComponentJobSlotsV1, planLocalComponentJobsV1, runPassesInJobSlotsV1, type ComponentJobsDecisionV1, type FleetJobEventV1, type LocalJobSampleV1, type PassJobSlotV1 } from "./🧵️job-slots/🟦️.ts";
+import { componentFleetChargeV1, componentJobsLimitV1, componentPassPeakMegabytesV1, describeFleetComponentJobsV1, describeLocalComponentJobsV1, FleetPlacementFailedErrorV1, nativeBuildPassOffloadableV1, ParentComponentMemoryV1, planComponentJobSlotsV1, planLocalComponentJobsV1, runPassesInJobSlotsV1, type ComponentJobsDecisionV1, type FleetJobEventV1, type LocalJobSampleV1, type PassJobSlotV1 } from "./🧵️job-slots/🟦️.ts";
 import { cargoJobsV1, createJobserverV1, defaultJobserverStyleV1, withoutJobserverEnvironmentV1, type JobSlotV1 } from "../🎰️jobserver/🟦️.ts";
 import { criticalPathV1, startTimelineV1, TELEMETRY_POLICY_V1, writeBuildReportV1, type BuildScriptRunV1, type StageRecordV1 } from "../📈️telemetry/🟦️.ts";
 import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../🗃️stage-cache/🟦️.ts";
@@ -454,7 +454,7 @@ export function componentCompileUnitsV1(hostDecision: CompileUnitsDecisionV1) {
 
 /** 🚀️ Runs one native component build: a GNU make jobserver of every core shared by all Cargo passes, jobs and post-link stages, a rustc wrapper admitting units by predicted
  * peak memory, one Cargo pass per planned workspace, profile and target (profiles in parallel lanes, workspaces of one profile in sequence so no two Cargo processes
- * contend for one unit), jobs started at t = 0 as soon as the completions they name happened (host tools, wasm-bindgen modules, product stages), each component
+ * contend for one unit), jobs start as soon as their dependencies settle and jobs declared solely for stages can overlap Cargo, each component
  * staged the moment Cargo links it and streamed through its post-link stages (each cached by content under the generation's stage cache), one provenance session
  * that hashes every file once and rechecks it once (a Merkle root per component closure), a CPU and memory timeline, a per-unit table, the critical path and a
  * report. The caller's remaining deadline bounds admission and every child. A stall watchdog additionally stops a run with no unit activity for `stallMs`
@@ -463,7 +463,7 @@ export function componentCompileUnitsV1(hostDecision: CompileUnitsDecisionV1) {
 export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Promise<NativeBuildOutcomeV1> {
  requireIssuedResourceControlV1(options.control);return withIssuedResourceOperationV1(options.control,async()=>{
   if(options.withCargoInputs&&!options.withPassInputs)throw Error("Actual Cargo configuration inputs require a retained pass transaction");
-  nativeBuildPrerequisiteOrderV1(options.plan.jobs??[]);
+  const jobOrder=nativeBuildPrerequisiteOrderV1(options.plan.jobs??[]);
   if(options.consume){requireIssuedResourceControlV1(options.control);if(typeof options.consume!=="function"||validateJsonSchemaSubset(schema.definitions.ObservationDeliveryV1,{version:1,maximumBytes:options.maximumObservationBytes},schema).length)throw Error("Finite actual Native observation delivery required");}
   if(options.retainCompilationBytes!==undefined&&(!options.consume||!Number.isSafeInteger(options.retainCompilationBytes)||options.retainCompilationBytes<1||options.retainCompilationBytes>compilationBytesMaximumV1||options.retainCompilationBytes>options.storage.allocation.bytes))throw Error("Finite cumulative completed pass retention required");
   options=Object.freeze({...options,environment:Object.freeze({...options.environment})});
@@ -532,6 +532,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   const fromDriverLeaseTask = AsyncLocalStorage.snapshot();
   return await withLeaseTaskV1(()=>withCapacity(async(capacity,cpuControl,driverScope)=>{
   const inputEnvironment=Object.freeze({...options.environment,CARGO_TARGET_DIR:generation.target,CARGO_BUILD_BUILD_DIR:generation.build});
+  const parentMemoryAllowanceBytes=parentCompilerMemoryAllowanceBytesV1(inputEnvironment);
   const tokens = Math.min(options.tokens ?? capacity.parallelism, capacity.parallelism);
   options = { ...options, environment: { ...options.environment, SEMIO_COMPILER_PARALLELISM: String(tokens) } };
   const fleet = await options.fleetJobs?.({ local: tokens, unitMegabytes: compileUnitMegabytesV1(await unitHistory()), signal }).catch(() => undefined), fleetRemote = fleet?.remote ?? 0;
@@ -559,7 +560,8 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   let fleetServer: Awaited<ReturnType<typeof createJobserverV1>> | undefined;
   if (fleetRemote > 0) try { fleetServer = await createJobserverV1({ version: 1, tokens: tokens + fleetRemote, style: defaultJobserverStyleV1() }, join(generation.jobserver, "fleet")); } catch (primary) { try { jobserver.close(); } catch (secondary) { throw new AggregateError([primary, secondary], "Native fleet jobserver initialization and jobserver retirement failed"); } throw primary; }
   let broker:Awaited<ReturnType<typeof startAdmissionBrokerV1>>;
-  try{broker=await startAdmissionBrokerV1({physicalBytes:options.physicalBytes??admissionMemoryShareV1(admissionMemoryBytesV1(),tokens,availableParallelism()),...options.physicalBytes===undefined?{reserveBytes:admissionReserveBytesV1(admissionMemoryBytesV1())}:{},history,onCompleted:recordCompletedUnit,log});}catch(primary){try{jobserver.close();fleetServer?.close();}catch(secondary){throw new AggregateError([primary,secondary],"Native broker initialization and jobserver retirement failed");}throw primary;}
+  try{broker=await startAdmissionBrokerV1({physicalBytes:options.physicalBytes??admissionMemoryShareV1(admissionMemoryBytesV1(),tokens,availableParallelism()),...options.physicalBytes===undefined?{reserveBytes:admissionReserveBytesV1(admissionMemoryBytesV1())}:{},history,onCompleted:recordCompletedUnit,log,...parentMemoryAllowanceBytes===undefined?{}:{parentMemoryAllowanceBytes}});}catch(primary){try{jobserver.close();fleetServer?.close();}catch(secondary){throw new AggregateError([primary,secondary],"Native broker initialization and jobserver retirement failed");}throw primary;}
+  if(parentMemoryAllowanceBytes!==undefined)broker.observe({nonRustcBytes:process.memoryUsage().rss,swapOutBytesPerSecond:null});
   let timeline:ReturnType<typeof startTimelineV1>;
   try{timeline=startTimelineV1({
     control:cpuControl,
@@ -569,6 +571,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
     onRow: async (row,actualControl) => { const bytes=await nonRustcBytes([...children],actualControl);broker.observe({ nonRustcBytes: bytes, swapOutBytesPerSecond: row.swapOutBytesPerSecond }); },
   });}catch(primary){const secondary:unknown[]=[];try{await broker.close();}catch(error){secondary.push(error);}try{jobserver.close();}catch(error){secondary.push(error);}try{fleetServer?.close();}catch(error){secondary.push(error);}if(secondary.length)throw new AggregateError([primary,...secondary],"Native timeline initialization and resource retirement failed");throw primary;}
   const completions = new Map<string, Completion>();
+  const producers = new Set<Completion>();
   const completion = (name: string): Completion => {
     let row = completions.get(name);
     if (!row) {
@@ -578,7 +581,14 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
       row = { promise, resolve: () => { if (!row!.settled) { row!.settled = true; accept(); } }, reject: (error) => { if (!row!.settled) { row!.settled = true; refuse(error); } }, settled: false };
       completions.set(name, row);
       const group = /^components:(.+)$/u.exec(name), named = /^(?!(?:job|pass|provenance|components):)([A-Za-z0-9_-]{1,128}):([a-z][a-z0-9-]{0,47})$/u.exec(name), instances = group ? components : named ? components.filter((key) => key.endsWith(`/${named[1]}`)) : [], owner = unlinked.get(name.slice(0, name.lastIndexOf(":")));
-      if (instances.length) Promise.all(instances.map((key) => completion(`${key}:${(group ?? named)![group ? 1 : 2]}`).promise)).then(row.resolve, row.reject);
+      if (instances.length) {
+        producers.add(row);
+        void Promise.allSettled(instances.map((key) => completion(`${key}:${(group ?? named)![group ? 1 : 2]}`).promise)).then(results => {
+          const failed = results.find(result => result.status === "rejected");
+          if (failed) row.reject(failed.reason);
+          else row.resolve();
+        });
+      }
       else if (owner) row.reject(owner);
     }
     return row;
@@ -589,6 +599,9 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
     for (const [name, row] of completions) if (name.startsWith(`${component}:`)) row.reject(error);
   };
   const pending = new Set<Promise<void>>();
+  const rejectUnissuedCompletions = (error: unknown): void => {
+    for (const completion of completions.values()) if (!producers.has(completion)) completion.reject(error);
+  };
   const track = (task: Promise<void>): void => { pending.add(task); void task.then(() => pending.delete(task), () => pending.delete(task)); };
   let firstStageFailure: { error: unknown } | undefined;
   const work = (component:string,name:string,after:readonly string[],run:(parallelism:number,control:CompilerAdmissionControl)=>Promise<void>,done?:Completion,intent:NativeBuildStageCapacityV1|"jobserver"="single"):void=>{
@@ -603,8 +616,8 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
     let refusal: { error: unknown; blocked: boolean } | undefined;
     const ready = async (): Promise<boolean> => {
       await dependenciesDrained;
-      if (!cleanup && dependencyFailure) {
-        refusal = { error: dependencyFailure.error, blocked: true };
+      if (!cleanup && (dependencyFailure || stopped)) {
+        refusal = { error: dependencyFailure ? dependencyFailure.error : stopReason, blocked: true };
         return false;
       }
       readyMs = Date.now();
@@ -617,13 +630,13 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
       stagesRunning++;
       startMs = Date.now();
       try {
-        if (!cleanup) check();
         try {
+          if (!cleanup) check();
           await run(parallelism, control);
           ok = true;
         } catch (error) {
-          if (intent === "jobserver" || control.signal.aborted) throw error;
-          refusal = { error, blocked: false };
+          if (control.signal.aborted) throw error;
+          refusal = { error, blocked: !cleanup && stopped && Object.is(error, stopReason) };
         }
       } finally {
         stagesRunning--;
@@ -670,6 +683,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
       if (waiting) stagesWaiting--;
       if (startMs !== undefined) stages.push({component,stage:name,readyMs,startMs,endMs:Date.now(),ok});
     }));
+    if (done) producers.add(done);
   };
   const provenanceOf = new Map<string, Promise<ObservedPassV1>>();
   const leavesReport: Record<string, unknown> = {};
@@ -678,7 +692,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
     parallelism=nativeBuildJobWorkerBudgetV1(job.workerProtocol,jobserver.config.tokens,()=>parallelism);
     const environment=withoutJobserverEnvironmentV1(jobEnvironmentOf(job,{early:{SEMIO_COMPILER_PARALLELISM:String(parallelism)},late:{[ADMISSION_POLICY_V1.brokerEnvironment]:broker.endpoint,[ADMISSION_POLICY_V1.passEnvironment]:job.id}}));
     delete environment.SEMIO_COMPILER_CAPACITY_HELD;
-    const execute=async(inputs:CargoCompilerInputsViewV1):Promise<void>=>withRequestedIssuedResourceControlV1(jobControl,0,async control=>{
+    const execute=async(inputs:CargoCompilerInputsViewV1):Promise<{error:unknown}|undefined>=>withRequestedIssuedResourceControlV1(jobControl,0,async control=>{
       const signal = control.signal;
       const checkAttempt = (): void => { check(); checkResourceLeaseControl(control); checkResourceLeaseControl(inputs.control); };
       checkAttempt();
@@ -717,16 +731,24 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
           finally { signal.removeEventListener("abort", stop); children.delete(child); jobWatches.delete(job.id); }
         }
       };
-      await runNativeBuildJobAttemptsV1({
-        id: job.id, logPath: join(generation.logs, jobLogNames.get(job.id)!), signal, check: checkAttempt, log,
-        logLimitBytes: policy.logLimitBytes, tailLines: policy.stderrTailLines, tailLineChars: policy.stderrLineChars,
-      }, async capture => {
-        await options.storage.recheck();
-        checkAttempt();
-        return job.workerProtocol === "jobserver" ? (fleetServer ?? jobserver).withClient(inherited => attempt(capture, inherited)) : attempt(capture);
-      });
+      try {
+        await runNativeBuildJobAttemptsV1({
+          id: job.id, logPath: join(generation.logs, jobLogNames.get(job.id)!), signal, check: checkAttempt, log,
+          logLimitBytes: policy.logLimitBytes, tailLines: policy.stderrTailLines, tailLineChars: policy.stderrLineChars,
+        }, async capture => {
+          await options.storage.recheck();
+          checkAttempt();
+          return job.workerProtocol === "jobserver" ? (fleetServer ?? jobserver).withClient(inherited => attempt(capture, inherited)) : attempt(capture);
+        });
+      } catch (error) {
+        if (signal.aborted) throw error;
+        return { error };
+      }
     },inputs.control.signal);
-    const manifest=nativeBuildJobManifestV1(job);if(manifest)await withNativeBuildCargoInputsV1(options,{manifest,cwd:job.cwd,arguments:job.command.slice(1),environment,control:options.control},execute);else await execute({arguments:job.command.slice(1),environment,control:options.control});
+    const manifest=nativeBuildJobManifestV1(job);
+    const request={arguments:job.command.slice(1),environment,control:admission};
+    const failed=manifest ? await withNativeBuildCargoInputsV1(options,{...request,manifest,cwd:job.cwd},execute) : await execute(request);
+    if(failed)throw failed.error;
   }, completion(`job:${job.id}`), job.workerProtocol==="jobserver"?"jobserver":job.workerProtocol==="exclusive"?"whole-host":"available");
 
   const progress = setInterval(() => {
@@ -889,6 +911,8 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
     finally { inflight.delete(pass.id); release(); }
   };
   const runAdmittedPass = (pass: NativeBuildPassV1, held: PassJobSlotV1): Promise<void> => {
+    const strictFleet = held === "fleet" && parentMemoryAllowanceBytes !== undefined;
+    let placementFailed=false;
     const retryWarm = retryWarmPlan && pass.id === plan.passes[0]?.id;
     const withholdLink = retryWarm && pass.packages.length === 1;
     const sourceCapture = sourceWitness;
@@ -927,7 +951,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
     const slot = held === "local" ? await jobserver.acquire(signal) : undefined;
     try {
       checkPass();
-      broker.registerPass({id:pass.id,profile:pass.profile,target:pass.target});
+      broker.registerPass({id:pass.id,profile:pass.profile,target:pass.target,...strictFleet?{placement:"fleet-only"}:{}});
       const port = options.cargo ?? {command:"cargo",args:[]};
       await ensureCargoLockCurrentV1({workspaceRoot:options.cwd,cwd:options.cwd,program:port.command,prefix:port.args,args,environment:inputs.environment,control:effectControl,force:false});
       const compile = (suffix:string,mayRetry?: (drift:CargoSourceDriftV1)=>boolean) => (fleetServer ?? jobserver).withClient(async inherited => {
@@ -935,9 +959,9 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
         const startMs = Date.now(), units: {message:any;evidence:unknown}[] = [], buildScripts:unknown[] = [], linked=new Map<string,string>();
         const sourceAttempt = withholdLink ? new CargoSourceAttemptV1(admittedDigests) : undefined;
         const missingWitnesses = new Map<string, { claim: CargoDepInfoChecksumV1; drift: CargoSourceDriftV1 }>();
-        let stream = !retryWarm;
+        let stream = !retryWarm && !strictFleet;
         const compilerErrors = new Map<string,Set<string>>(), passFiles = new Set<string>(), attemptFailures:string[] = [];
-        const child = spawn(port.command, [...port.args, ...args], {windowsHide:true, cwd: options.cwd, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"], env: scriptResourceProcessEnvironmentV1(effectControl,{ ...withoutJobserverEnvironmentV1(inputs.environment), SEMIO_COMPILER_PARALLELISM:String(tokens), SEMIO_BUILD_MODE: profileBuildModeV1(pass.profile), ...cargoJobs, ...inherited, RUSTC_WRAPPER: scheduler, ...compilerWrapperEnvironmentV1(scheduler, nativeBuildLaneRootV1(generation), options.environment), [ADMISSION_POLICY_V1.brokerEnvironment]: broker.endpoint, [ADMISSION_POLICY_V1.passEnvironment]: pass.id, CARGO_TARGET_DIR: generation.target, CARGO_BUILD_BUILD_DIR: generation.build, SEMIO_COMPILER_RESOURCE_ROOT: join(generation.build, "semio-compiler-resources"), CARGO_UNSTABLE_FEATURE_UNIFICATION: "true", CARGO_RESOLVER_FEATURE_UNIFICATION: policy.featureUnification, CARGO_TERM_COLOR: "never" }) });
+        const child = spawn(port.command, [...port.args, ...args], {windowsHide:true, cwd: options.cwd, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"], env: scriptResourceProcessEnvironmentV1(effectControl,{ ...withoutJobserverEnvironmentV1(inputs.environment), SEMIO_COMPILER_PARALLELISM:String(tokens), SEMIO_BUILD_MODE: profileBuildModeV1(pass.profile), ...cargoJobs, ...inherited, RUSTC_WRAPPER: scheduler, ...compilerWrapperEnvironmentV1(scheduler, nativeBuildLaneRootV1(generation), options.environment), [ADMISSION_POLICY_V1.brokerEnvironment]: broker.endpoint, [ADMISSION_POLICY_V1.passEnvironment]: pass.id, [ADMISSION_POLICY_V1.placementEnvironment]: strictFleet ? "fleet-only" : undefined, CARGO_TARGET_DIR: generation.target, CARGO_BUILD_BUILD_DIR: generation.build, SEMIO_COMPILER_RESOURCE_ROOT: join(generation.build, "semio-compiler-resources"), CARGO_UNSTABLE_FEATURE_UNIFICATION: "true", CARGO_RESOLVER_FEATURE_UNIFICATION: policy.featureUnification, CARGO_TERM_COLOR: "never" }) });
         const terminal=nativeBuildChildTerminalV1(child);children.add(child);
         const storageCheck = setInterval(() => {
           if (stopped || child.exitCode !== null || child.signalCode !== null) return;
@@ -1004,7 +1028,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
                   if (stream) prefetch(message);
                   if (component && !linked.has(component.package.name)) {
                     linked.set(component.package.name, component.wasm);
-                    if (!stream && pass.packages.length > 1) {
+                    if (!stream && !strictFleet && pass.packages.length > 1) {
                       stream = true;
                       for (const unit of units) prefetch(unit.message);
                     }
@@ -1042,6 +1066,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
             })(),
             (async () => { for await (const line of createInterface({ input: child.stderr!, crlfDelay: Infinity })) { diagnostics.write(line); errors.push(line); if (line.trim() && !/^\s*(Compiling|Fresh|Checking|Downloaded)\b/u.test(line)) { stderrTail.push(line.length > policy.stderrLineChars ? `${line.slice(0, policy.stderrLineChars)}…` : line); if (stderrTail.length > policy.stderrTailLines) stderrTail.shift(); } } })());
           const [exit]=await Promise.all([terminal,...streams]);
+          placementFailed=strictFleet&&broker.placementFailed(pass.id);
           const earlyDrift=exit===0?undefined:failedSpanDrift??sourceWatch?.drift();
           if(earlyDrift&&driftStopMs!==undefined){
             driftRetirements.push({pass:pass.id,started:startMs,stopped:driftStopMs,ended:Date.now()});
@@ -1051,7 +1076,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
            const missingWitnessDrift=exit===0&&linked.size&&sourceCapture
              ? [...missingWitnesses.values()].find(({claim})=>!sourceCapture.canTransfer(claim.path,claim))?.drift
              : undefined;
-           return {exit,startMs,units,buildScripts,linked,compilerErrors,passFiles,attemptFailures,stderrTail,errors,mixedSources,missingWitnessDrift,earlyDrift};
+           return {exit,startMs,units,buildScripts,linked,compilerErrors,passFiles,attemptFailures,stderrTail,errors,mixedSources,missingWitnessDrift,earlyDrift,placementFailed};
         }catch(error){primary={error};throw error;}finally {
           clearInterval(storageCheck);
           try{await finishNativeBuildChildV1(child,terminal,streams,primary,logs.map(log=>()=>log.close()));}
@@ -1066,6 +1091,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
       });
       let receiptGraph:CargoUnitGraphV1 | undefined;
       const outcome = await runCargoPassAttemptsV1(compile,async failed => {
+        if(failed.placementFailed)return undefined;
          if(failed.mixedSources||failed.missingWitnessDrift)return failed.mixedSources??failed.missingWitnessDrift;
         if(failed.earlyDrift)return failed.earlyDrift;
         if (!retryWarm || failed.exit === 0 || failed.linked.size || killedUnitsV1(broker.units().filter(unit=>unit.pass===pass.id&&unexpectedKill(unit))).length) return undefined;
@@ -1117,6 +1143,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
         unitGraphs.set(pass.id,Promise.resolve(receiptGraph));
         log(`[native-build] ${pass.id}: recompiling in the held lane because compiler evidence disagrees on ${drift.path}`);
       });
+      if(outcome.placementFailed)return;
       const {exit,startMs,units,buildScripts,linked,passFiles,attemptFailures,stderrTail,errors}=outcome;
       for (const file of passFiles) failedFiles.add(file);
       failureLines.push(...attemptFailures);
@@ -1131,6 +1158,12 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
           throw concurrentEditV1("bytes",path,`${reason} (BLAKE3 and byte lengths ${expected} versus ${observed})`,"build");
         }
         if (exit !== 0) { for (const name of linked.keys()) withheld.add(name); linked.clear(); }
+        for (const row of pass.packages) {
+          const wasm = linked.get(row.name);
+          if (wasm) streamComponent(pass,row,wasm);
+        }
+      } else if (strictFleet) {
+        for (const unit of units) prefetch(unit.message);
         for (const row of pass.packages) {
           const wasm = linked.get(row.name);
           if (wasm) streamComponent(pass,row,wasm);
@@ -1197,7 +1230,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
       finishedPasses.add(pass.id);
       reclaimPass(pass, units.map((row) => row.message));
     } finally { slot?.release(); }
-  },inputs.control.signal));
+  },inputs.control.signal)).then(()=>{if(placementFailed)throw new FleetPlacementFailedErrorV1(pass.id);});
   };
   let executionFailure: { message: string } | undefined;
   try {
@@ -1214,20 +1247,25 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
     await admitNativeBuildUpfrontV1({ partition: volumeMountOfV1(dirname(storageRoot)), batches, reserveBytes, free: () => availableOn(dirname(storageRoot)), slack: upfrontSlackBytes, check, log, ...(options.reclaimStorage ? { reclaim: options.reclaimStorage } : {}) });
     const passes = batches.map((row) => row.pass);
     for (const row of batches) if (row.pass.id !== row.parent) log(`[native-build] ${row.pass.id}: ${row.pass.packages.length} component(s), predicted ${(row.bytes / 1024 ** 2).toFixed(0)} MiB of ${((budget - reserveBytes) / 1024 ** 2).toFixed(0)} MiB free above the reserve${row.measured ? "" : " (unmeasured units estimated by kind)"}`);
-  const lanes = [...new Set([...passes.map((pass) => pass.profile), ...jobs.flatMap((job) => job.lane === undefined ? [] : [job.lane])])].map((profile) => ({ jobs: jobs.filter((job) => job.lane === profile), passes: passes.filter((pass) => pass.profile === profile) }));
+    const lanes = [...new Set(passes.map(pass => pass.profile))].map(profile => passes.filter(pass => pass.profile === profile));
     const sampleLocalMemory = options.localJobs?.sample ?? (async (memorySignal: AbortSignal): Promise<LocalJobSampleV1> => { const host = await readCompileUnitsHostV1({ environment: options.environment, signal: memorySignal }); return { availableMegabytes: host.availableMegabytes, ownedMegabytes: Math.floor(broker.stats().actualRunningBytes / 1048576), pressure: host.pressure }; });
     const localFloorMegabytes = options.localJobs?.floorMegabytes ?? Math.ceil(admissionReserveBytesV1(admissionMemoryBytesV1()) / 1048576);
     const localPeakMegabytes = async (pass: NativeBuildPassV1): Promise<number> => options.localJobs?.peakMegabytes?.(pass) ?? componentPassPeakMegabytesV1(await (historyWrites.then(() => readUnitHistoryV1(historyPath))), pass, tokens);
-    const local = localJobsAllowed > 1 ? { maximum: localJobsAllowed, floorMegabytes: localFloorMegabytes, peak: localPeakMegabytes, sample: () => sampleLocalMemory(signal), report: (pass: NativeBuildPassV1, event: Readonly<{ kind: "waiting" | "started"; running: number; peakMegabytes: number; freeMegabytes: number; floorMegabytes: number; reason: string }>) => log(describeLocalComponentJobsV1(event.kind, { pass: pass.id, running: event.running, peak: event.peakMegabytes, free: event.freeMegabytes, floor: event.floorMegabytes, reason: event.reason })) } : undefined;
-    if (local) {
+    const local = { maximum: localJobsAllowed, floorMegabytes: localFloorMegabytes, peak: localPeakMegabytes, sample: () => sampleLocalMemory(signal), report: (pass: NativeBuildPassV1, event: Readonly<{ kind: "waiting" | "started"; running: number; peakMegabytes: number; freeMegabytes: number; floorMegabytes: number; reason: string }>) => log(describeLocalComponentJobsV1(event.kind, { pass: pass.id, running: event.running, peak: event.peakMegabytes, free: event.freeMegabytes, floor: event.floorMegabytes, reason: event.reason })) };
+    if (localJobsAllowed > 1) {
       const offloadable = passes.filter(row => nativeBuildPassOffloadableV1(row)).slice(0, 8), sample = await sampleLocalMemory(signal).catch(() => ({ availableMegabytes: null, ownedMegabytes: 0, pressure: null }) as LocalJobSampleV1);
       if (offloadable.length > 1) { const peaks = await Promise.all(offloadable.map(localPeakMegabytes)), planned = planLocalComponentJobsV1({ tokens: localJobsAllowed, availableMegabytes: sample.availableMegabytes === null ? null : Math.floor(sample.availableMegabytes), floorMegabytes: localFloorMegabytes, pressure: sample.pressure, peaksMegabytes: peaks }); log(describeLocalComponentJobsV1("plan", { operation: "component build", jobs: planned.jobs, reason: planned.reason, available: sample.availableMegabytes ?? 0, floor: localFloorMegabytes, peak: Math.max(...peaks) })); }
     }
-    const fleetOptions = fleetLive ? { maximum: componentJobsLimitV1 - 1, slots: () => options.fleetSlots!({ crates: offloadableCrates, signal }), ...componentFleetChargeV1, sample: () => sampleLocalMemory(signal), report: (pass: NativeBuildPassV1, event: FleetJobEventV1) => log(describeFleetComponentJobsV1(event.kind, { pass: pass.id, running: event.running, slots: event.slots ?? 0, footprint: event.footprintMegabytes, peak: event.peakMegabytes, free: event.freeMegabytes, floor: event.floorMegabytes, waitsFor: event.waitsFor ?? "fleet", reason: event.fleetReason ?? "fleet-none", localReason: event.localReason ?? "local-memory" })) } : undefined;
+    const fleetOptions = fleetLive ? { maximum: componentJobsLimitV1 - 1, slots: () => options.fleetSlots!({ crates: offloadableCrates, signal }), waitForCompatibleSlot: true, ...componentFleetChargeV1, sample: () => sampleLocalMemory(signal), report: (pass: NativeBuildPassV1, event: FleetJobEventV1) => log(describeFleetComponentJobsV1(event.kind, { pass: pass.id, running: event.running, slots: event.slots ?? 0, footprint: event.footprintMegabytes, peak: event.peakMegabytes, free: event.freeMegabytes, floor: event.floorMegabytes, waitsFor: event.waitsFor ?? "fleet", reason: event.fleetReason ?? "fleet-none", localReason: event.localReason ?? "local-memory" })) } : undefined;
     if (fleetOptions) log(describeFleetComponentJobsV1("plan", { operation: "component build", local: localJobsAllowed, fleet: fleetOptions.maximum, footprint: fleetOptions.footprintMegabytes, seconds: Math.round(fleetOptions.pollMilliseconds / 1000), slots: await options.fleetSlots!({ crates: offloadableCrates, signal }).catch(() => undefined) ?? 0 }));
-    await Promise.all(lanes.map(async (lane) => {
-      await runPassesInJobSlotsV1(lane.passes, { jobs: componentJobsTotal, check, run: runPass, signal, ...local ? { local } : {}, ...fleetOptions ? { fleet: fleetOptions } : {}, ...componentJobsTotal > 1 ? { fail: stop } : {} });
-    }));
+    const memorySlots = parentMemoryAllowanceBytes !== undefined
+      ? { parentMemory: new ParentComponentMemoryV1(Math.floor(parentMemoryAllowanceBytes / 1048576), Math.ceil(process.memoryUsage().rss / 1048576)), local: { ...local, footprintMegabytes: componentFleetChargeV1.footprintMegabytes } }
+      : localJobsAllowed > 1 ? { local } : {};
+    const settledLanes = await Promise.allSettled(lanes.map(lane =>
+      runPassesInJobSlotsV1(lane, { jobs: componentJobsTotal, check, run: runPass, signal, ...memorySlots, ...fleetOptions ? { fleet: fleetOptions } : {}, ...componentJobsTotal > 1 || lanes.length > 1 ? { fail: stop } : {} }),
+    ));
+    const failedLane = settledLanes.find(row => row.status === "rejected");
+    if (failedLane) { check(); throw failedLane.reason; }
     let sealFailure: { error: unknown } | undefined;
     if (!failures.length) {
       const compilerWork = await Promise.allSettled([...provenanceOf.values(), ...pendingReclaims, prefetching]);
@@ -1258,6 +1296,8 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
       custodyClosed = true;
     }
   } catch (error) {
+    stop(error);
+    rejectUnissuedCompletions(stopReason);
     executionFailure = { message: error instanceof Error ? error.message : String(error) };
     failureLines.push(`[driver] ${executionFailure.message}`);
     throw error;
@@ -1305,12 +1345,38 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   finally{for(const scope of compilationScopes)scope.accepting=false;for(const scope of compilationScopes){while(scope.pending.size)await Promise.allSettled([...scope.pending]);scope.live=false;}let cleanupFailed=false,cleanupFailure:unknown;try{await inputContinuations.close();}catch(error){cleanupFailed=true;cleanupFailure=error;}if(options.retainCompilationBytes!==undefined)try{rmSync(join(generation.root,"q"),{recursive:true,force:true});}catch(error){if(!cleanupFailed){cleanupFailed=true;cleanupFailure=error;}}if (generation.kind === "fresh") for (const directory of [generation.target, generation.build])try{rmSync(directory,{recursive:true,force:true});}catch(error){if(!cleanupFailed){cleanupFailed=true;cleanupFailure=error;}}if(!consumerFailed&&cleanupFailed)throw cleanupFailure;}
   };
   };
-  for(const id of nativeBuildPrerequisiteOrderV1(jobs)){const job=jobs.find(row=>row.id===id);if(!job)throw Error("Actual prerequisite job required");runJob(job);}
-  try{await Promise.all(jobs.map(job=>completion(`job:${job.id}`).promise));}catch(error){const failed=failures.filter(row=>row.pass==="job").map(row=>row.package),named=new AggregateError([error],`Native build job failed (remaining jobs cancelled): ${failed.join(", ")||"unknown"}: ${error instanceof Error?error.message:String(error)}`);stop(named);while(pending.size)await Promise.allSettled([...pending]);if(signal.aborted)throw stopReason;throw named;}
-  while(pending.size)await Promise.all([...pending]);check();
-  const requests=nativeBuildPassInputRequestsV1(plan,{cwd:options.cwd,build:generation.build,target:generation.target,environment:inputEnvironment,control:options.control});
-  const withPassInputs=options.withPassInputs,first=requests[0];if(!first)throw Error("Actual declared pass input required");
-  let completed:undefined|(()=>Promise<NativeBuildOutcomeV1>);await planContinuations.start(consume=>withCargoCompilerInputsV1(first,withPassInputs?(request,consume)=>withPassInputs(requests,control=>consume(Object.freeze({...request,control}))):undefined,consume),async actual=>{completed=await withNestedInputOwnersRetiredV1(inputContinuations,()=>executePasses(actual.control));});if(!completed)throw Error("Actual completed compiler continuation required");if(!options.consume&&options.retainCompilationBytes===undefined){await inputContinuations.close();await planContinuations.close();}return completed;
+  const jobsById = new Map(jobs.map(job => [job.id, job]));
+  const orderedJobs = jobOrder.map(id => jobsById.get(id)!);
+  const passJobs = nativeBuildPassPrerequisitesV1(orderedJobs, plan.stageAfter ?? {});
+  const jobCompletion = (job: NativeBuildJobV1) => completion(`job:${job.id}`).promise;
+  void Promise.all(orderedJobs.map(jobCompletion)).catch(error => {
+    const failed = failures.filter(row => row.pass === "job").map(row => row.package);
+    stop(new AggregateError([error], `Native build job failed (remaining jobs cancelled): ${failed.join(", ") || "unknown"}: ${error instanceof Error ? error.message : String(error)}`));
+  });
+  try {
+    for (const job of orderedJobs) runJob(job);
+    await Promise.all(passJobs.map(jobCompletion));
+    check();
+    const requests = nativeBuildPassInputRequestsV1(plan, { cwd: options.cwd, build: generation.build, target: generation.target, environment: inputEnvironment, control: options.control });
+    const withPassInputs = options.withPassInputs, first = requests[0];
+    if (!first) throw Error("Actual declared pass input required");
+    let completed: undefined | (() => Promise<NativeBuildOutcomeV1>);
+    await planContinuations.start(
+      consume => withCargoCompilerInputsV1(first, withPassInputs ? (request, consume) => withPassInputs(requests, control => consume(Object.freeze({ ...request, control }))) : undefined, consume),
+      async actual => { completed = await withNestedInputOwnersRetiredV1(inputContinuations, () => executePasses(actual.control)); },
+    );
+    if (!completed) throw Error("Actual completed compiler continuation required");
+    if (!options.consume && options.retainCompilationBytes === undefined) {
+      await inputContinuations.close();
+      await planContinuations.close();
+    }
+    return completed;
+  } catch (error) {
+    stop(error);
+    rejectUnissuedCompletions(stopReason);
+    await disposeDriver().catch(failure => log(`[native-build] shutdown: ${failure instanceof Error ? failure.message : String(failure)}`));
+    throw stopReason;
+  }
   }));
   } catch(error){primaryFailed=true;if(!(error instanceof ResourceLoanDeadlineExhaustedV1||stopped&&signal.aborted&&Object.is(error,signal.reason)))throw error;stop(ended(error));throw stopReason;}finally {for(const lease of buildLeases.reverse())try{lease.release();}catch{}for(const scope of compilationScopes)scope.accepting=false;for(const scope of compilationScopes){while(scope.pending.size)await Promise.allSettled([...scope.pending]);scope.live=false;}let cleanupFailed=false,cleanupFailure:unknown;try{await dispose?.();}catch(error){cleanupFailed=true;cleanupFailure=error;}try{await inputContinuations.close();}catch(error){if(!cleanupFailed){cleanupFailed=true;cleanupFailure=error;}}try{if(options.retainCompilationBytes!==undefined)rmSync(join(generation.root,"q"),{recursive:true,force:true});}catch(error){if(!cleanupFailed){cleanupFailed=true;cleanupFailure=error;}}try{await planContinuations.close();}catch(error){if(!cleanupFailed){cleanupFailed=true;cleanupFailure=error;}}finally{if(deadline)clearTimeout(deadline);signal.removeEventListener("abort",abortStop);}if(!primaryFailed&&cleanupFailed)throw cleanupFailure; }
  });

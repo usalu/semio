@@ -27,7 +27,6 @@ _engine = importlib.import_module("manim")
 
 INK, MUTED, STRUCT, SERV, DATA, GOOD, WARN, GLASS, CONCRETE, ARCH = (
     getattr(_visuals, name) for name in ("INK", "MUTED", "STRUCT", "SERV", "DATA", "GOOD", "WARN", "GLASS", "CONCRETE", "ARCH"))
-BACKGROUND = _draft.BACKGROUND
 LABEL, SMALL = 19.2, 17.0
 LEFT, WIN_H = -7.05, 5.0
 COLS = {"A:B": 6.2, "C:F": 7.6, "A:D": 10.0, "A:B+": 8.0, "D:F": 6.4}
@@ -400,7 +399,7 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         """⛓️ A framed list of dependent cells: the label on one line and the live value under it."""
         pitch, width = 0.56, 3.7
         height = pitch * len(rows) + 0.2
-        frame = _engine.Rectangle(width=width, height=height, stroke_color=MUTED, stroke_width=_draft.W_THIN, fill_color=BACKGROUND, fill_opacity=0.9)
+        frame = _visuals._art.window_frame(width, height, color=MUTED, stroke_width=_draft.W_THIN)
         frame.move_to(np.array([at[0], at[1], 0.0]))
         panel = _engine.VGroup(frame)
         top = at[1] + height / 2 - 0.1 - pitch / 2

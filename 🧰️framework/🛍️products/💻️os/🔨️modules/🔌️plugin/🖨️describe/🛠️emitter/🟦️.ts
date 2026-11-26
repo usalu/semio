@@ -23,7 +23,7 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {join,basename} from "node:path";
 import {lstat} from "node:fs/promises";
 import {assertSealedFilesV1} from "./🔏️sealed/🟦️.ts";
-import {staleDescriptorEmitterInputsV1} from "./🌡️freshness/🟦️.ts";
+import {staleDescriptorEmitterCargoInputsV1,staleDescriptorEmitterInputsV1} from "./🌡️freshness/🟦️.ts";
 import {ensureFreshDescriptorEmitterWithV1,descriptorEmitterPrerequisiteResourceV1} from "./🥾️prerequisite/🟦️.ts";
 
 declare const emitterBrand:unique symbol;
@@ -66,7 +66,11 @@ export function ensureFreshDescriptorEmitterV1(workspace:string,invocation:Scrip
    inspect:async()=>{
     if(await descriptorEmitterAbsentV1(request.path,intent,actual))return {kind:"missing"};
     try{
-     const {stale}=await withDescriptorEmitterV1(workspace,invocation,phase(),emitter=>withDescriptorEmitterTaskV1(emitter,invocation,tool=>staleDescriptorEmitterInputsV1(tool.observation,workspace,tool.control.signal)));
+     const stale=await withDescriptorEmitterV1(workspace,invocation,phase(),emitter=>withDescriptorEmitterTaskV1(emitter,invocation,async tool=>{
+      const sources=await staleDescriptorEmitterInputsV1(tool.observation,workspace,tool.control.signal);
+      const cargo=await staleDescriptorEmitterCargoInputsV1(decodeCargoProvenanceV1(tool.observation),workspace,tool.compilation,tool.control.signal);
+      return [...sources.stale,...cargo.stale].sort();
+     }));
      return stale.length?{kind:"stale",changed:stale.length,first:stale[0]!}:{kind:"fresh"};
     }catch(error){
      actual.signal.throwIfAborted();

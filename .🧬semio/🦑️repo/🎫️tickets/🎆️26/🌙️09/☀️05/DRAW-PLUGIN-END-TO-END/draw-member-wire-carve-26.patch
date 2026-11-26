@@ -1,0 +1,160 @@
+--- /dev/null
++++ ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/📥️decode/📦️packages/🦀️rust/Cargo.toml
+@@ -0,0 +1,22 @@
++[package]
++workspace = "../../../../../../../../../../.."
++name = "semio-draw-member-decode"
++version.workspace = true
++edition.workspace = true
++rust-version.workspace = true
++description = "Draw member original operation JSON decoding"
++
++[package.metadata.semio]
++role = "library"
++
++[lints]
++workspace = true
++
++[lib]
++path = "../../🦀️.rs"
++
++[dependencies]
++semio-framework-pack-json = { workspace = true }
++semio-framework-value = { workspace = true }
++semio-framework-value-native-owned = { workspace = true }
++semio-s-artifact-draw-drawing-mutations = { workspace = true }
+--- /dev/null
++++ ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/📥️decode/🦀️.rs
+@@ -0,0 +1,22 @@
++//! 📥️ Draw member JSON advances its original operation and typed receiver under the existing caller loan.
++
++use semio_framework_pack_json::OriginalJsonReceiving;
++use semio_framework_value::{
++    RetainedCloneGrant, RetainedCloneStep, RetainedWorkPoll,
++    native_decoding::owned::OriginalSourceTurnWitness,
++};
++use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl, NativeReceivingFailure};
++use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
++
++/// 🪜️ Advances Draw's typed JSON receiver on the same source witness, with the store retaining its owner.
++#[inline(never)]
++pub fn advance(
++    receiver: &mut OriginalJsonReceiving<DrawingMutation>,
++    context: &mut NativeDecodeControl<'_>,
++    witness: OriginalSourceTurnWitness<'_>,
++    body: usize,
++    work: u64,
++    grant: RetainedCloneGrant,
++) -> RetainedWorkPoll<RetainedCloneStep, NativeReceivingFailure> {
++    receiver.advance(context, witness, body, work, grant)
++}
+--- ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/🦀️.rs
++++ ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/🦀️.rs
+@@ -310,7 +310,7 @@
+   let progress=if self.phase==Phase::Receive{
+    let r=self.receiver.as_mut().ok_or_else(||invalid("drawing original JSON owner vanished"))?;
+    let witness=c.source_witness()?;
+-   match r.advance(c,witness,body,work,g.retained_grant()){
++   match semio_draw_member_decode::advance(r,c,witness,body,work,g.retained_grant()){
+     RetainedWorkPoll::Pending{work}=>{self.work=work_u64(work);Progress::default()},
+     RetainedWorkPoll::Complete(turn)=>{
+      self.work=work_u64(turn.work);
+--- ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/📦️packages/🦀️rust/Cargo.toml
++++ ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/📦️packages/🦀️rust/Cargo.toml
+@@ -16,6 +16,7 @@
+ path = "../../🦀️.rs"
+ 
+ [dependencies]
++semio-draw-member-decode = { workspace = true }
+ semio-framework-pack-json = { workspace = true }
+ semio-framework-value = { workspace = true }
+ semio-framework-value-native-owned = { workspace = true }
+--- ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.toml
++++ ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.toml
+@@ -9,6 +9,7 @@
+     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪜️commands-2/📦️packages/🦀️rust",
+     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/📦️packages/🦀️rust",
+     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/📦️packages/🦀️rust",
++    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/📥️decode/📦️packages/🦀️rust",
+     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust",
+     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🧪️tests/🥣️companion/📦️packages/🦀️rust",
+@@ -231,6 +232,9 @@
+ [workspace.dependencies.semio-s-artifact-draw-drawing-editor-store-preparation]
+ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/📦️packages/🦀️rust"
+ 
++[workspace.dependencies.semio-draw-member-decode]
++path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/📥️decode/📦️packages/🦀️rust"
++
+ [workspace.dependencies.semio-s-artifact-draw-drawing-editor-member-wire]
+ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/📦️packages/🦀️rust"
+ 
+--- ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.lock
++++ ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.lock
+@@ -435,6 +435,16 @@
+  "unicode-ccc",
+  "unicode-properties",
+  "unicode-script",
++]
++
++[[package]]
++name = "semio-draw-member-decode"
++version = "0.1.0"
++dependencies = [
++ "semio-framework-pack-json",
++ "semio-framework-value",
++ "semio-framework-value-native-owned",
++ "semio-s-artifact-draw-drawing-mutations",
+ ]
+ 
+ [[package]]
+@@ -8392,6 +8402,7 @@
+ name = "semio-s-artifact-draw-drawing-editor-member-wire"
+ version = "0.1.0"
+ dependencies = [
++ "semio-draw-member-decode",
+  "semio-framework-pack-json",
+  "semio-framework-value",
+  "semio-framework-value-native-owned",
+--- 🌎️hub/Cargo.lock
++++ 🌎️hub/Cargo.lock
+@@ -4511,6 +4511,16 @@
+ dependencies = [
+  "core-foundation-sys",
+  "libc",
++]
++
++[[package]]
++name = "semio-draw-member-decode"
++version = "0.1.0"
++dependencies = [
++ "semio-framework-pack-json",
++ "semio-framework-value",
++ "semio-framework-value-native-owned",
++ "semio-s-artifact-draw-drawing-mutations",
+ ]
+ 
+ [[package]]
+@@ -35972,6 +35982,7 @@
+ name = "semio-s-artifact-draw-drawing-editor-member-wire"
+ version = "0.1.0"
+ dependencies = [
++ "semio-draw-member-decode",
+  "semio-framework-pack-json",
+  "semio-framework-value",
+  "semio-framework-value-native-owned",
+--- 📋️build-owners.json
++++ 📋️build-owners.json
+@@ -10237,6 +10237,12 @@
+       "name": "semio-document-json-engine",
+       "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/🧩️json/📦️packages/🦀️rust",
+       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml",
++      "packages": []
++    },
++    {
++      "name": "semio-draw-member-decode",
++      "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/📥️decode/📦️packages/🦀️rust",
++      "manifest": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/📥️decode/📦️packages/🦀️rust/Cargo.toml",
+       "packages": []
+     },
+     {

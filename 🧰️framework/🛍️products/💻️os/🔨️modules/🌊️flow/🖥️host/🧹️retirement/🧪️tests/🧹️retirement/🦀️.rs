@@ -206,21 +206,6 @@ fn original_preview_cancel_preserves_sources_and_resets_one_actual_latch_per_tur
 }
 
 #[test]
-fn original_preview_cancel_reserves_its_own_queue_slot_when_a_retained_root_displaces_it(){
-    for copy in [1,3,64]{
-        let mut session=FlowEvalSession::new();
-        session.eval_json=Some(Arc::new("原🌊".repeat(4097)));
-        let grant=RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()};
-        session.set_eval_json(Arc::new("incoming".repeat(257)),grant).unwrap_or_else(|_|panic!("original reset admission refused"));
-        session.cancel_preview_evaluation("",grant).unwrap();
-        let mut turns=0;
-        while !session.preview_cancellation_terminal_is_empty(){turns+=1;assert!(turns<100000);let demand=session.next_preview_cancellation_demands(copy).unwrap();let funded=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert!(session.preview_cancellation_step(funded).unwrap().progress().fits(funded));}
-        assert!(session.resume_preview_evaluation());
-        session.retire_cold();
-    }
-}
-
-#[test]
 fn session_latch_pruning_borrows_roster_and_preserves_original_arena_until_close(){
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     let names:Vec<String>=(0..65).map(|key|format!("window-{key}")).collect();

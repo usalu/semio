@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-stdio-pdf-model-graphics"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "PDF content operators, graphics state and XObjects"
+
+[package.metadata.semio]
+role = "library"
+
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::base::schema::snapshot::model::colour_and_graphics_state",
+  "standards::v1_7::subsets::base::schema::snapshot::model::content_operators",
+  "standards::v1_7::subsets::base::schema::snapshot::model::xobjects",
+]
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-pdf-model-object = { path = "../../../🔗️object-model/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-model-content-values = { path = "../../../🧩️content-values/📦️packages/🦀️rust" }

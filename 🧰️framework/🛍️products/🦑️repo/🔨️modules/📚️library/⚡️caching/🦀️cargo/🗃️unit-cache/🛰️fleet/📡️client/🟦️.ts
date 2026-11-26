@@ -2,6 +2,7 @@ import {createHash} from "node:crypto";
 import {appendFileSync,mkdirSync,readFileSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 import {FLEET_POLICY_V1} from "../🪪️identity/🟦️.ts";
+import {createFleetOutageCheckV1} from "./🧯️outage/🟦️.ts";
 import {fleetCacheRootV1,instanceRefusedV1,readLocalFleetCacheFactsV1} from "../../../../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
 
 const fleet=FLEET_POLICY_V1,EMPTY=createHash("sha256").digest("hex");
@@ -71,7 +72,7 @@ export function createFleetClientV1(settings:FleetSettingsV1,world:Readonly<{fet
  const signedFetch=(): Promise<typeof fetch>=>signing??=import("../../../../../🏗️build/🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts").then(module=>module.fleetSignedFetchV1({root:settings.signedRoot!,audience:"cache"}));
  const request:typeof fetch=world.fetch??(settings.signedRoot===undefined?fetch:(((input:RequestInfo|URL,init?:RequestInit)=>signedFetch().then(send=>send(input,init))) as typeof fetch)),base=`${settings.endpoint}/${settings.instance}`,headers=(extra:Record<string,string>={}):Record<string,string>=>({...(settings.token?{authorization:"Bearer "+settings.token}:{}),...extra});
  const bounded=(milliseconds:number):number=>settings.timeoutMilliseconds===undefined?milliseconds:Math.min(milliseconds,settings.timeoutMilliseconds);
- const downNow=():boolean=>{try{const now=Date.now();return readFileSync(join(settings.stateDirectory,fleet.layout.down),"utf8").split("\n").filter(Boolean).filter(at=>now-Number(at)<fleet.breaker.downMilliseconds).length>=fleet.breaker.downFaults;}catch{return false;}};
+ const downNow=createFleetOutageCheckV1(join(settings.stateDirectory,fleet.layout.down),fleet.breaker.downFaults,fleet.breaker.downMilliseconds);
  const deniedNow=():boolean=>{const path=join(settings.stateDirectory,fleet.layout.denied);if(!fresh(path,fleet.breaker.deniedMilliseconds))return false;try{return readFileSync(path,"utf8")===settings.identity;}catch{return false;}};
  const mark=(fault:FleetFaultV1)=>{
   if(fault==="down"){try{mkdirSync(settings.stateDirectory,{recursive:true});appendFileSync(join(settings.stateDirectory,fleet.layout.down),Date.now()+"\n");}catch{}}

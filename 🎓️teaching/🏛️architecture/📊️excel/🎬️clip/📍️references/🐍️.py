@@ -24,7 +24,6 @@ _m = _visuals._engine
 _S = {}
 
 INK, MUTED, ARCH, SERV, DATA, GOOD, WARN, GLASS = (getattr(_visuals, name) for name in ("INK", "MUTED", "ARCH", "SERV", "DATA", "GOOD", "WARN", "GLASS"))
-BACKGROUND = _draft.BACKGROUND
 LABEL, SMALL = 19.2, 16.2
 SHEET = "Type A"
 WIN_AT, WIN_W, WIN_H = (-2.85, 0.0, 0.0), 8.0, 5.1
@@ -214,7 +213,7 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
 
     def _card(self, width, height, point, top_depth=0.0):
         """🃏 A dark square card behind the right-hand explanations; a ``top_depth`` heading row is one glass chip."""
-        return _visuals._art.window_frame(width, height, color=MUTED, stroke_width=1.2, fill_color=BACKGROUND, fill_opacity=0.92, top_depth=top_depth,
+        return _visuals._art.window_frame(width, height, color=MUTED, stroke_width=1.2, top_depth=top_depth,
                                           top_chips=((0, width),) if top_depth else ()).move_to([point[0], point[1], 0])
 
     def _say(self, string, point, *, size=LABEL, color=INK, edge="c", width=None):

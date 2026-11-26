@@ -7,11 +7,11 @@
 use semio_ui_tui_core::cell::CellBuffer;
 use semio_ui_tui_core::geometry::{Pos, Rect};
 use semio_ui_tui_core::text::{display_width, elide, Elision};
-use semio_ui_tui_core::theme::{Surface, Theme};
+use semio_ui_tui_core::theme::{Theme};
 use crate::widget::{Align, LabelState};
 
 pub fn paint_label(l: &LabelState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
-    let bg = buf.get(rect.x, rect.y).map_or(theme.surface(Surface::Base), |c| c.bg);
+    let bg = buf.owner_background();
     let fg = theme.role(l.role);
     let text = elide(&l.text, rect.width, Elision::End, theme.glyphs.ellipsis());
     let width = display_width(&text);

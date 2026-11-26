@@ -277,7 +277,7 @@ fn expand_record(input: &DeriveInput, vc: &syn::Path, rows: &[CloneRow], variant
     let record = quote!(#rc::record);
     let count = rows.len();
     let idents = rows.iter().map(|row| &row.row).collect::<Vec<_>>();
-    let types = rows.iter().map(|row| &row.ty);
+    let types = rows.iter().map(|row| &row.ty).collect::<Vec<_>>();
     let projects = rows.iter().map(|row| &row.project).collect::<Vec<_>>();
     let indices = (0..count).collect::<Vec<_>>();
     let counts = variants.iter().map(|variant| variant.rows.len());
@@ -293,14 +293,22 @@ fn expand_record(input: &DeriveInput, vc: &syn::Path, rows: &[CloneRow], variant
                 #[allow(unused_variables)]
                 fn variant(source:&#owner)->usize{#select}
                 #[allow(unused_variables)]
-                fn query(&self,row:usize,source:Option<#rc::RetainedCloneRef<'_,#owner>>,visit:&mut dyn FnMut(&dyn #record::RetainedRecordQuery)){match row{#(#indices=>visit(&#record::RetainedRecordField::new(&self.#idents,source.map(|source|#projects))),)*_=>{}}}
+                fn query(&self,row:usize,source:Option<#rc::RetainedCloneRef<'_,#owner>>,visit:&mut dyn FnMut(&dyn #record::RetainedRecordQuery)){match row{#(#indices=><#types as #rc::RetainedClone>::query_record_field(&self.#idents,source.map(|source|#projects),visit),)*_=>{}}}
                 #[allow(unused_variables)]
-                fn drive(&mut self,row:usize,source:Option<#rc::RetainedCloneRef<'_,#owner>>,visit:&mut dyn FnMut(&mut dyn #record::RetainedRecordDrive)){match row{#(#indices=>visit(&mut #record::RetainedRecordFieldMut::new(&mut self.#idents,source.map(|source|#projects))),)*_=>{}}}
+                fn drive(&mut self,row:usize,source:Option<#rc::RetainedCloneRef<'_,#owner>>,visit:&mut dyn FnMut(&mut dyn #record::RetainedRecordDrive)){match row{#(#indices=><#types as #rc::RetainedClone>::drive_record_field(&mut self.#idents,source.map(|source|#projects),visit),)*_=>{}}}
                 fn finish(&mut self,variant:usize)->::core::result::Result<#owner,#vc::ValueError>{match variant{#(#finish,)*_=>Err(#vc::ValueError::invariant("record clone state is invalid"))}}
             }
             impl #impl_generics #rc::RetainedClone for #name #ty_generics #where_clause {
                 type Cursor = #record::RetainedRecordCursor<#owner,#rows_name #ty_generics>;
                 fn retained_clone_cursor() -> Self::Cursor { Default::default() }
+                #[inline(never)]
+                fn query_record_field(row: &#record::RetainedRecordRow<Self>, source: Option<#rc::RetainedCloneRef<'_, Self>>, visit: &mut dyn FnMut(&dyn #record::RetainedRecordQuery)) {
+                    visit(&#record::RetainedRecordField::new(row, source));
+                }
+                #[inline(never)]
+                fn drive_record_field(row: &mut #record::RetainedRecordRow<Self>, source: Option<#rc::RetainedCloneRef<'_, Self>>, visit: &mut dyn FnMut(&mut dyn #record::RetainedRecordDrive)) {
+                    visit(&mut #record::RetainedRecordFieldMut::new(row, source));
+                }
                 #bitwise
             }
         };

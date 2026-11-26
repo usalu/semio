@@ -168,12 +168,15 @@ fn a_wall_with_a_missing_type_is_skipped_with_a_note_instead_of_failing() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_serializer_returns_the_file_as_a_binary_payload_with_a_diagnostic_per_skipped_item() {
-    let clean = ModelIntoIfc2x3::serialize(&house(), &ArchiveChildren::empty()).await.expect("the house serializes");
+    use semio_framework_test_original_snapshot_owners::{original_grant, with_encoding};
+    use semio_os_kernel::io::io_mechanism::IoRunControl;
+    use semio_framework_async::poll::resolve_ready;
+    let clean = with_encoding(|owner| resolve_ready(ModelIntoIfc2x3::serialize(&house(), &ArchiveChildren::empty(), &mut IoRunControl::encoding(owner.native(), original_grant())))).expect("the house serializes");
     assert!(matches!(clean.value, IoPayload::Binary(ref bytes) if bytes.starts_with(b"ISO-10303-21")));
     assert!(clean.diagnostics.is_empty());
     let mut broken = house();
     broken.walls.get_mut("w-free").expect("the free wall").wall_type = "missing".into();
-    let outcome = ModelIntoIfc2x3::serialize(&broken, &ArchiveChildren::empty()).await.expect("it still serializes");
+    let outcome = with_encoding(|owner| resolve_ready(ModelIntoIfc2x3::serialize(&broken, &ArchiveChildren::empty(), &mut IoRunControl::encoding(owner.native(), original_grant())))).expect("it still serializes");
     assert!(outcome.diagnostics.iter().any(|diagnostic| diagnostic.message.contains("w-free")));
 }
 
@@ -268,6 +271,12 @@ fn every_phase_that_is_not_new_work_is_written_once_per_product_and_an_opening_c
 
 #[test]
 fn a_model_of_new_work_writes_no_phase_row() {
-    let document = document(&house());
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
+    let mut model = house();
+    macro_rules! reset {
+        ($($collection:ident),+) => { $( for row in model.$collection.values_mut() { row.phase = Phase::New; } )+ };
+    }
+    reset!(walls, curtain_walls, columns, beams, slabs, roofs, stairs, railings, spaces);
+    let document = document(&model);
     assert!(rows(&document, "IFCPROPERTYSINGLEVALUE").iter().all(|(_, args)| string(args, 0).as_deref() != Some("Phase")));
 }

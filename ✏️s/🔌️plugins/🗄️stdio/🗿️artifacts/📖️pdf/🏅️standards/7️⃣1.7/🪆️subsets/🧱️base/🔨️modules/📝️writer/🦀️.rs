@@ -36,6 +36,7 @@ pub struct DocumentTrailer {
 
 //#region 🔖️Streaming
 /// 📝 An incremental writer: `header`, any number of `object`s (in any order), then `finish`.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct PdfWriter {
     offset: usize,
     offsets: BTreeMap<u32, (usize, u16)>,

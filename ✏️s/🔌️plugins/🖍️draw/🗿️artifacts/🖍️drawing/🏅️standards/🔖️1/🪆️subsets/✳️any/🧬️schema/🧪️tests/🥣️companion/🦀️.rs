@@ -6,7 +6,9 @@ extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
-extern crate semio_framework_pack as pack;
+
+#[path="../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/🎟️work/🧪️tests/🦀️.rs"]
+mod work_fixture;
 
 /// 🧪️ Runs one original lookup turn under a real original action and returns its recorded step.
 pub fn test_step(

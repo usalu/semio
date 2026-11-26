@@ -461,7 +461,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
           className="min-w-0"
           style={{ width: columnWindow ? columnTotal * TABLE_COLUMN_WINDOW_WIDTH_PX : undefined }}
         >
-          <div role="row" aria-rowindex={1} data-shared-border-frame="" data-shared-border-edges="bottom" className="sticky top-0 z-10 grid min-w-0 bg-background text-2xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ gridTemplateColumns: template, height: rowPx }}>
+          <div role="row" aria-rowindex={1} data-shared-border-frame="" data-shared-border-edges="bottom" className="sticky top-0 z-10 grid min-w-0 ui-surface text-2xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ gridTemplateColumns: template, height: rowPx }}>
             {columnLeading > 0 ? <div aria-hidden="true" data-table-column-spacer="leading" /> : null}
             {component.columns.map((column, position) => {
               const logicalColumn = columnLeading + position;

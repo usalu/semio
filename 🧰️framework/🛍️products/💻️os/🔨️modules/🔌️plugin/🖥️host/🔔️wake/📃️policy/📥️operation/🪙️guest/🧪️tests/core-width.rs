@@ -70,11 +70,17 @@ fn fixed_core_guest_grants_fit_wasm32_with_larger_host_source_stock(){
    assert_eq!(driver.original_remaining().unwrap(),physical);
    assert!(physical.maximum_copy_bytes>u32::MAX as usize);
   }
+  let cancellation:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/cancel-crossing.json")).unwrap();
+  assert_eq!(cancellation["canceled"],true);
+  driver.abandon_operation();
+  let ordinary=driver.admit_guest_subloan(&mut lease,GuestRelayGuestPurpose::Semantic,144);
+  let ordinary_kind=ordinary.err().and_then(|fault|fault.primary.and_then(|primary|primary.primary_value().map(|value|value.kind.as_str())));
   let mut cleanup=None;
   for _ in 0..64{
    cleanup=driver.admit_cleanup_guest_subloan(&mut lease,144).unwrap();
    if cleanup.is_some(){break}
   }
+  assert_eq!(cancellation["cleanup"],if cleanup.is_some(){"admitted"}else{"pending"});
   let cleanup=cleanup.unwrap();
   let cleanup_budget=cleanup.budget();
   assert_eq!(cleanup_budget.retained_policy,RetainedCloneGrant{maximum_copy_bytes:caps.infrastructure.retained.maximum_copy_bytes-1,..caps.infrastructure.retained});
@@ -83,6 +89,7 @@ fn fixed_core_guest_grants_fit_wasm32_with_larger_host_source_stock(){
   drop(lease);
   for _ in 0..256{if driver.close_root_step().unwrap(){break}}
   assert!(driver.operation_terminal_is_empty().unwrap());
+  assert_eq!(ordinary_kind,cancellation["ordinary"].as_str());
  }
  for row in law["invalidInfrastructure"].as_array().unwrap(){
   caps.infrastructure.retained=grant(row);

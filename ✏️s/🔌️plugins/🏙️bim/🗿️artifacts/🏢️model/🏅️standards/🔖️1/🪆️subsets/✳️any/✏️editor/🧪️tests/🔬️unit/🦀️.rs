@@ -1,4 +1,5 @@
 use semio_plugin::{ArtifactEditor, DslValue, ViewModel};
+use semio_s_artifact_bim_model_bim::editor::bim::{BIM_TOOL_IDS, BimCommand, BimModelApp, command_actions, create_bim_app};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::{BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
 use semio_s_artifact_bim_model_bim::editor::bim::commands::{analyse_model, canvas_double_click, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, export_model};
 use semio_s_artifact_bim_model_move_storey::editor::bim::commands::{apply_template, conditions, edit_classification, edit_template, place_elements, place_grid_columns, remove_classification, remove_property, search_classification, select_findings, set_classification, set_property, split_wall};
@@ -183,7 +184,7 @@ fn args(value: serde_json::Value) -> DslValue {
 #[test]
 fn the_bridge_folds_host_arguments_into_typed_commands() {
     use serde_json::json;
-    let bridge = |action: &str, value: serde_json::Value| BimModelApp::command_from_action(action, Some((args(value)).clone()), None).unwrap_or_else(|error| panic!("{action} failed to bridge: {}", error.message));
+    let bridge = |action: &str, value: serde_json::Value| BimModelApp::command_from_action(action, &mut Some((args(value)).clone()), &mut None).unwrap_or_else(|error| panic!("{action} failed to bridge: {}", error.message));
     assert_eq!(bridge("createEntity", json!({ "kind": "wall" })), BimCommand::CreateEntity(create_entity::CreateEntity { kind: "wall".into(), parent: String::new(), name: String::new() }));
     assert_eq!(bridge("deleteSelection", json!({ "id": "w-south" })), BimCommand::DeleteSelection(delete_selection::DeleteSelection { ids: vec!["w-south".into()] }));
     assert_eq!(bridge("renameEntity", json!({ "id": "st-first", "value": "Upper" })), BimCommand::RenameEntity(rename_entity::RenameEntity { id: "st-first".into(), name: "Upper".into() }));
@@ -231,7 +232,7 @@ fn the_bridge_folds_host_arguments_into_typed_commands() {
     assert_eq!(bridge("editClassification", json!({ "id": "cs-uni", "op": "add", "value": "Pr_20 | Products" })), BimCommand::EditClassification(edit_classification::EditClassification { id: "cs-uni".into(), op: "add".into(), code: String::new(), title: "Pr_20 | Products".into(), parent: String::new() }));
     assert_eq!(bridge("searchClassification", json!({ "system": "cs-uni", "value": "wall" })), BimCommand::SearchClassification(search_classification::SearchClassification { system: "cs-uni".into(), query: "wall".into() }));
     assert_eq!(bridge("cursorRightFar", json!({})), BimCommand::CursorRightFar(cursor_keys::CursorRightFar {}));
-    assert!(BimModelApp::command_from_action("nonsense", None, None).is_err());
+    assert!(BimModelApp::command_from_action("nonsense", &mut None, &mut None).is_err());
 }
 //#endregion 🔖️ActionBridge
 

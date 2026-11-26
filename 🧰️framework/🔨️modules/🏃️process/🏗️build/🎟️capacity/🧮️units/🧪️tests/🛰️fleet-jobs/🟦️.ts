@@ -15,14 +15,14 @@ test("fleet job fixtures are valid for the schema oracle and planned exactly as 
 });
 test("every state of a generated grid is planned like the Python model",()=>{
  const grid:{host:FleetJobsHostV1}[]=[];
- for(const local of[1,2,4,10,24,47,48,64])for(const fleetIdle of[null,0,1,3,7,40,100,1000])for(const availableMegabytes of[null,0,2048,4096,6000,16000,65536])for(const pressure of[null,"normal","warn","critical"] as const)for(const unitMegabytes of[256,512,2048])grid.push({host:{local,fleetIdle,availableMegabytes,pressure,unitMegabytes}});
+ for(const local of[1,2,4,10,24,47,48,64])for(const fleetIdle of[null,0,1,3,7,40,100,1000])for(const availableMegabytes of[null,0,2048,4096,6000,16000,65536])for(const pressure of[null,"normal","warn","critical"] as const)for(const unitMegabytes of[256,512,2048])for(const grantedMegabytes of[null,704,3072])grid.push({host:{local,fleetIdle,availableMegabytes,pressure,unitMegabytes,grantedMegabytes}});
  const expected=python(grid);expect(grid.length).toBeGreaterThan(5000);
  grid.forEach((row,index)=>expect(planFleetJobsV1(row.host),JSON.stringify(row)).toEqual(expected[index] as never));
 });
 test("the jobs never fall below the local grant, never exceed the cap above it and never use more than the idle slots",()=>{
  const cap=schema.definitions.Policy.const.fleetJobsMaximum;
  for(const local of[1,4,10,47,48,64])for(const fleetIdle of[null,0,1,9,40,500]){
-  const plan=planFleetJobsV1({local,fleetIdle,availableMegabytes:null,pressure:null,unitMegabytes:512});
+  const plan=planFleetJobsV1({local,fleetIdle,grantedMegabytes:null,availableMegabytes:null,pressure:null,unitMegabytes:512});
   expect(plan.local).toBe(local);expect(plan.jobs).toBe(local+plan.remote);expect(plan.remote).toBeLessThanOrEqual(fleetIdle??0);expect(plan.jobs).toBeLessThanOrEqual(Math.max(local,cap));
  }
 });

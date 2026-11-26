@@ -3,6 +3,7 @@
 //! 🔖 `IoFidelity::Lossy`: a sheet shows cuts and projections of the model, never the model.
 //! 📎 https://www.w3.org/TR/SVG11/, https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/PDF32000_2008.pdf
 
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{instance, kinds};
 use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
 use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
@@ -70,7 +71,7 @@ impl Serializer<ModelSnapshot> for ModelIntoSheetsPdf {
     const INTO: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
-        let bytes = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, from, |inferred| sheets_pdf(from, inferred, None, &TitleLabels::english()))
+        let bytes = instance::probe::<{ kinds::SHEETS | kinds::VIEWS }, _>(None, from, |inferred| sheets_pdf(from, inferred, None, &TitleLabels::english()))
             .map_err(|error| error.to_string())
             .and_then(|written| written)
             .map_err(|message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ModelIntoSheetsPdf: {message}"))))?;

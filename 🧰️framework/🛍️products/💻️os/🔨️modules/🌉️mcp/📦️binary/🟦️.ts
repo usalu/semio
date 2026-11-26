@@ -21,8 +21,9 @@ function pathApi(platform: NodeJS.Platform): typeof posix {
 }
 
 /** 📁️ Absolute Cargo target root shared by the build and black-box test gates. */
-export function resolveMcpTargetDirectory(repoRoot: string, env: NodeJS.ProcessEnv = process.env, _platform: NodeJS.Platform = process.platform): string {
-  return cargoTargetDirectory(repoRoot, env);
+export function resolveMcpTargetDirectory(repoRoot: string, env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform): string {
+  const override = env.CARGO_TARGET_DIR ?? env.CARGO_BUILD_TARGET_DIR;
+  return override === undefined ? cargoTargetDirectory(repoRoot, env) : pathApi(platform).resolve(repoRoot, override);
 }
 
 /** 📦️ The exact artifact Cargo's MCP build command must produce for `profile`, ignoring test overrides. */

@@ -39,3 +39,17 @@ fn a_worker_receipt_excludes_the_independently_redeemed_return() {
     assert_eq!(receiving.posted, producer);
     assert_eq!(receiving.before.checked_add(receiving.posted).unwrap(), after);
 }
+
+#[test]
+fn a_history_receipt_smaller_than_the_window_posting_binds_nothing() {
+    use crate::ops_ingress::PluginExchangeOutput;
+    use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
+    let before = RetainedCloneProgress { copied_items: 3, copied_bytes: 40, ..Default::default() };
+    let receipt = RetainedCloneProgress { copied_items: 1, copied_bytes: 17, ..Default::default() };
+    let posted = RetainedCloneProgress { copied_items: 2, copied_bytes: 86, ..Default::default() };
+    let grant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 32768, ..Default::default() };
+    let mut output = PluginExchangeOutput::default();
+    output.history_command_receipt = Some((grant, receipt));
+    output.bind_window_posting(before, before.checked_add(posted).unwrap(), Default::default(), grant, 7).unwrap();
+    assert!(output.original_receiving.is_none() && output.ownership_receipt_pending());
+}

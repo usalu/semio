@@ -3,6 +3,9 @@
 pub mod control;
 #[path="🎟️original/🦀️.rs"]
 pub mod original;
+#[cfg(feature = "testkit")]
+#[path = "🧪️testing/🦀️.rs"]
+pub mod testing;
 use semio_framework_hash::Hasher;
 use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind};
 

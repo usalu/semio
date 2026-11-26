@@ -6,6 +6,7 @@
 //! the weather; windows and doors behind a partition are merged into their wall; curtain walls and surfaces without thermal data are not written (each is a note, a warning of the hop).
 //! 📎 ../../../../../../../../../🔋️energy/🗿️artifacts/🔋️model/🦀️.rs
 
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{instance, kinds};
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::energy::build::{Build, STAGES};
@@ -71,7 +72,7 @@ pub fn inferred_to_energy(model: &ModelSnapshot, inferred: &ModelInference) -> R
 
 /// 🏗️ The energy model of `model`, the inference coming from the shared session: an export after an edit recomputes only what the edit touched.
 pub fn model_to_energy(model: &ModelSnapshot) -> Result<(EnergyModel, Vec<String>), String> {
-    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| inferred_to_energy(model, inferred)).map_err(|error| error.to_string())?
+    instance::probe::<{ kinds::ENERGY }, _>(None, model, |inferred| inferred_to_energy(model, inferred)).map_err(|error| error.to_string())?
 }
 
 /// 📤️ The `.energy` text of `model` plus a note per item that could not be written as it is.

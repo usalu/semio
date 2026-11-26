@@ -642,20 +642,31 @@ fn brep_tessellation_seams_become_shared_mesh_vertices() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_workbench_creates_edits_analyzes_and_converts() {
     let registry = TestGeometryRegistry::new();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../🧫️fixtures/🥽️retained-workbench/🔣️.json")).unwrap();
     let defaults = |id: &str| registry.operator_info(id).unwrap().inputs.iter().fold(Dictionary::new(), |input, channel| match &channel.default {
         Some(value) => input.insert(channel.name.clone(), value.clone()),
         None => input,
     });
     let mut output = registry.dispatch_cold("brep.mesh.box", defaults("brep.mesh.box")).unwrap();
-    for (id, key, value) in [("brep.mesh.inset", "amount", 0.1), ("brep.mesh.extrude", "distance", 0.5)] {
-        let input = defaults(id).insert("mesh", output.get("meshOut").unwrap().clone()).insert(key, Value::Dictionary(number_dictionary(value)));
+    for (id, key) in [("brep.mesh.inset", "amount"), ("brep.mesh.extrude", "distance")] {
+        let input = defaults(id).insert("mesh", output.get("meshOut").unwrap().clone()).insert(key, Value::Dictionary(number_dictionary(fixture[key].as_f64().unwrap())));
         output = registry.dispatch_cold(id, input).unwrap();
+    }
+    let tessellation = read_mesh(&output, "meshOut").unwrap().tessellate().unwrap();
+    let expected = &fixture["mesh"];
+    assert_eq!(tessellation.indices.len() / 3, expected["triangles"].as_u64().unwrap() as usize);
+    for axis in 0..3 {
+        let positions = tessellation.positions.iter().skip(axis).step_by(3).copied().map(f64::from);
+        let minimum = positions.clone().fold(f64::INFINITY, f64::min);
+        let maximum = positions.fold(f64::NEG_INFINITY, f64::max);
+        assert!((minimum - expected["boundingBoxMin"][axis].as_f64().unwrap()).abs() < 1e-6);
+        assert!((maximum - expected["boundingBoxMax"][axis].as_f64().unwrap()).abs() < 1e-6);
     }
     let analyzed = registry.dispatch_cold("brep.mesh.analyze", Dictionary::new().insert("mesh", output.get("meshOut").unwrap().clone())).unwrap();
     let area = read_channel_number(&analyzed, "area").unwrap();
     let volume = read_channel_number(&analyzed, "volume").unwrap();
-    assert!((area - 7.6).abs() < 1e-5);
-    assert!((volume - 1.32).abs() < 1e-5);
+    assert!((area - fixture["area"].as_f64().unwrap()).abs() < 1e-5);
+    assert!((volume - fixture["volume"].as_f64().unwrap()).abs() < 1e-5);
     let brep = registry.dispatch_cold("brep.mesh.toBrep", defaults("brep.mesh.toBrep").insert("mesh", output.get("meshOut").unwrap().clone())).unwrap();
     let handle = read_geometry(&brep, "geometry").unwrap();
     let transfer = registry.session.with_kernel_read(|kernel| kernel.tessellate(&handle, 0.1).map_err(|error| map_kernel_error(&error))).unwrap();

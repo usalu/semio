@@ -67,8 +67,8 @@
       "description": "EN: A graph read could not resolve a native dependency after following the owner registry. DE: Der Graph konnte eine native Abhängigkeit nach dem Abgleich mit dem Eigentümerregister nicht auflösen.",
       "const": {
         "code": "BUILD_OWNER_REGISTRY_INCONSISTENT",
-        "en": "The build owner registry is inconsistent for {roots} after {rounds} follow-up rounds (registry moved: {moved}). Run `repo run workspace:verify -- build-owners sync`, then read again. Cause: {cause}",
-        "de": "Das Eigentümerregister des Builds ist nach {rounds} Folgerunden für {roots} inkonsistent (Register geändert: {moved}). `repo run workspace:verify -- build-owners sync` ausführen und erneut lesen. Ursache: {cause}"
+        "en": "The build owner registry is inconsistent for {roots} after {rounds} follow-up rounds (registry moved: {moved}). Run `{command}`, then read again. Cause: {cause}",
+        "de": "Das Eigentümerregister des Builds ist nach {rounds} Folgerunden für {roots} inkonsistent (Register geändert: {moved}). `{command}` ausführen und erneut lesen. Ursache: {cause}"
       }
     },
     "OwnerRegistryWorkerFailures": {

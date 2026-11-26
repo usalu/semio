@@ -8,7 +8,7 @@ use crate::ids::PatternId;
 /// 🎭️ A dynamic word-packed bitset over `0..len` pattern indices. `len` is the size of the
 /// universe this set is defined over, not its popcount — use [`PatternSet::count_ones`] /
 /// [`PatternSet::is_all_zero`] for cardinality. A zero [`PatternSet::len`] identifies an empty universe.
-#[derive(Clone, PartialEq, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, PartialEq, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub struct PatternSet {
     words: Vec<u64>,
     len: usize,

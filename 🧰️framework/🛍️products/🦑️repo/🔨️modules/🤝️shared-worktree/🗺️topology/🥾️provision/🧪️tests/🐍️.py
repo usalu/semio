@@ -83,7 +83,7 @@ def facts(path, platforms):
     lines = []
     for group in topology["groups"]:
         for platform in platforms:
-            lines.append("\t".join([group["id"], platform, topology["worktree"][platform], group["nfs"]["host"], group["nfs"]["export"], group["server"]["platform"], group["server"]["protocol"]]))
+            lines.append("\t".join([group["id"], platform, topology["worktree"][platform], group["roles"]["store"], group["nfs"]["export"], group["server"]["platform"], group["server"]["protocol"]]))
     return "\n".join(sorted(lines))
 
 

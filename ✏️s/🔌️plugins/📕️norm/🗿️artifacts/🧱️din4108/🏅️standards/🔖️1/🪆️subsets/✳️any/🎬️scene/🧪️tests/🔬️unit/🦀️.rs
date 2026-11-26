@@ -77,6 +77,36 @@ fn the_failing_check_colours_its_element() {
 }
 
 #[test]
+fn indexed_check_bindings_preserve_the_first_governing_row_and_clause() {
+    let document = Din4108Snapshot::default();
+    let mut report = inferences::evaluate(&document);
+    let template = report.checks.first().expect("seed check").clone();
+    let row = |id: &str, subject: &str, status, utilization, section: &str| {
+        let mut check = template.clone();
+        check.id = id.to_owned();
+        check.subject.entity_id = subject.to_owned();
+        check.status = status;
+        check.utilization = utilization;
+        check.clause.section = section.to_owned();
+        check
+    };
+    report.checks = vec![
+        row("governing", "missing-row", norm::CheckStatus::Fail, 3.0, "first clause"),
+        row("pass", "wall-north", norm::CheckStatus::Pass, 4.0, "pass"),
+        row("info", "wall-north", norm::CheckStatus::Info, 9.0, "info"),
+        row("governing", "wall-north:layer", norm::CheckStatus::Fail, 1.2, "later clause"),
+        row("tie", "wall-north", norm::CheckStatus::Fail, 1.2, "tie"),
+        row("nonfinite", "wall-north", norm::CheckStatus::Fail, f64::INFINITY, "nonfinite"),
+    ];
+    let indexed = kit::CheckBindings::new(&document, &report);
+    assert_eq!(indexed.binding("wall-north"), binding(&document, &report, &["wall-north"]));
+    assert_eq!(indexed.binding("wall-north").unwrap().check_id, "governing");
+    assert_eq!(indexed.binding("missing-row"), None);
+    assert_eq!(indexed.clause("governing"), projection_kit::clause_of(&report, "governing"));
+    assert_eq!(indexed.clause("governing").unwrap().section, "first clause");
+}
+
+#[test]
 fn diagrams_obey_the_laws_and_follow_the_closed_forms() {
     for (_, document) in fixtures() {
         let report = inferences::evaluate(&document);

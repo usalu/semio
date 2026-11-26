@@ -2,8 +2,27 @@ import * as React from "react";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../🟦️.tsx";
+import { SurfaceScope, useSurface } from "../../../🌈️Surface/🟦️.tsx";
+import { Badge, StatusChip } from "../../../../🎯️targets/⚛️react/🚦️status-surface/🟦️.tsx";
+
+function SurfaceProbe() { const surface = useSurface(); return <span data-testid="surface-probe">{surface?.level}:{surface?.fill}</span>; }
 
 describe("tabs painted boundary discovery", () => {
+  it("publishes the next glass level to tab descendants", () => {
+    const { getByRole, getByTestId } = render(<SurfaceScope level="window" fill="surface"><Tabs defaultValue="alpha"><TabsList><TabsTrigger value="alpha"><SurfaceProbe /></TabsTrigger></TabsList></Tabs></SurfaceScope>);
+    expect(getByRole("tablist").getAttribute("data-level")).toBe("pane");
+    expect(getByTestId("surface-probe").textContent).toBe("pane:glass");
+  });
+
+  it("paints badges and status chips at the next glass level with semantic ink", () => {
+    const { container, getByTestId } = render(<SurfaceScope level="window" fill="surface"><Badge tone="neutral" text="Ready" icon={<SurfaceProbe />} /><Badge tone="danger" text="Error" /><StatusChip status="ok" label="Online" /></SurfaceScope>);
+    const chips = [...container.querySelectorAll("[data-glass-chip]")];
+    expect(chips).toHaveLength(3);
+    expect(chips.every(chip => chip.getAttribute("data-level") === "pane" && chip.classList.contains("ui-glass"))).toBe(true);
+    expect(chips[0].className).not.toContain("bg-muted");
+    expect(chips[1].className).toContain("text-destructive-foreground");
+    expect(getByTestId("surface-probe").textContent).toBe("pane:glass");
+  });
   it.each(["horizontal", "vertical"] as const)("registers the list as a cells chip whose tabs are its cells in a %s group", (orientation) => {
     const { getByRole } = render(<Tabs defaultValue="alpha" orientation={orientation}><TabsList><TabsTrigger value="alpha">Alpha</TabsTrigger><TabsTrigger value="beta">Beta</TabsTrigger></TabsList></Tabs>);
     const list = getByRole("tablist");

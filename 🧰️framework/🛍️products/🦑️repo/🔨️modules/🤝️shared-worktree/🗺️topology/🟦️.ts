@@ -1,3 +1,4 @@
+import {networkInterfaces} from "node:os";
 import {validateJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import topologyJson from "./🔣️.json" with {type:"json"};
@@ -11,7 +12,7 @@ export type FleetPlatformV1="linux"|"macos"|"windows";
 type ByPlatform=Readonly<Record<FleetPlatformV1,string>>;
 
 /** 🖥️ The group server: its operating system, the protocol of its share, the network of its workers and, on Windows, the local folder of the share, shaped by `🧬️schema/🔣️.json`. */
-export type FleetServerV1=Readonly<{platform:FleetPlatformV1;protocol:"nfs"|"smb";network:string;advertise?:readonly string[];machines?:readonly string[];directory?:string}>;
+export type FleetServerV1=Readonly<{platform:FleetPlatformV1;protocol:"nfs"|"smb";network?:string;machines?:readonly string[];directory?:string}>;
 
 /** 🚪️ The ports of the services of a group server (cache, scheduler gRPC, scheduler worker API), shaped by `🧬️schema/🔣️.json` (`Ports`). */
 export type FleetPortsV1=Readonly<{cache:number;scheduler:number;worker:number}>;
@@ -19,8 +20,11 @@ export type FleetPortsV1=Readonly<{cache:number;scheduler:number;worker:number}>
 /** 🔗️ How a group reaches one peer group, shaped by `🧬️schema/🔣️.json` (`Link`): `direct` (authenticated HTTP to routable endpoints) or `relayed` (store-and-forward through the mounted stores). */
 export type FleetLinkV1=Readonly<{transport:"direct"|"relayed";endpoints?:readonly string[];serverKey?:string}>;
 
-/** 👥️ One group of machines with its NFS store, its cache server and the read-only mounts of the other groups, shaped by `🧬️schema/🔣️.json`. */
-export type FleetGroupV1=Readonly<{id:string;ports?:FleetPortsV1;access?:Readonly<{enforceNetwork:boolean;transport?:Readonly<{crossGroup?:"sealed";inGroup?:"sealed"|"trusted-lan"}>}>;links?:Readonly<Record<string,FleetLinkV1>>;nfs:Readonly<{host:string;export:string}>;server:FleetServerV1;cache:Readonly<{endpoint:string;instance:string}>;peers:Readonly<Record<string,string>>}>;
+/** 🎭️ The origin that fulfils each role of a group (store, cache, scheduler, relay), shaped by `🧬️schema/🔣️.json` (`Roles`). */
+export type FleetRolesV1=Readonly<{store:string;cache:string;scheduler:string;relay:string}>;
+
+/** 👥️ One group of machines with the origins that fulfil its roles, its NFS export, its cache instance and the read-only mounts of the other groups, shaped by `🧬️schema/🔣️.json`. `nfs.host` and `cache.endpoint` are never committed: they are the addresses of the store and cache roles that `bindFleetHostsV1` resolves into a topology for one rendering. */
+export type FleetGroupV1=Readonly<{id:string;ports?:FleetPortsV1;access?:Readonly<{enforceNetwork:boolean;transport?:Readonly<{crossGroup?:"sealed";inGroup?:"sealed"|"trusted-lan"}>}>;links?:Readonly<Record<string,FleetLinkV1>>;roles:FleetRolesV1;nfs:Readonly<{host?:string;export:string}>;server:FleetServerV1;cache:Readonly<{instance:string;endpoint?:string}>;peers:Readonly<Record<string,string>>}>;
 
 /** 🗺️ The committed fleet topology, shaped by `🧬️schema/🔣️.json`. */
 export type FleetTopologyV1=Readonly<{version:1;worktree:ByPlatform;storeMount:ByPlatform;groups:readonly FleetGroupV1[];replica:Readonly<{pollMilliseconds:number;scanSeconds:number;debounceMilliseconds:number;retentionDays:number;bootstrapMinutes:number;compaction:Readonly<{automatic:boolean;snapshotEvents:number;safetyHours:number;staleHours:number;catchUpEvents:number}>}>;sidecars?:SidecarSettingsV1}>;
@@ -88,7 +92,7 @@ export function readTopologyV1(value:unknown=topologyJson):FleetTopologyV1{
   for(const [linked,link] of Object.entries(group.links??{}))if(link.transport==="relayed"&&(link.endpoints?.length??0)>0)throw Error(`Closed fleet topology required: ${group.id} lists endpoints for the relayed link to ${linked}`);
   const {server}=group,refuse=(reason:string):never=>{throw Error(`Closed fleet topology required: ${group.id} ${reason}`);};
   if(group.cache.instance!==buildPolicy.remoteCache.defaults.instance)refuse(`needs cache.instance to be the policy instance ${buildPolicy.remoteCache.defaults.instance}, the one namespace every reader of the fleet uses / braucht cache.instance gleich der Instanz der Richtlinie ${buildPolicy.remoteCache.defaults.instance}, dem einen Namensraum aller Leser der Flotte`);
-  if(group.ports!==undefined&&new URL(group.cache.endpoint).port!==String(group.ports.cache))refuse(`needs the port of cache.endpoint to be ports.cache ${group.ports.cache}`);
+  for(const [role,origin] of Object.entries(group.roles))if(!origin.startsWith(`${group.id}-`))refuse(`needs the ${role} role to name an origin of its own group (${group.id}-...), not ${origin}`);
   if(server.protocol==="smb"&&server.platform!=="windows")refuse("shares over smb, which only a windows server does");
   if(server.platform==="windows"){
    if(server.directory===undefined)refuse("needs server.directory, the local folder of the share, on a windows server");
@@ -100,17 +104,29 @@ export function readTopologyV1(value:unknown=topologyJson):FleetTopologyV1{
  return Object.freeze(topology);
 }
 
-const FLEET_GROUP_ENVIRONMENT_V1="SEMIO_FLEET_GROUP",FLEET_HOST_ENVIRONMENT_V1="SEMIO_FLEET_NFS_HOST",FLEET_NETWORK_ENVIRONMENT_V1="SEMIO_FLEET_NETWORK",FLEET_CACHE_ENVIRONMENT_V1="SEMIO_FLEET_CACHE_ENDPOINT";
+const FLEET_GROUP_ENVIRONMENT_V1="SEMIO_FLEET_GROUP",FLEET_STORE_ADDRESS_ENVIRONMENT_V1="SEMIO_FLEET_STORE_ADDRESS",FLEET_NETWORK_ENVIRONMENT_V1="SEMIO_FLEET_NETWORK";
 const environmentText=(environment:Readonly<Record<string,string|undefined>>,name:string):string|undefined=>{const value=environment[name];return value===undefined||value===""?undefined:value;};
-const endpointWithHost=(endpoint:string,host:string):string=>{const url=new URL(endpoint);return `${url.protocol}//${host}${url.port===""?"":`:${url.port}`}`;};
+const urlHost=(address:string):string=>address.includes(":")&&!address.startsWith("[")?`[${address}]`:address;
 
-/** 🌐️ Replaces one group's host, worker network and cache endpoint from `SEMIO_FLEET_GROUP`, `SEMIO_FLEET_NFS_HOST`, `SEMIO_FLEET_NETWORK` and optional `SEMIO_FLEET_CACHE_ENDPOINT`. The three required names are set together. Absent names leave the topology as read. A group id that is not in this topology leaves it unchanged. The values are checked with `readTopologyV1`. */
+/** 📍️ The address that a rendering of a plan uses for one origin: the resolved address of the store role (never a host name of the operating system). */
+export type FleetResolvedHostsV1=Readonly<Record<string,string>>;
+
+/** 🔗️ Binds the resolved addresses of the store and cache roles into a topology for one rendering: `nfs.host` becomes the address of the origin that holds the store role and `cache.endpoint` the address of the cache role on `ports.cache`. A group whose role origin has no address stays unbound; rendering a plan of an unbound group is refused by `hostOf`. The committed topology never carries these values. */
+export function bindFleetHostsV1(topology:FleetTopologyV1,hosts:FleetResolvedHostsV1):FleetTopologyV1{
+ return Object.freeze({...topology,groups:topology.groups.map(group=>{
+  const store=hosts[group.roles.store],cache=hosts[group.roles.cache];
+  return {...group,...store===undefined?{}:{nfs:{...group.nfs,host:store}},...cache===undefined||group.ports===undefined?{}:{cache:{...group.cache,endpoint:`http://${urlHost(cache)}:${group.ports.cache}`}}};
+ })});
+}
+
+/** 🌐️ Binds an address that the operator names for the store role of the group `SEMIO_FLEET_GROUP` in `SEMIO_FLEET_STORE_ADDRESS` (a one-time bootstrap value for a machine that cannot discover it; it is read, never written to any file), and optionally pins the worker network (`SEMIO_FLEET_NETWORK`) and the machines (`SEMIO_FLEET_MACHINES`). Without them the topology stays as read. A group id that is not in this topology leaves it unchanged. */
 export function applyFleetAddressEnvironmentV1(topology:FleetTopologyV1,environment:Readonly<Record<string,string|undefined>>):FleetTopologyV1{
- const machinesText=environmentText(environment,"SEMIO_FLEET_MACHINES"),machines=machinesText===undefined?undefined:machinesText.split(",").map(item=>item.trim()).filter(Boolean),groupId=environmentText(environment,FLEET_GROUP_ENVIRONMENT_V1),host=environmentText(environment,FLEET_HOST_ENVIRONMENT_V1),network=environmentText(environment,FLEET_NETWORK_ENVIRONMENT_V1),endpoint=environmentText(environment,FLEET_CACHE_ENVIRONMENT_V1);
- if(groupId===undefined&&host===undefined&&network===undefined&&endpoint===undefined)return topology;
- if(groupId===undefined||host===undefined||network===undefined)throw Error("SEMIO_FLEET_GROUP, SEMIO_FLEET_NFS_HOST and SEMIO_FLEET_NETWORK are set together");
- if(!topology.groups.some(group=>group.id===groupId))return topology;
- return readTopologyV1({...topology,groups:topology.groups.map(group=>group.id===groupId?{...group,nfs:{...group.nfs,host},server:{...group.server,network,...(machines===undefined?{}:{machines})},cache:{...group.cache,endpoint:endpoint??endpointWithHost(group.cache.endpoint,host)}}:group)});
+ const machinesText=environmentText(environment,"SEMIO_FLEET_MACHINES"),machines=machinesText===undefined?undefined:machinesText.split(",").map(item=>item.trim()).filter(Boolean),groupId=environmentText(environment,FLEET_GROUP_ENVIRONMENT_V1),address=environmentText(environment,FLEET_STORE_ADDRESS_ENVIRONMENT_V1),network=environmentText(environment,FLEET_NETWORK_ENVIRONMENT_V1);
+ if(groupId===undefined&&address===undefined&&network===undefined&&machines===undefined)return topology;
+ const target=groupId===undefined?undefined:topology.groups.find(group=>group.id===groupId);
+ if(target===undefined)return topology;
+ const pinned=readTopologyV1({...topology,groups:topology.groups.map(group=>group.id===groupId?{...group,server:{...group.server,...network===undefined?{}:{network},...machines===undefined?{}:{machines}}}:group)});
+ return address===undefined?pinned:bindFleetHostsV1(pinned,{[target.roles.store]:address});
 }
 
 /** 🔎️ Resolves one group by id and refuses an unknown one. */
@@ -157,6 +173,19 @@ const SCRIPT="./📜️script.ts",
 type FleetPeerV1=Readonly<{group:FleetGroupV1;path:string}>;
 
 const xml=(text:string):string=>text.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+/** 🌐️ The networks of the workers of a group server as CIDR text: the pinned `network` when an operator set one, otherwise one network per private IPv4 interface of this machine at the moment of rendering (so the exports and rules follow the machine to another subnet when a plan is rendered again). */
+export function serverNetworksV1(server:FleetServerV1,interfaces:ReturnType<typeof networkInterfaces>=networkInterfaces()):readonly string[]{
+ if(server.network!==undefined)return [server.network];
+ const found=new Set<string>();
+ for(const rows of Object.values(interfaces))for(const row of rows??[]){
+  const parts=row.address.split(".").map(Number),bits=Number(row.cidr?.split("/")[1]);
+  if(row.family!=="IPv4"||row.internal||parts.length!==4||!Number.isInteger(bits)||bits<8||bits>30||(parts[0]===169&&parts[1]===254))continue;
+  const value=((parts[0]!<<24)|(parts[1]!<<16)|(parts[2]!<<8)|parts[3]!)>>>0,mask=(0xFFFFFFFF<<(32-bits))>>>0,base=(value&mask)>>>0;
+  found.add(`${base>>>24}.${(base>>>16)&255}.${(base>>>8)&255}.${base&255}/${bits}`);
+ }
+ return [...found].sort();
+}
+const networkVariable=(server:FleetServerV1):string=>server.network===undefined?"":`export SEMIO_FLEET_NETWORK=${server.network}; `;
 const maskOf=(network:string):string=>{
  const bits=Number(network.split("/")[1]),value=bits===0?0:(0xFFFFFFFF<<(32-bits))>>>0;
  return [24,16,8,0].map(shift=>(value>>>shift)&255).join(".");
@@ -180,7 +209,16 @@ const optionsOf=(group:FleetGroupV1,platform:FleetPlatformV1):string=>{
  if(protocol==="smb")return "";
  return {linux:protocol==="nfs4"?LINUX_OPTIONS:LINUX_V3_OPTIONS,macos:protocol==="nfs4"?MACOS_OPTIONS:MACOS_V3_OPTIONS,windows:WINDOWS_OPTIONS}[platform];
 };
-const source=(platform:FleetPlatformV1,nfs:FleetGroupV1["nfs"]):string=>platform==="windows"?`\\\\${nfs.host}${nfs.export.replaceAll("/","\\")}`:`${nfs.host}:${nfs.export}`;
+/** 🏷️ The address of the store role of a bound group; an unbound group is refused with the way out. */
+export function hostOf(nfs:FleetGroupV1["nfs"]):string{
+ if(nfs.host===undefined)throw Error("Resolved address of the store role required: pass --address <origin>=<address>, set SEMIO_FLEET_GROUP and SEMIO_FLEET_STORE_ADDRESS, or let `repo fleet` resolve it from the published addresses / Aufgelöste Adresse der Speicher-Rolle erforderlich");
+ return nfs.host;
+}
+
+/** 🤝️ The address of a peer group's store for the exports, firewall and mounts of a server plan: its resolved address, or the id of its store origin while that is unresolved (a name that resolves nowhere, which the provisioning leaves out with a warning, the way it leaves out any peer that does not answer). */
+const peerHost=(group:FleetGroupV1):string=>group.nfs.host??group.roles.store;
+
+const source=(platform:FleetPlatformV1,nfs:FleetGroupV1["nfs"]):string=>platform==="windows"?`\\\\${hostOf(nfs)}${nfs.export.replaceAll("/","\\")}`:`${hostOf(nfs)}:${nfs.export}`;
 const separator=(platform:FleetPlatformV1):string=>platform==="windows"?"\\":"/";
 const replicaDirectory=(topology:FleetTopologyV1,platform:FleetPlatformV1,home?:string):string=>`${worktreePathV1(topology,platform,home)}${separator(platform)}${platform==="windows"?REPLICA.replaceAll("/","\\"):REPLICA}`;
 const topologyDirectory=(topology:FleetTopologyV1,platform:FleetPlatformV1,home?:string):string=>replicaDirectory(topology,platform,home).replace(/[\\/][^\\/]*$/u,`${separator(platform)}${TOPOLOGY_FOLDER}`);
@@ -189,7 +227,7 @@ const sections=(parts:Readonly<Record<string,string>>):string=>Object.entries(pa
 /** 📮️ Where a group server finds the store of a peer group, mounted read-only on the platform of that server: the `peers` path on Linux, `/Volumes/semio-peers/<id>` on macOS, the UNC path of the share on Windows. The relay, the read-through of the cache and the registry of fleet identities all read the peer through this one path. */
 export function peerStorePathV1(topology:FleetTopologyV1,group:FleetGroupV1,peerId:string):string{
  const peer=groupV1(topology,peerId);
- return group.server.platform==="linux"?group.peers[peerId]!:group.server.platform==="macos"?`${MACOS_PEERS}/${peerId}`:source("windows",peer.nfs);
+ return group.server.platform==="linux"?group.peers[peerId]!:group.server.platform==="macos"?`${MACOS_PEERS}/${peerId}`:source("windows",{...peer.nfs,host:peerHost(peer)});
 }
 const peersOf=(topology:FleetTopologyV1,group:FleetGroupV1):readonly FleetPeerV1[]=>Object.keys(group.peers).sort().map(id=>({group:groupV1(topology,id),path:peerStorePathV1(topology,group,id)}));
 const peerList=(peers:readonly FleetPeerV1[]):string=>peers.map(peer=>`${peer.group.id}=${peer.path}`).join(",");
@@ -200,7 +238,7 @@ const smbCacheCommand=`Set-SmbClientConfiguration ${Object.entries(WINDOWS_SMB_C
 const nfsCacheCommands=[`New-Item -Path ${WINDOWS_NFS_KEY} -Force | Out-Null`,...Object.entries(WINDOWS_NFS_CACHE).map(([name,value])=>`New-ItemProperty -Path ${WINDOWS_NFS_KEY} -Name ${name} -Value ${value} -PropertyType DWord -Force | Out-Null`),"nfsadmin client stop","nfsadmin client start"].join("\n");
 /** 🪟️ `mount.exe` of the Client for NFS applies only the first entry of a comma-separated `-o` list (the rest is dropped without an error, which leaves locking on and the mount soft), so every option travels behind its own `-o`. */
 const windowsMountFlags=(options:string):string=>options.split(",").map(option=>`-o ${option}`).join(" ");
-const portOf=(group:FleetGroupV1):string=>group.ports===undefined?new URL(group.cache.endpoint).port||(group.cache.endpoint.startsWith("https")?"443":"80"):String(group.ports.cache);
+const portOf=(group:FleetGroupV1):string=>String(group.ports?.cache??"")||"6094";
 
 /** 🧱️ The named pieces of the worker mount plan: Linux `fstab`, `commands`, `sysctl-path` and `sysctl` (the inotify limits of the ~122k directories); macOS `command`, `plist-path` and `plist`; Windows over NFS `feature`, `cache`, `mount` and `task`, over SMB `credential`, `cache`, `mount` and `task` (`cache` sets the attribute and name cache of the client, see `mountPlanV1`). The mount options follow the protocol that `clientProtocolV1` names. */
 export function mountPartsV1(topology:FleetTopologyV1,groupId:string,platform:FleetPlatformV1):Readonly<Record<string,string>>{
@@ -227,7 +265,7 @@ export function mountPartsV1(topology:FleetTopologyV1,groupId:string,platform:Fl
  }
  const drive=mount.slice(0,2);
  if(protocol==="smb")return Object.freeze({
-  credential:`cmdkey /add:${nfs.host} /user:${nfs.host.split(".")[0]}\\${SMB_USER} /pass:<password>`,
+  credential:`cmdkey /add:${hostOf(nfs)} /user:${hostOf(nfs).split(".")[0]}\\${SMB_USER} /pass:<password>`,
   cache:smbCacheCommand,
   mount:`net use ${drive} ${remote} /persistent:yes`,
   task:`Register-ScheduledTask -TaskName ${WINDOWS_MOUNT_TASK} -User <account> -Xml ((repo ${MODULE}/${TOPOLOGY_FOLDER}/${SCRIPT.slice(2)} worker-service --group ${groupId} --platform windows --part mount-definition) -join "\`n")`
@@ -317,8 +355,8 @@ const linuxServerV1=(topology:FleetTopologyV1,group:FleetGroupV1):Record<string,
   worktree=worktreePathV1(topology,"linux"),directory=replicaDirectory(topology,"linux"),entry=entryDirectoryPathV1("linux"),replica=`semio-fleet-replica@${STORE_USER}.service`,archive=peers.length>0?` --archive ${archiveOf(peers,"linux")}`:"";
  const peerLine=(peer:FleetPeerV1):string=>{
   const {nfs,server}=peer.group;
-  if(server.protocol==="smb")return `//${nfs.host}${nfs.export} ${peer.path} cifs ${PEER_SMB_OPTIONS} 0 0`;
-  return server.platform==="linux"?`${nfs.host}:${nfs.export} ${peer.path} nfs4 ${PEER_OPTIONS} 0 0`:`${nfs.host}:${nfs.export} ${peer.path} nfs ${PEER_V3_OPTIONS} 0 0`;
+  if(server.protocol==="smb")return `//${hostOf(nfs)}${nfs.export} ${peer.path} cifs ${PEER_SMB_OPTIONS} 0 0`;
+  return server.platform==="linux"?`${hostOf(nfs)}:${nfs.export} ${peer.path} nfs4 ${PEER_OPTIONS} 0 0`:`${hostOf(nfs)}:${nfs.export} ${peer.path} nfs ${PEER_V3_OPTIONS} 0 0`;
  };
  return {
   prepare:[
@@ -333,7 +371,7 @@ const linuxServerV1=(topology:FleetTopologyV1,group:FleetGroupV1):Record<string,
    `sudo systemctl enable --now ${replica} semio-fleet-cache.service semio-fleet-relay.service`
   ].join("\n"),
   "exports-target":"/etc/exports.d/semio-fleet.exports",
-  exports:`${store} ${(group.server.machines??[group.server.network]).map(client=>`${client}(rw,sync,no_subtree_check,all_squash,anonuid=${STORE_ID},anongid=${STORE_ID})`).join(" ")}${peers.map(peer=>` ${peer.group.nfs.host}(ro,sync,no_subtree_check)`).join("")}`,
+  exports:`${store} ${(group.server.machines??serverNetworksV1(group.server)).map(client=>`${client}(rw,sync,no_subtree_check,all_squash,anonuid=${STORE_ID},anongid=${STORE_ID})`).join(" ")}${peers.map(peer=>` ${peerHost(peer.group)}(ro,sync,no_subtree_check)`).join("")}`,
   "sysctl-target":SERVER_SYSCTL_PATH,
   sysctl:SERVER_SYSCTL,
   fstab:[`${store} ${mount} none bind 0 0`,...peers.map(peerLine)].join("\n"),
@@ -348,7 +386,7 @@ const linuxServerV1=(topology:FleetTopologyV1,group:FleetGroupV1):Record<string,
    "[Install]","WantedBy=multi-user.target"
   ].join("\n"),
   "cache-launch-target":launchTargetOf(entry,"cache"),
-  "cache-launch":launchOf("cache",[`set -a; . ${TOKENS}; set +a`,"export SEMIO_LANGUAGE=en",`export SEMIO_FLEET_NETWORK=${group.server.network}`,`cd "${worktree}" && exec ${REPO} remote-cache serve --host fleet --port ${port} --directory ${CACHE_DIRECTORY} --max-bytes ${CACHE_BYTES}`]),
+  "cache-launch":launchOf("cache",[`set -a; . ${TOKENS}; set +a`,"export SEMIO_LANGUAGE=en",...(group.server.network===undefined?[]:[`export SEMIO_FLEET_NETWORK=${group.server.network}`]),`cd "${worktree}" && exec ${REPO} remote-cache serve --host fleet --port ${port} --directory ${CACHE_DIRECTORY} --max-bytes ${CACHE_BYTES}`]),
   "replica-unit":workerPartsV1(topology,group.id,"linux")["definition"]!,
   "relay-launch-target":launchTargetOf(entry,"relay"),
   "relay-launch":launchOf("relay",[`cd "${directory}" && exec ${REPO} ${SCRIPT} relay`]),
@@ -366,7 +404,7 @@ const macosServerV1=(topology:FleetTopologyV1,group:FleetGroupV1):Record<string,
  const store=group.nfs.export,peers=peersOf(topology,group),names=buildPolicy.remoteCache.server.tokenEnvironment,port=portOf(group),user=FLEET_WORKER_USER_PLACEHOLDER_V1,
   worktree=worktreePathV1(topology,"macos"),directory=replicaDirectory(topology,"macos"),archive=peers.length>0?` --archive ${archiveOf(peers,"macos")}`:"",
   mountOptions=(peer:FleetPeerV1):string=>peer.group.server.platform==="linux"?`vers=4,ro,hard,nobrowse,${MACOS_ATTRIBUTES}`:`vers=3,ro,hard,nobrowse,${MACOS_ATTRIBUTES},nolocks`,
-  mounts=peers.length===0?"/usr/bin/true":peers.map(peer=>`/sbin/mount | /usr/bin/grep -q ' on ${peer.path} ' || { /bin/mkdir -p ${peer.path}; /sbin/mount_nfs -o ${mountOptions(peer)} ${source("macos",peer.group.nfs)} ${peer.path}; }`).join("; ");
+  mounts=peers.length===0?"/usr/bin/true":peers.map(peer=>`/sbin/mount | /usr/bin/grep -q ' on ${peer.path} ' || { /bin/mkdir -p ${peer.path}; /sbin/mount_nfs -o ${mountOptions(peer)} ${source("macos",{...peer.group.nfs,host:peerHost(peer.group)})} ${peer.path}; }`).join("; ");
  return {
   prepare:[
    `sudo install -d -o ${user} ${store} ${CACHE_DIRECTORY}`,
@@ -381,8 +419,8 @@ const macosServerV1=(topology:FleetTopologyV1,group:FleetGroupV1):Record<string,
   ].join("\n"),
   "exports-target":"/etc/exports",
   exports:[
-   group.server.machines===undefined?`${store} -mapall=${user} -network ${addressOf(group.server.network)} -mask ${maskOf(group.server.network)}`:`${store} -mapall=${user} ${group.server.machines.join(" ")}`,
-   ...peers.length>0?[`${store} -ro -mapall=${user} ${peers.map(peer=>peer.group.nfs.host).join(" ")}`]:[]
+   ...group.server.machines===undefined?serverNetworksV1(group.server).map(network=>`${store} -mapall=${user} -network ${addressOf(network)} -mask ${maskOf(network)}`):[`${store} -mapall=${user} ${group.server.machines.join(" ")}`],
+   ...peers.length>0?[`${store} -ro -mapall=${user} ${peers.map(peer=>peerHost(peer.group)).join(" ")}`]:[]
   ].join("\n"),
   "nfs-conf-target":"/etc/nfs.conf",
   "nfs-conf":"nfs.server.mount.port = 892",
@@ -392,7 +430,7 @@ const macosServerV1=(topology:FleetTopologyV1,group:FleetGroupV1):Record<string,
   "cache-environment-target":TOKENS,
   "cache-environment":`${names.read}=<read-token>\n${names.write}=<write-token>`,
   "cache-target":`${MACOS_AGENTS}/${MACOS_CACHE_LABEL}.plist`,
-  "cache-unit":agentOf(MACOS_CACHE_LABEL,"cache",worktree,["/bin/sh","-c",`set -a; . ${TOKENS}; set +a; export SEMIO_FLEET_NETWORK=${group.server.network}; exec ${REPO} remote-cache serve --host fleet --port ${port} --directory ${CACHE_DIRECTORY} --max-bytes ${CACHE_BYTES}`],KEEP_ALIVE,`${MACOS_LOGS}/semio-fleet-cache.log`),
+  "cache-unit":agentOf(MACOS_CACHE_LABEL,"cache",worktree,["/bin/sh","-c",`set -a; . ${TOKENS}; set +a; ${networkVariable(group.server)}exec ${REPO} remote-cache serve --host fleet --port ${port} --directory ${CACHE_DIRECTORY} --max-bytes ${CACHE_BYTES}`],KEEP_ALIVE,`${MACOS_LOGS}/semio-fleet-cache.log`),
   "replica-unit":workerPartsV1(topology,group.id,"macos")["definition"]!,
   "relay-target":`${MACOS_AGENTS}/${MACOS_RELAY_LABEL}.plist`,
   "relay-unit":agentOf(MACOS_RELAY_LABEL,"relay",directory,[REPO,SCRIPT,"relay",...peers.length>0?["--peers",peerList(peers)]:[]],KEEP_ALIVE,`${MACOS_LOGS}/semio-fleet-relay.log`)
@@ -419,18 +457,18 @@ const windowsServerV1=(topology:FleetTopologyV1,group:FleetGroupV1):Record<strin
    `& icacls ${directory} /grant '${SMB_USER}:(OI)(CI)M' '${SMB_PEER_USER}:(OI)(CI)RX' | Out-Null`
   ].join("\n"):[
    `if(-not (Get-NfsShare -Name ${share} -ErrorAction SilentlyContinue)){New-NfsShare -Name ${share} -Path ${directory} -Authentication sys -EnableAnonymousAccess $true -EnableUnmappedAccess $true -AnonymousUid ${STORE_ID} -AnonymousGid ${STORE_ID} -Permission readwrite -AllowRootAccess $true | Out-Null}`,
-   ...peers.map(peer=>`Grant-NfsSharePermission -Name ${share} -ClientName ${peer.group.nfs.host} -ClientType host -Permission readonly -AllowRootAccess $false | Out-Null`)
+   ...peers.map(peer=>`Grant-NfsSharePermission -Name ${share} -ClientName ${peerHost(peer.group)} -ClientType host -Permission readonly -AllowRootAccess $false | Out-Null`)
   ].join("\n"),
   firewall:[
-   rule("semio-fleet-store-workers",server.network,ports),
-   ...peers.map(peer=>`$address=(Resolve-DnsName -Name ${peer.group.nfs.host} -Type A).IPAddress; ${rule(`semio-fleet-store-${peer.group.id}`,"$address",ports)}`),
-   rule("semio-fleet-cache",server.network,port)
+   rule("semio-fleet-store-workers",server.network??"LocalSubnet",ports),
+   ...peers.map(peer=>`$address=(Resolve-DnsName -Name ${peerHost(peer.group)} -Type A).IPAddress; ${rule(`semio-fleet-store-${peer.group.id}`,"$address",ports)}`),
+   rule("semio-fleet-cache",server.network??"LocalSubnet",port)
   ].join("\n"),
   "relay-peers":peerList(peers),
   "cache-environment-target":WINDOWS_TOKENS,
   "cache-environment":`${names.read}=<read-token>\n${names.write}=<write-token>`,
   "cache-target":WINDOWS_CACHE_TASK,
-  "cache-unit":taskOf(`semio fleet remote cache (${group.id})`,LOGON,FOREVER+priorityOf("cache"),worktree,"powershell.exe",`-NoProfile -ExecutionPolicy Bypass -Command "Get-Content ${WINDOWS_TOKENS} | ForEach-Object { $n,$v = $_ -split '=',2; Set-Item -Path ('Env:'+$n) -Value $v }; $env:SEMIO_FLEET_NETWORK='${group.server.network}'; & repo remote-cache serve --host fleet --port ${port} --directory ${WINDOWS_CACHE_DIRECTORY} --max-bytes ${CACHE_BYTES}"`),
+  "cache-unit":taskOf(`semio fleet remote cache (${group.id})`,LOGON,FOREVER+priorityOf("cache"),worktree,"powershell.exe",`-NoProfile -ExecutionPolicy Bypass -Command "Get-Content ${WINDOWS_TOKENS} | ForEach-Object { $n,$v = $_ -split '=',2; Set-Item -Path ('Env:'+$n) -Value $v }; ${group.server.network===undefined?"":`$env:SEMIO_FLEET_NETWORK='${group.server.network}'; `}& repo remote-cache serve --host fleet --port ${port} --directory ${WINDOWS_CACHE_DIRECTORY} --max-bytes ${CACHE_BYTES}"`),
   "replica-unit":workerPartsV1(topology,group.id,"windows")["definition"]!,
   "relay-target":WINDOWS_RELAY_TASK,
   "relay-unit":taskOf(`semio fleet relay (${group.id})`,LOGON,FOREVER+priorityOf("relay"),workdir,"repo",`${SCRIPT} relay${relayArguments(peers)}`)
@@ -458,10 +496,10 @@ export function factsV1(topology:FleetTopologyV1,groupId:string,platform:FleetPl
  const group=groupV1(topology,groupId),mount=topology.storeMount[platform],protocol=clientProtocolV1(group,platform),{server}=group;
  return Object.freeze({
   GROUP:group.id,PLATFORM:platform,WORKTREE:worktreePathV1(topology,platform,home),WORKTREE_TEMPLATE:topology.worktree[platform],STORE_MOUNT:mount,PROTOCOL:protocol,
-  NFS_HOST:group.nfs.host,NFS_EXPORT:group.nfs.export,NFS_SOURCE:source(platform,group.nfs),MOUNT_OPTIONS:optionsOf(group,platform),
+  NFS_HOST:hostOf(group.nfs),NFS_EXPORT:group.nfs.export,NFS_SOURCE:source(platform,group.nfs),MOUNT_OPTIONS:optionsOf(group,platform),
   FSTAB_LINE:platform==="linux"?mountPartsV1(topology,groupId,platform)["fstab"]!:"",DRIVE:platform==="windows"?mount.slice(0,2):"",
-  SERVER_PLATFORM:server.platform,SERVER_PROTOCOL:server.protocol,SERVER_NETWORK:server.network,SERVER_DIRECTORY:server.directory??group.nfs.export,SERVER_CACHE_DIRECTORY:server.platform==="windows"?WINDOWS_CACHE_DIRECTORY:CACHE_DIRECTORY,
+  SERVER_PLATFORM:server.platform,SERVER_PROTOCOL:server.protocol,SERVER_NETWORK:server.network??"",SERVER_DIRECTORY:server.directory??group.nfs.export,SERVER_CACHE_DIRECTORY:server.platform==="windows"?WINDOWS_CACHE_DIRECTORY:CACHE_DIRECTORY,
   SMB_CACHE:listOf(WINDOWS_SMB_CACHE),NFS_CACHE:listOf(WINDOWS_NFS_CACHE),NFS_CACHE_KEY:WINDOWS_NFS_KEY,
-  CACHE_ENDPOINT:group.cache.endpoint,CACHE_INSTANCE:group.cache.instance,REPLICA_DIRECTORY:replicaDirectory(topology,platform,home),TOPOLOGY_DIRECTORY:topologyDirectory(topology,platform,home),ARCHIVE_DIRECTORY:archiveDirectory(topology,platform)
+  CACHE_ENDPOINT:group.cache.endpoint??"",CACHE_INSTANCE:group.cache.instance,REPLICA_DIRECTORY:replicaDirectory(topology,platform,home),TOPOLOGY_DIRECTORY:topologyDirectory(topology,platform,home),ARCHIVE_DIRECTORY:archiveDirectory(topology,platform)
  });
 }

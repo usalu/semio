@@ -1,4 +1,5 @@
 import {mkdirSync,readFileSync,readdirSync,rmSync,statSync,existsSync} from "node:fs";
+import {processRecordAliveV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import {basename,dirname,join} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {CHANGE_JOURNAL_FILES_V1,CHANGE_JOURNAL_POLICY_V1,changeHeartbeatAgeV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🟦️.ts";
@@ -18,17 +19,17 @@ export function journalStateAbandonedV1(facts:JournalStateFactsV1,now:number,pol
 
 const size=(path:string):number=>{try{const facts=statSync(path);if(!facts.isDirectory())return facts.size;let sum=0;for(const name of readdirSync(path))sum+=size(join(path,name));return sum;}catch{return 0;}};
 const newest=(path:string,depth:number):number=>{try{const facts=statSync(path);let at=facts.mtimeMs;if(facts.isDirectory()&&depth>0)for(const name of readdirSync(path))at=Math.max(at,newest(join(path,name),depth-1));return at;}catch{return 0;}};
-const aliveProcess=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(failure){return(failure as NodeJS.ErrnoException).code==="EPERM";}};
+
 
 /** 🔒️ Whether a service holds the journal lock of a state directory, by the rule the service itself starts under (a live owner with a fresh heartbeat or a young lock). */
 function lockHeldV1(journal:string,now:number):boolean{
  const lock=join(journal,CHANGE_JOURNAL_FILES_V1.lock);
  if(!existsSync(lock))return false;
- let owner:{pid?:unknown;at?:unknown}={};
+ let owner:{pid?:unknown;at?:unknown;startMs?:unknown}={};
  try{owner=JSON.parse(readFileSync(join(lock,"owner.json"),"utf8"));}catch{}
  const pid=owner.pid,valid=Number.isSafeInteger(pid)&&(pid as number)>0,at=typeof owner.at==="number"?owner.at:newest(lock,0);
  if(!valid)return now-at<CHANGE_JOURNAL_POLICY_V1.startTimeoutMilliseconds;
- return aliveProcess(pid as number)&&(changeHeartbeatAgeV1(journal,now)<CHANGE_JOURNAL_POLICY_V1.heartbeatStaleMilliseconds||now-at<CHANGE_JOURNAL_POLICY_V1.startTimeoutMilliseconds);
+ return processRecordAliveV1(pid,owner.startMs)&&(changeHeartbeatAgeV1(journal,now)<CHANGE_JOURNAL_POLICY_V1.heartbeatStaleMilliseconds||now-at<CHANGE_JOURNAL_POLICY_V1.startTimeoutMilliseconds);
 }
 
 /** 🧹️ Removes the abandoned sibling state directories of the running service `own` (`<container>/<id>/journal`). It touches nothing when `own` is not laid out that way (tests, custom directories), never its own id, and takes the journal lock of a candidate before it removes the tree, so a service cannot start into a directory that is being removed. */

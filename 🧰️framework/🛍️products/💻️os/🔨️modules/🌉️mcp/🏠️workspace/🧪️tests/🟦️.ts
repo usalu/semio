@@ -7,18 +7,40 @@ import "../📨️plugin-artifact-channel/🔁️native-poll/🧪️tests/schedu
 
 test("folder custody vectors match independent SQLite guarded append and ownership",()=>{
  const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);
- const db=new Database(":memory:");try{db.exec("create table events(seq integer primary key,pack text,spr text);create table owners(schema text,plugin text,app text)");
+ const db=new Database(":memory:");try{db.exec("create table events(seq integer primary key,pack text,spr text);create table owners(schema text,plugin text,app text,kind text)");
  for(const row of fixture.commits){
  const expected=row.expected;
  const result=db.query("insert into events(pack,spr) select ?,? where (? is null and not exists(select 1 from events)) or (? is not null and exists(select 1 from (select pack,spr from events order by seq desc limit 1) where pack=? and spr=?))").run(row.pack,row.spr,expected===null?null:1,expected===null?null:1,expected?.[0]??null,expected?.[1]??null);
  expect(result.changes===1,row.id).toBe(row.accepted);const latest=db.query<{pack:string;spr:string},[]>("select pack,spr from events order by seq desc limit 1").get()!;expect([latest.pack,latest.spr],row.id).toEqual(row.current);
  }
- for(const row of fixture.owners){db.exec("delete from owners");for(const declaration of row.declarations)db.query("insert into owners values(?,?,?)").run(...declaration as [string,string,string]);
- const result=db.query<{n:number},[string]>("select count(*) n from (select distinct plugin,app from owners where schema=?)").get(row.schema)!;expect(result.n===1,row.id).toBe(row.accepted);}
+ for(const row of fixture.owners){db.exec("delete from owners");for(const declaration of row.declarations)db.query("insert into owners values(?,?,?,?)").run(...declaration as [string,string,string,string]);
+ const result=db.query<{n:number;kind:string|null},[string]>("select count(*) n, case when count(*)=1 then min(kind) end kind from (select distinct plugin,app,kind from owners where schema=?)").get(row.schema)!;
+ expect(result.n===1,row.id).toBe(row.accepted);expect(result.kind,row.id).toBe(row.artifactKind);}
  for(const row of fixture.schemaReads){
  const result=db.query("select coalesce(?1,?2) schema, case when ?1 is null and ?2 is null then 'PLUGIN_UNAVAILABLE' end error").get(row.live,row.ownerSchema);
  expect(result,row.id).toEqual({schema:row.schema,error:row.error});}
  }finally{db.close();}
+});
+
+test("folder reopen vectors match an independent SQLite binding transition", () => {
+ const db = new Database(":memory:");
+ try {
+  db.exec("create table binding(id integer primary key check(id=1), snapshot text not null, archive integer not null)");
+  const classify = db.query<{outcome:string}, [string,string,number]>(`select case
+   when ?1 <> ?2 then 'conflict'
+   when not exists(select 1 from binding) then 'bind'
+   when exists(select 1 from binding where snapshot=?2 and archive=?3) then 'reuse'
+   else 'replace' end outcome`);
+  const publish = db.query("insert into binding values(1, ?, ?) on conflict(id) do update set snapshot=excluded.snapshot, archive=excluded.archive");
+  for (const row of fixture.reopens) {
+   const archive = Number(row.archive);
+   const {outcome} = classify.get(row.observed, row.durable, archive)!;
+   expect(outcome, row.id).toBe(row.expected);
+   if (outcome === "bind" || outcome === "replace") publish.run(row.durable, archive);
+  }
+ } finally {
+  db.close();
+ }
 });
 
 import {readFileSync} from "node:fs";

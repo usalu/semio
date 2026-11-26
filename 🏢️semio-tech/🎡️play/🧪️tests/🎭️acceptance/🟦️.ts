@@ -390,7 +390,9 @@ test.describe("semio-tech play", () => {
     await page.keyboard.press("Escape");
     await expect(page.locator("[data-layered-card]")).toHaveCount(panes.length);
     await expect(page.locator('[data-slot="play-app-count"]')).toHaveText(`${panes.length} apps`);
-    await expect(page.getByRole("navigation", { name: "semio Play" })).toHaveClass(/ui-chrome-tint/);
+    const chrome = page.getByRole("navigation", { name: "semio Play" });
+    await expect(chrome).toHaveAttribute("data-level", "panel");
+    await expect(chrome).toHaveClass(/\bui-glass\b/);
     for (const pane of panes) await expect(page.locator(`[data-layered-card="${pane.variant}"] [data-overview-card]`)).toHaveAttribute("aria-label", new RegExp(`^Open ${pane.label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}: `));
     errors.stop();
     expect(errors.pageErrors).toEqual([]);

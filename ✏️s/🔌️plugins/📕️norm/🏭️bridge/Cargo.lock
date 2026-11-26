@@ -711,6 +711,9 @@ dependencies = [
 [[package]]
 name = "semio-framework-geometry-primitives"
 version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
 
 [[package]]
 name = "semio-framework-geometry-skeleton"
@@ -6655,7 +6658,6 @@ dependencies = [
  "semio-os-kernel",
  "semio-os-store-one-item",
  "semio-framework-schema",
- "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-ui-locale",
  "semio-framework-value",
@@ -6667,7 +6669,6 @@ dependencies = [
  "semio-s-artifact-norm-en1990-mut-design-basis",
  "semio-s-artifact-norm-en1990-mut-members",
  "semio-s-artifact-norm-en1990-mut-reliability",
- "semio-s-plugin-norm-app-surface",
  "semio-s-plugin-norm-compliance",
  "serde",
 ]

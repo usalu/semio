@@ -137,12 +137,12 @@ export function useDocumentTransferRefState({ exportDocumentArchive, importDocum
           return;
         }
       }
-      if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "z") {
+      if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "z" && keyApp.role !== "viewer") {
         event.preventDefault();
         onAction({ controllerId: keyApp.controllerId, action: event.shiftKey ? "redo" : "undo" });
         return;
       }
-      if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === "y") {
+      if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === "y" && keyApp.role !== "viewer") {
         event.preventDefault();
         onAction({ controllerId: keyApp.controllerId, action: "redo" });
         return;

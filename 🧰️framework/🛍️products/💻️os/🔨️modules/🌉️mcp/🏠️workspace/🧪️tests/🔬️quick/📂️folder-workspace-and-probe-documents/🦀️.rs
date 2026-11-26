@@ -105,6 +105,7 @@ fn folder_schema_binding_requires_one_declared_owner() {
         let kinds = folder_declared_kinds(row);
         let selected = HeadlessWorkspace::declared_artifact_owner(row["schema"].as_str().expect("schema"), &kinds);
         assert_eq!(matches!(selected, Ok(Some(_))), row["accepted"].as_bool().expect("accepted"), "{}", row["id"]);
+        assert_eq!(selected.ok().flatten().as_ref().map(|kind| kind.artifact_kind.as_str()), row["artifactKind"].as_str(), "{}", row["id"]);
     }
 }
 
@@ -135,12 +136,14 @@ async fn folder_create_uses_owner_spr_schema_instead_of_requested_kind_alias() {
     let kinds = folder_declared_kinds(row);
     let owner = HeadlessWorkspace::canonical_artifact_owner(&spr, &kinds).expect("actual declared owner");
     assert_eq!(owner.schema, row["schema"].as_str().unwrap());
+    assert_eq!(Some(owner.artifact_kind.as_str()), row["artifactKind"].as_str());
+    assert_ne!(owner.schema, owner.artifact_kind);
     assert_ne!(owner.schema, kinds[0].schema);
 }
 
 fn folder_declared_kinds(row: &serde_json::Value) -> Vec<semio_os_mcp_routing::hub_relay::InstalledArtifactKind> {
     row["declarations"].as_array().expect("declarations").iter().map(|value| semio_os_mcp_routing::hub_relay::InstalledArtifactKind {
-        schema: value[0].as_str().unwrap().into(), plugin_id: value[1].as_str().unwrap().into(), app_id: value[2].as_str().unwrap().into(), media_out_ports: Vec::new(), export_formats: Vec::new(),
+        schema: value[0].as_str().unwrap().into(), plugin_id: value[1].as_str().unwrap().into(), app_id: value[2].as_str().unwrap().into(), artifact_kind: value[3].as_str().unwrap().into(), media_out_ports: Vec::new(), export_formats: Vec::new(),
     }).collect()
 }
 

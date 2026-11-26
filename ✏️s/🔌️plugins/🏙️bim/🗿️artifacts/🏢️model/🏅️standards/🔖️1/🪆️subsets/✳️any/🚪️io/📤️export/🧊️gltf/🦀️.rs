@@ -4,6 +4,7 @@
 //! 🔖 `IoFidelity::Lossy`: glTF has no slot for parametric constraints, types, layers, property sets or quantities; geometry, hierarchy, names and colours are exact.
 //! 📎 https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
 
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{instance, kinds};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
@@ -15,7 +16,7 @@ pub const GLTF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", stand
 
 /// 🧊️ The glTF model of `model` plus a note per element that could not be placed: the inference comes from the shared session.
 pub fn model_to_gltf(model: &ModelSnapshot) -> Result<(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::document::GltfModel, Vec<String>), String> {
-    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::gltf::scene::build(model, inferred)).map_err(|error| error.to_string())
+    instance::probe::<{ kinds::SOLIDS | kinds::LEVELS }, _>(None, model, |inferred| semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::gltf::scene::build(model, inferred)).map_err(|error| error.to_string())
 }
 
 /// 📤️ The GLB bytes of `model` plus a note per element that could not be placed.

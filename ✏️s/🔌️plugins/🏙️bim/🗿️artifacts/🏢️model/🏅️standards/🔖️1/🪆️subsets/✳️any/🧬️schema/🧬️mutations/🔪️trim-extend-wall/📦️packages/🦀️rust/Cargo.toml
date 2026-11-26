@@ -55,12 +55,10 @@ semio-s-artifact-bim-model-ramp-runs = { path = "../../../../💡️inferences/�
 semio-s-artifact-bim-model-snapshot = { path = "../../../../📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-wall-geometry = { path = "../../../🦉️wall-geometry/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract = { workspace = true }
-semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-gltf-model = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base-model = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 serde_json = { workspace = true, optional = true }

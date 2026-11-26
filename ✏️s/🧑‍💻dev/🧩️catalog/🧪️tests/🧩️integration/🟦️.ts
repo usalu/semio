@@ -88,6 +88,22 @@ describe("Specific original catalog completion", () => {
     expect(malformed, malformed.join("\n")).toEqual([]);
   });
 
+  it("boots the BIM editor and exposes the authored BIM examples to both application surfaces", () => {
+    const boot = resolvePlaygroundBoot(catalog, "bim");
+    expect(boot.dependencyErrors).toEqual([]);
+    expect(boot.plugins.map(row => row.pluginId)).toEqual(["bim"]);
+    const room = join(findWorkspaceRoot(), "🌎️hub/🧩️compositions/🏙️bim");
+    const contract = JSON.parse(readFileSync(join(room, "🧪️tests/🧫️fixtures/🛂️committed-descriptor/🔣️.json"), "utf8"));
+    type BimManifest = Pick<PluginManifest, "examples"> & { apps: ({ id: string } & Parameters<typeof examplesForApp>[1])[] };
+    const { manifest } = JSON.parse(readFileSync(join(room, "🧩️component/🔣️.json"), "utf8")) as { manifest: BimManifest };
+    expect(manifest.apps.map(app => app.id)).toEqual(contract.applicationIds);
+    for (const app of manifest.apps) {
+      const examples = examplesForApp(manifest.examples ?? [], app);
+      expect(examples.map(row => row.id)).toEqual(["demo", "house", "office"]);
+      for (const example of examples) expect(example.artifactJson).toMatch(/^semio bim\.model\.dsl v1\nschema="s\.bim\.model@1"/u);
+    }
+  });
+
   it("sourcing editor surface resolves the demo row the ShellHost navbar picker reads", () => {
     const descriptorPath = join(findWorkspaceRoot(), "🌎️hub/🧩️compositions/🪵️sourcing/🧩️component/🔣️.json");
     const descriptor = JSON.parse(readFileSync(descriptorPath, "utf8")) as { manifest?: PluginManifest };

@@ -1,0 +1,42 @@
+{
+  "title": "Provision Mac Worker G1 M15",
+  "emoji": "🍎",
+  "status": "closed",
+  "description": "Enroll this Mac in group g1 as origin g1-m15 and verify replica, cache, and native readiness.",
+  "summary": "Enrolled g1-m15 in group g1. The live replica and remote-execution scheduler both see the worker, the cache authenticated it, and fleet preflight completed with zero failures. Local workspace readiness remains supervised and was still running at the final check. See enrollment.md.",
+  "goal": "aioptimizedrepo",
+  "sessions": [
+    "d48e2ca7-2ae3-41d3-b30e-919cbb8481e0"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-25 12:55:19",
+      "author": "",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Enroll this Mac in group g1 as origin g1-m15 and verify replica, cache, and native readiness."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-25 15:04:45",
+      "author": "ueli",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "9b948fc54a42d9dcefcdb5dd5e7b2c8e60a63eb3",
+      "summary": "Enrolled g1-m15 in group g1. The live replica and remote-execution scheduler both see the worker, the cache authenticated it, and fleet preflight completed with zero failures. Local workspace readiness remains supervised and was still running at the final check. See enrollment.md.",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/PROVISION-MAC-WORKER-G1-M15/enrollment.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/PROVISION-MAC-WORKER-G1-M15/plan.sh"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/PROVISION-MAC-WORKER-G1-M15/join.command"
+        }
+      ]
+    }
+  ]
+}

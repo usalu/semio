@@ -40,7 +40,7 @@ const memoryLimit = 256 * MiB;
 
 type FixtureMode = "empty" | "minimal" | "standard" | "captured-ack" | "matched-empty";
 
-function audit(path: string, expectedDigest: string, plugin: string, live: boolean, fixtureMode: FixtureMode, tuple: boolean, inputOnly: boolean, lifecycleTurns: boolean, transcriptPath?: string) {
+function audit(path: string, expectedDigest: string, plugin: string, live: boolean, fixtureMode: FixtureMode, tuple: boolean, inputOnly: boolean, lifecycleTurns: boolean, monotonicScale: bigint, hostEventOrder: boolean, transcriptPath?: string) {
   const began = performance.now();
   const elapsed = (since = began) => Number((performance.now() - since).toFixed(3));
   const log = (report: object) => parentPort?.postMessage(report);
@@ -105,7 +105,7 @@ function audit(path: string, expectedDigest: string, plugin: string, live: boole
           return;
         }
         case "wasi:clocks/monotonic-clock@0.2.0::now": {
-          const time = micros() * 1000n;
+          const time = micros() * 1000n * monotonicScale;
           if (call) {
             assert(call.length < 65_536, "Replay import count exceeded record bound");
             call.push(`I now ${time}`);
@@ -204,6 +204,10 @@ function audit(path: string, expectedDigest: string, plugin: string, live: boole
   });
   assert(fixture, "No exact valid Poll fixture");
   const input = live ? JSON.parse(readFileSync(liveFixture, "utf8")) : fixture.wire;
+  if (!live && hostEventOrder && input.Poll.events[0]?.instanceOpen) {
+    const { request, purpose, appId, actor, config, assets, capabilities, quotas } = input.Poll.events[0].instanceOpen;
+    input.Poll.events = [{ instanceOpen: { request, purpose, appId, actor, config, assets, capabilities, quotas } }];
+  }
   if (fixtureMode === "matched-empty") input.Poll.events = [];
   if (fixtureMode === "captured-ack") {
     const { activationGeneration, instanceId, requestSequence } = input.Poll.events[0].instanceOpen.request;
@@ -528,7 +532,7 @@ function audit(path: string, expectedDigest: string, plugin: string, live: boole
       }
       assert(ready && ["idle", "moreWork"].includes(result.status), "Invalid Poll result: " + JSON.stringify(result));
       const receipt = result.lifecycleReceipt ?? null;
-      log({ stage: "lifecycle-turn", turn, acknowledging, status: result.status, receipt, inputPending, effects: result.effects, nextWake: result.nextWake, fuelUsed: result.fuelUsed });
+      log({ stage: "lifecycle-turn", turn, acknowledging, status: result.status, receipt, inputPending, effects: result.effects, nextWake: result.nextWake, fuelUsed: result.fuelUsed, elapsedMs: elapsed(inputStart) });
       let closed = false;
       for (let attempt = 0; attempt < 2_048 && !closed; attempt++) closed = readReceipt("close_actor_output");
       assert(closed, "Poll output did not retire");
@@ -581,15 +585,19 @@ if (isMainThread) {
   const tuple = process.argv.includes("--tuple-limits");
   const inputOnly = process.argv.includes("--input-only");
   const lifecycleTurns = process.argv.includes("--lifecycle-turns");
+  const monotonicOption = process.argv.find(arg => arg.startsWith("--monotonic-scale="));
+  const monotonicScale = BigInt(monotonicOption?.split("=")[1] ?? "1");
   assert([emptyPoll, minimalOpen, capturedAck, matchedEmpty].filter(Boolean).length <= 1);
   assert(inputOnly || !capturedAck);
   assert(!lifecycleTurns || (!inputOnly && !live && tuple && !(emptyPoll || minimalOpen || capturedAck || matchedEmpty)));
+  assert(monotonicScale >= 1n && monotonicScale <= 256n && (monotonicScale === 1n || lifecycleTurns));
   const fixtureMode = capturedAck ? "captured-ack" : matchedEmpty ? "matched-empty" : emptyPoll ? "empty" : minimalOpen ? "minimal" : "standard";
   assert(!live || plugin === "note" && fixtureMode === "standard");
   assert(!minimalOpen || plugin === "note");
+  const hostEventOrder = process.argv.includes("--host-event-order");
   const transcriptPath = process.env.SEMIO_OWNED_INPUT_TRANSCRIPT;
   assert(!lifecycleTurns || !transcriptPath, "The scalar transcript covers input admission only");
-  const worker = new Worker(new URL(import.meta.url), { workerData: { path, expectedDigest, plugin, live, fixtureMode, tuple, inputOnly, lifecycleTurns, transcriptPath } });
+  const worker = new Worker(new URL(import.meta.url), { workerData: { path, expectedDigest, plugin, live, fixtureMode, tuple, inputOnly, lifecycleTurns, monotonicScale, hostEventOrder, transcriptPath } });
   const deadline = setTimeout(() => {
     console.error("[DEBUG] Owned Input diagnostic exceeded its wall-clock bound");
     process.exit(1);
@@ -607,5 +615,5 @@ if (isMainThread) {
     process.exitCode = 1;
   });
 } else {
-  audit(workerData.path, workerData.expectedDigest, workerData.plugin, workerData.live, workerData.fixtureMode, workerData.tuple, workerData.inputOnly, workerData.lifecycleTurns, workerData.transcriptPath);
+  audit(workerData.path, workerData.expectedDigest, workerData.plugin, workerData.live, workerData.fixtureMode, workerData.tuple, workerData.inputOnly, workerData.lifecycleTurns, workerData.monotonicScale, workerData.hostEventOrder, workerData.transcriptPath);
 }

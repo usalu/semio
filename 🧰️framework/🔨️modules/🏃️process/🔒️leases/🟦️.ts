@@ -1,6 +1,7 @@
 import{initializeResourceLeaseContinuationV1,requireResourceLeaseContinuationCatalogV1,readResourceLeaseContinuationV1,writeResourceLeaseContinuationV1,resourceLeaseContinuationStartV1,type ResourceLeaseContinuationKindV1,type ResourceLeaseTransactionPhaseV1}from"./♻️retirement/🧭️continuation/🟦️.ts";
 import cleanupLeaseSchema from"./🧹️cleanup/🧬️schema/🔣️.json" with{type:"json"};
 import metadataSchema from "./📦️metadata/🧬️schema/🔣️.json" with {type:"json"};
+import {processPidExistsV1} from "../🔖️identity/🟦️.ts";
 import {captureResourceLeaseCandidateV1,requireResourceLeaseCandidateV1,readOwnedResourceLeaseV1,resourceLeaseBusyV1,resourceLeaseRetirementNamesV1,resourceLeaseRetirementScanLimitsV1,resourceLeaseRetirementIdlePolicyV1,resourceLeaseRetirementMessagesV1,finishResourceLeaseCleanupV1,openResourceLeaseDatabaseV1,ResourceLeaseAdmissionFinalizerV1,type ResourceLeaseDatabaseV1,type ResourceLeaseCandidateV1} from "./♻️retirement/🟦️.ts";
 import { createHash, randomBytes } from "node:crypto";
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -651,10 +652,10 @@ async function reapQueueTickets(options:QueuedLeaseOptions,queue:string,names:re
     return{reaped,probed,more:false};
   }finally{sweepCatalog.release();}
 }
-/** 👻️ Whether the process that wrote a queue ticket no longer exists (`ESRCH`); a permission error means it exists. A hint for the order of the reclaim and for skipping the ticket in the turn decision, never a proof of release: the claim lock is. */
+/** 👻️ Whether the process that wrote a queue ticket no longer exists in the process table; a permission error means it exists. A hint for the order of the reclaim and for skipping the ticket in the turn decision, never a proof of release: the claim lock is. */
 function ticketPidGoneV1(pid:number,known:Map<number,boolean>):boolean{
   const seen=known.get(pid);if(seen!==undefined)return seen;
-  let gone=false;try{process.kill(pid,0);}catch(error){gone=(error as NodeJS.ErrnoException).code==="ESRCH";}
+  const gone=!processPidExistsV1(pid);
   known.set(pid,gone);return gone;
 }
 /** 🧹️ Releases a queue claim and removes its settled file at once, so a claim never outlives its acquisition: each queued acquisition owns one claim file named by its unique ticket, nobody else opens it after the ticket left the queue, and an unlink that fails (busy on Windows, a full disk) only leaves the file to the sweep of settled claims. @see ./♻️retirement/🟦️.ts */

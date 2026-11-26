@@ -1,0 +1,10 @@
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+const load = (path: string) => import(pathToFileURL(resolve(path)).href);
+const { issueRepositoryScriptProvidersV1 } = await load("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔌️providers/🟦️.ts");
+const { createScriptProcessEnvelope } = await load("🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts");
+issueRepositoryScriptProvidersV1(process.env);
+process.env.SEMIO_SCRIPT_PROCESS_INVOCATION = JSON.stringify(createScriptProcessEnvelope({version: 1, owner: "bim:sqlite", maximumElapsedMilliseconds: 180000}, {}, Date.now()));
+const model = resolve("✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any");
+const files = ["🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧩️complete/🟦️.ts", "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts", "🧬️schema/💡️inferences/💰️costs/🧪️tests/🟦️.ts"];
+process.exit(await Bun.spawn([process.execPath, "test", ...files.map(file => resolve(model, file))], {env: {...process.env}, stdout: "inherit", stderr: "inherit"}).exited);

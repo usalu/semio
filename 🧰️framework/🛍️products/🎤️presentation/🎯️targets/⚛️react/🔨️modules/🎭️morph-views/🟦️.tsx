@@ -743,7 +743,7 @@ function PdfMorphView({ morphId: anchorId, embodiment, emphasis, position }: { r
           <button
             type="button"
             {...SHARED_BORDER_CELL}
-            className="presentation-pdf-page-nav__button presentation-pdf-page-nav__button--prev"
+            className="presentation-pdf-page-nav__button presentation-pdf-page-nav__button--prev ui-glass"
             title="Previous page"
             disabled={!pdfCanGoToPreviousPage(currentPage, embodiment, numPages)}
             onPointerDown={(event) => {
@@ -759,7 +759,7 @@ function PdfMorphView({ morphId: anchorId, embodiment, emphasis, position }: { r
           <button
             type="button"
             {...SHARED_BORDER_CELL}
-            className="presentation-pdf-page-nav__button presentation-pdf-page-nav__button--next"
+            className="presentation-pdf-page-nav__button presentation-pdf-page-nav__button--next ui-glass"
             title="Next page"
             disabled={!pdfCanGoToNextPage(currentPage, embodiment, numPages)}
             onPointerDown={(event) => {

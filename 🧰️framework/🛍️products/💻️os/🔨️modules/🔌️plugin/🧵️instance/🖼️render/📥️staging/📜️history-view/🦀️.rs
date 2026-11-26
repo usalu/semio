@@ -78,7 +78,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     }
     /// 🧪️ Refreshes (backfilling the command log) and returns the current `HistoryView` —
     /// the merged command+operation timeline test harness accessor.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub async fn test_history(&mut self) -> HistoryView {
         self.refresh_cache().await.expect("refresh cache");
         self.shared().build_history_view(None).await

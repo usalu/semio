@@ -1,4 +1,5 @@
 use semio_s_artifact_draw_drawing_model::*;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_geometry::*;
 use semio_s_artifact_draw_drawing_scene::*;
 use semio_framework_test_fixtures::repo_text;

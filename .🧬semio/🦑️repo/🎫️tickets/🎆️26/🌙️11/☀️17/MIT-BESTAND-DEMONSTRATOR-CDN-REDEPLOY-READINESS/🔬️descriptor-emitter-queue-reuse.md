@@ -1,0 +1,7 @@
+# Descriptor emitter reuse for component staging
+
+The ticket's sequential and paired native queues now enter the canonical component driver directly. That driver reuses a fresh emitter or rebuilds a missing, unreadable or stale emitter before it admits component work. It opens the native emitter's retained compilation receipt and index, checks the exact executable and retained-source bytes, then compares the recorded input digests with current files. The component driver also runs the emitter capability check and retains the sealed reader through descriptor emission.
+
+The shell queue still requires a terminal successful component-stage summary and certified browser receipts. Removing its unconditional emitter build reduces repeated host compilation between package roots and does not change component admission or browser evidence. The existing single-root and paired-root fixture suites passed. The production prerequisite, freshness, and request suites passed 24 tests and 117 assertions.
+
+The canonical Darwin host emitter published at 21:59 UTC. The staged executable SHA-256 is `6359173086fc49397c4b13e71bc6f168d4386d6fe594bdb73d1fa9a115a6dce7`, recorded in the retained compiler receipt. The receipt SHA-256 is `21b3f70b3d874aea12515a96fb01e4b5d39a537815d7d083412777ee3d23a0fa`, recorded in its index. The Demonstrator guest entered the managed queue next. Subsequent packages run one at a time through the standard native lane. Each invocation checks the published artifact against current source and refreshes it when the compiler witness changes.

@@ -37,14 +37,14 @@ describe("typed-operation fault pages become SemioFaultErrors the shell tells in
 
   for (const row of fixture.cases) {
     test(`${row.id}: the consumed page throws a SemioFaultError whose notice reads in en and de`, () => {
-      const call = new TypedOperationRouter(() => {}, () => {}, () => {}).open("fixture");
+      const call = new TypedOperationRouter(() => {}, () => {}, () => false).open("fixture");
       let thrown: unknown;
       try { consumeTypedOperationEffects([page(fixture.faultLane, JSON.stringify(row.page), 0)] as never, call); } catch (error) { thrown = error; }
       expect(thrown).toBeInstanceOf(SemioFaultError);
       const error = thrown as SemioFaultError;
       expect(error.fault.code).toBe(row.page.code);
       expect(error.fault.params).toEqual((row.page as { params?: Record<string, string> }).params);
-      for (const locale of ["en", "de"] as const) expect(surfaced(error, locale)).toEqual(row.expected[locale]);
+      for (const locale of ["en", "de"] as const) expect<unknown>(surfaced(error, locale)).toEqual(row.expected[locale]);
     });
   }
 
@@ -54,7 +54,7 @@ describe("typed-operation fault pages become SemioFaultErrors the shell tells in
     expect(error.fault.code).toBe(TYPED_OPERATION_UNDECODABLE_FAULT);
     expect(error.fault.code).toBe(fixture.undecodable.code);
     expect(error.message).toBe(fixture.undecodable.text);
-    for (const locale of ["en", "de"] as const) expect(surfaced(error, locale)).toEqual(fixture.undecodable.expected[locale]);
+    for (const locale of ["en", "de"] as const) expect<unknown>(surfaced(error, locale)).toEqual(fixture.undecodable.expected[locale]);
   });
 
   test("a fault page parked for its own call rejects that call with the decoded SemioFaultError", async () => {
@@ -78,7 +78,7 @@ describe("typed-operation fault pages become SemioFaultErrors the shell tells in
       const router = new TypedOperationRouter(() => {}, () => {}, publishOperationFault);
       expect(router.fault(router.open("drain"), token(3), JSON.stringify(row.page))).toBe(false);
       expect(received.length).toBe(1);
-      for (const locale of ["en", "de"] as const) expect(surfaced(received[0]!, locale)).toEqual(row.expected[locale]);
+      for (const locale of ["en", "de"] as const) expect<unknown>(surfaced(received[0]!, locale)).toEqual(row.expected[locale]);
     } finally {
       operationFaultFanouts.delete(fixture.receiver);
     }
@@ -93,11 +93,26 @@ describe("typed-operation fault pages become SemioFaultErrors the shell tells in
       expect(consumeTypedOperationEffects([page(fixture.faultLane, JSON.stringify(row.page), 0)] as never, refresh).map((effect) => effect.tag)).toEqual([]);
       expect(published.length).toBe(1);
       expect(reported).toEqual([]);
-      for (const locale of ["en", "de"] as const) expect(surfaced(published[0]!, locale)).toEqual(row.expected[locale]);
+      for (const locale of ["en", "de"] as const) expect<unknown>(surfaced(published[0]!, locale)).toEqual(row.expected[locale]);
       const actorId = `fault-notice-refresh#${fixture.receiver}`;
       await expect(withTypedOperationCall(actorId, "refresh-ui", async (call) => call.observe(token(0)), false)).resolves.toBe(false);
     });
   }
+
+  test("archive commands deliver a foreign action fault to its subscriber and retain their own reply", async () => {
+    const { encodeAppCommand } = await import("@semio-tech/framework/app-channel");
+    const { inspectEncodedAppCommand } = await import("../📥️invocation-frames/🟦️.ts");
+    const fault = fixture.cases[0]!.page;
+    for (const command of fixture.archiveObservers) {
+      const inspected = inspectEncodedAppCommand([encodeAppCommand(command as Parameters<typeof encodeAppCommand>[0])]);
+      const received: string[] = [];
+      const router = new TypedOperationRouter(() => {}, () => {}, (_instance, error) => { received.push(error.fault.code); return true; });
+      const call = router.open(inspected.operation, inspected.adoptsTypedOperation);
+      expect(consumeTypedOperationEffects([page(fixture.faultLane, JSON.stringify(fault), 0)] as never, call)).toEqual([]);
+      expect(received).toEqual([fault.code]);
+      call.close();
+    }
+  });
 
   test("a successful operation raises and publishes nothing", () => {
     const published: SemioFaultError[] = [];

@@ -20,7 +20,7 @@ export function Inspector(props: { readonly inspected: Inspected | null; readonl
   const { t } = useArchive();
   const { inspected, language, hasValues } = props;
   return (
-    <Column as="section" aria-label={t("viewer.inspector")} className="min-h-20 bg-panel">
+    <Column as="section" aria-label={t("viewer.inspector")} className="min-h-20">
       <Cell><h3 className="m-0 text-[0.65rem] uppercase tracking-wide text-muted-foreground">{t("viewer.inspector")}</h3></Cell>
       {inspected === null ? (
         <Note>{t(hasValues ? "viewer.inspectorHint" : "viewer.inspectorNone")}</Note>
@@ -66,7 +66,7 @@ export function Legends(props: { readonly scene: DrawingScene | null; readonly l
   const { t } = useArchive();
   const legends = props.legends ?? props.scene?.legends ?? [];
   return (
-    <Column as="section" aria-label={t("viewer.legends")} className="bg-panel">
+    <Column as="section" aria-label={t("viewer.legends")}>
       <Cell><h3 className="m-0 text-[0.65rem] uppercase tracking-wide text-muted-foreground">{t("viewer.legends")}</h3></Cell>
       {legends.length === 0 ? <Note>{t("viewer.legendsNone")}</Note> : legends.map((legend, index) => <Cell key={`${legend.quantity}-${index}`} className="flex-col items-stretch"><LegendView legend={legend} language={props.language} /></Cell>)}
       {props.patterns && legends.length > 0 ? <Note className="text-[0.65rem]">{t("viewer.patternsMeaning")}</Note> : null}

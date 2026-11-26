@@ -182,7 +182,7 @@ pub async fn migrated_contract_registry() -> AppActionRegistry {
     /// instance (`dispatch_typed_command_inner` refuses `interactive-job.live-instance` otherwise),
     /// and it retires its stores before `ArtifactStore::drop` can fire its terminal-empty witness.
     #[doc(hidden)]
-pub struct ContractApp(VcsArtifactApp<TestApp>, semio_plugin_mounted_owner::MountedOwnerPolicyV1);
+pub struct ContractApp(pub VcsArtifactApp<TestApp>, pub semio_plugin_mounted_owner::MountedOwnerPolicyV1);
 
     impl std::ops::Deref for ContractApp {
         type Target = VcsArtifactApp<TestApp>;

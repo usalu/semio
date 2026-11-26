@@ -25,14 +25,17 @@ for (const row of fixture.chips) test("Print " + row.theme + " " + row.level + "
   const alpha = 1 - levels!.names.indexOf(row.level) * levels!.glassAlphaStep;
   const tint = levels!.chipTintPercent / 100;
   const paint = (name: string) => colord(paints.get("semio-chrome-" + row.theme + "-" + name)!);
-  const foreground = paint("foreground"), canvas = paint("canvas").toRgb(), glass = paint(row.level).toRgb();
+  const foreground = paint("foreground"), interior = paint("window"), glass = paint(row.level).toRgb();
+  const base = interior.toRgb();
+  expect(interior.toHex()).toBe(row.interior);
+  expect(paint("base").toHex()).toBe(row.margin);
   expect(paint(row.level).toHex()).toBe(row.glass);
   const text = foreground.toRgb();
   const channel = (component: "r" | "g" | "b") => Number(evaluate("round((surface * alpha + base * (1 - alpha)) * (1 - tint) + label * tint)", {
-    surface: glass[component], base: canvas[component], label: text[component], alpha, tint,
+    surface: glass[component], base: base[component], label: text[component], alpha, tint,
   }));
   const composite = colord({ r: channel("r"), g: channel("g"), b: channel("b") }).toHex();
-  expect(composite).toBe(row.canvasComposite);
+  expect(composite).toBe(row.interiorComposite);
   expect(foreground.contrast(composite)).toBeGreaterThanOrEqual(fixture.minimum);
   expect(contrastRatio(foreground.toHex(), composite)).toBeGreaterThanOrEqual(fixture.minimum);
 });

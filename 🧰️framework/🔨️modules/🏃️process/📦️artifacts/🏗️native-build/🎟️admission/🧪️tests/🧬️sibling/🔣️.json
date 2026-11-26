@@ -1,0 +1,20 @@
+{
+  "rows": [
+    {"key": "pkg@crate|host|release|lib", "lines": 100, "peakMiB": 600},
+    {"key": "pkg@crate|host|prototype|lib|abc", "lines": 100, "peakMiB": 400},
+    {"key": "pkg@crate|wasm32-unknown-unknown|release|lib", "lines": 100, "peakMiB": 9000},
+    {"key": "pkg@crate|host|release|rlib", "lines": 100, "peakMiB": 9001},
+    {"key": "other@crate|host|release|lib", "lines": 100, "peakMiB": 9002},
+    {"key": "pkg@crate|host|release|lib", "lines": 900, "peakMiB": 9003}
+  ],
+  "cases": [
+    {"name": "other profile and other inputs of the same unit and size", "key": "pkg@crate|host|check|lib", "lines": 100, "peaksMiB": [600, 400]},
+    {"name": "crate types are part of the unit: only the rlib row counts for an rlib", "key": "pkg@crate|host|check|rlib", "lines": 100, "peaksMiB": [9001]},
+    {"name": "a unit nobody measured has no siblings", "key": "none@crate|host|check|lib", "lines": 100, "peaksMiB": []},
+    {"name": "a grown source keeps only rows of comparable size", "key": "pkg@crate|host|check|lib", "lines": 900, "peaksMiB": [9003]}
+  ],
+  "broker": [
+    {"name": "measured sibling fits the parent grant", "parentMiB": 1536, "siblingMiB": 600, "expected": "admitted"},
+    {"name": "measured sibling above the parent grant is still refused", "parentMiB": 1536, "siblingMiB": 2000, "expected": "refused"}
+  ]
+}

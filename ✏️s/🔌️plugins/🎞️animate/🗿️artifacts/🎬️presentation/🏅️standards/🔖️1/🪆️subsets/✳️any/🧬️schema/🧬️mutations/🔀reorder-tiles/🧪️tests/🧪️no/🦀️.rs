@@ -74,13 +74,11 @@ fn committed_diff_is_canonical() {
     assert_eq!(reencoded, original, "reorder-tiles/no-ops-when-the-tile-is-already-at-that-index: committed diff JSON is not canonical");
 }
 
-/// 🩹 Applying the committed diff directly to `before` yields the committed `after`. Order lives in
-/// the composed deck, and this diff leaves that slot unset — the ordering-pinning assertion this
-/// verb specifically needs.
+/// 🩹 The committed identity diff preserves the source, tile list and schema.
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: PresentationDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    assert!(decoded.presentation.is_none(), "a positional no-op must leave the order-bearing presentation slot unset");
+    assert_eq!(decoded, PresentationDiff::default(), "this operation must carry the identity diff");
     let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-tiles/no-ops-when-the-tile-is-already-at-that-index: committed diff did not carry before to after");
 }
@@ -113,19 +111,14 @@ fn declared_outcome_holds() {
     assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Warning, "an already-there reorder is a warning, not a missing-target error");
 }
 
-/// ↩️ `reorder-tiles`' inverse is BASE-derived: it moves the tile back to the index it currently
-/// holds. Here that index IS the requested one, so replaying it leaves the deck exactly as it was.
+/// ↩️ A no-op leaves undo history empty and preserves the full snapshot.
 #[test]
-fn inverse_moves_the_tile_back_to_its_base_index() {
+fn unchanged_index_has_an_empty_inverse() {
     let base = before();
-    let inverse = inverse_presentation_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
-    assert_eq!(inverse.len(), 1, "reorder-tiles undoes with exactly one step, got {inverse:?}");
-    let PresentationMutation::ReorderTiles(undo) = &inverse[0] else {
-        panic!("reorder-tiles' inverse must be a reorder-tiles, got {:?}", inverse[0]);
-    };
-    assert_eq!((undo.id.as_str(), undo.to_index), ("t-hero", 0), "the inverse restores the base index of the tile the payload named");
-    let restored = apply_presentation_mutation(&apply_presentation_mutation(&base, &mutation()).expect("forward applies"), &inverse[0]).expect("inverse step applies");
-    assert_eq!(restored, base, "reorder-tiles/no-ops-when-the-tile-is-already-at-that-index: inverse did not restore the before-snapshot");
+    let operation = mutation();
+    let inverse = inverse_presentation_mutation(&base, &operation).expect("valid retained mutation inverse fixture");
+    assert!(inverse.is_empty());
+    assert_eq!(apply_presentation_mutation(&base, &operation).expect("no-op applies"), base);
 }
 
 /// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.

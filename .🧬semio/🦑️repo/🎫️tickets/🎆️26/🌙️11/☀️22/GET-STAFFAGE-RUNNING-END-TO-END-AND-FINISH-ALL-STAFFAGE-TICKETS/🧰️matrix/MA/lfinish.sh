@@ -1,5 +1,5 @@
 #!/bin/zsh
-# 🏁️ Writes and proves the loft repair of assets in ONE grant of the memory queue (1000 MB): lfinish.sh <id>…   The catalog file must be the backup, the hybrid copy the predecessor wrote or the loft copy (else the asset is skipped); it is set to the backup, `loft.ts --ops loft/<id>.json --write` runs twice (the second run changes nothing), the file must equal the proven trial copy `$GEN/loft/<id>.json`; then scan, gate, measure, check CLI and the matrix of the asset (MATRIX=0 leaves it out). An asset whose measure or check is not green is put back to the file it had before. Logs `$GEN/proof/<id>-*.log`, block `$GEN/proof/<id>-finish.txt`.
+# 🏁️ Writes and proves the loft repair of assets in ONE grant of the memory queue (1000 MB): lfinish.sh <id>…   The catalog file must be the backup, the hybrid copy the predecessor wrote or the loft copy (else the asset is skipped); it is set to the backup, `loft.ts --ops loft/<id>.json --write` runs twice (the second run changes nothing), then `../MX-2/loft.ts --ops loft/<id>.lofts.json --write` twice when that file exists, the file must equal the proven trial copy `$GEN/loft/<id>.json`; then scan, gate, measure, check CLI and the matrix of the asset (MATRIX=0 leaves it out). An asset whose measure or check is not green is put back to the file it had before. Logs `$GEN/proof/<id>-*.log`, block `$GEN/proof/<id>-finish.txt`.
 BATCH=MA source "${0:A:h}/../MR/env.sh"
 d="$GEN/proof"; mkdir -p "$d" "$GEN/was"
 for a in "$@"; do
@@ -10,6 +10,7 @@ for a in "$@"; do
     cp "$file" "$GEN/was/$a.json"
     cat "$GEN/backup/$a.json" > "$file"
     (cd "$T" && "$B" "$W/loft.ts" "$a" --ops "$W/loft/$a.json" --write > "$d/$a-apply1.log" 2>&1; "$B" "$W/loft.ts" "$a" --ops "$W/loft/$a.json" --write > "$d/$a-apply2.log" 2>&1)
+    [[ -f "$W/loft/$a.lofts.json" ]] && { (cd "$S/📦️packages/🟦️typescript" && "$B" "$M/../MX-2/loft.ts" "$a" --ops "$W/loft/$a.lofts.json" --write > "$d/$a-body1.log" 2>&1; "$B" "$M/../MX-2/loft.ts" "$a" --ops "$W/loft/$a.lofts.json" --write > "$d/$a-body2.log" 2>&1); echo "body: $(tail -2 "$d/$a-body1.log" | tr '\n' ' ') | second run: $(tail -2 "$d/$a-body2.log" | tr '\n' ' ')"; }
     echo "apply: $(tail -2 "$d/$a-apply1.log" | tr '\n' ' ') | second run: $(tail -2 "$d/$a-apply2.log" | tr '\n' ' ')"
     if ! cmp -s "$GEN/loft/$a.json" "$file"; then cat "$GEN/was/$a.json" > "$file"; echo "PUT BACK: the written file is not the proven trial copy"; continue; fi
     mkdir -p "$GEN/written"; cp "$file" "$GEN/written/$a.json"

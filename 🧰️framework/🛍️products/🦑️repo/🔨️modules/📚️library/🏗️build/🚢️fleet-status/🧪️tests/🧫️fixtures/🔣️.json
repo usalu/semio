@@ -10442,7 +10442,7 @@
        "recorded": "running",
        "stage": "dependencies"
       },
-      "text": "Worker g1-m09 lebt, schrieb aber 10 min lang keinen Bereitschaftseintrag, obwohl er running in Stufe dependencies ist"
+      "text": "Worker g1-m09 lebt, aber sein Bereitschaftsschlag ist veraltet: 10 min lang kein Bereitschaftseintrag, obwohl er running in Stufe dependencies ist"
      },
      {
       "id": "worker-warden-intervened",

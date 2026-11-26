@@ -4,7 +4,7 @@ import {Buffer} from "node:buffer";
 import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
-import {inferenceClientVerdictV1,createHeadlessCallerSurfaceV1,inferenceCancellationVerdictV1,verifyActiveInferenceCancellationV1,requireMcpClientTerminalStepV1,type McpClientSessionV1,type McpClientStep} from "../../🟦️.ts";
+import {inferenceJobSnapshotMatchesV1,listMcpInferenceDeclarationsV1,inferenceClientVerdictV1,createHeadlessCallerSurfaceV1,inferenceCancellationVerdictV1,verifyActiveInferenceCancellationV1,requireMcpClientTerminalStepV1,type McpClientSessionV1,type McpClientStep} from "../../🟦️.ts";
 import {encodeMcpComponentModelManifestV1} from "../../📡️stdio/📦️component-models/🟦️.ts";
 import modelSchema from "../../📡️stdio/📦️component-models/🔣️.json";
 import {OS_MCP_SCHEMA_DOCUMENT} from "../../🧬️schema/🟦️.ts";
@@ -13,9 +13,37 @@ import corpus from "./🔣️.json";
 import inference from "./inference.json";
 import context from "./context.json";
 import cancellation from "./cancellation.json";
+import archive from "./export.json";
+import creation from "./create.json";
+import { artifactCreationSucceededV1, exportedDocumentMatchesSnapshotV1 } from "../../🟦️.ts";
 import { SPECIFIC_MCP_CLIENT_E2E_PINS_V1 as pins } from "../../../../../../../✏️s/🧑‍💻dev/🤝️mcp-client-e2e/🟦️.ts";
 import initial from "../../../../../../../✏️s/🧑‍💻dev/🤝️mcp-client-e2e/🧫️initial-artifact.json";
 import bitmapSchema from "../../../../../../../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json";
+
+test("only a committed creation of the requested plugin artifact advances the journey", () => {
+ const {artifactId,kind,pluginId}=creation;
+ const check = new Ajv().compile({type:"object",required:["artifactId","kind","pluginId","status"],properties:{artifactId:{const:artifactId},kind:{const:kind},pluginId:{const:pluginId},status:{const:"SUCCEEDED"}}});
+ for(const row of creation.cases) {
+  const {matches,isError,...fields}=row;
+  const reply={isError,structuredContent:{artifactId,kind,pluginId,...fields}};
+  expect(!isError && check(reply.structuredContent)).toBe(matches);
+  expect(artifactCreationSucceededV1(reply,artifactId,kind,pluginId)).toBe(matches);
+ }
+});
+
+test("whole-document export carries the exact persisted genesis and journal", () => {
+ const db = new Database(":memory:");
+ try {
+  const oracle = db.query("SELECT lower(hex(char(1,1) || ?1 || char(1) || ?2 || char(0))) = ?3 AS matches");
+  for (const row of archive.cases) {
+   const pack = Buffer.from(archive.packBase64,"base64"), spr = Buffer.from(archive.sprBase64,"base64");
+   const expected = oracle.get(pack.toString(),spr.toString(),row.hex) as {matches:number};
+   expect(Boolean(expected.matches)).toBe(row.matches);
+   const data = Buffer.from("pk:" + Buffer.from(row.hex,"hex").toString("base64")).toString("base64");
+   expect(exportedDocumentMatchesSnapshotV1(data,archive.packBase64 + "." + archive.sprBase64)).toBe(row.matches);
+  }
+ } finally { db.close(); }
+});
 
 test("typed creation sends distinct schema-admitted fixtures to the owner before persisting", () => {
  const oracle = new Ajv({strict:false}).addFormat("base64", /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/u).compile(bitmapSchema);
@@ -73,10 +101,11 @@ test("cancellation gives the active job time to report progress and requires bot
    let snapshotCount = 0;
    const timers: ReturnType<typeof setTimeout>[] = [];
    const binding = {serviceId:pins.inferenceSchema,pluginId:pins.inferencePluginId,artifactKind:pins.inferenceArtifactKind,documentId:"artifact-active-cancel"};
-   const page = () => ({structuredContent:{jobHandle:cancelComplete ? terminalHandle : jobHandle,job:{...binding,jobId:cancelComplete ? terminalJobId : jobId,state:cancelComplete ? "CANCELLED" : "RUNNING",cancelRequested:cancelComplete,progress:activeProgress && !cancelComplete ? [{fraction:0.2}] : []}}});
-   const call = async (name: string): ReturnType<McpClientSessionV1["call"]> => {
+   let cursor = row.initialCursor ?? 0;
+   const page = () => ({structuredContent:{jobHandle:cancelComplete ? terminalHandle : jobHandle,job:{...binding,jobId:cancelComplete ? terminalJobId : jobId,state:cancelComplete ? "CANCELLED" : "RUNNING",cancelRequested:cancelComplete,nextCursor:cursor,progress:activeProgress && !cancelComplete ? [{fraction:0.2}] : []}}});
+   const call = async (name: string, args: unknown): ReturnType<McpClientSessionV1["call"]> => {
     switch (name) {
-     case "artifact_create": return {structuredContent:{}};
+     case "artifact_create": return {structuredContent:{status:"SUCCEEDED",artifactId:binding.documentId,kind:binding.artifactKind,pluginId:binding.pluginId}};
      case "artifact_snapshot": {
       const snapshot = snapshotCount++ === 0 ? row.before : row.after;
       const content = Object.fromEntries(Object.entries(snapshot));
@@ -88,8 +117,13 @@ test("cancellation gives the active job time to report progress and requires bot
      case "inference_cancel":
       if (row.cancelDelayMs) timers.push(setTimeout(() => { cancelComplete = true; }, row.cancelDelayMs));
       else cancelComplete = true;
+      const response = page();
+      response.structuredContent.job.nextCursor = row.cancellationCursor ?? cursor;
+      return response;
+     case "inference_events":
+      expect(args).toEqual({jobHandle,after:cursor});
+      cursor++;
       return page();
-     case "inference_events": return page();
      default: throw Error(`Unexpected inference fixture call ${name}`);
     }
    };
@@ -157,5 +191,35 @@ test("the native manifest binds each model to its mode, crate, and unique plugin
    if (row.expected) expect(JSON.parse(encodeMcpComponentModelManifestV1(manifest))).toEqual(manifest);
    else expect(() => encodeMcpComponentModelManifestV1(manifest), row.name).toThrow();
   } finally { db.close(); }
+ }
+});
+
+test("inference discovery carries its schema through later service pages and refuses repeated cursors", async () => {
+  const fixture = await import("./inference-pages.json");
+  for (const row of fixture.default.cases) {
+    const calls: unknown[] = [];
+    const result = await listMcpInferenceDeclarationsV1({ async call(tool, args) {
+      expect(tool).toBe("inference_list");
+      calls.push(args);
+      return { structuredContent: row.pages[calls.length-1] };
+    } }, fixture.default.schema);
+    expect(calls).toEqual(row.calls.map(cursor => cursor===null ? { inferenceSchema: fixture.default.schema } : { inferenceSchema: fixture.default.schema, cursor }));
+    expect(result.ok).toBe(row.ok);
+    expect(result.visited.map(declaration => declaration.owner)).toEqual(row.owners);
+  }
+});
+
+test("job_get retains the exact inference job and its returned solution", () => {
+ const solution = inference.cases[0].reply.structuredContent;
+ const snapshot = {jobId:solution.jobId,kind:"inference.run",status:"SUCCEEDED",result:solution};
+ const oracle = new Ajv({strict:false}).compile({type:"object",required:["structuredContent"],properties:{
+  isError:{const:false},structuredContent:{type:"object",required:Object.keys(snapshot),
+   properties:Object.fromEntries(Object.entries(snapshot).map(([key,value]) => [key,{const:value}]))}
+ }});
+ for (const row of inference.jobSnapshots) {
+  const result = Object.fromEntries(Object.entries({...solution,...row.result}).reverse());
+  const reply = {isError:row.isError === true,structuredContent:{...snapshot,result,...row.snapshot}};
+  expect(Boolean(oracle(reply)),row.name).toBe(row.valid);
+  expect(inferenceJobSnapshotMatchesV1(reply,solution),row.name).toBe(row.valid);
  }
 });

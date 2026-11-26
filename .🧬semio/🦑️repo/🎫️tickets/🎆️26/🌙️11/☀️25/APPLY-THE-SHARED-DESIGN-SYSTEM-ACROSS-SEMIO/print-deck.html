@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Print surface check</title></head>
+<body>
+<div id="preview"></div>
+<script type="module">
+  import "@semio-tech/ui-styling/🖌️ui.css";
+  import "@semio-tech/presentation-react/🎨️.css";
+  import { mountPresentation } from "@semio-tech/presentation-react";
+  import { DEFAULT_UI_DRIVER } from "@semio-tech/ui-react";
+
+  const appearance = new URLSearchParams(location.search).get("theme");
+  const thought = {
+    id: "print",
+    participants: [{ id: "title" }],
+    embodiments: [{ kind: "text", id: "heading", lines: ["Printable slide"], level: "heading" }],
+    slides: [{
+      arrangement: {
+        id: "layout",
+        dispositions: [{ participantId: "title", embodimentId: "heading", emphasis: "active", position: { x: 0.1, y: 0.15, width: 0.8, height: 0.3 } }]
+      }
+    }]
+  };
+  const deck = { id: "print", name: "Print surfaces", width: 960, height: 540, chapters: [{ id: "main", sequences: [{ id: "main", thoughts: [thought] }] }] };
+  mountPresentation(document.getElementById("preview"), deck, {
+    hash: false, slideNumber: true, surfaceChrome: { appearance, device: "desktop", driver: DEFAULT_UI_DRIVER }
+  });
+</script>
+</body>
+</html>

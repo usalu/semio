@@ -229,14 +229,14 @@ pub async fn content_frontier(protocol_bytes: &[u8]) -> Result<FrontierSummary, 
     };
 
     let ordinal_of: std::collections::HashMap<&str, u64> = log.edits.iter().enumerate().map(|(ordinal, edit)| (edit.id.as_str(), ordinal as u64)).collect();
-    let alternatives = fold.alternatives.iter().map(|alternative| alternative_head(&fold, &ordinal_of, alternative)).collect();
+    let alternatives = fold.lines().map(|(id, checkpoint_ids)| alternative_head(&fold, &ordinal_of, id, checkpoint_ids)).collect();
 
     Ok(FrontierSummary { document_id: log.doc_id, head_edit_ordinal, head_edit_id, alternatives, last_commit_seq: recovery.last_commit_seq, chain_hash })
 }
 
 /// 🧭️ See `content_frontier`'s design-choice note for the derivation this implements.
-fn alternative_head(fold: &HistoryFold, ordinal_of: &std::collections::HashMap<&str, u64>, alternative: &FoldAlternative) -> AlternativeHead {
-    let checkpoint_id = alternative.checkpoint_ids.last().cloned().unwrap_or_default();
+fn alternative_head(fold: &HistoryFold, ordinal_of: &std::collections::HashMap<&str, u64>, alternative_id: &str, checkpoint_ids: &[String]) -> AlternativeHead {
+    let checkpoint_id = checkpoint_ids.last().cloned().unwrap_or_default();
     let head_edit_ordinal = fold
         .checkpoints
         .iter()
@@ -244,7 +244,7 @@ fn alternative_head(fold: &HistoryFold, ordinal_of: &std::collections::HashMap<&
         .map_or(0, |checkpoint| {
             checkpoint.change_ids.iter().filter_map(|change_id| fold.changes.iter().find(|change| &change.id == change_id)).flat_map(|change| change.edit_ids.iter()).filter_map(|edit_id| ordinal_of.get(edit_id.as_str()).copied()).max().unwrap_or(0)
         });
-    AlternativeHead { alternative_id: alternative.id.clone(), checkpoint_id, head_edit_ordinal }
+    AlternativeHead { alternative_id: alternative_id.to_string(), checkpoint_id, head_edit_ordinal }
 }
 //#endregion 🔖️Sync
 

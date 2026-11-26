@@ -20,7 +20,8 @@
           "id",
           "source",
           "entry",
-          "kind"
+          "kind",
+          "runnerPackage"
         ],
         "additionalProperties": false,
         "properties": {
@@ -31,6 +32,9 @@
           "source": {
             "type": "string",
             "minLength": 1
+          },
+          "runnerPackage": {
+            "enum": ["@playwright/test", "playwright"]
           },
           "entry": {
             "type": "string",

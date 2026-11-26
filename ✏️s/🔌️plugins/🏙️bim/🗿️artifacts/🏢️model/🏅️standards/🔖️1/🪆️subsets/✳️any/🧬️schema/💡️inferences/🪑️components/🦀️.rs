@@ -140,6 +140,17 @@ pub struct ComponentEntry {
     pub family: Arc<FamilyValue>,
 }
 
+type ComponentRetirement = (ComponentValue, semio_framework_value::retirement::arc_custody::ArcLease<FamilyValue>);
+
+impl semio_framework_value::retirement::RetireOwned for ComponentEntry {
+    type RetirementCursor = <ComponentRetirement as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self) -> Self::RetirementCursor {
+        (self.value, semio_framework_value::retirement::arc_custody::ArcLease::new(self.family)).retirement_seed()
+    }
+    fn controlled_retirement_supported() -> bool { ComponentRetirement::controlled_retirement_supported() }
+    fn retirement_element_copy_bytes() -> usize { ComponentRetirement::retirement_element_copy_bytes() }
+}
+
 impl ComponentValue {
     /// 🧊️ Whether the component has geometry: a footprint of positive area.
     pub fn solid(&self) -> bool {

@@ -162,7 +162,6 @@
 
 .reveal .presentation-disposition-frame--overlay {
 	z-index: 1;
-	background-color: var(--base);
 }
 
 .reveal .presentation-disposition-frame:has(.presentation-media-pdf-document:not(.presentation-media-pdf-document--scroll)) {
@@ -197,4 +196,45 @@
 	display: block;
 	width: auto;
 	height: auto;
+}
+
+@media print {
+	html.reveal-print .reveal .slides .pdf-page {
+		--presentation-print-margin-x: calc((100% - var(--presentation-slide-width)) / 2);
+		--presentation-print-margin-y: calc((100% - var(--presentation-slide-height)) / 2);
+		background-color: var(--surface-bg) !important;
+		print-color-adjust: exact;
+	}
+
+	html.reveal-print .reveal .slides .pdf-page > .slide-background {
+		transition: none;
+		top: var(--presentation-print-margin-y);
+		left: var(--presentation-print-margin-x);
+		width: var(--presentation-slide-width);
+		height: var(--presentation-slide-height);
+		background-color: var(--surface-bg);
+		outline: var(--stroke-hairline) solid var(--border-normal-color);
+		outline-offset: calc(-1 * var(--stroke-hairline));
+	}
+
+	html.reveal-print .reveal .slides .pdf-page > .presentation-arrangement--positioned {
+		top: var(--presentation-print-margin-y) !important;
+		left: var(--presentation-print-margin-x) !important;
+		width: var(--presentation-slide-width);
+		height: var(--presentation-slide-height);
+	}
+
+	html.reveal-print .reveal .pdf-page .presentation-arrangement-canvas {
+		width: var(--presentation-slide-width);
+		height: var(--presentation-slide-height);
+	}
+
+	html.reveal-print .reveal .slides .pdf-page > .slide-number-pdf {
+		right: calc(var(--presentation-print-margin-x) + var(--stroke-hairline));
+		bottom: calc(var(--presentation-print-margin-y) + var(--stroke-hairline));
+		border-block-start: var(--stroke-hairline) solid var(--border-normal-color);
+		border-inline-start: var(--stroke-hairline) solid var(--border-normal-color);
+		color: var(--foreground);
+		background-color: color-mix(in srgb, var(--surface-bg) calc(100% * var(--surface-alpha)), transparent);
+	}
 }

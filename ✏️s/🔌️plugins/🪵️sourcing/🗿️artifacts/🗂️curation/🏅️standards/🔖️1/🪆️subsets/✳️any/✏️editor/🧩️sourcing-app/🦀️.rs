@@ -128,6 +128,18 @@ impl ArtifactEditor for SourcingCurationApp {
         Some(crate::editor::sourcing::config::schema::app_schema_descriptor())
     }
 
+    fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
+        Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.json@rfc8259", extension: ".json", media_type: "application/json", binary: false })
+    }
+
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
+        crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(snapshot).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+    }
+
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
+        crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(bytes).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+    }
+
     fn reference_birth()->Option<fn()->Result<CurationSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::standards::v1::subsets::any::io::text::snapshot::default_document())
     })}
@@ -228,7 +240,7 @@ impl ArtifactEditor for SourcingCurationApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, CurationSnapshot>, cfg: &ConfigView<'_, SourcingCurationConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
-        render_body(body_key, doc, cfg, view_state, &[])
+        render_body(body_key, doc, cfg, view_state, &[], None)
     }
 
     /// 🕹️ Every window follows the framework-owned `rows` selection a table row, a grid pick or a menu action makes: the tables paint the selected rows, the grid highlights the selected kinds and the Preview shows them.
@@ -243,13 +255,14 @@ impl ArtifactEditor for SourcingCurationApp {
         _cx:&mut semio_plugin::StepContext<'_>,
     ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
         let selected_ids = interaction.selection(SOURCING_ROWS_DOMAIN).ids.clone();
-        let rendered = render_body(body_key, doc, cfg, view_state, &selected_ids);
+        let hovered = interaction.hover(SOURCING_ROWS_DOMAIN, "pointer").ids.first().cloned();
+        let rendered = render_body(body_key, doc, cfg, view_state, &selected_ids, hovered.as_deref());
         rendered.map(Some).map_err(Into::into)
         }
 }
 
 /// 🧭️ The one body-key router: the stock windows render against the `rows` selection they are handed.
-fn render_body(body_key: &str, doc: &ArtifactView<'_, CurationSnapshot>, cfg: &ConfigView<'_, SourcingCurationConfig>, view_state: &semio_plugin::ViewModel, selected_ids: &[String]) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+fn render_body(body_key: &str, doc: &ArtifactView<'_, CurationSnapshot>, cfg: &ConfigView<'_, SourcingCurationConfig>, view_state: &semio_plugin::ViewModel, selected_ids: &[String], hovered_id: Option<&str>) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     let snapshot = doc.snapshot;
     let config = cfg.snapshot;
     let labels = sourcing_curation_labels(view_state);
@@ -258,7 +271,7 @@ fn render_body(body_key: &str, doc: &ArtifactView<'_, CurationSnapshot>, cfg: &C
         pool::SOURCING_CURATION_BODY_POOL => pool::render(snapshot, config, labels, selected_ids, view_state.locale).map(semio_plugin::built_to_component_tree),
         curated::SOURCING_CURATION_BODY_CURATED => curated::render(snapshot, config, labels, selected_ids, view_state.locale).map(semio_plugin::built_to_component_tree),
         preview::SOURCING_CURATION_BODY_PREVIEW => preview::render(snapshot, selected_ids, labels, view_state.locale).map(semio_plugin::built_to_component_tree),
-        grid::SOURCING_CURATION_BODY_GRID => grid::render(snapshot, config, &grid_window, selected_ids, view_state.locale).map(semio_plugin::built_to_component_tree),
+        grid::SOURCING_CURATION_BODY_GRID => grid::render(snapshot, config, &grid_window, selected_ids, hovered_id, view_state.locale).map(semio_plugin::built_to_component_tree),
         _ => semio_plugin::built_text_to_component_tree(Label::data("")),
     }
 }

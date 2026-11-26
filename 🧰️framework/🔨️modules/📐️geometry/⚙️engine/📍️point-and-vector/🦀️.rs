@@ -1,7 +1,7 @@
 //! 📍️ Point and vector of the geometry primitives: the point and vector value types with their arithmetic operators and conversions. See [`super`].
 
 // #region 🔖️Shapes
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq)]
 pub struct Point {
     pub x: f64,
     pub y: f64,

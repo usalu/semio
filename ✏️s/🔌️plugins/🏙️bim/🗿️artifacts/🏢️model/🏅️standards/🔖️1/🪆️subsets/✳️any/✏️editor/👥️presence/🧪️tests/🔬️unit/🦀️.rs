@@ -4,7 +4,7 @@ use protocol::{ColdMutation, Mutation, OpBinary, OpText};
 use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
 
 fn busy() -> BimPresence {
-    BimPresence { engagement_input: "Kitchen".into(), storey: "st-first".into(), owned_worksets: Vec::new(), camera: store::Viewport2d { x: 4.0, y: 3.0, zoom: 2.0 } }
+    BimPresence { engagement_input: "Kitchen".into(), storey: "st-first".into(), owned_worksets: vec!["architecture".into()], camera: store::Viewport2d { x: 4.0, y: 3.0, zoom: 2.0 } }
 }
 
 #[semio_framework_async_macros::async_test]

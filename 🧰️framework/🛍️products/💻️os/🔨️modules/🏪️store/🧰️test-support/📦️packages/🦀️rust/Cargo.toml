@@ -42,7 +42,7 @@ semio-os-store-space-member = { path = "../../../🧩️composition/👥️space
 semio-os-store-space-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
 semio-os-store-text-io = { path = "../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
-semio-framework-job = { workspace = true }
+semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-job-payload = { workspace = true }
 semio-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
 semio-os-store-command = { path = "../../../📬️command/📦️packages/🦀️rust" }

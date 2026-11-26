@@ -5,7 +5,7 @@ use semio_ui_tui_core::cell::CellBuffer;
 use semio_ui_tui_core::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
 use semio_ui_tui_core::geometry::{Pos, Rect};
 use semio_ui_tui_core::text::{elide, Elision};
-use semio_ui_tui_core::theme::{Glyph, Role, Surface, Theme};
+use semio_ui_tui_core::theme::{Glyph, Role, Theme};
 use crate::widget::SelectState;
 use semio_ui_tui_core::signal::WidgetSignal;
 
@@ -47,7 +47,7 @@ pub fn select_on_mouse(s: &mut SelectState, rect: Rect, event: &MouseEvent) -> O
 
 pub fn paint_select(s: &SelectState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
     let fg = if focused { theme.role(Role::Accent) } else { theme.role(Role::Foreground) };
-    let bg = buf.get(rect.x, rect.y).map_or(theme.surface(Surface::Panel), |c| c.bg);
+    let bg = buf.owner_background();
     let value = s.options.get(s.index).map_or("", String::as_str);
     let text = format!("{}: {} {} {}", s.label, theme.glyphs.glyph(Glyph::PreviousOption), value, theme.glyphs.glyph(Glyph::NextOption));
     let text = elide(&text, rect.width, Elision::End, theme.glyphs.ellipsis());

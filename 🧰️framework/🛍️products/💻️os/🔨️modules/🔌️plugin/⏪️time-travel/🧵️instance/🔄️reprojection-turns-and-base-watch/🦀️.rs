@@ -34,6 +34,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 if self.stores.store.generation() != generation {
                     self.history.cache = None;
                     self.as_dispatch().queue_base_moved();
+                    self.as_render().revalidate_interaction_on_document_change(identity).await?;
                 }
                 self.note_time_travel_changed(true, true);
             }

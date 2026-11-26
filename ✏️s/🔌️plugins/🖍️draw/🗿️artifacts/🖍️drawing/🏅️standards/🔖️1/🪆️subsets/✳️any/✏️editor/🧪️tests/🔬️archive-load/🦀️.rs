@@ -5,7 +5,7 @@
 
 use super::unit_tests::context::drawing_app;
 use semio_s_artifact_draw_drawing_editor::DrawingCommand;
-use semio_s_artifact_draw_drawing_editor_commands::set_active_example;
+use semio_s_artifact_draw_drawing_editor_commands::{add_layer, set_active_example};
 use semio_plugin::{artifact_app_laws as artifact_laws, MountedOwnerPolicyV1, PluginApp};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
@@ -62,4 +62,32 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     assert_eq!(initial, authored, "the archive preserves the authored emblem and its artboard");
     artifact_laws::close_registered_fixture_app(&mut app.0, MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("archive close");
     assert!(app.close_terminal_is_empty());
+}
+
+/// 🧾️ Reopens the same genesis Pack with a nonempty SPR and compares the restored edited snapshot.
+#[semio_framework_async_macros::async_test]
+async fn document_archive_replays_the_edited_drawing_on_reopen() {
+    let mut app = drawing_app().await;
+    let policy = MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+    let meta = artifact_laws::meta("local");
+    let mut identity = artifact_laws::fixture_identity();
+    let initial = app.document_pack().await.expect("initial document archive");
+    let initial_layers = app.snapshot_ref().layers.len();
+    let command = DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() });
+    artifact_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, policy, &mut identity, app.1.cx()).await.expect("rectangle dispatch");
+    artifact_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, policy, &mut identity, app.1.cx()).await.expect("rectangle settlement");
+    let edited = app.snapshot().expect("edited Drawing snapshot");
+    assert_eq!(edited.layers.len(), initial_layers + 1);
+    let persisted = app.document_pack().await.expect("edited document archive");
+    assert_eq!(persisted.pack, initial.pack);
+    assert_ne!(persisted.spr, initial.spr);
+    artifact_laws::close_registered_fixture_app(&mut app.0, policy, app.1.cx()).expect("close edited Drawing");
+    drop(app);
+
+    let mut reopened = drawing_app().await;
+    let status = settle_archive(&mut reopened, 92, persisted.pack, persisted.spr).await;
+    assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
+    assert_eq!(reopened.snapshot_ref(), &edited);
+    artifact_laws::close_registered_fixture_app(&mut reopened.0, policy, reopened.1.cx()).expect("close reopened Drawing");
+    assert!(reopened.close_terminal_is_empty());
 }

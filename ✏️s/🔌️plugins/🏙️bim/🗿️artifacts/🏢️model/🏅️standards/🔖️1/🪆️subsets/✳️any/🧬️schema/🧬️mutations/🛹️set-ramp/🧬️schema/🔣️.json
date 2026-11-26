@@ -6,20 +6,7 @@
   "additionalProperties": false,
   "required": [
     "mutation",
-    "id",
-    "path",
-    "width",
-    "landing_start",
-    "landing_end",
-    "landing_turn",
-    "max_slope",
-    "thickness",
-    "material",
-    "base_offset",
-    "top",
-    "railing_left",
-    "railing_right",
-    "name"
+    "id"
   ],
   "properties": {
     "mutation": {

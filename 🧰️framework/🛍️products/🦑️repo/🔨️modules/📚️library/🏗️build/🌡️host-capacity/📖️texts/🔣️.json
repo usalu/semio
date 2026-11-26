@@ -18,9 +18,17 @@
       "en": "Waiting for farm capacity was cancelled",
       "de": "Das Warten auf Farm-Kapazität wurde abgebrochen"
     },
+    "unit-growth-cancelled": {
+      "en": "Waiting for the memory growth of a compile unit was cancelled",
+      "de": "Das Warten auf das Speicherwachstum einer Compile-Einheit wurde abgebrochen"
+    },
     "graph-plan-wait-cancelled": {
       "en": "Waiting for the capacity of the graph plan was cancelled",
       "de": "Das Warten auf die Kapazität des Graph-Plans wurde abgebrochen"
+    },
+    "cargo-orchestration-grant": {
+      "en": "Cargo orchestration needs a live local reservation of {minimum} MB. The enclosing grant supplies {reserved} MB.",
+      "de": "Die Cargo-Koordination benötigt eine aktive lokale Reservierung von {minimum} MB. Die übergeordnete Zusage stellt {reserved} MB bereit."
     }
   }
 }

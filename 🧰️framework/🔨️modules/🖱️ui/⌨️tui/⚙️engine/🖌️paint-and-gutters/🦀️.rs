@@ -1,6 +1,7 @@
 //! 🖌️ Paint and gutters: the paint pass, the diffed and full renders and the gutter hit testing and painting. See [`super`].
 
 use super::*;
+use semio_ui_tui_core::theme::Surface;
 
 type BorderCapture = (Rect, std::collections::HashMap<(u16, u16), Cell>, std::collections::HashSet<(u16, u16)>);
 
@@ -103,17 +104,25 @@ impl PaintPass<'_> {
         if outlined { let (outline, writes) = buf.take_borders(); borders.push((rect, outline, writes)); }
     }
 
-    fn walk(&self, id: NodeId, buf: &mut CellBuffer, borders: &mut Vec<BorderCapture>) {
+    fn walk(&self, id: NodeId, owner: Surface, buf: &mut CellBuffer, borders: &mut Vec<BorderCapture>) {
         let node = self.scene.node(id);
         if !node.visible {
             return;
         }
         let rect = node.rect;
+        let owner = match &node.content {
+            NodeContent::Chrome(ChromeState::Window(_)) => Surface::Window,
+            NodeContent::Chrome(ChromeState::Navbar(_) | ChromeState::Footer(_)) => Surface::Panel,
+            NodeContent::Widget(WidgetState::Dialog(_) | WidgetState::Palette(_)) => Surface::Dialog,
+            NodeContent::Widget(WidgetState::Menu(_) | WidgetState::Tooltip(_)) => Surface::Menu,
+            _ => owner,
+        };
+        buf.set_owner(owner, self.theme);
         match &node.content {
             NodeContent::Chrome(c) => self.chrome(id, c, rect, buf, borders, ChromePart::Frame),
             NodeContent::Widget(w) => w.paint(self.theme, rect, buf, Some(id) == self.focus),
             NodeContent::Text(s) => {
-                let bg = buf.get(rect.x, rect.y).map_or(self.theme.surface(semio_ui_tui_core::theme::Surface::Base), |c| c.bg);
+                let bg = buf.owner_background();
                 buf.put_str(Pos { x: rect.x, y: rect.y }, s, self.theme.role(Role::Foreground), bg, 0, rect);
             }
             NodeContent::Axis(_) => {}
@@ -125,8 +134,9 @@ impl PaintPass<'_> {
             }
             return;
         }
+        let child_owner = if matches!(node.content, NodeContent::Widget(WidgetState::Chip(_))) { owner.above() } else { owner };
         for &child in node.children() {
-            self.walk(child, buf, borders);
+            self.walk(child, child_owner, buf, borders);
         }
         if let NodeContent::Chrome(c) = &node.content {
             self.chrome(id, c, rect, buf, borders, ChromePart::Chips);
@@ -136,20 +146,20 @@ impl PaintPass<'_> {
 
 impl Tui {
     fn paint(&mut self) {
-        let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
+        let blank = Cell::blank(self.theme.role(Role::Foreground), self.theme.surface(Surface::Base));
         self.back.resize(self.size, blank);
         let pass = PaintPass { scene: &self.scene, theme: &self.theme, focus: self.focus(), hovered_chrome: &self.hovered_chrome, projected: None };
         let mut borders = Vec::new();
-        pass.walk(self.scene.root(), &mut self.back, &mut borders);
+        pass.walk(self.scene.root(), Surface::Base, &mut self.back, &mut borders);
         let preview = self.dock_preview.as_ref().map(|preview| {
             let mut committed = self.back.clone();
             let mut outlines = Vec::new();
-            PaintPass { projected: Some((preview.canvas, preview.windows.as_slice())), ..pass }.walk(self.scene.root(), &mut committed, &mut outlines);
+            PaintPass { projected: Some((preview.canvas, preview.windows.as_slice())), ..pass }.walk(self.scene.root(), Surface::Base, &mut committed, &mut outlines);
             compose_shared_borders(&self.scene, pass.focus, &self.theme, &outlines, &mut committed);
             (preview.rect, committed)
         });
         compose_shared_borders(&self.scene, pass.focus, &self.theme, &borders, &mut self.back);
-        pass.walk(self.scene.overlay_root(), &mut self.back, &mut Vec::new());
+        pass.walk(self.scene.overlay_root(), Surface::Base, &mut self.back, &mut Vec::new());
         if let Some((rect, committed)) = preview {
             self.back.copy_rect(&committed, rect);
         }

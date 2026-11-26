@@ -15,16 +15,16 @@ html, body {
 #animate-presentation-root {
   display: grid;
   place-items: center;
-  box-sizing: border-box;
   height: 100%;
-  border: var(--presentation-hairline) solid var(--border-normal-color);
-  background: color-mix(in oklab, var(--base), var(--foreground) var(--level-shade-step));
   --presentation-hairline: 1px;
 }
 
 #animate-presentation-canvas {
   display: block;
-  width: min(100%, calc((100dvh - 2 * var(--presentation-hairline)) * 16 / 9));
+  box-sizing: border-box;
+  width: min(100%, calc(100dvh * 16 / 9));
   height: auto;
   aspect-ratio: 16 / 9;
+  border: var(--presentation-hairline) solid var(--border-normal-color);
+  background: color-mix(in oklab, var(--base), var(--foreground) var(--level-shade-step));
 }

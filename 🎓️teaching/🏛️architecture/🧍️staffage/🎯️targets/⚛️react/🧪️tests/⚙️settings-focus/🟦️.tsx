@@ -30,9 +30,15 @@ async function open(phone: boolean) {
 
 it("focuses the selected text size, follows the setting order and restores the trigger on Escape", async () => {
   const { user, trigger, settings } = await open(false);
+  expect(settings.getAttribute("data-level")).toBe("menu");
+  expect(settings.classList.contains("ui-glass")).toBe(true);
+  expect(trigger.closest(".staffage-app")?.getAttribute("data-level")).toBe("base");
   const scoped = within(settings);
   const textSize = within(scoped.getByRole("radiogroup", { name: "Text size" }));
   expect(document.activeElement).toBe(textSize.getByRole("radio", { checked: true }));
+  const inactive = textSize.getByRole("radio", { checked: false });
+  expect(inactive.closest("[data-level]")).toBe(settings);
+  expect(inactive.getAttribute("data-shared-border-cell")).toBe("");
   await user.tab();
   const motion = within(scoped.getByRole("radiogroup", { name: "Motion" }));
   expect(document.activeElement).toBe(motion.getByRole("radio", { checked: true }));

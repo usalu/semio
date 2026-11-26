@@ -49,6 +49,8 @@ impl DrawingTextFootprintCursor {
 
     pub fn totals(&self) -> Option<DrawingTextFootprint> { (self.phase == 2).then_some(self.totals) }
 
+    pub fn is_closed(&self) -> bool { self.phase == 3 }
+
     pub fn close_step(&mut self, maximum_items: usize) -> bool {
         if maximum_items == 0 { return self.terminal_is_empty(); }
         self.owner = None;

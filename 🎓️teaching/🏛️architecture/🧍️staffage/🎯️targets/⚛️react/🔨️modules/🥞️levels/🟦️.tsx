@@ -138,7 +138,7 @@ export function Level(props: LevelProps): ReactElement {
     return () => window.removeEventListener("keydown", onKey);
   }, [interactive, openedId, onEscape]);
   return (
-    <div ref={root} data-level={label} data-grid-active={interactive ? "" : undefined} className="relative h-full min-h-0 w-full">
+    <div ref={root} data-staffage-level={label} data-grid-active={interactive ? "" : undefined} className="relative h-full min-h-0 w-full">
       <LayeredOverview
         panes={panes}
         cells={cells}

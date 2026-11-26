@@ -543,6 +543,32 @@ async fn german_decimal_comma_edit_stores_the_canonical_number() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn canonical_cell_text_fixture_agrees_with_the_python_float_oracle() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌐️canonical-cell-text/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let (locale, text, canonical) = (case["locale"].as_str().unwrap(), case["text"].as_str().unwrap(), case["canonical"].as_str().unwrap());
+        assert_eq!(xlsx_canonical_cell_text(text, locale), canonical, "{text:?} typed in {locale:?}");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_german_cell_draft_reduces_to_the_canonical_number_on_the_locale_free_native_path() {
+    let snapshot = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
+        sheets: vec![XlsxSheet { name: "Sheet 1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(2.0) }] }],
+        ..Default::default()
+    });
+    let address = xlsx_cell_address(&snapshot, "Sheet 1", 1, 0).unwrap();
+    for (locale, typed, expected) in [("de", "1,5", XlsxCellValue::Number(1.5)), ("de", "1.5", XlsxCellValue::InlineString("1.5".into())), ("en", "1,5", XlsxCellValue::InlineString("1,5".into())), ("", "1.5", XlsxCellValue::Number(1.5))] {
+        let json = serde_json::json!({ "sheetName": "Sheet 1", "row": 1, "column": 0, "revision": address.revision, "value": typed, "locale": locale }).to_string();
+        let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let command = XlsxEditor::command_from_action("set-cell", &mut Some(args), &mut None).unwrap();
+        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(native) = &command else { panic!("expected native command") };
+        let emitted = xlsx_set_cell_emit(&snapshot, native, None).unwrap();
+        assert_eq!(emitted.artifact_mutations, vec![XlsxMutation::SetCell(set_cell::SetCell { address: address.clone(), value: expected, node: None })], "{typed:?} typed in {locale:?}");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
 async fn unchanged_localized_number_draft_emits_nothing() {
     let snapshot = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![XlsxSheet { name: "Sheet 1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.5) }] }],

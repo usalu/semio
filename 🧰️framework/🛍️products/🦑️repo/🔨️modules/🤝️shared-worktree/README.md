@@ -390,7 +390,7 @@ Windows peer) and SMB peers by `cifs` with `/etc/semio/smb-peer.credentials`; a 
 
 How the three servers differ:
 
-- **Linux.** `/etc/exports.d/semio-fleet.exports` (read-write for `server.network`, read-only for the peer servers),
+- **Linux.** `/etc/exports.d/semio-fleet.exports` (read-write for the networks derived from the current interfaces of the server, or the pinned `server.network`; read-only for the peer servers),
   an fstab block (bind mount of the export at the store mount, peer mounts), systemd units for cache and relay.
 - **macOS.** The export must lie below `/Users` or `/Volumes` (the root volume is read-only; the topology refuses other
   paths). `/etc/exports` gets two lines (workers read-write by `-network/-mask`, peers `-ro`), `/etc/nfs.conf` pins the mount
@@ -402,19 +402,18 @@ How the three servers differ:
   access mapped to uid 1500, read-only entries for the peer servers); the `smb` fallback creates the local accounts
   `semio-fleet` (workers, Change) and `semio-fleet-peer` (relays, Read) with `New-SmbShare`. Windows workers of an SMB group
   store the account once with `cmdkey /add:<host> /user:<server name>\semio-fleet /pass:<password>` (the `credential` part of
-  `mount-plan`). The firewall allows the store ports from `server.network` and from the peer servers only. Cache and relay
+  `mount-plan`). The firewall allows the store ports from the local subnet (`LocalSubnet`, or the pinned `server.network`) and from the peer servers only. Cache and relay
   are Scheduled Tasks (`semio-fleet-cache`, `semio-fleet-relay`) next to the replica task; the cache task reads
   `C:\ProgramData\semio\remote-cache.env`, which only the server account can read. All three tasks run at logon of the
   server account (give the machine an automatic logon, or register them with a password).
 
 ### The one file the operator edits
 
-`🗺️topology/🔣️.json` is the only file the operator edits to make the fleet real. The hosts in it are placeholders
-(`nfs.gN.semio.internal`, `cache.gN.semio.internal`, `10.0.N.0/24`). Per group set `nfs.export`,
+`🗺️topology/🔣️.json` is the only file the operator edits to make the fleet real. The hosts in it are names, never addresses: the server of `g1` is `nfs.host` (its multicast DNS name `<name>.local`, with `nfs.candidates` as further names), the other groups are placeholders (`nfs.gN.semio.internal`, `cache.gN.semio.internal`). No file of the fleet carries an IP address (a law test refuses it), so a move to another subnet, router or DHCP range needs no edit; see "Addresses follow the machine". Per group set `nfs.export`,
 `server.platform`, `server.protocol` and, on Windows, `server.directory`; per fleet the canonical `worktree` and `storeMount` per OS and the `replica`
-timings. The machine's own host, worker network and cache endpoint are not written into this file. Set `SEMIO_FLEET_GROUP`,
+timings. The worker network is derived from the interfaces of the server when a plan is rendered. Only an operator who must override a name sets `SEMIO_FLEET_GROUP`,
 `SEMIO_FLEET_NFS_HOST` and `SEMIO_FLEET_NETWORK` together (and `SEMIO_FLEET_CACHE_ENDPOINT` when the cache URL is not
-`http://<that host>:<the port already in the file>`). The commands and the provisioning script apply them for that run and leave the file as it is. Everything else is derived from it and never edited by hand: the mount lines, exports, fstab blocks, units,
+`http://<that host>:<the port already in the file>`); running the provisioning script again without them removes the old values. The commands and the provisioning script apply them for that run and leave the file as it is. Everything else is derived from it and never edited by hand: the mount lines, exports, fstab blocks, units,
 LaunchDaemons, Scheduled Task XML, firewall rules, the scripts' checks (they
 refuse a topology file that differs from the one in the worktree) and the Python oracle in `🧪️tests`. After the
 edit run `validate` (offline, checks shape and the server rules), then `validate --reachable` from a machine of each
@@ -605,7 +604,7 @@ the `relay-peers` part to copy the other groups into its still empty store.
 
 1. **Topology.** Edit `🗺️topology/🔣️.json` (the one file, see "The one file the operator edits"): group ids (`g1` to `g5`), the NFS export,
    server platform and protocol, peer mount points per group, the canonical worktree
-   path and store mount per OS, and the replica timings. Leave the placeholder host, network and cache name in the file, and set `SEMIO_FLEET_GROUP`, `SEMIO_FLEET_NFS_HOST` and `SEMIO_FLEET_NETWORK` on the machine. Run `validate`, then `validate --reachable`. The topology is a shared source file, so after the first machine has seeded, edits to it propagate
+   path and store mount per OS, and the replica timings. Put the multicast name of the server in `nfs.host` and `cache.endpoint`; no address and no network are needed. Run `validate`, then `validate --reachable`. The topology is a shared source file, so after the first machine has seeded, edits to it propagate
    like any other file; change it on one machine and let it replicate.
 2. **Canonical path.** Cache hits across machines need identical checkout paths, so every replica lives at the
    worktree path that the topology fixes for its OS: a template below the home folder of the account that edits
@@ -1213,3 +1212,14 @@ A fresh machine runs the same overlay right after the archive is extracted: the 
 **Cross-group traffic is sealed.** A request of an origin of another group reaches a group server only inside the sealed exchange (`POST /v1/fleet/sealed`, schema `📚️library/🏗️build/🌐️remote-cache/🔐️sealed/🧬️schema`): X25519 with a one-time key of the asker and the identity key of the server (the Ed25519 `origin` key of `<group>-server`, converted; nothing new is published), HKDF-SHA256, AES-256-GCM. Method, path, credentials and body are inside; the reply is encrypted under keys that need the one-time keys of both sides, so a later theft of the identity key opens no past reply. Messages are authenticated (a changed byte is refused), tied to the group, within 60 s of the server's clock and answered once (replay table). The inside request still carries the usual signature, so roles are unchanged (`cache-read` and `submit` only). A plain request of a foreign origin is refused with 403 `sealed transport required`. The key of the peer server is the pin `links.<peer>.serverKey` or, without a pin, its registration in a mounted or relayed store. `access.transport` of a topology row chooses for the machines of the own group: `inGroup` is `sealed` (the default when absent: every client seals, the facts `cache.transport` tell them) or `trusted-lan` (plain signed HTTP, the value of the committed rows); `crossGroup` is always `sealed`. `GET /status` shows `fleet.transport`. Not covered: the sizes and times of messages, the relayed route (a trusted mount) and the gRPC scheduler (a foreign submit is refused until a sealed client exists).
 
 **What `fleet` and `status` say.** An origin that has a registration (`origins/<id>/fleet-auth.json`) but no head, no attestation and no retirement is named by a `never-attested` warning (one line, English and German: start the replica there or `retire <origin>`); it does not change the verdict. On the group server `fleet` and `status` also name every peer store that is not reachable, and the relay says the same once per outage (and when the store is back): mount it read-only at that path (`server-plan --group <own> --part relay-peers`).
+
+## Addresses follow the machine
+
+Machines are identified by origin id, never by address (`🗺️topology/🧭️addresses/`, schema `🧬️schema/🔣️.json`, texts en/de).
+
+- **Published address set.** Every machine writes `<store>/v1/origins/<origin>/addresses.json` atomically: all addresses of all interfaces (IPv4 and IPv6; loopback and link-local left out), each with interface, prefix length and scope (`private`, `unique-local`, `global`), its multicast name `<name>.local`, a freshness stamp (`observedAtMs`, `ttlMs` 5 min) and a generation. The build agent checks the interfaces every 15 s, republishes on a change and refreshes the stamp at half of the time to live.
+- **Resolution.** A client reads the set of the peer, orders the addresses (same subnet first, then private, unique-local, global, IPv4 before IPv6), puts the last good endpoint (`.cache/f/last-good.json`) first and the multicast name after the addresses (before them when the set is stale), and tries them in turn with a short time limit each (`resolveFleetEndpointV1`); a build never waits for a dead address longer than candidates times the limit and falls back to local work.
+- **Servers** listen on the wildcard address (`::`, else `0.0.0.0`) beside loopback, so a new interface or address needs no restart; the cache publishes every address plus the multicast name in the fleet facts; the scheduler rebinds (supervisor restart) when its address goes away.
+- **Bootstrap.** What a new machine needs is `nfs.host` (the `.local` name of the server) and `nfs.candidates` (more names). The store mount is by name, so it can be mounted again by name after a network change; the provisioning scripts warn with the exact commands when an older mount still uses another source.
+- **Law.** `🧭️addresses/🧪️tests` fail when any file of the topology, the policy or the cache and execution code contains an IPv4 literal (tests and fixtures are exempt).
+

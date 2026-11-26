@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 pub type V = Part21Value;
 
 /// 🔖️ The IFC schema a file is written in.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, semio_framework_value::RetireOwned)]
 pub enum Schema {
     Ifc2x3,
     Ifc4,
@@ -156,6 +156,7 @@ fn orthogonal_to(axis: [f64; 3]) -> [f64; 3] {
 
 //#region 🔖️Builder
 /// 🏗️ The IFC instance graph under construction plus the shared context entities every product refers to.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct Ifc {
     builder: Part21Builder,
     shared: BTreeMap<String, u64>,

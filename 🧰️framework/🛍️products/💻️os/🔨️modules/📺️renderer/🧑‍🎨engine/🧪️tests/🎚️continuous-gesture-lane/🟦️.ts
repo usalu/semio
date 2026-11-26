@@ -301,6 +301,23 @@ describe("🎚️ interpreted continuous controls speak the scrub protocol", () 
     expect(intents.at(-1)!.input).toEqual({ gesture: intents[0]!.input!.gesture, abort: "blur" });
   });
 
+  it("an exact entry after a cancelled slider press starts a new gesture and commits once", () => {
+    const { view, intents } = interpreted({ type: "slider", value: 5, min: 0, max: 10, step: 1 }, "inspector.opacity");
+    const slider = view.container.querySelector<HTMLElement>('[data-slot="slider"]')!;
+    fireEvent.pointerDown(slider, { pointerId: 1, clientX: 0 });
+    fireEvent.blur(slider);
+    const readout = view.container.querySelector<HTMLElement>('[data-slot="slider-value"]')!;
+    fireEvent.keyDown(readout, { key: "Enter" });
+    const editor = view.getByRole("spinbutton");
+    fireEvent.change(editor, { target: { value: "8" } });
+    fireEvent.keyDown(editor, { key: "Enter" });
+    expect(intents).toHaveLength(3);
+    const [live, cancel, exact] = intents.map((intent) => intent.input);
+    expect(cancel).toEqual({ gesture: live?.gesture, abort: "blur" });
+    expect(exact).toEqual({ value: 8, gesture: exact?.gesture, commit: true });
+    expect(exact?.gesture).not.toBe(live?.gesture);
+  });
+
   it("a stepper click is one press: the tick and the button's release", () => {
     const { view, intents } = interpreted({ type: "numberStepper", value: 3, step: 1, uniform: true, min: null, max: null }, "inspector.count");
     const plus = view.container.querySelector<HTMLElement>('[data-slot="stepper-plus"]')!;

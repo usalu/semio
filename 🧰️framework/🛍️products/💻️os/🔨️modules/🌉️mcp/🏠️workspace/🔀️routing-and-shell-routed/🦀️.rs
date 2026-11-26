@@ -764,6 +764,7 @@ impl ArtifactChannel for ShellRoutedArtifactChannel {
 #[derive(Clone)]
 pub struct PluginArtifactBinding {
     pub schema: String,
+    pub artifact_kind: String,
     pub plugin_id: String,
     pub app_id: String,
     pub surface_id: Option<String>,
@@ -796,6 +797,7 @@ impl std::fmt::Debug for PluginArtifactBinding {
         formatter
             .debug_struct("PluginArtifactBinding")
             .field("schema", &self.schema)
+            .field("artifact_kind", &self.artifact_kind)
             .field("plugin_id", &self.plugin_id)
             .field("app_id", &self.app_id)
             .field("surface_id", &self.surface_id)

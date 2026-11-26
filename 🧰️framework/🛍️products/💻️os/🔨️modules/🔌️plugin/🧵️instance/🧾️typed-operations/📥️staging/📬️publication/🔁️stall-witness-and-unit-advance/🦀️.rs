@@ -139,9 +139,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if cx.is_cancelled()||mounted.cancellation_lease.as_ref().is_some_and(|lease|lease.publication_is_cancelled()){return Ok(())}
         let borrowed=mounted.borrows_original_emission_authority();
         if borrowed{mounted.validate_original_emission_authoring(cx)?;}
-        let meta=&mounted.meta;
         if borrowed{
-            self.as_render().revalidate_interaction_on_document_change(meta,identity).await?;
+            self.as_render().revalidate_interaction_on_document_change(identity).await?;
             mounted.interaction_revalidated=true;
             return Ok(())
         }
@@ -152,7 +151,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let mut observer=|next:semio_framework_value::native_encoding::NativeEncodeProgress|{progress=next;!token.is_cancelled_now()&&!publication.is_cancelled()};
         let mut work=cx.native_encoder_work();
         let mut owned_identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume(receipt,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).with_work_lender(Box::new(semio_plugin_retained_command::typed_operation::MountedIdentityWork(&mut work)));
-        let result=self.as_render().revalidate_interaction_on_document_change(meta,&mut owned_identity).await;
+        let result=self.as_render().revalidate_interaction_on_document_change(&mut owned_identity).await;
         mounted.identity=Some(owned_identity.pause().map_err(|error|plugin_sdk_fault(error.to_string()))?);drop(observer);cx.consume_fuel(work.performed());mounted.identity_progress=progress;
         result?;mounted.interaction_revalidated=true;Ok(())
     }

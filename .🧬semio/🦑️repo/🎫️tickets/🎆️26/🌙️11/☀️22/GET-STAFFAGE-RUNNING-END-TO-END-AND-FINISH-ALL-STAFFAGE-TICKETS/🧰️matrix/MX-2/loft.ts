@@ -5,7 +5,7 @@
  * - a solid of another kind is not a loft and is reported (draw it as a prism with `../MH-6/bodies.ts`, or name it under `fit`).
  * `fit` draws several solids as ONE loft where the scale cannot print them apart (the fingers of a hand): the solids named (default all of the entry) are cut at `stations` equal steps along the bone and every cut becomes the superellipse of its box with the exponent of its area (or the given `exponent`), stated with the limb rotation; the solids of a fit are not drawn singly.
  * `swell` adds metres to the half extents of every section of a loft: a part that stands a fraction of a printed gap (0.15 mm on paper) beside its neighbour is drawn touching it.
- * The shapes of the bone named in `replace`, and those that carry the id of a new loft, leave the view; the new shapes stand where the first of them stood. Paint (role, z, filled, tone, region, regions, material, hatch, penMm) comes from the shape of the same id in that view when there is one, else from the shape `paint` of that view, else from `paint` in the side elevation. A second run changes nothing. Solids with skin weights or a `repeat` are refused. `--write` writes the catalog document only when it did not change on disk since it was read; `--out` writes a trial copy.
+ * The shapes of the bone named in `replace`, and those that carry the id of a new loft, leave the view; the new shapes stand where the first of them stood. Paint (role, z, filled, tone, region, regions, material, hatch, penMm) comes from the shape of the same id in that view when there is one, else from the shape `paint` of that view, else from `paint` in the side elevation; `"filled": true` in the entry sets the loft filled whatever the paint says (a stroke that becomes a body). A second run changes nothing. Solids with skin weights or a `repeat` are refused. `--write` writes the catalog document only when it did not change on disk since it was read; `--out` writes a trial copy.
  * @see ../../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/README.md — "Loft shapes"
  * @see ../MH-6/bodies.ts — prisms and bodies of revolution from the volume solids */
 import { join } from "node:path";
@@ -198,7 +198,7 @@ for (const entry of entries) {
     };
     const made = lofts.map((loft) => {
       const paint = paintOf(loft.id);
-      return { id: loft.id, kind: "loft", bone: entry.bone, ...paint, sections: loft.sections };
+      return { id: loft.id, kind: "loft", bone: entry.bone, ...paint, ...(entry.filled === undefined ? {} : { filled: entry.filled }), sections: loft.sections };
     });
     const first = list.findIndex((shape) => shape.bone === entry.bone && leaving.has(shape.id));
     const kept = list.filter((shape) => !(shape.bone === entry.bone && leaving.has(shape.id)));

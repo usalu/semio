@@ -121,9 +121,11 @@ fn publish_mounted_typed_operation_unit() {
 export function stalePublicationChecks() {
   const validateStale = new Ajv({ strict: true }).addSchema(retainedCommandSchema).getSchema(`${retainedCommandSchema.$id}#/$defs/StalePublicationCase`)!;
   const cases = staleFixtures.publicationCases.filter(row => row.staleAt !== undefined);
-  if (cases.length !== 1 || !validateStale(cases[0])) throw new Error("Stale publication fixture must refuse locally and preserve the next commit");
-  for (const change of [{ committed: true }, { faultCode: "guest.trap" }, { nextGeneration: 0 }]) {
-    if (validateStale({ ...cases[0], ...change })) throw new Error("Stale publication schema accepted a hostile result");
+  if (cases.length !== 2 || new Set(cases.map(row => row.root)).size !== 2 || !cases.every(row => validateStale(row))) {
+    throw new Error("Stale document and window publications must refuse locally and preserve the next commit");
+  }
+  for (const change of [{ root: "actor" }, { committed: true }, { faultCode: "guest.trap" }, { nextGeneration: 0 }]) {
+    if (cases.some(row => validateStale({ ...row, ...change }))) throw new Error("Stale publication schema accepted a hostile result");
   }
   const freshPublicationTurn = `
 fn typed_operation_document_is_fresh(operation: &Operation, canonical_revision: Revision, live_revision: Revision, live_generation: u64) -> bool {
@@ -136,7 +138,13 @@ fn publish_mounted_typed_operation_unit() {
     self.stores.handoff_mounted_durable_publication(mounted)?;
     return Ok(());
   }
-  if !typed_operation_document_is_fresh(&mounted.operation, mounted.canonical_revision, live_revision, live_generation) {
+  let window_config_selected = matches!(mounted.pending_artifact_publication, Some(PendingArtifactStorePublication::WindowConfig(_)))
+    || matches!(mounted.publication.as_ref(), Some(ArtifactToolCompletionValue::Emit(Ok(emit), _)) if !emit.window_config_mutations.is_empty());
+  let stale_window_config = window_config_selected && mounted.window_config_authority.as_ref().is_some_and(|authority| {
+    self.stores.window_config_store.borrow(&authority.window_kind_id, &authority.window_id)
+      .is_none_or(|live| !authority.matches_committed(&live))
+  });
+  if !typed_operation_document_is_fresh(&mounted.operation, mounted.canonical_revision, live_revision, live_generation) || stale_window_config {
     cx.with_original_retirement(|cx| {
       close_original_retained_step(cx, demand, |_| {
         mounted.terminal_fault = Some(borrowed_report("interactive-job.stale"));
@@ -163,6 +171,8 @@ fn publish_mounted_typed_operation_unit() {
     ["    return Ok(());\n  }\n  if let Some(pending)", "    return Err(stale);\n  }\n  if let Some(pending)"],
     ["mounted.cancellation_lease.as_ref().expect(\"claimed publication lease\").cancel()", "drop(mounted)"],
     ["mounted.reserve_cancelled_result(cx)?", "drop(mounted)"],
+    [" || stale_window_config", ""],
+    ["!authority.matches_committed(&live)", "false"],
   ] as const) {
     if (toolJobPublicationFreshnessBeforeEveryTurn(freshPublicationTurn.replace(before, after)))
       throw new Error("[verify interactivity tool-jobs] self-test stale publication without a local terminal result was falsely accepted.");

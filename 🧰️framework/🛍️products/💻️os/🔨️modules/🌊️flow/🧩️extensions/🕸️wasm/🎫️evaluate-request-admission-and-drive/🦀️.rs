@@ -128,7 +128,8 @@ impl EvaluationRound {
         }
     }
 
-    fn spent(&mut self, work: u64, now_us: impl FnOnce() -> Option<u64>) -> bool {
+    fn should_publish(&mut self, work: u64, completed_reply_pending: bool, now_us: impl FnOnce() -> Option<u64>) -> bool {
+        if completed_reply_pending { return false; }
         self.remaining = self.remaining.saturating_sub(work);
         self.remaining == 0 || self.started_us.is_some_and(|started| {
             now_us().is_some_and(|now| now.saturating_sub(started) >= EVALUATE_STEP_WALL_MICROS)
@@ -151,7 +152,7 @@ mod round_tests {
             round.started_us = case["startedUs"].as_u64();
             for poll in case["polls"].as_array().unwrap() {
                 assert_eq!(
-                    round.spent(poll[0].as_u64().unwrap(), || poll[1].as_u64()),
+                    round.should_publish(poll[0].as_u64().unwrap(), poll[3].as_bool().unwrap_or(false), || poll[1].as_u64()),
                     poll[2].as_bool().unwrap(),
                     "{}",
                     case["name"],
@@ -248,9 +249,10 @@ pub(super) fn evaluation_drive_original(registry:&neural_engine::SharedRegistry,
         }
         if physical!=Default::default(){return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None}}
         if let Some(round)=round.as_deref_mut(){round.begin(cx);}
-        let before_units=retained.units;let restarting=retained.restarting;let (step,receipt,failed)=match retained.advance(registry,&key.1,cx){Ok((step,receipt))=>(step,receipt,false),Err(error)=>{let receipt=retained.normal_step_progress();retained.fault=Some(error);retained.cancel();(EvaluationStep::Working(retained.progress()),receipt,true)}};
+        let before_units=retained.units;let fuel_before=cx.fuel_remaining();let restarting=retained.restarting;let (step,receipt,failed)=match retained.advance(registry,&key.1,cx){Ok((step,receipt))=>(step,receipt,false),Err(error)=>{let receipt=retained.normal_step_progress();retained.fault=Some(error);retained.cancel();(EvaluationStep::Working(retained.progress()),receipt,true)}};
         if !failed&&!retained.normal_context_posted&&receipt==Default::default()&&retained.units==before_units{return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None}}
-        let work=if restarting&&!retained.restarting&&retained.units==0{receipt.copied_items.max(1)}else{retained.units.saturating_sub(before_units).max(receipt.copied_items).max(1)};if !retained.normal_context_posted{cx.consume_fuel(work as u64);}
+        let work=if restarting&&!retained.restarting&&retained.units==0{receipt.copied_items.max(1)}else{retained.units.saturating_sub(before_units).max(receipt.copied_items).max(1)};
+        if !retained.normal_context_posted{cx.consume_fuel((work as u64).saturating_sub(fuel_before.saturating_sub(cx.fuel_remaining())));}
         physical=match physical.checked_add(receipt){Ok(sum)=>sum,Err(_)=>{if retained.fault.is_none(){retained.fault=Some("original evaluation receipt overflowed its caller total".into());}retained.cancel();physical}};
         let funded=receipt.fits(remaining)&&physical.fits(memory_grant);if !funded{if retained.fault.is_none(){retained.fault=Some("original evaluation exceeded its caller memory grant".into());}retained.cancel();}
         match step{
@@ -258,7 +260,7 @@ pub(super) fn evaluation_drive_original(registry:&neural_engine::SharedRegistry,
             EvaluationStep::Done(mut reply)=>{reply.retirement_posted=retained.normal_context_posted;reply.retirement_progress=physical;reply.returned_request=returned_request;if reply.complete{retained.cancelled=true;}return reply;},
             EvaluationStep::Cancelled(progress)=>retained.response=Some(EvaluationOutput::envelope(EvaluationEnvelopeSource{output:None,done:true,cancellable:false,phase:"cancelled",units_done:progress.units_done,units_total:progress.units_total,pending:None},false)),
             EvaluationStep::Working(progress)=>{
-                let publish=round.is_some_and(|round|round.spent(work as u64,||cx.now_us()));
+                let publish=round.is_some_and(|round|round.should_publish(work as u64,retained.terminal_reply_is_parked(),||cx.now_us()));
                 if publish{
                     retained.response=Some(EvaluationOutput::envelope(EvaluationEnvelopeSource{output:None,done:false,cancellable:true,phase:progress.phase,units_done:progress.units_done,units_total:progress.units_total,pending:None},false));
                 }

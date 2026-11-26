@@ -1,5 +1,5 @@
 import { requireHostPlatformBuildArgumentsV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
-import {buildDescriptorEmitterV1} from "../🛠️emitter/🟦️.ts";
+import {ensureFreshDescriptorEmitterV1} from "../🛠️emitter/🟦️.ts";
 import {verifyCapturedCargoArtifactsV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -19,7 +19,7 @@ export const FRESH_IO_CHUNK_BYTES = 64 * 1024;
 export class DescriptorBuildScript extends BundleScript {
   async run(segments:string[]): Promise<void> {
     requireHostPlatformBuildArgumentsV1(segments,process.platform);
-    await buildDescriptorEmitterV1(this.repoRoot,this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"descriptor:build",0));
+    await ensureFreshDescriptorEmitterV1(this.repoRoot,this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"descriptor:build",0));
   }
 }
 

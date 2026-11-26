@@ -2,12 +2,20 @@
 //! instance that names the framework `elements` interaction domain with the element's kind as granularity, so the host's own raycast pick, hover and marquee select
 //! the same ids the outliner and the plan select. Storey isolation and visibility filter the instances, the section plane clips them.
 
-#[path = "🎚️config/🦀️.rs"]
-pub mod config;
+#[path = "🎚️config"]
+pub mod config {
+    pub use semio_s_artifact_bim_model_window_config::world::*;
+
+    #[cfg(test)]
+    #[path = "🧪️tests/🔬️unit/🦀️.rs"]
+    mod tests;
+}
+pub use config::{INITIAL_CAMERA, WINDOW_KIND_ID};
 
 #[path = "🌡️envelope/🦀️.rs"]
 pub mod envelope;
 
+use crate::editor::bim::kit::visible_in_options;
 use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_holding;
 use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Preview, Shape};
 use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
@@ -24,13 +32,10 @@ use semio_plugin::WindowKindDefinition;
 use semio_plugin::WindowOptions;
 
 //#region 🔖️Constants
-pub const WINDOW_KIND_ID: &str = "bim-edit-world";
 pub const BODY_KEY: &str = "bim.edit.world";
 const SURFACE_ID: &str = "bim.edit.world3d/world";
 /// 🎥️ The projection kinds of the 3D window, as the host names them: perspective, orthographic, axonometric, one-point and two-point.
 pub const PROJECTION_KINDS: [&str; 5] = ["threePoint", "orthographic", "axonometric", "onePoint", "twoPoint"];
-/// 🎥️ The camera of a window that has not framed its content yet.
-pub const INITIAL_CAMERA: store::Viewport3dOrbit = store::Viewport3dOrbit { position: [14.0, -14.0, 10.0], target: [4.0, 3.0, 1.5], zoom: 1.0, up: None };
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -71,7 +76,7 @@ fn in_box(solid: &ElementSolid, config: &config::BimWorldWindowConfig) -> bool {
 /// 👁️ Whether the solid of element `id` is drawn: not on a hidden storey, on the isolated storey when there is one, and not hidden by the phase filter (the `phase-visibility` of its storey decides).
 pub fn visible(id: &str, solid: &ElementSolid, inference: &ModelInference, config: &config::BimWorldWindowConfig) -> bool {
     (config.isolated_elements.is_empty() || config.isolated_elements.iter().any(|isolated| isolated == id))
-        && inference.option_scope.includes(id, &config.selected_options, &config.workset_visibility)
+        && visible_in_options(inference, id, &config.selected_options, &config.workset_visibility)
         && in_box(solid, config)
         && (config.isolated_storey.is_empty() || solid.storey == config.isolated_storey)
         && !config.hidden_storeys.contains(&solid.storey)

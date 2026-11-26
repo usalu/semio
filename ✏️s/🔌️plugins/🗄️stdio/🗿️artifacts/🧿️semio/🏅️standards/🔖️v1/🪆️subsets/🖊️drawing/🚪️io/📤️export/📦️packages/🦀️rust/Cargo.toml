@@ -22,22 +22,23 @@ semio-framework-artifact-reference = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-plugin = { workspace = true }
 semio-framework-value = { workspace = true }
-semio-s-artifact-stdio-dwg-geometry = { workspace = true }
-semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-drawing = { workspace = true }
 semio-s-artifact-stdio-semio-drawing-png-export = { workspace = true }
 # 🧩️ Capability Dependencies
-semio-s-artifact-stdio-dwg-model = { workspace = true }
+semio-s-artifact-stdio-dwg-geometry = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 semio-s-artifact-stdio-dwg-write = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
-semio-s-artifact-stdio-pdf = { workspace = true }
+semio-s-artifact-stdio-pdf-conformance-support = { workspace = true }
+semio-s-artifact-stdio-pdf-lower = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 # /🧩️ Capability Dependencies
 
 [dev-dependencies]
+semio-s-artifact-stdio-pdf = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 hayro = { workspace = true }

@@ -270,7 +270,7 @@ pub fn scoped_compiled_component(runtime: &GuestRuntimes, plugin_id: &str, compo
             scope.enter(ActivationPhase::CompilingComponent).map_err(activation_fault)?;
             match semio_framework_async::block_on(runtime.isolated_compile_target(&package)) {
                 Some(target) => {
-                    CompileFlight::join(package_hash, target, &bytes, scope)?;
+                    CompileFlight::join(target, &bytes, scope)?;
                     semio_framework_async::block_on(runtime.load_compiled(&package)).ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, format!("compiling `{plugin_id}`: the isolated compile finished but its compiled code does not load")))?
                 }
                 None => semio_framework_async::block_on(runtime.compile(&package, &bytes)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("compiling `{plugin_id}`: {error}")))?,
@@ -322,7 +322,7 @@ pub fn set_component_compile_worker(program: PathBuf) {
 
 /// 🧪️ A unit-test binary is not `semio-os-mcp` and has no `compile-component` subcommand, so under
 /// `cfg(test)` the worker is this test binary running exactly [`ISOLATED_COMPILE_TEST_ENTRY`], which
-/// reads the same two inputs from its environment.
+/// reads the worker inputs from its environment.
 #[cfg(test)]
 pub(crate) const ISOLATED_COMPILE_TEST_ENTRY: &str = "workspace::quick::isolated_compile_worker_entry";
 
@@ -331,6 +331,9 @@ pub const ISOLATED_COMPILE_TEST_ENGINE: &str = "SEMIO_ISOLATED_COMPILE_ENGINE";
 
 #[cfg(any(test, feature = "testkit"))]
 pub const ISOLATED_COMPILE_TEST_OUT: &str = "SEMIO_ISOLATED_COMPILE_OUT";
+
+#[cfg(any(test, feature = "testkit"))]
+pub const ISOLATED_COMPILE_TEST_BYTES: &str = "SEMIO_ISOLATED_COMPILE_BYTES";
 
 /// 🔢️ Isolated compile workers this process has started — a shared compile starts exactly one.
 #[cfg(not(target_arch = "wasm32"))]
@@ -353,11 +356,11 @@ pub fn prepare_plugin_component(plugin_id: &str, bytes: &[u8], scope: &Activatio
 /// 🔎️ Isolated compile workers alive right now — zero once every compile finished or was killed.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn live_component_compile_workers() -> usize {
-    compile_flights().lock().unwrap_or_else(std::sync::PoisonError::into_inner).values().filter(|flight| flight.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).worker.is_some()).count()
+    compile_slot().active.lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().filter(|flight| flight.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).worker.is_some()).count()
 }
 
 /// 🧊️ One cold compile of one component, in an isolated worker process, shared by every requester
-/// of the same content hash while it runs. A requester that cancels detaches and is answered at
+/// for the same cache entry while it runs. A requester that cancels detaches and is answered at
 /// once; when the last one detaches the worker is killed, which returns every core and byte the
 /// compile held, and its unfinished output is removed. Nothing completes in the background after
 /// its last requester is gone. Law: `🏠️workspace/🧫️fixtures/⏱️compile-cancellation-law.json`.
@@ -370,30 +373,41 @@ struct CompileFlight {
 #[cfg(not(target_arch = "wasm32"))]
 pub(super) struct CompileFlightState {
     pub requesters: usize,
-    waiters: Vec<semio_framework_async_sync::oneshot::Sender<Result<(), String>>>,
+    waiters: Vec<semio_framework_async_sync::oneshot::Sender<Result<(), GatewayError>>>,
     worker: Option<std::process::Child>,
-    pub outcome: Option<Result<(), String>>,
+    pub outcome: Option<Result<(), GatewayError>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn compile_flights() -> &'static Mutex<HashMap<[u8; 32], Arc<CompileFlight>>> {
-    static FLIGHTS: OnceLock<Mutex<HashMap<[u8; 32], Arc<CompileFlight>>>> = OnceLock::new();
-    FLIGHTS.get_or_init(|| Mutex::new(HashMap::new()))
+#[derive(Default)]
+struct CompileSlot {
+    active: Mutex<Option<Arc<CompileFlight>>>,
+    changed: std::sync::Condvar,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn compile_slot() -> &'static CompileSlot {
+    static SLOT: OnceLock<CompileSlot> = OnceLock::new();
+    SLOT.get_or_init(CompileSlot::default)
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl CompileFlight {
-    /// 🛫️ Joins the running compile of `package_hash`, or starts it, and waits for it or for the
-    /// requester's cancel, whichever comes first.
-    pub fn join(package_hash: [u8; 32], target: semio_plugin_host::IsolatedCompileTarget, bytes: &[u8], scope: &ActivationScope) -> Result<(), GatewayError> {
+    /// 🛫️ Joins the compile for this cache entry or waits for the process's cold worker slot.
+    pub fn join(target: semio_plugin_host::IsolatedCompileTarget, bytes: &[u8], scope: &ActivationScope) -> Result<(), GatewayError> {
         let (flight, answer) = {
-            let mut flights = compile_flights().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let flight = match flights.get(&package_hash) {
-                Some(flight) => Arc::clone(flight),
-                None => {
-                    let flight = Self::launch(package_hash, target, bytes)?;
-                    flights.insert(package_hash, Arc::clone(&flight));
-                    flight
+            let slot = compile_slot();
+            let mut active = slot.active.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let flight = loop {
+                scope.checkpoint().map_err(activation_fault)?;
+                match active.as_ref() {
+                    Some(flight) if flight.cache_path == target.cache_path => break Arc::clone(flight),
+                    Some(_) => active = slot.changed.wait_timeout(active, std::time::Duration::from_millis(50)).unwrap_or_else(std::sync::PoisonError::into_inner).0,
+                    None => {
+                        let flight = Self::launch(target, bytes)?;
+                        *active = Some(Arc::clone(&flight));
+                        break flight;
+                    }
                 }
             };
             let (sender, answer) = semio_framework_async_sync::oneshot::channel();
@@ -410,20 +424,19 @@ impl CompileFlight {
             semio_framework_async::Either::Left(answer) => {
                 flight.leave();
                 match answer {
-                    Ok(Ok(())) => Ok(()),
-                    Ok(Err(message)) => Err(GatewayError::new(GatewayErrorCode::Internal, format!("isolated component compile failed: {message}"))),
+                    Ok(result) => result,
                     Err(_) => Err(GatewayError::new(GatewayErrorCode::Internal, "the isolated component compile ended without answering")),
                 }
             }
             semio_framework_async::Either::Right(()) => {
-                flight.detach(package_hash);
+                flight.detach();
                 Err(GatewayError::new(GatewayErrorCode::Cancelled, "the caller cancelled while its component was compiling"))
             }
         }
     }
 
     /// 🚀️ Starts the worker and the thread that feeds it the component and observes its exit.
-    fn launch(package_hash: [u8; 32], target: semio_plugin_host::IsolatedCompileTarget, bytes: &[u8]) -> Result<Arc<Self>, GatewayError> {
+    fn launch(target: semio_plugin_host::IsolatedCompileTarget, bytes: &[u8]) -> Result<Arc<Self>, GatewayError> {
         let program = match COMPONENT_COMPILE_WORKER.get() {
             Some(program) => program.clone(),
             None => std::env::current_exe().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("locating the compile worker: {error}")))?,
@@ -434,9 +447,9 @@ impl CompileFlight {
             command.env("SYSTEMROOT", system_root);
         }
         #[cfg(not(test))]
-        command.arg("compile-component").arg("--engine").arg(&target.engine).arg("--out").arg(&target.cache_path);
+        command.arg("compile-component").arg("--engine").arg(&target.engine).arg("--out").arg(&target.cache_path).arg("--component-bytes").arg(bytes.len().to_string());
         #[cfg(test)]
-        command.args([ISOLATED_COMPILE_TEST_ENTRY, "--exact", "--test-threads=1"]).env(ISOLATED_COMPILE_TEST_ENGINE, &target.engine).env(ISOLATED_COMPILE_TEST_OUT, &target.cache_path);
+        command.args([ISOLATED_COMPILE_TEST_ENTRY, "--exact", "--test-threads=1"]).env(ISOLATED_COMPILE_TEST_ENGINE, &target.engine).env(ISOLATED_COMPILE_TEST_OUT, &target.cache_path).env(ISOLATED_COMPILE_TEST_BYTES, bytes.len().to_string());
         let mut worker = command
             .stdin(std::process::Stdio::piped())
             .stdout(std::process::Stdio::null())
@@ -449,29 +462,34 @@ impl CompileFlight {
         let flight = Arc::new(Self { cache_path: target.cache_path, state: Mutex::new(CompileFlightState { requesters: 0, waiters: Vec::new(), worker: Some(worker), outcome: None }) });
         let observed = Arc::clone(&flight);
         let bytes = bytes.to_vec();
-        std::thread::Builder::new()
+        if let Err(error) = std::thread::Builder::new()
             .name("semio-compile-flight".to_string())
-            .spawn(move || observed.observe(package_hash, input, report, bytes))
-            .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("observing the compile worker: {error}")))?;
+            .spawn(move || observed.observe(input, report, bytes))
+        {
+            flight.kill_worker();
+            return Err(GatewayError::new(GatewayErrorCode::Internal, format!("observing the compile worker: {error}")));
+        }
         Ok(flight)
     }
 
     /// 👁️ Feeds the worker its component, waits for it to exit — its report closes when it does —
     /// and answers every requester. A worker already killed by the last detach answers no one.
-    pub(crate) fn observe(self: Arc<Self>, package_hash: [u8; 32], mut input: std::process::ChildStdin, mut report: std::process::ChildStderr, bytes: Vec<u8>) {
+    pub(crate) fn observe(self: Arc<Self>, mut input: std::process::ChildStdin, mut report: std::process::ChildStderr, bytes: Vec<u8>) {
         use std::io::{Read as _, Write as _};
         let _ = input.write_all(&bytes);
         drop(input);
         drop(bytes);
         let mut message = String::new();
         let _ = report.read_to_string(&mut message);
-        let mut flights = compile_flights().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let slot = compile_slot();
+        let mut active = slot.active.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let Some(mut worker) = state.worker.take() else { return };
         let outcome = match worker.wait() {
             Ok(status) if status.success() => Ok(()),
-            Ok(status) => Err(format!("{status}: {}", message.trim())),
-            Err(error) => Err(error.to_string()),
+            Ok(status) if status.code() == Some(semio_plugin_host::ISOLATED_COMPILE_DEFERRED_EXIT) => Err(GatewayError::new(GatewayErrorCode::BudgetExceeded, message.trim()).retryable()),
+            Ok(status) => Err(GatewayError::new(GatewayErrorCode::Internal, format!("isolated component compile failed: {status}: {}", message.trim()))),
+            Err(error) => Err(GatewayError::new(GatewayErrorCode::Internal, format!("waiting for the isolated component compile: {error}"))),
         };
         if outcome.is_err() {
             let _ = std::fs::remove_file(semio_plugin_host::compiled_cache_scratch_path(&self.cache_path, worker.id()));
@@ -480,9 +498,8 @@ impl CompileFlight {
             let _ = waiter.send(outcome.clone());
         }
         state.outcome = Some(outcome);
-        if flights.get(&package_hash).is_some_and(|flight| Arc::ptr_eq(flight, &self)) {
-            flights.remove(&package_hash);
-        }
+        *active = None;
+        slot.changed.notify_all();
     }
 
     fn leave(&self) {
@@ -491,22 +508,30 @@ impl CompileFlight {
     }
 
     /// ✂️ Withdraws one requester; the last one kills the worker and removes its unfinished output.
-    fn detach(self: &Arc<Self>, package_hash: [u8; 32]) {
-        let mut flights = compile_flights().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    fn detach(&self) {
+        let slot = compile_slot();
+        let mut active = slot.active.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         state.requesters -= 1;
         if state.requesters > 0 || state.outcome.is_some() {
             return;
         }
+        self.stop_worker(&mut state);
+        state.waiters.clear();
+        state.outcome = Some(Err(GatewayError::new(GatewayErrorCode::Cancelled, "every requester cancelled; the compile was killed")));
+        *active = None;
+        slot.changed.notify_all();
+    }
+
+    fn kill_worker(&self) {
+        self.stop_worker(&mut self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
+    }
+
+    fn stop_worker(&self, state: &mut CompileFlightState) {
         if let Some(mut worker) = state.worker.take() {
             let _ = worker.kill();
             let _ = worker.wait();
             let _ = std::fs::remove_file(semio_plugin_host::compiled_cache_scratch_path(&self.cache_path, worker.id()));
-        }
-        state.waiters.clear();
-        state.outcome = Some(Err("every requester cancelled; the compile was killed".to_string()));
-        if flights.get(&package_hash).is_some_and(|flight| Arc::ptr_eq(flight, self)) {
-            flights.remove(&package_hash);
         }
     }
 }

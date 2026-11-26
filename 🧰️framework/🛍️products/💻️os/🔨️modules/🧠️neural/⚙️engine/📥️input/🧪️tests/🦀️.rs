@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_value::RetainedWorkPoll;
 use semio_os_kernel_neural_engine_model::testkit::EffectCaller;
 const WORK:u64=1<<16;
 fn exit_error(exit:RetirementPollExit)->ValueError{match exit{RetirementPollExit::Failed(failure)=>failure.into_value_error(),RetirementPollExit::Pending(_)=>panic!("synchronous fixture suspended")}}

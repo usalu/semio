@@ -5,13 +5,15 @@
       "id": "demonstrator",
       "source": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/🟦️.ts",
       "entry": "runTestScript",
-      "kind": "function"
+      "kind": "function",
+      "runnerPackage": "@playwright/test"
     },
     {
       "id": "play",
       "source": "🏢️semio-tech/🎡️play/🔨️modules/🧪️e2e/🟦️.ts",
       "entry": "TestScript",
-      "kind": "class"
+      "kind": "class",
+      "runnerPackage": "playwright"
     }
   ],
   "cases": [

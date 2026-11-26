@@ -21,6 +21,8 @@ const cases:{lines:string[];root:string;want:boolean}[]=[
  {lines:["The plan cannot continue: the slice worker ended 3 times in a row with exit code 75 and the same text: out of memory"],root,want:false},
  {lines:["SyntaxError: Unexpected token '}' at /elsewhere/x.ts:3:1"],root,want:false},
  {lines:["stage failed with exit code 1"],root,want:false},
+ {lines:["The resident service met an unexpected failure (reference 1c7c6ae4): Error [BUILD_SOURCE_CONFLICT]: Conflicting inference observations: global:[\"closure-graph\"]"],root,want:true},
+ {lines:["Error [BUILD_SOURCE_CONFLICT]: Something else entirely"],root,want:false},
  {lines:[`error: failed to write \`${root}/.cache/b/r/m/b/p/prototype/build/semio-framework-pack-http/cf085c40b268a8e7/fingerprint/invoked.timestamp\``],root,want:true},
  {lines:["error: failed to write `/elsewhere/cache/x.timestamp`"],root,want:false},
 ];

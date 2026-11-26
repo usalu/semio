@@ -5,27 +5,12 @@ T="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$T/../../../../../../.." && pwd)"
 generated="$T/🗑️generated"
 mkdir -p "$generated"
-lock="$generated/static-verification.lock"
-if ! mkdir "$lock" 2>/dev/null; then echo "another static verification owns $lock" >&2; exit 1; fi
+lock="$generated/native-site-build.lock"
+if ! mkdir "$lock" 2>/dev/null; then echo "another native site build owns $lock" >&2; exit 1; fi
 trap 'rmdir "$lock"' EXIT
-accepted="$generated/static-accepted.sha256"
-before="$generated/static-before.sha256"
-rm -f "$accepted"
-if [[ "${VERIFY_QUEUE_RECEIPTS:-0}" == 1 ]]; then
-  python3 "$T/release-receipts.py" status "$ROOT/.cache/b/p/m/browser/release/modules" "$generated/confirmed" >&2 || { echo "refusing to build and verify the site before every roster module is confirmed" >&2; exit 1; }
-fi
+repo tools exec --light python -- -I "$T/release-receipts.py" status "$ROOT/.cache/b/p/m/browser/release/modules" "$generated/confirmed" >&2
 capture=$(mktemp "$T/🗑️generated/native-site-verify.XXXXXX")
-NATIVE_SITE_RUN_LOG="$capture" MEM=4096 bash "$T/native-wasm.sh" site
-OUT="$(python3 "$T/captured-site.py" "$ROOT" "$capture")"
+NATIVE_SITE_RUN_LOG="$capture" MEM="${MEM:-3000}" bash "$T/native-wasm.sh" site
+OUT="$(repo tools exec --light python -- -I "$T/captured-site.py" "$ROOT" "$capture")"
 echo "SITE $OUT"
-if [[ "${VERIFY_QUEUE_RECEIPTS:-0}" == 1 ]]; then
-  python3 "$T/site-manifest.py" "$OUT" "$ROOT" "$before"
-  python3 "$T/release-receipts.py" verify "$ROOT/.cache/b/p/m/browser/release/modules" "$T/🗑️generated/confirmed" --site "$OUT"
-fi
-"$T/verify-static.sh" "$OUT" 8765
-if [[ "${VERIFY_QUEUE_RECEIPTS:-0}" == 1 ]]; then
-  after="$T/🗑️generated/static-after.sha256"
-  python3 "$T/site-manifest.py" "$OUT" "$ROOT" "$after"
-  cmp "$before" "$after"
-  mv "$after" "$accepted"
-fi
+repo tools exec --light python -- -I "$T/accept-site.py" "$OUT"

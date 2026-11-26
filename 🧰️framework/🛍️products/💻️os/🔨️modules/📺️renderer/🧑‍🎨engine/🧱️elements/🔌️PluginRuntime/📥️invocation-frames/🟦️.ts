@@ -48,10 +48,14 @@ import { admitCrossingViewContext } from "../🖼️surface-refresh/🟦️.ts";
 //#region 🔖️plugin-runtime
 //#region 🔖️ActorAdapter
 //#region 🔖️GenericThunkQueue
-export function inspectEncodedAppCommand(events: readonly Uint8Array[]): { actionId: string | null; seq: number | null; lane: "Interactive" | "Background"; mediaIn?: true; operation: string } {
+export function inspectEncodedAppCommand(events: readonly Uint8Array[]): { actionId: string | null; seq: number | null; lane: "Interactive" | "Background"; mediaIn?: true; adoptsTypedOperation?: false; operation: string } {
   try {
     const command = decodeAppCommand(events[0]!);
     if (events.length === 1 && "MediaIn" in command) return { actionId: null, seq: null, lane: "Interactive", mediaIn: true, operation: "media-in" };
+    if (events.length === 1 && ("LoadDocumentArchive" in command || "MergeDocumentArchive" in command || "ReadDocumentArchive" in command ||
+        "PollDocumentArchiveLoad" in command || "CancelDocumentArchiveLoad" in command || "AcknowledgeDocumentArchiveLoad" in command)) {
+      return { actionId: null, seq: null, lane: "Interactive", operation: Object.keys(command)[0]!, adoptsTypedOperation: false };
+    }
     const seq = "Command" in command ? command.Command.seq : "ConfigCommand" in command ? command.ConfigCommand.seq : null;
     if (!("Command" in command)) return { actionId: null, seq, lane: "Interactive", operation: "ConfigCommand" in command ? "config-command" : Object.keys(command)[0] ?? "unknown" };
     const invocation = decodePackValue(new Uint8Array(command.Command.command)) as { readonly address?: { readonly actionId?: unknown; readonly commandId?: unknown } } | null;

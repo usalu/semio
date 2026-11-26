@@ -118,7 +118,7 @@ function AgentChatEntry({
       {entry.kind === "toolCall" ? (
         <>
           <p className="break-words px-single pb-single font-mono text-xs text-foreground">{entry.toolName}</p>
-          {entry.args ? <pre className="mx-single mb-single overflow-x-auto whitespace-pre-wrap break-words bg-muted p-single font-mono text-2xs text-muted-foreground">{entry.args}</pre> : null}
+          {entry.args ? <pre className="mx-single mb-single overflow-x-auto whitespace-pre-wrap break-words p-single font-mono text-2xs text-muted-foreground">{entry.args}</pre> : null}
           {entry.summary !== null ? (
             <p className="whitespace-pre-wrap break-words px-single pb-single text-xs text-foreground">
               <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{resultRoleLabel}: </span>

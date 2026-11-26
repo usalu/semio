@@ -105,7 +105,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
     }
 
     /// 🌿️ The alternatives the history body lists ([`history_alternative_views`]) over the log's branch and supersede
-    /// transitions.
+    /// transitions. The trunk is implicit in the envelope and always listed first, with the empty name.
     pub fn history_alternatives(&self) -> Vec<AlternativeView> {
         let envelope = self.store.envelope();
         let transitions: Vec<(&store::os_spr::MutationEnvelope, store::os_spr::HistoryTransition)> =
@@ -119,7 +119,9 @@ impl<A: ArtifactApp> InstanceStores<A> {
             })
             .collect();
         let line = self.store.active_line_id();
-        history_alternative_views(envelope.vcs.alternatives.iter().map(|alternative| (alternative.id.as_str(), alternative.name.as_str())), Some(line.as_str()), &facts)
+        let trunk = self.store.trunk_alternative_id();
+        let named = envelope.vcs.alternatives.iter().map(|alternative| (alternative.id.as_str(), alternative.name.as_str()));
+        history_alternative_views(std::iter::once((trunk.as_str(), "")).chain(named), Some(line.as_str()), &facts)
     }
 
     pub async fn current_open_conflicts(&self) -> Vec<protocol::Conflict> {

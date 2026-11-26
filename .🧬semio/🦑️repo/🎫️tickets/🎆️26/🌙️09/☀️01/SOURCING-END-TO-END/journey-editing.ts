@@ -1,23 +1,27 @@
 import { createHash } from "node:crypto";
-import { assert, awaitBeacon, dismissIntroduction, kinds, out, runJourneys, session, url, writeFile, type Browser, type Locator } from "./journey-kit.ts";
+import { assert, awaitBeacon, dismissIntroduction, out, runJourneys, session, url, writeFile, type Browser, type Locator } from "./journey-kit.ts";
 
 /** ✏️ Sourcing curation editing journey (6081): selection (click, Escape, Select All, selection modes, granularity, shift/ctrl/alt merges, grid marquee, hover), clipboard (Copy, Cut, Paste with every anchor), typed and stepped counts, the Curate row action, the row More menu, Restock, Curation Set Count, Set Active Example, Grid Instance Display and the contributions lane; English and German.
  * Usage: `JOURNEY=editing bun journey-editing.ts [en|de ...]` with the native sourcing host on 6081.
  * @see ./journey-kit.ts
  * @see ./✂️editing-features.md */
 
-const KVH = "KVH C24 100×200";
-const IPE = "Steel IPE 200";
-const HEA = "Steel HEA 160";
-const GLULAM = kinds[0];
-const CASEMENT = "Casement Window 100×120";
-const KVH_ID = "beam-kvh-c24";
+const KVH = "beam-kvh-c24";
+const IPE = "beam-steel-ipe200";
+const HEA = "beam-steel-hea160";
+const GLULAM = "beam-glulam-gl24h";
+const CASEMENT = "window-casement-100x120";
+const KVH_ID = KVH;
+const MODULE_KINDS = ["beam-glulam-gl24h", "beam-kvh-c24", "beam-steel-ipe200", "beam-steel-hea160", "window-casement-100x120", "window-fixed-150x150", "window-tilt-turn-120x140", "slab-concrete-240", "slab-clt-160", "slab-hollow-core-265"];
 const WINDOWS = { pool: "sourcingPool", curated: "sourcingCurated", preview: "sourcingPreview", grid: "sourcingGrid" } as const;
 type Win = (typeof WINDOWS)[keyof typeof WINDOWS];
 
 async function journey(browser: Browser, language: "en" | "de") {
   const s = await session(browser, language);
-  const { page, t, pool, curated, preview, rowIn, countIn, names, settle, eventually } = s;
+  const { page, t, pool, curated, preview, settle, eventually } = s;
+  const rowIn = (scope: Locator, id: string) => scope.locator(`tbody tr[data-row-id="${id}"]`);
+  const countIn = (scope: Locator, id: string) => rowIn(scope, id).getByRole("spinbutton").first();
+  const names = (scope: Locator) => scope.locator("tbody tr[data-row-id]").evaluateAll(rows => rows.map(row => row.getAttribute("data-row-id") ?? ""));
   await s.context.grantPermissions(["clipboard-read", "clipboard-write"]).catch(() => undefined);
   const boot = async () => {
     await page.goto(url);
@@ -27,10 +31,10 @@ async function journey(browser: Browser, language: "en" | "de") {
   };
   const total = () => names(pool()).then(rows => rows.length);
   const cell = (scope: Locator, name: string) => rowIn(scope, name).locator("td").nth(1);
-  const active = (scope: Locator) => scope.locator('tbody tr[data-active="true"]').evaluateAll(rows => rows.map(row => row.querySelector("td")?.textContent?.replace(/^\s*(Drag to window|Verschieben)\s*/u, "").trim() ?? ""));
+  const active = (scope: Locator) => scope.locator('tbody tr[data-active="true"]').evaluateAll(rows => rows.map(row => row.getAttribute("data-row-id") ?? ""));
   const poolCount = (name: string) => countIn(pool(), name).inputValue();
   const curatedCount = (name: string) => countIn(curated(), name).inputValue().catch(() => "absent");
-  const curatedNames = () => names(curated()).then(rows => rows.filter(row => row !== "No data" && row !== "Keine Daten"));
+  const curatedNames = () => names(curated());
   const previewEmpty = async () => (await preview().innerText()).includes(t.noSelection);
   const toggle = (win: Win) => page.locator(`[id="framework.window.${win}.engagement.toggle"]`);
   let opened: Win = WINDOWS.pool;
@@ -54,8 +58,13 @@ async function journey(browser: Browser, language: "en" | "de") {
   };
   const run = async (win: Win, id: string) => { await act(win, id); await closeActions(win); await settle(600); };
   const form = async (win: Win, id: string, args: Record<string, string | number>) => {
-    await act(win, id);
     const prefix = `framework.window.${win}.action.${id}`;
+    await act(win, id);
+    for (let attempt = 0; attempt < 3 && (await page.locator(`[id="${prefix}.execute"]`).count()) === 0; attempt++) { await page.locator(`[id="action.${id}"]`).click(); await settle(900); }
+    for (const input of await page.locator(`input[id^="${prefix}.arg."][id$=".input"]`).all()) {
+      const name = (await input.getAttribute("id"))!.slice(`${prefix}.arg.`.length, -".input".length);
+      if (!(name in args)) await input.fill("");
+    }
     for (const [name, value] of Object.entries(args)) {
       const field = page.locator(`[id="${prefix}.arg.${name}.input"]`);
       if ((await field.getAttribute("role")) === "combobox") { await field.click(); await page.getByRole("option").nth(Number(value)).click(); }
@@ -275,18 +284,28 @@ async function journey(browser: Browser, language: "en" | "de") {
       return {};
     });
 
-    await step("Stock From Catalogue: the action and the Restock button keep rows and curated counts", async () => {
+    await step("Stock From Catalogue: restocks an emptied catalogue from the installed modules, keeps curated counts, via the action and the Restock button", async () => {
       await setPool(KVH, 3);
       const n = await total();
       await run(WINDOWS.pool, "stockFromCatalogue");
       await eventually(async () => { assert.equal(await total(), n); assert.equal(await poolCount(KVH), "3"); });
+      await form(WINDOWS.pool, "setActiveExample", { exampleId: 0 });
+      await eventually(async () => assert.equal(await total(), 0, "No example left rows"), 150_000);
       await page.locator('[id="window:sourcing-pool/sourcing-pool-restock"]').click();
-      await settle(2500);
-      await eventually(async () => { assert.equal(await total(), n); assert.equal(await poolCount(KVH), "3"); assert.equal(await curatedCount(KVH), "3"); });
-      return { rows: n };
+      await eventually(async () => assert.ok((await total()) >= 10, `restock added ${await total()} kinds`), 150_000);
+      const restocked = await names(pool());
+      for (const kind of MODULE_KINDS) assert.ok(restocked.includes(kind), `restock missed ${kind}`);
+      await form(WINDOWS.pool, "setActiveExample", { exampleId: 0 });
+      await eventually(async () => assert.equal(await total(), 0));
+      await run(WINDOWS.pool, "stockFromCatalogue");
+      await eventually(async () => assert.ok((await total()) >= 10, "Stock From Catalogue action restocks"), 150_000);
+      await form(WINDOWS.pool, "setActiveExample", { exampleId: 1 });
+      await eventually(async () => assert.equal(await total(), n), 150_000);
+      return { rows: n, restocked: restocked.length };
     });
 
     await step("Curation Set Count…: value, delta, negative value and unknown object", async () => {
+      await fresh();
       const set = (args: Record<string, string | number>) => form(WINDOWS.curated, "curationSetCount", args);
       await set({ objectId: KVH_ID, value: 7 });
       await eventually(async () => assert.equal(await curatedCount(KVH), "7"));
@@ -304,13 +323,15 @@ async function journey(browser: Browser, language: "en" | "de") {
     });
 
     await step("Set Active Example…: Demo reloads the catalogue and empties the curation", async () => {
+      await fresh();
       await setPool(KVH, 2);
-      await form(WINDOWS.pool, "setActiveExample", { exampleId: 0 });
-      await eventually(async () => { assert.equal(await curatedCount(KVH), "absent"); assert.ok((await names(pool())).includes(GLULAM)); }, 15_000);
+      await form(WINDOWS.pool, "setActiveExample", { exampleId: 1 });
+      await eventually(async () => { assert.equal(await curatedCount(KVH), "absent"); assert.ok((await names(pool())).includes(GLULAM)); }, 150_000);
       return {};
     });
 
     await step("Set Grid Instance Display…: all three options redraw the Grid canvas", async () => {
+      await fresh();
       await setPool(KVH, 3);
       await setPool(IPE, 2);
       await settle(2500);

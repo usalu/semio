@@ -3,12 +3,59 @@ import { expect, test } from "bun:test";
 import { optimizeComponentCoresV1 } from "../../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts";
 import { Database } from "bun:sqlite";
 import { formatStampProtocolV1 } from "../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🟨️.mjs";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
 import { type LinkedComponentV1, type NativeBuildStageV1 } from "../../🟦️.ts";
 import { type NativeBuildJobV1, type NativeBuildPlanV1 } from "../../📋️contract/🟦️.ts";
 import { artifacts, stubCargo, stubWorkspace, runStub, stubJob } from "../🎭️stub/🟦️.ts";
+
+for (const row of fixture.stageJobOverlap.cases) {
+  const run = async () => {
+    const root = mkdtempSync(join(artifacts, "sj-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a"], "release");
+    const journal = join(root, "events"), linked = join(root, "linked");
+    const tool = stubJob(root, "describe-tool", [], 0);
+    writeFileSync(tool.command[1]!, `import { appendFileSync, existsSync } from "node:fs";
+const journal = ${JSON.stringify(journal)}, linked = ${JSON.stringify(linked)};
+appendFileSync(journal, "tool-start\\n");
+const deadline = Date.now() + ${fixture.stageJobOverlap.waitMilliseconds};
+while (${row.waitForGuest} && !existsSync(linked) && Date.now() < deadline) await Bun.sleep(25);
+appendFileSync(journal, "tool-end\\n");
+process.exit(${row.exit});
+`);
+    const plan: NativeBuildPlanV1 = { version: 1, passes: [pass], jobs: [tool], stageAfter: { describe: ["job:describe-tool"] } };
+    const toolFailed = Promise.withResolvers<void>();
+    const outcome = runStub(root, plan, cargo, {
+      tokens: row.tokens,
+      log(line) { if (line.includes("job:describe-tool job: exit")) toolFailed.resolve(); },
+      stages: () => [
+        { name: "guest-ready", after: [], capacity: "io", async run() {
+          appendFileSync(journal, "guest-linked\n");
+          writeFileSync(linked, "");
+          if (row.exit) {
+            await toolFailed.promise;
+            await Bun.sleep(50);
+            appendFileSync(journal, "guest-settled\n");
+          }
+        } },
+        { name: "describe", after: ["guest-ready"], capacity: "single", async run() { appendFileSync(journal, "describe\n"); } },
+        { name: "discard", after: ["describe"], capacity: "cleanup", async run() { appendFileSync(journal, "discard\n"); } },
+      ],
+    });
+    if (row.exit) await expect(outcome).rejects.toThrow(/job failed.*job:describe-tool/su);
+    else expect((await outcome).staged).toEqual(["comp-a:release"]);
+    const oracle = new Database(":memory:");
+    try {
+      const expected = oracle.query<{ event: string }, [string]>("select value as event from json_each(?) order by key").all(JSON.stringify(row.events));
+      expect(readFileSync(journal, "utf8").trim().split("\n")).toEqual(expected.map(({ event }) => event));
+    } finally { oracle.close(); }
+  };
+  if (row.exit) registerIsolatedBuildTestV1(import.meta.path, row.name, { bodyMilliseconds: 60_000, scope: { kind: "body" } }, async checkpoint => {
+    await run();
+    checkpoint();
+  }, /exit 3/u);
+  else test(row.name, run, 60_000);
+}
 
 test("jobs start as soon as the jobs they name complete, and post-link stages stream per component after the job they name", async () => {
   const root = mkdtempSync(join(artifacts, "j-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a", "comp-b"], "release");
@@ -31,7 +78,7 @@ test("reserved nested compiler processes receive held worker slots and release t
   const root = mkdtempSync(join(artifacts, "b-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a"], "release");
   const jobs: NativeBuildJobV1[] = [
     { ...stubJob(root, "reserved", [], 20), lane: "release", workerProtocol: "reserved" },
-    { ...stubJob(root, "shared", [], 20), lane: "release" },
+    { ...stubJob(root, "shared", ["job:reserved"], 20), lane: "release" },
   ];
   const outcome = await runStub(root, { version: 1, passes: [pass], jobs }, cargo);
   expect(outcome.failed).toEqual([]);
@@ -79,7 +126,7 @@ registerIsolatedBuildTestV1(import.meta.path, "a component Cargo did not link fa
 test("a lane job runs inside its profile's Cargo lane before that lane's passes, and an idle stage widens onto free slots", async () => {
   const root = mkdtempSync(join(artifacts, "l-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a"], "release");
   const widths: number[] = [];
-  const plan: NativeBuildPlanV1 = { version: 1, passes: [pass], jobs: [{ ...stubJob(root, "module", [], 200), lane: "release", profile: "release", target: "wasm32-unknown-unknown" }] };
+  const plan: NativeBuildPlanV1 = { version: 1, passes: [pass], jobs: [{ ...stubJob(root, "module", [], 200), lane: "release", profile: "release", target: "wasm32-unknown-unknown" }], stageAfter: { wide: ["job:module"] } };
   const outcome = await runStub(root, plan, cargo, { stages: () => [{ name: "wide", capacity: "available", after: [], run: async (context) => { widths.push(context.parallelism); } }] });
   expect(outcome.failed).toEqual([]);
   const module = JSON.parse(readFileSync(join(root, "jobs.jsonl"), "utf8").trim()), passStart = readFileSync(cargo.calls, "utf8").trim().split("\n").map((line) => JSON.parse(line)).find((row) => row.at).at;

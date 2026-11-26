@@ -64,14 +64,17 @@ export async function driveInboundRequest(drive: InboundRequestDrive): Promise<I
     }
     return null;
   };
+  const cancelled = () => drive.signal?.aborted === true;
+  if (cancelled()) return { status: "cancelled", turns: 0 };
   let turn = await drive.submit([
     { kind: "request", payload: { req: drive.req, params: { origin: { tag: "shell", val: drive.originInstanceId }, capability: drive.capability, payload: Array.from(drive.payload) } } },
   ]);
   for (let turns = 1; turns <= budget; turns += 1) {
     const result = answerFor(turn);
     if (result) return { status: "answered", turns, result };
-    if (drive.signal?.aborted === true) return { status: "cancelled", turns };
+    if (cancelled()) return { status: "cancelled", turns };
     drive.onProgress?.({ capability: drive.capability, turns, budget });
+    if (cancelled()) return { status: "cancelled", turns };
     if (turns === budget || wireTurnStatusTag(turn.status) !== "more-work") return { status: "unanswered", turns };
     turn = await drive.submit([]);
   }

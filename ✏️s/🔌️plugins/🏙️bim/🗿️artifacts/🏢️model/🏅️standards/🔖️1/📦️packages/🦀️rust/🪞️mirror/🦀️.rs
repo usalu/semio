@@ -80,6 +80,12 @@ pub mod editor {
         
         #[path = "."]
         pub mod commands {
+            #[cfg(test)]
+            #[path = "."]
+            pub mod export_schedule_csv {
+                #[path = "../../../🪆️subsets/✳️any/✏️editor/🎮️commands/📊️export-schedule-csv/🧪️tests/🔬️unit/🦀️.rs"]
+                pub mod tests;
+            }
             #[path = "."]
             pub mod select_findings {
                 #[cfg(test)]

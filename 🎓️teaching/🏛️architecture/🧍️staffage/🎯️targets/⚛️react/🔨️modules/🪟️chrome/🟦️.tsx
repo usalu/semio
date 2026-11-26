@@ -33,8 +33,8 @@ export function Cell(props: React.ComponentProps<typeof SharedBorderRowCell>): R
   return <SharedBorderRowCell className={cn("flex-wrap gap-single px-double py-double", className)} {...rest} />;
 }
 
-const CONTROL = "inline-flex min-h-6 items-center justify-center gap-single border border-border bg-panel px-double py-single text-xs font-medium text-foreground transition-colors hover:bg-hover-panel disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none";
-const PRIMARY = "border-primary bg-primary text-primary-foreground hover:bg-primary/90";
+const CONTROL = "inline-flex min-h-6 items-center justify-center gap-single border-0 bg-transparent px-double py-single text-xs font-medium text-foreground transition-colors hover:bg-hover-interactive-fill disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none";
+const PRIMARY = "bg-primary text-primary-foreground hover:bg-primary/90";
 const PRESSED = "bg-active-base text-active-foreground hover:bg-active-hover";
 
 /** ☑️ A control is pressed when `aria-pressed` is the boolean or the string true. */
@@ -127,7 +127,7 @@ export function Segmented<T extends string | number>(props: { readonly label: st
           data-shared-border-cell=""
           onKeyDown={(event) => move(event, index)}
           onClick={() => option.unavailable === undefined && onChange(option.value)}
-          className={cn("inline-flex min-h-6 max-w-full shrink-0 basis-auto items-center justify-center gap-single border-0 px-double py-single text-xs font-medium transition-colors motion-reduce:transition-none", hideLabel ? "grow-0" : "grow", option.value === value ? "bg-active-base text-active-foreground" : "bg-panel text-foreground hover:bg-hover-panel", option.unavailable !== undefined && "cursor-not-allowed opacity-65")}
+          className={cn("inline-flex min-h-6 max-w-full shrink-0 basis-auto items-center justify-center gap-single border-0 px-double py-single text-xs font-medium transition-colors motion-reduce:transition-none", hideLabel ? "grow-0" : "grow", option.value === value ? "bg-active-base text-active-foreground" : "bg-transparent text-foreground hover:bg-hover-interactive-fill", option.unavailable !== undefined && "cursor-not-allowed opacity-65")}
         >
           {option.icon === undefined ? null : <Icon icon={option.icon} size="small" className="shrink-0" />}
           {option.label}
@@ -154,7 +154,7 @@ const FIELD_LABEL = cn(LABEL_TEXT, "shrink-0");
 export function SelectField<T extends string>(props: { readonly label: string; readonly value: T; readonly options: readonly { readonly value: T; readonly label: string }[]; readonly onChange: (value: T) => void; readonly className?: string; readonly disabled?: boolean }): ReactElement {
   return (
     <SharedBorderRowField label={<span className={FIELD_LABEL}>{props.label}</span>} className={cn(FIELD, props.className)}>
-      <select aria-label={props.label} value={props.value} disabled={props.disabled} onChange={(event) => props.onChange(event.target.value as T)} className="min-w-0 flex-1 text-xs text-foreground">
+      <select aria-label={props.label} value={props.value} disabled={props.disabled} onChange={(event) => props.onChange(event.target.value as T)} className="min-w-0 flex-1 bg-transparent text-xs text-foreground">
         {props.options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
@@ -169,7 +169,7 @@ export function SelectField<T extends string>(props: { readonly label: string; r
 export function TextField(props: { readonly label: string; readonly value: string; readonly onChange: (value: string) => void; readonly type?: "text" | "search"; readonly placeholder?: string; readonly className?: string; readonly describedBy?: string; readonly readOnly?: boolean; readonly inputRef?: (element: HTMLInputElement | null) => void }): ReactElement {
   return (
     <SharedBorderRowField label={<span className={FIELD_LABEL}>{props.label}</span>} className={cn(FIELD, props.className)}>
-      <input aria-label={props.label} ref={props.inputRef} type={props.type ?? "text"} value={props.value} placeholder={props.placeholder} aria-describedby={props.describedBy} readOnly={props.readOnly} onChange={(event) => props.onChange(event.target.value)} className="min-w-0 flex-1 text-xs text-foreground" />
+      <input aria-label={props.label} ref={props.inputRef} type={props.type ?? "text"} value={props.value} placeholder={props.placeholder} aria-describedby={props.describedBy} readOnly={props.readOnly} onChange={(event) => props.onChange(event.target.value)} className="min-w-0 flex-1 bg-transparent text-xs text-foreground" />
     </SharedBorderRowField>
   );
 }
@@ -316,7 +316,7 @@ export function Notice(props: { readonly kind: NoticeKind; readonly title: React
 export function ProgressNotice(props: { readonly label: string; readonly done: number; readonly total: number; readonly cancelLabel: string; readonly onCancel?: () => void; readonly className?: string }): ReactElement {
   const { label, done, total, cancelLabel, onCancel, className } = props;
   return (
-    <SharedBorderRow role="status" className={cn("bg-panel text-xs", className)}>
+    <SharedBorderRow role="status" className={cn("text-xs", className)}>
       <SharedBorderRowCell className="flex-1 flex-wrap gap-double p-double">
         <progress aria-label={label} value={done} max={Math.max(total, 1)} className="h-2 min-w-24 flex-1 accent-[var(--accent)]" />
         <span className="font-mono">
@@ -393,7 +393,7 @@ export function CardButton(props: ButtonHTMLAttributes<HTMLButtonElement> & { re
 /** 📄️ A scrolling page: one column of cells that fills the width — the header (the one `h1`, its lede and its actions as a row of buttons) and then whatever the page puts in it, each child a cell or a row of cells. The column paints only the dividers between its cells; the navbar and the footer own the page's top and bottom lines. */
 export function PageFrame(props: { readonly title: ReactNode; readonly lede?: ReactNode; readonly actions?: ReactNode; readonly wide?: boolean; readonly eyebrow?: ReactNode; readonly children: ReactNode; readonly page: string }): ReactElement {
   return (
-    <div data-page={props.page} className="relative h-full min-h-0 w-full overflow-auto bg-background text-foreground">
+    <div data-page={props.page} className="relative h-full min-h-0 w-full overflow-auto text-foreground">
       <SharedBorderRow orientation="vertical" framed={false} className="min-h-full">
         <header data-shared-border-cell="" className="flex flex-col gap-single p-double sm:p-4">
           {props.eyebrow === undefined ? null : <p className="m-0 font-mono text-[0.65rem] uppercase tracking-widest text-muted-foreground">{props.eyebrow}</p>}

@@ -1,5 +1,112 @@
 //! 🧪️ Actual inline scalar receipt bytes preserve failed effects and maximum-width original identities.
 use super::*;
+
+#[test]
+fn close_output_retires_only_accepted_poll_causes_before_reentry() {
+    use semio_framework_actor::ActorFailureCallKind::{AdmitActorInput, CloseActorOutput, Poll};
+    let cases: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/poll-failure-retirement.json")).unwrap();
+    let stock = RetainedCloneGrant {
+        maximum_items: 65_536,
+        maximum_copy_bytes: 16 * 1024 * 1024,
+        maximum_capacity_bytes: 16 * 1024 * 1024,
+        maximum_release_bytes: 16 * 1024 * 1024,
+        maximum_depth: 64,
+    };
+    for (index, row) in cases.as_array().unwrap().iter().enumerate() {
+        let kind = match row["kind"].as_str().unwrap() {
+            "Poll" => Poll,
+            "AdmitActorInput" => AdmitActorInput,
+            _ => unreachable!(),
+        };
+        let accepted = row["accepted"].as_bool().unwrap();
+        let failure_frame_released = row["frameReleased"].as_bool().unwrap();
+        let operation = 9230 + index as u64;
+        let mut input = RetainedTurnInput {
+            operation, generation: 1, epoch: 1, grant: stock,
+            work: semio_framework_actor::OriginalActorTurnWork {
+                clock_binding: operation, absolute_deadline_us: u64::MAX, fuel: 1_000_000,
+            },
+        };
+        let clock = || Some(1);
+        let budget = |input: RetainedTurnInput| super::super::StepBudget::new(input.work.fuel, input.work.absolute_deadline_us, input.grant);
+        let settle = |input: &mut RetainedTurnInput, spent, work| {
+            let returned = input.return_original(spent, work).unwrap();
+            input.epoch += 1;
+            input.grant = returned.remaining;
+            input.work.fuel = returned.remaining_fuel;
+        };
+        let mut entry = super::super::OriginalActorGuestEntry::new();
+        for _ in 0..64 {
+            if entry.context.is_ready() { break; }
+            let call = entry.admit_step(input, budget(input), clock);
+            assert!(call.result.is_ok());
+            settle(&mut input, call.receipt_spent, call.work_units_spent);
+        }
+        assert!(entry.context.is_ready());
+        entry.context.begin_pending_context(input).unwrap();
+        let address = &entry as *const _ as usize;
+        let cause = &*entry.value_fault as *const _ as usize;
+        let mut debit = RetainedCloneProgress::default();
+        let mut origin = None;
+        let call = entry.context.dispatch_core_wire_step(input, budget(input), &mut debit, clock, true, |cx| {
+            cx.admit_original_escrow_publisher()?;
+            origin = Some(OriginalActorFailureOrigin::borrow(input, kind, address, cause, cx)?);
+            Ok::<(), OriginalTurnFailure>(())
+        });
+        call.result.unwrap();
+        settle(&mut input, call.receipt_spent, call.work_units_spent);
+        *entry.value_fault = Some(ValueError::literal(ValueRefusalKind::InvalidValue, "retained test cause").into());
+        entry.failure_origin = origin;
+        if accepted {
+            let reference = entry.failure_origin.unwrap().reference();
+            for _ in 0..2 {
+                let mut debit = RetainedCloneProgress::default();
+                let call = entry.context.dispatch_core_wire_step(input, budget(input), &mut debit, clock, false, |cx| {
+                    let mut body = OriginalHeaderFailureBody {
+                        value_fault: entry.value_fault.as_ref(), cleanup_fault: None, origin: &mut entry.failure_origin,
+                        cleanup_origin: &mut entry.cleanup_origin, input_identity: None, entry: address,
+                        value_address: cause, cleanup_address: 0, value_publication: &mut entry.value_publication,
+                    };
+                    cx.with_original_retirement(|cx| body.acknowledge_publication_step(reference, cx))
+                });
+                call.result.unwrap();
+                settle(&mut input, call.receipt_spent, call.work_units_spent);
+            }
+        }
+        let requires_retirement = retires_poll_failure(CloseActorOutput, entry.failure_origin.map(|origin| origin.kind));
+        let mut advance_close = !requires_retirement;
+        let mode = HeaderMode::CloseOutput { failure_frame_released };
+        if requires_retirement && mode.poll_frame_released() {
+            for _ in 0..64 {
+                let mut debit = RetainedCloneProgress::default();
+                let call = entry.context.dispatch_core_wire_step(input, budget(input), &mut debit, clock, false, |cx| {
+                    let before = cx.retained_progress();
+                    let result = cx.with_original_retirement(|cx| close_accepted_failure_causes_step(address, &mut entry.value_fault, &mut entry.value_retirement, &mut entry.cleanup_fault, &mut entry.cleanup_fault_retirement, &mut entry.value_publication, &mut entry.failure_origin, &mut entry.cleanup_origin, None, cx));
+                    if !accepted { assert_eq!(cx.retained_progress(), before); }
+                    result
+                });
+                advance_close = call.result.unwrap();
+                settle(&mut input, call.receipt_spent, call.work_units_spent);
+                if !accepted || advance_close { break; }
+            }
+        }
+        assert_eq!(Some(advance_close), row["advanceClose"].as_bool());
+        assert_eq!(entry.failure_origin.is_none(), requires_retirement && accepted && failure_frame_released);
+        assert_eq!(entry.value_fault.is_none(), requires_retirement && accepted && failure_frame_released);
+        if let Some(origin) = entry.failure_origin.as_mut() { origin.accepted = true; }
+        for _ in 0..1024 {
+            if entry.terminal_is_empty() { break; }
+            let call = entry.close_plugin_step(semio_framework_actor::OriginalJobBudget {
+                input, retained_policy: input.grant, fuel: input.work.fuel,
+                deadline_us: input.work.absolute_deadline_us, cancelled: true,
+            });
+            assert!(call.result.is_ok());
+            settle(&mut input, call.receipt_spent, call.work_units_spent);
+        }
+        assert!(entry.terminal_is_empty());
+    }
+}
+
 #[test]
 fn fixed_receipt_prices_this_dispatch_against_its_resident_baseline() {
     let cases: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/dispatch-receipt.json")).unwrap();

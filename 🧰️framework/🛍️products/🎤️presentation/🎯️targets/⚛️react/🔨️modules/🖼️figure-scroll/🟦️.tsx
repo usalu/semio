@@ -74,7 +74,7 @@ export function MediaTeaserWrap({ teaser, children }: { readonly teaser?: MediaT
   return (
     <div className="presentation-media-teaser">
       <div className="presentation-media-teaser__content">{children}</div>
-      <div className="presentation-media-teaser__veil" aria-hidden={teaser.label === undefined} {...(teaser.label !== undefined ? { role: "img", "aria-label": teaser.label } : {})}>
+      <div className="presentation-media-teaser__veil ui-glass" data-level="pane" aria-hidden={teaser.label === undefined} {...(teaser.label !== undefined ? { role: "img", "aria-label": teaser.label } : {})}>
         {teaser.label !== undefined ? <span className="presentation-media-teaser__label">{teaser.label}</span> : null}
       </div>
     </div>

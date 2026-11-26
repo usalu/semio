@@ -1,14 +1,14 @@
 import {appendFileSync,mkdirSync,readdirSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {randomBytes} from "node:crypto";
 import {dirname,join,resolve} from "node:path";
-import {fleetCacheRootV1,remoteCacheFetchV1,resolveRemoteCacheV1} from "../../🌐️remote-cache/🛰️fleet/🟦️.ts";
+import {fleetCacheRootV1,refreshFleetCacheFactsV1,remoteCacheFetchV1,resolveRemoteCacheV1} from "../../🌐️remote-cache/🛰️fleet/🟦️.ts";
 import {fleetHeadersV1} from "../../🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
 import {httpRemoteExecutionContentV1,outageTolerantRemoteExecutionContentV1,type RemoteExecutionContentV1} from "../🗄️content/🟦️.ts";
 import {readRemoteExecutionPolicyV1,remoteExecutionHostPropertiesV1,remoteExecutionMatchPropertiesV1,type RemoteExecutionPropertyV1} from "../🟦️.ts";
 import {buildOffloadActionV1,offloadPlatformV1,shipOffloadActionV1,parseRustcIdentityV1,type OffloadToolchainV1} from "./📜️action/🟦️.ts";
 import {executeOffloadV1,offloadExecuteBudgetMillisecondsV1,readOffloadOutputsV1,runBoundedOffloadPhaseV1,writeOffloadOutputsV1,type OffloadOutputsV1,type OffloadStageV1} from "./🔌️client/🟦️.ts";
 import {classifyOffloadExitV1,offloadIncompleteDetailV1} from "./🩺️failure/🟦️.ts";
-import {resolveRemoteExecutionEndpointV1} from "../🧭️endpoint/🟦️.ts";
+import {explainRemoteExecutionEndpointAbsenceV1,resolveRemoteExecutionEndpointV1} from "../🧭️endpoint/🟦️.ts";
 import {offloadRealTextV1,planOffloadV1} from "./🗺️paths/🟦️.ts";
 import {OFFLOAD_POLICY_V1,offloadActionSecondsV1,offloadDeadlineMillisecondsV1,offloadCrateTypesOfV1,offloadLinksNativelyV1,offloadKilledPeakMegabytesV1,offloadPeakMegabytesV1,offloadPinV1,offloadTextV1,offloadTextsV1,type OffloadReasonV1} from "./📐️policy/🟦️.ts";
 import {remoteExecutionOriginV1} from "../🌡️load/🟦️.ts";
@@ -100,8 +100,10 @@ export type OffloadSessionV1=Readonly<{endpoint:string;content:RemoteExecutionCo
 /** 🔌️ Opens the session of one offload attempt: names the endpoint and the credentials, honours the decline memo of the last seconds and checks that the cache store answers (remembered for 15 seconds). A decline is answered as its reason and detail; nothing throws for a missing fleet. */
 export async function openOffloadSessionV1(input:Readonly<{root:string;environment:Environment;ports?:OffloadPortsV1;queue?:boolean}>):Promise<OffloadSessionV1|Readonly<{decline:OffloadReasonV1;detail:string}>>{
  const {environment,ports}=input,workspace=environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||fleetCacheRootV1(environment);
- const endpoint=ports?.endpoint??resolveRemoteExecutionEndpointV1({environment,...workspace===undefined?{}:{root:workspace}})?.endpoint;
- if(!endpoint)return{decline:"no-endpoint",detail:""};
+ const resolveEndpoint=():string|undefined=>ports?.endpoint??resolveRemoteExecutionEndpointV1({environment,...workspace===undefined?{}:{root:workspace}})?.endpoint;
+ let endpoint=resolveEndpoint();
+ if(!endpoint&&workspace!==undefined){await refreshFleetCacheFactsV1({root:workspace,ttlMilliseconds:5000});endpoint=resolveEndpoint();}
+ if(!endpoint)return{decline:"no-endpoint",detail:explainRemoteExecutionEndpointAbsenceV1({environment,...workspace===undefined?{}:{root:workspace}})};
  const cache=ports?.content&&ports.token!==undefined?undefined:resolveRemoteCacheV1(environment,workspace===undefined?{}:{root:workspace});
  const token=ports?.token??cache?.token,cacheEndpoint=ports?.cacheEndpoint??cache?.contract.endpoint,instance=ports?.instance??cache?.contract.instance;
  if(!ports?.content&&(!cacheEndpoint||!instance))return{decline:"no-credential",detail:""};

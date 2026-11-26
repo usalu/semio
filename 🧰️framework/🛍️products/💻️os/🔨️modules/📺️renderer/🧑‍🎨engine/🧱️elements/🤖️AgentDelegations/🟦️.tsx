@@ -132,13 +132,13 @@ function CredentialBlock({ credential, onDownload, onDismiss, onInstallMcpClient
       </SharedBorderRow>
       <SharedBorderRowCell><p className="text-xs text-muted-foreground">{permissionLabel}</p></SharedBorderRowCell>
       <SharedBorderRowCell><p className="text-xs text-muted-foreground">{commandLabel}</p></SharedBorderRowCell>
-      <SharedBorderRowCell><code data-semio-hub-agent-command className="block min-w-0 break-all bg-muted text-xs">{credential.command}</code></SharedBorderRowCell>
+      <SharedBorderRowCell><code data-semio-hub-agent-command className="block min-w-0 break-all text-xs">{credential.command}</code></SharedBorderRowCell>
       <McpClientBlock mcpClient={credential.mcpClient} onInstall={onInstallMcpClient} onCopy={onCopyMcpClientConfig} />
       {credential.save === "saved" ? <SharedBorderRowCell><p className="text-xs">{downloadedLabel}</p></SharedBorderRowCell> : null}
       {credential.save === "failed" ? (
         <>
           <SharedBorderRowCell><p role="alert" className="text-xs text-destructive">{downloadFailedLabel}</p></SharedBorderRowCell>
-          <SharedBorderRowCell><code data-semio-hub-agent-credential-file={credential.file.fileName} className="block max-h-48 min-w-0 overflow-auto break-all bg-muted text-xs">{credential.file.contents}</code></SharedBorderRowCell>
+          <SharedBorderRowCell><code data-semio-hub-agent-credential-file={credential.file.fileName} className="block max-h-48 min-w-0 overflow-auto break-all text-xs">{credential.file.contents}</code></SharedBorderRowCell>
         </>
       ) : null}
     </SharedBorderRow>
@@ -177,7 +177,7 @@ function McpClientBlock({ mcpClient, onInstall, onCopy }: {
       {mcpClient.config === null ? null : (
         <>
           <SharedBorderRowCell><p className="text-xs text-muted-foreground">{readyLabel}</p></SharedBorderRowCell>
-          <SharedBorderRowCell><pre data-semio-hub-agent-mcp-config className="max-h-64 min-w-0 overflow-auto whitespace-pre-wrap break-all bg-muted text-xs">{mcpClient.config}</pre></SharedBorderRowCell>
+          <SharedBorderRowCell><pre data-semio-hub-agent-mcp-config className="max-h-64 min-w-0 overflow-auto whitespace-pre-wrap break-all text-xs">{mcpClient.config}</pre></SharedBorderRowCell>
           <Button id="os.hub.agent.mcpCopy" icon="copy" type="button" variant="outline" aria-label={copyLabel} onClick={onCopy}>{copyLabel}</Button>
           <SharedBorderRowCell><p className="text-xs text-muted-foreground">{revocableLabel}</p></SharedBorderRowCell>
         </>

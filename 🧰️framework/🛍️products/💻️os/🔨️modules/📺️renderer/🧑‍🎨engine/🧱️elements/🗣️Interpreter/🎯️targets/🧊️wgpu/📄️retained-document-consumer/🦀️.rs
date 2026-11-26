@@ -199,6 +199,7 @@ pub fn render_ui_document_step(
     cursor: &mut UiDocumentFrameCursor,
     document: &UiDocumentLease,
     bounds: Rect,
+    owner: semio_ui_theme::Level,
     ctx: &mut FrameworkWidgetContext<'_>,
     window_id: &str,
     controller_id: &str,
@@ -333,7 +334,7 @@ pub fn render_ui_document_step(
                     world_resources: &mut *hosts.world_resources,
                 };
                 let viewport = semio_ui_theme::geometry::Rect { x: bounds.x, y: bounds.y, w: viewport_w, h: viewport_h };
-                let Ok(demand) = engine.frame_into_next_retained_demand(window_id, viewport, ctx.draw) else {
+                let Ok(demand) = engine.frame_into_next_retained_demand(window_id, viewport, owner, ctx.draw) else {
                     cursor.phase = UiDocumentFramePhase::Fault;
                     return false;
                 };
@@ -341,7 +342,7 @@ pub fn render_ui_document_step(
                 if demand.maximum_items > grant.maximum_items || demand.maximum_copy_bytes > grant.maximum_copy_bytes || demand.maximum_capacity_bytes > grant.maximum_capacity_bytes || demand.maximum_release_bytes > grant.maximum_release_bytes || demand.maximum_depth > grant.maximum_depth {
                     return false;
                 }
-                let (paint, receipt) = engine.frame_into_step(window_id, viewport, ctx.atlas, ctx.icons, Some(&mut scene_host), ctx.draw, grant);
+                let (paint, receipt) = engine.frame_into_step(window_id, viewport, owner, ctx.atlas, ctx.icons, Some(&mut scene_host), ctx.draw, grant);
                 if step.consume_retained(receipt).is_err() {
                     cursor.phase = UiDocumentFramePhase::Fault;
                     return false;

@@ -246,7 +246,7 @@ fn checkout_governs_concurrent_edits_by_hlc() {
     assert_eq!(shuffled.applied, fold.applied);
 }
 
-/// 🌳️ The trunk is a first-class alternative: a commit that names no line grows its chain and lists it first.
+/// 🌳️ The trunk is an implicit line: a commit that names no line grows its chain, kept apart from the named alternatives and listed first by `lines`.
 /// A checkout event does not select it. A viewer head on a branch sees that branch's chain and its scoped
 /// supersessions; the canonical fold stays on the trunk. No branch may claim the trunk id.
 #[test]
@@ -267,7 +267,9 @@ fn the_trunk_is_a_first_class_alternative() {
     assert_eq!(on_trunk.trunk, trunk);
     assert_eq!(on_trunk.alternative, None);
     assert_eq!(on_trunk.applied, vec!["a"]);
-    assert_eq!(on_trunk.alternatives.iter().map(|alternative| (alternative.id.as_str(), alternative.name.as_str(), alternative.checkpoint_ids.clone())).collect::<Vec<_>>(), vec![(trunk.as_str(), "", vec!["ck-1".to_string()]), ("alt", "Variant", vec!["ck-1".to_string(), "ck-2".to_string()])]);
+    assert_eq!(on_trunk.alternatives.iter().map(|alternative| (alternative.id.as_str(), alternative.name.as_str(), alternative.checkpoint_ids.clone())).collect::<Vec<_>>(), vec![("alt", "Variant", vec!["ck-1".to_string(), "ck-2".to_string()])]);
+    assert_eq!(on_trunk.trunk_checkpoint_ids, vec!["ck-1"]);
+    assert_eq!(on_trunk.lines().map(|(id, chain)| (id, chain.to_vec())).collect::<Vec<_>>(), vec![(trunk.as_str(), vec!["ck-1".to_string()]), ("alt", vec!["ck-1".to_string(), "ck-2".to_string()])]);
     assert_eq!(on_trunk.supersessions.keys().map(|id| id.0.as_str()).collect::<Vec<_>>(), vec!["op-a"]);
     let on_branch = fold_history_for(&document, &edits, &transitions, &none(), &head("alt", None)).expect("branch");
     assert_eq!((on_branch.alternative.as_deref(), on_branch.applied.clone()), (Some("alt"), vec!["a".to_string(), "b".to_string()]));
@@ -278,11 +280,11 @@ fn the_trunk_is_a_first_class_alternative() {
     assert_eq!(still_trunk.supersessions.keys().map(|id| id.0.as_str()).collect::<Vec<_>>(), vec!["op-a"]);
     transitions.push(at(commit("ck-3", Some("ck-1"), &[]), "x", 12));
     let grown = fold_history(&document, &edits, &transitions, &none()).expect("fold");
-    assert_eq!(grown.alternatives[0].checkpoint_ids, vec!["ck-1", "ck-3"]);
+    assert_eq!(grown.trunk_checkpoint_ids, vec!["ck-1", "ck-3"]);
     transitions.push(at(HistoryTransition::Branch { alternative_id: trunk.clone(), name: "Stolen".into(), checkpoint_id: "ck-1".into() }, "x", 13));
     assert!(fold_history(&document, &edits, &transitions, &none()).is_err_and(|error| format!("{error:?}").contains("branch claims the trunk alternative")));
     let bare = fold_history(&document, &edits[..1], &[], &none()).expect("fold");
-    assert!(bare.alternatives.is_empty(), "a trunk without a checkpoint is not listed");
+    assert!(bare.alternatives.is_empty() && bare.trunk_checkpoint_ids.is_empty() && bare.lines().next().is_none(), "a trunk without a checkpoint has no line");
     assert_ne!(trunk_alternative_id(&ArtifactId("other".into())), trunk);
 }
 
@@ -300,8 +302,8 @@ fn branch_commit_and_repin_track_alternative_chains() {
     ];
     let fold = fold_history(&document, &edits, &transitions, &none()).expect("fold");
     assert_eq!(fold.alternative, None);
-    assert_eq!(fold.alternatives[1].checkpoint_ids, vec!["ck-1", "ck-2p"]);
-    assert_eq!((fold.alternatives[0].id.as_str(), fold.alternatives[0].checkpoint_ids.clone()), (fold.trunk.as_str(), vec!["ck-1".to_string()]));
+    assert_eq!(fold.alternatives[0].checkpoint_ids, vec!["ck-1", "ck-2p"]);
+    assert_eq!(fold.trunk_checkpoint_ids, vec!["ck-1".to_string()]);
     assert_eq!(fold.checkpoint.as_deref(), Some("ck-1"));
     assert_eq!(fold.checkpoints[1].pins.len(), 1);
     assert_eq!(fold.applied, vec!["a"]);

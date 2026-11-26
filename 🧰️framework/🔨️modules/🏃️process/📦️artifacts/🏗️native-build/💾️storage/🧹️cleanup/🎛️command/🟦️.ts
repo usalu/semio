@@ -1,5 +1,6 @@
 import{beginAdmissionWaitV1}from"../../../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import {observeNativeStorageVerificationAwaitV1} from "../../⏱️verification/🟦️.ts";
+import {processPidExistsV1} from "../../../../../🔖️identity/🟦️.ts"
 import{refuseProcessV1}from"../../../../../📖️texts/🟦️.ts";
 import{acquireNativeImageMaintenanceWaitV1}from"../../🌐️platform/⏳️wait/🟦️.ts";
 import{nativeImageBackingAllocatedBytesV1}from"../../🪶️extent/🟦️.ts";
@@ -170,7 +171,7 @@ export function foreignChildMountV1(error:unknown,attached:boolean):boolean{cons
 /** ⚖️ Decides a refused child read: `live` when an unfunded attached image has a live user (a disposable fixture child of this parent, or another process holding its image lease), `foreign` when nobody does (a leak), else `other`. */
 export function unfundedChildDecisionV1(error:unknown,attached:boolean,live:()=>boolean):"live"|"foreign"|"other"{return foreignChildMountV1(error,attached)?live()?"live":"foreign":"other";}
 /** 👑️ Describes the nearest sandbox owner row above a path (pid, route, start, liveness), or `unknown`. */
-export function foreignMountOwnerV1(path:string):string{for(let current=dirname(path);;current=dirname(current)){try{const row=JSON.parse(readFileSync(join(current,sandboxProtocol.layout.owner),"utf8")) as{pid?:number;route?:string;startedAt?:number};let alive="unknown";try{process.kill(row.pid!,0);alive="alive";}catch(error){alive=(error as NodeJS.ErrnoException).code==="EPERM"?"alive":"dead";}return"pid "+row.pid+" ("+alive+"), route "+row.route+", started "+new Date(row.startedAt??0).toISOString();}catch{}if(dirname(current)===current)return"unknown";}}
+export function foreignMountOwnerV1(path:string):string{for(let current=dirname(path);;current=dirname(current)){try{const row=JSON.parse(readFileSync(join(current,sandboxProtocol.layout.owner),"utf8")) as{pid?:number;route?:string;startedAt?:number};const alive=processPidExistsV1(row.pid!)?"alive":"dead";return"pid "+row.pid+" ("+alive+"), route "+row.route+", started "+new Date(row.startedAt??0).toISOString();}catch{}if(dirname(current)===current)return"unknown";}}
 /** 👪️ Builds the bilingual non-retried refusal of a foreign mount below a managed parent. */
 export function foreignChildMountRefusalV1(row:Readonly<{root:string;image:string;device:string}>):Error{const text=receiverSchema.definitions.Protocol.const.foreignMountRefusal,fill=(template:string)=>template.replaceAll("{mount}",row.root).replaceAll("{image}",row.image).replaceAll("{device}",row.device).replaceAll("{owner}",foreignMountOwnerV1(row.root));return Object.assign(Error(fill(text.en)+"\n"+fill(text.de)),{name:"NativeStorageForeignMountError"});}
 export function concurrentChildChangeV1(error:unknown):boolean{const row=error as {code?:unknown;message?:unknown}|null;if(row===null||typeof row!=="object")return false;return row.code==="ENOENT"||typeof row.message==="string"&&receiverSchema.definitions.Protocol.const.concurrentChangePatterns.some(pattern=>new RegExp(pattern,"u").test(row.message as string));}

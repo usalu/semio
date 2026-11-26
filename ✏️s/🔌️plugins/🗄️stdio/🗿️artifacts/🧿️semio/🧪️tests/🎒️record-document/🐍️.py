@@ -68,6 +68,14 @@ class PrimitiveLaws(unittest.TestCase):
         for row in FIXTURE["deflate"]:
             self.assertEqual(codec.deflate(bytes.fromhex(row["rawHex"])).hex(), row["deflatedHex"], row["source"])
 
+    def test_deflate_reproduces_every_vector_of_the_rust_retained_producer(self) -> None:
+        with open(os.path.join(HERE, "../../../../../../../🧰️framework/🔨️modules/🗜️deflate/🛫️encode/⏳️cursor/🧪️tests/🧫️fixtures/🔣️.json"), encoding="utf-8") as handle:
+            vectors = json.load(handle)["vectors"]
+        self.assertGreaterEqual(len(vectors), 5)
+        for vector in vectors:
+            self.assertEqual(list(codec.deflate(bytes(vector["raw"]))), vector["stored"], vector["id"])
+            self.assertEqual(list(zlib.decompress(bytes(vector["stored"]), -15)), vector["raw"], vector["id"])
+
     def test_deflate_output_is_read_back_by_the_system_zlib(self) -> None:
         for size in (0, 1, 3, 258, 259, 1000, 70000):
             raw = pattern(size) + bytes(size // 2)

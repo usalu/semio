@@ -74,6 +74,21 @@ impl InterpretedStreamCursor {
         self.phase == Phase::Walk && self.decoding.as_ref().is_some_and(|decoding| decoding.step == DecodeStep::Decode && decoding.decoder.next_reserves_history())
     }
 
+    /// 🧭️ Names the unit the walk runs next, for the turn census.
+    pub fn trace(&self) -> &'static str {
+        match (self.phase, self.decoding.as_ref().map(|decoding| decoding.step)) {
+            (Phase::Seed, _) => "seed",
+            (Phase::Walk, None) => "visit",
+            (Phase::Walk, Some(DecodeStep::Decode)) => "decode",
+            (Phase::Walk, Some(DecodeStep::CloseDecoder { .. })) => "close-decoder",
+            (Phase::Walk, Some(DecodeStep::Sanitize)) => "sanitize",
+            (Phase::Walk, Some(DecodeStep::Swap)) => "swap",
+            (Phase::Walk, Some(DecodeStep::RetireDictionary)) => "retire-dictionary",
+            (Phase::Walk, Some(DecodeStep::Retire)) => "retire",
+            _ => "close",
+        }
+    }
+
     /// 🧹️ Whether the walk completed or was cancelled and only retirement remains.
     pub fn closing(&self) -> bool { matches!(self.phase, Phase::Closing | Phase::Closed) }
 

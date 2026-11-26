@@ -33,10 +33,10 @@
   "supportsSendOnlyPayload": true,
   "originalAdmissionWork": {
     "allocation": 1,
-    "transfer": 1,
-    "cloneFactory": 1,
+    "transfer": 0,
+    "cloneFactory": 0,
     "denied": 0,
     "allocationRefusal": 1,
-    "success": 3
+    "success": 1
   }
 }

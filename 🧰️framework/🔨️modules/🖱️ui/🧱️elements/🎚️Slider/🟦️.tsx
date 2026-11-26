@@ -79,6 +79,7 @@ export interface SliderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 
   formatDisplayValue?: (value: number) => string;
   onValueChange?: (values: SliderValue) => void;
   onValueCommit?: (values: SliderValue) => void;
+  onValueTypedCommit?: (values: SliderValue) => void;
   onPointerDown?: () => void;
   onPointerUp?: () => void;
   onPointerCancel?: () => void;
@@ -185,6 +186,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
     formatDisplayValue,
     onValueChange,
     onValueCommit,
+    onValueTypedCommit,
     onPointerDown,
     onPointerUp,
     onPointerCancel,
@@ -268,7 +270,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
   const readyWidthPct = readyExtent == null || readyExtent <= displayValue || span <= 0 ? 0 : (sliderAxisPosition(readyExtent, range.min, range.max, scale) - sliderAxisPosition(displayValue, range.min, range.max, scale)) * 100;
 
   const publishValues = reactHostPort.useCallback(
-    (rawValues: SliderValue, rawThumbIds: readonly string[] = thumbIdsRef.current): SliderValue => {
+    (rawValues: SliderValue, rawThumbIds: readonly string[] = thumbIdsRef.current, notifyChange = true): SliderValue => {
       const records = rawValues
         .map((rawValue, index) => ({ id: rawThumbIds[index] ?? `${thumbIdBase}-thumb-${nextThumbIdRef.current++}`, value: settle(rawValue) }))
         .map((record) => ({ ...record, value: clampToReady ? (clampSliderValuesToReady([record.value], ready, range.min)[0] ?? range.min) : record.value }))
@@ -284,7 +286,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
       gestureChangedRef.current = true;
       if (controlled) setPendingDraftValues(nextValues);
       else setUncontrolledValues(nextValues);
-      onValueChange?.(nextValues.slice());
+      if (notifyChange) onValueChange?.(nextValues.slice());
       return nextValues;
     },
     [clampToReady, controlled, minStepsBetweenThumbs, onValueChange, range, ready, settle, snaps, thumbIdBase],
@@ -308,12 +310,12 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
     gestureChangedRef.current = false;
   }, []);
 
-  const commitGesture = reactHostPort.useCallback(() => {
+  const commitGesture = reactHostPort.useCallback((publish = onValueCommit) => {
     if (!gestureStartRef.current) return;
     const changed = gestureChangedRef.current;
     gestureStartRef.current = null;
     gestureChangedRef.current = false;
-    if (changed) onValueCommit?.(valuesRef.current.slice());
+    if (changed) publish?.(valuesRef.current.slice());
   }, [onValueCommit]);
 
   const cancelGesture = reactHostPort.useCallback(() => {
@@ -356,14 +358,14 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
     setRefusal(null);
     if (stored >= range.min && stored <= range.max) {
       beginGesture();
-      publishValues([stored]);
-      commitGesture();
+      publishValues([stored], undefined, onValueTypedCommit === undefined);
+      commitGesture(onValueTypedCommit);
     } else {
       valuesRef.current = [stored];
       if (controlled) setPendingDraftValues([stored]);
       else setUncontrolledValues([stored]);
-      onValueChange?.([stored]);
-      onValueCommit?.([stored]);
+      if (!onValueTypedCommit) onValueChange?.([stored]);
+      (onValueTypedCommit ?? onValueCommit)?.([stored]);
     }
     return true;
   };

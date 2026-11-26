@@ -6,6 +6,7 @@ import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{HOST_ASK_POLICY_V1 as P,createHostAskV1,hostAskClaimV1,hostAskDirectoryV1,hostAskLiveV1,readHostAsksV1}from"../🟦️.ts";
 import schema from"../🧬️schema/🔣️.json";
+import{ownProcessIdentityV1}from"../../../../🔖️identity/🟦️.ts";
 
 const scratch:string[]=[];
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
@@ -49,4 +50,17 @@ test("a stale, dead, misshapen or oversized ask counts for nothing, and live ask
 test("a writer into an unusable directory never throws",()=>{
  const dir=temp();writeFileSync(join(dir,"asks"),"a file where the directory should be");
  const writer=createHostAskV1({directory:dir,pid:3});expect(()=>{writer.set({key:"a",needMegabytes:1,alone:false});writer.clear();}).not.toThrow();
+});
+
+test("an ask of this process carries its creation time; an ask written before startMs is judged by its pid; a reused pid (another creation time) is dead",()=>{
+ const dir=temp(),writer=createHostAskV1({directory:dir,now:()=>Date.now()});writer.set({key:"owner-s",needMegabytes:1,alone:false});
+ const written=JSON.parse(readFileSync(join(hostAskDirectoryV1(dir),`${process.pid}.json`),"utf8")) as {pid:number;startMs?:number};
+ expect(written.startMs).toBe(ownProcessIdentityV1().startMs);
+ expect(new Ajv({strict:true}).compile({...schema.definitions.Ask,definitions:undefined})(written)).toBe(true);
+ expect(readHostAsksV1(dir).map(ask=>ask.pid)).toEqual([process.pid]);
+ const old={...written};delete old.startMs;
+ writeFileSync(join(hostAskDirectoryV1(dir),`${process.pid}.json`),JSON.stringify(old));
+ expect(readHostAsksV1(dir).map(ask=>ask.pid)).toEqual([process.pid]);
+ writeFileSync(join(hostAskDirectoryV1(dir),`${process.pid}.json`),JSON.stringify({...written,startMs:ownProcessIdentityV1().startMs-3_600_000}));
+ expect(readHostAsksV1(dir)).toEqual([]);
 });

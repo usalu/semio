@@ -21,7 +21,7 @@
    }
   },
   "Lease": {
-   "description": "<name>.lease below .cache/f/sidecars: written by the daemon that owns the sidecar every five seconds (tmp + rename). The launcher ends itself, and its child with it, once the last write is older than ten minutes: a daemon that restarts within that time adopts the sidecar, no daemon at all ends it.",
+   "description": "<name>.<launcher pid>.lease below .cache/f/sidecars: written by the daemon that owns the sidecar for that one launcher every five seconds (tmp + rename), so a launcher that a newer one replaced is never renewed. The launcher ends itself, and its child with it, once the last write is older than ten minutes: a daemon that restarts within that time adopts the sidecar, no daemon at all ends it.",
    "type": "object",
    "additionalProperties": false,
    "required": ["version", "pid", "wallMs"],

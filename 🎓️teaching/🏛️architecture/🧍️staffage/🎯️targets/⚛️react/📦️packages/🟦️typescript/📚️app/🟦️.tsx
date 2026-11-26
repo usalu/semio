@@ -11,7 +11,7 @@
 import { StrictMode, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
-import { DEFAULT_UI_DRIVER, Navbar, UI_AVAILABLE_HEIGHT, bootstrapElementsSurfaceChromeDocument, elementsSurfaceDeviceForMatches, navbarFillItem, useElementsSurfaceChrome, useMediaQuery, type NavbarItem } from "@semio-tech/ui-react/chrome";
+import { DEFAULT_UI_DRIVER, Navbar, Surface, SurfaceScope, UI_AVAILABLE_HEIGHT, bootstrapElementsSurfaceChromeDocument, elementsSurfaceDeviceForMatches, navbarFillItem, useElementsSurfaceChrome, useMediaQuery, type NavbarItem } from "@semio-tech/ui-react/chrome";
 import { VIEWS } from "@teaching/staffage";
 import "../../../🎨️.css";
 import { ArchiveProvider, useArchive, useLocal } from "../../../🔨️modules/🧭️context/🟦️.tsx";
@@ -30,9 +30,9 @@ const ROUTE_TITLES = { overview: "nav.overview", all: "all.title", category: "na
 
 function LanguageGate(props: { readonly onChoose: (language: (typeof OFFERED)[number]) => void }): ReactElement {
   return (
-    <div data-staffage-language-gate="" className="staffage-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }}>
+    <Surface level="base" data-staffage-language-gate="" className="staffage-app flex min-h-0 flex-col overflow-hidden text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }}>
       <main id="staffage-main" className="relative flex min-h-0 flex-1 flex-col overflow-auto">
-        <SharedBorderRow orientation="vertical" className="w-full flex-1 bg-panel">
+        <SharedBorderRow orientation="vertical" className="w-full flex-1">
           <SharedBorderRowCell className="flex-col items-start gap-double p-4">
             {inEveryLanguage("brand.title").map(({ language, text }) => (
               <h1 key={language} lang={language} className="m-0 font-serif text-3xl leading-tight">
@@ -50,7 +50,7 @@ function LanguageGate(props: { readonly onChoose: (language: (typeof OFFERED)[nu
           ))}
         </SharedBorderRow>
       </main>
-    </div>
+    </Surface>
   );
 }
 
@@ -96,32 +96,34 @@ function SettingsMenu({ phone }: { readonly phone: boolean }): ReactElement {
         <span className="hidden lg:inline">{t("settings.title")}</span>
       </Button>
       {open ? createPortal(
-        <SharedBorderRow orientation="vertical" id="staffage-settings" data-staffage-phone={phone ? "" : undefined} ref={panel} role="group" aria-label={t("settings.title")} className="staffage-app fixed right-double top-[calc(max(44px,var(--size-workbench))+0.5rem)] z-50 max-h-[85vh] w-72 max-w-[90vw] overflow-auto bg-panel text-foreground">
-          {phone ? (
-            <>
-              <SharedBorderRow as="nav" orientation="vertical" aria-label={t("nav.label")}>
-                {([{ page: "all", label: t("all.title") }, { page: "collections", label: t("collections.title") }, { page: "compare", label: t("compare.title") }, { page: "playground", label: t("playground.title") }] as const).map((link) => (
-                  <ButtonLink key={link.page} grouped href={formatAddress(link.page === "collections" ? { page: "collections", collection: null } : { page: link.page })} variant="quiet" aria-current={route.page === link.page ? "page" : undefined} className={cn("justify-start", route.page === link.page && "text-primary")}>{link.label}</ButtonLink>
-                ))}
-              </SharedBorderRow>
-              <Segmented label={t("settings.theme")} value={preferences.theme} onChange={(theme) => patch({ theme })} options={THEMES.map((theme) => ({ value: theme, label: t(`settings.theme.${theme}`) }))} />
-            </>
-          ) : null}
-          <Segmented label={t("settings.textSize")} value={preferences.textSize} onChange={(textSize) => patch({ textSize })} options={[{ value: "normal", label: t("settings.textSize.normal") }, { value: "large", label: t("settings.textSize.large") }]} />
-          <Segmented label={t("settings.motion")} value={preferences.motion} onChange={(motion) => patch({ motion })} options={[{ value: "system", label: t("settings.motion.system") }, { value: "reduced", label: t("settings.motion.reduced") }, { value: "full", label: t("settings.motion.full") }]} />
-          <Segmented label={t("settings.playful")} value={preferences.playful ? "on" : "off"} onChange={(value) => patch({ playful: value === "on" })} options={[{ value: "on", label: t("settings.on") }, { value: "off", label: t("settings.off") }]} />
-          <SharedBorderRowCell className="px-double py-double"><p className="m-0 text-xs text-muted-foreground">{t("settings.clearBody")}</p></SharedBorderRowCell>
-          <Bar>
-            {asCells(confirm ? (
+        <SurfaceScope level="menu" fill="glass">
+          <SharedBorderRow orientation="vertical" id="staffage-settings" data-level="menu" data-staffage-phone={phone ? "" : undefined} ref={panel} role="group" aria-label={t("settings.title")} className="staffage-app ui-glass fixed right-double top-[calc(max(44px,var(--size-workbench))+0.5rem)] z-50 max-h-[85vh] w-72 max-w-[90vw] overflow-auto text-foreground">
+            {phone ? (
               <>
-                <Button variant="primary" icon="check" onClick={() => { store.dispatch({ type: "everything-cleared" }); setConfirm(false); }}>{t("settings.clearConfirm")}</Button>
-                <Button icon="x" onClick={() => setConfirm(false)}>{t("action.cancel")}</Button>
+                <SharedBorderRow as="nav" orientation="vertical" aria-label={t("nav.label")}>
+                  {([{ page: "all", label: t("all.title") }, { page: "collections", label: t("collections.title") }, { page: "compare", label: t("compare.title") }, { page: "playground", label: t("playground.title") }] as const).map((link) => (
+                    <ButtonLink key={link.page} grouped href={formatAddress(link.page === "collections" ? { page: "collections", collection: null } : { page: link.page })} variant="quiet" aria-current={route.page === link.page ? "page" : undefined} className={cn("justify-start", route.page === link.page && "text-primary")}>{link.label}</ButtonLink>
+                  ))}
+                </SharedBorderRow>
+                <Segmented label={t("settings.theme")} value={preferences.theme} onChange={(theme) => patch({ theme })} options={THEMES.map((theme) => ({ value: theme, label: t(`settings.theme.${theme}`) }))} />
               </>
-            ) : (
-              <Button icon="trash-2" className="flex-1" onClick={() => setConfirm(true)}>{t("settings.clear")}</Button>
-            ))}
-          </Bar>
-        </SharedBorderRow>,
+            ) : null}
+            <Segmented label={t("settings.textSize")} value={preferences.textSize} onChange={(textSize) => patch({ textSize })} options={[{ value: "normal", label: t("settings.textSize.normal") }, { value: "large", label: t("settings.textSize.large") }]} />
+            <Segmented label={t("settings.motion")} value={preferences.motion} onChange={(motion) => patch({ motion })} options={[{ value: "system", label: t("settings.motion.system") }, { value: "reduced", label: t("settings.motion.reduced") }, { value: "full", label: t("settings.motion.full") }]} />
+            <Segmented label={t("settings.playful")} value={preferences.playful ? "on" : "off"} onChange={(value) => patch({ playful: value === "on" })} options={[{ value: "on", label: t("settings.on") }, { value: "off", label: t("settings.off") }]} />
+            <SharedBorderRowCell className="px-double py-double"><p className="m-0 text-xs text-muted-foreground">{t("settings.clearBody")}</p></SharedBorderRowCell>
+            <Bar>
+              {asCells(confirm ? (
+                <>
+                  <Button variant="primary" icon="check" onClick={() => { store.dispatch({ type: "everything-cleared" }); setConfirm(false); }}>{t("settings.clearConfirm")}</Button>
+                  <Button icon="x" onClick={() => setConfirm(false)}>{t("action.cancel")}</Button>
+                </>
+              ) : (
+                <Button icon="trash-2" className="flex-1" onClick={() => setConfirm(true)}>{t("settings.clear")}</Button>
+              ))}
+            </Bar>
+          </SharedBorderRow>
+        </SurfaceScope>,
         document.body,
       ) : null}
     </div>
@@ -197,7 +199,7 @@ function Shell({ breakpoint }: { readonly breakpoint: Breakpoint }): ReactElemen
     seen.current = path;
   }, [path]);
   return (
-    <div className="staffage-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }} lang={language} data-staffage-phone={phone ? "" : undefined} data-motion={reducedMotion ? "reduced" : "full"} data-playful={preferences.playful ? "on" : "off"}>
+    <Surface level="base" className="staffage-app flex min-h-0 flex-col overflow-hidden text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }} lang={language} data-staffage-phone={phone ? "" : undefined} data-motion={reducedMotion ? "reduced" : "full"} data-playful={preferences.playful ? "on" : "off"}>
       <a href="#staffage-main" data-shared-border-frame="" data-shared-border-edges="" className="sr-only focus:not-sr-only focus:absolute focus:left-double focus:top-double focus:z-50 focus:bg-background focus:p-double focus:text-sm focus:text-foreground" onClick={(event) => { event.preventDefault(); main.current?.focus(); }}>
         {t("nav.skip")}
       </a>
@@ -215,7 +217,7 @@ function Shell({ breakpoint }: { readonly breakpoint: Breakpoint }): ReactElemen
         {store.problems.length === 0 ? null : <span role="status">{store.problems.map((problem) => problem[language]).join(" ")}</span>}
         {store.mode === "volatile" ? <span role="status">{t("footer.volatile")}</span> : <span>{t("footer.local", { version: STORAGE_VERSION })}</span>}
       </SharedBorderRow>
-    </div>
+    </Surface>
   );
 }
 

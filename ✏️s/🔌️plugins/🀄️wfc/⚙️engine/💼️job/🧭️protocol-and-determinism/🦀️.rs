@@ -97,7 +97,7 @@ pub struct WfcPreview {
     pub backtracks: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub struct WfcCommit {
     pub assignment: Vec<u32>,
     pub observations: u64,
@@ -142,6 +142,8 @@ pub struct WfcJobConfig {
 pub(super) struct JobRng {
     pub(super) state: [u64; 4],
 }
+
+semio_framework_value::artifact_retire_leaf!(WfcStage, VisibleCell, JobRng);
 
 impl JobRng {
     pub(super) fn from_seed(seed: u64) -> Self {

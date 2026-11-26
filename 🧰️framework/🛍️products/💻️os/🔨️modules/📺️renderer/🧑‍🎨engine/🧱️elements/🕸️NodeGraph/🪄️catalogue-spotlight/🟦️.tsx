@@ -1,3 +1,4 @@
+import { Surface } from "@semio-tech/ui-react";
 /** 🪄️ The flow catalogue: drag payloads, items, groups and sections, ranking and scoring of suggestions, and the double-click spotlight.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | NodeGraph}, which re-exports every public name below so import specifiers stay unchanged.
@@ -203,11 +204,9 @@ export function FlowSpotlight({
   }, [onClose]);
 
   return (
-    <div
-      ref={rootRef}
+    <Surface
+      overlay level="menu" fill="glass" ref={rootRef}
       className={cn("pointer-events-auto absolute z-60 flex min-h-0 w-layout-floating-menu-sm flex-col overflow-hidden", floatingMenuSurfaceClass)}
-      data-level="menu"
-      data-glass-chip=""
       style={{ left: state.screen.x, top: state.screen.y }}
       onPointerDown={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
@@ -297,7 +296,7 @@ export function FlowSpotlight({
           })
         )}
       </div>
-    </div>
+    </Surface>
   );
 }
 //#endregion FlowCatalogueSpotlight

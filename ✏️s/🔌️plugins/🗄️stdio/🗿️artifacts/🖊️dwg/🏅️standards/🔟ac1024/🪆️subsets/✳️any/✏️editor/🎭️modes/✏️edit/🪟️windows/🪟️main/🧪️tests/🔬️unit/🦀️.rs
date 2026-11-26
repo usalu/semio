@@ -17,7 +17,7 @@ async fn render_produces_a_scene_node_for_the_default_document() {
 #[semio_framework_async_macros::async_test]
 async fn real_drawing_renders_its_typed_entities_as_vector_geometry() {
     let bytes = include_bytes!("../../../../../../../🖼️assets/🏛️architectural/🏛️architectural.dwg");
-    let document = semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::import::decode_dwg(bytes).expect("a real AC1024 file opens");
+    let document = semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg(bytes).expect("a real AC1024 file opens");
     let svg = semio_s_artifact_stdio_dwg_snapshot_drawing::standards::v_ac1024::subsets::any::schema::snapshot::drawing::preview::preview_svg(&document.drawing);
     assert!(svg.starts_with("<svg") && svg.ends_with("</svg>"));
     assert!(svg.contains("<path") || svg.contains("<circle") || svg.contains("<polygon"), "the fixture's typed geometry draws something");

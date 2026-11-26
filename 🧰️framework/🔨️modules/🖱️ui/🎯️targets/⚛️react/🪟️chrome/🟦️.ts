@@ -11,7 +11,8 @@
  */
 
 export { cn } from "@semio-tech/ui/modules/class-name-composition";
-export { WindowChrome, useSharedBorderFrameRef, useSharedBorderBox, sharedBorderlessBoxProps, windowChromeTitleChipClass, type WindowChromeControlAction, type WindowChromeProps } from "@semio-tech/ui/elements/WindowChrome";
+export { Surface, SurfaceScope, useLevel, useSurface, type Level, type SurfaceFill, type SurfaceProps, type SurfaceScopeValue } from "@semio-tech/ui/elements/Surface";
+export { WindowChrome, useSharedBorderFrameRef, useSharedBorderBox, sharedBorderlessBoxProps, windowFrameChipLevel, windowChromeTitleChipClass, type WindowChromeControlAction, type WindowChromeProps } from "@semio-tech/ui/elements/WindowChrome";
 export {
   OverviewCard,
   OverviewCardAction,

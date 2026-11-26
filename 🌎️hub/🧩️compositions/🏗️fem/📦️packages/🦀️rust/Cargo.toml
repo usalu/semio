@@ -22,9 +22,14 @@ sourceRoots = ["../../../✏️s/🔌️plugins/🏗️fem", "../../../✏️s/�
 storyGlobs = ["../../../✏️s/🧑‍💻dev/🏗️fem/📖️stories/**/🧪️.story.tsx"]
 
 [lib]
+name = "semio_hub_fem_router"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-hub-fem-2d-editor-app = { workspace = true }
+semio-hub-fem-2d-viewer-app = { workspace = true }
+semio-hub-fem-3d-editor-app = { workspace = true }
+semio-hub-fem-3d-viewer-app = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust" }

@@ -32,7 +32,7 @@ function workbook(dialect: Dialect, a1: string): Uint8Array {
   const parts: Record<string, string> = {
     "[Content_Types].xml": `<Types xmlns="${pkg}/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="${mainType}"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="${sheetType}"/></Types>`,
     "_rels/.rels": `<Relationships xmlns="${pkg}/relationships"><Relationship Id="rId1" Type="${ns.rel}/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
-    "xl/workbook.xml": `<workbook xmlns="${ns.main}" xmlns:r="${ns.rel}"><sheets><sheet name="Sheet1" sheetId="1" r:id="rId1"/></sheets></workbook>`,
+    "xl/workbook.xml": `<workbook xmlns="${ns.main}" xmlns:r="${ns.rel}"${dialect === "strict" ? ' conformance="strict"' : ""}><sheets><sheet name="Sheet1" sheetId="1" r:id="rId1"/></sheets></workbook>`,
     "xl/_rels/workbook.xml.rels": `<Relationships xmlns="${pkg}/relationships"><Relationship Id="rId1" Type="${ns.rel}/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`,
     "xl/worksheets/sheet1.xml": `<worksheet xmlns="${ns.main}"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t xml:space="preserve">${a1}</t></is></c><c r="B1"><v>42</v></c></row></sheetData></worksheet>`,
   };

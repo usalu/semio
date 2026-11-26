@@ -411,12 +411,12 @@ async fn cmd_log(rest: &[String], context: &semio_os_pack_tools::control::Comman
     let allowed_ids: Option<HashSet<String>> = match alternative_filter {
         None => None,
         Some(alternative_id) => {
-            let Some(alternative) = fold.alternatives.iter().find(|a| &a.id == alternative_id) else {
+            let Some((_, checkpoint_ids)) = fold.lines().find(|(id, _)| id == alternative_id) else {
                 eprintln!("protocol: unknown --alternative '{alternative_id}'");
                 return 2;
             };
             let mut ids = HashSet::new();
-            for checkpoint_id in &alternative.checkpoint_ids {
+            for checkpoint_id in checkpoint_ids {
                 if let Some(checkpoint) = fold.checkpoints.iter().find(|c| &c.id == checkpoint_id) {
                     for change_id in &checkpoint.change_ids {
                         if let Some(change) = fold.changes.iter().find(|c| &c.id == change_id) {

@@ -163,9 +163,10 @@ class UtilityActionPolicyScript extends BundleScript {
 class BrowserAcceptanceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { repoCacheDirectory } = await import("@semio-tech/process/execution");
-    const control = createIssuedResourceControlV1(this.invocation, "draw-browser-acceptance", 300000);
     const oracle = segments.length === 1 && segments[0] === "oracle";
-    await runOwnedCommand(process.execPath, [resolve(this.root, oracle ? "../../🧪️tests/🌐️browser/🔮️check.mjs" : "../../🧪️tests/🌐️browser/🟦️.mjs"), ...(oracle ? [] : segments)], this.repoRoot, "draw-browser-acceptance", 300000, { control, signal: control.signal, env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH ?? repoCacheDirectory(this.repoRoot, "tools", "ms-playwright") } });
+    const timeoutMs = (oracle ? 5 : 15) * 60_000;
+    const control = createIssuedResourceControlV1(this.invocation, "draw-browser-acceptance", timeoutMs);
+    await runOwnedCommand(process.execPath, [resolve(this.root, oracle ? "../../🧪️tests/🌐️browser/🔮️check.mjs" : "../../🧪️tests/🌐️browser/🟦️.mjs"), ...(oracle ? [] : segments)], this.repoRoot, "draw-browser-acceptance", timeoutMs, { control, signal: control.signal, env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH ?? repoCacheDirectory(this.repoRoot, "tools", "ms-playwright") } });
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("publication-authority-audit", PublicationAuthorityAuditScript).register("utility-action-policy",UtilityActionPolicyScript).register("browser-acceptance", BrowserAcceptanceScript);

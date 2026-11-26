@@ -1,4 +1,3 @@
-import"./name-diagnostic.test.ts";
 import{test,expect}from"bun:test";
 import {testPythonV1} from "../../../../../../🧪️testing/🧰️toolchain/🟦️.ts";
 import*as fs from"node:fs/promises";

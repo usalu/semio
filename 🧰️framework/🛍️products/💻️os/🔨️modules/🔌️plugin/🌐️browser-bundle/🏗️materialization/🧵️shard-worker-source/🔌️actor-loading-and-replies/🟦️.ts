@@ -121,7 +121,13 @@ function settleSuccession(msg) {
 // every hold so it can seed later activations on other workers, and a closed activation releases its
 // holds, so the module and every closure of its instance become collectable.
 ${ShardCoreModules.toString()}
-const coreModules = new ShardCoreModules((url) => WebAssembly.compileStreaming(fetch(url)));
+const coreModules = new ShardCoreModules(async (url) => {
+  const response = await fetch(url);
+  if (!new URL(url).pathname.endsWith(".wasm.gz.bin")) return WebAssembly.compileStreaming(response);
+  if (!response.ok || !response.body) throw new Error("Component core fetch failed (" + response.status + "): " + url);
+  const bytes = response.body.pipeThrough(new DecompressionStream("gzip"));
+  return WebAssembly.compileStreaming(new Response(bytes, { headers: { "Content-Type": "application/wasm" } }));
+});
 const coreModuleHolder = (actorId, activationGeneration) => actorId + "#" + activationGeneration;
 function actorCoreModules(actorId, activationGeneration, seeds) {
   const holder = coreModuleHolder(actorId, activationGeneration);

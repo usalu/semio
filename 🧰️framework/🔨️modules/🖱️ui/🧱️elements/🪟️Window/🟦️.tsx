@@ -15,7 +15,7 @@ import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/�
 import { loadingBorderStateClass, waitingBorderStateClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useShellScopeOptional, NULL_SHELL_ROOT_REF, useShellKeydown } from "../🐚️ShellScope/🟦️.tsx";
-import { SurfaceScope, getLevelZClass } from "../🌈️Surface/🟦️.tsx";
+import { SurfaceScope, getLevelZClass, useSurface } from "../🌈️Surface/🟦️.tsx";
 import { measureWindowChromeScrollClearancePx, windowChromeScrollClearanceVar, windowContentDeadLineVar } from "../🚧️WindowContentDeadLine/🟦️.tsx";
 import { interactiveActiveFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { type UiStatus, uiSpacingPx } from "@semio-tech/ui-styling";
@@ -159,7 +159,6 @@ const Window: React.FC<WindowProps> = ({
 }) => {
   const loading = status === "loading";
   const waiting = status === "waiting";
-  const bgClass = surfaceClass;
   const newWindowLabel = useLabel("ui.common.newWindow");
   const closeLabel = useLabel("ui.common.close");
   const controlsFocusLabel = useLabel("ui.common.focus");
@@ -170,6 +169,10 @@ const Window: React.FC<WindowProps> = ({
   const utilitiesLabel = useLabel("ui.common.utilities");
   const mobile = useUiMobile();
   const hostedByFrame = reactHostPort.useContext(WindowFrameHostContext);
+  const parent = useSurface();
+  const owner = hostedByFrame ? parent : null;
+  const level = owner?.level ?? "window";
+  const bgClass = owner ? "bg-transparent" : surfaceClass;
   const focusControl = !mobile && (onMaximize || onMinimize);
   const shellScope = useShellScopeOptional();
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -354,12 +357,12 @@ const Window: React.FC<WindowProps> = ({
   );
 
   return (
-    <SurfaceScope level="window" fill="surface">
+    <SurfaceScope level={level} fill={owner?.fill ?? "surface"}>
       <GhostRegionShell
         ref={windowRef}
         id={id}
         data-slot="window"
-        data-level="window"
+        data-level={level}
         data-elevation-root=""
         data-shared-border-frame={hostedByFrame ? undefined : ""}
         data-shared-border-edges={hostedByFrame ? undefined : "top right bottom left"}

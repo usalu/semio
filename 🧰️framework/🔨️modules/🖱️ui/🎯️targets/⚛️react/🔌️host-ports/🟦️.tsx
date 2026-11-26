@@ -12,8 +12,7 @@ import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.j
 import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
 import * as React from "react";
 import { cn } from "@semio-tech/ui/modules/class-name-composition";
-import { useLevel } from "@semio-tech/ui/elements/Surface";
-import { windowFrameChipLevel } from "@semio-tech/ui/elements/WindowChrome";
+import { SurfaceScope, surfaceLevelAbove, useLevel } from "@semio-tech/ui/elements/Surface";
 import { glassClass } from "@semio-tech/ui/modules/surface-presentation";
 
 /** 🧊️ Host surface for three.js / R3F (implemented by 🔌️Adapters). */
@@ -517,7 +516,7 @@ export function IconShotFrame({
   readonly badge?: boolean;
   readonly children?: React.ReactNode;
 }): React.ReactNode {
-  const chipLevel = windowFrameChipLevel(useLevel());
+  const chipLevel = surfaceLevelAbove(useLevel());
   const ellipse = shape === "ellipse";
   return (
     <div className={cn("pointer-events-none absolute inset-0 flex items-center justify-center", className)}>
@@ -539,7 +538,7 @@ export function IconShotFrame({
             className={cn("pointer-events-none absolute bottom-0 max-w-full border-solid border-[color:var(--border-normal-color)] px-single font-mono text-tiny text-foreground", glassClass, ellipse ? "inset-x-0 flex justify-center pb-single" : "end-0")}
             style={{ borderBlockStartWidth: "var(--stroke-hairline)", borderInlineStartWidth: ellipse ? undefined : "var(--stroke-hairline)" }}
           >
-            <span className={cn("block truncate", ellipse && "max-w-[60%]")}>{width}×{height}</span>
+            <SurfaceScope level={chipLevel} fill="glass"><span className={cn("block truncate", ellipse && "max-w-[60%]")}>{width}×{height}</span></SurfaceScope>
           </span>
         ) : null}
       </div>

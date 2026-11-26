@@ -491,6 +491,7 @@ fn revision6_hash(password: &[u8], salt: &[u8], user_data: &[u8]) -> Vec<u8> {
 
 /// 🔐 A ready-to-use per-document cipher: the file key plus how strings and streams are wrapped.
 #[derive(Clone, Debug)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct Decryptor {
     file_key: Vec<u8>,
     aes: bool,

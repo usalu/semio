@@ -295,7 +295,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         if store_log.envelope.vcs.alternatives.iter().any(stale_alternative) {
             store_log.envelope.vcs.alternatives.extract_if(stale_alternative).map_err(shrank)?;
         }
-        for alternative in &fold.alternatives {
+        for alternative in fold.alternatives.iter() {
             if let Some(known) = store_log.envelope.vcs.alternatives.iter_mut().find(|known| known.id == alternative.id) {
                 if known.checkpoint_ids != alternative.checkpoint_ids {
                     known.checkpoint_ids = alternative.checkpoint_ids.clone();

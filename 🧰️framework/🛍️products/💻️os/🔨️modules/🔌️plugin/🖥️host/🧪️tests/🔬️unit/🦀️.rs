@@ -160,24 +160,9 @@ async fn wasmtime_runtime_keeps_wrong_abi_components_isolated_by_package() {
     }
 }
 
-/// 🪪️ Registers one mock-backed package with the process origin registry and returns the router's immutable identity of it. The mock backs registration and routing laws only: Host startup requires the real owned backend, so dispatch laws run against built components.
-async fn mock_registration(mock: &Arc<MockGuestRuntime>, actor: RuntimeActorId, package: &str, hash: u8) -> PluginRegistration {
-    use semio_framework_job::{Generation, OperationId, OriginalJobFixtureCaller};
-    use semio_plugin_host_post_turn_relay::origin_registry;
-    let compiled = mock.compile(&PackageRef { package: PackageId(package.to_string()), hash: PackageHash([hash; 32]) }, &[]).await.expect("mock compile");
-    let runtime = Arc::new(GuestRuntimes::Mock(mock.clone()));
-    let stock = semio_framework_value::RetainedCloneGrant { maximum_items: 100_000, maximum_copy_bytes: 4_000_000, maximum_capacity_bytes: 16_000_000, maximum_release_bytes: 16_000_000, maximum_depth: 64 };
-    let mut caller = OriginalJobFixtureCaller::admit(OperationId(98), Generation(1), stock, || Some(1000), 100_000_000, 1_000_000);
-    let identity = origin_registry::next_identity();
-    let mut origin = None;
-    for _ in 0..4096 {
-        if caller.turn(stock, |cx| origin_registry::register_step(identity, &runtime, &compiled, &mut origin, cx)).unwrap() {
-            break;
-        }
-    }
-    caller.retire(stock);
-    PluginRegistration { actor, origin: origin.expect("fixture registry admits the original compiled parent") }
-}
+#[path = "../registration.rs"]
+mod registration;
+use registration::mock_registration;
 
 /// 🌉️ Two mock-backed plugins (`stdio` owns `binary->gif87a`, `gif` owns `gif87a->gif89a`) register through the production `register_plugin` path into one shared router.
 #[semio_framework_async_macros::async_test]

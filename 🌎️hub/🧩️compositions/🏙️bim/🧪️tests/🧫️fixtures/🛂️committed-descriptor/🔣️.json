@@ -7,11 +7,40 @@
   "descriptorPath": "🌎️hub/🧩️compositions/🏙️bim/🧩️component/🛂️.descriptor.semio",
   "componentDirectory": "🌎️hub/🧩️compositions/🏙️bim/🧩️component/📦️packages/🦀️rust/dist",
   "componentName": "semio_hub_bim_component.wasm",
-  "deliverables": [
-    "components"
-  ],
+  "deliverables": {
+    "prototype": "components/prototype",
+    "release": "components/release"
+  },
   "pluginId": "bim",
+  "applicationIds": ["s.bim.model@1/*#editor", "s.bim.model@1/*#viewer"],
+  "guestReadConfigSequence": 1,
+  "browserCaller": {
+    "lifetimeUs": 120000000,
+    "fuel": 100000000,
+    "maximumTurns": 4096,
+    "grant": {
+      "maximumItems": 1048576,
+      "maximumCopyBytes": 67108864,
+      "maximumCapacityBytes": 268435456,
+      "maximumReleaseBytes": 268435456,
+      "maximumDepth": 4096
+    }
+  },
+  "ioHops": [
+    ["export", "s.energy.model@1/*"],
+    ["export", "s.stdio.bcf@2.1/*"],
+    ["export", "s.stdio.csv@rfc4180/*"],
+    ["export", "s.stdio.gltf@2.0/*"],
+    ["export", "s.stdio.ifc@2x3/*"],
+    ["export", "s.stdio.ifc@4/*"],
+    ["export", "s.stdio.json@rfc8259/*"],
+    ["export", "s.stdio.pdf@1.7/*"],
+    ["export", "s.stdio.svg@1.1/*"],
+    ["export", "s.stdio.xml@1.0/*"],
+    ["import", "s.stdio.bcf@2.1/*"],
+    ["import", "s.stdio.ifc@2x3/*"],
+    ["import", "s.stdio.ifc@4/*"]
+  ],
   "load": "hot_reload_plugin",
-  "manifest": "plugin_graph().manifest",
-  "missingComponent": "return-without-runtime-proof"
+  "manifest": "plugin_graph().manifest"
 }

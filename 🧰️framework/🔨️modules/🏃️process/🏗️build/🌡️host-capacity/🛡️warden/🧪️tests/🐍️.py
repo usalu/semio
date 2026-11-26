@@ -40,7 +40,7 @@ def ceiling_of(command, policy=None):
     cls = policy["classes"][policy["workerClass"]]
     final = bool({"cdylib", "bin", "dylib", "staticlib"} & set(types))
     base = cls["finalMegabytes"] if final else cls["libraryMegabytes"]
-    entry = next((e for e in policy["carving"] if e["crate"] == crate and e["target"] == target), None)
+    entry = next((e for e in policy["carving"] if e["crate"] == crate and e["target"] == target), None) or next((f for f in policy.get("families", []) if f["target"] == target and re.fullmatch(f["pattern"], crate)), None)
     out = {"unit": crate + "|" + target, "kind": "final" if final else "library", "megabytes": max(entry["budgetMegabytes"], base) if entry else base, "listed": entry is not None}
     if entry:
         out["measuredMegabytes"] = entry["measuredMegabytes"]
@@ -57,7 +57,8 @@ def swap_depth(policy, host):
     used = host.get("swapUsedMegabytes")
     free = host.get("swapFreeMegabytes")
     compressed = host.get("compressedMegabytes")
-    fixed = used is not None and free is not None and host.get("swapVolumeFreeMegabytes") is None and used + free > 0
+    growth = max(0, (host.get("swapVolumeFreeMegabytes") or 0) - policy["swapDiskReserveMegabytes"])
+    capacity = used + free + growth if used is not None and free is not None else 0
 
     def depth_of(value, whole, guard_bp, danger_bp):
         if value is None:
@@ -68,7 +69,7 @@ def swap_depth(policy, host):
 
     lines = [
         ("swap-used", depth_of(used, total, policy["swapUsedGuardBasisPoints"], policy["swapUsedDangerBasisPoints"])),
-        ("swap-share", depth_of(used, used + free, policy["swapShareGuardBasisPoints"], policy["swapShareDangerBasisPoints"]) if fixed else 0),
+        ("swap-share", depth_of(used, capacity, policy["swapShareGuardBasisPoints"], policy["swapShareDangerBasisPoints"]) if capacity else 0),
         ("compressed", depth_of(compressed, total, policy["compressedGuardBasisPoints"], policy["compressedDangerBasisPoints"])),
     ]
     depth = max(d for _, d in lines)
@@ -106,7 +107,7 @@ def decide(policy, host, subjects, previous):
 
     crossed = [s for s in subjects if s["canCancel"] and (over(s) or (s.get("capMegabytes") is not None and s.get("capCritical") and s["megabytes"] > cap_of(s)))]
     overage = sum(s["megabytes"] - (s["ceiling"]["megabytes"] if over(s) else cap_of(s)) for s in crossed)
-    acute = comp == 2 and swap_worked
+    acute = swap_worked and (comp == 2 or (pressure >= 1 and comp >= 1 and previous["level"] != "calm"))
     severe = avail < danger or (headroom is not None and headroom < head_danger) or (depth == 2 and avail < guard) or acute
     if severe or pressure == 2 or comp == 2:
         level = "danger"
@@ -479,9 +480,10 @@ def swaps(fixture):
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else "--check"
     fixture = json.load(open(FIXTURES, encoding="utf-8"))
-    if mode == "--acute":
+    if mode in ("--acute", "--warning-churn"):
         sample = json.load(open(os.path.join(HERE, "🚨️swap-churn", "🔣️.json"), encoding="utf-8"))
-        print(json.dumps(decide(POLICY, sample["host"], sample["subjects"], {"level": "danger", "calmTicks": 0})))
+        key, level = ("host", "danger") if mode == "--acute" else ("warningHost", "guard")
+        print(json.dumps(decide(POLICY, sample[key], sample["subjects"], {"level": level, "calmTicks": 0})))
     elif mode == "--others":
         print(json.dumps([others(c["rows"], c["subjects"], c["count"], c.get("prefixes", [])) for c in fixture["others"]], ensure_ascii=False))
     elif mode == "--charge":
@@ -519,7 +521,7 @@ def main():
                 json.dump(fixture, handle, ensure_ascii=False, indent=1)
                 handle.write("\n")
     else:
-        sys.exit("usage: 🐍️.py --decide|--classify|--discover|--swap|--others|--holds|--charge|--write|--check")
+        sys.exit("usage: 🐍️.py --acute|--warning-churn|--decide|--classify|--discover|--swap|--others|--holds|--charge|--write|--check")
 
 
 if __name__ == "__main__":

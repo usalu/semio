@@ -5,7 +5,7 @@ import{BROWSER_CANVAS_HOT_CRATES}from"../../../../../../../🔨️modules/🖱�
 import{cargoProfileConstraintsForOwnerV1,CARGO_PROFILE_CONSTRAINT_SOURCE_V1}from"./📋️constraints/🟦️.ts";
 import sourceSchema from"./🧬️schema/🔣️.json"with{type:"json"};
 
-export interface CargoProfilePolicyRequestV1{readonly version:1;readonly mode:"prototype"|"release";readonly target:string;readonly producer:"artifact"|"descriptor-emitter"|"wasm-component"|"browser-canvas"|"browser-module";readonly operation:"build"|"check"|"test"|"doc"|"run"|"bench"|"clippy"|"rustc"|"rustdoc";readonly composition?:string}
+export interface CargoProfilePolicyRequestV1{readonly version:1;readonly mode:"prototype"|"release";readonly target:string;readonly producer:"artifact"|"descriptor-emitter"|"wasm-component"|"browser-canvas"|"browser-module";readonly operation:"build"|"check"|"test"|"doc"|"run"|"bench"|"clippy"|"rustc"|"rustdoc";readonly compositions?:readonly string[]}
 export interface CargoProfileManifestInputV1{readonly owner:string;readonly kind:"repository"|"isolated"}
 export type CargoProfileConsumptionV1=Readonly<{kind:"resolution"}>|Readonly<{kind:"compiler";producer:CargoProfilePolicyRequestV1["producer"];operation:CargoProfilePolicyRequestV1["operation"]}>;
 export interface CargoProfilePackageConstraintV1{readonly package:string;readonly optLevel:"1"|"2"|"3";readonly origin:"native"|"wasm"|"browser-canvas";readonly owner:string;readonly evidence:string}
@@ -16,14 +16,34 @@ export interface CargoProfileRenderedConfigurationV1{readonly version:1;readonly
 const schema:typeof sourceSchema=JSON.parse(JSON.stringify(sourceSchema)),protocol=schema.definitions.PolicyProtocol.const,browser=Object.freeze([...BROWSER_CANVAS_HOT_CRATES]);
 const compare=(left:string,right:string)=>left<right?-1:left>right?1:0,hash=(text:string)=>createHash("sha256").update(text).digest("hex");
 
+/** 🧩️ Reads the exact named Cargo packages before its program argument delimiter. */
+export function selectedCargoProfileCompositionsV1(args:readonly string[]):readonly string[]|undefined{
+ const packages=new Set<string>();
+ for(let index=0;index<args.length;index++){
+  const arg=args[index]!;
+  if(arg==="--")break;
+  if(arg==="--workspace"||arg==="--all"||arg==="--exclude"||arg.startsWith("--exclude="))return undefined;
+  let name:string|undefined;
+  if(arg==="--package"||arg==="-p")name=args[++index];
+  else if(arg.startsWith("--package="))name=arg.slice(10);
+  else if(arg.startsWith("-p"))name=arg.slice(2);
+  else continue;
+  if(!name||!/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/u.test(name))return undefined;
+  packages.add(name);
+ }
+ return packages.size?Object.freeze([...packages].sort(compare)):undefined;
+}
+
 /** 🎚️ Derives immutable role policy from canonical workspace constraints; DATA grants no compiler or storage authority. */
 export function planCargoProfilePolicyV1(value:unknown,input:unknown):CargoProfilePolicyPlanV1{
  if(validateJsonSchemaSubset(schema.definitions.PolicyRequest,value,schema).length||validateJsonSchemaSubset(schema.definitions.ManifestInput,input,schema).length)throw Error("Closed Cargo profile policy inputs required");
- const row=value as CargoProfilePolicyRequestV1,request=Object.freeze({version:row.version,mode:row.mode,target:row.target,producer:row.producer,operation:row.operation,...(row.composition===undefined?{}:{composition:row.composition})}),workspaceOwner=(input as CargoProfileManifestInputV1).owner,workspaceKind=(input as CargoProfileManifestInputV1).kind,authored=workspaceKind==="repository"?cargoProfileConstraintsForOwnerV1(workspaceOwner):Object.freeze([]),role=(request.producer==="artifact"&&request.target==="wasm32-wasip2"?"component":request.producer==="artifact"&&request.target==="wasm32-unknown-unknown"?"browser":protocol.producers[request.producer])as CargoProfilePolicyPlanV1["role"],wasm=role==="component"||role==="browser",overrides=new Map<string,CargoProfilePackageConstraintV1>();
+ const row=value as CargoProfilePolicyRequestV1,request=Object.freeze({version:row.version,mode:row.mode,target:row.target,producer:row.producer,operation:row.operation,...(row.compositions===undefined?{}:{compositions:Object.freeze([...row.compositions].sort(compare))})}),workspaceOwner=(input as CargoProfileManifestInputV1).owner,workspaceKind=(input as CargoProfileManifestInputV1).kind,authored=workspaceKind==="repository"?cargoProfileConstraintsForOwnerV1(workspaceOwner):Object.freeze([]),role=(request.producer==="artifact"&&request.target==="wasm32-wasip2"?"component":request.producer==="artifact"&&request.target==="wasm32-unknown-unknown"?"browser":protocol.producers[request.producer])as CargoProfilePolicyPlanV1["role"],wasm=role==="component"||role==="browser",overrides=new Map<string,CargoProfilePackageConstraintV1>();
  if(request.mode==="prototype"){for(const item of authored)if(item.origin==="native"||wasm)overrides.set(item.package,item);if(request.producer==="browser-canvas")for(const name of browser)overrides.set(name,Object.freeze({package:name,optLevel:"3",origin:"browser-canvas",owner:"🧰️framework/🔨️modules/🖱️ui/🖌️render/🏗️build/🕸️browser/🟦️.ts",evidence:protocol.evidence["browser-canvas"]}));}
  if(overrides.size>protocol.maximumPackageRows)throw Error("Combined package constraint capacity exceeded");
  const targetRole=role==="component"&&request.mode==="prototype"?"component":role==="descriptor"?"descriptor":wasm?"wasm":"native";
- const lean=targetRole==="component"&&request.composition!==undefined&&(protocol.leanCompositions as readonly string[]).includes(request.composition),targetKey=(request.mode+"-"+targetRole+(lean?"-lean":""))as keyof typeof protocol.settings,hostKey=(request.mode+"-host")as keyof typeof protocol.settings,target=protocol.settings[targetKey],host=protocol.settings[hostKey];
+ const compositions=request.compositions,leanPackages:readonly string[]=protocol.leanCompositions[request.mode];
+ const lean=role==="component"&&compositions!==undefined&&(request.mode==="release"||compositions.length===1)&&compositions.every(name=>leanPackages.includes(name));
+ const targetKey=lean?"component-lean":(request.mode+"-"+targetRole)as keyof typeof protocol.settings,hostKey=(request.mode+"-host")as keyof typeof protocol.settings,target=protocol.settings[targetKey],host=protocol.settings[hostKey];
  if(validateJsonSchemaSubset(schema.definitions.Settings,target,schema).length||validateJsonSchemaSubset(schema.definitions.HostSettings,host,schema).length)throw Error("Closed authored target and host settings required");
  const sources:Readonly<{owner:string;path:string;digest:string}>[]=[Object.freeze({owner:workspaceOwner,...CARGO_PROFILE_CONSTRAINT_SOURCE_V1}),Object.freeze({owner:"profile-schema",path:"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧬️schema/🔣️.json",digest:hash(JSON.stringify(schema))})];if(request.producer==="browser-canvas")sources.push(Object.freeze({owner:"browser-canvas",path:"🧰️framework/🔨️modules/🖱️ui/🖌️render/🏗️build/🕸️browser/🔣️.json",digest:hash(JSON.stringify({version:1,hotPackages:browser}))}));
  const content={version:1 as const,request,workspaceOwner,workspaceKind,profile:request.mode,role,target:Object.freeze({...target})as CargoProfileSettingsV1,host:Object.freeze({...host})as CargoProfileHostSettingsV1,authoredConstraints:authored,packageOverrides:Object.freeze([...overrides.values()].sort((a,b)=>compare(a.package,b.package))),sources:Object.freeze(sources),preserved:Object.freeze([...protocol.preserved]),requiresConsumedView:true as const};return Object.freeze({...content,digest:hash(JSON.stringify({protocol,content}))});

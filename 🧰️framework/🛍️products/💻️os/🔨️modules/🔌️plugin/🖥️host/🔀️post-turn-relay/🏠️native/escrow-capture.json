@@ -13,5 +13,104 @@
         "Coverage", "OriginDelta", "Purpose", "Scope", "Bootstrap", "Ledger", "Journal"
       ]
     }
+  ],
+  "localPasses": [
+    {"rows":0,"funded":32,"park":null,"expected":"Bootstrap","calls":8},
+    {"rows":2,"funded":32,"park":null,"expected":"Bootstrap","calls":20},
+    {"rows":32,"funded":32,"park":null,"expected":"ClaimDelta","calls":32},
+    {"rows":2,"funded":3,"park":null,"expected":"ReceiptOrigin","calls":3},
+    {"rows":2,"funded":32,"park":5,"expected":"ClaimOrigin","calls":5}
+  ],
+  "batches": [
+    {
+      "name": "claim slot sweep",
+      "stage": "ClaimSlot",
+      "funded": 40,
+      "ready": null,
+      "park": null,
+      "deadline": null,
+      "cancel": null,
+      "attempts": 32
+    },
+    {
+      "name": "paid final verification",
+      "stage": "VerifyClaim",
+      "funded": 9,
+      "ready": 6,
+      "park": null,
+      "deadline": null,
+      "cancel": null,
+      "attempts": 6
+    },
+    {
+      "name": "no retained progress",
+      "stage": "ClaimDelta",
+      "funded": 9,
+      "ready": null,
+      "park": 2,
+      "deadline": null,
+      "cancel": null,
+      "attempts": 2
+    },
+    {
+      "name": "deadline after three",
+      "stage": "Coverage",
+      "funded": 10,
+      "ready": null,
+      "park": null,
+      "deadline": 3,
+      "cancel": null,
+      "attempts": 3
+    },
+    {
+      "name": "cancellation after two",
+      "stage": "CommitClaim",
+      "funded": 10,
+      "ready": null,
+      "park": null,
+      "deadline": null,
+      "cancel": 2,
+      "attempts": 2
+    },
+    {
+      "name": "completed fixed header",
+      "stage": "Header",
+      "funded": 10,
+      "ready": null,
+      "park": null,
+      "deadline": null,
+      "cancel": null,
+      "attempts": 1
+    },
+    {
+      "name": "ledger ownership boundary",
+      "stage": "Ledger",
+      "funded": 10,
+      "ready": null,
+      "park": null,
+      "deadline": null,
+      "cancel": null,
+      "attempts": 1
+    },
+    {
+      "name": "already batched claim words",
+      "stage": "StageClaim",
+      "funded": 40,
+      "ready": null,
+      "park": null,
+      "deadline": null,
+      "cancel": null,
+      "attempts": 1
+    },
+    {
+      "name": "exhausted turn",
+      "stage": "Scope",
+      "funded": 1,
+      "ready": null,
+      "park": null,
+      "deadline": null,
+      "cancel": null,
+      "attempts": 1
+    }
   ]
 }

@@ -1,0 +1,5 @@
+{
+  "widgets": [{"id":"height","number":6},{"id":"width","number":8}],
+  "connections": [{"from":"height","port":""},{"from":"width","port":"number"}],
+  "expected": {"number":"8"}
+}

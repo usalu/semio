@@ -1,0 +1,14 @@
+{
+  "input": {
+    "label": { "$schema": "text", "value": "beam" },
+    "profile": { "$schema": "profile", "name": "wide" },
+    "tags": { "$schema": "list", "0": { "$schema": "text", "value": "steel" } }
+  },
+  "expected": {
+    "memberOut": { "$schema": "member", "label": "beam", "profile": { "$schema": "profile", "name": "wide" }, "tags": { "$schema": "list", "0": { "$schema": "text", "value": "steel" } } },
+    "labelOut": { "$schema": "text", "value": "beam" },
+    "profileOut": { "$schema": "profile", "name": "wide" },
+    "tagsOut": { "$schema": "list", "0": { "$schema": "text", "value": "steel" } },
+    "errors": { "$schema": "list" }
+  }
+}

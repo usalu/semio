@@ -142,3 +142,19 @@ async fn results_panel_renders_the_chosen_mode_and_index() {
     assert_ne!(idle, chosen);
     assert!(chosen.contains("\"modal\"") && chosen.contains("\"3\""), "{chosen}");
 }
+
+/// ⏯️ LAW (F9): the play control of a readable pane is a pressed-state toggle — pressed exactly while the transport plays —
+/// whose change dispatches the `playing` field, so the button reflects the state and Pause is the same control un-pressed.
+#[semio_framework_async_macros::async_test]
+async fn results_panel_play_control_is_a_pressed_toggle_that_follows_the_transport() {
+    let mut config = Fem3dResultsWindowConfig::default();
+    config.animation.playing = false;
+    let idle = panel_json(&config);
+    config.animation.playing = true;
+    let running = panel_json(&config);
+    let control = |json: &str| json[json.find("fem3d-play-results.transport.play").expect("play control")..].chars().take(900).collect::<String>();
+    assert!(control(&idle).contains("\"toggle\"") || control(&idle).to_lowercase().contains("toggle"), "{}", control(&idle));
+    assert!(control(&idle).contains("\"on\":false"), "{}", control(&idle));
+    assert!(control(&running).contains("\"on\":true"), "{}", control(&running));
+    assert!(control(&running).contains("playing"), "the change dispatches the playing field: {}", control(&running));
+}

@@ -1,5 +1,6 @@
 import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {readFile} from "node:fs/promises";
+import {processPidExistsV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import {join} from "node:path";
 import {CompactTableV1,ReplicaBookV1,localPathsV1} from "../../../../🤝️shared-worktree/🔁️replica/📇️book/🟦️.ts";
 import {decideTrustV1,trustPolicyV1} from "../../../../🤝️shared-worktree/🔏️trust/🟦️.ts";
@@ -16,7 +17,7 @@ export type ReplicaFilesV1=Readonly<{generation:number;shared:number;manifest:st
 export type ReplicaEntryV1=readonly [path:string,sha256:string,bytes:number,mtimeMs:number,racy:boolean];
 
 /** 🩺️ Whether the replica daemon of the worktree is healthy now: it wrote its health file within the allowed age, its store is reachable, its process lives and its `trust` statement grants the tier `trusted` (`decideTrustV1`: a sweep found the manifest equal to the tree after the last event that can make it wrong). The manifest may stand in for a file walk only then; lifetime failure counters play no part. */
-export async function replicaHealthyV1(worktree:string,now:number=Date.now(),alive:(pid:number)=>boolean=pid=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}}):Promise<boolean>{
+export async function replicaHealthyV1(worktree:string,now:number=Date.now(),alive:(pid:number)=>boolean=processPidExistsV1):Promise<boolean>{
  try{
   const value=JSON.parse(await readFile(machinePathV1(worktree,".cache","f","health.json"),"utf8")) as {wallMs:number;pid:number;store:string;trust:Parameters<typeof decideTrustV1>[0]["trust"]};
   if(validateJsonSchemaSubset({$ref:"#/definitions/Health"},value,schema).length)return false;

@@ -1,6 +1,6 @@
 {
   "schema": "drawing.native-retirement/v1",
-  "maximumBytes": 4096,
+  "maximumBytesPerAxis": 4096,
   "constructorAllocationBytes": 0,
   "variants": ["Snapshot", "Asset", "Mutation", "Layer", "Fill", "Stroke", "String", "Segments", "SegmentCollections", "HistoryId"],
   "initializerOwners": ["HistoryId", "Snapshot"],

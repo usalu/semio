@@ -32,9 +32,9 @@ test("a serving machine (no plan limit) is not touched and says nothing, SEMIO_G
  lines.length=0;expect(await settleGraphMemoryV1({limitBytes:Infinity,environment:{},force:true,report:line=>lines.push(line),ports,shrink:()=>undefined})).toBeDefined();
 });
 
-test("the retained line names the largest bounded caches and is quiet without a limit",()=>{
+test("the retained line names the largest bounded caches and is reported without a plan limit (the whole read has none)",()=>{
  const lines:string[]=[],stats=()=>[{name:"a",entries:1,bytes:5*MB},{name:"b",entries:9,bytes:50*MB},{name:"c",entries:0,bytes:0}];
- reportRetainedGraphMemoryV1({limitBytes:Infinity,environment:{},report:line=>lines.push(line),stats});expect(lines).toEqual([]);
+ reportRetainedGraphMemoryV1({limitBytes:Infinity,environment:{},report:line=>lines.push(line),stats,ports:{sample:()=>1*MB,collect:()=>undefined},resident:()=>2*MB});expect(lines.length).toBeGreaterThan(0);lines.length=0;
  reportRetainedGraphMemoryV1({limitBytes:4915*MB,environment:{},report:line=>lines.push(line),stats,ports:{sample:()=>100*MB,collect:()=>undefined},resident:()=>200*MB});
  expect(lines[0]).toBe("graph: after the wave managed 100 MB, resident 200 MB; largest collections: b 9 entries 50 MB, a 1 entries 5 MB");
 });

@@ -1,6 +1,6 @@
 import {execFile,spawn,spawnSync} from "node:child_process";
 import {createHash} from "node:crypto";
-import {readProcessStartV1} from "../../../../🔖️identity/🟦️.ts";
+import {processPidExistsV1,readProcessStartV1} from "../../../../🔖️identity/🟦️.ts";
 import {appendFileSync,closeSync,mkdirSync,openSync,readdirSync,readFileSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {createRequire} from "node:module";
 import {join} from "node:path";
@@ -9,7 +9,7 @@ import {currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,readHostTextV
 import {systemDarwinFootprintPortV1,type DarwinFootprintPortV1} from "../../🍏️native-footprint/🟦️.ts";
 import type {HostCapacityPolicyV1} from "../../📏️decision/🟦️.ts";
 import {readHostProcessRowsV1} from "../../🧺️unmanaged/🟦️.ts";
-import type {CompileBudgetPolicyV1} from "../../../../📦️artifacts/🏗️native-build/🎟️admission/🏔️ceiling/🟦️.ts";
+import {buildScriptOutputDirectoryV1,type CompileBudgetPolicyV1} from "../../../../📦️artifacts/🏗️native-build/🎟️admission/🏔️ceiling/🟦️.ts";
 import {HOST_WARDEN_PLATFORMS_V1,HOST_WARDEN_POLICY_V1,HOST_WARDEN_SWAP_V1,HOST_WARDEN_TABLES_V1,HOST_WARDEN_TABLE_V1,buildHostWardenAlarmV1,classifyWardenSubjectsV1,decideHostWardenV1,discoverWardenWorkspacesV1,parseWardenSwapV1,formatHostWardenCancelFailureV1,formatHostWardenNoticeV1,formatHostWardenStopReasonV1,isHostWardenV1,parseWardenProcessTableV1,planWardenSignalsV1,requireHostWardenV1,topWardenOthersV1,type HostWardenAlarmV1,type HostWardenCancelV1,type HostWardenHostV1,type HostWardenMirrorV1,type HostWardenOtherV1,type HostWardenPolicyV1,type HostWardenPreviousV1,type HostWardenStateV1,type HostWardenRowV1,type HostWardenSubjectV1,type HostWardenTablesV1} from "../🟦️.ts";
 
 const MEGABYTE=1048576;
@@ -48,7 +48,7 @@ export function hostWardenDirectoryV1(hostCapacityDirectory?:string):string{
 
 const readJson=(path:string):unknown=>{try{return JSON.parse(readFileSync(path,"utf8"));}catch{return undefined;}};
 const writeAtomic=(path:string,text:string):void=>{const temporary=`${path}.${process.pid}.tmp`;writeFileSync(temporary,text);renameSync(temporary,path);};
-const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
+const alive=(pid:number):boolean=>processPidExistsV1(pid);
 
 /** 📖️ Reads the state the running warden wrote (validated); null when absent, invalid or older than `staleMilliseconds`. */
 export function readHostWardenStateV1(directory?:string,nowMs:number=Date.now()):HostWardenStateV1|null{
@@ -304,7 +304,8 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
       }else if(action.action==="resume"){
        signalTree(rows,{pid:subject.pid,scope},["SIGCONT"]);suspended.delete(subject.id);since.delete(subject.id);counters.resumed++;{const known=flaps.get(subject.id)??{suspends:[]};known.resumedAtMs=now;flaps.set(subject.id,known);}writeState(host,decision,subjects);
       }else{
-       const record:HostWardenCancelV1={version:1,pid:subject.pid,start,kind:subject.kind,owner:subject.owner??"",command:(rows.find(row=>row.pid===subject.pid)?.command??"").slice(0,512),megabytes:subject.megabytes,atMs:now,reason:action.reason,ancestors:ancestorsOf(rows,subject.pid),...action.capMegabytes===undefined?{}:{capMegabytes:action.capMegabytes},...action.reason==="ceiling"&&subject.ceiling!==undefined?{ceiling:subject.ceiling}:{}};
+       const command=rows.find(row=>row.pid===subject.pid)?.command??"",buildScriptOutput=buildScriptOutputDirectoryV1(command);
+       const record:HostWardenCancelV1={version:1,pid:subject.pid,start,kind:subject.kind,owner:subject.owner??"",command:command.slice(0,512),megabytes:subject.megabytes,atMs:now,reason:action.reason,ancestors:ancestorsOf(rows,subject.pid),...buildScriptOutput&&buildScriptOutput.length<=256?{buildScriptOutput}:{},...action.capMegabytes===undefined?{}:{capMegabytes:action.capMegabytes},...action.reason==="ceiling"&&subject.ceiling!==undefined?{ceiling:subject.ceiling}:{}};
        writeAtomic(join(cancelled,`${subject.pid}.${createHash("sha256").update(start).digest("hex").slice(0,8)}.json`),JSON.stringify(record));
        signalTree(rows,{pid:subject.pid,scope},["SIGCONT"]);signalTree(rows,{pid:subject.pid,scope},[subject.signal??"SIGKILL"]);
        suspended.delete(subject.id);since.delete(subject.id);counters.cancelled++;writeState(host,decision,subjects);

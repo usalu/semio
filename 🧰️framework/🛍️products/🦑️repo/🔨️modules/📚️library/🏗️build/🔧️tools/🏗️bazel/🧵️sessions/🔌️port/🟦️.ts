@@ -1,4 +1,5 @@
 import {constants,createReadStream,existsSync,readdirSync,rmSync,writeFileSync} from "node:fs";
+import {processPidExistsV1} from "../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 import {chmod,copyFile,lstat,mkdir,readdir,readFile,rename,rm,rmdir,stat,utimes,writeFile} from "node:fs/promises";
 import {createHash,randomBytes} from "node:crypto";
 import {dirname,join} from "node:path";
@@ -15,7 +16,7 @@ import {nativeFreeSpaceSyncV1} from "../../../../../../../../../🔨️modules/�
 const temporaryName=snapshotSchema.definitions.Policy.const.temporary,slotPattern=new RegExp(policy.names.slotPattern),keyPattern=new RegExp(policy.names.keyPattern),missing=(error:unknown)=>["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""),busy=(error:unknown)=>error instanceof Error&&error.message.startsWith("Resource lease timed out: ");
 export type BazelSlotDirectoriesV1=Readonly<{leases:string;server:string;workspaces:string;pool?:string}>;
 
-const alivePid=(pid:number)=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
+const alivePid=(pid:number)=>processPidExistsV1(pid);
 const waiterPattern=(kind:BazelSlotKindV1)=>new RegExp(`^waiter-${kind}-[0-9]{15}-([0-9]+)-[0-9a-f]{12}$`,"u");
 /** 🚶️ The waiters of one slot class still alive, oldest first: one small file per waiter beside the slot states, named by class, arrival time, process and a random token (the inventory ignores plain files of other names); the file of a dead process is removed when seen. */
 function liveWaiters(server:string,kind:BazelSlotKindV1):string[]{
@@ -53,7 +54,7 @@ export function bazelSlotPortV1(directories:BazelSlotDirectoriesV1,options:Reado
  });
 }
 
-const alive=(pid:number)=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
+const alive=(pid:number)=>processPidExistsV1(pid);
 /** 🛑️ Stops the persistent server of an output base the way Bazel itself notices a shutdown request, by removing its pid file, then waits for the process to end; it needs neither the Bazel binary nor a workspace and starts no JVM. An output base without a server is already stopped. */
 export async function stopBazelServerV1(outputBase:string,signal:AbortSignal,rules:{timeoutMilliseconds:number;pollMilliseconds:number}=policy.stop):Promise<void>{
  const file=join(outputBase,policy.stop.pidFile);let pid:number;

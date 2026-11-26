@@ -1,20 +1,12 @@
 //! 🧵️ Original borrowed Flow authoring retains its exact source, fields and domain outcome.
 use neural_engine as neural;
-use neural::{Atom, Dictionary, EvalChannels, Neuron, OperatorInfo, Tree, TreeSnapshot, Value as NeuralValue};
+use neural::OperatorInfo;
 use protocol::causal::transition::HistoryFoldIndex;
-use semio_framework_artifact_flow_flow::{artifact::*, widget_id_for};
 use semio_os_flow_host_core::*;
-use semio_os_flow_host_source::{seeds::FlowEvaluationSeeds, FlowEvaluationSource};
-use semio_os_flow_operators::catalogue::flow_neuron_kind_info_map;
-use semio_os_flow_operators::registry::flow_extension_registry_generation;
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::controlled::ControlledRetirement};
-use semio_framework_value_ordered::ordered::SharedOwner;
-use semio_framework_job::StepContext;
-use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
-use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkPoll,RetirementPollExit};
-use neural::retirement::{close_reply,CloseReply,CloseComplete};
-use semio_os_flow_host_source::{close_with_effect,close_with_poll,poll_outcome,settle_close};
-use std::mem::{ManuallyDrop,size_of};
+use semio_os_flow_host_source::close_with_poll;
+use semio_framework_value::RetainedAllocationEffect;
+#[cfg(test)] use semio_framework_artifact_flow_flow::artifact::*;
+#[cfg(test)] use std::sync::Arc;
 use semio_framework_artifact_flow_flow::{FlowMutation,WidgetDescriptor};
 use semio_os_flow_host_core::authoring_layout::DagLayoutOptions;
 #[path="📦️storage/🦀️.rs"]mod storage;

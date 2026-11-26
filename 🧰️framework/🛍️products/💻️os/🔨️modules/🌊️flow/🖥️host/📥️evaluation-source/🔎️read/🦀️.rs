@@ -1,10 +1,10 @@
 //! 🔎️ Current successful Flow outputs are admitted against the original funded source and baseline owners.
 use neural_engine as neural;
-use neural::{Atom, Dictionary, EvalChannels, Neuron, OperatorInfo, Tree, TreeSnapshot, Value as NeuralValue};
+use neural::{Atom, Dictionary, EvalChannels, OperatorInfo, Tree, TreeSnapshot, Value as NeuralValue};
 use protocol::causal::transition::HistoryFoldIndex;
 use semio_framework_artifact_flow_flow::{artifact::*, widget_id_for};
 use semio_os_flow_host_core::*;
-use semio_os_flow_host_source::{seeds::FlowEvaluationSeeds, FlowEvaluationSource};
+use semio_os_flow_host_source::{seeds::FlowEvaluationSeeds, settle_close, FlowEvaluationSource};
 use semio_os_flow_operators::catalogue::flow_neuron_kind_info_map;
 use semio_os_flow_operators::registry::flow_extension_registry_generation;
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::controlled::ControlledRetirement};
@@ -13,7 +13,6 @@ use semio_framework_job::StepContext;
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
 use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkPoll,RetirementPollExit};
 use neural::retirement::{close_reply,CloseReply,CloseComplete};
-use semio_os_flow_host_source::{close_with_effect,close_with_poll,poll_outcome,settle_close};
 use std::mem::{ManuallyDrop,size_of};
 /// 🧭️ The session baseline custody a funded current-source read inspects; the evaluation session is its one implementor.
 pub trait FlowSourceBaseline {

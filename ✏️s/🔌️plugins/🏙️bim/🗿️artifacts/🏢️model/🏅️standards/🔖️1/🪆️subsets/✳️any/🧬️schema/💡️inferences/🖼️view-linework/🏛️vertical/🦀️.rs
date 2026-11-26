@@ -9,7 +9,7 @@ use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema:
 use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::view_linework::cut::{cut_regions, Cut};
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::filters::{category_of_family, phase_of};
 use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::view_linework::frame::Frame;
-use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::view_linework::hidden_lines::{bodies, faces, feature_edges, mean_depth, pieces, Facing, Tri};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::view_linework::hidden_lines::{bodies, faces, feature_edges, mean_depth, pieces, silhouette_edges, Facing, Tri};
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanStyle, PlanVertex, Sheet};
@@ -113,12 +113,6 @@ pub fn vertical_view(snapshot: &ModelSnapshot, id: &str, view: &View, inputs: &I
     for body in &order {
         for cut in faces(body) {
             region(&mut sheet, &body.element, PlanKind::Silhouette, PlanStyle::Projection, &cut, crop);
-            if view.detail == DetailLevel::Coarse {
-                let ring = &cut.outer;
-                for index in 0..ring.len() {
-                    stroke(&mut sheet, &body.element, PlanStyle::Projection, ring[index], ring[(index + 1) % ring.len()], crop);
-                }
-            }
         }
     }
     for (element, cuts) in &cuts {
@@ -126,14 +120,13 @@ pub fn vertical_view(snapshot: &ModelSnapshot, id: &str, view: &View, inputs: &I
             region(&mut sheet, element, PlanKind::SectionCut, PlanStyle::Cut, cut, crop);
         }
     }
-    if view.detail != DetailLevel::Coarse {
-        let edges: Vec<_> = seen.iter().flat_map(|body| feature_edges(body, &frame, view.depth)).collect();
-        for piece in pieces(&edges, &seen, &closing) {
-            if piece.visible {
-                stroke(&mut sheet, &piece.element, PlanStyle::Projection, piece.a, piece.b, crop);
-            } else if view.detail == DetailLevel::Fine {
-                stroke(&mut sheet, &piece.element, PlanStyle::Hidden, piece.a, piece.b, crop);
-            }
+    let edges_of = if view.detail == DetailLevel::Coarse { silhouette_edges } else { feature_edges };
+    let edges: Vec<_> = seen.iter().flat_map(|body| edges_of(body, &frame, view.depth)).collect();
+    for piece in pieces(&edges, &seen, &closing) {
+        if piece.visible {
+            stroke(&mut sheet, &piece.element, PlanStyle::Projection, piece.a, piece.b, crop);
+        } else if view.detail == DetailLevel::Fine {
+            stroke(&mut sheet, &piece.element, PlanStyle::Hidden, piece.a, piece.b, crop);
         }
     }
     let lines = sheet.finish("", 0.0);

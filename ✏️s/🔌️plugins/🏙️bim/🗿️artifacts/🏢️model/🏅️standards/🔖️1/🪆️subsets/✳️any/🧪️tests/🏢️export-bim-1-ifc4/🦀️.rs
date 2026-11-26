@@ -44,17 +44,16 @@ mod subject {
         outcome(report(&back, &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec::decode_ifc4(&second)?).to_json())
     }
 
-    /// ⏳️ The house report of the file the stepped IFC4 export job writes: a first job is cancelled half-way, a second one runs to its end on the same session and its file is read back.
+    /// ⏳️ The IFC4 house report after cancelling partial inference and resuming the export with the same session.
     pub fn stepped(ctx: &Context) -> Result<Outcome, String> {
         let model = snapshot(ctx)?;
-        let mut cancelled = ExportJob::with_steps("ifc4", Some(43), 2);
+        let mut job = ExportJob::new("ifc4".into(), None);
         for _ in 0..2 {
-            cancelled.advance(&model).map_err(|fault| format!("{fault:?}"))?;
+            job.advance_cold(&model, 2).map_err(|fault| format!("{fault:?}"))?;
         }
-        cancelled.cancel(&model);
-        let mut job = ExportJob::with_steps("ifc4", Some(43), 64);
+        job.cancel_cold(&model);
         let output = loop {
-            if let Advance::Done(output) = job.advance(&model).map_err(|fault| format!("{fault:?}"))? {
+            if let Advance::Done(output) = job.advance_cold(&model, 64).map_err(|fault| format!("{fault:?}"))? {
                 break output;
             }
         };

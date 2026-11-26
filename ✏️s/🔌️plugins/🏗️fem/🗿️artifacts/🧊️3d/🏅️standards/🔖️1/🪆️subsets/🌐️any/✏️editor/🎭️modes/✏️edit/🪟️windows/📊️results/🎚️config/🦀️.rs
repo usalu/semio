@@ -260,7 +260,7 @@ pub fn addressed_fields(window_id: &str, config: &Fem3dResultsWindowConfig, fiel
     semio_plugin::WindowConfigMutation::of::<Fem3dResultsWindowConfigOwner>(window_id, Fem3dResultsWindowConfigMutation::Update(Fem3dResultsWindowConfigUpdate { patch: Box::new(patch) }))
 }
 
-/// 🪟️ The results-window instance a command both READS through [`current`] and writes back. A command issued from another window (the Actions palette of the Model window) speaks for the first open results window.
+/// 🪟️ The results-window instance a command both READS through [`current`] and writes back.
 ///
 /// `requested` is the `windowId` a panel control tagged onto its own arguments (the puzzle3d
 /// Settings-panel rule): a panel projection carries no `window_id` of its own, so without the tag a
@@ -285,9 +285,12 @@ pub fn addressed_window_id<C>(cfg: &semio_plugin::ConfigView<'_, C>, view: &semi
     if let Some(captured) = captured {
         return Ok(captured);
     }
-    let results = |window: &&semio_plugin::ViewWindowInstance| window.window_kind_id == kind_id;
-    let own = view.window_id.as_deref().and_then(|id| view.window_instances.iter().filter(results).find(|window| window.id == id));
-    own.or_else(|| view.window_instances.iter().find(results)).map(|window| window.id.clone()).ok_or_else(|| semio_plugin::Fault::from("fem.window.required: no FEM 3D results window is open"))
+    let id = view.window_id.as_deref().ok_or_else(|| semio_plugin::Fault::from("fem.window.required: command has no addressed window instance"))?;
+    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_plugin::Fault::from("fem.window.stale: addressed window instance is not open"))?;
+    if kind != kind_id {
+        return Err(semio_plugin::Fault::from("fem.window.kind: the result display belongs to a results window; run it from the Results window"));
+    }
+    Ok(id.to_string())
 }
 
 /// 🎚️ The whole-record publication into one exact results-window partition.

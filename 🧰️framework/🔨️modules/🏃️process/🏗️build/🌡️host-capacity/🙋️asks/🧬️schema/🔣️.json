@@ -20,6 +20,7 @@
       "properties": {
         "version": {"const": 1},
         "pid": {"type": "integer", "minimum": 1},
+        "startMs": {"type": "integer", "minimum": 1},
         "key": {"type": "string", "minLength": 1, "maxLength": 512},
         "needMegabytes": {"type": "integer", "minimum": 0},
         "alone": {"type": "boolean"},

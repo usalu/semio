@@ -15,6 +15,10 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[test]]
+name = "original-solids"
+path = "../../🎟️original/🧪️tests/🦀️solids.rs"
+
 [features]
 testkit = ["dep:semio-framework-trace", "dep:serde_json", "semio-framework-job/testkit"]
 funded-turns = []

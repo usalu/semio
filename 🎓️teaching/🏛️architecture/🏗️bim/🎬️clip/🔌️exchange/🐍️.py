@@ -108,8 +108,8 @@ def _route(ring, panel, target, color=DATA, lane=0):
 
 
 def _backed(label, pad=0.05):
-    """🧱 A label on an opaque background plate, so lines and hatches behind it do not run through the text."""
-    plate = _engine.Rectangle(width=label.width + 2 * pad, height=label.height + 2 * pad, fill_color=_d.BACKGROUND, fill_opacity=0.92, stroke_width=0).move_to(label)
+    """🧱 Overlay a glass label on drawing lines and hatches."""
+    plate = _art.window_frame(label.width + 2 * pad, label.height + 2 * pad, glass=True, stroke_width=0).move_to(label)
     return _engine.VGroup(plate, label)
 
 

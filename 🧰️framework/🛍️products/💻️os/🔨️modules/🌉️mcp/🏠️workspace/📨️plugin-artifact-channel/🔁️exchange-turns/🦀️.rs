@@ -28,21 +28,57 @@ impl PluginArtifactChannel {
     /// 🔁️ [`Self::exchange_one_real`] for a command already stamped with `seq` — the archive load's
     /// `store::DocumentArchiveLoadHost` stamps its own, because its operation IS its admission's sequence.
     pub(super) fn exchange_sequenced(&mut self, instance: u32, real_command: &store::AppCommand, seq: u64) -> Result<store::AppFrame, Fault> {
+        self.exchange_sequenced_scoped(instance, real_command, seq, &ActivationScope::detached())
+    }
+
+    pub(super) fn exchange_sequenced_scoped(&mut self, instance: u32, real_command: &store::AppCommand, seq: u64, scope: &ActivationScope) -> Result<store::AppFrame, Fault> {
+        scope.checkpoint()?;
         let deadline = std::time::Instant::now() + COMMAND_RESUME_WALL_BUDGET;
         loop {
-            match self.exchange_one_turn(instance, real_command, seq)? {
-                CommandTurn::Settled(frame) => return Ok(frame),
-                CommandTurn::MoreWork if std::time::Instant::now() < deadline => continue,
-                CommandTurn::MoreWork => {
+            let turn = self.exchange_one_turn(instance, real_command, seq, scope);
+            let turn = match turn {
+                Ok(CommandTurn::MoreWork) if matches!(real_command, store::AppCommand::MediaOut { .. }) => {
+                    scope.advance(ActivationPhase::ReadingDocument, 0.5).map(|()| CommandTurn::MoreWork)
+                }
+                result => result,
+            };
+            match turn {
+                Ok(CommandTurn::Settled(frame)) => return Ok(frame),
+                Ok(CommandTurn::MoreWork) if std::time::Instant::now() < deadline => continue,
+                Ok(CommandTurn::MoreWork) => {
                     self.discard_instance(instance);
                     return Err(Fault { code: "budget.exceeded".to_string(), message: format!("AppCommand seq {seq} reached its wall budget before it settled; the instance was discarded and the next command starts on a fresh one") });
                 }
+                Err(fault) if fault.code == ACTIVATION_CANCELLED_FAULT_CODE => {
+                    if !self.closing_instances.contains(&instance) { self.discard_instance(instance); }
+                    if let Err(cleanup) = self.retire_cancelled_command(instance, seq) {
+                        return Err(Fault { code: cleanup.code, message: format!("{}; cleanup: {}", fault.message, cleanup.message) });
+                    }
+                    return Err(self.settle_instance_cancellation(instance, fault));
+                }
+                Err(fault) => return Err(fault),
             }
         }
     }
 
+    /// ♻️ Retires the host command and answer pages after the cancelled guest was closed.
+    fn retire_cancelled_command(&mut self, instance: u32, seq: u64) -> Result<(), Fault> {
+        if !self.pending_exchanges.get(instance).is_some_and(|pending| pending.seq == seq) {
+            return Ok(());
+        }
+        if self.pending_command_closes.is_active(u64::from(instance), seq) {
+            self.pending_command_closes.begin_close(u64::from(instance), seq).map_err(|fault| Self::not_wired("cancelled command owner", format!("{}: {}", fault.code.0, fault.message)))?;
+        }
+        let page_bytes = semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES;
+        while !self.pending_exchanges.close_response_step(instance, page_bytes).0 {}
+        while !self.pending_command_closes.close_step(page_bytes).0 {}
+        let terminal = self.pending_exchanges.remove(instance).expect("cancelled exchange reached terminal empty");
+        assert!(terminal.response.terminal_is_empty(), "cancelled response reached terminal empty");
+        Ok(())
+    }
+
     /// 🔁️ ONE guest turn, or one bounded host-side bookkeeping step, of the command above. Returns [Design notes](README.md#source-notes-44).
-    fn exchange_one_turn(&mut self, instance: u32, real_command: &store::AppCommand, seq: u64) -> Result<CommandTurn, Fault> {
+    fn exchange_one_turn(&mut self, instance: u32, real_command: &store::AppCommand, seq: u64, scope: &ActivationScope) -> Result<CommandTurn, Fault> {
         if !self.rejected_command_builds.terminal_is_empty() {
             self.rejected_command_builds.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
             return Ok(CommandTurn::MoreWork);
@@ -97,7 +133,7 @@ impl PluginArtifactChannel {
         self.pending_command_closes.prepare_suspend(u64::from(instance), seq).map_err(|fault| Self::not_wired("suspending command owner", format!("{}: {}", fault.code.0, fault.message)))?;
         let mut resumed = false;
         let mut published: Vec<String> = Vec::new();
-        let outcome = self.with_native_turn(instance, std::slice::from_ref(&event), |channel, turn| {
+        let outcome = self.with_native_turn_scoped(instance, std::slice::from_ref(&event), scope, |channel, turn| {
             channel.pending_command_closes.resume(u64::from(instance), seq).map_err(|fault| Self::not_wired("resuming command owner", format!("{}: {}", fault.code.0, fault.message)))?;
             resumed = true;
             let progress = channel.pending_command_closes
@@ -123,7 +159,10 @@ impl PluginArtifactChannel {
             semio_framework::kernel::CommandBatchProgress::Complete => {
                 self.pending_command_closes.remove_terminal(u64::from(instance), seq).map_err(|fault| Self::not_wired("terminal command owner", format!("{}: {}", fault.code.0, fault.message)))?;
                 let mut pending = self.pending_exchanges.remove(instance).expect("terminal pending exchange");
-                self.await_response(instance, seq, &mut pending.response).map_err(|fault| Fault { code: fault.code, message: format!("{}; the acknowledging turn published {}", fault.message, named_shapes(&published)) })?;
+                if let Err(fault) = self.await_response(instance, seq, &mut pending.response, scope, matches!(real_command, store::AppCommand::MediaOut { .. })) {
+                    while !pending.response.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES).0 {}
+                    return Err(Fault { code: fault.code, message: format!("{}; the acknowledging turn published {}", fault.message, named_shapes(&published)) });
+                }
                 pending.response.take(seq).map(CommandTurn::Settled)
             }
             semio_framework::kernel::CommandBatchProgress::Faulted => {
@@ -160,11 +199,11 @@ impl PluginArtifactChannel {
     }
 
     /// 📮️ Wakes the guest until it publishes the frame answering `seq`, once its command ingress has [Design notes](README.md#source-notes-234).
-    fn await_response(&mut self, instance: u32, seq: u64, response: &mut PendingResponsePage) -> Result<(), Fault> {
+    fn await_response(&mut self, instance: u32, seq: u64, response: &mut PendingResponsePage, scope: &ActivationScope, media: bool) -> Result<(), Fault> {
         let deadline = std::time::Instant::now() + COMMAND_RESUME_WALL_BUDGET;
         let mut foreign: Vec<u64> = Vec::new();
         while matches!(response, PendingResponsePage::Empty) {
-            let outcome = self.with_native_turn(instance, &[semio_framework::kernel::Event::Wake], |_, turn| {
+            let outcome = self.with_native_turn_scoped(instance, &[semio_framework::kernel::Event::Wake], scope, |_, turn| {
                 for effect in &turn.effects {
                     if let semio_framework::kernel::Effect::Respond { req, .. } = effect { foreign.push(req.0); }
                     let Some(payload) = shell_app_frame_payload(instance, effect) else { continue; };
@@ -184,6 +223,9 @@ impl PluginArtifactChannel {
             }
             if std::time::Instant::now() >= deadline {
                 return Err(Self::budget_fault(&format!("the guest acknowledged command seq {seq} but published no response in")));
+            }
+            if media && matches!(response, PendingResponsePage::Empty) {
+                scope.advance(ActivationPhase::ReadingDocument, 0.5)?;
             }
         }
         Ok(())

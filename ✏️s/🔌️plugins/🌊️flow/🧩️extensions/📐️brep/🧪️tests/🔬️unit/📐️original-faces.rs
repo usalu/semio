@@ -32,7 +32,7 @@ fn original_polygon_wire_face_and_extrusion_use_the_live_registry() {
         let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["name"].as_str() == Some(name)).unwrap();
         let session = Session::new();
         let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 97153, generation: 17 };
+        let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 97153, generation: 17 };
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(identity.generation), stock(), || Some(1000), 1500, 32768);
         let (mut born, mut free) = (0, 0);
         let profile = &case["inputs"]["wire"];
@@ -124,7 +124,7 @@ fn original_helix_keeps_the_cold_wire_pitch_and_handedness() {
     for (index, case) in cases.iter().chain(std::iter::once(&cases[0])).enumerate() {
         let session = Session::new();
         let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 97214, generation: 17 };
+        let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 97214, generation: 17 };
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(identity.generation), stock(), || Some(1000), 1500, 32768);
         let (mut born, mut free) = (0, 0);
         let input = ["origin", "axis"].into_iter().fold(Dictionary::new(), |input, port| {
@@ -192,7 +192,7 @@ fn original_polygonal_wire_recipes_match_the_shared_curve_fixture() {
         let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["name"].as_str() == Some(name)).unwrap();
         let session = Session::new();
         let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 97152, generation: 17 };
+        let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 97152, generation: 17 };
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(identity.generation), stock(), || Some(1000), 1500, 32768);
         let (mut born, mut free) = (0, 0);
         let wire = run_live_query(&registry, case["kind"].as_str().unwrap(), polygon_fixture_input(&case["inputs"]), &mut caller, &mut born, &mut free);
@@ -274,7 +274,7 @@ fn original_interpolated_curves_pass_through_centripetal_samples_and_preview() {
         let input = polygon_fixture_input(&case["inputs"]);
         let session = Session::new();
         let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 97157, generation: 17 };
+        let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 97157, generation: 17 };
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(identity.generation), stock(), || Some(1000), 1500, 32768);
         let (mut born, mut free) = (0, 0);
 
@@ -325,7 +325,7 @@ fn original_approximate_curve_matches_the_pinned_least_squares_spline() {
     for (index, case) in cases.iter().chain(std::iter::once(&cases[2])).enumerate() {
         let session = Session::new();
         let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 97213, generation: 17 };
+        let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 97213, generation: 17 };
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(identity.generation), stock(), || Some(1000), 1500, 32768);
         let (mut born, mut free) = (0, 0);
         let points = case["points"].as_array().unwrap().iter().enumerate().fold(Dictionary::with_schema("list"), |list, (i, position)| {
@@ -403,7 +403,7 @@ fn original_point_list_face_publishes_only_the_face_and_retires_both_drafts() {
     ] {
         let session = Session::new();
         let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 97212, generation: 17 };
+        let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 97212, generation: 17 };
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(identity.generation), stock(), || Some(1000), 1500, 32768);
         let (mut born, mut free) = (0, 0);
         let case = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"].as_str() == Some(name)).unwrap();
@@ -492,7 +492,7 @@ fn original_coons_fits_oriented_boundary_samples_and_previews_the_published_surf
     ] {
         let session = Session::new();
         let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 97156, generation: 17 };
+        let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 97156, generation: 17 };
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(identity.generation), stock(), || Some(1000), 1500, 32768);
         let (mut born, mut free) = (0, 0);
         let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["name"].as_str() == Some(name)).unwrap();
@@ -570,7 +570,7 @@ fn original_nurbs_grid_interpolates_samples_and_cancels_before_publication() {
     ] {
         let session = Session::new();
         let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 97155, generation: 17 };
+        let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 97155, generation: 17 };
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(identity.generation), stock(), || Some(1000), 1500, 32768);
         let (mut born, mut free) = (0, 0);
         let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["name"].as_str() == Some(name)).unwrap();
@@ -651,7 +651,7 @@ fn retained_affine_operators_transform_original_line_parameterization() {
 
 #[test]
 fn conic_face_publishes_area_and_preview_from_the_live_registry() {
-    use flow_extension_sdk::geometry::{GeometryStep,GeometryWorkIdentity};
+    use semio_os_flow_geometry::{GeometryStep,GeometryWorkIdentity};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🧫️fixtures/curve-preview.json")).unwrap();
     let session=Session::new();
     let registry=neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
@@ -697,7 +697,7 @@ fn conic_face_publishes_area_and_preview_from_the_live_registry() {
 
 #[test]
 fn retained_arc_admits_its_controls_and_previews_from_the_live_registry() {
-    use flow_extension_sdk::geometry::{GeometryStep,GeometryWorkIdentity};
+    use semio_os_flow_geometry::{GeometryStep,GeometryWorkIdentity};
     let f:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➰️curve/🧪️tests/🧫️fixtures/rational-jets.json")).unwrap();
     let row=&f[0];
     let arc=&row["arc"];
@@ -826,7 +826,7 @@ fn original_standalone_affine_images_preserve_cold_parameter_samples() {
     for (index, row) in rows.iter().chain(std::iter::once(ellipse)).enumerate() {
         let session = Session::new();
         let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 97219, generation: 17 };
+        let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 97219, generation: 17 };
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(identity.generation), stock(), || Some(1000), 1500, 32768);
         let (mut born, mut free) = (0, 0);
         let kind = row["kind"].as_str().unwrap();
@@ -933,7 +933,7 @@ fn original_planar_polygon_transforms_keep_exact_trims_and_preview_orientation()
         let operator = case["operator"].as_str().unwrap();
         let session = Session::new();
         let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 97218, generation: 17 };
+        let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 97218, generation: 17 };
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(identity.generation), stock(), || Some(1000), 1500, 32768);
         let (mut born, mut free) = (0, 0);
         let points = fixture["source"].as_array().unwrap().iter().enumerate().fold(Dictionary::with_schema("list"), |list, (i, point)| {
@@ -1038,7 +1038,7 @@ fn original_polygonal_face_offset_keeps_winding_and_cancels_without_changing_the
     for (index, case) in cases.iter().chain(std::iter::once(&cases[0])).enumerate() {
         let session = Session::new();
         let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 97216, generation: 17 };
+        let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 97216, generation: 17 };
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(identity.generation), stock(), || Some(1000), 1500, 32768);
         let (mut born, mut free) = (0, 0);
         let points = case["points"].as_array().unwrap().iter().enumerate().fold(Dictionary::with_schema("list"), |list, (i, point)| {
@@ -1208,7 +1208,7 @@ fn run_curve_case(case: &serde_json::Value, queries: &serde_json::Value, default
         let expected = case["outputs"]["shape"]["length"].as_f64().unwrap();
         assert!((length - expected).abs() < case["tolerance"].as_f64().unwrap_or(default_tolerance), "{operator}: {length} != {expected}");
 
-        use flow_extension_sdk::geometry::{GeometryStep, GeometryWorkIdentity};
+        use semio_os_flow_geometry::{GeometryStep, GeometryWorkIdentity};
         let identity = GeometryWorkIdentity { operation: 97147, generation: 17 };
         let tolerance = 0.025;
         let mut mesh = None;
@@ -1333,7 +1333,7 @@ fn original_face_from_wire_preserves_trimmed_rational_pcurve_and_rolls_back() {
             let wire = kernel.import_shape(&ShapeValue { root, body }).map_err(|error| semio_s_spatial_kernel_semio_session::map_kernel_error(&error))?;
             semio_s_spatial_kernel_semio_session::geometry_dict(kernel, &wire)
         }).unwrap();
-        let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 97251, generation: 17 };
+        let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 97251, generation: 17 };
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(identity.generation), stock(), || Some(1000), 1500, 32768);
         let (mut born, mut free) = (0, 0);
         let input = Dictionary::new().insert("wire", Value::Dictionary(source));
@@ -1408,7 +1408,7 @@ fn retained_sew_rebuilds_exact_shared_cuboid_incidence_without_mutating_faces() 
     let row = &fixture["retainedCuboidSew"];
     let session = Session::new();
     let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-    let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 98462, generation: 17 };
+    let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 98462, generation: 17 };
     let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(identity.generation), stock(), || Some(1000), 1500, 32768);
     let (mut born, mut free) = (0,0);
     let faces: Vec<_> = row["rings"].as_array().unwrap().iter().map(|ring| {
@@ -1499,7 +1499,7 @@ fn original_box_edge_chamfer_uses_the_selected_native_edge_and_rolls_back() {
     for (index,row) in corpus["retainedBoxEdgeChamfer"].as_array().unwrap().iter().enumerate() {
         let session=Session::new();
         let registry=neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity=flow_extension_sdk::geometry::GeometryWorkIdentity { operation:98510+index as u64,generation:17 };
+        let identity=semio_os_flow_geometry::GeometryWorkIdentity { operation:98510+index as u64,generation:17 };
         let mut caller=OriginalJobFixtureCaller::admit(OperationId(identity.operation),Generation(identity.generation),stock(),||Some(1000),1500,131072);
         let (mut born,mut free)=(0,0);
         let [width,depth,height]=fixture_xyz(&row["size"]);
@@ -1589,7 +1589,7 @@ fn original_all_edge_chamfer_funds_exact_topology_and_commits_once() {
     for (index, row) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let session = Session::new();
         let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 98720 + index as u64, generation: 17 };
+        let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 98720 + index as u64, generation: 17 };
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(17), stock(), || Some(1000), 1500, 131072);
         let (mut born, mut free) = (0, 0);
         let dimensions = ["width", "depth", "height"].into_iter().zip(fixture_xyz(&row["size"]))
@@ -1685,7 +1685,7 @@ fn original_box_face_draft_preserves_the_neutral_line_and_rolls_back() {
     for (index,row) in corpus["retainedBoxFaceDraft"].as_array().unwrap().iter().enumerate() {
         let session=Session::new();
         let registry=neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity=flow_extension_sdk::geometry::GeometryWorkIdentity { operation:98550+index as u64,generation:17 };
+        let identity=semio_os_flow_geometry::GeometryWorkIdentity { operation:98550+index as u64,generation:17 };
         let mut caller=OriginalJobFixtureCaller::admit(OperationId(identity.operation),Generation(identity.generation),stock(),||Some(1000),1500,131072);
         let (mut born,mut free)=(0,0);
         let [width,depth,height]=fixture_xyz(&row["size"]);
@@ -1765,7 +1765,7 @@ fn original_builders_preserve_the_picked_circular_opening_and_roll_back() {
     let row=&corpus["retainedBoreCapOffset"];
     let session=Session::new();
     let registry=neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-    let identity=flow_extension_sdk::geometry::GeometryWorkIdentity { operation:98580,generation:17 };
+    let identity=semio_os_flow_geometry::GeometryWorkIdentity { operation:98580,generation:17 };
     let mut caller=OriginalJobFixtureCaller::admit(OperationId(identity.operation),Generation(identity.generation),stock(),||Some(1000),1500,131072);
     let (mut born,mut free)=(0,0);
     let [width,depth,height]=fixture_xyz(&row["stock"]);
@@ -1974,7 +1974,7 @@ fn original_builders_preserve_the_picked_circular_opening_and_roll_back() {
 
 #[test]
 fn original_box_edge_fillet_picks_exact_cylinders_and_rolls_back_the_draft() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_curve::Curve3;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_framework_3d_brep_surface::Surface;

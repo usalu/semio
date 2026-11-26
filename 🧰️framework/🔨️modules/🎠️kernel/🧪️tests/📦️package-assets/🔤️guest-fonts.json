@@ -1,0 +1,7 @@
+{
+  "url": "/🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin",
+  "modules": [
+    "/🧩️extension-modules/math/bridge.js",
+    "/🔌️plugin-modules/editor/bridge.js"
+  ]
+}

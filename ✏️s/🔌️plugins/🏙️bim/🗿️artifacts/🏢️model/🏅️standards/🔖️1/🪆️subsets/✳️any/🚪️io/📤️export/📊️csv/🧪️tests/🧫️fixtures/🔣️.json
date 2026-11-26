@@ -1,0 +1,9 @@
+{
+  "columns": ["A, heading", "set.Property", "Length"],
+  "rows": [
+    ["quoted, \"Tür\"\nsecond line", "", "0"],
+    ["", "G", "0.333333"],
+    ["total", "", "8"]
+  ],
+  "csv": "\"A, heading\",set.Property,Length\r\n\"quoted, \"\"Tür\"\"\nsecond line\",,0\r\n,G,0.333333\r\ntotal,,8\r\n"
+}

@@ -27,12 +27,23 @@ export function registerBrowserCancellationTestsV1(it:(name:string,body:()=>Prom
     const ports={
      BundleScript:Frame,AbortController,AbortSignal,process:host,console:{log:()=>undefined},join,resolve,readinessBudget:budget,
      DEMONSTRATOR_E2E_OWNER:"fixture",PLAY_E2E_OWNER:"fixture",demonstratorE2eSessionRoot:()=>"/session",playE2eSessionRoot:()=>"/session",demonstratorE2eInvocationPid:()=>1,playE2eInvocationPid:()=>1,readServiceSession:()=>({id:"fixture"}),
-     parseServiceReadinessBudgetV1:(value:unknown)=>{assert.equal(value,budget);return budget;},serviceReadyProgressLanguage:()=>"en",serviceReadyProgressLine:()=>"progress",repoPlaywrightBrowsersPath:()=>"/browsers",playE2eServiceV1:()=>({root:"/session",owner:"fixture"}),createRequire:()=>({resolve:()=>"/fixture/node_modules/playwright/package.json"}),runtimeCommandNameV1:()=>"bun",demonstratorE2eOutputDirectory:()=>"/artifacts",
+     parseServiceReadinessBudgetV1:(value:unknown)=>{assert.equal(value,budget);return budget;},serviceReadyProgressLanguage:()=>"en",serviceReadyProgressLine:()=>"progress",repoPlaywrightBrowsersPath:()=>"/browsers",playE2eServiceV1:()=>({root:"/session",owner:"fixture"}),
+     createRequire:(fileName:string)=>{
+      assert.equal(fileName,join(resolve(dirname(file),"../.."),"package.json"));
+      return {resolve:(name:string)=>{
+       assert.equal(name,owner.runnerPackage+"/package.json");
+       return join("/fixture/node_modules",name);
+      }};
+     },
+     runtimeCommandNameV1:()=>"bun",demonstratorE2eOutputDirectory:()=>"/artifacts",
      waitForServiceReady:(_root:unknown,_session:unknown,signal:AbortSignal)=>{
       readySignal=signal;const abort=()=>readyReject(signal.reason);signal.addEventListener("abort",abort,{once:true});void ready.then(()=>signal.removeEventListener("abort",abort),()=>signal.removeEventListener("abort",abort));
       if(signal.aborted)abort();if(row.phase==="ready")entered();else readyResolve("http://fixture");return ready;
      },
-     startToolV1:(_tool:unknown,_args:unknown,options:{signal?:AbortSignal})=>{
+     startToolV1:(tool:string,args:string[],options:{signal?:AbortSignal;cwd:string})=>{
+      assert.equal(tool,"bun");
+      assert.equal(args[0],resolve("/fixture/node_modules",owner.runnerPackage,"cli.js"));
+      assert.equal(options.cwd,resolve(dirname(file),"../.."));
       requireIssuedScriptInvocationV1(invocation);invocation.control.signal.throwIfAborted();toolSignal=options.signal;const abort=()=>child.kill();toolSignal?.addEventListener("abort",abort,{once:true});toolCleanup=()=>toolSignal?.removeEventListener("abort",abort);if(toolSignal?.aborted)abort();entered();return child;
      },
      toolExitV1:(value:unknown)=>{assert.equal(value,child);return exit;}

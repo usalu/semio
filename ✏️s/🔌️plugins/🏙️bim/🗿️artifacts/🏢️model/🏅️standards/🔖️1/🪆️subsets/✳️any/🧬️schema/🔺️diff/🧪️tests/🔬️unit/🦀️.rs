@@ -1,4 +1,4 @@
-use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Assigned, Entry, KeyedDelta, PropertySetPatch};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Assigned, Entry, KeyedDelta, Patch, PropertySetPatch};
 use crate::standards::v1::subsets::any::schema::diff::ModelDiff;
 use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::OpeningPatch;
 use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::columns_beams_slabs::SlabPatch;
@@ -6,7 +6,8 @@ use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::dif
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Opening, Slab, Storey};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{OpeningKind, PropertySet, PropertyValue, Slope};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use protocol::os_spr::protocol_laws::{assert_diff_algebra_inverse_law};
+use protocol::os_spr::protocol_laws::assert_diff_algebra_inverse_law;
+use protocol::DiffRegions;
 use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};
 
 type Delta = KeyedDelta<Storey, StoreyPatch>;
@@ -146,10 +147,14 @@ async fn apply_refuses_with_a_code_and_the_collection_and_id_as_target() {
 
 #[semio_framework_async_macros::async_test]
 async fn apply_is_all_or_nothing() {
-    let base = base();
-    let diff = ModelDiff { storeys: Some(KeyedDelta([("st".to_string(), E::Patched(heightened(3.4))), ("ghost".to_string(), E::Deleted)].into())), ..ModelDiff::default() };
-    assert!(protocol::apply_diff_cold(&diff, &base).is_err());
-    assert_eq!(base.storeys["st"].height, 3.0, "the base is untouched by a refused diff");
+    let mut unpublished = base();
+    let diff: ModelDiff = from_json_str(
+        r#"{"project":{"name":"Edited"},"storeys":{"st":{"entry":"Patched","value":{"height":3.4}}},"walls":{"ghost":{"entry":"Deleted"}}}"#,
+        JsonMemberPolicy::Reject,
+    ).expect("wire diff");
+    let error = protocol::apply_diff_cold_into(&diff, &mut unpublished).expect_err("the wall is absent");
+    assert_eq!(error.target, ["walls", "ghost"]);
+    assert_eq!(unpublished, base());
 }
 
 #[semio_framework_async_macros::async_test]

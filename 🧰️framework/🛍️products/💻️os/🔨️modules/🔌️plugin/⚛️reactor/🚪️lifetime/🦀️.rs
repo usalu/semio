@@ -623,9 +623,7 @@ impl<PA: semio_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<PA> {
     pub fn next_raw_media_poll(&mut self, closing: &[u32]) -> Option<u32> {
         let count = self.slots.values.len();
         if count == 0 { return None; }
-        for offset in 0..count {
-            let index = (self.raw_media_cursor + offset) % count;
-            let Some(slot) = self.slots.get(index) else { continue; };
+        for (index, slot) in self.slots.iter_from(self.raw_media_cursor) {
             let instance = slot.cell.lifetime().instance_id;
             if slot.cell.is_live() && slot.raw_media.picker.receipt_due() && !closing.contains(&instance) {
                 self.raw_media_cursor = (index + 1) % count;
@@ -638,9 +636,7 @@ impl<PA: semio_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<PA> {
     /// 🔁️ Selects one live natural source receipt that can progress without a host page.
     pub fn next_natural_source_poll(&mut self, closing: &[u32]) -> Option<u32> {
         let count = self.slots.values.len();
-        for offset in 0..count {
-            let index = (self.natural_source_cursor + offset) % count;
-            let Some(slot) = self.slots.get(index) else { continue; };
+        for (index, slot) in self.slots.iter_from(self.natural_source_cursor) {
             let instance = slot.cell.lifetime().instance_id;
             if slot.cell.is_live() && !closing.contains(&instance) && slot.natural_source.as_ref().is_some_and(|source| {
                 source.page_pending() || source.cancellation_pending() || source.completion_pending()
@@ -655,9 +651,7 @@ impl<PA: semio_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<PA> {
     /// 🧮 Selects one sealed natural source or format shutdown for this bounded guest turn.
     pub fn next_natural_format_poll(&mut self, closing: &[u32]) -> Option<u32> {
         let count = self.slots.values.len();
-        for offset in 0..count {
-            let index = (self.natural_format_cursor + offset) % count;
-            let Some(slot) = self.slots.get(index) else { continue; };
+        for (index, slot) in self.slots.iter_from(self.natural_format_cursor) {
             let instance = slot.cell.lifetime().instance_id;
             if slot.cell.is_live() && !closing.contains(&instance)
                 && slot.natural_source.as_ref().is_some_and(NaturalSourceGuest::format_runnable)
@@ -676,11 +670,10 @@ impl<PA: semio_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<PA> {
         Some(semio_framework::kernel::ActorUiPatchReceipt { lifetime: slot.cell.lifetime(), patch_sequence: slot.patch_sequence })
     }
     pub fn next_work(&mut self) -> Option<u32> {
-        let index = (0..semio_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS)
-            .map(|offset| (self.cursor + offset) % semio_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS)
-            .find(|index| self.slots.get(*index).is_some_and(|slot| !slot.cell.is_live() || slot.cell.owner().is_some_and(|owner| owner.request.is_some())))?;
+        let (index, slot) = self.slots.iter_from(self.cursor)
+            .find(|(_, slot)| !slot.cell.is_live() || slot.cell.owner().is_some_and(|owner| owner.request.is_some()))?;
         self.cursor = (index + 1) % semio_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS;
-        self.slots.get(index).map(|slot| slot.cell.lifetime().instance_id)
+        Some(slot.cell.lifetime().instance_id)
     }
     pub fn has_work(&self) -> bool {
         self.slots.iter().any(|slot| !slot.cell.is_live() || slot.cell.owner().is_some_and(|owner| owner.request.is_some()))

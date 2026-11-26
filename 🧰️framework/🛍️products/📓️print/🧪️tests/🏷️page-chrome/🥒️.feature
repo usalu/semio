@@ -15,18 +15,36 @@ Feature: Unified page chrome chip borders
       | navbar | bottom |
       | footer | top    |
 
-  Scenario: Chips are glass surfaces one step above the page
+  Scenario Outline: Page margins and interior have distinct opaque levels
+    Given a <theme> sheet with a printable content frame
+    When a cover or a running page is rendered
+    Then its physical margin uses the base level
+    And prose, headings, chrome bands and ordinary window and table contents share one opaque window-level background
+    And the window-level surface ends at the frame boundary
+
+    Examples:
+      | theme |
+      | light |
+      | dark  |
+
+  Scenario: Standalone articles retain their typesetting with shared page surfaces
+    Given an article produced by the shared Print pipeline
+    When it is rendered with its authored page style and geometry
+    Then its physical margin is base and its full text area is window
+    And the running text and page numbers belong to the interior
+
+  Scenario: Chips are glass surfaces one step above the interior
     Given the chip surface in the shared language-neutral fixture
     When a chip is rendered with transparency enabled
     Then its fill is the glass of the level above its frame at the alpha derived from the styling tokens, under a veil of the foreground at the chip tint, so the content beneath stays visible
-    And its title and number meet normal-text contrast against the composited canvas
+    And its title and number meet normal-text contrast against the composited interior
     When the transparency switch is off
-    Then the same two layers are filled flattened onto the canvas
+    Then the same two layers are filled flattened onto the interior
 
   Scenario: Heading depth accents the inner side of each chip
     Given a heading at any depth
     When its title and number chips are rendered in light or dark print
-    Then their fill is window-level glass and their labels use the foreground
+    Then their fill is pane-level glass and their labels use the foreground
     And the heading-depth accent appears on the inner vertical edge
 
   Scenario: Window, table, figure and heading chips share one rectangle

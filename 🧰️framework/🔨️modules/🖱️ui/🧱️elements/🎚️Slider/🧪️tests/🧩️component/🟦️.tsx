@@ -384,6 +384,20 @@ for (const key of exactEntry.keys) it(`opens slider exact entry with ${key} and 
   expect(document.activeElement).toBe(view.container.querySelector('[data-slot="slider-value"]'));
 });
 
+for (const entry of exactEntry.publication) it(`publishes typed slider value ${entry.typed} as one commit`, () => {
+  const events: { phase: string; value: number | undefined }[] = [];
+  const view = render(<Slider id="slider.exact-commit" defaultValue={[exactEntry.initial]} min={0} max={1} step={0.01}
+    limits={{ min: { value: 0, exclusive: true, refusal: null }, max: null }}
+    onValueChange={([value]) => events.push({ phase: "live", value })}
+    onValueCommit={([value]) => events.push({ phase: "release", value })}
+    onValueTypedCommit={([value]) => events.push({ phase: "commit", value })} />);
+  fireEvent.keyDown(view.container.querySelector('[data-slot="slider-value"]')!, { key: "Enter" });
+  const editor = view.getByRole("spinbutton");
+  fireEvent.change(editor, { target: { value: entry.typed } });
+  fireEvent.keyDown(editor, { key: "Enter" });
+  expect(events).toEqual(entry.events);
+});
+
 for (const blocked of exactEntry.blocked) it(`keeps ${blocked} slider exact entry unavailable`, () => {
   const view = render(<Slider id="slider.exact-disabled" defaultValue={[exactEntry.initial]} min={0} max={1} {...{ [blocked]: true }} />);
   const readout = view.container.querySelector<HTMLElement>('[data-slot="slider-value"]')!;

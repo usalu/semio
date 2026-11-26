@@ -36,6 +36,15 @@ describe("presentation interaction dom", () => {
     expect(container.querySelectorAll("[data-disposition-id]").length).toBe(1);
   });
 
+  it("renders the slide owner over the base and puts controls on pane glass", () => {
+    act(() => {
+      mountPresentation(container, positionedDeck, { hash: false, slideNumber: false, surfaceChrome: false });
+    });
+    expect(container.querySelector(".reveal[data-level=base] > .slides[data-level=window].ui-surface")).toBeTruthy();
+    act(() => pointerClick(container.querySelector("[data-disposition-id]") as HTMLElement));
+    expect(container.querySelector(".presentation-interaction-enlarge[data-level=pane][data-glass-chip].ui-glass")).toBeTruthy();
+  });
+
   it("renders one interactive wrapper per tile disposition", () => {
     const frame = { x: 0.05, y: 0.1, width: 0.9, height: 0.75 };
     const grid = split({ source: "/catalogue.png", rows: 2, columns: 2, frame, alt: "Catalogue" });

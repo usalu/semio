@@ -19,11 +19,11 @@ async fn replica(fixture: &Value, uri: &str, actor: &str, seed: bool, mounted_po
 
 /// 🔀️ Delivers every event batch `from` published since the last relay into `to` (through its probe `into`) and ingests it.
 #[doc(hidden)]
-pub async fn relay(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mut ToyApp, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+pub async fn relay(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mut ToyApp, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) {
     for message in from.receive().await.expect("replica outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
         into.send(message).await.expect("relay an event batch");
     }
-    to.tick_backbone(identity).await.expect("ingest the relayed events");
+    to.tick_backbone(identity, cx).await.expect("ingest the relayed events");
     to.render_ctx().refresh_cache().await.expect("the command log backfills the relayed events");
 }
 
@@ -31,18 +31,23 @@ pub async fn relay(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mu
 async fn relay_adopted(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mut ToyApp, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
-    relay(from, into, to, mounted_policy, identity).await;
+    relay(from, into, to, mounted_policy, identity, cx).await;
     pump_until(to, "the relayed change is adopted", |app| app.stores.store.reprojection_progress().is_none(), mounted_policy, identity,cx).await;
     to.render_ctx().refresh_cache().await.expect("the command log backfills the adopted change");
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
+/// 🎬️ Dispatches `action` through the original-turn action ingress, answering a refusal as the fault it carries.
+async fn dispatch(app: &mut ToyApp, action: &str, args: Option<DslValue>, meta: &ActionMeta, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
+    artifact_app_laws::dispatch_fixture_action(app, action, args, meta, identity, cx, mounted_policy.maintenance).await.map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| panic!("{action}: the refusal is a fault: {failure:?}")))
+}
+
 /// ↩️ Runs a framework history verb (`undo`, `redo`, `revertToCommand`) as `actor` through its reserved admission.
-async fn history_verb(app: &mut ToyApp, actor: &str, action: &str, args: Option<DslValue>, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+async fn history_verb(app: &mut ToyApp, actor: &str, action: &str, args: Option<DslValue>, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) {
     let meta = ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(actor) };
-    let admitted = app.handle_action(action, args.as_ref(), &meta, identity).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
-    semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await.unwrap_or_else(|fault| panic!("{action} settles: {fault:?}"));
+    let admitted = dispatch(app, action, args, &meta, mounted_policy, identity, cx).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
+    semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await.unwrap_or_else(|failure| panic!("{action} settles: {failure:?}"));
     app.render_ctx().refresh_cache().await.expect("history refresh");
 }
 
@@ -76,17 +81,17 @@ async fn a_history_edit_is_its_own_row_locally_remotely_and_after_reload() {
     let actor = text(&fixture["actor"]).to_string();
     let (mut local, mut local_probe) = replica(&fixture, "history-edit-row-local", &actor, true, mounted_policy, &mut identity).await;
     let (mut remote, mut remote_probe) = replica(&fixture, "history-edit-row-remote", "remote", false, mounted_policy, &mut identity).await;
-    relay(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity).await;
+    relay(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity, cx).await;
     assert_eq!(head(&remote), (5, "a".to_string()), "the remote replica holds the seed");
     commit_scenario(&mut local, &fixture, "overwrite-supersedes-in-place", mounted_policy, &mut identity).await;
-    relay(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity).await;
+    relay(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity, cx).await;
     let mut reloaded = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.clone().into()), mounted_policy, &mut identity).await;
     assert_eq!(reloaded.stores.store.local_actor_id(), &protocol::ActorId(actor.clone().into()));
-    artifact_app_laws::load_document_text(&mut reloaded, &local.document_text().await.expect("document text"), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("text reload");
+    artifact_app_laws::load_document_text(&mut reloaded, &local.document_text().await.expect("document text"), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("text reload");
     reloaded.render_ctx().refresh_cache().await.expect("the reloaded log backfills");
     let mut repacked = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("reader".into()), mounted_policy, &mut identity).await;
     assert_eq!(repacked.stores.store.local_actor_id(), &protocol::ActorId("reader".into()));
-    artifact_app_laws::load_document(&mut repacked, &local.document_pack().await.expect("document pack"), &mut identity).await.expect("pack reload");
+    artifact_app_laws::load_document(&mut repacked, &local.document_pack().await.expect("document pack"), &mut identity, cx).await.expect("pack reload");
     repacked.render_ctx().refresh_cache().await.expect("the repacked log backfills");
     for (who, app, revertible) in [("local", &mut local, true), ("remote", &mut remote, false), ("text reload", &mut reloaded, true), ("pack reload", &mut repacked, false)] {
         let rows = history_edit_rows(app).await;
@@ -100,7 +105,7 @@ async fn a_history_edit_is_its_own_row_locally_remotely_and_after_reload() {
         let mutation = seeded_mutation_row(app, 1).await;
         assert!(mutation.superseded && !mutation.withdrawn, "{who}: the edited mutation reads superseded from the store");
         assert_eq!(head(app), (5, "b".to_string()), "{who}: the edited head");
-        let history = render_history(app, Locale::De).await;
+        let history = render_history(app, Locale::De,cx).await;
         assert!(find_node(&history, &format!("framework.history.entry.{}", row.seq)).is_some(), "{who}: the panel shows the row");
     }
     drop((local_probe, remote_probe));
@@ -131,7 +136,7 @@ async fn undo_and_redo_of_a_finalize_author_restoring_supersedes_on_both_replica
     relay_adopted(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity).await;
     let edits = local.stores.store.envelope().vcs.edits.len();
 
-    history_verb(&mut local, &actor, "undo", None, mounted_policy, &mut identity).await;
+    history_verb(&mut local, &actor, "undo", None, mounted_policy, &mut identity, cx).await;
     assert_eq!(head(&local), (5, "a".to_string()), "the undo restores the original input");
     let rows = history_edit_rows(&mut local).await;
     assert_eq!(english(&rows), ["History edit undone — overwrite: 1 mutation", "History edited — overwrite: 1 mutation"]);
@@ -143,7 +148,7 @@ async fn undo_and_redo_of_a_finalize_author_restoring_supersedes_on_both_replica
     assert_eq!(head(&remote), (5, "a".to_string()), "the remote replica folds the restoring supersede");
     assert_eq!(english(&history_edit_rows(&mut remote).await), ["History edit undone — overwrite: 1 mutation", "History edited — overwrite: 1 mutation"]);
 
-    history_verb(&mut local, &actor, "redo", None, mounted_policy, &mut identity).await;
+    history_verb(&mut local, &actor, "redo", None, mounted_policy, &mut identity, cx).await;
     assert_eq!(head(&local), (5, "b".to_string()), "the redo re-authors the edited input");
     let rows = history_edit_rows(&mut local).await;
     assert_eq!(english(&rows), ["History edit redone — overwrite: 1 mutation", "History edit undone — overwrite: 1 mutation", "History edited — overwrite: 1 mutation"]);
@@ -153,29 +158,29 @@ async fn undo_and_redo_of_a_finalize_author_restoring_supersedes_on_both_replica
 
     local.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: 7 }.into()], transaction: None }, &mut identity).await.expect("a newer document edit");
     local.render_ctx().refresh_cache().await.expect("the newer edit is logged");
-    history_verb(&mut local, &actor, "undo", None, mounted_policy, &mut identity).await;
+    history_verb(&mut local, &actor, "undo", None, mounted_policy, &mut identity, cx).await;
     assert_eq!(head(&local), (5, "b".to_string()), "the newer own document edit is undone first");
-    history_verb(&mut local, &actor, "undo", None, mounted_policy, &mut identity).await;
+    history_verb(&mut local, &actor, "undo", None, mounted_policy, &mut identity, cx).await;
     assert_eq!(head(&local), (5, "a".to_string()), "then the history edit");
-    history_verb(&mut local, &actor, "redo", None, mounted_policy, &mut identity).await;
+    history_verb(&mut local, &actor, "redo", None, mounted_policy, &mut identity, cx).await;
     assert_eq!(head(&local), (5, "b".to_string()), "the history edit undone last is redone first");
-    history_verb(&mut local, &actor, "redo", None, mounted_policy, &mut identity).await;
+    history_verb(&mut local, &actor, "redo", None, mounted_policy, &mut identity, cx).await;
     assert_eq!(head(&local), (7, "b".to_string()), "then the document edit");
 
     let edited = history_edit_rows(&mut local).await.into_iter().rev().find(|row| row.revertible).expect("the revertible history edit row");
-    history_verb(&mut local, &actor, REVERT_TO_COMMAND_ACTION_ID, Some(DslValue::object([("entrySeq".to_string(), DslValue::float(edited.seq as f64))])), mounted_policy, &mut identity).await;
+    history_verb(&mut local, &actor, REVERT_TO_COMMAND_ACTION_ID, Some(DslValue::object([("entrySeq".to_string(), DslValue::float(edited.seq as f64))])), mounted_policy, &mut identity, cx).await;
     assert_eq!(head(&local), (7, "a".to_string()), "Backwards takes the history edit back and leaves the document edits");
     relay_adopted(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity).await;
     assert_eq!(head(&remote), (7, "a".to_string()), "the replicas converge");
 
-    history_verb(&mut local, &actor, "redo", None, mounted_policy, &mut identity).await;
+    history_verb(&mut local, &actor, "redo", None, mounted_policy, &mut identity, cx).await;
     relay_adopted(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity).await;
     assert_eq!((head(&local), head(&remote)), ((7, "b".to_string()), (7, "b".to_string())));
     let foreign = history_edit_rows(&mut remote).await;
     assert!(foreign.iter().all(|row| !row.revertible && row.author.as_deref() == Some(actor.as_str())), "another author's history edits are never revertible here");
-    history_verb(&mut remote, "remote", "undo", None, mounted_policy, &mut identity).await;
+    history_verb(&mut remote, "remote", "undo", None, mounted_policy, &mut identity, cx).await;
     let original = foreign.iter().rev().find(|row| row.label.resolve(Terminology::Native, Locale::En).starts_with("History edited")).expect("the history edit row");
-    history_verb(&mut remote, "remote", REVERT_TO_COMMAND_ACTION_ID, Some(DslValue::object([("entrySeq".to_string(), DslValue::float(original.seq as f64))])), mounted_policy, &mut identity).await;
+    history_verb(&mut remote, "remote", REVERT_TO_COMMAND_ACTION_ID, Some(DslValue::object([("entrySeq".to_string(), DslValue::float(original.seq as f64))])), mounted_policy, &mut identity, cx).await;
     assert_eq!(head(&remote), (7, "b".to_string()), "another author can neither undo nor revert the history edit");
     drop((local_probe, remote_probe));
     close(&mut local,cx);
@@ -199,7 +204,7 @@ async fn an_alternative_history_edit_is_undone_within_its_alternative() {
     commit_scenario(&mut app, &fixture, "a-new-alternative-keeps-the-original", mounted_policy, &mut identity).await;
     let variant = app.stores.store.envelope().active_alternative_id.clone().expect("the new alternative is active");
     assert_eq!(english(&history_edit_rows(&mut app).await), ["History edited — alternative Variant: 1 mutation"]);
-    history_verb(&mut app, &actor, "undo", None, mounted_policy, &mut identity).await;
+    history_verb(&mut app, &actor, "undo", None, mounted_policy, &mut identity, cx).await;
     pump_until(&mut app, "the alternative undo lands", |app| !app.time_travel.authoring_pending(), mounted_policy, &mut identity,cx).await;
     assert_eq!(head(&app), (5, "a".to_string()), "the undo restores the original within the alternative");
     let rows = history_edit_rows(&mut app).await;
@@ -210,7 +215,7 @@ async fn an_alternative_history_edit_is_undone_within_its_alternative() {
         "the restoring supersede is scoped to the alternative"
     );
     assert_eq!(app.stores.store.envelope().active_alternative_id.as_deref(), Some(variant.as_str()), "the alternative stays active");
-    history_verb(&mut app, &actor, "redo", None, mounted_policy, &mut identity).await;
+    history_verb(&mut app, &actor, "redo", None, mounted_policy, &mut identity, cx).await;
     pump_until(&mut app, "the alternative redo lands", |app| !app.time_travel.authoring_pending(), mounted_policy, &mut identity,cx).await;
     assert_eq!(head(&app), (5, "b".to_string()));
     drop(probe);

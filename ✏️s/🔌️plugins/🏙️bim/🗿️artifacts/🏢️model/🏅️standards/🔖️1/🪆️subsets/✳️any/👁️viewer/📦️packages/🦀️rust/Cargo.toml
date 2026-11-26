@@ -15,6 +15,16 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[[test]]
+name = "ifc4"
+path = "🧪️ifc4.rs"
+required-features = ["testkit"]
+
+[[test]]
+name = "ifc"
+path = "🧪️ifc.rs"
+required-features = ["testkit"]
+
 [dependencies]
 semio-ui-contract.workspace = true
 semio-framework-job.workspace = true
@@ -108,12 +118,10 @@ semio-s-artifact-bim-model-tests-5 = { path = "../../../🧬️schema/💡️inf
 semio-s-artifact-bim-model-wall-geometry = { path = "../../../🧬️schema/🧬️mutations/🦉️wall-geometry/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-wall-layout = { path = "../../../🧬️schema/💡️inferences/🧱️wall-layout/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract = { workspace = true }
-semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-gltf-model = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base-model = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 serde_json = { workspace = true, optional = true }

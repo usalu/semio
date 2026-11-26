@@ -1,0 +1,7 @@
+# incoming,consume,selected,waiting-after
+completed,no,completed,1
+wake,no,completed,2
+timer,yes,completed,2
+-,yes,wake,1
+-,yes,timer,0
+-,no,-,0

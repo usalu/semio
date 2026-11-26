@@ -10,9 +10,9 @@ import { surfaceClass } from "../🌈️surface-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🏛️ShellFloorPresentation
-/** 🏛️ Whether base-floor chrome must paint its own surface. */
+/** 🏛️ Whether a shell floor needs to paint its ambient level. */
 export function shellFloorPaints(parent: SurfaceScopeValue | null): boolean {
-  return !(parent?.level === "base" && parent.fill !== "none");
+  return !parent || parent.fill === "none";
 }
 
 /** 🧱️ Base-floor fill without nested same-level painting. */

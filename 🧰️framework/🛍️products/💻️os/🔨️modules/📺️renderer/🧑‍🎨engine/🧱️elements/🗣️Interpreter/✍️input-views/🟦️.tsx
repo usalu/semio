@@ -347,6 +347,7 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
  * off. Both dispatch the picked value on `Trigger::Change`. */
 export function SelectView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {
   const component = record.component as Extract<Component, { type: "select" }>;
+  const value = context.controls.value(record) ?? component.value;
   if (component.appearance === "segmented") {
     return (
       <ToggleGroup
@@ -362,14 +363,15 @@ export function SelectView({ record, context }: { readonly record: UiNodeRecord;
         aria-invalid={context.field?.invalid || undefined}
         aria-errormessage={context.field?.invalid ? context.field.error : undefined}
         disabled={context.controls.disabled(record)}
-        value={context.controls.value(record) ?? component.value}
+        value={value}
         onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}
         items={component.items.map((item, index) => ({ id: selectOptionDomId(controlDomId(context, record), index), value: item.value, icon: "circle-dot" as const, text: item.label }))}
       />
     );
   }
+  const menuValue = value === "" && !component.items.some(item => item.value === "") ? undefined : value;
   return (
-    <Select id={`${controlDomId(context, record)}-select`} disabled={context.controls.disabled(record)} value={(context.controls.value(record) ?? component.value) || undefined} onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}>
+    <Select id={`${controlDomId(context, record)}-select`} disabled={context.controls.disabled(record)} value={menuValue} onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}>
       <SelectTrigger id={controlDomId(context, record)} aria-label={record.accessibility.label ?? undefined} aria-labelledby={context.field?.label} aria-describedby={context.field?.describedBy} aria-required={context.field?.required || undefined} aria-invalid={context.field?.invalid || undefined} aria-errormessage={context.field?.invalid ? context.field.error : undefined} data-ui-node-id={record.id} data-ui-node-key={record.key} className="h-[var(--tree-inline-control-height,var(--size-medium))] w-full min-w-0" size="sm">
         <SelectValue placeholder={component.placeholder ?? interpLabel("ui.common.select")} />
       </SelectTrigger>
@@ -393,6 +395,7 @@ export function ToggleView({ record, context }: { readonly record: UiNodeRecord;
 export function SliderView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {
   const component = record.component as Extract<Component, { type: "slider" }>;
   const lane = useContinuousTriggerLane(context, record);
+  const scalar = (values: readonly number[]) => toUiValue(values[0] ?? component.value);
   const slider = (
     <Slider
       id={controlDomId(context, record)}
@@ -413,7 +416,8 @@ export function SliderView({ record, context }: { readonly record: UiNodeRecord;
       limits={component.limits ?? null}
       value={[component.value]}
       onValueChange={(values) => lane.offer(toUiValue(values[0] ?? component.value))}
-      onValueCommit={(values) => lane.commit(toUiValue(values[0] ?? component.value))}
+      onValueCommit={(values) => lane.commit(scalar(values))}
+      onValueTypedCommit={(values) => lane.commitExact(scalar(values))}
       onPointerCancel={() => lane.abort("captureLost")}
       onBlur={() => lane.abort("blur")}
     />

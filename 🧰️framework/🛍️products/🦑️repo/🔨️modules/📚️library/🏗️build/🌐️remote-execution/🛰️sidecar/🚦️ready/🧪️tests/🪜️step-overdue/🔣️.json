@@ -6,7 +6,7 @@
     "bound": 600
   },
   "nextCount": 128,
-  "stationary": {"observations": 330401, "owners": 1254, "initialLines": 45},
+  "stationary": {"observations": 330401, "owners": 1254, "initialLines": 70},
   "verifiedMemo": [
     {"milliseconds":0,"rows":64,"overdue":false},
     {"milliseconds":6000,"rows":64,"overdue":true},

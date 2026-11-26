@@ -198,9 +198,7 @@
   \bool_gset_true:N \g_semio_thesis_frontmatter_bool
   \semio_thesis_numbering_suspend:
   \semio_frontmatter_begin:
-  \newgeometry{left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm}
-  \thispagestyle{empty}
-  \bool_gset_true:N \g_semio_cover_geometry_bool
+  \semio_cover_geometry_begin:
   \group_begin:
   \semio_theme_apply:
   \setlength{\parskip}{0pt}

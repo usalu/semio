@@ -13,10 +13,10 @@ for (const file of [join(moduleRoot,'semio_hub_draw_component.js'),descriptor]) 
 const server=createServer((req,res)=>{
   const url=new URL(req.url,'http://localhost'), path=decodeURIComponent(url.pathname);
   let file;
-  if (path===prefix+'🔣️.json') file=descriptor;
-  else if (path.startsWith(prefix)) {
+  if (path.startsWith(prefix)) {
     const name=path.slice(prefix.length);
-    if (name===basename(name) && (name==='🟨️.js' || name==='🌉️bridge.js' || name==='semio_hub_draw_component.js' || /^semio_hub_draw_component\.core\d*\.wasm$/.test(name))) file=join(moduleRoot,name);
+    if (!name || name==='.' || name==='..' || name!==basename(name)) {res.writeHead(404);res.end();return;}
+    file=join(moduleRoot,name);
   } else if (path.startsWith(vendor)) {
     const relative=path.slice(vendor.length);
     if (relative.split('/').every(part=>part && part!=='.' && part!=='..')) file=join(vendorRoot,relative);
@@ -24,7 +24,7 @@ const server=createServer((req,res)=>{
   if (file) {
     if (!existsSync(file) || !statSync(file).isFile()) {res.writeHead(404);res.end();return;}
     const size=statSync(file).size;
-    res.writeHead(200,{'content-type':file.endsWith('.wasm')?'application/wasm':file.endsWith('.json')?'application/json':'text/javascript','content-length':size,'cache-control':'no-store'});
+    res.writeHead(200,{'content-type':file.endsWith('.wasm')?'application/wasm':file.endsWith('.json')?'application/json':file.endsWith('.js')?'text/javascript':'application/octet-stream','content-length':size,'cache-control':'no-store'});
     console.log('[DEBUG] fresh asset',req.method,path,size);
     if (req.method==='HEAD') res.end(); else createReadStream(file).pipe(res);
     return;

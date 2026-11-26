@@ -5,7 +5,8 @@ import {afterAll,expect,test} from "bun:test";
 import {existsSync,mkdtempSync,readdirSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {readHostCapacityPolicyV1,type HostSampleV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
+import {newHostCapacityIdV1,readHostCapacityPolicyV1,readLiveHostCapacityReservationV1,withHostCapacityV1,type HostSampleV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
+import {readCompileUnitsHostV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🟦️.ts";
 import {recordHostOutcomeV1,updateHostEstimateStoreV1,emptyHostEstimateStoreV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts";
 import buildPolicy from "../../../🔣️policy.json" with {type:"json"};
 import {withBuildCapacityV1} from "../../🟦️.ts";
@@ -26,8 +27,17 @@ for(const item of cases.runs)test(`cargo run: ${item.name}`,async()=>{
  await updateHostEstimateStoreV1(directory,policy,()=>Array.from({length:cases.learnedPlanRuns},(_,index)=>index).reduce((store,index)=>recordHostOutcomeV1(policy,store,["phase:plan"],{operation:"run",jobs:1,peakMegabytes:cases.learnedPlanRatioBasisPoints*policy.estimates.phaseReferenceMegabytes/10000,defaultMegabytes:policy.estimates.phaseReferenceMegabytes,activeMilliseconds:1000,peakAtMilliseconds:500,endedAtMs:Date.now()-index}),emptyHostEstimateStoreV1()));
  const timer=setTimeout(()=>abort.abort(),4000);
  let jobs=0,parallelism="";
+ const ports={directory,policy,strip,sample,observe:async()=>45,write:()=>undefined,exitCode:()=>0,control:{signal:abort.signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined}};
  try{
-  await withBuildCapacityV1(item.args,environment,async granted=>{jobs=granted.handle!.jobs;parallelism=granted.args.find(argument=>argument.startsWith("--parallelism="))!;},{directory,policy,strip,sample,observe:async()=>45,write:()=>undefined,exitCode:()=>0,control:{signal:abort.signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined}});
+  await withBuildCapacityV1(item.args,environment,async granted=>{
+   jobs=granted.handle!.jobs;parallelism=granted.args.find(argument=>argument.startsWith("--parallelism="))!;
+   await withBuildCapacityV1(granted.args,environment,async nested=>{
+    expect(nested.handle?.id).toBe(granted.handle?.id);
+    expect(nested.handle?.inherited).toBe(true);
+    expect(nested.handle!.plan.memoryMegabytes).toBeGreaterThan(0);
+    expect(nested.args).toEqual(granted.args);
+   },ports);
+  },ports);
  }finally{clearTimeout(timer);}
  expect(jobs).toBeGreaterThanOrEqual(item.jobsAtLeast);
  expect(jobs).toBeLessThan(item.jobsBelow);
@@ -35,24 +45,37 @@ for(const item of cases.runs)test(`cargo run: ${item.name}`,async()=>{
 },30000);
 
 const fleetWithHeadroom=(candidates:number)=>({fetch:(async()=>new Response(JSON.stringify({workers:candidates+2,compatible:candidates,headroom:candidates,candidates}))) as unknown as typeof fetch});
+const smallHost=async()=>({host:{...host(),availableMegabytes:cases.fleetAvailableMegabytes},swappedOutMegabytes:0});
 
 for (const item of cases.fleetRuns) test(`cargo with published fleet execution ${item.name}`, async () => {
  const directory = fresh();
- const environment = {
+ const environment: NodeJS.ProcessEnv = {
   LANG: "en_US.UTF-8",
+  SEMIO_HOST_CAPACITY_DIRECTORY: directory,
   SEMIO_WORKSPACE_ROOT: directory,
   SEMIO_REMOTE_EXECUTION_ENDPOINT: "grpc://192.0.2.1:8980",
  };
  const args = ["cargo", "--store=shared", "--configuration=prototype", ...item.parallelismArgs, "--", "check", "-p", "x"];
- const result = await withBuildCapacityV1(args, environment, async grant => ({
-  args: grant.args,
-  hostGranted: grant.handle !== undefined,
-  localParallelism: readRepositoryCargoLaunchV1(grant.args.slice(1), environment).parallelism,
- }), {
-  policy, directory, strip, write: () => undefined,
+ const ports = {
+  policy, directory, strip, sample: smallHost, write: () => undefined,
   offloadAdmission: { probe: testHostProbeV1("critical-pressure-gigabyte-swap"), policy, fleet: fleetWithHeadroom(2) },
- });
- expect(result).toEqual({ args, hostGranted: false, localParallelism: item.localParallelism });
+ };
+ await withBuildCapacityV1(args, environment, async grant => {
+  const reservation = readLiveHostCapacityReservationV1(environment, policy);
+  expect(reservation?.reservedMegabytes).toBe(cases.fleetControlMegabytes);
+  expect(grant.handle?.plan).toMatchObject({memoryMegabytes:0,fixedMegabytes:cases.fleetControlMegabytes});
+  expect(grant.args).toEqual(args);
+  expect(readRepositoryCargoLaunchV1(extractOffloadFlagV1(grant.args).args.slice(1), environment).parallelism).toBe(item.localParallelism);
+  expect(await readCompileUnitsHostV1({environment,probe:testHostProbeV1("quiet-no-swap",true)})).toMatchObject({grantedJobs:null,grantedMegabytes:null});
+  await withBuildCapacityV1(grant.args,environment,async nested=>{
+   expect(nested.handle?.id).toBe(reservation?.id);
+   expect(nested.handle?.inherited).toBe(true);
+   expect(nested.args).toEqual(args);
+   expect(readdirSync(join(directory,"grants")).filter(path=>path.endsWith(".json"))).toEqual([`${reservation!.id}.json`]);
+  },{...ports,offloadAdmission:{...ports.offloadAdmission,probe:testHostProbeV1("quiet-no-swap",true)}});
+ }, ports);
+ expect(environment.SEMIO_HOST_CAPACITY_GRANT).toBeUndefined();
+ expect(readdirSync(join(directory,"grants"))).toEqual([]);
 });
 
 for (const item of cases.queuedFleetRuns) test(`cargo with published fleet execution ${item.name}`, async () => {
@@ -70,7 +93,7 @@ for (const item of cases.queuedFleetRuns) test(`cargo with published fleet execu
   expect(readdirSync(queue)).toEqual([]);
   if (item.outcome === "local") expect(grant.handle?.jobs).toBe(1);
   else {
-   expect(grant.handle).toBeUndefined();
+   expect(grant.handle?.plan).toMatchObject({memoryMegabytes:0,fixedMegabytes:cases.fleetControlMegabytes});
    expect(grant.args).toEqual(args);
   }
   expect(readRepositoryCargoLaunchV1(extractOffloadFlagV1(grant.args).args.slice(1), environment).parallelism).toBe(1);
@@ -103,8 +126,8 @@ for (const item of cases.queuedFleetRuns) test(`cargo with published fleet execu
 test("a machine the door would make wait starts cargo with a minimal local grant when the fleet has headroom, and keeps waiting when it has none or the scheduler does not answer",async()=>{
  const directory=fresh(),environment:Record<string,string|undefined>={LANG:"en_US.UTF-8",SEMIO_WORKSPACE_ROOT:directory,SEMIO_REMOTE_EXECUTION_ENDPOINT:"grpc://192.0.2.1:8980"};
  const args=["cargo","--store=shared","--configuration=prototype","--","check","-p","x"],pressured=testHostProbeV1("critical-pressure-gigabyte-swap");
- const started=await withBuildCapacityV1(args,environment,async grant=>({granted:grant.handle!==undefined,slots:environment.SEMIO_UNIT_CACHE_SLOTS,pressure:environment.SEMIO_OFFLOAD_PRESSURE}),{policy,directory,strip,write:()=>undefined,offloadAdmission:{probe:pressured,policy,fleet:fleetWithHeadroom(1)}});
- expect(started).toEqual({granted:false,slots:"1",pressure:"door"});
+ const started=await withBuildCapacityV1(args,environment,async grant=>({reserved:grant.handle?.reservedMegabytes,slots:environment.SEMIO_UNIT_CACHE_SLOTS,pressure:environment.SEMIO_OFFLOAD_PRESSURE}),{policy,directory,strip,sample:smallHost,write:()=>undefined,offloadAdmission:{probe:pressured,policy,fleet:fleetWithHeadroom(1)}});
+ expect(started).toEqual({reserved:cases.fleetControlMegabytes,slots:"1",pressure:"door"});
  expect(environment.SEMIO_UNIT_CACHE_SLOTS,"restored after the build").toBeUndefined();expect(environment.SEMIO_OFFLOAD_PRESSURE).toBeUndefined();
  for(const [label,fleet] of [["nobody has headroom",fleetWithHeadroom(0)],["the scheduler does not answer",{fetch:(async()=>{throw Error("unreachable");}) as unknown as typeof fetch}]] as const){
   const controller=new AbortController(),timer=setTimeout(()=>{controller.abort(Error("kept waiting"));},1200);let launched=false;
@@ -112,3 +135,57 @@ test("a machine the door would make wait starts cargo with a minimal local grant
   expect(launched,label).toBe(false);expect(String((outcome as Error).message),label).toContain("kept waiting");
  }
 },30000);
+
+const pinned=["cargo","--offload=pin:test-worker","--parallelism=3","--","check"];
+const fleetEnvironment=(directory:string):NodeJS.ProcessEnv=>({LANG:"en",SEMIO_HOST_CAPACITY_DIRECTORY:directory,SEMIO_WORKSPACE_ROOT:directory,SEMIO_REMOTE_EXECUTION_ENDPOINT:"grpc://192.0.2.1:8980"});
+const controlOf=(signal:AbortSignal,publish:()=>void=()=>undefined)=>({signal,remainingMilliseconds:()=>null,publish,yieldContinuation:async()=>undefined});
+
+for(const row of cases.fleetRefusals)test(`fleet headroom does not bypass ${row.name} on local Cargo orchestration`,async()=>{
+ const directory=fresh(),environment=fleetEnvironment(directory),controller=new AbortController(),cancelled=Error("cancelled safely"),reserve=async()=>({host:{...host(),pressure:row.pressure as HostSampleV1["pressure"],availableMegabytes:row.availableMegabytes,swapOutMegabytesPerSecond:row.swapOutMegabytesPerSecond},swappedOutMegabytes:0});
+ let ran=false;
+ const outcome=await withBuildCapacityV1(pinned,environment,async()=>{ran=true;},{policy,directory,strip,sample:reserve,write:()=>undefined,control:controlOf(controller.signal,()=>controller.abort(cancelled))}).catch(error=>error);
+ expect(outcome).toBe(cancelled);
+ expect(ran).toBe(false);
+ expect(readdirSync(join(directory,"queue"))).toEqual([]);
+ expect(readdirSync(join(directory,"grants"))).toEqual([]);
+});
+
+test("fleet orchestration reuses a sufficiently funded parent and refuses a smaller parent",async()=>{
+ const directory=fresh(),environment=fleetEnvironment(directory),control=controlOf(AbortSignal.timeout(3000)),ports={directory,policy,strip,sample,write:()=>undefined,control};
+ for(const memory of [cases.fleetControlMegabytes,cases.fleetControlMegabytes-1]){
+  const request={id:newHostCapacityIdV1(),operation:"command",priority:"batch" as const,minimumJobs:1,preferredJobs:1,fixedMegabytes:memory,minimumMegabytes:memory,perJobMegabytes:0,cpuPerJob:1};
+  await withHostCapacityV1({...ports,environment,request},async parent=>{
+   const scoped={...environment,...parent.environment};
+   const nested=withBuildCapacityV1(pinned,scoped,async active=>{
+    expect(active.handle?.id).toBe(parent.id);
+    expect(active.handle?.inherited).toBe(true);
+    expect(active.args).toEqual(pinned);
+    expect(readdirSync(join(directory,"grants")).filter(path=>path.endsWith(".json"))).toEqual([`${parent.id}.json`]);
+    return parent.id;
+   },ports);
+   if(memory===cases.fleetControlMegabytes)expect(await nested).toBe(parent.id);
+   else await expect(nested).rejects.toMatchObject({key:"capacity.cargo-orchestration-grant"});
+   expect(readLiveHostCapacityReservationV1(scoped,policy)?.reservedMegabytes).toBe(memory);
+  });
+ }
+ expect(readdirSync(join(directory,"grants"))).toEqual([]);
+});
+
+test("fleet orchestration keeps its grant while the cancelled body drains",async()=>{
+ const directory=fresh(),environment=fleetEnvironment(directory),controller=new AbortController(),reason=Error("cancelled while running");
+ let release!:()=>void,ready!:()=>void;
+ const drained=new Promise<void>(done=>{release=done;}),entered=new Promise<void>(done=>{ready=done;});
+ const running=withBuildCapacityV1(pinned,environment,async()=>{
+  ready();
+  await drained;
+  controller.signal.throwIfAborted();
+ },{policy,directory,strip,sample:smallHost,control:controlOf(controller.signal),write:()=>undefined});
+ try{
+  await Promise.race([entered,running]);
+  controller.abort(reason);
+  expect(readLiveHostCapacityReservationV1(environment,policy)?.reservedMegabytes).toBe(cases.fleetControlMegabytes);
+ }finally{release();}
+ await expect(running).rejects.toBe(reason);
+ expect(readLiveHostCapacityReservationV1(environment,policy)).toBeUndefined();
+ expect(readdirSync(join(directory,"grants"))).toEqual([]);
+});

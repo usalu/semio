@@ -22,10 +22,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>):
       expect(cargo).not.toMatch(/semio-s-plugin-gis/);
     });
 
-    it("links only the artifact crates used by the eight demonstrator panes", () => {
-      expect(cargo).toContain("semio-s-artifact-puzzle-3d");
-      expect(cargo).toContain("semio-s-artifact-procedural-generation3d");
-      expect(cargo).toContain("semio-s-artifact-gis-gismap");
+    it("links the bundled sourcing and process editors without duplicating standalone pane engines", () => {
+      expect(cargo).toContain("semio-s-artifact-sourcing-curation");
+      expect(cargo).toContain("semio-s-artifact-process-process3d-editor");
+      expect(cargo).not.toContain("semio-s-artifact-puzzle-3d");
+      expect(cargo).not.toContain("semio-s-artifact-procedural-generation3d");
+      expect(cargo).not.toContain("semio-s-artifact-gis-gismap");
       expect(cargo).not.toContain("semio-s-artifact-puzzle-2d");
       expect(cargo).not.toContain("semio-s-artifact-puzzle-5d");
       expect(cargo).not.toContain("semio-s-artifact-procedural-generation2d");

@@ -167,10 +167,29 @@ pub type ArtifactInference = for<'a,'cx> fn(&ArtifactInferenceExecutionRequest<'
 /// ♻️ Borrows the actual original child retained by the registered executable.
 pub type ArtifactInferenceDemands = for<'a> fn(&ArtifactInferenceExecutionRequest<'a>,usize)->Result<RetirementDemand,ValueError>;
 
+/// 🧵️ Owns one operation's original request processing and executable inference through paid closure.
+pub trait RetainedArtifactInference: Send {
+    fn step(&mut self, request: &ArtifactInferenceExecutionRequest<'_>, revision: semio_framework_job::RevisionId, cx: &mut ArtifactInferenceStepContext<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError>;
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
+    fn close_step(&mut self, cx: &mut ArtifactInferenceStepContext<'_>) -> Result<RetainedCloneProgress, semio_framework_job::OriginalTurnFailure>;
+    fn terminal_is_empty(&self) -> bool;
+}
+
+#[derive(Clone, Copy)]
+pub struct RetainedArtifactInferenceFactory {
+    pub allocate: fn() -> Box<dyn RetainedArtifactInference>,
+    pub size: usize,
+}
+
+fn allocate_retained_inference<T: RetainedArtifactInference + Default + 'static>() -> Box<dyn RetainedArtifactInference> {
+    Box::new(T::default())
+}
+
 #[derive(Clone, Copy)]
 pub enum ArtifactInferenceExecutable {
     Pure(ArtifactInference,ArtifactInferenceDemands),
     Contextual(for<'a,'cx> fn(&ArtifactInferenceExecutionRequest<'a>, &dyn std::any::Any,&mut ArtifactInferenceStepContext<'cx>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError>,for<'a> fn(&ArtifactInferenceExecutionRequest<'a>,&dyn std::any::Any,usize)->Result<RetirementDemand,ValueError>),
+    Retained(RetainedArtifactInferenceFactory),
 }
 
 /// 🧰️ Native type-erased bounded inference entry.
@@ -188,15 +207,22 @@ impl ArtifactInferenceService {
     pub const fn new(metadata:ArtifactInferenceServiceMetadata,infer:ArtifactInference,demands:ArtifactInferenceDemands)->Self{Self{metadata,infer:ArtifactInferenceExecutable::Pure(infer,demands)}}
     /// 🔗️ Binds both normal work and child closure to the same original resource context.
     pub const fn new_contextual(metadata:ArtifactInferenceServiceMetadata,infer:for<'a,'cx> fn(&ArtifactInferenceExecutionRequest<'a>,&dyn std::any::Any,&mut ArtifactInferenceStepContext<'cx>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>,demands:for<'a> fn(&ArtifactInferenceExecutionRequest<'a>,&dyn std::any::Any,usize)->Result<RetirementDemand,ValueError>)->Self{Self{metadata,infer:ArtifactInferenceExecutable::Contextual(infer,demands)}}
+    /// 🎒️ A retained operation starts with an allocation-free default state in its funded frame.
+    pub const fn new_retained<T: RetainedArtifactInference + Default + 'static>(metadata: ArtifactInferenceServiceMetadata) -> Self {
+        Self { metadata, infer: ArtifactInferenceExecutable::Retained(RetainedArtifactInferenceFactory { allocate: allocate_retained_inference::<T>, size: size_of::<T>() }) }
+    }
+    pub fn retained_factory(&self) -> Option<RetainedArtifactInferenceFactory> {
+        match self.infer { ArtifactInferenceExecutable::Retained(factory) => Some(factory), _ => None }
+    }
     pub const fn metadata(&self)->ArtifactInferenceServiceMetadata{self.metadata}
     /// 🧷️ Returns the capability identity of the actual request-aware executable.
-    pub fn executable_identity(&self)->ArtifactExecutableIdentity{ArtifactExecutableIdentity::from_function_pointer(match self.infer{ArtifactInferenceExecutable::Pure(infer,_)=>infer as *const (),ArtifactInferenceExecutable::Contextual(infer,_)=>infer as *const ()})}
-    pub fn infer(&self,request:&ArtifactInferenceExecutionRequest<'_>,cx:&mut ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{match self.infer{ArtifactInferenceExecutable::Pure(infer,_)=>infer(request,cx),ArtifactInferenceExecutable::Contextual(_,_)=>Err(ArtifactInferenceExecutionError::new("artifact-inference.context-required","inference requires its owning instance resource context"))}}
+    pub fn executable_identity(&self)->ArtifactExecutableIdentity{ArtifactExecutableIdentity::from_function_pointer(match self.infer{ArtifactInferenceExecutable::Pure(infer,_)=>infer as *const (),ArtifactInferenceExecutable::Contextual(infer,_)=>infer as *const (),ArtifactInferenceExecutable::Retained(factory)=>factory.allocate as *const ()})}
+    pub fn infer(&self,request:&ArtifactInferenceExecutionRequest<'_>,cx:&mut ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{match self.infer{ArtifactInferenceExecutable::Pure(infer,_)=>infer(request,cx),ArtifactInferenceExecutable::Contextual(_,_)=>Err(ArtifactInferenceExecutionError::new("artifact-inference.context-required","inference requires its owning instance resource context")),ArtifactInferenceExecutable::Retained(_)=>Err(ArtifactInferenceExecutionError::native(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"inference requires its retained gateway operation"),true))}}
     /// 🧩️ Executes with the resource owner already retained by the calling instance.
-    pub fn infer_with_context(&self,request:&ArtifactInferenceExecutionRequest<'_>,context:&dyn std::any::Any,cx:&mut ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{match self.infer{ArtifactInferenceExecutable::Pure(infer,_)=>infer(request,cx),ArtifactInferenceExecutable::Contextual(infer,_)=>infer(request,context,cx)}}
+    pub fn infer_with_context(&self,request:&ArtifactInferenceExecutionRequest<'_>,context:&dyn std::any::Any,cx:&mut ArtifactInferenceStepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{match self.infer{ArtifactInferenceExecutable::Contextual(infer,_)=>infer(request,context,cx),_=>self.infer(request,cx)}}
     /// ♻️ Quotes only the actual child belonging to this original request and context.
-    pub fn retirement_demands(&self,request:&ArtifactInferenceExecutionRequest<'_>,context:Option<&dyn std::any::Any>,copy:usize)->Result<RetirementDemand,ValueError>{match self.infer{ArtifactInferenceExecutable::Pure(_,demands)=>demands(request,copy),ArtifactInferenceExecutable::Contextual(_,demands)=>demands(request,context.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original inference child requires its owning context"))?,copy)}}
-    pub fn identical_to(&self,other:&Self)->bool{self.metadata==other.metadata&&match(self.infer,other.infer){(ArtifactInferenceExecutable::Pure(a,ad),ArtifactInferenceExecutable::Pure(b,bd))=>std::ptr::fn_addr_eq(a,b)&&std::ptr::fn_addr_eq(ad,bd),(ArtifactInferenceExecutable::Contextual(a,ad),ArtifactInferenceExecutable::Contextual(b,bd))=>std::ptr::fn_addr_eq(a,b)&&std::ptr::fn_addr_eq(ad,bd),_=>false}}
+    pub fn retirement_demands(&self,request:&ArtifactInferenceExecutionRequest<'_>,context:Option<&dyn std::any::Any>,copy:usize)->Result<RetirementDemand,ValueError>{match self.infer{ArtifactInferenceExecutable::Pure(_,demands)=>demands(request,copy),ArtifactInferenceExecutable::Contextual(_,demands)=>demands(request,context.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original inference child requires its owning context"))?,copy),ArtifactInferenceExecutable::Retained(_)=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"inference retirement requires its retained gateway operation"))}}
+    pub fn identical_to(&self,other:&Self)->bool{self.metadata==other.metadata&&match(self.infer,other.infer){(ArtifactInferenceExecutable::Pure(a,ad),ArtifactInferenceExecutable::Pure(b,bd))=>std::ptr::fn_addr_eq(a,b)&&std::ptr::fn_addr_eq(ad,bd),(ArtifactInferenceExecutable::Contextual(a,ad),ArtifactInferenceExecutable::Contextual(b,bd))=>std::ptr::fn_addr_eq(a,b)&&std::ptr::fn_addr_eq(ad,bd),(ArtifactInferenceExecutable::Retained(a),ArtifactInferenceExecutable::Retained(b))=>a.size==b.size&&std::ptr::fn_addr_eq(a.allocate,b.allocate),_=>false}}
 }
 
 /// 🔑️ Lookup key intentionally excludes owner and versions: there can be only one owner

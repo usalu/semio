@@ -2619,6 +2619,9 @@ dependencies = [
 [[package]]
 name = "semio-framework-geometry-primitives"
 version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
 
 [[package]]
 name = "semio-framework-geometry-skeleton"
@@ -11278,6 +11281,7 @@ dependencies = [
  "semio-framework-job-worker-authority",
  "semio-framework-pack",
  "semio-framework-pack-json",
+ "semio-framework-value",
  "semio-os-kernel",
  "semio-s-plugin-wfc-engine-foundation",
  "semio-s-plugin-wfc-engine-kernel",

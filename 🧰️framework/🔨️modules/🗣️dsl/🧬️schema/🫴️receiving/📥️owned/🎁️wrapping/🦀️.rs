@@ -37,7 +37,10 @@ impl<T:DslOwnedReceivingField,W:OwnedWrapping<T>>WrappedReceiving<T,W>{
    7 if !self.source.terminal_is_empty()=>{let poll=self.source.close_step(effect);return settle(effect,receiving(poll))},
    _=>{}
   }
-  local(effect,d,||{match self.phase{0=>{if W::OPTIONAL&&matches!(source,Some(FieldValue::Absent)){source.take();self.phase=6;}else if W::OPTIONAL&&matches!(source,Some(FieldValue::Block(_))){*self.source.value=source.take();self.optional_record()?;self.phase=1;}else{if source.is_none(){return Err(invalid())}*self.current.value=source.take();self.phase=2;}},1=>{if self.optional_record()?.get(0).is_none_or(|v|matches!(v,FieldValue::Absent)){self.phase=6;}else{let Some(FieldValue::Block(inner))=self.source.value.as_mut()else{return Err(invariant())};let FieldValue::Record(record)=inner.as_mut()else{return Err(invariant())};*self.current.value=Some(std::mem::replace(record.fields.get_mut(&0).ok_or_else(invariant)?,FieldValue::Absent));self.phase=2;}},2=>self.phase=3,3=>self.phase=4,4=>self.phase=5,5|6=>self.phase=7,7=>self.phase=8,_=>return Err(invariant())}Ok(())})
+  local(effect,d,||{match self.phase{0=>{if W::OPTIONAL && T::RECEIVES_STATEMENT && matches!(source, Some(FieldValue::Statements(rows)) if rows.is_empty()) {
+    *self.source.value = source.take();
+    self.phase = 6;
+  } else if W::OPTIONAL&&matches!(source,Some(FieldValue::Absent)){source.take();self.phase=6;}else if W::OPTIONAL&&matches!(source,Some(FieldValue::Block(_))){*self.source.value=source.take();self.optional_record()?;self.phase=1;}else{if source.is_none(){return Err(invalid())}*self.current.value=source.take();self.phase=2;}},1=>{if self.optional_record()?.get(0).is_none_or(|v|matches!(v,FieldValue::Absent)){self.phase=6;}else{let Some(FieldValue::Block(inner))=self.source.value.as_mut()else{return Err(invariant())};let FieldValue::Record(record)=inner.as_mut()else{return Err(invariant())};*self.current.value=Some(std::mem::replace(record.fields.get_mut(&0).ok_or_else(invariant)?,FieldValue::Absent));self.phase=2;}},2=>self.phase=3,3=>self.phase=4,4=>self.phase=5,5|6=>self.phase=7,7=>self.phase=8,_=>return Err(invariant())}Ok(())})
  }
 }
 impl<T:DslOwnedReceivingField,W:OwnedWrapping<T>>OwnedFieldReceiving<W::Output>for WrappedReceiving<T,W>{

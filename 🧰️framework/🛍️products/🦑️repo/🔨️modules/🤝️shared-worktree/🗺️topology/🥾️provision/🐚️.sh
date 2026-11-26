@@ -184,12 +184,40 @@ case "$WORKTREE_TEMPLATE" in
   *) WORKTREE=$WORKTREE_TEMPLATE ;;
 esac
 GROUP_PATH=$(json_group "$TOPOLOGY_FLAT" "$GROUP_ID")
-NFS_HOST=$(json_fact "$TOPOLOGY_FLAT" "$GROUP_PATH.nfs.host")
+STORE_ORIGIN=$(json_fact "$TOPOLOGY_FLAT" "$GROUP_PATH.roles.store")
 NFS_EXPORT=$(json_fact "$TOPOLOGY_FLAT" "$GROUP_PATH.nfs.export")
-if [ -n "${SEMIO_FLEET_GROUP:-}${SEMIO_FLEET_NFS_HOST:-}${SEMIO_FLEET_NETWORK:-}${SEMIO_FLEET_CACHE_ENDPOINT:-}" ]; then
-  { [ -n "${SEMIO_FLEET_GROUP:-}" ] && [ -n "${SEMIO_FLEET_NFS_HOST:-}" ] && [ -n "${SEMIO_FLEET_NETWORK:-}" ]; } || fail "SEMIO_FLEET_GROUP, SEMIO_FLEET_NFS_HOST and SEMIO_FLEET_NETWORK are set together"
-  if [ "$SEMIO_FLEET_GROUP" = "$GROUP_ID" ]; then NFS_HOST=$SEMIO_FLEET_NFS_HOST; fi
-fi
+# #region 🔭️Discover
+# The topology names the store by the origin that holds the store role (never by a host name or an address); its address is what the machine resolves now: the operator's one-time SEMIO_FLEET_STORE_ADDRESS (read, never stored), else the DNS-SD service `_semio-fleet._tcp` whose instance is that origin (avahi on Linux, Bonjour on macOS). Nothing here is written to the machine.
+run_for() { local seconds=$1 pid killer; shift; "$@" & pid=$!; ( sleep "$seconds"; kill "$pid" 2>/dev/null ) & killer=$!; wait "$pid" 2>/dev/null; kill "$killer" 2>/dev/null; return 0; }
+install_discovery() {
+  command -v avahi-browse >/dev/null 2>&1 && return 0
+  [ "$(id -u)" = 0 ] || return 0
+  say "installing avahi (service discovery of the fleet)"
+  if command -v apt-get >/dev/null 2>&1; then apt-get install -y avahi-daemon avahi-utils
+  elif command -v dnf >/dev/null 2>&1; then dnf install -y avahi avahi-tools
+  elif command -v zypper >/dev/null 2>&1; then zypper --non-interactive install avahi avahi-utils
+  elif command -v pacman >/dev/null 2>&1; then pacman -S --noconfirm avahi
+  else say "WARNING: install avahi (avahi-daemon, avahi-utils) so that this machine can find the fleet by name"; return 0; fi
+  if command -v systemctl >/dev/null 2>&1; then systemctl enable --now avahi-daemon >/dev/null 2>&1 || say "WARNING: could not start avahi-daemon: systemctl enable --now avahi-daemon"; fi
+}
+discover_store_address() {
+  local origin=$1 target
+  case "$PLATFORM" in
+    linux)
+      install_discovery
+      command -v avahi-browse >/dev/null 2>&1 || return 0
+      run_for 4 avahi-browse -rtp _semio-fleet._tcp 2>/dev/null | awk -F';' -v origin="$origin" '$1=="=" && $4==origin && $3=="IPv4" && $8 !~ /^169\.254\./ {print $8; exit}' ;;
+    macos)
+      command -v dns-sd >/dev/null 2>&1 || return 0
+      target=$(run_for 2 dns-sd -L "$origin" _semio-fleet._tcp local 2>/dev/null | sed -n 's/.*can be reached at \(.*\)\.:[0-9]*.*/\1/p' | head -1)
+      [ -z "$target" ] || run_for 2 dns-sd -G v4 "$target" 2>/dev/null | awk '$2=="Add" && $6 !~ /^169\.254\./ {print $6; exit}' ;;
+  esac
+}
+# #endregion 🔭️Discover
+NFS_HOST=""
+if [ "${SEMIO_FLEET_GROUP:-}" = "$GROUP_ID" ]; then NFS_HOST=${SEMIO_FLEET_STORE_ADDRESS:-}; fi
+[ -n "$NFS_HOST" ] || NFS_HOST=$(discover_store_address "$STORE_ORIGIN")
+[ -n "$NFS_HOST" ] || fail "the address of the store ($STORE_ORIGIN) could not be found: no service discovery answer. Run the script again with SEMIO_FLEET_GROUP=$GROUP_ID SEMIO_FLEET_STORE_ADDRESS=<address of $STORE_ORIGIN> once (read from the log of the server, never stored) / die Adresse des Speichers ($STORE_ORIGIN) wurde nicht gefunden: Skript einmal mit SEMIO_FLEET_GROUP=$GROUP_ID SEMIO_FLEET_STORE_ADDRESS=<Adresse von $STORE_ORIGIN> erneut starten"
 NFS_SOURCE="$NFS_HOST:$NFS_EXPORT"
 { [ -n "$WORKTREE" ] && [ "$NFS_SOURCE" != ":" ]; } || fail "the topology has no worktree for $PLATFORM or no group $GROUP_ID: $TOPOLOGY_JSON"
 SERVER_PLATFORM=$(json_fact "$TOPOLOGY_FLAT" "$GROUP_PATH.server.platform")
@@ -294,12 +322,11 @@ trap cleanup EXIT
 LANGUAGE_CHOICE=${SEMIO_LANGUAGE:-en}
 fleet_address_env() {
   [ -z "${SEMIO_FLEET_GROUP:-}" ] || printf 'SEMIO_FLEET_GROUP=%s\n' "$SEMIO_FLEET_GROUP"
-  [ -z "${SEMIO_FLEET_NFS_HOST:-}" ] || printf 'SEMIO_FLEET_NFS_HOST=%s\n' "$SEMIO_FLEET_NFS_HOST"
+  [ -z "${SEMIO_FLEET_STORE_ADDRESS:-}" ] || printf 'SEMIO_FLEET_STORE_ADDRESS=%s\n' "$SEMIO_FLEET_STORE_ADDRESS"
   [ -z "${SEMIO_FLEET_NETWORK:-}" ] || printf 'SEMIO_FLEET_NETWORK=%s\n' "$SEMIO_FLEET_NETWORK"
-  [ -z "${SEMIO_FLEET_CACHE_ENDPOINT:-}" ] || printf 'SEMIO_FLEET_CACHE_ENDPOINT=%s\n' "$SEMIO_FLEET_CACHE_ENDPOINT"
 }
 run_as() {
-  if [ "$WORKER_USER" = root ]; then env "PATH=$WORKER_HOME/.local/bin:$PATH" "SEMIO_LANGUAGE=$LANGUAGE_CHOICE" "SEMIO_WORKSPACE_ROOT=$WORKTREE" ${SEMIO_FLEET_GROUP:+SEMIO_FLEET_GROUP=$SEMIO_FLEET_GROUP} ${SEMIO_FLEET_NFS_HOST:+SEMIO_FLEET_NFS_HOST=$SEMIO_FLEET_NFS_HOST} ${SEMIO_FLEET_NETWORK:+SEMIO_FLEET_NETWORK=$SEMIO_FLEET_NETWORK} ${SEMIO_FLEET_CACHE_ENDPOINT:+SEMIO_FLEET_CACHE_ENDPOINT=$SEMIO_FLEET_CACHE_ENDPOINT} "$@"; else sudo -u "$WORKER_USER" -H env "PATH=$WORKER_HOME/.local/bin:$PATH" "SEMIO_LANGUAGE=$LANGUAGE_CHOICE" "SEMIO_WORKSPACE_ROOT=$WORKTREE" ${SEMIO_FLEET_GROUP:+SEMIO_FLEET_GROUP=$SEMIO_FLEET_GROUP} ${SEMIO_FLEET_NFS_HOST:+SEMIO_FLEET_NFS_HOST=$SEMIO_FLEET_NFS_HOST} ${SEMIO_FLEET_NETWORK:+SEMIO_FLEET_NETWORK=$SEMIO_FLEET_NETWORK} ${SEMIO_FLEET_CACHE_ENDPOINT:+SEMIO_FLEET_CACHE_ENDPOINT=$SEMIO_FLEET_CACHE_ENDPOINT} "$@"; fi
+  if [ "$WORKER_USER" = root ]; then env "PATH=$WORKER_HOME/.local/bin:$PATH" "SEMIO_LANGUAGE=$LANGUAGE_CHOICE" "SEMIO_WORKSPACE_ROOT=$WORKTREE" ${SEMIO_FLEET_GROUP:+SEMIO_FLEET_GROUP=$SEMIO_FLEET_GROUP} ${SEMIO_FLEET_STORE_ADDRESS:+SEMIO_FLEET_STORE_ADDRESS=$SEMIO_FLEET_STORE_ADDRESS} ${SEMIO_FLEET_NETWORK:+SEMIO_FLEET_NETWORK=$SEMIO_FLEET_NETWORK} "$@"; else sudo -u "$WORKER_USER" -H env "PATH=$WORKER_HOME/.local/bin:$PATH" "SEMIO_LANGUAGE=$LANGUAGE_CHOICE" "SEMIO_WORKSPACE_ROOT=$WORKTREE" ${SEMIO_FLEET_GROUP:+SEMIO_FLEET_GROUP=$SEMIO_FLEET_GROUP} ${SEMIO_FLEET_STORE_ADDRESS:+SEMIO_FLEET_STORE_ADDRESS=$SEMIO_FLEET_STORE_ADDRESS} ${SEMIO_FLEET_NETWORK:+SEMIO_FLEET_NETWORK=$SEMIO_FLEET_NETWORK} "$@"; fi
 }
 skew_message() {
   printf "[fleet-provision] ERROR: the checkout's fleet code is older than this script and the store offers no newer sealed code: %s / der Fleet-Code des Checkouts ist älter als dieses Skript und der Store bietet keinen neueren versiegelten Code: %s\n" "$WORKTREE" "$WORKTREE" >&2
@@ -432,6 +459,7 @@ install_nfs_client() {
   elif command -v pacman >/dev/null 2>&1; then pacman -S --noconfirm nfs-utils
   else fail "install an NFS client (mount.nfs) first"; fi
 }
+
 fetch_archive() {
   local source=$1 target=$2 attempt expected actual name stem manifest
   for attempt in 1 2 3 4 5; do
@@ -779,13 +807,13 @@ else
   say "linked /usr/local/bin/repo for the service definitions"
 fi
 
-FACTS=$(fleet facts --group "$GROUP_ID" --platform "$PLATFORM" --shell sh --home "$WORKER_HOME" | grep '^FLEET_')
+FACTS=$(fleet facts --group "$GROUP_ID" --platform "$PLATFORM" --shell sh --home "$WORKER_HOME" --addresses "$STORE_ORIGIN=$NFS_HOST" | grep '^FLEET_')
 eval "$FACTS"
 { [ "$FLEET_WORKTREE" = "$WORKTREE" ] && [ "$FLEET_NFS_SOURCE" = "$NFS_SOURCE" ]; } || fail "the topology file next to this script differs from the one in the worktree ($FLEET_WORKTREE, $FLEET_NFS_SOURCE): copy the topology directory from the worktree and run again"
 { [ "$FLEET_SERVER_PLATFORM" = "$SERVER_PLATFORM" ] && [ "$FLEET_SERVER_PROTOCOL" = "$SERVER_PROTOCOL" ]; } || fail "the topology file next to this script differs from the one in the worktree (server $FLEET_SERVER_PLATFORM/$FLEET_SERVER_PROTOCOL): copy the topology directory from the worktree and run again"
 STORE_ROOT=$FLEET_STORE_MOUNT
 if [ "$SERVER" = 1 ] && [ "$PLATFORM" != linux ]; then STORE_ROOT=$FLEET_SERVER_DIRECTORY; fi
-say "canonical worktree $FLEET_WORKTREE, store $FLEET_NFS_SOURCE at $FLEET_STORE_MOUNT, cache $FLEET_CACHE_ENDPOINT"
+say "canonical worktree $FLEET_WORKTREE, store $FLEET_NFS_SOURCE (role of $STORE_ORIGIN) at $FLEET_STORE_MOUNT"
 
 say "step 4: system limits, store and NFS client"
 if [ "$PLATFORM" = linux ]; then
@@ -829,12 +857,12 @@ if [ "$PLATFORM" = linux ]; then
       elif mount "$path"; then say "mounted $path"; else say "WARNING: $path is not mounted: is the server of that group up? It is retried at boot (nofail) and by this script"; fi
     done
   else
-    FSTAB_FOREIGN=$(awk -v mp="$FLEET_STORE_MOUNT" -v src="$FLEET_NFS_SOURCE" '$1 !~ /^#/ && $2==mp && $1!=src' /etc/fstab)
+    FSTAB_FOREIGN=$(awk -v mp="$FLEET_STORE_MOUNT" -v src="$FLEET_NFS_SOURCE" -v ex="$NFS_EXPORT" '$1 !~ /^#/ && $2==mp && $1!=src && $1 !~ (":" ex "$")' /etc/fstab)
     [ -z "$FSTAB_FOREIGN" ] || fail "/etc/fstab already mounts another source at $FLEET_STORE_MOUNT: $FSTAB_FOREIGN"
     FSTAB_CHANGED=0
     if grep -qxF "$FLEET_FSTAB_LINE" /etc/fstab; then say "unchanged /etc/fstab"; else
       FSTAB_TMP=$(mktemp)
-      awk -v mp="$FLEET_STORE_MOUNT" -v src="$FLEET_NFS_SOURCE" '!($1 !~ /^#/ && $2==mp && $1==src)' /etc/fstab > "$FSTAB_TMP"
+      awk -v mp="$FLEET_STORE_MOUNT" -v src="$FLEET_NFS_SOURCE" -v ex="$NFS_EXPORT" '!($1 !~ /^#/ && $2==mp && ($1==src || $1 ~ (":" ex "$")))' /etc/fstab > "$FSTAB_TMP"
       printf '%s\n' "$FLEET_FSTAB_LINE" >> "$FSTAB_TMP"
       cat "$FSTAB_TMP" > /etc/fstab; rm -f "$FSTAB_TMP"
       FSTAB_CHANGED=1; say "set in /etc/fstab: $FLEET_FSTAB_LINE"
@@ -866,6 +894,8 @@ else
   load_daemon "$MOUNT_PLIST"
   if grep -q " on $FLEET_STORE_MOUNT " <<< "$(mount)"; then
     say "already mounted $FLEET_STORE_MOUNT"
+    MOUNTED_SOURCE=$(mount | awk -v mp="$FLEET_STORE_MOUNT" '$2=="on" && $3==mp {print $1; exit}')
+    [ "$MOUNTED_SOURCE" = "$FLEET_NFS_SOURCE" ] || say "WARNING: $FLEET_STORE_MOUNT is mounted from $MOUNTED_SOURCE, the topology names $FLEET_NFS_SOURCE (a host name that follows the server to another network): stop the replica service, then run: sudo umount $FLEET_STORE_MOUNT && sudo mount_nfs -o $FLEET_MOUNT_OPTIONS $FLEET_NFS_SOURCE $FLEET_STORE_MOUNT"
     [ "$MOUNT_PLAN_CHANGED" = 0 ] || say "WARNING: the mount plan changed; $FLEET_STORE_MOUNT keeps its old options until it is unmounted and mounted again (stop the replica service first, then sudo umount $FLEET_STORE_MOUNT)"
   else mkdir -p "$FLEET_STORE_MOUNT"; mount_nfs -o "$FLEET_MOUNT_OPTIONS" "$FLEET_NFS_SOURCE" "$FLEET_STORE_MOUNT"; say "mounted $FLEET_STORE_MOUNT"; fi
 fi
@@ -911,6 +941,9 @@ ENVIRONMENT=$(fleet_address_env | sed 's/^/export /')
 if [ "$PLATFORM" = linux ]; then
   install_text /etc/profile.d/semio-fleet.sh 644 "$ENVIRONMENT"
 else
+  for stale in SEMIO_FLEET_GROUP SEMIO_FLEET_NFS_HOST SEMIO_FLEET_NETWORK SEMIO_FLEET_CACHE_ENDPOINT; do
+    grep -q "^export $stale=" <<< "$ENVIRONMENT" || ! launchctl getenv "$stale" >/dev/null 2>&1 || [ -z "$(launchctl getenv "$stale" 2>/dev/null)" ] || { launchctl unsetenv "$stale" 2>/dev/null && say "launchctl unsetenv $stale (the fleet addresses come from the topology names and the published address sets)"; } || true
+  done
   while IFS= read -r line; do
     [ -n "$line" ] || continue
     assignment=${line#export }

@@ -856,9 +856,10 @@ impl PdfFilePreparationCursor {
             PreparePhase::Closing => "closing",
             PreparePhase::Closed => "closed",
         };
-        match self.bytes.as_ref() {
-            Some(bytes) => format!("{phase}/{}", bytes.trace()),
-            None => phase.to_string(),
+        match (self.interpret.as_ref().filter(|_| matches!(self.phase, PreparePhase::Interpret)), self.bytes.as_ref()) {
+            (Some(walk), _) => format!("{phase}/{}", walk.trace()),
+            (None, Some(bytes)) => format!("{phase}/{}", bytes.trace()),
+            _ => phase.to_string(),
         }
     }
 
@@ -1373,5 +1374,70 @@ mod tests {
         println!("prepare runs (name, calls single, calls run, structure and text pass calls single, run): {report:?}");
         assert!(4 * runs <= units, "body runs save at least three quarters of the ledger's calls ({runs} of {units}): {report:?}");
         assert!(8 * pass_runs <= pass_units, "body runs save at least seven eighths of the structure and text pass calls ({pass_runs} of {pass_units}): {report:?}");
+    }
+
+    /// 🪙️ What one browser turn grants a decode step, and the contract's token and body-byte costs the importer charges per unit: the copy grant, the retained items, the fuel (one unit per token, one per 64 body bytes).
+    const TURN_COPY: usize = 1_048_463;
+    const TURN_ITEMS: usize = 63;
+    const TURN_FUEL: usize = 4096;
+
+    /// 🧮️ Prepares `input` under the importer's accounting (copy charged per unit, bulk runs for body bytes and slot writes, an allocation charged as copy unless it only reserves empty backing, a turn ending when its copy, item or fuel grant is spent or a demand cannot be met); the outcome, the turns, and per pass `(calls, copy, work)`.
+    fn prepare_turns(input: &[u8]) -> (Result<PreparedPdfFile, String>, usize, std::collections::BTreeMap<String, (usize, usize, usize)>) {
+        let mut cursor = PdfFilePreparationCursor::new(100_000, 64 << 20);
+        let (mut turns, mut remaining, mut items, mut fuel, mut demanded, mut stalled) = (1, TURN_COPY, TURN_ITEMS, TURN_FUEL, 0, 0);
+        let mut report = std::collections::BTreeMap::new();
+        loop {
+            let bodies = cursor.decoding_body_bytes();
+            let writes = if bodies { None } else { cursor.writing_bytes() };
+            let unit = if bodies { 2 } else { writes.map_or(128, |bytes| bytes.max(2)) };
+            if remaining < unit || items == 0 || fuel == 0 { turns += 1; (remaining, items, fuel) = (TURN_COPY, TURN_ITEMS, TURN_FUEL); }
+            let empty = cursor.reserving_empty_backing();
+            let running = bodies || writes.is_some();
+            let work = if running { (remaining.saturating_sub(demanded) / (2 * unit)).min(fuel * 64).max(1) } else { 1 };
+            let boundary = if empty { TURN_COPY } else { remaining - unit * work };
+            let grant = CosGrant { work, allocation_bytes: boundary.min(16 << 20), release_bytes: TURN_COPY };
+            let trace = cursor.trace();
+            let step = cursor.advance(input, grant, false);
+            let copied = if empty { 0 } else { step.allocated_bytes } + step.work * unit;
+            assert!(copied <= remaining, "{trace}: a call copies {copied} of {remaining}");
+            remaining -= copied;
+            fuel = fuel.saturating_sub(step.work.div_ceil(if running { 64 } else { 1 }));
+            items = items.saturating_sub(usize::from(step.allocated_bytes != 0 || matches!(step.event, Ok(PdfByteGraphEvent::Object | PdfByteGraphEvent::Complete))));
+            let entry = report.entry(trace.clone()).or_insert((0, 0, 0));
+            *entry = (entry.0 + 1, entry.1 + copied, entry.2 + step.work);
+            demanded = 0;
+            match step.event {
+                Ok(PdfByteGraphEvent::NeedsAllocation { bytes }) => { demanded = bytes; turns += 1; (remaining, items, fuel) = (TURN_COPY, TURN_ITEMS, TURN_FUEL); }
+                Ok(PdfByteGraphEvent::NeedsRelease { .. }) => { turns += 1; (remaining, items, fuel) = (TURN_COPY, TURN_ITEMS, TURN_FUEL); }
+                Ok(PdfByteGraphEvent::More | PdfByteGraphEvent::Object) => {}
+                Ok(PdfByteGraphEvent::Complete) => return (Ok(cursor.take().expect("prepared PDF file")), turns, report),
+                other => return (Err(format!("{other:?}")), turns, report),
+            }
+            stalled = if step.work == 0 { stalled + 1 } else { 0 };
+            assert!(stalled < 64, "{trace}: no progress");
+        }
+    }
+
+    /// 🚦️ LAW: preparation fits its share of the registered route's settlement bound (the route lets an open settle in 512 host turns plus 512 per MiB of file and prepare and lift each take at most half of it): under the browser turn's copy, item and fuel grants every real-world document prepares to the file single units reach in at most that many turns, and the interpreted-stream pass (the 1,345 forms of the institution diagram) takes at most a third of the document's turns.
+    #[test]
+    fn real_world_documents_prepare_within_half_of_their_route_turn_bound() {
+        let ledger: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🌍️real-world/🔣️.json")).unwrap();
+        let mut report = Vec::new();
+        for case in ledger["documents"].as_array().unwrap() {
+            let name = case["name"].as_str().unwrap();
+            let input = ledger_file(case["path"].as_str().unwrap());
+            let (file, turns, passes) = prepare_turns(&input);
+            let (single, ..) = prepare_driven(&input, 0);
+            match (single, file) {
+                (Ok(single), Ok(file)) => assert!(single.header.offset() == file.header.offset() && single.graph.objects == file.graph.objects && single.trailer == file.trailer, "{name}: the accounted preparation reaches the single-unit file"),
+                (single, file) => assert_eq!(single.map(|_| ()), file.map(|_| ()), "{name}: the accounted preparation reaches the single-unit outcome"),
+            }
+            let bound = (512 + 512 * input.len().div_ceil(1 << 20)) / 2;
+            let interpreted: usize = passes.iter().filter(|(pass, _)| pass.starts_with("interpret")).map(|(_, (_, copy, _))| copy).sum();
+            report.push((name.to_owned(), turns, interpreted.div_ceil(TURN_COPY)));
+            assert!(turns <= bound, "{name}: prepared in {turns} turns, above {bound}: {passes:?}");
+            assert!(3 * interpreted.div_ceil(TURN_COPY) <= turns + 3, "{name}: the interpreted-stream pass copies {interpreted} bytes of the {turns} turns: {passes:?}");
+        }
+        println!("prepare turns (name, turns, interpreted-stream pass copy in turns): {report:?}");
     }
 }

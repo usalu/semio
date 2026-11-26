@@ -8,7 +8,7 @@ import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import corpus from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {fleetDurationV1,fleetTextV1,formatFleetReportV1,summarizeFleetV1,validateFleetFactsV1,validateFleetReportV1,type FleetFactsV1,type FleetLanguageV1,type FleetReportV1 as FleetReport} from "../🟦️.ts";
-import {collectFleetFactsV1,readFleetBazelV1,readFleetGenerationV1,readFleetSealedV1,readWorkerMappingV1,readWorkerTreesV1,treeDifferenceV1,workerMemoryOfV1,type FleetReadersV1} from "../📥️readers/🟦️.ts";
+import {collectFleetFactsV1,readFleetBazelV1,readFleetHostNamesV1,readFleetGenerationV1,readFleetSealedV1,readWorkerMappingV1,readWorkerTreesV1,treeDifferenceV1,workerMemoryOfV1,type FleetReadersV1} from "../📥️readers/🟦️.ts";
 import {fleetArgumentsV1,runFleetCliV1} from "../⌨️command/🟦️.ts";
 import {requireHostWardenV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🟦️.ts";
 import {requireTestToolV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
@@ -497,5 +497,67 @@ test("a worker row names the mapping grant queue of its graph read, in both lang
   expect(english[1]).toContain("mapping grant: nobody waiting (12 shared grants waited");
   expect(german[0]).toContain("Zuordnungs-Grant: 2 warten auf Lease-Zuteilung");expect(german[0]).toContain("exklusiver Halter, Prozess 4242");
   expect(english.join("\n")).not.toMatch(/\{[a-zA-Z]+\}/u);expect(german.join("\n")).not.toMatch(/\{[a-zA-Z]+\}/u);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("fleet status shows the host name state per origin: ok, duplicate (naming the others), named as another origin and unknown, with a bilingual hint, equal to the Python oracle",async()=>{
+ const root=mkdtempSync(join(tmpdir(),"fleet-hostname-")),now=Date.now();
+ const publish=(origin:string,hostLabel:string|null)=>{mkdirSync(join(root,"v1","origins",origin),{recursive:true});writeFileSync(join(root,"v1","origins",origin,"addresses.json"),JSON.stringify({version:1,origin,name:`semio-${origin}`,hostLabel,advertise:{enabled:false,duplicates:[],namedAs:null},addresses:[],observedAtMs:now,ttlMs:300000,generation:1}));};
+ try{
+  publish("g1-m01","ueli-mac-01");publish("g1-m08","uelis-mac-mini");publish("g1-m10","uelis-mac-mini");mkdirSync(join(root,"v1","origins","g1-m13"),{recursive:true});writeFileSync(join(root,"v1","origins","g1-m13","addresses.json"),JSON.stringify({version:1,origin:"g1-m13",hostLabel:"uelis-mac-mini-2"}));publish("g1-server","semio-g1-m08");publish("g1-m15",null);
+  const found=await readFleetHostNamesV1(root,["g1-m01","g1-m08","g1-m10","g1-m13","g1-m15","g1-m16","g1-server"]);
+  expect(Object.fromEntries(found)).toEqual({
+   "g1-m01":{state:"ok",label:"ueli-mac-01",others:[]},
+   "g1-m08":{state:"duplicate",label:"uelis-mac-mini",others:["g1-m10","g1-m13"]},
+   "g1-m10":{state:"duplicate",label:"uelis-mac-mini",others:["g1-m08","g1-m13"]},
+   "g1-m13":{state:"duplicate",label:"uelis-mac-mini-2",others:["g1-m08","g1-m10"]},
+   "g1-m15":{state:"unknown",label:null,others:[]},
+   "g1-m16":{state:"unknown",label:null,others:[]},
+   "g1-server":{state:"named-as",label:"semio-g1-m08",others:["g1-m08"]}});
+  const base=plain(cases[0]!.facts) as unknown as FleetFactsV1,rows=["g1-m01","g1-m08","g1-m15","g1-server"].map(origin=>({...workerRow(origin),hostName:found.get(origin)!}));
+  const facts={...base,workers:{offlineSeconds:600,rows}} as unknown as FleetFactsV1;
+  expect(validator("Facts")(facts),JSON.stringify(validator("Facts").errors?.[0])).toBe(true);
+  const english=summarizeFleetV1(facts,"en"),german=summarizeFleetV1(facts,"de");
+  expect(validator("Report")(english),JSON.stringify(validator("Report").errors?.[0])).toBe(true);
+  expect(english.findings.filter(row=>row.id.startsWith("worker-host-name")).map(row=>`${row.id}:${row.severity}:${row.subject}`)).toEqual(["worker-host-name-duplicate:warn:g1-m08","worker-host-name-named-as:warn:g1-server"]);
+  expect(english.findings.find(row=>row.subject==="g1-m08"&&row.id==="worker-host-name-duplicate")!.text).toBe("worker g1-m08: its host name uelis-mac-mini is also carried by g1-m10, g1-m13; run `repo fleet hostname apply` on that machine");
+  expect(german.findings.find(row=>row.id==="worker-host-name-named-as")!.text).toBe("Worker g1-server: sein Rechnername semio-g1-m08 ist der Name von g1-m08; auf dieser Maschine `repo fleet hostname apply` ausführen");
+  const lines=formatFleetReportV1("en",english,40);
+  expect(lines.find(line=>line.startsWith("  g1-m01 "))).toContain(", host name ok (ueli-mac-01)");
+  expect(lines.find(line=>line.startsWith("  g1-m08 "))).toContain(", host name uelis-mac-mini is also on g1-m10, g1-m13: run `repo fleet hostname apply` on this machine");
+  expect(lines.find(line=>line.startsWith("  g1-m15 "))).toContain(", host name unknown (nothing published yet)");
+  expect(lines.find(line=>line.startsWith("  g1-server "))).toContain(", host name semio-g1-m08 belongs to g1-m08: run `repo fleet hostname apply` on this machine");
+  const german2=formatFleetReportV1("de",german,40);
+  expect(german2.find(line=>line.startsWith("  g1-m08 "))).toContain(", Rechnername uelis-mac-mini liegt auch auf g1-m10, g1-m13: auf dieser Maschine `repo fleet hostname apply` ausführen");
+  expect(english.workers!.rows.find(row=>row.origin==="g1-server")).toMatchObject({hostName:{state:"named-as",others:["g1-m08"]}});
+  expect(lines.join("\n")).not.toMatch(/\{[a-zA-Z]+\}/u);
+  const file=join(root,"facts.json");writeFileSync(file,JSON.stringify(facts));
+  for(const language of ["en","de"] as const){
+   const result=spawnSync(requireTestToolV1("python"),[oracle,"summarize",file,language],{encoding:"utf8",maxBuffer:1<<28});
+   expect(result.status,result.stderr).toBe(0);
+   expect(JSON.parse(result.stdout).findings).toEqual(plain((language==="en"?english:german).findings));
+  }
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("repo fleet hostname apply prints the plan with the exact sudo command, asks on the terminal only, never takes --yes and runs the tool only after a yes",async()=>{
+ const root=mkdtempSync(join(tmpdir(),"fleet-hostname-cli-"));
+ try{
+  mkdirSync(join(root,".cache","f"),{recursive:true});writeFileSync(join(root,".cache","f","machine.json"),JSON.stringify({version:1,originId:"g1-zz-test",groupId:"g1"}));
+  const calls:string[]=[],questions:string[]=[],drive=async(args:string[],answer:string,interactive=true,language="en")=>{const lines:string[]=[];const code=await runFleetCliV1(root,args,{SEMIO_LANGUAGE:language},line=>lines.push(line),{hostname:{interactive,platform:"darwin",answer:async question=>{questions.push(question);return answer;},run:async(command,commandArguments)=>{calls.push([command,...commandArguments].join(" "));return 0;}}});return {code,lines};};
+  const declined=await drive(["hostname","apply"],"n");
+  expect(declined.code).toBe(0);
+  expect(declined.lines.join("\n")).toContain("This machine is g1-zz-test. Its host name will become semio-g1-zz-test with: sudo scutil --set LocalHostName semio-g1-zz-test");
+  expect(declined.lines.join("\n")).toContain("Nothing was changed.");
+  expect(questions).toEqual(["Rename this machine to semio-g1-zz-test? [y/N] "]);
+  expect(calls).toEqual([]);
+  expect((await drive(["hostname","apply","--lang","de"],"n",true,"de")).lines.join("\n")).toContain("Es wurde nichts geändert.");
+  const refused:string[]=[],noTerminal=await runFleetCliV1(root,["hostname","apply"],{},line=>refused.push(line),{hostname:{interactive:false,platform:"darwin",run:async()=>{throw Error("must not run");}},refuse:text=>refused.push(text)});
+  expect(noTerminal).toBe(2);expect(refused.join("\n")).toContain("needs a terminal");expect(refused.join("\n")).toContain("braucht ein Terminal");
+  await expect(drive(["hostname","apply","--yes"],"y")).rejects.toThrow();
+  await expect(drive(["hostname"],"y")).rejects.toThrow();
+  expect(calls).toEqual([]);
+  expect((await drive(["hostname","apply"],"y")).code).toBe(0);
+  expect(calls).toEqual(["sudo scutil --set LocalHostName semio-g1-zz-test"]);
  }finally{rmSync(root,{recursive:true,force:true});}
 });

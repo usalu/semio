@@ -1,4 +1,3 @@
-import "./📣️invocations/🪟️batch/🟦️.ts";
 import {resolve,dirname} from "node:path";
 import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
@@ -10,6 +9,7 @@ import wasmTools from "./wasm-tools.json" with {type:"json"};
 import invocationCases from "./📣️invocations/🔣️.json" with {type:"json"};
 import invocationSchema from "./📣️invocations/🧬️schema/🔣️.json" with {type:"json"};
 import { describe, expect, test } from "bun:test";
+import { toolCommandNameV1 } from "../../📖️registry/🟦️.ts";
 import { findToolV1, readToolDigestsV1, readToolSourceV1, resolveToolV1, toolDigestForHostV1, toolEnvironmentNameMatchesV1, toolEnvironmentV1, toolPointerV1, type ToolHostV1 } from "../../🟦️.ts";
 
 const files = (table: Record<string, string>) => ({ read: (path: string) => table[path] });
@@ -134,9 +134,9 @@ describe("declared primary invocations",()=>{
   expect(oraclePrefix).toEqual(row.expected.prefix);expect({command:actual.command,prefix:actual.prefix,suffix:actual.suffix??[]}).toEqual(row.expected);expect(actual.source).toBe(row.source);
  });
  test("existing execution expression preserves prefix caller suffix and originally requested capacity",()=>{
-  const source=ts.createSourceFile("run.ts",readFileSync(new URL("../../🏃️run/🟦️.ts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true),nodes:ts.VariableDeclaration[]=[];const visit=(node:ts.Node)=>{if(ts.isVariableDeclaration(node))nodes.push(node);ts.forEachChild(node,visit);};visit(source);const expression=(name:string)=>nodes.find(node=>node.name.getText(source)===name)!.initializer!.getText(source);
+  const source=ts.createSourceFile("run.ts",readFileSync(new URL("../../🏃️run/🟦️.ts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true),nodes:ts.VariableDeclaration[]=[];const visit=(node:ts.Node)=>{if(ts.isVariableDeclaration(node))nodes.push(node);ts.forEachChild(node,visit);};visit(source);const expression=(name:string)=>nodes.find(node=>node.name.getText(source)===name&&(name!=="capacity"||node.initializer?.getText(source).startsWith("owner.capacity")===true))!.initializer!.getText(source);
   for(const row of invocationCases.composition){const actual=runInNewContext(expression("fullArguments"),{resolution:{prefix:row.prefix,suffix:row.suffix},args:row.args}),oracle=_.concat(row.prefix,row.args,row.suffix);expect(JSON.parse(JSON.stringify(actual))).toEqual(row.expected);expect(oracle).toEqual(row.expected);}
-  const row=invocationCases.capacity,entry={commands:[row.primary,row.requested],capacity:{operation:"primary",rules:[{command:row.requested,argumentsPrefix:["test"],operation:row.expected,kind:"test"}]}},actual=runInNewContext(ts.transpileModule("(()=>{const requested="+expression("requested")+",capacity="+expression("capacity")+";return capacity.operation;})()",{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText,{options:{command:row.requested},entry,args:row.args});expect(actual).toBe(row.expected);
+  const row=invocationCases.capacity,entry={commands:[row.primary,row.requested],capacity:{operation:"primary",rules:[{command:row.requested,argumentsPrefix:["test"],operation:row.expected,kind:"test"}]}},actual=runInNewContext(ts.transpileModule("(()=>{"+["requested","offset","delegated","owner","commandName","commandArgs","capacity"].map(name=>"const "+name+"="+expression(name)+";").join("")+"return capacity.operation;})()",{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText,{toolCommandNameV1,rustupCommandOffset:()=>-1,toolForCommandV1:()=>undefined,registry:undefined,options:{command:row.requested},entry,args:row.args});expect(actual).toBe(row.expected);
  });
 });
 

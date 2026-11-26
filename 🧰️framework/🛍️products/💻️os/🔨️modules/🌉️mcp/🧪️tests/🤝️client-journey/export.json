@@ -1,0 +1,13 @@
+{
+  "packBase64": "YQ==",
+  "sprBase64": "Yg==",
+  "cases": [
+    {"name":"owner snapshot", "hex":"010161016200", "matches":true},
+    {"name":"foreign genesis", "hex":"01017a016200", "matches":false},
+    {"name":"foreign journal", "hex":"010161017a00", "matches":false},
+    {"name":"missing member count", "hex":"0101610162", "matches":false},
+    {"name":"trailing byte", "hex":"01016101620000", "matches":false},
+    {"name":"unknown version", "hex":"020161016200", "matches":false},
+    {"name":"empty carrier", "hex":"", "matches":false}
+  ]
+}

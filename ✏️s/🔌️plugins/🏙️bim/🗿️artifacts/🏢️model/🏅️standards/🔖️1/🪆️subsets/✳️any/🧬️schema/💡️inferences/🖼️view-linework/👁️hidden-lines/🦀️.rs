@@ -3,8 +3,7 @@
 //!
 //! The meshes are clipped to the slab of the view first. The *feature edges* are the silhouettes (an edge between a front-facing and a back-facing triangle, or whose neighbour is edge-on) and the creases
 //! (an angle of 30 degrees or more between the normals of its triangles); a smooth, finely tessellated surface has none inside. An edge is hidden where a nearer front-facing triangle covers it: the
-//! covered intervals are found per edge against the triangles of a uniform grid, exactly for polyhedra, so prisms (walls, columns, beams, slabs) come out exact. A triangle is shrunk by [`INSET`] for the test, so
-//! an edge that runs along the silhouette of a nearer element stays visible, and the identical edges that the front and the back of a prism project to are drawn once.
+//! covered intervals are found per edge against the triangles of a uniform grid, exactly for polyhedra, so prisms (walls, columns, beams, slabs) come out exact. The depth test includes the projected boundary, so a nearer silhouette covers the far edge at the same screen location.
 //!
 //! [`faces`] merges the coplanar front-facing triangles of an element into its planar faces and unites them: the silhouette of the element, exact to the corner.
 
@@ -14,10 +13,14 @@ use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::infere
 use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
 use semio_framework_2d::booleans::BooleanOperation;
 use semio_framework_2d::regions::{region_boolean, Region};
+use semio_framework_2d::retirement::BlockingTurns;
 use semio_framework_geometry::section::chain;
 use semio_framework_geometry::vector::{cross3, dot3, normalize3, sub3};
 use semio_framework_geometry::Point;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
+
+#[path = "🔲️outline/🦀️.rs"]
+mod outline;
 
 //#region 🔖️Tolerances
 /// 📏️ Facing within this of zero is edge-on.
@@ -26,8 +29,6 @@ pub const FACE_EPS: f64 = 1e-9;
 pub const CREASE_COS: f64 = 0.866_025_403_784_438_6;
 /// 📏️ An edge is behind a triangle when it is deeper by more than this many metres.
 pub const DEPTH_EPS: f64 = 1e-4;
-/// 📏️ A triangle covers only what lies this far inside its outline.
-pub const INSET: f64 = 1e-7;
 /// 📏️ Visible or hidden pieces shorter than this are dropped.
 pub const MIN_PIECE: f64 = 1e-5;
 /// 📏️ Vertices closer than this are one vertex.
@@ -154,6 +155,15 @@ fn is_feature(tris: &[&Tri]) -> bool {
 
 /// 〰️ The feature edges of a body, in a deterministic order. Boundary edges that lie on a clipping plane of the slab are artefacts of the clipping and are left out.
 pub fn feature_edges(body: &Body, frame: &Frame, depth: f64) -> Vec<Edge> {
+    edges_for_detail(body, frame, depth, false)
+}
+
+/// 🔲️ The apparent contours separate front-facing triangles from the rest of the mesh.
+pub fn silhouette_edges(body: &Body, frame: &Frame, depth: f64) -> Vec<Edge> {
+    edges_for_detail(body, frame, depth, true)
+}
+
+fn edges_for_detail(body: &Body, frame: &Frame, depth: f64, contours_only: bool) -> Vec<Edge> {
     let welded = weld(body);
     let mut adjacent: BTreeMap<(usize, usize), Vec<usize>> = BTreeMap::new();
     for (index, ids) in welded.triangles.iter().enumerate() {
@@ -169,6 +179,8 @@ pub fn feature_edges(body: &Body, frame: &Frame, depth: f64) -> Vec<Edge> {
         .filter(|((a, b), owners)| {
             if owners.len() == 1 {
                 !(on_slab(frame, depth, welded.worlds[*a]) && on_slab(frame, depth, welded.worlds[*b]))
+            } else if contours_only {
+                owners.iter().any(|&i| body.tris[i].facing == Facing::Front) && owners.iter().any(|&i| body.tris[i].facing != Facing::Front)
             } else {
                 is_feature(&owners.iter().map(|owner| &body.tris[*owner]).collect::<Vec<_>>())
             }
@@ -259,10 +271,10 @@ fn inside_interval(q: &[[f64; 2]; 3], a: [f64; 2], d: [f64; 2]) -> Option<(f64, 
         let (p, r) = (q[index], q[(index + 1) % 3]);
         let e = [r[0] - p[0], r[1] - p[1]];
         let length = e[0].hypot(e[1]);
-        let g0 = e[0] * (a[1] - p[1]) - e[1] * (a[0] - p[0]) - INSET * length;
+        let g0 = e[0] * (a[1] - p[1]) - e[1] * (a[0] - p[0]);
         let g1 = e[0] * d[1] - e[1] * d[0];
         if g1.abs() < 1e-18 {
-            if g0 < 0.0 {
+            if g0 < -1e-12 * length {
                 return None;
             }
         } else {
@@ -339,6 +351,52 @@ fn key(point: [f64; 2]) -> (i64, i64) {
     ((point[0] / WELD).round() as i64, (point[1] / WELD).round() as i64)
 }
 
+fn stroke_axis(piece: &Piece) -> ([f64; 2], (i64, i64, i64)) {
+    let [dx, dy] = [piece.b[0] - piece.a[0], piece.b[1] - piece.a[1]];
+    let length = dx.hypot(dy);
+    let orientation = if dx < 0.0 || (dx == 0.0 && dy < 0.0) { -length } else { length };
+    let axis = [dx / orientation, dy / orientation];
+    let distance = axis[0] * piece.a[1] - axis[1] * piece.a[0];
+    (axis, ((axis[0] / FACE_EPS).round() as i64, (axis[1] / FACE_EPS).round() as i64, (distance / WELD).round() as i64))
+}
+
+/// 🖋️ Draw each interval of a projected line once, giving visible edges precedence over hidden ones.
+fn unique_strokes(pieces: Vec<Piece>) -> Vec<Piece> {
+    let mut taken = HashMap::<(i64, i64, i64), BTreeMap<i64, i64>>::new();
+    let mut result = Vec::new();
+    for (index, piece) in pieces.iter().enumerate().filter(|(_, p)| p.visible)
+        .chain(pieces.iter().enumerate().filter(|(_, p)| !p.visible)) {
+        let (axis, key) = stroke_axis(piece);
+        let position = |p: [f64; 2]| ((p[0] * axis[0] + p[1] * axis[1]) / WELD).round() as i64;
+        let (a, b) = (position(piece.a), position(piece.b));
+        let (lo, hi) = (a.min(b), a.max(b));
+        if lo == hi { continue; }
+        let intervals = taken.entry(key).or_default();
+        let start = intervals.range(..=lo).next_back().filter(|(_, end)| **end >= lo).map_or(lo, |(&start, _)| start);
+        let overlaps: Vec<_> = intervals.range(start..=hi).map(|(&start, &end)| (start, end)).collect();
+        let at = |t: i64| {
+            let fraction = (t - a) as f64 / (b - a) as f64;
+            [piece.a[0] + fraction * (piece.b[0] - piece.a[0]), piece.a[1] + fraction * (piece.b[1] - piece.a[1])]
+        };
+        let emit = |out: &mut Vec<(usize, Piece)>, first, last| {
+            if first < last {
+                let (p, q) = if a < b { (first, last) } else { (last, first) };
+                out.push((index, Piece { element: piece.element.clone(), a: at(p), b: at(q), visible: piece.visible }));
+            }
+        };
+        let mut cursor = lo;
+        for (left, right) in overlaps {
+            intervals.remove(&left);
+            emit(&mut result, cursor, left);
+            cursor = cursor.max(right);
+        }
+        emit(&mut result, cursor, hi);
+        intervals.insert(start, cursor.max(hi));
+    }
+    result.sort_by_key(|(index, _)| *index);
+    result.into_iter().map(|(_, piece)| piece).collect()
+}
+
 /// 👁️ The visible and hidden pieces of `edges` against the front-facing triangles of `bodies` and the `caps` (the faces a section closes its cut with). Identical pieces (the same two end points) are kept once, the visible one winning.
 pub fn pieces(edges: &[Edge], bodies: &[Body], caps: &[Tri]) -> Vec<Piece> {
     let occluders: Vec<Occluder> = bodies.iter().flat_map(|body| body.tris.iter()).chain(caps.iter()).filter(|tri| tri.facing == Facing::Front).filter_map(occluder).collect();
@@ -362,7 +420,7 @@ pub fn pieces(edges: &[Edge], bodies: &[Body], caps: &[Tri]) -> Vec<Piece> {
             match seen.get(&ends) {
                 Some(&position) => {
                     if shown && !out[position].visible {
-                        out[position].visible = true;
+                        out[position] = Piece { element: edge.element.clone(), a, b, visible: true };
                     }
                 }
                 None => {
@@ -372,7 +430,7 @@ pub fn pieces(edges: &[Edge], bodies: &[Body], caps: &[Tri]) -> Vec<Piece> {
             }
         }
     }
-    out
+    unique_strokes(out)
 }
 //#endregion 🔖️Pieces
 
@@ -417,6 +475,12 @@ pub fn faces(body: &Body) -> Vec<Cut> {
         let root = find(&mut parents, index);
         groups.entry(root).or_default().push(index);
     }
+    if groups.len() > 1 {
+        let triangles = front.iter().map(|&index| welded.triangles[index].map(|id| [welded.vertices[id][0], welded.vertices[id][1]]));
+        if let Some(outer) = outline::single_front_outline(triangles) {
+            return vec![Cut { outer, holes: Vec::new() }];
+        }
+    }
     let mut regions: Vec<Region> = Vec::new();
     for members in groups.values() {
         let mut directed: BTreeSet<(usize, usize)> = BTreeSet::new();
@@ -434,7 +498,7 @@ pub fn faces(body: &Body) -> Vec<Cut> {
     if regions.len() <= 1 {
         return regions.into_iter().map(|region| Cut { outer: region.outer, holes: region.holes }).collect();
     }
-    match region_boolean(BooleanOperation::Union, &regions, &[], &mut |_| true) {
+    match region_boolean(BooleanOperation::Union, &regions, &[], &mut |_| true, &mut BlockingTurns::new(1 << 20)) {
         Ok(united) => united.into_iter().map(|region| Cut { outer: region.outer, holes: region.holes }).collect(),
         Err(_) => regions.into_iter().map(|region| Cut { outer: region.outer, holes: region.holes }).collect(),
     }

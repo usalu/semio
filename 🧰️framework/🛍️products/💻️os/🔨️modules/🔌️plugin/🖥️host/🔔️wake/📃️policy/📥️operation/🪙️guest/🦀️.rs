@@ -108,11 +108,13 @@ impl GuestRelayWakeDriver{
  pub fn admit_cleanup_guest_subloan<T:OriginalNativeRetirement>(&self,producer:&mut OriginalNativeLease<T>,header_bytes:usize)->Result<Option<GuestRelayGuestSubloan>,GuestRelayAdmissionFailure>{self.admit_guest_subloan_inner(producer,GuestRelayGuestPurpose::Infrastructure,true,Some(header_bytes))}
  fn admit_guest_subloan_inner<T:OriginalNativeRetirement>(&self,producer:&mut OriginalNativeLease<T>,purpose:GuestRelayGuestPurpose,cleanup:bool,wire_header:Option<usize>)->Result<Option<GuestRelayGuestSubloan>,GuestRelayAdmissionFailure>{
   #[cfg(not(test))] if wire_header.is_none(){return Err(invalid("guest loan requires its fixed Core wire reserve").into())}
+  let cancelled_crossing=||ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"a cancelled operation cannot start another guest crossing");
+  if !cleanup&&self.original_cancelled_now()?{return Err(cancelled_crossing().into())}
   let identity=producer.recipient_identity();let mut verified=false;
   let verify=|_,cx:&mut semio_framework_job::StepContext<'_>|GuestRelayAdmissionCall{result:producer.with_native(cx,|_,cx|{let bytes=std::mem::size_of::<GuestHold>()+std::mem::size_of::<GuestSettlement>()+std::mem::size_of::<bool>();let grant=cx.retained_grant();if (if cleanup{cx.retirement_should_yield()}else{cx.should_yield()})||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(())}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);verified=true;Ok(())}).map(|_|()),execution:None};
   if !(if cleanup{self.dispatch_cleanup_admission_step(false,verify)}else{self.dispatch_admission_step(false,verify)})?||!verified{return Ok(None)}
   let mut original=self.original.try_lock().map_err(|_|invalid("guest reservation issuer is borrowed"))?;
-  if original.checkout.is_some(){return Ok(None)}let cancelled=(original.cancelled)()||self.operation_abandoned();if cancelled&&!cleanup{return Err(spent("a cancelled operation cannot start another guest crossing").into())}
+  if original.checkout.is_some(){return Ok(None)}let cancelled=(original.cancelled)()||self.operation_abandoned();if cancelled&&!cleanup{return Err(cancelled_crossing().into())}
   let operation=original.operation.as_ref().ok_or_else(||invalid("guest reservation requires an actual per-operation Source"))?;
   if operation.closed||operation.cleanup&&!cleanup{return Err(invalid("guest semantic admission cannot follow Source cleanup").into())}if operation.guest.pending(){return Err(invalid("guest crossing still owes its exact fixed receipt").into())}
   let physical=operation.guest.physical_remaining(original.treasury.original_remaining())?;

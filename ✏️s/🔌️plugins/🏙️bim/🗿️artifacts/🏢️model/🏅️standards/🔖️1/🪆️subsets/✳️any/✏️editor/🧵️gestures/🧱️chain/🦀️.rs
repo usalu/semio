@@ -4,7 +4,7 @@
 //! writes nothing, ever.
 
 use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{axis_of, bulge_through, dist, flatten, point2, same, P};
-use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, REJECTED, STOREY_MISSING, TYPE_MISSING};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{snap_mark, length_label, Pointer, Step, Tool, ToolContext, ToolEvent, REJECTED, STOREY_MISSING, TYPE_MISSING};
 use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Beam, CurtainWall, GridLine, Railing, Ramp, Wall};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{LocationLine, Phase, TopConstraint, Vertex};
@@ -286,7 +286,7 @@ impl Tool for Chain {
             path.extend(hover);
             marks.push(Mark::path(&path, false, Style::Ghost));
         }
-        marks.extend(self.hover.as_ref().map(Mark::snap));
+        marks.extend(self.hover.as_ref().map(snap_mark));
         Preview::of(marks)
     }
 }

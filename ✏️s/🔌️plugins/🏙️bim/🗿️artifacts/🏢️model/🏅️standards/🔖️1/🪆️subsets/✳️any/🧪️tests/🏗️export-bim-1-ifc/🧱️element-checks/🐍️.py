@@ -135,6 +135,8 @@ def phase_problems(model, snapshot):
             expected[tag] = hosts[opening["host"]]["phase"]
     found = {}
     for element in model.by_type("IfcProduct"):
+        if element.is_a("IfcOpeningElement"):
+            continue
         tag = identity(element)
         if tag in expected:
             found[tag] = ifcopenshell.util.element.get_psets(element).get("Semio_Authoring", {}).get("Phase", "New")

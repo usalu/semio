@@ -180,7 +180,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
 
 
     /// ⏱️ Replaces the clock every driver turn reads its wall deadline from (laws drive a counted clock).
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn set_turn_clock(&mut self, clock: fn() -> Option<u64>) {
         self.turn_clock = clock;
     }
@@ -204,7 +204,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
     }
 
     /// ✏️ The draft editor for a law that exercises a descriptor the fixture app's leaves do not declare.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn editor_mut(&mut self) -> Option<&mut TimeTravelEditor> {
         self.editor.as_mut()
     }

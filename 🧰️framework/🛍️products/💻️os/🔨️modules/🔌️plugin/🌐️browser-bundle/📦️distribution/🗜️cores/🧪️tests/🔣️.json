@@ -1,0 +1,6 @@
+{
+  "source": "answer.core.wasm",
+  "encoded": "answer.core.wasm.gz.bin",
+  "moduleHex": "0061736d010000000105016000017f0302010007070103616e7300000a06010400412a0b",
+  "result": 42
+}

@@ -6,7 +6,7 @@ export interface RowLogListV1<Row=GenerationRowV1>extends Iterable<Row>{readonly
 /** 🧱️ Keeps the ids of one owner while its rows arrive. */
 export interface RowLogBuilderV1<Row=GenerationRowV1>{add(rows:Iterable<Row>):void;addList(list:RowLogListV1<Row>):void;addIds(ids:Iterable<number>):void;exclude(list:RowLogListV1<Row>):void;finish():RowLogListV1<Row>}
 /** 🗃️ An append-only log of distinct observation rows on disk. */
-export interface RowLogV1<Row=GenerationRowV1>{readonly path:string;id(row:Row):number;append(rows:Iterable<Row>):RowLogListV1<Row>;builder():RowLogBuilderV1<Row>;list(ids:Iterable<number>):RowLogListV1<Row>;readonly empty:RowLogListV1<Row>;stats():{rows:number;bytes:number;reads:number;readBytes:number;pendingBytes:number};close():void}
+export interface RowLogV1<Row=GenerationRowV1>{readonly path:string;id(row:Row):number;append(rows:Iterable<Row>):RowLogListV1<Row>;builder():RowLogBuilderV1<Row>;list(ids:Iterable<number>):RowLogListV1<Row>;readonly empty:RowLogListV1<Row>;stats():{rows:number;bytes:number;reads:number;readBytes:number;pendingBytes:number};settle():void;close():void}
 /** 🏷️ The file name of the row log one process opens. */
 export function rowLogFileNameV1(pid:number,time:number,serial:number):string;
 /** 🗃️ Creates the log at `path` (a previous crashed build's logs next to it are swept). */

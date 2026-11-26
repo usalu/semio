@@ -1,0 +1,28 @@
+{
+  "matching": {
+    "ordinary": [
+      ".course-value",
+      ".course-slot"
+    ],
+    "fields": [
+      ".course-cell",
+      ".course-guess-entry .course-input"
+    ]
+  },
+  "sorting": {
+    "ordinary": [
+      ".course-sort"
+    ],
+    "fields": [
+      ".course-guess-entry .course-input"
+    ]
+  },
+  "classification": {
+    "ordinary": [
+      ".course-chip"
+    ],
+    "fields": [
+      "select.course-cell"
+    ]
+  }
+}

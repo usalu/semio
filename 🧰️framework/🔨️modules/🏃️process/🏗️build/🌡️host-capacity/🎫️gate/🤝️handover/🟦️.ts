@@ -20,7 +20,7 @@ export async function claimHostGrantHandoverV1(ledger:HostLedgerPrimitivesV1,opt
  }
  try{
   const id=offered.slice(0,offered.indexOf(".")),path=identifier.test(id)?grantPath(directory,id):undefined,at=now(),row=path===undefined?undefined:readJson(path),grant=isHostCapacityV1("Grant",row)?row as HostGrantV1:null;
-  const current=path!==undefined&&grant!==null&&isCurrentHostGrantV1({grant,expectedId:id,pidAlive:alive(grant.pid),nowMs:at,bootAtMs:bootAt(directory,at),modifiedAtMs:modified(path)},policy);
+  const current=path!==undefined&&grant!==null&&isCurrentHostGrantV1({grant,expectedId:id,pidAlive:alive(grant.pid,grant.startMs),nowMs:at,bootAtMs:bootAt(directory,at),modifiedAtMs:modified(path)},policy);
   const verdict=decideHostHandoverV1({grant,grantCurrent:current,offered,operation:request.operation,parent:parent??null,nowMs:at});
   if(!verdict.adopt){write(formatHostCapacityV1(language,"handoverRefused",{reason:describeHostHandoverRefusalV1(language,verdict.reason)}));return undefined;}
   const{handover:_,...rest}=grant!,taken=requireHostCapacityV1<HostGrantV1>("Grant",{...rest,pid,bootAtMs:bootAt(directory,at)});

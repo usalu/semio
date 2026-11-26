@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { createElement } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
+import { Surface } from "@semio-tech/ui-react";
 import { InkCanvasHost } from "../../🧱️elements/🖋️InkCanvasHost/🟦️.tsx";
 import { inkCanvasEditingFixtureUrl } from "@semio-tech/ui/testing/fixtures";
 
@@ -20,6 +21,19 @@ function actionEvents(actions: readonly any[]): any[] {
 
 describe("InkCanvas text and table-cell editing", () => {
   afterEach(() => cleanup());
+
+  it("uses the containing window for ink blocks and pane glass for the open editor", () => {
+    const node = { type: "componentScene", ...law.scene, inkCanvas: { ...law.scene.inkCanvas, documentJson: JSON.stringify(law.document) } };
+    const { container } = render(createElement(Surface, { level: "window" }, createElement(InkCanvasHost, { node, onAction: () => {} } as any)));
+    const root = container.querySelector<HTMLElement>("[data-surface-id]")!;
+    expect(root.dataset.level).toBe("window");
+    expect(root.classList.contains("bg-transparent")).toBe(true);
+    expect(root.querySelector("[data-ink-block-id]")?.classList.contains("ui-surface")).toBe(true);
+    fireEvent.doubleClick(root, { clientX: law.gestures.text.x, clientY: law.gestures.text.y });
+    const editor = root.querySelector("[data-ink-editor-overlay]");
+    expect(editor?.getAttribute("data-level")).toBe("pane");
+    expect(editor?.classList.contains("ui-glass")).toBe(true);
+  });
 
   it("commits text on blur, advances table cells on Enter and Tab, and cancels text on Escape", () => {
     const actions: any[] = [];

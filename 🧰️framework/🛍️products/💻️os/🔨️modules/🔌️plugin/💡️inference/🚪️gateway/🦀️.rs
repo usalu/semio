@@ -6,6 +6,7 @@ use semio_plugin_decl_registry::ArtifactInferenceExecution;
 use semio_plugin_plugin_program::ARTIFACT_INFERENCE_WIRE_VERSION;
 use semio_plugin_decl_registry::ArtifactInferenceExecutionError;
 use semio_plugin_decl_registry::ArtifactInferenceExecutionRequest;
+use semio_plugin_decl_registry::{ArtifactInferenceExecutionStep, RetainedArtifactInference, RetainedArtifactInferenceFactory};
 use semio_plugin_plugin_program::WireArtifactInferenceRequest;
 use semio_plugin_plugin_program::active_artifact_inferences;
 use semio_plugin_plugin_program::cancelled_artifact_inferences;
@@ -15,7 +16,7 @@ use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeContinuation;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_pack_json::{Value, Number, JsonGrammarCursor, JsonSourceCursor, JsonReadLimits, JsonMemberPolicy, JsonWriteCursor, JsonWriteSource, JsonWriteNode};
+use semio_framework_pack_json::{Value, Number, JsonError, JsonGrammarCursor, JsonSourceCursor, JsonReadLimits, JsonMemberPolicy, JsonWriteCursor, JsonWriteSource, JsonWriteNode};
 
 /// 🧾️ Absence retains the gateway source; a refusal transfers its original typed cause.
 pub struct ArtifactInferenceGatewayStep{pub payload:Option<Vec<u8>>,pub retained_progress:RetainedCloneProgress,pub refusal:Option<crate::artifact_inference::ArtifactInferenceGatewayRefusal>}
@@ -70,20 +71,22 @@ pub struct ArtifactInferenceGateway{
  pub operation:u64,pub generation:u64,pub pointer:usize,pub length:usize,pub stage:u8,
  pub parser:Option<JsonGrammarCursor<Value>>,pub decoding:Option<NativeDecodeContinuation>,pub root:Option<Value>,
  pub request:Option<WireArtifactInferenceRequest>,pub field:usize,pub required:u32,pub nested:usize,pub position:usize,pub born:bool,pub dependency:usize,
- execution_work_spent:u64,normal_progress:RetainedCloneProgress,pub discarded_execution:Option<ArtifactInferenceExecution>,pub writer:Option<JsonWriteCursor<InferenceEnvelopeSource>>,pub encoding:Option<NativeEncodeContinuation>,pub wire:Option<String>,pub active:Option<Box<dyn ErasedSnapshotRetirement>>,pub child_live:bool,pub closing:bool,
+ execution_work_spent:u64,normal_progress:RetainedCloneProgress,retained_route:Option<Box<dyn RetainedArtifactInference>>,pub discarded_execution:Option<ArtifactInferenceExecution>,pub writer:Option<JsonWriteCursor<InferenceEnvelopeSource>>,pub encoding:Option<NativeEncodeContinuation>,pub wire:Option<String>,pub active:Option<Box<dyn ErasedSnapshotRetirement>>,pub child_live:bool,pub closing:bool,
 }
 impl ArtifactInferenceGateway{
- pub fn new(operation:u64,generation:u64,source:&[u8])->Self{Self{operation,generation,pointer:source.as_ptr()as usize,length:source.len(),stage:0,parser:None,decoding:None,root:None,request:None,field:0,required:0,nested:0,position:0,born:false,dependency:0,execution_work_spent:0,normal_progress:Default::default(),discarded_execution:None,writer:None,encoding:None,wire:None,active:None,child_live:false,closing:false}}
+ const JSON_UNITS_PER_STEP:usize=64;
+ pub fn new(operation:u64,generation:u64,source:&[u8])->Self{Self{operation,generation,pointer:source.as_ptr()as usize,length:source.len(),stage:0,parser:None,decoding:None,root:None,request:None,field:0,required:0,nested:0,position:0,born:false,dependency:0,execution_work_spent:0,normal_progress:Default::default(),retained_route:None,discarded_execution:None,writer:None,encoding:None,wire:None,active:None,child_live:false,closing:false}}
  pub fn matches(&self,operation:u64,generation:u64,source:&[u8])->bool{self.operation==operation&&self.generation==generation&&self.pointer==source.as_ptr()as usize&&self.length==source.len()}
  pub fn begin_close(&mut self){self.closing=true;}
  pub fn child_closed(&mut self){self.child_live=false;}
- pub fn terminal_is_empty(&self)->bool{!self.child_live&&self.parser.is_none()&&self.decoding.is_none()&&self.root.is_none()&&self.request.is_none()&&self.discarded_execution.is_none()&&self.writer.is_none()&&self.encoding.is_none()&&self.wire.is_none()&&self.active.is_none()}
+ pub fn terminal_is_empty(&self)->bool{!self.child_live&&self.retained_route.is_none()&&self.parser.is_none()&&self.decoding.is_none()&&self.root.is_none()&&self.request.is_none()&&self.discarded_execution.is_none()&&self.writer.is_none()&&self.encoding.is_none()&&self.wire.is_none()&&self.active.is_none()}
  pub fn retirement_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
   if let Some(active)=&self.active{return semio_framework_value::factory_ticket_demands(active,copy);}
+  if let Some(route)=self.retained_route.as_deref(){return if route.terminal_is_empty(){Ok(route_release_demand(route))}else{route.retirement_demands(copy)};}
   if self.parser.is_some(){return Ok(birth::<JsonGrammarCursor<Value>>());}if self.root.is_some(){return Ok(birth::<Value>());}if self.discarded_execution.is_some(){return Ok(birth::<ArtifactInferenceExecution>());}if self.request.is_some(){return Ok(birth::<WireArtifactInferenceRequest>());}if self.writer.is_some(){return Ok(birth::<JsonWriteCursor<InferenceEnvelopeSource>>());}if self.wire.is_some(){return Ok(birth::<String>());}Ok(RetirementDemand{depth:usize::from(self.decoding.is_some()||self.encoding.is_some()),..Default::default()})
  }
  pub fn retirement_demands_with_context(&self,context:Option<&dyn std::any::Any>,copy:usize)->Result<RetirementDemand,ValueError>{
-  if !self.child_live||self.active.is_some()||self.discarded_execution.is_some(){return self.retirement_demands(copy)}
+  if !self.child_live||self.retained_route.is_some()||self.active.is_some()||self.discarded_execution.is_some(){return self.retirement_demands(copy)}
   let request=self.request.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"live original inference child lost its request"))?;
   let service=artifact_inference_service(&request.artifact_kind,&request.inference_schema)?.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"live original inference child lost its registered service"))?;
   let view=ArtifactInferenceExecutionRequest{operation:self.operation,generation:self.generation,cancelled:true,policy:&request.policy,budgets:&request.budgets,retained:request.retained,cancellation_id:&request.cancellation_id,previous_state:request.previous_state.as_deref(),requested_cache_mode:request.requested_cache_mode.clone(),canonical_payload:&request.canonical_payload,dependencies:&request.dependencies};
@@ -95,6 +98,17 @@ impl ArtifactInferenceGateway{
  fn close_discarded_execution(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
   if self.active.is_some(){self.close_ticket(effect)}else{admit(&mut self.discarded_execution,&mut self.active,effect)}
  }
+ fn close_retained_route(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ArtifactInferenceGatewayFailure>{
+  let route=self.retained_route.as_deref_mut().expect("retained route exists");
+  if !route.terminal_is_empty(){return route.close_step(cx).map_err(|failure|ArtifactInferenceGatewayFailure::Execution(ArtifactInferenceExecutionError::original(failure,false)));}
+  let demand=route_release_demand(route);
+  Ok(self.with_effect(cx,grant,|this,effect|{
+   if !semio_framework_value::retained_clone::retained_clone_grant_admits(effect.grant(),demand)||!effect.performed(1)?{return Ok(Default::default());}
+   drop(this.retained_route.take());
+   this.child_live=false;
+   Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()})
+  })?.unwrap_or_default())
+ }
  fn with_effect<T>(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,operation:impl FnOnce(&mut Self,&mut RetainedAllocationEffect<'_>)->Result<T,ValueError>)->Result<Option<T>,ArtifactInferenceGatewayFailure>{
   let Some((result,performed))=cx.with_original_effect(grant,|_,effect|operation(self,effect))? else{return Ok(None)};
   cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));Ok(Some(result?))
@@ -103,7 +117,7 @@ impl ArtifactInferenceGateway{
   let grant=effect.grant();
   if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
   if self.active.is_some()||self.discarded_execution.is_some(){return self.close_discarded_execution(effect);}
-  if self.child_live{return Ok(RetainedCloneStep::Progress(Default::default()));}
+  if self.child_live||self.retained_route.is_some(){return Ok(RetainedCloneStep::Progress(Default::default()));}
   if self.parser.is_some(){return admit(&mut self.parser,&mut self.active,effect);}if self.root.is_some(){return admit(&mut self.root,&mut self.active,effect);}if self.request.is_some(){return admit(&mut self.request,&mut self.active,effect);}if self.writer.is_some(){return admit(&mut self.writer,&mut self.active,effect);}if self.wire.is_some(){return admit(&mut self.wire,&mut self.active,effect);}
   if self.decoding.is_some()||self.encoding.is_some(){if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original inference continuation requires depth"));}if self.decoding.is_some(){self.decoding=None;}else{self.encoding=None;}return Ok(RetainedCloneStep::Progress(item()));}Ok(RetainedCloneStep::Complete(Default::default()))
  }
@@ -144,11 +158,32 @@ impl ArtifactInferenceGateway{
  pub fn advance(&mut self,source:&[u8],cx:&mut semio_framework_job::StepContext<'_>,context:Option<&dyn std::any::Any>)->Result<(Option<Vec<u8>>,RetainedCloneProgress),ArtifactInferenceGatewayFailure>{
   self.normal_progress=Default::default();let available=cx.retained_grant();let grant=RetainedCloneGrant{maximum_items:available.maximum_items.min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX)),..available};let cancelled=cx.is_cancelled();
   if cancelled{self.closing=true;}
+  if self.retained_route.is_some()&&(self.closing||self.stage==4){return Ok((None,self.close_retained_route(cx,grant)?));}
   if self.closing&&(self.active.is_some()||self.discarded_execution.is_some()){return Ok((None,self.with_effect(cx,grant,Self::close_discarded_execution)?.map_or_else(Default::default,|step|step.progress())));}
   if self.closing&&!self.child_live{return Ok((None,self.with_effect(cx,grant,Self::close_step)?.map_or_else(Default::default,|step|step.progress())));}
   if self.stage==0{
    if self.parser.is_none(){let cursor=JsonSourceCursor::<_,Value>::new(source,JsonMemberPolicy::Reject,JsonReadLimits{maximum_bytes:source.len()as u64,maximum_allocation_bytes:grant.maximum_capacity_bytes,maximum_depth:grant.maximum_depth,maximum_items:source.len()as u64})?;self.parser=Some(cursor.into_grammar().1);return Ok((None,item()));}
-   let halted=cx.should_yield()||cx.is_cancelled();let mut callback=|_|!halted;let mut control=match self.decoding.take(){Some(original)=>match NativeDecodeControl::resume(original,&mut callback){Ok(control)=>control,Err((error,original))=>{self.decoding=Some(original);return Err(error.into())}},None=>NativeDecodeControl::new_retained(&mut callback)};let mut cursor=JsonSourceCursor::from_grammar(source,self.parser.take().unwrap());let stepped=cx.with_original_effect(grant,|_,effect|cursor.step(1,&mut control,effect));let stepped=match stepped{Ok(stepped)=>stepped,Err(error)=>{self.parser=Some(cursor.into_grammar().1);self.decoding=Some(control.pause().map_err(|(error,_)|error)?);return Err(error.into())}};let Some((result,performed))=stepped else{self.parser=Some(cursor.into_grammar().1);self.decoding=Some(control.pause().map_err(|(error,_)|error)?);return Ok((None,Default::default()))};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));let receipt=cursor.normal_step_progress();self.normal_progress=receipt;self.parser=Some(cursor.into_grammar().1);self.decoding=Some(control.pause().map_err(|(error,_)|error)?);match result{Ok(Some(original))=>{self.root=Some(original);self.stage=1;},Ok(None)=>{},Err(error)=>return Err(ArtifactInferenceGatewayFailure::Json(error))}return Ok((None,receipt));
+   let units=grant.maximum_items.min(Self::JSON_UNITS_PER_STEP);
+   let stepped=cx.with_original_effect(grant,|turn,effect|->Result<_,ArtifactInferenceGatewayFailure>{
+    let mut callback=|_|!turn.is_cancelled();
+    let mut control=match self.decoding.take(){
+     Some(original)=>match NativeDecodeControl::resume(original,&mut callback){
+      Ok(control)=>control,
+      Err((error,original))=>{self.decoding=Some(original);return Err(error.into());}
+     },
+     None=>NativeDecodeControl::new_retained(&mut callback),
+    };
+    let mut cursor=JsonSourceCursor::from_grammar(source,self.parser.take().unwrap());
+    let result=cursor.step(units,&mut control,effect);
+    self.normal_progress=cursor.normal_step_progress();
+    self.parser=Some(cursor.into_grammar().1);
+    self.decoding=Some(control.pause().map_err(|(error,_)|error)?);
+    result.map_err(ArtifactInferenceGatewayFailure::Json)
+   })?;
+   let Some((result,performed))=stepped else{return Ok((None,Default::default()))};
+   cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+   if let Some(original)=result?{self.root=Some(original);self.stage=1;}
+   return Ok((None,self.normal_progress));
   }
   if self.stage==1{return self.decode(grant).map(|receipt|(None,receipt)).map_err(Into::into);}
   if self.stage==2{
@@ -162,8 +197,11 @@ impl ArtifactInferenceGateway{
    let work=if self.closing{cx.fuel_remaining()}else{request.budgets.work_units.saturating_sub(self.execution_work_spent)};
    if work==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original inference request exhausted its initiating work").into())}
    let before_work=cx.original_work_units_spent();let deadline=cx.deadline_us();let mut outcome=None;
+   let retained_route=&mut self.retained_route;
    let loan=cx.with_retained_loan(retained,|same|same.with_original_work_loan(work,deadline,|same|{
-    let before_fuel=same.fuel_remaining();let mut result=match context{Some(context)=>service.infer_with_context(&view,context,same),None=>service.infer(&view,same)};
+    let before_fuel=same.fuel_remaining();let mut result=if let Some(factory)=service.retained_factory(){
+     match retained_route.as_deref_mut(){Some(route)=>route.step(&view,semio_framework_job::RevisionId(request.revision),same),None=>admit_retained_route(retained_route,factory,same)}
+    }else{match context{Some(context)=>service.infer_with_context(&view,context,same),None=>service.infer(&view,same)}};
     if same.fuel_remaining()==before_fuel{let receipt=match &result{Ok(step)=>step.retained_progress,Err(error)=>error.retained_progress};same.consume_fuel(receipt.copied_items.max(1)as u64)}
     let original=match &mut result{Err(error)=>error.cause.take(),_=>None};outcome=Some(result);match original{Some(failure)=>Err(failure),None=>Ok(())}
    }));
@@ -185,7 +223,26 @@ impl ArtifactInferenceGateway{
    self.stage=4;return Ok((None,receipt));
   }
   if self.stage==4{
-   let mut callback=|_|!cx.should_yield()&&!cx.is_cancelled();let mut control=match self.encoding.take(){Some(original)=>match NativeEncodeControl::resume(original,&mut callback){Ok(control)=>control,Err((error,original))=>{self.encoding=Some(original);return Err(error.into())}},None=>NativeEncodeControl::new_retained(&mut callback)};let writer=self.writer.as_mut().unwrap();let result=writer.step(1,&mut control,grant);let receipt=writer.normal_step_progress();self.normal_progress=receipt;self.encoding=Some(control.pause().map_err(|(error,_)|error)?);match result{Ok(Some(original))=>{self.wire=Some(original);self.stage=5;},Ok(None)=>{},Err(error)=>return Err(error.into())}return Ok((None,receipt));
+   let units=grant.maximum_items.min(Self::JSON_UNITS_PER_STEP);
+   let mut callback=|_|!cx.is_cancelled();
+   let mut control=match self.encoding.take(){
+    Some(original)=>match NativeEncodeControl::resume(original,&mut callback){
+     Ok(control)=>control,
+     Err((error,original))=>{self.encoding=Some(original);return Err(error.into());}
+    },
+    None=>NativeEncodeControl::new_retained(&mut callback),
+   };
+   let writer=self.writer.as_mut().unwrap();
+   let result=writer.step(units,&mut control,grant);
+   self.normal_progress=writer.normal_step_progress();
+   self.encoding=Some(control.pause().map_err(|(error,_)|error)?);
+   cx.consume_fuel(writer.state.last_turn_work());
+   match result{
+    Ok(Some(original))=>{self.wire=Some(original);self.stage=5;},
+    Ok(None)=>{},
+    Err(error)=>return Err(error.into()),
+   }
+   return Ok((None,self.normal_progress));
   }
   if self.stage==5{
    if self.active.is_some(){return Ok((None,self.with_effect(cx,grant,Self::close_ticket)?.map_or_else(Default::default,|step|step.progress())));}
@@ -201,10 +258,36 @@ impl ArtifactInferenceGateway{
   let debit=semio_plugin_ownership::bounded_ownership::original_lifecycle_unposted(receipt,before,cx.retained_progress()).and_then(|unposted|cx.consume_retained(unposted));if let Err(error)=debit{match &mut refusal{Some(original)=>{assert!(original.receipt_refusal.is_none());original.receipt_refusal=Some(error)},None=>refusal=Some(error.into())}}if cx.fuel_remaining()==before_fuel{cx.consume_fuel(receipt.copied_items.max(1) as u64)}ArtifactInferenceGatewayStep{payload,retained_progress:receipt,refusal}
  }
 }
+
+fn route_release_demand(route:&dyn RetainedArtifactInference)->RetirementDemand{
+ RetirementDemand{copy_bytes:size_of::<Option<Box<dyn RetainedArtifactInference>>>(),release_bytes:std::mem::size_of_val(route),depth:1,..Default::default()}
+}
+
+fn admit_retained_route(slot:&mut Option<Box<dyn RetainedArtifactInference>>,factory:RetainedArtifactInferenceFactory,cx:&mut semio_framework_job::StepContext<'_>)->Result<ArtifactInferenceExecutionStep,ArtifactInferenceExecutionError>{
+ let demand=RetirementDemand{copy_bytes:factory.size+size_of::<Option<Box<dyn RetainedArtifactInference>>>(),capacity_bytes:factory.size,depth:1,..Default::default()};
+ let grant=cx.retained_grant();
+ let mut step=ArtifactInferenceExecutionStep{execution:None,retained_progress:Default::default(),terminal:false};
+ if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(step);}
+ let Some((result,work))=cx.with_original_effect(grant,|_,effect|->Result<bool,ValueError>{
+  if !effect.performed(1)?{return Ok(false);}
+  let route=(factory.allocate)();
+  *effect.actual()=Some(factory.size);
+  *slot=Some(route);
+  Ok(true)
+ }).map_err(|error|ArtifactInferenceExecutionError::native(error,slot.is_none()))?else{return Ok(step);};
+ cx.consume_work(work);
+ if result.map_err(|error|ArtifactInferenceExecutionError::native(error,slot.is_none()))?{
+  step.retained_progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()};
+ }
+ Ok(step)
+}
 #[doc(hidden)]
 pub fn item()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
 #[doc(hidden)]
-pub fn birth<T:RetireOwned>()->RetirementDemand{RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<T>(),depth:1,..Default::default()}}
+pub fn birth<T:RetireOwned>()->RetirementDemand{
+ let capacity_bytes=semio_framework_value::retirement::owned_retirement_birth_bytes::<T>();
+ RetirementDemand{copy_bytes:size_of::<Option<T>>()+capacity_bytes,capacity_bytes,depth:1,..Default::default()}
+}
 #[doc(hidden)]
 pub fn settle_ticket(active:&mut Option<Box<dyn ErasedSnapshotRetirement>>,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{let body=effect.grant().maximum_copy_bytes;semio_plugin_ownership::bounded_ownership::plugin_settle_value(semio_framework_value::close_factory_ticket(active,body,effect))}
 #[doc(hidden)]

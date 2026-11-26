@@ -234,6 +234,9 @@ impl<T: DslField, const N: usize> DslField for semio_framework_value::paged::Pag
     fn shape() -> Shape { Shape::Map(Box::new(T::shape())) }
     fn shape_controlled<C: NativeSchemaControl>(control: &mut C) -> Result<Shape, ValueError> { control.scoped_depth(64, |control| Ok(Shape::Map(producer::boxed(T::shape_controlled(control)?, control)?))) }
     fn to_value(&self) -> FieldValue { FieldValue::Map(self.iter().map(|(key, value)| (key.to_string_owner(), value.to_value())).collect()) }
+    fn to_value_controlled(&self, control: &mut NativeEncodeControl<'_>) -> Result<FieldValue, ValueError> {
+        native_encoding::project_keyed_entries(self.len(), self.iter(), control, |key, control| key.to_string_owner_controlled(control))
+    }
     fn from_value(value: &FieldValue) -> Result<Self, String> { match value { FieldValue::Map(entries) => Self::try_from_fallible_entries(entries.iter().map(|(key, value)| Ok((semio_framework_value::paged::PagedUtf8::try_from_str(key)?, T::from_value(value).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?)))).map_err(ValueError::into_message), _ => Err("expected Map".into()) } }
     fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         let FieldValue::Map(entries) = value else { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected Map")); };

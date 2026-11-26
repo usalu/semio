@@ -1,1 +1,0 @@
-return await page.evaluate(()=>[...document.querySelectorAll("[id$='engagement.toggle']")].map(e=>e.id+"|"+e.getAttribute("aria-expanded")+"|"+e.getAttribute("aria-pressed")+"|"+e.getAttribute("data-state")));

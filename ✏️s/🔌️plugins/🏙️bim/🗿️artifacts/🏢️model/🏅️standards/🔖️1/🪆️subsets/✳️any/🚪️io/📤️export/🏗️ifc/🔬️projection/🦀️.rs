@@ -97,6 +97,7 @@ fn holder_id(instance: &Part21Instance) -> Option<String> {
     let (name, args) = instance.primary()?;
     match name {
         "IFCANNOTATION" => text(args, 2),
+        "IFCPROXY" => text(args, 8),
         "IFCPROJECT" | "IFCSITE" | "IFCBUILDING" | "IFCBUILDINGSTOREY" | "IFCSPACE" | "IFCGRID" | "IFCZONE" | "IFCGROUP" => text(args, 4),
         _ => text(args, 7),
     }
@@ -107,6 +108,7 @@ fn identity(instance: &Part21Instance) -> Option<String> {
     match name {
         "IFCBUILDINGSTOREY" => text(args, 4),
         "IFCANNOTATION" => text(args, 2),
+        "IFCPROXY" => text(args, 8),
         _ => text(args, 7),
     }
 }

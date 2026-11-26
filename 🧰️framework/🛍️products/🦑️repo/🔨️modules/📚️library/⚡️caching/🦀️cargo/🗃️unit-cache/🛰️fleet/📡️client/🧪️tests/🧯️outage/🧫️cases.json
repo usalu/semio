@@ -1,0 +1,224 @@
+[
+  {
+    "name": "boundary and clock rollback",
+    "lines": [
+      "1",
+      "85000",
+      "85001",
+      "99998"
+    ],
+    "checks": [
+      [
+        100000,
+        true
+      ],
+      [
+        100001,
+        false
+      ],
+      [
+        114998,
+        false
+      ],
+      [
+        100000,
+        true
+      ]
+    ]
+  },
+  {
+    "name": "future and malformed values",
+    "lines": [
+      "",
+      "nan",
+      "Infinity",
+      "-Infinity",
+      "100100"
+    ],
+    "checks": [
+      [
+        100000,
+        true
+      ],
+      [
+        115099,
+        true
+      ],
+      [
+        115100,
+        false
+      ],
+      [
+        100000,
+        true
+      ]
+    ]
+  },
+  {
+    "name": "numeric whitespace and CRLF",
+    "lines": [
+      "  ",
+      "0x10",
+      "\r",
+      "garbage"
+    ],
+    "checks": [
+      [
+        14999,
+        true
+      ],
+      [
+        15000,
+        false
+      ],
+      [
+        500,
+        true
+      ]
+    ]
+  },
+  {
+    "name": "timestamp without a final newline",
+    "lines": [
+      "99000",
+      "100000"
+    ],
+    "trailingNewline": false,
+    "checks": [
+      [
+        100000,
+        true
+      ],
+      [
+        114000,
+        false
+      ],
+      [
+        99999,
+        true
+      ]
+    ]
+  },
+  {
+    "name": "burst at the end of a long history",
+    "leading": [],
+    "repeat": {
+      "line": "1700000000000",
+      "count": 118523
+    },
+    "lines": [
+      "1700000015000",
+      "1700000015001"
+    ],
+    "checks": [
+      [
+        1700000020000,
+        true
+      ],
+      [
+        1700000030000,
+        false
+      ],
+      [
+        1700000014000,
+        true
+      ]
+    ]
+  },
+  {
+    "name": "future records before a long stale tail",
+    "leading": [
+      "250000",
+      "240000"
+    ],
+    "repeat": {
+      "line": "20000",
+      "count": 100000
+    },
+    "lines": [
+      "99999",
+      "99998"
+    ],
+    "checks": [
+      [
+        100000,
+        true
+      ],
+      [
+        115000,
+        true
+      ],
+      [
+        255000,
+        false
+      ],
+      [
+        70000,
+        true
+      ]
+    ]
+  },
+  {
+    "name": "only one recent fault in a long history",
+    "repeat": {
+      "line": "100",
+      "count": 100000
+    },
+    "lines": [
+      "50000"
+    ],
+    "checks": [
+      [
+        50001,
+        false
+      ],
+      [
+        100,
+        true
+      ],
+      [
+        50001,
+        false
+      ]
+    ]
+  },
+  {
+    "name": "a large incomplete boundary line",
+    "leading": [
+      "240000",
+      "250000"
+    ],
+    "repeat": {
+      "line": "x",
+      "count": 0
+    },
+    "lines": [
+      "99000"
+    ],
+    "longLineLength": 8192,
+    "checks": [
+      [
+        100000,
+        true
+      ],
+      [
+        255000,
+        false
+      ],
+      [
+        100000,
+        true
+      ]
+    ]
+  },
+  {
+    "name": "empty history",
+    "lines": [],
+    "checks": [
+      [
+        100000,
+        false
+      ]
+    ]
+  }
+]

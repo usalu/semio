@@ -1,7 +1,22 @@
 semio bim.model.dsl v1
-schema="s.bim.model@1"
+schema="s.bim.model@1" supports={
+}
+load-cases={
+}
+loads={
+}
 project {
   name="Family House" description="Detached single-family house with basement, two storeys and a pitched attic roof." author=semio organization=semio phase-names=[ Design Permit Construction ]
+}
+option-groups={
+}
+design-options={
+}
+worksets={
+}
+element-options={
+}
+element-worksets={
 }
 materials={
   m-brick={ name="Clay Block" category=masonry density=800 conductivity=0.14 specific-heat=1000
@@ -1479,12 +1494,75 @@ sheet-revisions={
   rev-plans-a={ sheet=sh-plans number=A date="2026-10-01" description="Issued for review" author=semio } rev-plans-b={ sheet=sh-plans number=B date="2026-10-05" description="Sheets added" author=semio }
 }
 clash-sets={
+  cs-stairs={ name="Stairs against structure" tolerance=0.005 clearance=0
+  a {
+    classes=[ stair ] storeys=[ ] phases=[ ] ids=[ ]
+  }
+  b {
+    classes=[ wall column beam slab ] storeys=[ ] phases=[ ] ids=[ ]
+  }
+  } cs-structure={ name="Structure against walls" tolerance=0.002 clearance=0
+  a {
+    classes=[ column beam slab ] storeys=[ ] phases=[ ] ids=[ ]
+  }
+  b {
+    classes=[ wall ] storeys=[ ] phases=[ ] ids=[ ]
+  }
+  }
 }
 rules={
+  rl-clear-height={ name="Clear height of rooms (MBO)" kind=min-clear-height limit=2.4 severity=error
+  scope {
+    filter="" storeys=[ ] phases=[ ] ids=[ ]
+  }
+  } rl-door-width={ name="Door clear width (DIN 18040-2)" kind=min-door-width limit=0.9 severity=warning
+  scope {
+    filter="" storeys=[ ] phases=[ ] ids=[ ]
+  }
+  } rl-ramp={ name="Ramp slope 6 % (DIN 18040-1)" kind=max-ramp-slope limit=0.06 severity=error
+  scope {
+    filter="" storeys=[ ] phases=[ ] ids=[ ]
+  }
+  } rl-riser={ name="Riser height (DIN 18065)" kind=max-riser limit=0.19 severity=error
+  scope {
+    filter="" storeys=[ ] phases=[ ] ids=[ ]
+  }
+  } rl-stair-width={ name="Stair width (MBO 34)" kind=min-stair-width limit=1 severity=warning
+  scope {
+    filter="" storeys=[ ] phases=[ ] ids=[ ]
+  }
+  } rl-tread={ name="Tread depth (DIN 18065)" kind=min-tread limit=0.26 severity=error
+  scope {
+    filter="" storeys=[ ] phases=[ ] ids=[ ]
+  }
+  }
 }
 issues={
+  is-1={ title="Check the headroom above the main stair" description="The stair rises towards the slab above; confirm 2.00 m of headroom before the stair is built." status=open priority=high assignee=structure author=semio created="2026-10-09T08:00:00Z" labels=[ Coordination Stair ] elements=[ sr-main w-b-south ]
+  clash {
+    set=cs-stairs first=sr-main second=w-b-south
+  }
+  viewpoint {
+    camera {
+      target-height=3 azimuth=0.9 pitch=0.55 distance=22
+      target {
+        x=5 y=4
+      }
+    }
+    section {
+      min {
+        x=-1 y=-1 z=-3.5
+      }
+      max {
+        x=16 y=13 z=9
+      }
+    }
+    isolate=[ sr-main w-b-south ]
+  }
+  }
 }
 issue-comments={
+  ic-1={ issue=is-1 author=structure date="2026-10-09T09:30:00Z" text="Will check with the next design iteration." } ic-2={ issue=is-1 author=semio date="2026-10-09T10:15:00Z" text="Thanks. Section box and isolation are saved with the viewpoint." }
 }
 dimensions={
   dim-g-grids={ storey=st-ground angle=0 offset=6 style=as-plan name="Axis spacing"

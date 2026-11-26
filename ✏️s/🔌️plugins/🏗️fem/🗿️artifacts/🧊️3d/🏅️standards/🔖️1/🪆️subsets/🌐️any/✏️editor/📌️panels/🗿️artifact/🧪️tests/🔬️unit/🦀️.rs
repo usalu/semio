@@ -540,7 +540,9 @@ fn tree_icons(node: &BuiltNode, found: &mut std::collections::BTreeSet<String>) 
 #[semio_framework_async_macros::async_test]
 async fn every_tree_row_icon_id_is_registered_3d() {
     let mut found = std::collections::BTreeSet::new();
-    tree_icons(&build(&demo(), english()), &mut found);
+    let mut document = demo();
+    document.solids.push(FemSolid { id: "s1".into(), name: "S".into(), outline: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]], holes: Vec::new(), base_z: 0.0, height: 0.2, layers: 1, mesh_size: 1.0, material_id: "concrete".into(), axis: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis::Z });
+    tree_icons(&build(&document, english()), &mut found);
     assert!(found.len() >= 10, "the demo tree uses a row icon per entity kind: {found:?}");
     for icon in &found {
         assert!(semio_plugin::IconName::from_str(icon).is_some(), "unregistered icon id '{icon}'");

@@ -12,7 +12,7 @@ use semio_ui_tui_core::theme::{Role, Surface, Theme};
 const STATUS_GAP: u16 = 1;
 
 pub fn paint_footer(f: &FooterState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, emphasized: bool) {
-    let bg = theme.surface(Surface::Base);
+    let bg = theme.surface(Surface::Panel);
     let (hairline, content) = rect.split_top(1);
     buf.border_hline(Pos { x: hairline.x, y: hairline.y }, hairline.width, '\u{2500}', theme.role(if emphasized { Role::BorderEmphasized } else { Role::BorderNormal }), bg);
     buf.fill_rect(content, Cell::blank(theme.role(Role::Foreground), bg));

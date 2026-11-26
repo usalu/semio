@@ -17,6 +17,16 @@ const assets = catalog();
 const find = (id: string): Asset => assets.find((asset) => asset.id === id)!;
 const select = (denominator: number) => ({ kind: "scale", scale: { denominator } }) as const;
 
+type Placed = { id: string; parent: string | null; z?: number; abductionDeg?: number; twistDeg?: number };
+
+/** 🦴️ The bone whose rest `z` moves `id` sideways along the lateral axis of the body: `z` is placed along the `w` of the parent, and the `w` of a parent is the lateral axis only while that parent and its ancestors stand in the sagittal rest placement, so the root is the first bone from the pelvis down to `id` that is abducted or twisted (a clavicle, an ilium: its own `z` lies in the sagittal frame of its parent), or `id` itself when none is. */
+function sagittalRoot(asset: Asset, id: string): Placed {
+  const byId = new Map((asset.rig.bones as unknown as Placed[]).map((bone) => [bone.id, bone] as const));
+  const path: Placed[] = [];
+  for (let bone = byId.get(id); bone !== undefined; bone = bone.parent === null ? undefined : byId.get(bone.parent)) path.unshift(bone);
+  return path.find((bone) => (bone.abductionDeg ?? 0) !== 0 || (bone.twistDeg ?? 0) !== 0) ?? path.at(-1)!;
+}
+
 describe("🧊️ the state is the solved chain", () => {
   const gull = find("herring-gull");
 
@@ -176,8 +186,10 @@ describe("🧊️ depth is the extent of the shape in its own 3D carry", () => {
 
   it("ranks the right of the asset nearer in the elevation when its bone sits beside the symmetry plane", () => {
     const person = JSON.parse(JSON.stringify(find("person-with-umbrella"))) as { rig: { bones: { id: string; z?: number }[] } } & Asset;
-    for (const bone of person.rig.bones) if (bone.id === "upper-arm-r") bone.z = -0.23;
-    else if (bone.id === "upper-arm-l") bone.z = 0.23;
+    const [rightRoot, leftRoot] = [sagittalRoot(person, "upper-arm-r"), sagittalRoot(person, "upper-arm-l")];
+    expect([rightRoot.id, leftRoot.id], "the roots that carry the arms sideways").toEqual(["clavicle-r", "clavicle-l"]);
+    rightRoot.z = -0.23;
+    leftRoot.z = 0.23;
     const shapes = (person.representations["50"] as unknown as { geometry: { elevation: { id: string; bone: string }[] } }).geometry.elevation;
     const right = shapes.find((s) => s.bone === "upper-arm-r")! as Parameters<typeof restShapeDepth>[1];
     const left = shapes.find((s) => s.bone === "upper-arm-l")! as Parameters<typeof restShapeDepth>[1];
@@ -212,8 +224,8 @@ describe("🧊️ occlusion under spread and twist", () => {
   });
 });
 
-describe("🧊️ a rest z with a compensated shape offset changes no extent", () => {
-  it("leaves every view of person-on-crutches unchanged in every pose when the limb roots gain their lateral z and their revolved axes lose it", () => {
+describe("🧊️ a lateral rest z on the roots of the limbs changes no extent in the side elevation", () => {
+  it("leaves the elevation of person-on-crutches unchanged in every pose, and the height of the front and the ahead extent of the plan, while the lateral extents move with the limbs", () => {
     const original = find("person-on-crutches");
     const moved = JSON.parse(JSON.stringify(original)) as Asset;
     const worldZ = (asset: Asset, id: string): number => {
@@ -222,7 +234,10 @@ describe("🧊️ a rest z with a compensated shape offset changes no extent", (
       for (let bone = byId.get(id); bone !== undefined; bone = bone.parent === null ? undefined : byId.get(bone.parent)) z += bone.z ?? 0;
       return z;
     };
-    for (const bone of moved.rig.bones as unknown as { id: string; z?: number }[]) if (/^(arm|upper-arm|thigh)-[lr]$/.test(bone.id)) bone.z = (bone.id.endsWith("-l") ? 1 : -1) * 0.2;
+    const limbs = (moved.rig.bones as unknown as Placed[]).filter((bone) => /^(arm|upper-arm|thigh)-[lr]$/.test(bone.id));
+    expect(limbs.map((bone) => bone.id).sort(), "the limbs that are moved").toEqual(["arm-l", "arm-r", "thigh-l", "thigh-r"]);
+    for (const limb of limbs) sagittalRoot(moved, limb.id).z = (limb.id.endsWith("-l") ? 1 : -1) * 0.2;
+    expect(new Set(limbs.map((limb) => sagittalRoot(moved, limb.id).id)), "the roots of the limbs").toEqual(new Set(["clavicle-l", "clavicle-r", "ilium-l", "ilium-r"]));
     for (const representation of Object.values(moved.representations))
       if (representation.status === "authored")
         for (const view of ["elevation", "front", "plan"] as const)
@@ -230,11 +245,15 @@ describe("🧊️ a rest z with a compensated shape offset changes no extent", (
             const solid = shape.solid as { kind: string; axisBone?: string; axisZ?: number } | undefined;
             if (solid?.kind === "revolved") solid.axisZ = (solid.axisZ ?? 0) + worldZ(original, solid.axisBone!) - worldZ(moved, solid.axisBone!);
           }
+    let lateral = 0;
     for (const pose of original.poses)
       for (const view of ["elevation", "front", "plan"] as const) {
         const a = extentOf(evaluate(original, { kind: "pose", pose: pose.id }, select(50)).shapes[view], true)!;
         const b = extentOf(evaluate(moved, { kind: "pose", pose: pose.id }, select(50)).shapes[view], true)!;
-        for (const edge of ["minX", "maxX", "minY", "maxY"] as const) expect(Math.abs(a[edge] - b[edge]), `${pose.id} ${view} ${edge}`).toBeLessThanOrEqual(1e-6);
+        const edges = { elevation: ["minX", "maxX", "minY", "maxY"], front: ["minY", "maxY"], plan: ["minX", "maxX"] }[view] as readonly ("minX" | "maxX" | "minY" | "maxY")[];
+        for (const edge of edges) expect(Math.abs(a[edge] - b[edge]), `${pose.id} ${view} ${edge}`).toBeLessThanOrEqual(1e-6);
+        if (view !== "elevation") lateral = Math.max(lateral, ...(view === "front" ? (["minX", "maxX"] as const) : (["minY", "maxY"] as const)).map((edge) => Math.abs(a[edge] - b[edge])));
       }
+    expect(lateral, "the lateral extents move with the limbs").toBeGreaterThan(0.05);
   });
 });

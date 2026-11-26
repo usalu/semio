@@ -6,7 +6,8 @@
 import { shellDialogOriginIsCurrentV1, shellDialogSessionIsCurrentV1 } from "../🗨️dialog-origin/🟦️.ts";
 import { useCallback } from "../../⚛️react-port/🟦️.ts";
 import { applyOnDemandRequestEffect } from "./🧭️on-demand-request/🟦️.ts";
-import { type Effect, type UiDirtyScope } from "@semio-tech/framework";
+import { type Effect, resolveUiDirtyScope, type UiDirtyScope } from "@semio-tech/framework";
+import type { EffectInvocationSink } from "../../🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
 // #region 🔌️Adapters
 import {
   LOCAL_CATALOG_ACTIONS_V1,
@@ -88,6 +89,11 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
       const effectOrigin = effectOwner.presentation;
       if (effects.length === 0 && sealedInstancesRef.current.sealed(effectOwner.plugin, baseSession.pluginId, baseSession.instanceId)) return;
       if (dropForSealedInstance(effectOwner.plugin, baseSession, "host effects", `${effects.length} effect(s)`)) return;
+      const applyDeferredResponse: EffectInvocationSink = async (response, target) => {
+        applyHistoryPatch(response.historyPatch, false, { pluginId: target.pluginId, instanceId: target.instanceId });
+        applyLeftoverInteractionView(response.output);
+        await applyHostEffects(response.requestedEffects ?? [], target, resolveUiDirtyScope(response.uiScope), effectOwner);
+      };
       let nextViewState = baseSession.viewState;
       for (const effect of effects) {
         if (!isCurrentEffectOwner(effectOwner)) return;
@@ -143,11 +149,11 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
           continue;
         }
         if ("requestFileOpen" in effect) {
-          await applyRequestFileOpenEffect({ loadedPlugins, isCurrentEffectOwner, resolvedTargetViewState, effect, baseSession, core, applyHostEffects, effectOwner });
+          await applyRequestFileOpenEffect({ loadedPlugins, isCurrentEffectOwner, resolvedTargetViewState, effect, baseSession, core, applyDeferredResponse, effectOwner });
           continue;
         }
         if ("dispatchAction" in effect) {
-          applyDispatchActionEffect({ loadedPluginsRef, isCurrentEffectOwner, resolvedTargetViewState, effect, baseSession, applyHostEffects, effectOwner });
+          applyDispatchActionEffect({ loadedPluginsRef, isCurrentEffectOwner, resolvedTargetViewState, effect, baseSession, applyDeferredResponse, effectOwner });
           continue;
         }
         if ("requestServiceOperation" in effect) {
@@ -155,15 +161,15 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
           continue;
         }
         if ("replayShellCommand" in effect) {
-          await applyReplayShellCommandEffect({ showTransientNoticeRef, uiLocaleRef, spaceAdministrationEpochRef, identityRef, ensureBackboneWorker, spaceAdministrationRef, setSpaceAdministration, openDocumentSessionsRef, shellStateRef, spaceArtifactCreationCatalogRef, spaceArtifactCreationCatalogUiRef, spaceArtifactCreationOwnersRef, setSpaceArtifactCreationUi, spaceDirectoryHistoriesRef, hostPorts, adoptSharedSpaceAccess, resolveArtifactOpeningWithActivationRef, openResolvedArtifactRef, isCurrentEffectOwner, openDocumentRef, localDataDir, writeLocalDocumentRef, recordLocalCatalogRef, loadedPluginsRef, resolvedTargetViewState, rehydratedLocalDocumentsRef, localCatalogRef, replayShellOwnedCommandRef, effect, baseSession, effectOrigin, effectOwner, applyHostEffects, core });
+          await applyReplayShellCommandEffect({ showTransientNoticeRef, uiLocaleRef, spaceAdministrationEpochRef, identityRef, ensureBackboneWorker, spaceAdministrationRef, setSpaceAdministration, openDocumentSessionsRef, shellStateRef, spaceArtifactCreationCatalogRef, spaceArtifactCreationCatalogUiRef, spaceArtifactCreationOwnersRef, setSpaceArtifactCreationUi, spaceDirectoryHistoriesRef, hostPorts, adoptSharedSpaceAccess, resolveArtifactOpeningWithActivationRef, openResolvedArtifactRef, isCurrentEffectOwner, openDocumentRef, localDataDir, writeLocalDocumentRef, recordLocalCatalogRef, loadedPluginsRef, resolvedTargetViewState, rehydratedLocalDocumentsRef, localCatalogRef, replayShellOwnedCommandRef, effect, baseSession, effectOrigin, effectOwner, applyDeferredResponse, core });
           continue;
         }
         if ("requestMediaFrames" in effect) {
-          await applyRequestMediaFramesEffect({ loadedPlugins, isCurrentEffectOwner, resolvedTargetViewState, effect, baseSession, core, applyHostEffects, effectOwner });
+          await applyRequestMediaFramesEffect({ loadedPlugins, isCurrentEffectOwner, resolvedTargetViewState, effect, baseSession, core, applyDeferredResponse, effectOwner });
           continue;
         }
         if ("invokeExtension" in effect) {
-          applyInvokeExtensionEffect({ loadedPluginsRef, sessionRef, sessionWorkRef, dropForSealedInstance, isCurrentEffectOwner, applyHistoryPatch, applyLeftoverInteractionView, sealedInstancesRef, baseSession, effect, effectOwner, applyHostEffects });
+          applyInvokeExtensionEffect({ loadedPluginsRef, sessionRef, sessionWorkRef, dropForSealedInstance, isCurrentEffectOwner, sealedInstancesRef, baseSession, effect, effectOwner, applyDeferredResponse });
           continue;
         }
         if ("spawnPluginInstance" in effect) {
@@ -218,7 +224,7 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
         await refreshUi(nextSession, refreshScope, undefined, windowViewInputChanged || leftoverReplaceRefreshBodiesV1(), windowViewInputChanged || hostEffectsRewriteGuestRenderInputsV1(effects) || nextViewState !== baseSession.viewState);
       }
     },
-    [catalog,captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, refreshHistorySnapshot, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateShellUri, refreshSpawnedUi, refreshUi, requestServiceOperation, resolvedTargetViewState, session, writeUtilityRegister, writeToolRegister, spacePrograms, hostMode, hostPorts?.documentAccess],
+    [applyHistoryPatch, applyLeftoverInteractionView, catalog,captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, refreshHistorySnapshot, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateShellUri, refreshSpawnedUi, refreshUi, requestServiceOperation, resolvedTargetViewState, session, writeUtilityRegister, writeToolRegister, spacePrograms, hostMode, hostPorts?.documentAccess],
   );
   core.applyHostEffects = applyHostEffects;
   applyHostEffectsRef.current = applyHostEffects;

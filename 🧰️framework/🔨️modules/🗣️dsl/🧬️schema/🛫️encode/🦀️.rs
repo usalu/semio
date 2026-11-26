@@ -165,22 +165,7 @@ impl semio_framework_value::retirement::RetireOwned for RetainedFieldProjection{
     fn controlled_retirement_supported()->bool{<ProjectionOwned as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
 
-/// ♻️ Retires intermediate native fields without recursive container drops.
-pub fn retire_field(value:FieldValue){
-    if matches!(&value,FieldValue::Absent|FieldValue::Bool(_)|FieldValue::Int(_)|FieldValue::UInt(_)|FieldValue::Float(_)|FieldValue::Text(_)|FieldValue::Bytes64(_)|FieldValue::Enum(_)){return;}
-    let mut pending=vec![value];
-    while let Some(value)=pending.pop(){match value{
-        FieldValue::Tuple(mut items)|FieldValue::List(mut items)=>pending.append(&mut items),
-        FieldValue::Record(record)=>pending.extend(record.fields.into_values()),
-        FieldValue::Block(value)=>pending.push(*value),
-        FieldValue::Statements(items)=>for(_,record)in items{pending.extend(record.fields.into_values());},
-        FieldValue::Map(items)=>for(_,value)in items{pending.push(value);},
-        FieldValue::Value(value)=><super::DslValue as semio_framework_value::FromValue>::retire_decoded(value),
-        FieldValue::Wire(value)=><super::DslValue as semio_framework_value::FromValue>::retire_decoded(value.properties),
-        FieldValue::Expr(value)=>{let mut expressions=vec![value];while let Some(value)=expressions.pop(){match value{super::ExprValue::Neg(value)=>expressions.push(*value),super::ExprValue::Binary(_,left,right)=>{expressions.push(*left);expressions.push(*right);},super::ExprValue::Call(_,mut items)=>expressions.append(&mut items),super::ExprValue::Num(_)|super::ExprValue::Var(_)=>{}}}},
-        FieldValue::Bool(_)|FieldValue::Int(_)|FieldValue::UInt(_)|FieldValue::Float(_)|FieldValue::Text(_)|FieldValue::Bytes64(_)|FieldValue::Enum(_)|FieldValue::Absent=>{}
-    }}
-}
+pub use semio_framework_dsl_record_ownership::retirement::retire_field;
 
 /// 🛡️ Holds intermediate fields until the complete record is committed.
 pub struct EncodedRecord{record:Option<RecordValue>}
@@ -208,8 +193,37 @@ pub fn project_map<T:DslField>(values:&std::collections::BTreeMap<String,T>,cont
 
 /// ⛔️ Projects ordered literal entries of any map owner under the same exact workload and partial-field retirement; an empty map owns nothing and completes without a checkpoint.
 pub fn project_entries<'a,T:DslField+'a>(length:usize,values:impl Iterator<Item=(&'a String,&'a T)>,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{
-    if length==0{return Ok(FieldValue::Map(Vec::new()));}
-    control.scoped_stage(|control|{control.begin_stage(length)?;let mut output=super::__rt::DecodedFieldOwner::new(control.allocate_vec(length)?,|items:Vec<(String,FieldValue)>|{for(_,value)in items{retire_field(value);}});for(key,value)in values{let key=control.copy_text(key)?;let value=control.scoped_stage(|control|{control.begin_stage(0)?;value.to_value_controlled(control)})?;output.as_mut().push((key,value));control.step()?;}Ok(FieldValue::Map(output.take()))})
+    project_keyed_entries(length, values, control, |key, control| control.copy_text(key))
+}
+
+/// 🧵️ Projects literal keys under their original storage owner and guards all completed fields.
+pub(super) fn project_keyed_entries<'a, K: 'a, T: DslField + 'a>(
+    length: usize,
+    values: impl Iterator<Item = (&'a K, &'a T)>,
+    control: &mut NativeEncodeControl<'_>,
+    mut copy_key: impl FnMut(&K, &mut NativeEncodeControl<'_>) -> Result<String, ValueError>,
+) -> Result<FieldValue, ValueError> {
+    if length == 0 {
+        return Ok(FieldValue::Map(Vec::new()));
+    }
+    control.scoped_stage(|control| {
+        control.begin_stage(length)?;
+        let mut output = super::__rt::DecodedFieldOwner::new(control.allocate_vec(length)?, |items: Vec<(String, FieldValue)>| {
+            for (_, value) in items {
+                retire_field(value);
+            }
+        });
+        for (key, value) in values {
+            let key = copy_key(key, control)?;
+            let value = control.scoped_stage(|control| {
+                control.begin_stage(0)?;
+                value.to_value_controlled(control)
+            })?;
+            output.as_mut().push((key, value));
+            control.step()?;
+        }
+        Ok(FieldValue::Map(output.take()))
+    })
 }
 
 /// 🧾️ Projects tagged records with literal owner keywords and known collection progress.

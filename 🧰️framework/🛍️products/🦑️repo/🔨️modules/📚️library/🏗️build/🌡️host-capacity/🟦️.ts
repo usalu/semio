@@ -2,6 +2,14 @@ import buildPolicy from "../🔣️policy.json" with {type:"json"};
 import {adoptUpgradedHostPlanV1,attachHostCapacityProcessV1,currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,wholeHostProbeV1,hostClassBoundV1,hostClassCeilingV1,hostLearnCeilingV1,hostProfileV1,createHostPhaseResizerV1,estimateHostPhasesV1,forecastHostQuietV1,formatHostCapacityV1,hostCapacityDirectoryV1,hostEstimateLineageV1,hostFloorMegabytesV1,hostRebuildSlotsV1,hostRequestPriorityV1,learnableHostRunV1,newHostCapacityIdV1,quietHostRequestV1,rampHostRequestV1,readHostEstimateStoreV1,recordHostForecastV1,recordHostPhasesV1,requestHostCapacityUpgradeV1,resolveHostCapacityLanguageV1,scaleHostRequestV1,sizeHostRequestV1,updateHostEstimateStoreV1,withHostCapacityV1,type HostActionKindV1,type HostRunV1,type HostCapacityHandleV1,type HostCapacityPolicyV1,type HostCapacityPortsV1,type HostRequestV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type {HostUpgradeOutcomeV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
+import {readdirSync,readFileSync} from "node:fs";
+import {join} from "node:path";
+import {totalmem} from "node:os";
+import {hostAvailableBytesV1,hostInteractiveReserveMegabytesV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
+import type {GrantGrowthPortV1,GrowthHostV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts";
+import admissionPolicy from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧬️schema/🔣️.json" with {type:"json"};
+const GROWTH_POLICY_V1=admissionPolicy.definitions.Policy.const.growth;
+import {readLiveHostCapacityReservationV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {leasePriorityClassV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/📈️standing/⚖️priority/🟦️.ts";
 import {availableParallelism} from "node:os";
 import {agentSessionAddressV1,currentAgentSessionV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
@@ -126,6 +134,54 @@ export function requestBuildFarmCapacityV1(input:HostCapacityPortsV1&Readonly<{p
  return Object.freeze({granted,release:cancel});
 }
 
+/** 📈️ The memory facts of one machine for grant growth: the total, the free-memory floor and interactive reserve of the host-capacity policy at that total, the share of the rest reservations may take and, for this machine, the memory available now.
+ * @see hostHoldableMegabytesV1 */
+export function growthHostV1(policy:HostCapacityPolicyV1,facts:Readonly<{origin:string;totalMegabytes:number;availableMegabytes?:number}>):GrowthHostV1{
+ const host={totalMegabytes:facts.totalMegabytes};
+ return Object.freeze({origin:facts.origin,totalMegabytes:facts.totalMegabytes,floorMegabytes:hostFloorMegabytesV1(policy,host),interactiveReserveMegabytes:hostInteractiveReserveMegabytesV1(policy,host),budgetBasisPoints:policy.memory.budgetBasisPoints,...facts.availableMegabytes===undefined?{}:{availableMegabytes:facts.availableMegabytes}});
+}
+
+/** 📈️ The machines of the fleet as the warden of each mirrors them to the group store (`<store>/v1/origins/<origin>/memory.json`, host total and time of the sample): only mirrors younger than `maximumAgeMilliseconds` count; `undefined` when the store is unknown or unreadable, so a caller never mistakes an unknown fleet for a small one. Never throws.
+ * @see ../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧬️schema/🔣️.json (`Policy.growth`) */
+export function readFleetGrowthHostsV1(policy:HostCapacityPolicyV1,environment:Readonly<Record<string,string|undefined>>,nowMs:number=Date.now(),maximumAgeMilliseconds:number=GROWTH_POLICY_V1.fleetStalenessMilliseconds):readonly GrowthHostV1[]|undefined{
+ const store=environment["SEMIO_FLEET_STORE_ROOT"];
+ if(!store)return undefined;
+ try{
+  const base=join(store,"v1",GROWTH_POLICY_V1.fleetDirectory),hosts:GrowthHostV1[]=[];
+  for(const origin of readdirSync(base)){
+   try{
+    const row=JSON.parse(readFileSync(join(base,origin,GROWTH_POLICY_V1.fleetFile),"utf8")) as {atMs?:unknown;host?:{totalMegabytes?:unknown}};
+    const total=row.host?.totalMegabytes;
+    if(typeof total==="number"&&Number.isFinite(total)&&total>0&&typeof row.atMs==="number"&&nowMs-row.atMs<=maximumAgeMilliseconds)hosts.push(growthHostV1(policy,{origin,totalMegabytes:Math.floor(total)}));
+   }catch{continue;}
+  }
+  return Object.freeze(hosts);
+ }catch{return undefined;}
+}
+
+/** 📈️ The port through which the admission broker grows a parent memory grant: this machine's facts from the live sample, the fleet from the group store, and `acquire`, a supplementary reservation of the difference requested of the machine-wide gate in the fair queue beside the grant the invocation holds (never the grant row itself: its holder keeps its own books), so every other run, the warden thresholds and the interactive reserve see it. The wait ends after `waitMilliseconds`, when the signal aborts or when the gate refuses; the booking is held until `release` and a gate that is off books nothing and grants at once.
+ * @see ../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts (`startAdmissionBrokerV1`) */
+export function createGrantGrowthPortV1(input:HostCapacityPortsV1&Readonly<{environment?:NodeJS.ProcessEnv;directory?:string;policy?:HostCapacityPolicyV1;origin?:string}>={}):GrantGrowthPortV1{
+ const policy=input.policy??BUILD_HOST_CAPACITY_POLICY_V1,origin=input.origin??"local";
+ return Object.freeze({
+  local:()=>{const available=hostAvailableBytesV1();return growthHostV1(policy,{origin,totalMegabytes:Math.floor(totalmem()/1048576),...available===undefined?{}:{availableMegabytes:Math.floor(available/1048576)}});},
+  fleet:()=>readFleetGrowthHostsV1(policy,input.environment??process.env),
+  acquire:ask=>new Promise(accept=>{
+   const environment:NodeJS.ProcessEnv={...(input.environment??process.env)};delete environment["SEMIO_HOST_CAPACITY_GRANT"];delete environment["SEMIO_HOST_CAPACITY_PLAN"];
+   if(!policy.enabled||environment["SEMIO_HOST_CAPACITY"]==="off"){accept(Object.freeze({granted:true as const,release:()=>{}}));return;}
+   const request:HostRequestV1=Object.freeze({id:newHostCapacityIdV1(),operation:"cargo-growth",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:Math.max(1,Math.ceil(ask.extraMegabytes)),perJobMegabytes:0,cpuPerJob:1,label:"unit-growth"}),session=currentAgentSessionV1({environment});
+   const controller=new AbortController(),control:ResourceLeaseControl=Object.freeze({signal:controller.signal,remainingMilliseconds:()=>null,publish:()=>undefined,yieldContinuation:()=>new Promise<void>(done=>setImmediate(done))});
+   let release=()=>{},admitted=false,timedOut=false;const held=new Promise<void>(done=>{release=done;});
+   const stop=()=>{if(!admitted)controller.abort(refuseCapacityV1("cancelled","unit-growth-cancelled"));release();};
+   const timer=setTimeout(()=>{timedOut=true;stop();},ask.waitMilliseconds);timer.unref?.();
+   if(ask.signal.aborted)stop();else ask.signal.addEventListener("abort",stop,{once:true});
+   const leave=()=>{clearTimeout(timer);ask.signal.removeEventListener("abort",stop);};
+   const refused=()=>{leave();accept(Object.freeze({granted:false as const,reason:timedOut?"timeout" as const:"cancelled" as const}));};
+   withHostCapacityV1({observe:()=>Promise.resolve(0),...input,directory:input.directory??hostCapacityDirectoryV1(environment),policy,request,control,environment,write:ask.write,session:{address:agentSessionAddressV1(session),weight:session.budget.weight}},async handle=>{admitted=true;clearTimeout(timer);accept(Object.freeze({granted:true as const,release:()=>{leave();release();}}));void handle;await held;}).then(()=>{if(!admitted)refused();},()=>{if(!admitted)refused();else leave();});
+  })
+ });
+}
+
 /** 🔭️ The megabytes a process tree holds right now, for the slice pool to learn the real peak of a worker on hosts without a cgroup limit. */
 export const observeHostTreeMegabytesV1=observeTreeMegabytesV1;
 
@@ -175,15 +231,31 @@ export async function withBuildCapacityV1<T>(args:readonly string[],environment:
  const fleetPolicy=ask.operation==="cargo"?await import("../🌐️remote-execution/🚀️offload/📐️policy/🟦️.ts"):undefined;
  const mode=fleetPolicy?.extractOffloadFlagV1(stripped).mode,fleetEnvironment=mode===undefined?environment:{...environment,SEMIO_OFFLOAD:mode};
  const fleetAdmission=fleetPolicy!==undefined&&fleetPolicy.offloadModeV1(fleetEnvironment)!=="never"?(await import("../🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts")).offloadFanOutJobsV1:undefined;
- const runWithFleet=()=>{
-  const language=resolveHostCapacityLanguageV1(environment),write=ports.write??(line=>process.stderr.write(line+"\n"));
-  write(language==="de"?"[capacity] Cargo ermittelt lokale Compilerplätze. Die Flotte kann einzelne Einheiten übernehmen.":"[capacity] Cargo admits local compiler slots. The fleet can take individual units.");
-  const pressure={SEMIO_UNIT_CACHE_SLOTS:"1",SEMIO_OFFLOAD_PRESSURE:"door"},before=Object.fromEntries(Object.keys(pressure).map(key=>[key,environment[key]]));
-  Object.assign(environment,pressure);
-  return body({args,handle:undefined,limit:undefined,report:()=>undefined}).finally(()=>{for(const [key,value] of Object.entries(before))if(value===undefined)delete environment[key];else environment[key]=value;});
+ const directory=ports.directory??hostCapacityDirectoryV1(environment),session=currentAgentSessionV1({environment}),now=ports.now??Date.now,write=ports.write??(line=>process.stderr.write(line+"\n"));
+ const hostSession={address:agentSessionAddressV1(session),weight:session.budget.weight};
+ const runWithFleet=async()=>{
+  const waiting=ports.control?undefined:createCapacityControlV1(),control=ports.control??waiting!.control,minimum=policy.operations.find(row=>row.name===base.operation)!.fixedMegabytes;
+  const request:HostRequestV1={id:newHostCapacityIdV1(),operation:"cargo-orchestration",priority:base.priority,minimumJobs:1,preferredJobs:1,fixedMegabytes:minimum,minimumMegabytes:minimum,perJobMegabytes:0,cpuPerJob:1,label:base.label};
+  try{
+   return await withHostCapacityV1({park:parkGrantForRestartV1,...ports,directory,policy,request,control,environment,session:hostSession},async handle=>{
+    control.signal.throwIfAborted();
+    if(!handle.bypassed){
+     const held=readLiveHostCapacityReservationV1({...environment,...handle.environment,SEMIO_HOST_CAPACITY_DIRECTORY:directory},policy);
+     if(held?.id!==handle.id||held.reservedMegabytes<minimum||held.cpu<request.cpuPerJob)throw refuseCapacityV1("refused","cargo-orchestration-grant",{minimum,reserved:held?.reservedMegabytes??0});
+    }
+    if(!handle.inherited)write(resolveHostCapacityLanguageV1(environment)==="de"?"[capacity] Cargo hat lokale Kapazität für die Koordination. Die Flotte kann einzelne Compiler-Einheiten übernehmen.":"[capacity] Cargo has local orchestration capacity. The fleet can take individual compiler units.");
+    const carried={...handle.environment,SEMIO_UNIT_CACHE_SLOTS:"1",SEMIO_OFFLOAD_PRESSURE:"door"},before=Object.fromEntries(Object.keys(carried).map(key=>[key,environment[key]]));
+    Object.assign(environment,carried);
+    try{return await body({args,handle,limit:undefined,report:()=>undefined});}
+    finally{for(const [key,value] of Object.entries(before))if(value===undefined)delete environment[key];else environment[key]=value;}
+   });
+  }finally{waiting?.dispose();}
  };
- if(fleetAdmission!==undefined&&await fleetAdmission(fleetEnvironment,ports.offloadAdmission)!==undefined)return runWithFleet();
- const directory=ports.directory??hostCapacityDirectoryV1(environment),session=currentAgentSessionV1({environment}),now=ports.now??Date.now,write=ports.write??(line=>process.stderr.write(line+"\n")),stored=readHostEstimateStoreV1(directory),client=ports.plannedByService===true,phaseless=client||PHASELESS_COMMANDS_V1.includes(ask.operation),learned=phaseless?Object.freeze({...stored,classes:Object.fromEntries(Object.entries(stored.classes).filter(([name])=>!PLANNER_PHASE_CLASSES_V1.includes(name)))}) as typeof stored:stored,estimate=estimateHostPhasesV1(policy,learned,ask.lineage,base,now());
+ if(fleetAdmission!==undefined){
+  const inherited=environment.SEMIO_OFFLOAD_PRESSURE==="door"&&environment.SEMIO_HOST_CAPACITY_GRANT!==undefined&&readLiveHostCapacityReservationV1({...environment,SEMIO_HOST_CAPACITY_DIRECTORY:directory},policy)?.id===environment.SEMIO_HOST_CAPACITY_GRANT;
+  if(inherited||await fleetAdmission(fleetEnvironment,{...ports.offloadAdmission,...ports.control===undefined?{}:{signal:ports.control.signal}})!==undefined)return runWithFleet();
+ }
+ const stored=readHostEstimateStoreV1(directory),client=ports.plannedByService===true,phaseless=client||PHASELESS_COMMANDS_V1.includes(ask.operation),learned=phaseless?Object.freeze({...stored,classes:Object.fromEntries(Object.entries(stored.classes).filter(([name])=>!PLANNER_PHASE_CLASSES_V1.includes(name)))}) as typeof stored:stored,estimate=estimateHostPhasesV1(policy,learned,ask.lineage,base,now());
  const total=hostProfileV1(environment).totalMegabytes,capacity=Math.max(0,total-hostFloorMegabytesV1(policy,{totalMegabytes:total})),scaled=scaleHostRequestV1(policy,{...base,priority:hostRequestPriorityV1(base.priority,leasePriorityClassV1(environment,{agentSession:session.agent.client!=="human",interactiveTerminal:session.agent.client==="human"}),estimate)},estimate.ratioBasisPoints,capacity,estimate.floorMegabytes),measured=hostClassBoundV1(policy,learned,ask.lineage,now()).source==="measured",request=rampHostRequestV1(base,scaled,estimate,measured),growth=estimate.growRatioBasisPoints<estimate.ratioBasisPoints?rampHostRequestV1(base,scaleHostRequestV1(policy,{...base,priority:request.priority},estimate.growRatioBasisPoints,capacity,estimate.floorMegabytes),estimate,measured):request;
  if(estimate.floorMegabytes>estimate.phases.execution!.megabytes)write(formatHostCapacityV1(resolveHostCapacityLanguageV1(environment),"phased",{operation:ask.operation,percent:Math.round(estimate.ratioBasisPoints/100),samples:estimate.samples,floor:estimate.floorMegabytes,phase:(estimate.phases.plan?.megabytes??0)>=(estimate.phases.assembly?.megabytes??0)?"plan":"assembly"}));
  else if(estimate.samples>0)write(formatHostCapacityV1(resolveHostCapacityLanguageV1(environment),"estimated",{operation:ask.operation,percent:Math.round(estimate.ratioBasisPoints/100),samples:estimate.samples}));
@@ -200,7 +272,7 @@ export async function withBuildCapacityV1<T>(args:readonly string[],environment:
  };
  const waiting=ports.control?undefined:createCapacityControlV1(),tasks=request.perJobMegabytes>0,deferring=quiet&&client;
  try{
-  return await withHostCapacityV1({park:parkGrantForRestartV1,...ports,learn,resize:createHostPhaseResizerV1(policy,base,estimate,capacity),directory,policy,request:admission,...forecastable||quiet?{upgrade:growth}:{},...deferring?{quietUpgradeRequiresRequest:true}:{},control:ports.control??waiting!.control,environment,session:{address:agentSessionAddressV1(session),weight:session.budget.weight}},async handle=>{
+  return await withHostCapacityV1({park:parkGrantForRestartV1,...ports,learn,resize:createHostPhaseResizerV1(policy,base,estimate,capacity),directory,policy,request:admission,...forecastable||quiet?{upgrade:growth}:{},...deferring?{quietUpgradeRequiresRequest:true}:{},control:ports.control??waiting!.control,environment,session:hostSession},async handle=>{
    waiting?.dispose();
    const previous=Object.fromEntries([...Object.keys(handle.environment),"SEMIO_BUILD_PARALLEL"].map(key=>[key,environment[key]]));
    Object.assign(environment,handle.environment,tasks?{SEMIO_BUILD_PARALLEL:String(handle.jobs)}:{});

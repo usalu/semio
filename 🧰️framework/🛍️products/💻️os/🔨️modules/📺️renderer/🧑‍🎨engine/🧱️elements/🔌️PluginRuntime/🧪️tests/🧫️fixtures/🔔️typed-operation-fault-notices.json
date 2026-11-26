@@ -5,6 +5,14 @@
   "generation": 1,
   "faultLane": 11,
   "terminalLane": 10,
+  "archiveObservers": [
+    {"LoadDocumentArchive":{"seq":7,"archive":{"parent_pack":[],"parent_spr":[],"members":[]}}},
+    {"MergeDocumentArchive":{"seq":8,"archive":{"parent_pack":[],"parent_spr":[],"members":[]}}},
+    {"ReadDocumentArchive":{"seq":9}},
+    {"PollDocumentArchiveLoad":{"seq":10,"operation":7}},
+    {"CancelDocumentArchiveLoad":{"seq":11,"operation":7}},
+    {"AcknowledgeDocumentArchiveLoad":{"seq":12,"operation":7}}
+  ],
   "terminology": "native",
   "table": [
     {

@@ -323,7 +323,7 @@ export function CategoryPage(props: { readonly category: CategoryId; readonly vi
   const byId = useMemo(() => new Map(withOpened.map((row) => [row.entry.id, row])), [withOpened]);
   const index = (id: string): number => pages.findIndex((page) => page.id === id);
   return (
-    <div data-page={`category:${category}`} className="relative flex h-full min-h-0 w-full flex-col bg-background text-foreground">
+    <div data-page={`category:${category}`} className="relative flex h-full min-h-0 w-full flex-col text-foreground">
       <Column edges={["bottom"]} className={cn("shrink-0", opened !== null && "hidden")}>
         <SharedBorderRowCell className="flex-wrap items-baseline justify-between gap-double p-double sm:px-4">
           <h1 tabIndex={-1} className="m-0 font-serif text-3xl leading-tight outline-none">

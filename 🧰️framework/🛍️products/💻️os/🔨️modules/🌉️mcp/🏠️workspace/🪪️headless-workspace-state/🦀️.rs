@@ -122,7 +122,7 @@ impl HeadlessWorkspace {
         });
         let artifact_kind = match &probe_head {
             Some(_) => Some(PROBE_SCHEMA.to_string()),
-            None => self.plugin_artifact_binding(artifact_id).map(|binding| binding.schema),
+            None => self.plugin_artifact_binding(artifact_id).map(|binding| binding.artifact_kind),
         };
         Ok(UntrustedProvenance {
             source,
@@ -194,7 +194,7 @@ impl HeadlessWorkspace {
                 let body = if open_probe {
                     serde_json::json!({ "artifactId": artifact_id, "schema": PROBE_SCHEMA })
                 } else if let Some(binding) = self.plugin_artifact_binding(artifact_id) {
-                    serde_json::json!({ "artifactId": artifact_id, "schema": binding.schema, "pluginId": binding.plugin_id, "appId": binding.app_id })
+                    serde_json::json!({ "artifactId": artifact_id, "schema": binding.schema, "artifactKind": binding.artifact_kind, "pluginId": binding.plugin_id, "appId": binding.app_id })
                 } else {
                     let schema = match self.read_open_artifact_bytes(artifact_id)? {
                         Some((_, spr)) => semio_framework_async::block_on(store::os_store::codec_registry::lane_schema_from_spr(&spr)),

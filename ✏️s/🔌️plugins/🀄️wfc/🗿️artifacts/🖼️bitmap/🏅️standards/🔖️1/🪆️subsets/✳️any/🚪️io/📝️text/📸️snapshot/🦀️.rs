@@ -29,7 +29,7 @@ pub struct BitmapColorDsl {
     pub a: u32,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned)]
 pub struct BitmapPinnedPixelDsl {
     pub x: u32,
     pub y: u32,
@@ -52,7 +52,7 @@ pub fn pin_from_dsl(pin: &BitmapPinnedPixelDsl) -> BitmapPinnedPixel {
     BitmapPinnedPixel { x: pin.x, y: pin.y, color: pin.color }
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned)]
 #[dsl(id = "wfc.bitmap", layout = "lines")]
 pub struct BitmapSnapshotDsl {
     schema: String,
@@ -77,6 +77,27 @@ impl Default for BitmapSnapshotDsl {
     fn default() -> Self {
         let base = BitmapSnapshot::default();
         bitmap_document_to_dsl(&base)
+    }
+}
+
+#[derive(semio_framework_value::RetireOwned)]
+pub struct BitmapSnapshotPhysicalFields {
+    pub pixels: String,
+    pub palette: Vec<BitmapColorDsl>,
+    pub pinned: Vec<BitmapPinnedPixelDsl>,
+}
+
+impl BitmapSnapshotDsl {
+    /// 🧩️ Hands off the existing persisted fields without duplicating pixel or table backing.
+    pub fn into_snapshot_fields(self) -> (BitmapSnapshot, BitmapSnapshotPhysicalFields) {
+        let snapshot = BitmapSnapshot {
+            schema: self.schema, seed: self.seed,
+            input: BitmapInput { width: self.input_width, height: self.input_height, palette: Vec::new(), pixels: Vec::new() },
+            output: BitmapOutputSpec { width: self.output_width, height: self.output_height, periodic: self.output_periodic },
+            model: BitmapOverlappingModel { pattern_size: self.pattern_size, symmetry: self.symmetry, periodic_input: self.periodic_input, ground: self.ground },
+            pinned: Vec::new(),
+        };
+        (snapshot, BitmapSnapshotPhysicalFields { pixels: self.input_pixels, palette: self.palette, pinned: self.pinned })
     }
 }
 //#endregion 🔖️DslMirror

@@ -4,7 +4,8 @@
   "required": [
     "languages",
     "cases",
-    "b15"
+    "b15",
+    "b15TintOpacity"
   ],
   "additionalProperties": false,
   "properties": {
@@ -66,6 +67,11 @@
     "b15": {
       "type": "string",
       "minLength": 1
+    },
+    "b15TintOpacity": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "exclusiveMaximum": 1
     }
   }
 }

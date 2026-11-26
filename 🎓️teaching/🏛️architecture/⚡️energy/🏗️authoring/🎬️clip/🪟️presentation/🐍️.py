@@ -12,6 +12,7 @@ from pathlib import Path
 _PACKAGE = "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring"
 _ROOT = Path(__file__).resolve().parent
 _theme = importlib.import_module(_PACKAGE + ".🎨️theme.🐍️")
+_surface = importlib.import_module(_PACKAGE + ".🎬️clip.🪟️presentation.🎨️surface.🐍️")
 _UNIT = 8 / 900
 _browser = importlib.import_module(_PACKAGE + ".🎬️clip.🪟️presentation.🌐️browser.🐍️")
 _geometry = importlib.import_module(_PACKAGE + ".🎬️clip.🪟️presentation.📐️geometry.🐍️")
@@ -219,9 +220,9 @@ def _render_chapter(video_id: str, content: Path, output: Path, settings: dict, 
     source_fps = float(rate.group(1))
     body_count = frame_count(int(frames[-1]) / source_fps, fps)
     first, last = work / "first.png", work / "last.png"
-    dark = _theme.color("dark").replace("#", "0x")
+    content_fill = _surface.surface_fill().replace("#", "0x")
     fit = (f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
-           f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:color={dark},setsar=1")
+           f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:color={content_fill},setsar=1")
     normalized = (f"setpts=N/({source_fps}*TB),tpad=stop_mode=clone:stop_duration={1 / source_fps},"
                   f"fps={fps}:eof_action=pass,trim=end_frame={body_count},{fit}")
     run(["-i", str(content), "-vf", normalized, "-frames:v", "1", "-update", "1", str(first)], "first.log")

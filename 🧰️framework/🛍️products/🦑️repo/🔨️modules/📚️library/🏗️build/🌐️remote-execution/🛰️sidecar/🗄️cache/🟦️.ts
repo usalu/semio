@@ -1,6 +1,8 @@
-import {hostname,networkInterfaces} from "node:os";
+import {networkInterfaces} from "node:os";
 import {join} from "node:path";
-import {fleetCacheEndpointsV1,fleetGroupViewV1,fleetNetworkV1,publishFleetCacheFactsV1} from "../../../🌐️remote-cache/🛰️fleet/📣️publication/🟦️.ts";
+import {fleetGroupViewV1,fleetNetworkV1,publishFleetCacheFactsV1} from "../../../🌐️remote-cache/🛰️fleet/📣️publication/🟦️.ts";
+import {fleetBindHostV1} from "../../../../../🤝️shared-worktree/🗺️topology/🧭️addresses/🟦️.ts";
+import {serverNetworksV1} from "../../../../../🤝️shared-worktree/🗺️topology/🟦️.ts";
 import {createFleetPeerReadThroughV1,directPeerTransportV1,fleetPeerEndpointsV1,relayedPeerTransportV1,servePeerExchangeV1,FLEET_HOP_HEADER_V1,type FleetPeerTransportV1} from "../../../🌐️remote-cache/🧭️peers/🟦️.ts";
 import {readLocalFleetCacheFactsV1} from "../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
 import {createSealedFetchV1} from "../../../🌐️remote-cache/🔐️sealed/🟦️.ts";
@@ -18,14 +20,10 @@ export async function runCache(context:RemoteExecutionSidecarContextV1):Promise<
  await syncFleetIdentityV1({root:context.root});
  const admin=loadFleetSignerV1(context.root,"admin");
  if(admin===undefined)throw Error("the admin signing key of the group server is missing");
- const view=await fleetGroupViewV1(context.root,context.environment),network=await fleetNetworkV1(context.root,context.environment),previous=readLocalFleetCacheFactsV1(context.root)?.facts.cache.endpoints.map(endpoint=>{try{return new URL(endpoint).hostname;}catch{return"";}})??[];
- let address=network===undefined?undefined:fleetInterfaceAddressV1(network,undefined,previous),declared=network;
- if(address===undefined){
-  const found=Object.values(networkInterfaces()).flatMap(rows=>rows??[]).find(row=>row.family==="IPv4"&&!row.internal&&/^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)/u.test(row.address));
-  if(found!==undefined){address=found.address;declared=`${found.address.split(".").slice(0,3).join(".")}.0/24`;say(`the declared fleet network does not match; using ${address} and ${declared}`);}
- }
- if(address===undefined||declared===undefined)throw Error("no address of this machine inside the fleet network (SEMIO_FLEET_NETWORK)");
- const additionalHosts=Object.values(networkInterfaces()).flatMap(rows=>rows??[]).filter(row=>row.family==="IPv4"&&!row.internal&&row.address!==address&&fleetPeerAllowedV1(row.address,[declared])).map(row=>row.address);
+ const view=await fleetGroupViewV1(context.root,context.environment),network=await fleetNetworkV1(context.root,context.environment),previous=readLocalFleetCacheFactsV1(context.root)?.candidates.map(endpoint=>{try{return new URL(endpoint).hostname;}catch{return"";}})??[];
+ const bound=network===undefined?undefined:fleetInterfaceAddressV1(network,undefined,previous),declared:readonly string[]=bound!==undefined&&network!==undefined?[network]:serverNetworksV1({platform:"macos",protocol:"nfs"}),bindHost=bound===undefined?await fleetBindHostV1():bound;
+ if(bound===undefined&&network!==undefined)say("the declared fleet network matches no interface of this machine; serving on every interface");
+ const additionalHosts:string[]=bound===undefined?[bindHost]:Object.values(networkInterfaces()).flatMap(rows=>rows??[]).filter(row=>row.family==="IPv4"&&!row.internal&&row.address!==bound&&fleetPeerAllowedV1(row.address,[network!])).map(row=>row.address);
  const port=Number(environment.SEMIO_REMOTE_CACHE_FLEET_PORT??view?.ports?.cache);
  if(!Number.isInteger(port)||port<1||port>65535)throw Error("the cache port is a fact of the topology (ports.cache of the group row) or SEMIO_REMOTE_CACHE_FLEET_PORT");
  const peerStores=view?.peerStores??{},inGroup=view?.inGroup??"sealed",transports:FleetPeerTransportV1[]=[];
@@ -38,7 +36,7 @@ export async function runCache(context:RemoteExecutionSidecarContextV1):Promise<
  const pinned=Object.fromEntries(Object.entries(view?.links??{}).filter(([,link])=>link.serverKey!==undefined).map(([peer,link])=>[`${peer}-server`,link.serverKey!]));
  const home=cacheAreaHomeV1(context.root,policy.fleetArea),directory=home.directory,maximumBytes=Math.min(policy.maximumBytes,home.budgetBytes??policy.maximumBytes),{createCasStoreV1,casRootV1}=await import("../../../🗄️cas/🗃️store/🟦️.ts");
  const chosen=environment[policy.environment.toolchains]?.split(",").map(row=>row.trim()).filter(row=>/^[0-9a-f]{64}$/u.test(row)),toolchains=chosen===undefined||chosen.length===0?undefined:new Set(chosen);
- const server=await startRemoteCacheServerV1({reusePort:true,successor:context.environment.SEMIO_SIDECAR_SUCCESSOR==="1",startupScan:"background",onActivity:createActivityWakeV1(context.work),hostStore:createCasStoreV1({root:casRootV1(environment),refuseOverCap:true}),directory,host:address,additionalHosts,port,maximumBytes,maximumEntryBytes:Math.min(policy.maximumEntryBytes,Math.floor(maximumBytes/2)),maximumAgeDays:policy.maximumAgeDays,graceMilliseconds:policy.graceSeconds*1000,defaultInstance:all.defaults.instance,tokens:{},validation:policy.actionResults as "complete",maximumActionResultBytes:policy.maximumActionResultBytes,maintenanceSeconds:policy.maintenanceSeconds,blobSharePercent:policy.blobSharePercent,graph:policy.graph,staleness:{mode:policy.staleness.mode as "off"|"dry-run"|"enforce",workspace:context.root,recheckSeconds:policy.staleness.recheckSeconds,manifestNames:policy.staleness.manifestNames,examples:policy.staleness.examples,...toolchains===undefined?{}:{toolchains:()=>toolchains}},mirror:{directory:join(directory,"mirror")},fleet:{storeRoot:machine.storeRoot,group:machine.group,root:context.root,inGroup,...(view?.enforceNetwork===true?{networks:[declared]}:{}),peerStores,pinned},peers:createFleetPeerReadThroughV1({transports}),signal:context.signal});
+ const server=await startRemoteCacheServerV1({reusePort:true,successor:context.environment.SEMIO_SIDECAR_SUCCESSOR==="1",startupScan:"background",onActivity:createActivityWakeV1(context.work),hostStore:createCasStoreV1({root:casRootV1(environment),refuseOverCap:true}),directory,host:bound??"127.0.0.1",additionalHosts,port,maximumBytes,maximumEntryBytes:Math.min(policy.maximumEntryBytes,Math.floor(maximumBytes/2)),maximumAgeDays:policy.maximumAgeDays,graceMilliseconds:policy.graceSeconds*1000,defaultInstance:all.defaults.instance,tokens:{},validation:policy.actionResults as "complete",maximumActionResultBytes:policy.maximumActionResultBytes,maintenanceSeconds:policy.maintenanceSeconds,blobSharePercent:policy.blobSharePercent,graph:policy.graph,staleness:{mode:policy.staleness.mode as "off"|"dry-run"|"enforce",workspace:context.root,recheckSeconds:policy.staleness.recheckSeconds,manifestNames:policy.staleness.manifestNames,examples:policy.staleness.examples,...toolchains===undefined?{}:{toolchains:()=>toolchains}},mirror:{directory:join(directory,"mirror")},fleet:{storeRoot:machine.storeRoot,group:machine.group,root:context.root,inGroup,...(view?.enforceNetwork===true?{networks:declared}:{}),peerStores,pinned},peers:createFleetPeerReadThroughV1({transports}),signal:context.signal});
  const leaving=new AbortController(),exchange=servePeerExchangeV1({ownGroup:machine.group,ownStore:machine.storeRoot,peers:peerStores,pollMilliseconds:1000,signal:AbortSignal.any([context.signal,leaving.signal]),answer:async path=>{const response=await signedRead(server.url+path,{headers:{[FLEET_HOP_HEADER_V1]:"1"}});return response.status===200?{status:200,bytes:new Uint8Array(await response.arrayBuffer())}:(await response.body?.cancel(),{status:response.status});}});
  const profile=await createStallProfilerV1(),lag=createLoopLagWatchV1({intervalMilliseconds:1000,thresholdMilliseconds:1500,attributeMilliseconds:400,...profile===undefined?{}:{profile},openFiles:()=>{try{return readdirSync(process.platform==="win32"?".":"/dev/fd").length;}catch{return undefined;}},report:say}),lagTimer=setInterval(()=>{lag.tick();},1000);lagTimer.unref();
  say(`serving the cache on ${server.url}, index ${directory}`);
@@ -46,11 +44,10 @@ export async function runCache(context:RemoteExecutionSidecarContextV1):Promise<
  settleSidecarSuccessorV1(process.env);
  const publish=async():Promise<void>=>{
   try{
-   const hosts=[address,...additionalHosts,...(view?.advertise??[])];
-   const published=await publishFleetCacheFactsV1({admin,storeRoot:machine.storeRoot!,directory,group:machine.group,instance:all.defaults.instance,port:server.port,transport:inGroup,endpoints:fleetCacheEndpointsV1(server.port,hosts.map(host=>`http://${host}:${server.port}`),[]).filter(endpoint=>hosts.includes(new URL(endpoint).hostname))});
+   const published=await publishFleetCacheFactsV1({admin,storeRoot:machine.storeRoot!,directory,group:machine.group,instance:all.defaults.instance,port:server.port,transport:inGroup});
    if(published.changed)say(`fleet facts published: generation ${published.facts.generation}`);
   }catch(error){say(`publishing the fleet facts failed: ${(error as Error).message}`);}
  };
  await publish();
- try{while(!context.signal.aborted){await sleep(60_000,context.signal);if(!context.signal.aborted)await publish();}}finally{leaving.abort();await server.stop().catch(()=>{});await exchange.catch(()=>{});}
+ try{while(!context.signal.aborted){await sleep(15_000,context.signal);if(!context.signal.aborted)await publish();}}finally{leaving.abort();await server.stop().catch(()=>{});await exchange.catch(()=>{});}
 }

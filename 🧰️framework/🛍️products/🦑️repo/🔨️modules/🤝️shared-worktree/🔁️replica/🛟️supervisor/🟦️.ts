@@ -1,11 +1,10 @@
-import {spawn} from "node:child_process";
+import {spawn,spawnSync} from "node:child_process";
 import {createHash,randomBytes} from "node:crypto";
 import {existsSync,readdirSync,readFileSync,realpathSync,renameSync,rmSync,writeFileSync,mkdirSync} from "node:fs";
 import {mkdir,readdir,readFile,rename,rm,writeFile} from "node:fs/promises";
 import {dirname,join,relative,resolve} from "node:path";
 import {fileURLToPath,pathToFileURL} from "node:url";
 import {isMainThread,Worker,workerData} from "node:worker_threads";
-import {ownProcessIdentityV1,processHolderAliveV1,readProcessStartV1,type ProcessStartReadV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 type Check=(root:string,signal?:AbortSignal)=>Promise<{ok:boolean;error:string|null}>;
 type Reject=(root:string,digest:string)=>Promise<string|null>;
@@ -36,7 +35,42 @@ const bootDirectory=(root:string):string=>join(root,".cache","f","boot");
 const codeDirectory=(root:string):string=>join(root,".cache","f","code");
 const readJson=(file:string):unknown=>{try{return JSON.parse(readFileSync(file,"utf8"));}catch{return undefined;}};
 const writeAtomic=(file:string,body:string):void=>{mkdirSync(dirname(file),{recursive:true});const temporary=`${file}.${process.pid}.${randomBytes(4).toString("hex")}.tmp`;try{writeFileSync(temporary,body);renameSync(temporary,file);}catch(error){rmSync(temporary,{force:true});throw error;}};
-const parentLives=(pid:number,start:ProcessStartReadV1):boolean=>start==="gone"?false:start==="unknown"?true:processHolderAliveV1({pid,startMs:start});
+type ProcessStartReadV1=number|"gone"|"unknown";
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+/** 🕰️ The creation time of one process, `gone` or `unknown`: a self-contained twin of `readProcessStartV1` because this file is copied alone to `.cache/f/boot/stage.ts` and may import nothing outside Node built-ins (the identity module would not resolve from there); the twin is kept in step by `🧪️tests/🛟️boot.ts`.
+ * @see ../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts */
+function readProcessStartV1(pid:number):ProcessStartReadV1{
+ if(!Number.isInteger(pid)||pid<1)return "gone";
+ try{
+  if(process.platform==="win32"){
+   const run=spawnSync("powershell.exe",["-NoProfile","-NonInteractive","-Command",`$p = Get-CimInstance Win32_Process -Filter 'ProcessId=${pid}'; if ($null -eq $p -or $null -eq $p.CreationDate) { 'gone' } else { ([DateTimeOffset]$p.CreationDate).ToUnixTimeMilliseconds() }`],{encoding:"utf8",windowsHide:true,timeout:15000});
+   if(run.status!==0)return "unknown";
+   const text=String(run.stdout).trim(),value=Number(text);
+   return text==="gone"?"gone":Number.isFinite(value)&&value>0?value:"unknown";
+  }
+  const run=spawnSync("ps",["-p",String(pid),"-o","lstart="],{encoding:"utf8",timeout:15000,env:{...process.env,LC_ALL:"C",TZ:"UTC0"}});
+  if(run.error!==undefined||run.status===null)return "unknown";
+  for(const line of String(run.stdout).split("\n")){
+   const found=/^\s*[A-Za-z]{3}\s+([A-Za-z]{3})\s+(\d{1,2})\s+(\d{2}):(\d{2}):(\d{2})\s+(\d{4})\s*$/u.exec(line),month=found===null?-1:MONTHS.indexOf(found[1]!);
+   if(found!==null&&month>=0)return Date.UTC(Number(found[6]),month,Number(found[2]),Number(found[3]),Number(found[4]),Number(found[5]));
+  }
+  return run.status===1&&String(run.stderr).trim()===""?"gone":"unknown";
+ }catch{return "unknown";}
+}
+let own:{pid:number;startMs:number}|undefined;
+/** 🪪️ The identity this process records in its beat: its creation time as the operating system reports it, else the instant the runtime started. */
+function ownProcessIdentityV1():{pid:number;startMs:number}{
+ if(own!==undefined&&own.pid===process.pid)return own;
+ const read=readProcessStartV1(process.pid);
+ own={pid:process.pid,startMs:typeof read==="number"?read:Math.round(Date.now()-process.uptime()*1000)};
+ return own;
+}
+const parentLives=(pid:number,start:ProcessStartReadV1):boolean=>{
+ if(start==="gone")return false;
+ const now=readProcessStartV1(pid);
+ return now==="gone"?false:now==="unknown"||start==="unknown"?true:Math.abs(now-start)<=3000;
+};
 const timed=<T>(work:Promise<T>,milliseconds:number):Promise<T>=>new Promise<T>((done,fail)=>{const timer=setTimeout(()=>{fail(Error(`store did not answer within ${milliseconds} ms`));},milliseconds);work.then(value=>{clearTimeout(timer);done(value);},error=>{clearTimeout(timer);fail(error);});});
 
 /** ⏱️ Reads the limits from the environment. */
@@ -257,8 +291,6 @@ async function recordBlock(root:string,pid:number,beat:Beat,reason:"blocked"|"si
  try{for(const stale of readdirSync(bootDirectory(root)).filter(item=>/^loop-blocked-\d+\.sample\.txt$/u.test(item)&&item!==name).sort().slice(0,-2))rmSync(join(bootDirectory(root),stale),{force:true});}catch{}
 }
 
-type SilenceModuleV1={readySidecarSilenceV1(input:{status:unknown;nowMs:number}):{state:string;missedBeats:number;ageMs:number};readySilenceWatchV1():{observe(status:unknown,nowMs:number):"wait"|"restart"};readySilenceNoticeV1(silence:{state:"silent";missedBeats:number;ageMs:number}):string};
-const silenceModuleRelativeV1=["🧰️framework","🛍️products","🦑️repo","🔨️modules","📚️library","🏗️build","🌐️remote-execution","🛰️sidecar","🚦️ready","💔️silence","🟦️.ts"];
 const priorityModuleRelativeV1=["🧰️framework","🛍️products","🦑️repo","🔨️modules","📚️library","🏗️build","🌐️remote-execution","🛰️sidecar","🪜️priority","🟦️.ts"];
 
 /** 🏎️ Puts this process (the boot stage or the daemon child, whose watchdog thread shares its priority) into the declared class of the `replica` service before it runs, so a service manager that starts it lower (a Windows task without `<Priority>` runs below normal) cannot starve its event loop and its beat behind other work on a saturated machine; reports the outcome on `notice` and never throws. See `../../../📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🪜️priority/🟦️.ts`. */
@@ -269,22 +301,13 @@ async function applyReplicaPriorityV1(root:string,notice:Sink):Promise<void>{
  }catch(error){notice(`replica scheduling: not applied (${text(error)}) / replica Scheduling: nicht angewendet (${text(error)})`);}
 }
 
-/** 💔️ The `ready.json` of this machine's readiness sidecar (`<store>/v1/origins/<origin>/ready.json`), `undefined` without a fleet store. */
-function readyStatusFileV1(root:string,environment:Readonly<Record<string,string|undefined>>):string|undefined{
- const store=environment.SEMIO_FLEET_STORE_ROOT;
- if(store===undefined||store==="")return undefined;
- const explicit=environment.SEMIO_FLEET_ORIGIN,recorded=(readJson(join(root,".cache","f","machine.json")) as {originId?:unknown}|undefined)?.originId,origin=explicit!==undefined&&explicit!==""?explicit:typeof recorded==="string"?recorded:undefined;
- return origin===undefined||!/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u.test(origin)?undefined:join(store,"v1","origins",origin,"ready.json");
-}
 
 function candidate(args:readonly string[],root:string,environment:Readonly<Record<string,string|undefined>>,limits:BootLimitsV1,signal:AbortSignal,notice:Sink,base:string,source:"worktree"|"snapshot"|"store",reason:string,force:boolean):Promise<Outcome>{
  return new Promise<Outcome>(done=>{
   const startedAt=Date.now(),beatFile=join(bootDirectory(root),"beat.json"),readyFile=join(bootDirectory(root),"ready.json");
   let ready=false,waiting=false,stopping=false,finished=false,killed="",termTimer:ReturnType<typeof setTimeout>|undefined;
   const proc=spawn(process.execPath,[fileURLToPath(import.meta.url),"--boot-child",...args],{env:{...environment,SEMIO_FLEET_BOOT_BASE:base,SEMIO_FLEET_BOOT_SOURCE:source,SEMIO_FLEET_BOOT_REASON:reason,SEMIO_FLEET_BOOT_FORCE:force?"1":""} as NodeJS.ProcessEnv,stdio:"inherit",windowsHide:true});
-  let recording=false,ownedBeat:Beat|undefined,ownedBeatAt=startedAt,silenceRule:SilenceModuleV1|undefined,silenceWatch:ReturnType<SilenceModuleV1["readySilenceWatchV1"]>|undefined;
-  const statusFile=readyStatusFileV1(root,environment);
-  if(statusFile!==undefined)void import(pathToFileURL(join(root,...silenceModuleRelativeV1)).href).then(module=>{silenceRule=module as SilenceModuleV1;silenceWatch=silenceRule.readySilenceWatchV1();}).catch(()=>undefined);
+  let recording=false,ownedBeat:Beat|undefined,ownedBeatAt=startedAt;
   const pid=proc.pid??0,kill=(why:string,beat?:Beat,reason?:"blocked"|"silent"):void=>{
    killed=killed||why;
    if(beat!==undefined&&reason!==undefined&&beat.phase==="run"){
@@ -305,10 +328,6 @@ function candidate(args:readonly string[],root:string,environment:Readonly<Recor
     if(beat.phase==="run")ready=true;
     if(!stopping&&now-ownedBeatAt>30_000)kill("the watchdog of the daemon fell silent",beat,"silent");
     else if(!stopping&&beat.phase==="run"&&(beat.lagMs??0)>=limits.killMs)kill(`the event loop was blocked for ${Math.round((beat.lagMs??0)/1000)} s${beat.activity===undefined||beat.activity==="idle"?"":` in ${beat.activity}`}`,beat,"blocked");
-   }
-   if(statusFile!==undefined&&silenceRule!==undefined&&silenceWatch!==undefined&&ready&&!stopping){
-    const status=readJson(statusFile);
-    if(silenceWatch.observe(status,now)==="restart"){const silence=silenceRule.readySidecarSilenceV1({status,nowMs:now});notice(silenceRule.readySilenceNoticeV1({state:"silent",missedBeats:silence.missedBeats,ageMs:silence.ageMs}));kill("the readiness sidecar fell silent");}
    }
    if(!ready&&!waiting&&now-startedAt>limits.readyMs&&!stopping)kill(`the daemon was not ready after ${Math.round(limits.readyMs/1000)} s`);
   },Math.max(20,Math.min(1000,limits.beatMs)));

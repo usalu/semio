@@ -176,7 +176,7 @@ export function wireEffectToFriendly(effect: WireVariant): Effect | null {
       return null;
     }
     default:
-      if (effect.tag.startsWith("typed-operation-")) return null;
+      if (effect.tag?.startsWith("typed-operation-")) return null;
       return actorWireEffectToFriendly(effect, (bytes) => decodeWirePack(bytes, "wire.params.args"));
   }
 }

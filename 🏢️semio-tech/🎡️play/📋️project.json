@@ -306,9 +306,13 @@
               "describe": [
                 "job:describe-tool"
               ],
-              "browser": [
-                "job:support",
+              "transpile": [
                 "job:native-transpile"
+              ],
+              "browser": [
+                "job:font-assets",
+                "job:fonts",
+                "job:support"
               ]
             },
             "jobs": [

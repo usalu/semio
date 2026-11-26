@@ -441,6 +441,13 @@ pub struct MemoryBackbone {
 }
 
 impl MemoryBackbone {
+    /// 🚇️ Lends the actual in-memory outbound queue to one funded original page-custody handoff, as [`ChannelBackbone::send_original`] does.
+    pub fn send_original(&self,source:&mut original_outbox::OriginalBackboneOutbox,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(bool,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{
+        let Some(queue)=self.outbox.as_ref()else{return Ok(None)};
+        let mut queue=match queue.try_lock(){Ok(queue)=>queue,Err(std::sync::TryLockError::WouldBlock)=>return Ok(None),Err(std::sync::TryLockError::Poisoned(_))=>return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original memory queue is poisoned"))};
+        source.transfer_to_channel_step(&mut queue,grant)
+    }
+
     pub async fn pair(uri_a: &str, uri_b: &str) -> (Self, Self) {
         let a_to_b = Arc::new(Mutex::new(VecDeque::new()));
         let b_to_a = Arc::new(Mutex::new(VecDeque::new()));

@@ -119,7 +119,7 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
                   const holder = holders.get(index);
                   const state = holder === undefined ? text("course.matching.free") : text("course.matching.used", { item: itemLabel(holder) });
                   return (
-                    <li key={index} data-icon-host="" {...CELL} className="course-value bg-background py-single pe-double ps-single data-[used]:bg-hover-interactive-fill" data-course-drag="" data-used={holder === undefined ? undefined : ""}>
+                    <li key={index} data-icon-host="" {...CELL} className="course-value py-single pe-double ps-single data-[used]:bg-hover-interactive-fill" data-course-drag="" data-used={holder === undefined ? undefined : ""}>
                       <DragGrip title={text("course.matching.drag", { value: cardText(dimension, index) })} locked={locked} onDrop={drop(index)} />
                       <span className="min-w-0 text-sm font-semibold tabular-nums">
                         <IconLabel icon={dimension.icon}>

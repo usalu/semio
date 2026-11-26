@@ -12,3 +12,8 @@ Feature: Keyboard access to display settings
     Given the archive on a phone
     When the reader opens Display settings with the keyboard
     Then the first archive navigation link receives focus
+
+  Scenario: Display settings have one owner
+    When a reader opens display settings
+    Then there is one glass menu surface
+    And its options share the menu surface and their borders

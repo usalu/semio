@@ -1,4 +1,5 @@
 import {noticeLanguagesV1} from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
+import {processPidExistsV1} from "../../../🔖️identity/🟦️.ts";
 import {spawnSync} from "node:child_process";
 import {appendFileSync,mkdirSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
@@ -62,7 +63,7 @@ export function leaseTerminateDecisionV1(input:LeaseTerminateInputV1):Readonly<{
 
 /** 🔌️ What reclaiming touches outside the pure decisions; tests replace it. */
 export type LeaseReclaimPortsV1=Readonly<{alive(pid:number):boolean;signal(pid:number,signal:"SIGTERM"|"SIGKILL"|0):boolean;osStartedAtMs(pid:number):number|undefined;sleep(milliseconds:number):Promise<void>;write(text:string):void;children?(pid:number):readonly number[]|undefined;now?():number}>;
-const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
+const alive=(pid:number):boolean=>processPidExistsV1(pid);
 /** ⏱️ Seconds in the elapsed-time column of `ps` (`[[dd-]hh:]mm:ss`), which carries no time zone. */
 export function leaseElapsedSecondsV1(text:string):number|undefined{
  const match=/^\s*(?:(\d+)-)?(?:(\d+):)?(\d+):(\d+)\s*$/u.exec(text);

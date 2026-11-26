@@ -1,0 +1,9 @@
+# WFC Cold Operation Retirement
+
+The seeded SDK replay resolved the artifact schema and reached live WFC inference. The original request returned INTERNAL after the worker panicked while dropping a live GuestRelayOperation. A second run on the same native gateway and prepared model requested 100 million work units, one million retained items and 64 MiB in each copy, capacity and release dimension. The original 30-second lifetime and stock host policy stayed in use. The same panic occurred after 12.682 seconds. Both runs preserved the seeded 405-byte Pack and 211-byte SPR.
+
+The stack places the drop in the native router's call_plugin after its second close attempt. The code retires the first close refusal, calls close again and discards the returned status. The original Source guard correctly detects that it still owns work. The repeated SDK outcome leaves the initial refusal unidentified on that executable.
+
+The next native link includes the opt-in SEMIO_DEBUG_GUEST_RELAY_REFUSAL trace. It reports body, capture retirement, content closure and Source closure refusals outside the metered callbacks, with separate causal receipt, context and work messages. The source also has an incomplete guest-failure protocol in ColdController. Its permit accessor always refuses, its frozen journal projects SAF1 as a job return, and its genuine capture destination is unused. The authenticated actor failure service used by native Poll establishes the required Source witness.
+
+The causal trace identified a bootstrap discriminator applied to a normal cold-job scalar. The production selector now checks for the bootstrap header before requiring the corresponding ActorContext export. The actual Rust selector regression passed, and SQLite passed eight independent header cases. The rebuilt SDK route returned structured exhaustion without dropping a live owner at both the standard resource limit and a five-minute deadline.

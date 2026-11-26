@@ -1,0 +1,27 @@
+[scan] [1/26] bicycle-stand 1.0 s · clean · remaining about 00:00:25
+[scan] [2/26] ceiling-diffuser 0.8 s · clean · remaining about 00:00:22
+[scan] [3/26] electric-fan-heater 0.6 s · clean · remaining about 00:00:19
+[scan] [4/26] etics-brick-wall-12 1.0 s · clean · remaining about 00:00:19
+[scan] [5/26] etics-brick-wall-30 0.8 s · clean · remaining about 00:00:17
+[scan] [6/26] heat-pump-outdoor-unit 4.4 s · clean · remaining about 00:00:28
+[scan] [7/26] pendant-lamp 1.1 s · clean · remaining about 00:00:26
+[scan] [8/26] plate-heat-exchanger 2.7 s · clean · remaining about 00:00:28
+[scan] [9/26] solar-thermal-collector 2.9 s · clean · remaining about 00:00:29
+[scan] [10/26] solid-brick-wall-1960 0.7 s · clean · remaining about 00:00:25
+[scan] [11/26] spiral-stair 8.7 s · clean · remaining about 00:00:33
+[scan] [12/26] stair-flight 7.3 s · clean · remaining about 00:00:37
+[scan] [13/26] tealight 0.2 s · clean · remaining about 00:00:32
+[scan] [14/26] used-bollard-light 3.9 s · clean · remaining about 00:00:30
+[scan] [15/26] used-coffee-table 2.7 s · clean · remaining about 00:00:28
+[scan] [16/26] used-folding-bookcase-ladder 5.4 s · clean · remaining about 00:00:27
+[scan] [17/26] used-harmonium 7.3 s · clean · remaining about 00:00:27
+[scan] [18/26] used-hinged-wardrobe 5.9 s · clean · remaining about 00:00:25
+[scan] [19/26] used-park-lantern 9.8 s · clean · remaining about 00:00:24
+[scan] [20/26] used-playground-roundabout 12.3 s · clean · remaining about 00:00:23
+[scan] [21/26] used-shoe-cabinet 7.7 s · clean · remaining about 00:00:20
+[scan] [22/26] used-towel-radiator 16.5 s · clean · remaining about 00:00:18
+[scan] [23/26] used-tv-sideboard 5.8 s · clean · remaining about 00:00:14
+[scan] [24/26] used-wall-hung-gas-boiler 12.5 s · clean · remaining about 00:00:10
+[scan] [25/26] used-wall-unit 15.5 s · clean · remaining about 00:00:05
+[scan] [26/26] waste-bin 2.1 s · clean · remaining about 00:00:00
+[scan] 26 assets: 26 clean, 0 with a hard finding, 0 hard findings

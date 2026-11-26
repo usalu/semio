@@ -93,11 +93,12 @@ fn the_box_is_one_space_with_six_surfaces_two_openings_and_its_constructions() {
 }
 
 #[test]
-fn the_roof_without_a_construction_has_no_construction_reference() {
+fn the_roof_without_thermal_data_references_a_schematic_construction() {
     let plan = plan_for(&load((*BOX)));
     let roof = plan.surfaces.iter().find(|row| row.kind == "Roof").expect("a roof");
-    assert_eq!(roof.construction, None);
-    assert!(plan.surfaces.iter().filter(|row| row.kind != "Roof").all(|row| row.construction.is_some()));
+    let schematic = plan.constructions.iter().find(|row| row.xml == roof.construction).expect("schematic construction");
+    assert_eq!(schematic.u_value, None);
+    assert!(plan.surfaces.iter().all(|surface| plan.constructions.iter().any(|row| row.xml == surface.construction)));
 }
 
 #[test]

@@ -1,0 +1,139 @@
+[
+ {
+  "op": "loft",
+  "scale": "500",
+  "id": "sil-body",
+  "solid": "hoodie",
+  "why": "torso: the skinned body of the hoodie in the three views (97 mm elevation/plan, 65 mm elevation/front in the hamstring stretch)"
+ },
+ {
+  "op": "remove",
+  "scale": "50",
+  "view": "elevation",
+  "id": "hem-rib",
+  "bone": "torso",
+  "why": "hem rib: the body carries it on the pelvis, the drawing had it on the torso, so it swung out behind the body when the trunk folds (50 mm in the hamstring stretch); the loft of the pelvis solid stands in its place"
+ },
+ {
+  "op": "remove",
+  "scale": "50",
+  "view": "front",
+  "id": "hem-rib",
+  "bone": "torso",
+  "why": "hem rib: the body carries it on the pelvis, the drawing had it on the torso, so it swung out behind the body when the trunk folds (50 mm in the hamstring stretch); the loft of the pelvis solid stands in its place"
+ },
+ {
+  "op": "remove",
+  "scale": "50",
+  "view": "plan",
+  "id": "hem-rib",
+  "bone": "torso",
+  "why": "hem rib: the body carries it on the pelvis, the drawing had it on the torso, so it swung out behind the body when the trunk folds (50 mm in the hamstring stretch); the loft of the pelvis solid stands in its place"
+ },
+ {
+  "op": "remove",
+  "scale": "100",
+  "view": "elevation",
+  "id": "hem-rib",
+  "bone": "torso",
+  "why": "hem rib: the body carries it on the pelvis, the drawing had it on the torso, so it swung out behind the body when the trunk folds (50 mm in the hamstring stretch); the loft of the pelvis solid stands in its place"
+ },
+ {
+  "op": "remove",
+  "scale": "100",
+  "view": "front",
+  "id": "hem-rib",
+  "bone": "torso",
+  "why": "hem rib: the body carries it on the pelvis, the drawing had it on the torso, so it swung out behind the body when the trunk folds (50 mm in the hamstring stretch); the loft of the pelvis solid stands in its place"
+ },
+ {
+  "op": "remove",
+  "scale": "100",
+  "view": "plan",
+  "id": "hem-rib",
+  "bone": "torso",
+  "why": "hem rib: the body carries it on the pelvis, the drawing had it on the torso, so it swung out behind the body when the trunk folds (50 mm in the hamstring stretch); the loft of the pelvis solid stands in its place"
+ },
+ {
+  "op": "loft",
+  "scale": "50",
+  "id": "hoodie",
+  "solid": "hoodie",
+  "why": "torso: the skinned body of the hoodie in the three views (front and plan prisms 45 to 55 mm apart in the side bend)"
+ },
+ {
+  "op": "loft",
+  "scale": "100",
+  "id": "hoodie",
+  "solid": "hoodie",
+  "why": "torso: the skinned body of the hoodie in the three views (front and plan prisms 45 to 55 mm apart in the side bend)"
+ },
+ {
+  "op": "loft",
+  "scale": "200",
+  "id": "hoodie",
+  "solid": "hoodie",
+  "why": "torso: the skinned body of the hoodie in the three views (front and plan prisms 45 to 55 mm apart in the side bend)"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "sil-shoe-r",
+  "view": "front",
+  "taper": false,
+  "why": "foot-r: flat in the three views while the quad stretch lifts it behind the body (heel anchor 97 mm off the front shoe, 140 mm between side and front): the side outline swept laterally"
+ },
+ {
+  "op": "extrude",
+  "scale": "500",
+  "id": "sil-shoe-r",
+  "view": "plan",
+  "taper": false,
+  "why": "foot-r: flat in the three views while the quad stretch lifts it behind the body (heel anchor 97 mm off the front shoe, 140 mm between side and front): the side outline swept laterally"
+ },
+ {
+  "op": "set",
+  "scale": "50",
+  "view": "front",
+  "id": "hair-fringe",
+  "set": {
+   "solid": {
+    "kind": "extruded",
+    "sweep": "v",
+    "z0": -0.07,
+    "z1": 0
+   }
+  },
+  "why": "head: the fringe is the hair over the forehead; its front prism ran through the whole depth of the head and stood 40 mm above the hair of the side elevation when the head hangs in the hamstring fold; it is as deep as the front half of the hair"
+ },
+ {
+  "op": "set",
+  "scale": "100",
+  "view": "front",
+  "id": "hair-fringe",
+  "set": {
+   "solid": {
+    "kind": "extruded",
+    "sweep": "v",
+    "z0": -0.07,
+    "z1": 0
+   }
+  },
+  "why": "head: the fringe is the hair over the forehead; its front prism ran through the whole depth of the head and stood 40 mm above the hair of the side elevation when the head hangs in the hamstring fold; it is as deep as the front half of the hair"
+ },
+ {
+  "op": "set",
+  "scale": "200",
+  "view": "front",
+  "id": "hair-fringe",
+  "set": {
+   "solid": {
+    "kind": "extruded",
+    "sweep": "v",
+    "z0": -0.07,
+    "z1": 0
+   }
+  },
+  "why": "head: the fringe is the hair over the forehead; its front prism ran through the whole depth of the head and stood 40 mm above the hair of the side elevation when the head hangs in the hamstring fold; it is as deep as the front half of the hair"
+ }
+]

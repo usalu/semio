@@ -1,6 +1,6 @@
 //! 🖼️ DWG AC1018 viewer — Main window: a real 2D `ImageWindowKit` render of the typed drawing geometry (read-only).
 //! This file imports nothing from the sibling editor module.
-Objects without a typed geometry stay in the logical model untouched and are not drawn.
+//! Objects without a typed geometry stay in the logical model untouched and are not drawn.
 
 use semio_s_artifact_stdio_dwg_model::standards::v_ac1018::subsets::any::schema::snapshot::DwgSnapshot;
 use semio_s_artifact_stdio_dwg_snapshot_drawing::standards::v_ac1024::subsets::any::schema::snapshot::drawing::preview::{preview_svg, DWG_PREVIEW_CANVAS};

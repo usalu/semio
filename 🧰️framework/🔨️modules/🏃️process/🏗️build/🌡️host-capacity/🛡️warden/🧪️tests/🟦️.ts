@@ -776,6 +776,15 @@ test("ceiling: observe mode reports the breach once and signals nothing; at crit
  expect(tight.alarms.map(alarm=>[alarm.action,alarm.reason])).toEqual([["cancel","ceiling"]]);
 });
 
+test("build-script cancellation keeps the artifact directory beyond the stored command text",async()=>{
+ const output="/work with spaces/target/prototype/build/beta-9a23",rows=unitRows(4500,"build_script_build","wasm32-wasip2","bin");
+ const run=await ceilingRun(rows.map(row=>row.pid===11?{...row,command:row.command+" --cfg test".repeat(60)+` --out-dir "${output}" -C opt-level=0`}:row),{available:300});
+ const record=readHostWardenCancelsBelowV1(10,Date.now()-60_000,run.base)[0];
+ expect(record?.buildScriptOutput).toBe(output);
+ expect(record?.command).toHaveLength(512);
+ expect(record?.command).not.toContain(output);
+});
+
 test("ceiling: the typed failure of the cancelled build is found by the pid above the cancelled process, carries both languages and names every cancelled unit",async()=>{
  const run=await ceilingRun(unitRows(1700),{available:300});
  const since=Date.now()-60000;
@@ -818,7 +827,7 @@ test("MOUNTED: a real unit over its ceiling is killed with its tree at a critica
  const tag="unit",child=Bun.spawn([process.execPath,"-e",`${hog(tag)}/* --crate-name warden_probe --crate-type lib --target wasm32-wasip2 */`],{stdout:"ignore",stderr:"ignore",stdin:"ignore"});children.push(child);
  await Bun.sleep(400);
  const tables:HostWardenTablesV1={roots:[`warden-test-${token}`],never:[],kinds:[{name:"unit",rank:20,pattern:`warden-test-${token}-${tag}`,actions:["suspend","cancel"],signal:"SIGKILL",scope:"tree",capMegabytes:10240,capCritical:true,ceiling:"unit"}]};
- const ceilings={workerClass:"tiny",classes:{tiny:{hostMegabytes:4096,libraryMegabytes:20,finalMegabytes:30,finalBackend:"serial"}},carving:[]};
+ const ceilings={workerClass:"tiny",classes:{tiny:{hostMegabytes:4096,libraryMegabytes:20,finalMegabytes:30,finalBackend:"serial"}},carving:[],families:[]};
  const base=fresh(),directory=join(base,"warden"),written:string[]=[],begun=Date.now();
  const ports:HostWardenPortsV1={directory,now:Date.now,write:line=>written.push(line),mode:()=>"enforce",sample:async()=>host(300),table:realTable,signal:(pid,name)=>{if(!children.some(entry=>entry.pid===pid))throw Error(`the test refuses to signal pid ${pid}`);process.kill(pid,name);},sleep:async()=>{await Bun.sleep(60);}};
  const result=await runHostWardenLoopV1({ports,policy:quickPolicy,tables,ceilings,within:process.pid,maxTicks:4,code:"mounted",platform:process.platform});

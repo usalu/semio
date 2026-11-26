@@ -2,4 +2,5 @@ type BimPresence {
   engagementInput: String! @state(class: PRESENCE)
   storey: String! @state(class: PRESENCE)
   camera: Viewport2d! @state(class: PRESENCE)
+  ownedWorksets: [String!]! @state(class: PRESENCE)
 }

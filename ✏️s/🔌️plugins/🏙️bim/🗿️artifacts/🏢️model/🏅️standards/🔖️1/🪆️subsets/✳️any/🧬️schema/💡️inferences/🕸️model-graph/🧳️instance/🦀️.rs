@@ -14,8 +14,7 @@ use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::infe
 use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use protocol::{InferenceWorkFailure,InferenceError, ColdMutation, Mutation, MutationDiff};
-use protocol::ColdMutationDiff;
+use protocol::{ColdMutation, ColdMutationDiff, InferenceError, InferenceWorkFailure};
 use semio_plugin::ArtifactInstanceOperationOwnerHandle;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -28,6 +27,7 @@ pub type Instance<'a> = Option<&'a ArtifactInstanceOperationOwnerHandle>;
 pub const DOCUMENT: &str = "bim.model-graph";
 /// 🔭️ The name of the probe session in the instance.
 pub const PROBE: &str = "bim.model-graph.probe";
+const PREVIEW: &str = "bim.model-graph.preview";
 
 /// 🧠️ Lends the session `name` of `handle` to `act`, creating it on first use. An instance whose close ladder already dropped its sessions serves `act` a throwaway session instead.
 pub fn lend_handle<R>(handle: &ArtifactInstanceOperationOwnerHandle, name: &'static str, act: impl FnOnce(&mut ModelInferenceSession) -> R) -> R {
@@ -68,6 +68,23 @@ pub fn with_inference<R>(instance: Instance<'_>, snapshot: &ModelSnapshot, read:
     })
 }
 
+/// 🪟️ Associates the mounted view's authenticated document revision with its completed inference.
+pub fn with_view_inference<R>(instance: Instance<'_>, doc: &semio_plugin::ArtifactView<'_, ModelSnapshot>, read: impl FnOnce(&ModelInference) -> R) -> R {
+    let Some(operation) = doc.committed_render_operation() else {
+        return lend(instance, PREVIEW, |session| {
+            let result = session.try_sync(doc.snapshot).map(|_| ());
+            read(&shown(session, result))
+        });
+    };
+    lend(instance, DOCUMENT, |session| {
+        let result = session.try_sync(doc.snapshot).map(|_| ());
+        if result.is_ok() {
+            session.record_rendered_revision(operation.canonical_base_revision);
+        }
+        read(&shown(session, result))
+    })
+}
+
 /// 💡️ [`with_inference`] whose run failure is a value: a fault of the engine is returned instead of shown.
 pub fn try_with_inference<R>(instance: Instance<'_>, snapshot: &ModelSnapshot, read: impl FnOnce(&ModelInference) -> R) -> Result<R, InferenceError> {
     lend(instance, DOCUMENT, |session| session.try_sync(snapshot).map(read))
@@ -75,7 +92,7 @@ pub fn try_with_inference<R>(instance: Instance<'_>, snapshot: &ModelSnapshot, r
 
 /// 📝️ Records the concrete diffs of `mutations` the editor emits against `snapshot`, in order, for the instance's next sync. Each mutation's diff is read against the state the ones
 /// before it leave; a mutation whose diff does not apply records nothing and the next sync walks the plan.
-pub fn record_mutations<Op: Mutation<ModelSnapshot, Diff = ModelDiff>>(instance: Instance<'_>, snapshot: &ModelSnapshot, mutations: &[Op]) {
+pub fn record_mutations<Op: ColdMutation<ModelSnapshot, ReferenceDiff = ModelDiff>>(instance: Instance<'_>, snapshot: &ModelSnapshot, mutations: &[Op]) {
     let Some(handle) = instance else { return };
     let mut sum = ModelDiff::default();
     let mut state: Option<ModelSnapshot> = None;
@@ -133,21 +150,51 @@ pub fn finish(instance:&ArtifactInstanceOperationOwnerHandle,run:&mut SessionRun
 //#endregion 🔖️Runs
 
 //#region 🔖️Analysis
+/// 🎟️ The original caller's cursor for the mounted inference owner.
+pub type MountedAnalysisAccess = semio_plugin::ArtifactInferenceSessionAccess<ModelInferenceSession>;
+
+/// 🕳️ A read of an exact revision that no committed view has published.
+pub const PROJECTION_UNAVAILABLE: &str = "BIM inference has no completed render for this document revision";
+
 /// 🧵️ A stepped, cancellable bring-up of one instance's session to a snapshot: what a job holds between its steps. The first [`advance`](Analysis::advance) opens the run, every later one spends the
 /// fuel on it, the one that finishes it settles the session. [`cancel`](Analysis::cancel) closes the run as cancelled, so the nodes it finished stay cached for the next run. An analysis without an instance
 /// settles a session of its own, so its runs belong to one session all the way.
 pub struct Analysis {
-    access:semio_plugin::ArtifactInferenceSessionAccess<ModelInferenceSession>,
+    access:MountedAnalysisAccess,
     instance: Option<ArtifactInstanceOperationOwnerHandle>,
     local: Option<ModelInferenceSession>,
     run: Option<SessionRun>,
+    rendered_revision: Option<[u8; 32]>,
     done: bool,
 }
 
 impl Analysis {
-    /// 🏗️ An analysis of the document that `instance` shows, finishing at most `fuel` graph nodes per step (at least one).
+    /// 🏗️ An analysis of the document that `instance` shows.
     pub fn new(instance: Instance<'_>) -> Self {
-        Self { access:Default::default(),instance: instance.cloned(), local: None, run: None, done: false }
+        Self { access:Default::default(),instance: instance.cloned(), local: None, run: None, rendered_revision: None, done: false }
+    }
+
+    /// 🪪️ Uses an already rendered projection only for the admitted command's exact document revision.
+    pub fn for_rendered_revision(instance: &ArtifactInstanceOperationOwnerHandle, revision: [u8; 32]) -> Self {
+        Self { rendered_revision: Some(revision), ..Self::new(Some(instance)) }
+    }
+
+    /// 📖️ Lends the completed projection for this exact revision under the original caller.
+    pub fn read_rendered<R>(
+        instance: &ArtifactInstanceOperationOwnerHandle,
+        access: &mut MountedAnalysisAccess,
+        revision: [u8; 32],
+        cx: &mut semio_framework_job::StepContext<'_>,
+        read: impl FnOnce(&ModelInference, &mut semio_framework_job::StepContext<'_>) -> R,
+    ) -> Result<Option<R>, semio_framework_job::OriginalTurnFailure> {
+        use semio_framework_value::{ValueError, ValueRefusalKind};
+        let unavailable = || ValueError::literal(ValueRefusalKind::UnsupportedOwner, PROJECTION_UNAVAILABLE);
+        instance.with_inference_session(DOCUMENT, access, cx, |_| Err(unavailable().into()), |session, cx| {
+            if !session.has_rendered_revision(revision) {
+                return Err(unavailable().into());
+            }
+            Ok(read(session.inference(), cx))
+        })?.transpose()
     }
 
     /// ✅️ Whether the session is settled at the snapshot.
@@ -170,10 +217,17 @@ impl Analysis {
 
     /// ⏩️ Does one bounded step against `snapshot`; a run that fails or finishes is closed here.
     pub fn advance(&mut self,snapshot:&ModelSnapshot,cx:&mut semio_framework_job::StepContext<'_>)->Result<RunProgress,InferenceWorkFailure> {
+        if cx.is_cancelled() {
+            return Err(InferenceError::Cancelled.into());
+        }
         if self.done {
             return Ok(RunProgress { fraction: 1.0, done: true, ..RunProgress::default() });
         }
+        let rendered_revision = self.rendered_revision;
         let progress = self.session(cx,|session,slot,cx| {
+            if rendered_revision.is_some_and(|revision| session.has_rendered_revision(revision)) {
+                return Ok(if cx.charge_work_unit() { RunProgress { fraction: 1.0, done: true, ..RunProgress::default() } } else { RunProgress::default() });
+            }
             let Some(mut run)=slot.take()else{*slot=session.begin_sync_funded(cx)?;return Ok(RunProgress::default())};
             match session.step(&mut run,snapshot,cx) {
                 Ok(progress) if progress.done=>{let result=session.finish(&mut run,snapshot,cx).map(|_|progress);if result.is_err(){*slot=Some(run)}result},
@@ -189,6 +243,52 @@ impl Analysis {
         })?.unwrap_or_else(||Ok(RunProgress::default()))?;
         self.done = progress.done;
         Ok(progress)
+    }
+
+    fn reference_session<R>(&mut self, act: impl FnOnce(&mut ModelInferenceSession, &mut Option<SessionRun>) -> R) -> R {
+        let Self { instance, local, run, .. } = self;
+        match instance {
+            Some(handle) => lend_handle(handle, DOCUMENT, |session| act(session, run)),
+            None => act(local.get_or_insert_with(ModelInferenceSession::default), run),
+        }
+    }
+
+    /// 🔬️ Advances a cold analysis by up to `fuel` uncached node computations.
+    pub fn advance_cold(&mut self, snapshot: &ModelSnapshot, fuel: usize) -> Result<RunProgress, InferenceError> {
+        if self.done {
+            return Ok(RunProgress { fraction: 1.0, done: true, ..RunProgress::default() });
+        }
+        let progress = self.reference_session(|session, slot| {
+            let mut run = slot.take().unwrap_or_else(|| session.begin_sync(snapshot));
+            match session.step_cold(&mut run, snapshot, fuel) {
+                Ok(progress) if progress.done => session.finish_cold(run, snapshot).map(|_| progress),
+                Ok(progress) => {
+                    *slot = Some(run);
+                    Ok(progress)
+                }
+                Err(error) => {
+                    let _ = session.finish_cold(run, snapshot);
+                    Err(error)
+                }
+            }
+        })?;
+        self.done = progress.done;
+        Ok(progress)
+    }
+
+    /// 🛑️ Closes a cold analysis as cancelled and preserves the last published inference.
+    pub fn cancel_cold(&mut self, snapshot: &ModelSnapshot) {
+        self.reference_session(|session, slot| {
+            if let Some(mut run) = slot.take() {
+                run.cancel();
+                let _ = session.finish_cold(run, snapshot);
+            }
+        });
+    }
+
+    /// 📖️ Reads the reference inference at the requested snapshot.
+    pub fn read_cold<R>(&mut self, snapshot: &ModelSnapshot, read: impl FnOnce(&ModelInference) -> R) -> Result<R, InferenceError> {
+        self.reference_session(|session, _| session.try_sync(snapshot).map(read))
     }
 
     /// 🛑️ Cancels the analysis: the run is closed as cancelled and the session keeps every node it finished.

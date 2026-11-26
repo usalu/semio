@@ -1,7 +1,7 @@
 //! 🖼️ Authored-view rules shared by the three view leaves, the editor and the `view-linework` inference: which fields a view kind owns, the conventions of its defaults and
 //! why a view cannot be written. Pure, total and read-only: a refusal names the field below the view record and carries the message.
 
-use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{DetailLevel, Phase, Point2, ViewCamera, ViewCategory, ViewCrop, ViewKind, ViewPlane};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Point2, ViewCamera, ViewCategory, ViewCrop, ViewKind, ViewPlane};
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use crate::standards::v1::subsets::any::schema::snapshot::entities::View;
 use crate::standards::v1::subsets::any::schema::snapshot::validity::DEFAULT_CUT_HEIGHT;
@@ -11,55 +11,12 @@ use std::f64::consts::FRAC_PI_2;
 /// 🪑️ Ceiling plan convention: the height above the storey elevation at which a ceiling plan cuts when the view authors none.
 pub const DEFAULT_CEILING_CUT_HEIGHT: f64 = 2.1;
 
-/// 🔭️ The view depth of a new view: deep enough to see the whole model.
-pub const DEFAULT_VIEW_DEPTH: f64 = 100.0;
+pub use super::entities::DEFAULT_VIEW_DEPTH;
 
-/// 📏️ The drawing scale denominator of a new view.
-pub const DEFAULT_VIEW_SCALE: u32 = 100;
+pub use super::entities::DEFAULT_VIEW_SCALE;
 
 /// 📏️ The largest scale denominator a view accepts (1:10000).
 pub const MAX_VIEW_SCALE: u32 = 10_000;
-
-impl View {
-    /// 🖼️ A view of `kind` with the conventions of a new view: unlimited depth, 1:100, medium detail, nothing hidden, no crop, every phase.
-    pub fn standard(building: &str, name: &str, kind: ViewKind) -> Self {
-        Self {
-            building: building.into(),
-            name: name.into(),
-            kind,
-            storey: None,
-            plane: None,
-            camera: None,
-            cut_height: None,
-            depth: DEFAULT_VIEW_DEPTH,
-            crop: None,
-            hidden: Vec::new(),
-            phase: None,
-            scale: DEFAULT_VIEW_SCALE,
-            detail: DetailLevel::Medium,
-        }
-    }
-
-    /// 🗺️ A plan or ceiling plan of `storey`.
-    pub fn of_storey(building: &str, name: &str, kind: ViewKind, storey: &str) -> Self {
-        Self { storey: Some(storey.into()), ..Self::standard(building, name, kind) }
-    }
-
-    /// 📐️ A section or elevation through `plane`.
-    pub fn through(building: &str, name: &str, kind: ViewKind, plane: ViewPlane) -> Self {
-        Self { plane: Some(plane), ..Self::standard(building, name, kind) }
-    }
-
-    /// 🎥️ Whether the view hides the category.
-    pub fn hides(&self, category: ViewCategory) -> bool {
-        self.hidden.contains(&category)
-    }
-
-    /// 🕰️ Whether the phase filter lets an element of `phase` through.
-    pub fn shows_phase(&self, phase: Phase) -> bool {
-        self.phase.is_none_or(|wanted| wanted == phase)
-    }
-}
 
 /// ✂️ The height above the storey elevation at which a plan or ceiling plan cuts: the view's own, else the storey's, else the plan convention (the ceiling convention for a ceiling plan); none for every other kind or a missing storey.
 pub fn view_cut_height(base: &ModelSnapshot, view: &View) -> Option<f64> {

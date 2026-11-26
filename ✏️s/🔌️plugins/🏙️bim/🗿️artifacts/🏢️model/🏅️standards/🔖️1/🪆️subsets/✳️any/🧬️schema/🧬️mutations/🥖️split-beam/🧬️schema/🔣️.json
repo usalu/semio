@@ -11,7 +11,7 @@
     "new_id"
   ],
   "x-semio-inverse-rows": {
-    "bounded": 2
+    "bounded": 3
   },
   "properties": {
     "mutation": {

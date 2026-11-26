@@ -23,9 +23,6 @@
 	align-items: center;
 	justify-content: center;
 	pointer-events: auto;
-	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-	background-color: color-mix(in srgb, var(--panel, var(--color-background)) 42%, transparent);
 }
 
 .reveal .presentation-media-teaser__label {

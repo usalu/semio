@@ -817,3 +817,11 @@ export const WORLD3D_SUGGESTIONS_LABELS_V1 = {
 export function world3dSuggestionsGestureTarget(hoveredVortexFullId: string | null | undefined): string | null {
   return hoveredVortexFullId || null;
 }
+
+/** ⏱️ Longest gap between a pointer-up and the click the browser derives from it. */
+export const WORLD3D_CLICK_AFTER_RELEASE_MS = 50;
+
+/** 🎯️ Whether an `onPointerMissed` click is the one that follows the very pointer-up whose padded pick already selected; any later click is a genuine, separate click. */
+export function world3dMissedClickBelongsToPickRelease(pickReleaseTimeStamp: number | null, clickTimeStamp: number): boolean {
+  return pickReleaseTimeStamp !== null && clickTimeStamp >= pickReleaseTimeStamp && clickTimeStamp - pickReleaseTimeStamp <= WORLD3D_CLICK_AFTER_RELEASE_MS;
+}

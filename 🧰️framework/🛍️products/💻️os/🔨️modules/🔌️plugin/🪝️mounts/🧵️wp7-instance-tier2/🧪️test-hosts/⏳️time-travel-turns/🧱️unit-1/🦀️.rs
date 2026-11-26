@@ -19,6 +19,7 @@ use protocol::OpBinary;
 use protocol::OpText;
 use store::{ReferenceSpaceMember, SpaceMember};
 use semio_plugin_time_travel::TimeTravelOwners;
+use semio_plugin_time_travel_turns::TimeTravelExtension;
 use semio_framework_value_derive::ToValue;
 use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 use semio_plugin_window_config::WindowConfigOwner;

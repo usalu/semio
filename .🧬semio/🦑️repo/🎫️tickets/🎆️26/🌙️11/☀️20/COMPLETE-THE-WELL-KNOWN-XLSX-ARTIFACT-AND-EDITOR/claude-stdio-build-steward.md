@@ -1,6 +1,6 @@
 # Stdio Build Steward (wasm32-wasip2 stdio + stdio-office)
 
-Status 19:55: build NOT green yet; paused at the coordinator's request (host warden cancels units over memory ceilings).
+Status 23:57: BUILD GREEN (rebuild 231237, exit 0). Published, supported, activated; pane journey run (see Journey).
 
 ## Errors and root fixes
 
@@ -16,3 +16,24 @@ A broader first sweep also touched non-stdio files (plugins and framework tests)
 
 ## Next
 Rebuild once the coordinator says the warden budgets are fixed, then bun publish/support/activate/journey steps, then delete native build intermediates first (disk 24 GiB).
+
+## Later errors (all not code, except the last)
+
+- Warden SIGTERMs (hub-stdio, hub-stdio-component, pdf-model, ifc4x3 add2 shards): memory budgets; resolved by the warden agent's budgets plus the coordinator's cheaper compile (`-Z threads=1`, `lto="off"`).
+- Two concurrent giant crates: `claude-pane-cargo.sh` builds the two components in two sequential cargo invocations (stdio first, office second), exit non-zero if either fails.
+- Transient manifest edits by other agents (brep-import duplicate `step-snapshot` key, bim snapshot missing `sqlite-schema` dep): fixed by their owners during the run; no change by this steward.
+
+## Result (rebuild 231237, 23:12 to 23:48)
+
+- Stripped wasm: stdio 402,046,338 bytes (383 MiB), stdio-office 210,167,265 bytes (200 MiB); both under the 512 MiB cap.
+- Warden peaks: semio_hub_stdio_component 9,879 MB at its earlier cancelled run (budget now allows it); this green run logged no cancellations. semio_hub_stdio_office_component final link peaks 4,096 to 4,231 MB (above the unbudgeted 4,096 MB final-link ceiling, reported not cancelled): budget it at about 4,700 MB.
+- native/build deleted after publish (disk 31 GiB free).
+
+## Journey (T/🗑️generated/standalone-journey/journey.json)
+
+- en: FAIL, download event timeout 90 s
+- de: FAIL, download event timeout 90 s
+- open transitional workbook: FAIL, `file-open-failed` notice
+- open strict workbook: FAIL, `file-open-failed` notice
+- refuse not-a-workbook.xlsx (en, de): PASS
+- refuse foreign-package.xlsx (en, de): PASS

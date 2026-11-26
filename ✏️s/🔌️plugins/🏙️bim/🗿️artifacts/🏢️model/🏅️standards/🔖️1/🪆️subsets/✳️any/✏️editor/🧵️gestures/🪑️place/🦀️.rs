@@ -6,7 +6,7 @@
 
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Modifiers, Surface};
 use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{axis_tangent_at, point2, project, P};
-use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{GestureKey, Pointer, Step, Tool, ToolContext, ToolEvent, ELEVATION_STEP, PICK_PIXELS, REJECTED, STOREY_MISSING};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{snap_mark, GestureKey, Pointer, Step, Tool, ToolContext, ToolEvent, ELEVATION_STEP, PICK_PIXELS, REJECTED, STOREY_MISSING};
 use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::snap::SnapHit;
 use semio_s_artifact_bim_model_coordination::editor::bim::gestures::typed::INVALID;
@@ -300,7 +300,7 @@ impl Tool for Place {
             marks.push(Mark::path(&[candidate.frame.world([-CROSS, 0.0]), candidate.frame.world([CROSS, 0.0])], false, style));
             marks.push(Mark::path(&[candidate.frame.world([0.0, -CROSS]), candidate.frame.world([0.0, CROSS])], false, style));
         }
-        marks.extend(candidate.hit.as_ref().map(Mark::snap));
+        marks.extend(candidate.hit.as_ref().map(snap_mark));
         Preview::of(marks)
     }
 }

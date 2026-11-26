@@ -1,6 +1,6 @@
 {
   "width": 128.0,
-  "height": 144.5,
+  "height": 172.03,
   "views": {
     "v-plan-st-first": {
       "name": "Plan First",
@@ -31,13 +31,13 @@
       "kind": "plan",
       "scale": 100,
       "regions": 6,
-      "lines": 7,
-      "texts": 2,
+      "lines": 37,
+      "texts": 16,
       "styles": {
         "cut": 7,
         "projection": 3,
         "hidden": 0,
-        "annotation": 3
+        "annotation": 33
       },
       "arcs": 4,
       "pocheArea": 8.13,
@@ -45,10 +45,62 @@
         "cut": 2.6,
         "projection": 3.5999999999999996,
         "hidden": 0.0,
-        "annotation": 8.0
+        "annotation": 52.41281312654634
       },
-      "notation": {},
-      "printed": []
+      "notation": {
+        "dimension-extension": {
+          "count": 6,
+          "length": 9.6
+        },
+        "dimension-line": {
+          "count": 7,
+          "length": 31.0
+        },
+        "dimension-mark": {
+          "count": 15,
+          "length": 2.2485995641732246
+        },
+        "dimension-text": {
+          "count": 8,
+          "length": 0.0
+        },
+        "leader-line": {
+          "count": 1,
+          "length": 1.4142135623730951
+        },
+        "leader-mark": {
+          "count": 1,
+          "length": 0.15
+        },
+        "leader-text": {
+          "count": 1,
+          "length": 0.0
+        },
+        "note-text": {
+          "count": 1,
+          "length": 0.0
+        },
+        "tag-text": {
+          "count": 4,
+          "length": 0.0
+        }
+      },
+      "printed": [
+        "0.30",
+        "0.30 × 0.30",
+        "1.20 × 1.20",
+        "2.00",
+        "3.00",
+        "3.00",
+        "3.00",
+        "5.70",
+        "6.00",
+        "8.00",
+        "Brick 300",
+        "Brick 300",
+        "South",
+        "Verify on site"
+      ]
     }
   },
   "audit": {

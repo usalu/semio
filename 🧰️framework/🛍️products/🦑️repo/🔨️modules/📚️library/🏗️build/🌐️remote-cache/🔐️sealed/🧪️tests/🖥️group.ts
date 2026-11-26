@@ -47,10 +47,10 @@ test("the resolver of every cache client seals by itself when the published fact
  const sealed=fleetSignedFetchV1({root:secure.member,audience:"cache",fetch:createSealedFetchV1({group:"g1",serverKey:()=>readFleetOriginKeyV1([secure.store],"g1-server")})});
  expect((await sealed(`${secure.endpoint}/semio/cas/${hash}`,{method:"PUT",body:bytes})).status).toBe(200);
  const admin=loadFleetSignerV1(secure.server,"admin")!;
- await publishFleetCacheFactsV1({admin,storeRoot:secure.store,directory:"/d",group:"g1",instance:"semio",port:secure.running.port,endpoints:[secure.endpoint],transport:"sealed"});
+ await publishFleetCacheFactsV1({admin,storeRoot:secure.store,directory:"/d",group:"g1",instance:"semio",port:secure.running.port,transport:"sealed"});
  const published=(await Bun.file(join(secure.store,"v1","fleet","cache.json")).json()) as {cache:{transport:string}};
  expect(published.cache.transport).toBe("sealed");
- writeFileSync(fleetCacheLocalPathV1(secure.member),JSON.stringify({version:1,fetchedAtMs:Date.now(),checkedAtMs:Date.now(),selectedEndpoint:secure.endpoint,facts:await Bun.file(join(secure.store,"v1","fleet","cache.json")).json()}));
+ writeFileSync(fleetCacheLocalPathV1(secure.member),JSON.stringify({version:1,fetchedAtMs:Date.now(),checkedAtMs:Date.now(),selectedEndpoint:secure.endpoint,candidates:[secure.endpoint],selectedExecution:null,facts:await Bun.file(join(secure.store,"v1","fleet","cache.json")).json()}));
  const client=remoteCacheFetchV1({SEMIO_WORKSPACE_ROOT:secure.member},{root:secure.member}),got=await client(`${secure.endpoint}/semio/cas/${hash}`);
  expect(got.status).toBe(200);expect(sha(new Uint8Array(await got.arrayBuffer()))).toBe(hash);
  expect((await fetch(`${secure.endpoint}/semio/cas/${hash}`)).status,"and a caller without any credential is still refused").toBe(401);

@@ -122,3 +122,110 @@ fn original_source_clock_same_callback_matches_paid_staging(){
  assert_eq!(u64::from_le_bytes(reply[8..].try_into().unwrap()),1000);
  assert_eq!((receipt.retained_capacity_bytes,receipt.released_bytes),(0,0));
 }
+
+fn retirement_scalar_core(module: &str, name: &str) -> Vec<u8> {
+ fn name_bytes(value: &str) -> Vec<u8> {
+  assert!(value.len() < 128);
+  [vec![value.len() as u8], value.as_bytes().to_vec()].concat()
+ }
+ fn append_section(core: &mut Vec<u8>, kind: u8, contents: &[u8]) {
+  assert!(contents.len() < 128);
+  core.extend([kind, contents.len() as u8]);
+  core.extend(contents);
+ }
+ let mut core = b"\0asm\x01\0\0\0".to_vec();
+ append_section(&mut core, 1, &[1, 0x60, 0, 1, 0x7e]);
+ append_section(&mut core, 2, &[vec![1], name_bytes(module), name_bytes(name), vec![0, 0]].concat());
+ append_section(&mut core, 3, &[1, 0]);
+ append_section(&mut core, 5, &[1, 0, 1]);
+ let export = OwnedSemioExport::PublishActorFailure.core_name();
+ append_section(&mut core, 7, &[vec![2], name_bytes("memory"), vec![2, 0], name_bytes(export), vec![0, 1]].concat());
+ append_section(&mut core, 10, &[1, 4, 0, 0x10, 0, 0x0b]);
+ core
+}
+
+#[test]
+fn original_source_clock_retirement_admits_only_actual_clock_replies() {
+ use semio_plugin_interpreter::Value;
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let law=&law["retirementScalarImports"];
+ let microseconds=law["clockMicroseconds"].as_u64().unwrap();
+ let nanoseconds=law["clockNanoseconds"].as_i64().unwrap();
+ HOST_CLOCK_NOW.with(|clock|clock.set(microseconds));
+ let stock=grant();
+ let engine=wasmtime::Engine::default();
+ for case in law["cases"].as_array().unwrap() {
+  let import_module=case["module"].as_str().unwrap();
+  let import_name=case["name"].as_str().unwrap();
+  let allowed=case["allowed"].as_bool().unwrap();
+  let bytes=retirement_scalar_core(import_module,import_name);
+  let oracle=wasmtime::Module::new(&engine,&bytes).unwrap();
+  let mut store=wasmtime::Store::new(&engine,());
+  let clock=wasmtime::Func::wrap(&mut store,move||nanoseconds);
+  let instance=wasmtime::Instance::new(&mut store,&oracle,&[clock.into()]).unwrap();
+  let export=OwnedSemioExport::PublishActorFailure.core_name();
+  let expected=instance.get_typed_func::<(),i64>(&mut store,export).unwrap().call(&mut store,()).unwrap();
+  let module=&Arc::new(CoreModule::parse(&bytes).unwrap());
+  let mut caller=OriginalJobFixtureCaller::admit(OperationId(801),Generation(1),stock,counted_clock,1_000_000,1_000_000);
+  let mut epoch=1;
+  let(mut core,mut host)=caller.turn(stock,|cx|{
+   cx.bind_original_source_epoch(epoch)?;
+   Ok((CoreInstanceOpening::begin(module,cx)?.unwrap(),OriginalHostState::new(cx)?))
+  }).unwrap();
+  for _ in 0..100 {
+   epoch+=1;
+   if caller.turn(stock,|cx|{cx.bind_original_source_epoch(epoch)?;core.advance(module,cx)}).unwrap(){break}
+  }
+  let Some(ExportKind::Function(function))=module.export(export) else{panic!("fixture retirement export")};
+  caller.cancel().cancel_now();
+  epoch+=1;
+  caller.turn(stock,|cx|{
+   cx.bind_original_source_epoch(epoch)?;
+   cx.with_original_retirement(|cx|{
+    assert!(core.begin_function_step(module,*function,&[],cx)?);
+    let execution=OriginalGuestExecutionBudget{input:RetainedTurnInput::borrow_original(cx)?,fuel:16,deadline_us:cx.deadline_us()};
+    core.advance_scalar(module,execution,cx)?.result?;
+    assert!(core.original_host_call_pending());
+    Ok(())
+   })
+  }).unwrap();
+  epoch+=1;
+  caller.turn(RetainedCloneGrant{maximum_items:0,..stock},|cx|{
+   cx.bind_original_source_epoch(epoch)?;
+   cx.with_original_retirement(|cx|{
+    let before=cx.retained_progress();
+    let result=advance(&mut host,&mut core,module,None,cx);
+    if allowed{assert!(!result?);}else{assert!(result.is_err());}
+    assert_eq!(cx.retained_progress(),before);
+    assert!(!host.reply_pending());
+    assert!(core.original_host_call_pending());
+    Ok(())
+   })
+  }).unwrap();
+  epoch+=1;
+  caller.turn(stock,|cx|{
+   cx.bind_original_source_epoch(epoch)?;
+   cx.with_original_retirement(|cx|{
+    if allowed {
+     assert!(advance(&mut host,&mut core,module,None,cx)?);
+     let execution=OriginalGuestExecutionBudget{input:RetainedTurnInput::borrow_original(cx)?,fuel:16,deadline_us:cx.deadline_us()};
+     core.advance_scalar(module,execution,cx)?.result?;
+     assert_eq!(core.invocation_values(),Some(&[Value::I64(expected)][..]));
+    }else{
+     let before=cx.retained_progress();
+     assert!(core.reply_original_host_step(module,&[Value::I64(expected)],cx).is_err());
+     assert_eq!(cx.retained_progress(),before);
+     assert!(core.original_host_call_pending());
+    }
+    Ok(())
+   })
+  }).unwrap();
+  for _ in 0..200 {
+   if core.terminal_is_empty(){break}
+   epoch+=1;
+   caller.turn(stock,|cx|{cx.bind_original_source_epoch(epoch)?;host.close_step(cx)?;core.close_step(module,cx)}).unwrap();
+  }
+  assert!(host.terminal_is_empty()&&core.terminal_is_empty());
+  caller.retire(stock);
+ }
+}

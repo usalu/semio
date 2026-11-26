@@ -1,0 +1,10 @@
+{
+  "crossings": [
+    { "kind": 9, "action": "publish-failure", "coreExport": "semio_owned_publish_actor_failure_v1" },
+    { "kind": 10, "action": "read-failure", "coreExport": "semio_owned_read_actor_failure_v1" },
+    { "kind": 11, "action": "borrow-failure-chunk", "coreExport": "semio_owned_borrow_actor_failure_v1" },
+    { "kind": 12, "action": "acknowledge-failure-chunk", "coreExport": "semio_owned_acknowledge_actor_failure_chunk_v1" },
+    { "kind": 13, "action": "acknowledge-failure", "coreExport": "semio_owned_acknowledge_actor_failure_v1" }
+  ],
+  "refused": [2, 8, 14, 21, 24]
+}

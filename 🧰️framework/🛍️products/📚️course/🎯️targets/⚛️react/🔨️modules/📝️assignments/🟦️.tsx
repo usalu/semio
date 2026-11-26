@@ -11,7 +11,7 @@ import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 import { HOME_PAGES } from "../🧭️session/🧮️state/🟦️.ts";
 import type { CourseSession } from "../🧭️session/🟦️.ts";
 
-const VIEWER = "h-[75vh] min-h-[24rem] w-full border-0 bg-background";
+const VIEWER = "h-[75vh] min-h-[24rem] w-full border-0";
 
 /** 📍️ Where the site serves the PDF of an assignment in `locale`, from its own origin. */
 export function assignmentUrl(assignment: Assignment, locale: CourseLocale): string {

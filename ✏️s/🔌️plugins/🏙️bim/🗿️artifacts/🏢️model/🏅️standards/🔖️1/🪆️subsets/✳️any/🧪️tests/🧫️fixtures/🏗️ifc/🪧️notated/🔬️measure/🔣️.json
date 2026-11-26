@@ -41,10 +41,10 @@
     "IfcFacetedBrep": 0,
     "IfcClassification": 0,
     "IfcClassificationReference": 0,
-    "IfcAnnotation": 0,
-    "IfcTextLiteralWithExtent": 0,
-    "IfcPolyline": 11,
-    "IfcPlanarExtent": 0,
+    "IfcAnnotation": 15,
+    "IfcTextLiteralWithExtent": 14,
+    "IfcPolyline": 41,
+    "IfcPlanarExtent": 14,
     "IfcCovering": 0,
     "IfcCoveringType": 0,
     "IfcRamp": 0,
@@ -67,8 +67,23 @@
   "containment": {
     "st-first": [],
     "st-ground": [
+      "Broken lock",
+      "Clear width",
+      "Column to grid",
+      "East thickness",
+      "Kept lock",
+      "Parallel faces",
+      "South length",
+      "Window position",
       "col-1",
+      "lead-1",
+      "note-1",
       "o-win",
+      "tag-column",
+      "tag-empty",
+      "tag-name",
+      "tag-size",
+      "tag-type",
       "w-east",
       "w-north",
       "w-south",
@@ -82,7 +97,140 @@
     "w-west": 5.4,
     "col-1": 0.27
   },
-  "annotations": {},
+  "annotations": {
+    "Broken lock": {
+      "kind": "Dimension",
+      "printed": "3.00",
+      "curves": 3,
+      "literals": [
+        "3.00"
+      ],
+      "total": 3.0
+    },
+    "Clear width": {
+      "kind": "Dimension",
+      "printed": "5.70",
+      "curves": 3,
+      "literals": [
+        "5.70"
+      ],
+      "total": 5.7
+    },
+    "Column to grid": {
+      "kind": "Dimension",
+      "printed": "3.00",
+      "curves": 4,
+      "literals": [
+        "3.00"
+      ],
+      "total": 3.0
+    },
+    "East thickness": {
+      "kind": "Dimension",
+      "printed": "0.30",
+      "curves": 3,
+      "literals": [
+        "0.30"
+      ],
+      "total": 0.3
+    },
+    "Kept lock": {
+      "kind": "Dimension",
+      "printed": "3.00",
+      "curves": 3,
+      "literals": [
+        "3.00"
+      ],
+      "total": 3.0
+    },
+    "Parallel faces": {
+      "kind": "Dimension",
+      "printed": "",
+      "curves": 0,
+      "literals": [],
+      "total": null
+    },
+    "South length": {
+      "kind": "Dimension",
+      "printed": "8.00",
+      "curves": 5,
+      "literals": [
+        "8.00"
+      ],
+      "total": 8.0
+    },
+    "Window position": {
+      "kind": "Dimension",
+      "printed": "8.00",
+      "curves": 7,
+      "literals": [
+        "2.00",
+        "6.00"
+      ],
+      "total": 8.0
+    },
+    "lead-1": {
+      "kind": "Leader",
+      "printed": "Brick 300",
+      "curves": 2,
+      "literals": [
+        "Brick 300"
+      ],
+      "total": null
+    },
+    "note-1": {
+      "kind": "TextNote",
+      "printed": "Verify on site",
+      "curves": 0,
+      "literals": [
+        "Verify on site"
+      ],
+      "total": null
+    },
+    "tag-column": {
+      "kind": "Tag",
+      "printed": "0.30 × 0.30",
+      "curves": 0,
+      "literals": [
+        "0.30 × 0.30"
+      ],
+      "total": null
+    },
+    "tag-empty": {
+      "kind": "Tag",
+      "printed": "",
+      "curves": 0,
+      "literals": [],
+      "total": null
+    },
+    "tag-name": {
+      "kind": "Tag",
+      "printed": "South",
+      "curves": 0,
+      "literals": [
+        "South"
+      ],
+      "total": null
+    },
+    "tag-size": {
+      "kind": "Tag",
+      "printed": "1.20 × 1.20",
+      "curves": 0,
+      "literals": [
+        "1.20 × 1.20"
+      ],
+      "total": null
+    },
+    "tag-type": {
+      "kind": "Tag",
+      "printed": "Brick 300",
+      "curves": 0,
+      "literals": [
+        "Brick 300"
+      ],
+      "total": null
+    }
+  },
   "classifications": {
     "systems": {},
     "attached": {}

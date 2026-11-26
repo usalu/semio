@@ -37,7 +37,7 @@ fn mounted_results_frames_never_invoke_synchronous_solvers() {
     }
     assert_eq!(results_solve_count(), 0);
     let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    assert!(matches!(semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_step(operation.app_instance_id, scope.cx(), grant), Ok(semio_plugin::PluginLifecycleStep::Progress(_))));
+    semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_step(operation.app_instance_id, scope.cx(), grant).expect("the mounted frames close without a fault");
     for _ in 0..64 { if semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::terminal_is_empty(operation.app_instance_id) { break; } semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_step(operation.app_instance_id, scope.cx(), grant).expect("close step"); }
     assert!(semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::terminal_is_empty(operation.app_instance_id));
 }
@@ -225,7 +225,10 @@ async fn pump_results(app: &mut Fem3dApp, drivers: &mut HashMap<u64, semio_plugi
     for _ in 0..rounds {
         let _ = render_body(app, FEM3D_BODY_RESULTS);
         let view = crate::context::view(FEM3D_WINDOW_RESULTS);
-        let effects = semio_plugin::PluginApp::pending_effects(&mut app.0, Some(&view), app.1.cx()).await.expect("pending effects").unwrap_or_default();
+        let grant = app.1.cx().retained_grant();
+        semio_plugin::artifact_app_laws::fixture_renew_turn(app.1.cx(), semio_plugin::artifact_app_laws::OriginalFixtureCaller::turn_fuel(), grant).expect("renew turn");
+        let effects = semio_plugin::PluginApp::pending_effects(&mut app.0, Some(&view), app.1.cx()).await.expect("pending effects");
+        let effects = effects.unwrap_or_default();
         for effect in effects {
             match effect {
                 semio_plugin::Effect::SpawnJob { job, kind, input, .. } => { let mut driver = RegistryJobDriver::generous(job); driver.start(&kind, input, None).expect("job admission"); drivers.insert(job, driver); }
@@ -246,14 +249,14 @@ async fn pump_results(app: &mut Fem3dApp, drivers: &mut HashMap<u64, semio_plugi
 async fn superseded_solve_settles_on_the_latest_revision_3d() {
     let mut app = fem3d_app();
     let mut drivers = HashMap::new();
-    let settled = pump_results(&mut app, &mut drivers, 4000).await;
+    let settled = pump_results(&mut app, &mut drivers, 600).await;
     assert!(!settled.contains("Preparing"), "initial solve settles: {settled}");
     dispatch(&mut app, Fem3dCommand::AddNode(semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 })).await;
     let _ = pump_results(&mut app, &mut drivers, 30).await;
     dispatch(&mut app, Fem3dCommand::AddNode(semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_node::AddNode { x: 4.0, y: 5.0, z: 6.0 })).await;
     let _ = pump_results(&mut app, &mut drivers, 30).await;
     crate::context::history_verb(&mut app, "undo").await;
-    let json = pump_results(&mut app, &mut drivers, 4000).await;
+    let json = pump_results(&mut app, &mut drivers, 600).await;
     assert!(!json.contains("Preparing") && !json.contains("queued") && !json.contains("Solving") && !json.contains("Generating") && !json.contains("Assembling"), "results settle on the latest revision: {json}");
 }
 
@@ -262,8 +265,8 @@ async fn superseded_solve_settles_on_the_latest_revision_3d() {
 async fn burst_of_edits_with_undo_redo_settles_3d() {
     let mut app = fem3d_app();
     let mut drivers = HashMap::new();
-    let _ = pump_results(&mut app, &mut drivers, 4000).await;
-    for step in 0..6u32 {
+    let _ = pump_results(&mut app, &mut drivers, 600).await;
+    for step in 0..45u32 {
         let node = semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_node::AddNode { x: step as f64, y: 1.0, z: 2.0 };
         dispatch(&mut app, Fem3dCommand::AddNode(node)).await;
         let _ = pump_results(&mut app, &mut drivers, 2).await;
@@ -272,7 +275,7 @@ async fn burst_of_edits_with_undo_redo_settles_3d() {
         crate::context::history_verb(&mut app, verb).await;
         let _ = pump_results(&mut app, &mut drivers, 1).await;
     }
-    let json = pump_results(&mut app, &mut drivers, 4000).await;
+    let json = pump_results(&mut app, &mut drivers, 600).await;
     assert!(!json.contains("Preparing") && !json.contains("queued") && !json.contains("Solving") && !json.contains("Generating") && !json.contains("Assembling"), "results settle after the burst: {json}");
     assert!(drivers.is_empty(), "no superseded job stays running: {}", drivers.len());
 }
@@ -286,7 +289,21 @@ async fn example_switch_during_a_running_solve_settles_on_the_new_example_3d() {
     dispatch(&mut app, Fem3dCommand::SetActiveExample(semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::house::ID.into() })).await;
     let _ = pump_results(&mut app, &mut drivers, 20).await;
     dispatch(&mut app, Fem3dCommand::SetActiveExample(semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::demo::ID.into() })).await;
-    let json = pump_results(&mut app, &mut drivers, 4000).await;
+    let json = pump_results(&mut app, &mut drivers, 600).await;
     assert!(!json.contains("Preparing") && !json.contains("queued") && !json.contains("Solving") && !json.contains("Generating") && !json.contains("Assembling"), "results settle on the new example: {json}");
     assert!(drivers.is_empty(), "the superseded solve is cancelled: {}", drivers.len());
+}
+
+/// 🧠️ LAW: adding a solid to a settled model re-solves and settles on the new revision, never sticking in a preparation stage.
+#[semio_framework_async_macros::async_test]
+async fn add_solid_settles_the_results_3d() {
+    let mut app = app_with_example().await;
+    let mut drivers = HashMap::new();
+    let first = pump_results(&mut app, &mut drivers, 600).await;
+    assert!(!first.contains("Preparing") && !first.contains("queued"), "the example settles: {first}");
+    let material = app.snapshot().expect("snapshot").materials[0].id.as_str().to_owned();
+    let solid = semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_solid::AddSolid { x: 0.0, y: 0.0, width: 3.0, depth: 3.0, height: 0.3, material_id: material, base_z: None, layers: None, mesh_size: None, axis: None };
+    dispatch(&mut app, Fem3dCommand::AddSolid(solid)).await;
+    let json = pump_results(&mut app, &mut drivers, 600).await;
+    assert!(!json.contains("Preparing") && !json.contains("queued") && !json.contains("Solving") && !json.contains("Generating") && !json.contains("Assembling"), "results settle after the solid: {json}");
 }

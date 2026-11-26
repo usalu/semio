@@ -10,12 +10,12 @@ fn append_admitted(grant: semio_framework_job::RetainedCloneGrant, demand: semio
 //#region 🔖️Ui
 impl Ui {
     /// 📋 Quotes retained append work before the caller admits the next frame step.
-    pub fn frame_into_next_retained_demand(&self, window_id: &str, viewport: semio_ui_theme::geometry::Rect, target: &DrawList) -> Result<semio_framework_job::RetainedCloneGrant, semio_ui_draw_contract::RetainedOutputError> {
+    pub fn frame_into_next_retained_demand(&self, window_id: &str, viewport: semio_ui_theme::geometry::Rect, owner: semio_ui_theme::Level, target: &DrawList) -> Result<semio_framework_job::RetainedCloneGrant, semio_ui_draw_contract::RetainedOutputError> {
         let Some(window) = self.windows.get(window_id) else { return Ok(Default::default()); };
         let Some(frame) = window.paint_frame.as_ref() else { return Ok(Default::default()); };
         if let Some(token) = frame.append_token {
             if target.active_retained_append_token() != Some(token) { return Ok(Default::default()); }
-            let fresh = frame.revision == window.revision && frame.theme_revision == window.theme_revision && frame.viewport_revision == window.viewport_revision && window.viewport == (viewport.w, viewport.h) && frame.viewport_origin == [viewport.x, viewport.y] && frame.interaction_epoch == window.presented_interaction_epoch;
+            let fresh = frame.owner == owner && frame.revision == window.revision && frame.theme_revision == window.theme_revision && frame.viewport_revision == window.viewport_revision && window.viewport == (viewport.w, viewport.h) && frame.viewport_origin == [viewport.x, viewport.y] && frame.interaction_epoch == window.presented_interaction_epoch;
             return if !fresh || matches!(frame.phase, RetainedPaintPhase::Fault) { target.next_retained_append_cancel_demand(token) } else { target.next_retained_append_demand(token) };
         }
         if matches!(frame.phase, RetainedPaintPhase::Publish) { Ok(DrawList::retained_append_begin_demand()) } else { Ok(Default::default()) }
@@ -23,13 +23,13 @@ impl Ui {
 
     /// 🧱️ Advances a retained UI node or bounded append into the caller's unpublished frame builder.
     /// The builder remains transaction-owned through `Pending`; only `Ready` permits publication.
-    pub fn frame_into_step<H: SceneHost>(&mut self, window_id: &str, viewport: semio_ui_theme::geometry::Rect, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, scene_host: Option<&mut H>, target: &mut DrawList, grant: semio_framework_job::RetainedCloneGrant) -> (UiFrameStep, semio_framework_job::RetainedCloneProgress) {
+    pub fn frame_into_step<H: SceneHost>(&mut self, window_id: &str, viewport: semio_ui_theme::geometry::Rect, owner: semio_ui_theme::Level, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, scene_host: Option<&mut H>, target: &mut DrawList, grant: semio_framework_job::RetainedCloneGrant) -> (UiFrameStep, semio_framework_job::RetainedCloneProgress) {
         let mut progress = semio_framework_job::RetainedCloneProgress::default();
-        let step = self.frame_into_step_inner(window_id, viewport, atlas, icons, scene_host, target, grant, &mut progress);
+        let step = self.frame_into_step_inner(window_id, viewport, owner, atlas, icons, scene_host, target, grant, &mut progress);
         (step, progress)
     }
 
-    fn frame_into_step_inner<H: SceneHost>(&mut self, window_id: &str, viewport: semio_ui_theme::geometry::Rect, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, mut scene_host: Option<&mut H>, target: &mut DrawList, grant: semio_framework_job::RetainedCloneGrant, progress: &mut semio_framework_job::RetainedCloneProgress) -> UiFrameStep {
+    fn frame_into_step_inner<H: SceneHost>(&mut self, window_id: &str, viewport: semio_ui_theme::geometry::Rect, owner: semio_ui_theme::Level, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, mut scene_host: Option<&mut H>, target: &mut DrawList, grant: semio_framework_job::RetainedCloneGrant, progress: &mut semio_framework_job::RetainedCloneProgress) -> UiFrameStep {
         let semio_ui_theme::geometry::Rect { x: offset_x, y: offset_y, w: viewport_width, h: viewport_height } = viewport;
         self.set_viewport(window_id, viewport_width, viewport_height);
         self.publish_overlay_origins(window_id);
@@ -37,7 +37,7 @@ impl Ui {
         let viewport_rect = viewport;
         let theme = self.theme;
         let Some(surface) = self.windows.token(window_id) else { return UiFrameStep::Missing };
-        let presentation = semio_ui_wgpu_paint::RetainedPaintPresentation { window: semio_ui_wgpu_paint::media_window_handle(window_id), ..self.presentation() };
+        let presentation = semio_ui_wgpu_paint::RetainedPaintPresentation { owner, window: semio_ui_wgpu_paint::media_window_handle(window_id), ..self.presentation() };
         let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return UiFrameStep::Missing };
         let Some(root) = window.tree.root else { return UiFrameStep::Missing };
         let reversed = window.router.flow().block == ui_contract::FlowBlock::Up;
@@ -59,7 +59,8 @@ impl Ui {
                 sync_node: None,
                 node_sync: RetainedInteractiveSyncCursor::default(),
                 paint_node: None,
-                paint_overlay: false,
+                owner: presentation.owner,
+                paint_overlay: None,
                 paint_glass: None,
                 overlay_glass: [None; UI_FRAME_OVERLAY_CHROME],
                 overlay_chrome,
@@ -84,7 +85,8 @@ impl Ui {
             .paint_frame
             .as_ref()
             .is_some_and(|frame| {
-                frame.revision == window.revision
+                frame.owner == owner
+                    && frame.revision == window.revision
                     && frame.theme_revision == window.theme_revision
                     && frame.viewport_revision == window.viewport_revision
                     && frame.viewport_origin == [offset_x, offset_y]
@@ -169,7 +171,7 @@ impl Ui {
                         frame.candidate.push_scissor(clip);
                     }
                 }
-                if frame.paint_overlay {
+                if frame.paint_overlay.is_some() {
                     frame.candidate.begin_overlay_route();
                     if let Some(region) = frame.paint_glass {
                         frame.candidate.begin_glass_content(region);
@@ -184,14 +186,14 @@ impl Ui {
                     atlas,
                     icons,
                     scene_host.is_some(),
-                    presentation,
+                    semio_ui_wgpu_paint::RetainedPaintPresentation { owner: frame.paint_overlay.unwrap_or(frame.owner), ..presentation },
                     window.router.flow().block.is_reversed(),
                     window.router.flow().inline,
                     window.router.hover_pointer().map(|(x, y)| (x + offset_x, y + offset_y)),
                     &mut frame.candidate,
                     &mut frame.node_paint,
                 );
-                if frame.paint_overlay {
+                if frame.paint_overlay.is_some() {
                     if frame.paint_glass.is_some() {
                         frame.candidate.end_glass_content();
                     }
@@ -302,7 +304,7 @@ impl Ui {
                 RetainedPaintWalkStep::Visit(node, origin_x, origin_y, overlay_root) => {
                     frame.paint_node = Some((node, origin_x + offset_x, origin_y + offset_y));
                     let chrome = overlay_root.and_then(|root| frame.overlay_chrome.iter().position(|placement| placement.is_some_and(|placement| placement.root == root)));
-                    frame.paint_overlay = chrome.is_some();
+                    frame.paint_overlay = chrome.and_then(|i| frame.overlay_chrome[i]).map(|p| semio_ui_wgpu_paint::overlay_surface_level(p.backdrop));
                     frame.paint_glass = chrome.and_then(|index| frame.overlay_glass[index]);
                     UiFrameStep::Pending
                 }

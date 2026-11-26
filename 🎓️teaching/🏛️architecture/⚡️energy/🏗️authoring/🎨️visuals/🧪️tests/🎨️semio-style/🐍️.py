@@ -52,6 +52,27 @@ class ClipStyleTest(unittest.TestCase):
                 chips = {key: value for key, value in case["input"].items() if key not in ("width", "height", "inset")}
                 self.assertEqual(self.visuals.window_frame_chip_regions(*size, **chips), case["chips"])
 
+    def test_rendered_clip_has_one_window_surface_under_its_chip(self):
+        from types import SimpleNamespace
+        from manim import Camera
+        from PIL import Image, ImageColor
+
+        for case in CASES["surfaces"]:
+            with self.subTest(appearance=case["appearance"]):
+                camera = Camera(pixel_width=160, pixel_height=90, frame_width=16, frame_height=9)
+                self.fonts.apply_scene_style(SimpleNamespace(camera=camera), appearance=case["appearance"])
+                content = self.visuals.window_frame(5, 3, appearance=case["appearance"], stroke_width=0)
+                self.assertEqual(content.get_fill_opacity(), 1)
+                chip = self.visuals.window_frame(4, 2, glass=True, appearance=case["appearance"], stroke_width=0)
+                camera.reset()
+                camera.capture_mobjects([content, chip])
+                frame = Image.fromarray(camera.pixel_array)
+                self.assertEqual(frame.getpixel((0, 0))[:3], ImageColor.getrgb(case["window"]))
+                self.assertEqual(frame.getpixel((103, 45))[:3], frame.getpixel((0, 0))[:3])
+                self.assertNotEqual(frame.getpixel((0, 0))[:3], ImageColor.getrgb(case["base"]))
+                for actual, expected in zip(frame.getpixel((80, 45))[:3], ImageColor.getrgb(case["chip"]), strict=True):
+                    self.assertAlmostEqual(actual, expected, delta=3)
+
     def test_frame_matches_independent_skia_union_with_its_chips(self):
         import pathops
 

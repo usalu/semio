@@ -3,6 +3,8 @@ import { cn } from "@semio-tech/ui/modules/class-name-composition";
 import { BoxIcon, AlertCircleIcon } from "@semio-tech/ui/elements/Icons";
 import type { UiLabel } from "@semio-tech/ui/elements/UiLabel";
 import { useLabel } from "@semio-tech/ui/elements/Label";
+import { SurfaceScope, surfaceLevelAbove, useLevel } from "@semio-tech/ui/elements/Surface";
+import { glassClass } from "@semio-tech/ui/modules/surface-presentation";
 import { SharedBorderRow, SharedBorderRowCell } from "@semio-tech/ui/elements/SharedBorderRow";
 
 // #region 🚦️StatusSurface
@@ -13,14 +15,14 @@ import { SharedBorderRow, SharedBorderRowCell } from "@semio-tech/ui/elements/Sh
 export type StatusTone = "neutral" | "info" | "success" | "warning" | "danger";
 
 /**
- * 🎶️ STATUS_TONE_SURFACE_CLASS holds the background/foreground classes for a StatusTone.
+ * 🎶️ STATUS_TONE_INK_CLASS holds the semantic ink classes for a StatusTone.
  **/
-const STATUS_TONE_SURFACE_CLASS: Record<StatusTone, string> = {
-  neutral: "bg-muted text-muted-foreground",
-  info: "bg-info-bg text-info-foreground",
-  success: "bg-success-bg text-success-foreground",
-  warning: "bg-warning-bg text-warning-foreground",
-  danger: "bg-destructive-bg text-destructive-foreground",
+const STATUS_TONE_INK_CLASS: Record<StatusTone, string> = {
+  neutral: "text-muted-foreground",
+  info: "text-info-ink",
+  success: "text-success-ink",
+  warning: "text-warning-ink",
+  danger: "text-destructive-foreground",
 };
 
 /**
@@ -44,12 +46,15 @@ export interface BadgeProps {
   icon?: React.ReactNode;
 }
 
-/** 🏷️ Small tone-colored pill for inline status labels. */
+/** 🏷️ Inline status badge with semantic ink on glass above the owner. */
 export function Badge({ id, tone = "neutral", text, icon }: BadgeProps): React.ReactElement {
+  const level = surfaceLevelAbove(useLevel());
   return (
-    <span id={id} data-slot="badge" data-glass-chip="" className={cn("inline-flex items-center gap-single px-double py-0.5 text-xs font-medium", STATUS_TONE_SURFACE_CLASS[tone])}>
-      {icon ? <span className="inline-flex shrink-0 items-center justify-center size-tiny [&_svg]:size-full">{icon}</span> : null}
-      <span className="truncate">{text}</span>
+    <span id={id} data-slot="badge" data-glass-chip="" data-level={level} className={cn("inline-flex items-center gap-single px-double py-0.5 text-xs font-medium", glassClass, STATUS_TONE_INK_CLASS[tone])}>
+      <SurfaceScope level={level} fill="glass">
+        {icon ? <span className="inline-flex shrink-0 items-center justify-center size-tiny [&_svg]:size-full">{icon}</span> : null}
+        <span className="truncate">{text}</span>
+      </SurfaceScope>
     </span>
   );
 }
@@ -76,10 +81,13 @@ const STATUS_CHIP_TONE: Record<StatusChipProps["status"], StatusTone> = {
 /** 🟢️ Inline dot-and-label indicator for live status (connection, task, presence). */
 export function StatusChip({ id, status, label }: StatusChipProps): React.ReactElement {
   const tone = STATUS_CHIP_TONE[status];
+  const level = surfaceLevelAbove(useLevel());
   return (
-    <span id={id} data-slot="status-chip" data-status={status} className="inline-flex items-center gap-half text-xs text-muted-foreground">
-      <span className={cn("size-tiny shrink-0", STATUS_TONE_DOT_CLASS[tone])} aria-hidden />
-      <span className="truncate">{label}</span>
+    <span id={id} data-slot="status-chip" data-status={status} data-glass-chip="" data-level={level} className={cn("inline-flex items-center gap-half text-xs text-muted-foreground", glassClass)}>
+      <SurfaceScope level={level} fill="glass">
+        <span className={cn("size-tiny shrink-0", STATUS_TONE_DOT_CLASS[tone])} aria-hidden />
+        <span className="truncate">{label}</span>
+      </SurfaceScope>
     </span>
   );
 }

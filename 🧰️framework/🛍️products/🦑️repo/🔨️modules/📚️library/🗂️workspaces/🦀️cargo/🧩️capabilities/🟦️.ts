@@ -1,6 +1,6 @@
 import {fileURLToPath} from "node:url";
 import {observeCargoPreparationSourceV1,observeCargoPreparationInputV1,observeCargoPreparationOutputV1} from "../🛠️preparation/🧾️custody/🟦️.ts";
-import { lstatSync, readFileSync, writeFileSync } from "node:fs";
+import { lstatSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { runtimeParseTomlV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 
@@ -80,6 +80,21 @@ function region(source: string, name: string, value: string): string {
   return source.slice(0, start + begin.length) + value + (value ? "\n" : "") + source.slice(finish);
 }
 
+/** 🧹️ Drops generated lines whose key the manifest already declares outside both capability regions. */
+export function dedupeCapabilityLinesV1(source: string, features: string[], dependencies: string[]): { features: string[]; dependencies: string[] } {
+  const outside = region(region(source, "Capability Features", ""), "Capability Dependencies", ""), document = runtimeParseTomlV1(outside) as any;
+  const keep = (table: unknown, lines: string[]): string[] => lines.filter(line => !Object.hasOwn((table ?? {}) as object, line.slice(0, line.indexOf(" = "))));
+  return { features: keep(document.features, features), dependencies: keep(document.dependencies, dependencies) };
+}
+
+/** 🔏️ Writes a manifest atomically after proving that it parses without duplicate keys. */
+export function writeCargoManifestAtomicV1(path: string, source: string): void {
+  runtimeParseTomlV1(source);
+  const temporary = `${path}.${process.pid}.tmp`;
+  try { writeFileSync(temporary, source); renameSync(temporary, path); }
+  catch (error) { try { rmSync(temporary, { force: true }); } catch {} throw error; }
+}
+
 /** 📦️ Publishes native capability edges from physically present, owner-authored target manifests. */
 export function prepareCargoCapabilityLinksV1(repoRoot: string, ownerRoot: string, manifestRelative: string, linksRelative: string): number {
   observeCargoPreparationSourceV1(fileURLToPath(import.meta.url));
@@ -105,10 +120,10 @@ export function prepareCargoCapabilityLinksV1(repoRoot: string, ownerRoot: strin
     features.push(`${group.feature} = ${JSON.stringify([...group.requires, ...targets.map(target => target.feature)])}`);
     for (const target of targets) features.push(`${target.feature} = ${JSON.stringify([`dep:${target.package}`])}`);
   }
-  const dependencies = [...new Set(selected.map(target => target.package))].sort().map(name => `${name} = { workspace = true, optional = true }`).join("\n");
-  const next = region(region(previous, "Capability Features", features.join("\n")), "Capability Dependencies", dependencies);
+  const deduped = dedupeCapabilityLinesV1(previous, features, [...new Set(selected.map(target => target.package))].sort().map(name => `${name} = { workspace = true, optional = true }`));
+  const next = region(region(previous, "Capability Features", deduped.features.join("\n")), "Capability Dependencies", deduped.dependencies.join("\n"));
   if ([...observed].some(([path, source]) => read(repoRoot, path) !== source) || [...presence].some(([path, available]) => physical(repoRoot, path, true) !== available)) throw new Error("Capability authority changed during publication");
-  if (next !== previous) writeFileSync(path, next);
+  if (next !== previous) writeCargoManifestAtomicV1(path, next);
   observeCargoPreparationOutputV1(path,next);
   return selected.length;
 }

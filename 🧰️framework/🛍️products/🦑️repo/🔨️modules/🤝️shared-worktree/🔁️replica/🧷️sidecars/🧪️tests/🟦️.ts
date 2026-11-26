@@ -50,7 +50,8 @@ test("nothing starts before the daemon is healthy and the delay has passed; then
  expect(supervisor.report()[0]).toMatchObject({state:"running"});expect(typeof supervisor.report()[0]!.pid).toBe("number");
  await until(()=>existsSync(join(facts.worktree,"env.json")),5000,"environment written");
  expect(JSON.parse(readFileSync(join(facts.worktree,"env.json"),"utf8"))).toEqual({origin:"g1-m03",group:"g1",store:facts.storeRoot,root:facts.worktree,name:"a",record:join(facts.worktree,".cache","f","sidecars","a.json"),lease:join(facts.worktree,".cache","f","sidecars","a.lease"),leaseMs:"600000"});
- expect(JSON.parse(readFileSync(join(facts.worktree,".cache","f","sidecars","a.lease"),"utf8"))).toMatchObject({version:1,pid:process.pid});
+ expect(JSON.parse(readFileSync(join(facts.worktree,".cache","f","sidecars",`a.${supervisor.report()[0]!.pid}.lease`),"utf8"))).toMatchObject({version:1,pid:process.pid});
+ expect(existsSync(join(facts.worktree,".cache","f","sidecars","a.lease")),"the shared lease of older launchers is gone: they leave by themselves").toBe(false);
  expect(readFileSync(join(facts.worktree,".cache","f","sidecars","a.log"),"utf8")).toContain("child stay started");
 });
 
@@ -199,4 +200,19 @@ test("a record that nobody refreshes is not adopted even when its process id liv
  expect(pid).not.toBe(process.pid);
  first.quiet();first.supervisor.release();
  await until(()=>!box.alive(pid),30000,"the launcher ended itself without a lease");
+});
+
+test("a launcher that a newer live launcher of the same sidecar superseded leaves, one that is newer takes the record",async()=>{
+ const box=adoption();
+ mkdirSync(join(box.worktree,".cache","f","sidecars"),{recursive:true});
+ const hash=createHash("sha256").update(readFileSync(box.entry)).digest("hex"),environment={...process.env,SIDECAR_TEST_DIR:box.worktree,SEMIO_FLEET_SIDECAR:"role",SEMIO_FLEET_SIDECAR_RECORD:box.record};
+ writeFileSync(box.record,JSON.stringify({version:1,name:"role",...ownProcessIdentityV1(),startedMs:Date.now()+600000,wallMs:Date.now(),entrySha256:hash}));
+ const older=Bun.spawn([process.execPath,box.entry,"role"],{env:environment,stdout:"ignore",stderr:"pipe"});stoppers.push(async()=>{try{older.kill("SIGKILL");}catch{}});
+ expect(await Promise.race([older.exited,sleep(20000).then(()=>"alive")]),"the older launcher leaves at once").toBe(0);
+ expect(await new Response(older.stderr).text()).toContain("superseded by launcher");
+ expect(JSON.parse(readFileSync(box.record,"utf8")).pid,"the record of the newer launcher is untouched").toBe(process.pid);
+ writeFileSync(box.record,JSON.stringify({version:1,name:"role",...ownProcessIdentityV1(),startedMs:Date.now()-600000,wallMs:Date.now(),entrySha256:hash}));
+ const newer=Bun.spawn([process.execPath,box.entry,"role"],{env:environment,stdout:"ignore",stderr:"ignore"});stoppers.push(async()=>{try{newer.kill("SIGKILL");}catch{}});
+ await until(()=>{try{return JSON.parse(readFileSync(box.record,"utf8")).pid===newer.pid;}catch{return false;}},20000,"the newer launcher took over the record");
+ expect(newer.exitCode).toBeNull();
 });

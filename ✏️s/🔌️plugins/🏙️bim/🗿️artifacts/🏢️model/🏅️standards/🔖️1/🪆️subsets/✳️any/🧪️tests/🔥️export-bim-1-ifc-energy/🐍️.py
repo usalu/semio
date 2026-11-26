@@ -281,12 +281,18 @@ def rules_problems(snapshot, table, model):
     for collection, set_name, types, kind_key in (("slabs", "Pset_SlabCommon", "slab_types", "slab_type"), ("roofs", "Pset_RoofCommon", "roof_types", "roof_type")):
         for identity_, row in snapshot[collection].items():
             rows = elements.get(identity_, {}).get(set_name, {})
-            if set_name == "Pset_RoofCommon" and not v4 and "ThermalTransmittance" in rows:
-                problems.append("%s: IFC 2x3 has no ThermalTransmittance in Pset_RoofCommon" % identity_)
             override = authored(snapshot, [identity_], set_name, "ThermalTransmittance")
             if override is not None:
+                if "ThermalTransmittance" not in rows or not close(rows["ThermalTransmittance"][1], override):
+                    problems.append("%s: the authored roof or slab U-value %s was not preserved" % (identity_, override))
+                if listed(identity_, set_name, "ThermalTransmittance"):
+                    problems.append("%s: the authored roof or slab U-value is marked as derived" % identity_)
                 continue
             if "ThermalTransmittance" in rows:
+                if set_name == "Pset_RoofCommon" and not v4:
+                    problems.append("%s: IFC 2x3 has no derived ThermalTransmittance in Pset_RoofCommon" % identity_)
+                if not listed(identity_, set_name, "ThermalTransmittance"):
+                    problems.append("%s: the computed roof or slab U-value is absent from DerivedRows" % identity_)
                 low, high = bounds(snapshot, snapshot[types][row[kind_key]]["layers"], ["up", "down"])
                 if not low - 1e-9 <= rows["ThermalTransmittance"][1] <= high + 1e-9:
                     problems.append("%s: U %s is outside the ISO 6946 bounds %s..%s of its layers" % (identity_, rows["ThermalTransmittance"][1], low, high))

@@ -25,6 +25,9 @@ use semio_plugin_abi::wasip2::semio::framework::types as wit_types;
 use semio_plugin_abi::wasip2::semio::framework::ui as wit_ui;
 
 semio_plugin_abi::component_persistent_local! {
+    /// 📬️ Original event donors awaiting kernel admission, in host delivery order.
+    static PENDING_EVENTS: RefCell<crate::pending_events::PendingEvents<Event, 1024>> = RefCell::new(crate::pending_events::PendingEvents::new());
+
     /// 📥️ The one command-ingress page staged for the next turn, and the one cold document-pair
     /// page beside it. Staged by their own exports and TAKEN by `poll`, never left behind.
     static STAGED_PAGES: RefCell<StagedTurnPages> = RefCell::new(StagedTurnPages { command: None, cold_pair: None });
@@ -71,6 +74,20 @@ pub async fn stage_cold_pair_page(page: semio_plugin_abi::wasip2::exports::semio
     })
 }
 
+/// 📥️ Preserves a borrowed donor on a returned error or a dropped poll future.
+struct EventCrossing(Option<Event>);
+
+impl Drop for EventCrossing {
+    fn drop(&mut self) {
+        PENDING_EVENTS.with(|pending| pending.borrow_mut().finish(self.0.take()));
+    }
+}
+
+/// 🧾️ Actor closure and succession wait while a previous host event still has an owner.
+pub fn event_held() -> bool {
+    PENDING_EVENTS.with(|pending| pending.borrow().held())
+}
+
 /// ▶️ The real `reactor::poll` body — see module doc for the shape. `events`/`budget` are the
 /// WIT-generated types from `exports::semio::framework::reactor`; the return is that same
 /// module's `TurnResult`. The turn's pages come from [`STAGED_PAGES`], which this call empties.
@@ -82,16 +99,18 @@ pub async fn poll<PA: semio_plugin_reactor_app::PluginApp + 'static>(
     cx:&mut semio_framework_job::StepContext<'_>,
 ) -> Result<semio_plugin_abi::wasip2::exports::semio::framework::reactor::TurnResult, semio_framework_job::OriginalTurnFailure> {
     turn::note_turn_events(events.len(), wit_events_payload_bytes(&events));
-    let mut kernel_event = None;
-    for event in events {
-        if kernel_event.replace(wit_event_to_kernel(event)).is_some() {
-            return Err(staging_fault("a reactor turn admits at most one event").into());
-        }
-    }
+    if events.len() > 1 { return Err(staging_fault("a reactor turn admits at most one event").into()); }
     let kernel_budget = semio_framework::kernel::Budget { retained:wit_retained_input_to_kernel(budget.retained)?, retained_policy:wit_retained_grant_to_kernel(budget.retained_policy)?,work_fuel:budget.work_fuel, fuel: budget.fuel, deadline_us: budget.deadline_us, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
+    let incoming = events.into_iter().next().map(wit_event_to_kernel);
+    let mut crossing = EventCrossing(PENDING_EVENTS.with(|pending| pending.borrow_mut().begin(incoming))
+        .map_err(|_| staging_fault("reactor event admission is busy or full"))?);
     let staged = STAGED_PAGES.with(|pages| pages.try_borrow_mut().map(|mut pages| std::mem::take(&mut *pages)).map_err(|_| staging_fault("turn page staging authority busy")))?;
     let mut command = staged.command.map(|(cursor, page)| (cursor, *page));
-    turn::poll_kernel_output(runtime, &mut kernel_event, &mut command, staged.cold_pair.as_deref(), kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared, identity,cx).await
+    let mut result = turn::poll_kernel_output(runtime, &mut crossing.0, &mut command, staged.cold_pair.as_deref(), kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared, identity,cx).await?;
+    drop(crossing);
+    use semio_plugin_abi::wasip2::exports::semio::framework::reactor::TurnStatus as WireStatus;
+    if matches!(result.status, WireStatus::Idle) && event_held() { result.status = WireStatus::MoreWork; }
+    Ok(result)
 }
 
 /// 🩺️ Bulk bytes a turn's events carry across the component boundary — every `pack`/`list<u8>`

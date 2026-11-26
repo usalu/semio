@@ -49,6 +49,7 @@ export default defineConfig({
   reporter: [["list"]],
   use: {
     baseURL,
+    actionTimeout: Math.min(playwrightTimeoutMs, 30_000),
     trace: "on-first-retry",
   },
   projects: languageCases.projects.map((project) => ({

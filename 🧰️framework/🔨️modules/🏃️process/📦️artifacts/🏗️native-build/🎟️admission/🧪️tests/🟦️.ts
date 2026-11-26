@@ -7,9 +7,11 @@ import { quantile, rollup } from "d3-array";
 import { Database } from "bun:sqlite";
 import ts from "typescript";
 import * as admission from "../🟦️.ts";
+import { localCompilerInputKeyV1, normalizeRustcArgumentsV1, unitKeyV1 as rustcCacheKey } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts";
 import { appendFileSync, mkdtempSync, readFileSync, truncateSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
+import localHistory from "./🧫️fixtures/local-history.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import { buildThroughBrokerV1, tinyCargoWorkspaceV1 } from "../../🧪️tests/🦀️cargo/🟦️.ts";
 import { appendUnitHistoryV1, compactUnitHistoryV1, admissionFrozenV1, componentFinalCratePeaksV1, componentFinalPeaksV1, admissionOrderV1, admitWaitersV1, expectedWallMsV1, externArtifactsV1, predictPeakBytesV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, unitArtifactV1, unitKeyV1, unitOutputBytesV1, type UnitObservationV1, type UnitRecordV1 } from "../🟦️.ts";
@@ -80,6 +82,58 @@ test("the store keeps the newest window per key, survives a torn trailing line a
 const journalOptions = (original: Parameters<Parameters<typeof withBuildTestInvocationV1>[0]>[0]) => ({ leaseDirectory: artifacts, control: createIssuedResourceControlV1(original, "history:journal", 10_000, AbortSignal.timeout(10_000)) });
 const journalView = (history: Map<string, admission.UnitObservationV1[]>) => Object.fromEntries([...history].map(([key, rows]) => [key, rows.map((row) => ({ atMs: row.atMs, peakRssBytes: row.peakRssBytes, remainingMs: row.remainingMs }))]));
 
+test("local compiler forecasts record completed exact-key samples and isolate other hosts", () => withBuildTestInvocationV1(async (original) => {
+  const root = mkdtempSync(join(artifacts, "lh-"));
+  const darwin = admission.localUnitHistoryPathV1(root, "darwin", "arm64");
+  const linux = admission.localUnitHistoryPathV1(root, "linux", "arm64");
+  const intel = admission.localUnitHistoryPathV1(root, "darwin", "x64");
+  const { owner, lines, peakRssBytes, outputBytes } = localHistory;
+  const key = unitKeyV1(owner, owner.profile);
+  const compilerKey = (args = ["--cfg", 'feature="std"', "-C", "opt-level=0"], toolchain = "rustc-aarch64") =>
+    rustcCacheKey({ toolchain, normalized: normalizeRustcArgumentsV1(args, new Map(), undefined), sourceSha256: "same", externs: [], environment: [] });
+  const localInputKey = localCompilerInputKeyV1(compilerKey(), owner.package, owner.version, false)!;
+  const unit = {
+    ...owner, key, localInputKey, lines, peakRssBytes, pass: "local", primary: false, artifact: "libc-1",
+    dependencies: [], buildScriptOutDir: null, predictedBytes: 1, requestMs: 0, admittedMs: 1,
+    startMs: 2, endMs: 25, rmetaMs: null, userMs: 6, sysMs: 4, exit: 0,
+  } satisfies UnitRecordV1;
+  let reads = 0;
+  const measure = (artifact: string) => { reads++; expect(artifact).toBe(unit.artifact); return outputBytes; };
+  for (const { name, ...details } of localHistory.ignored) {
+    expect(admission.localUnitObservationV1({ ...unit, ...details }, measure), name).toBeNull();
+  }
+  expect(admission.localUnitObservationV1({ ...unit, lines: undefined }, measure)).toBeNull();
+  expect(admission.localUnitObservationV1({ ...unit, localInputKey: undefined }, measure)).toBeNull();
+  expect(reads).toBe(0);
+  const row = admission.localUnitObservationV1({ ...unit, exit: localHistory.accepted[0]!.exit }, measure)!;
+  expect(definition("ObservationV1")(row), JSON.stringify(definition("ObservationV1").errors)).toBe(true);
+  await recordUnitHistoryV1(darwin, [row], journalOptions(original));
+  const disk = await readUnitHistoryV1(darwin);
+  expect(await readUnitHistoryV1(linux)).toEqual(new Map());
+  expect(await readUnitHistoryV1(intel)).toEqual(new Map());
+  expect(await readUnitHistoryV1(admission.unitHistoryPathV1(root))).toEqual(new Map());
+  const sample = (localKey?: string, unit = key, history = new Map<string, UnitObservationV1[]>()) =>
+    admission.admissionForecastHistoryV1(unit, lines, history, disk, localKey);
+  expect(sample(localInputKey, unitKeyV1({ ...owner, target: "wasm32-wasip2" }, owner.profile))).toEqual([]);
+  expect(sample(localInputKey, unitKeyV1(owner, "release"))).toEqual([]);
+  for (const other of [
+    localCompilerInputKeyV1(compilerKey(["--cfg", 'feature="extra_traits"', "-C", "opt-level=0"]), owner.package, owner.version, false),
+    localCompilerInputKeyV1(compilerKey(["--cfg", 'feature="std"', "-C", "opt-level=3"]), owner.package, owner.version, false),
+    localCompilerInputKeyV1(compilerKey(undefined, "different-compiler"), owner.package, owner.version, false),
+    localCompilerInputKeyV1(compilerKey(), owner.package, "0.2.187", false),
+    localCompilerInputKeyV1(compilerKey(), owner.package, owner.version, false, ["changed-artifact-bytes"]),
+    localCompilerInputKeyV1(compilerKey(), "tokio", owner.version, false),
+    localCompilerInputKeyV1(compilerKey(), owner.package, owner.version, true),
+    undefined,
+  ]) expect(sample(other)).toEqual([]);
+  const established = { ...row, key, peakRssBytes: 1024 ** 3 };
+  expect(sample(localInputKey, key, new Map([[key, [established]]]))).toEqual([established]);
+  const peaks = sample(localInputKey).map(row => row.peakRssBytes);
+  expect(peaks).toEqual([peakRssBytes]);
+  expect(predictPeakBytesV1(peaks, { kloc: lines / 1000, component: null })).toBe(admission.ADMISSION_POLICY_V1.floorBytes);
+  expect(reads).toBe(1);
+}));
+
 test("a refined observation replaces the incrementally recorded one of the same key and time (vectors, cross-checked with d3-array)", () => {
   const rows = fixture.journal.rows as UnitObservationV1[];
   expect(journalView(compactUnitHistoryV1(rows))).toEqual(fixture.journal.refined);
@@ -144,10 +198,24 @@ test("memory capacity respects actual process bounds and agrees with SQLite inde
 test("both actual production broker inputs apply memory bounds and preserve explicit driver observations",()=>{
  const files=["../../🧩️component-pass/🟦️.ts", "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts"];
  for(const[index,path]of files.entries()){
-  const tree=ts.createSourceFile(path,readFileSync(new URL(path,import.meta.url),"utf8"),ts.ScriptTarget.Latest,true),expressions:ts.Expression[]=[];
-  const visit=(node:ts.Node):void=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression)&&node.expression.text==="startAdmissionBrokerV1"){const object=node.arguments[0];if(object&&ts.isObjectLiteralExpression(object))for(const property of object.properties)if(ts.isPropertyAssignment(property)&&property.name.getText(tree)==="physicalBytes")expressions.push(property.initializer);}ts.forEachChild(node,visit);};visit(tree);expect(expressions).toHaveLength(1);
-  const expression=ts.transpile(`(${expressions[0]!.getText(tree)})`,{target:ts.ScriptTarget.ESNext}),run=new Function("options","admissionMemoryBytesV1","admissionMemoryShareV1","tokens","availableParallelism","units","admissionReserveBytesV1",`return ${expression}`);
-  for(const row of fixture.memoryShares){const observed=run({},()=>row.effectiveBytes,admission.admissionMemoryShareV1,row.tokens,()=>row.parallelism);expect(observed).toBe(row.bytes);if(index===1)expect(run({},()=>row.effectiveBytes,admission.admissionMemoryShareV1,row.tokens,()=>row.parallelism,{decision:{budgetMegabytes:0}},admission.admissionReserveBytesV1)).toBe(Math.min(row.bytes,admission.admissionReserveBytesV1(row.effectiveBytes)));if(index===0)expect(run({physicalBytes:123},()=>row.effectiveBytes,admission.admissionMemoryShareV1,row.tokens,()=>row.parallelism)).toBe(123);}
+  const tree=ts.createSourceFile(path,readFileSync(new URL(path,import.meta.url),"utf8"),ts.ScriptTarget.Latest,true),brokers:ts.ObjectLiteralExpression[]=[],parent:ts.Expression[]=[];
+  const visit=(node:ts.Node):void=>{
+   if(ts.isCallExpression(node)&&node.expression.getText(tree)==="startAdmissionBrokerV1"&&node.arguments[0]&&ts.isObjectLiteralExpression(node.arguments[0]))brokers.push(node.arguments[0]);
+   if(ts.isVariableDeclaration(node)&&node.name.getText(tree)==="parentMemoryAllowanceBytes"&&node.initializer)parent.push(node.initializer);
+   ts.forEachChild(node,visit);
+  };visit(tree);
+  expect(brokers).toHaveLength(1);expect(parent).toHaveLength(1);
+  expect(brokers[0]!.getText(tree)).toContain("parentMemoryAllowanceBytes");
+  expect(parent[0]!.getText(tree)).toBe(`parentCompilerMemoryAllowanceBytesV1(${index===0?"inputEnvironment":"environment"})`);
+  const physical=brokers[0]!.properties.find((property):property is ts.PropertyAssignment=>ts.isPropertyAssignment(property)&&property.name.getText(tree)==="physicalBytes");
+  expect(physical).toBeDefined();
+  const expression=ts.transpile(`(${physical!.initializer.getText(tree)})`,{target:ts.ScriptTarget.ESNext});
+  const run=new Function("options","admissionMemoryBytesV1","admissionMemoryShareV1","tokens","local","physical","availableParallelism",`return ${expression}`);
+  for(const row of fixture.memoryShares){
+   const observe=(options:object)=>run(options,()=>row.effectiveBytes,admission.admissionMemoryShareV1,row.tokens,row.tokens,row.effectiveBytes,()=>row.parallelism);
+   expect(observe({})).toBe(row.bytes);
+   if(index===0)expect(observe({physicalBytes:123})).toBe(123);
+  }
  }
  const physical=8321515520,constraint=7516192768,effective=admission.admissionMemoryBytesV1(physical,constraint);expect(effective-admission.admissionReserveBytesV1(effective)).toBe(effective-1879048192);expect(physical-effective).toBe(805322752);
 });

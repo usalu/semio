@@ -8,7 +8,7 @@
   {"active":{"state":"RUNNING","progress":[{"fraction":0.2}]},"terminal":{"state":"CANCELLED","cancelRequested":true,"commit":null},"unchanged":false,"expected":false}
  ],
  "documentCases": [
-  {"name":"both bytes survive active cancellation","progressDelayMs":40,"cancelDelayMs":30,"before":{"packBase64":"YQ==","sprBase64":"Yg=="},"after":{"packBase64":"YQ==","sprBase64":"Yg=="},"expected":true},
+  {"name":"both bytes survive active cancellation across journal pages","initialCursor":483,"cancellationCursor":292,"progressDelayMs":40,"cancelDelayMs":30,"before":{"packBase64":"YQ==","sprBase64":"Yg=="},"after":{"packBase64":"YQ==","sprBase64":"Yg=="},"expected":true},
   {"name":"missing history is not an unchanged document","progressDelayMs":0,"cancelDelayMs":0,"before":{"packBase64":"YQ=="},"after":{"packBase64":"YQ=="},"expected":false},
   {"name":"changed history is not an unchanged document","progressDelayMs":0,"cancelDelayMs":0,"before":{"packBase64":"YQ==","sprBase64":"Yg=="},"after":{"packBase64":"YQ==","sprBase64":"Yw=="},"expected":false},
   {"name":"foreign terminal job cannot prove cancellation","progressDelayMs":0,"cancelDelayMs":0,"before":{"packBase64":"YQ==","sprBase64":"Yg=="},"after":{"packBase64":"YQ==","sprBase64":"Yg=="},"terminalJobId":"job-foreign","expected":false},

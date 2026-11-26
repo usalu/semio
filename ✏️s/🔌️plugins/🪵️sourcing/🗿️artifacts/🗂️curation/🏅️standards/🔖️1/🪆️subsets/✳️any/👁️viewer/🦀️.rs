@@ -76,6 +76,19 @@ impl ArtifactViewer for SourcingViewer {
 })())
 }
 
+    /// 🧊️ Quotes the cold-replay owner catalog the viewer admits, so a document that carries curation history initializes through the framework replay instead of refusing for want of a native semantic producer.
+    fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    }
+
+    /// 🗃️ Admits the cold-replay owner catalog with the same ordinal binary receiving and whole-document conflict target the editor declares, because a viewer owns exactly the same document.
+    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant).map(|(mut owners, progress)| {
+            owners.operation_wire = owners.operation_wire.with_original_ordinal_binary_receiving().with_original_target(store::os_store::whole_document_target::<Self::Mutation>);
+            (owners, progress)
+        }))
+    }
+
     /// 👁️ Structurally read-only: the sole `SourcingViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (e.g. a

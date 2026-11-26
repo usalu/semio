@@ -1,3 +1,4 @@
+import {processRecordAliveV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs"
 import{readdirSync,readFileSync}from"node:fs";
 import{basename,join}from"node:path";
 import schema from"../🔐️custody/🧬️schema/🔣️.json"with{type:"json"};
@@ -5,7 +6,7 @@ const P=Object.freeze(structuredClone(schema.definitions.Policy.const)),M=schema
 const closed=(value,keys,what)=>{if(value===null||typeof value!=="object"||Array.isArray(value)||Object.keys(value).length!==keys.length||keys.some(key=>!Object.hasOwn(value,key)))throw Object.assign(Error("Closed "+what+" required"),{});return value;};
 const count=(value,what)=>{if(!Number.isSafeInteger(value)||value<0)throw Error("Non-negative integer required in "+what);return value;};
 const fill=(template,fields)=>template.replace(/\{([a-z]+)\}/gu,(_token,name)=>String(fields[name]??""));
-const alive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error?.code==="EPERM";}};
+const alive=(pid,startedMs)=>processRecordAliveV1(pid,startedMs);
 let remembered;
 /** 🪧 Remembers the directory of the claim documents this process queues in, so a yield ticket can name it and the front door can read who is ahead without loading the custody. */
 export function rememberDoorV1(directory){remembered=directory;}
@@ -73,7 +74,7 @@ export function readDoorV1(directory,{isAlive=alive}={}){
   const row={token:claim.token,ticket:claim.ticket,state:"held",structural:claim.structural===true,owners:Array.isArray(claim.owners)?claim.owners:[]};
   try{if(claim.holder!==undefined)row.holder=readHolderV1(claim.holder);}catch{}
   for(const[kind,read]of[["progress",readProgressV1],["ask",readAskV1]]){if(!side.has(claim.token+"."+kind+".json"))continue;try{row[kind]=read(readJson(join(directory,claim.token+"."+kind+".json")));}catch{}}
-  if(row.holder&&!isAlive(row.holder.pid))continue;
+  if(row.holder&&!isAlive(row.holder.pid,row.holder.startedMs))continue;
   rows.push(row);
  }
  return rows.sort((a,b)=>a.ticket-b.ticket);

@@ -14,7 +14,7 @@ export function DataTable(props: { readonly caption: ReactNode; readonly head: r
         <thead>
           <tr>
             {props.head.map((cell, index) => (
-              <th key={index} scope="col" className="whitespace-nowrap border-b border-border bg-panel px-double py-single text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
+              <th key={index} scope="col" className="whitespace-nowrap border-b border-border px-double py-single text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground">
                 {cell}
               </th>
             ))}

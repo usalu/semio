@@ -18,6 +18,7 @@ use semio_s_artifact_stdio_pdf_page_content::project_content_bytes;
 //#region 🔖️Lifter
 /// 🏷️ Resource categories whose ids share one namespace each (`Page` keys pages by index).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum Category {
     Font,
     XObject,

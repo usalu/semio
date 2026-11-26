@@ -1,7 +1,7 @@
 /** 📯 Typed-operation completion drain, delivery, ceilings and retired instances. */
 import { encodeAppFrame } from "@semio-tech/framework-os";
 import type { TurnOutcome } from "@semio-tech/framework-kernel";
-import { type PluginRuntimeVitest, type PluginRuntimeDependencies } from "../🛠️plugin-runtime-helpers/🟦️.tsx";
+import { createPluginRuntimeSupport, type PluginRuntimeVitest, type PluginRuntimeDependencies } from "../🛠️plugin-runtime-helpers/🟦️.tsx";
 
 export async function registerTypedOperationCompletionTests(vitest: PluginRuntimeVitest, dependencies: PluginRuntimeDependencies): Promise<void> {
   const { describe, expect, it } = vitest;
@@ -110,6 +110,33 @@ export async function registerTypedOperationCompletionTests(vitest: PluginRuntim
   });
 
   describe("typed-operation completion delivery", () => {
+    it("delivers the workspace clipboard before an observing refresh can release a queued paste", async () => {
+      const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/🔄️surface-refresh.json");
+      const { subscribeWorkspaceClipboardWrites } = await import("../../🧱️elements/🔌️PluginRuntime/🧵️turn-dispatch/workspace-clipboard.ts");
+      const { default: equal } = await import("fast-deep-equal");
+      const instance = 41417;
+      const actor = "fixture#" + instance;
+      const fragment = fixture.clipboard.fragment;
+      const write = { tag: "clipboard-write", val: { fragment: encodePackValue(fragment) } };
+      const untouched = { tag: "notify", val: { message: "background" } };
+      const seen: unknown[] = [];
+      const { withFakeShardClient } = createPluginRuntimeSupport(dependencies);
+      await withFakeShardClient(async () => ({ effects: [write, untouched], uiPatches: [], status: { tag: "idle" } }), async () => {
+        const poll = (actorId: string) => dependencies.submitPluginTurn(actorId, [], "UserVisible");
+        const unsubscribe = subscribeWorkspaceClipboardWrites(actor, value => { seen.push(value); return true; });
+        try {
+          expect((await poll("other#41418")).effects).toEqual([write, untouched]);
+          expect((await poll(actor)).effects).toEqual([untouched]);
+          expect(seen).toHaveLength(fixture.clipboard.copies);
+          expect(equal(seen[0], fragment)).toBe(true);
+        } finally { unsubscribe(); }
+        expect((await poll(actor)).effects).toEqual([write, untouched]);
+        const retire = subscribeWorkspaceClipboardWrites(actor, () => false);
+        try { expect((await poll(actor)).effects).toEqual([write, untouched]); }
+        finally { retire(); }
+      });
+    });
+
     it("hands one completion its own effects exactly once and never the invocation's", async () => {
       const instanceId = 4242;
       let push: ((outcome: TurnOutcome) => void) | null = null;

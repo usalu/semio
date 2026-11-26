@@ -13,6 +13,9 @@ use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 
+#[path = "🧵️.rs"]
+mod streaming;
+pub use streaming::ScheduleCsvCursor;
 
 /// 🪪️ The RFC 4180 dialect this leaf writes.
 pub const CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId::ANY };
@@ -20,11 +23,15 @@ pub const CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standar
 /// 🔢️ A number with at most six decimals and no trailing zeros.
 pub fn number_text(value: f64) -> String {
     let fixed = format!("{value:.6}");
+    trim_number(&fixed).to_owned()
+}
+
+fn trim_number(fixed: &str) -> &str {
     let trimmed = fixed.trim_end_matches('0').trim_end_matches('.');
     if trimmed == "-0" || trimmed.is_empty() {
-        "0".to_string()
+        "0"
     } else {
-        trimmed.to_string()
+        trimmed
     }
 }
 

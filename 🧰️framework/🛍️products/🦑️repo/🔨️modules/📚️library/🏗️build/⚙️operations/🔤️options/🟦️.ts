@@ -20,6 +20,13 @@ export function normalizeBuildOptionsV1(args: readonly string[], catalog: BuildO
   return result;
 }
 
+/** 🩹️ The command line the neutral operations catalogue declares to repair one named drift (`repairs`), the single source every message that advises a repair spells its command from; an undeclared repair is a programming error, never a guessed command. */
+export function buildRepairCommandV1(id:string):string{
+ const row=(catalogue as unknown as {repairs?:readonly {id:string;command:string}[]}).repairs?.find(candidate=>candidate.id===id);
+ if(row===undefined)throw Error("Declared repair required: "+id);
+ return row.command;
+}
+
 /** 🧭️ Projects operation arguments after global selections are consumed, preserving help and the opaque child tail. */
 export function buildOperationArgumentsV1(args:readonly string[],catalog:BuildOptionCatalogV1=catalogue as BuildOptionCatalogV1):string[]{
  const flags=catalog.flags.filter(flag=>flag.operations===undefined&&flag.value==="required"),globals=new Set(flags.flatMap(flag=>[flag.name,...(flag.aliases??[])])),normalized=normalizeBuildOptionsV1(args,{flags}),boundary=normalized.indexOf("--"),head=normalized.slice(0,boundary<0?undefined:boundary);

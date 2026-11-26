@@ -185,7 +185,7 @@ class ExactUIParityTests(unittest.TestCase):
             self.assertEqual(window["font_size"],"11.2px")
             self.assertEqual(window["line_height"],"11.2px")
             self.assertEqual(window["padding"],"3.2px")
-            self.assertEqual(window["backdropfilter"],"blur(8px) saturate(1.45)")
+            self.assertEqual(window["backdropfilter"], "none")
             self.assertAlmostEqual(frame["navbar"]["height"],expected["metrics"]["navbar_height"],delta=CASES["oracle"]["layoutTolerance"])
             self.assertAlmostEqual(frame["footer"]["height"],expected["metrics"]["footer_height"],delta=CASES["oracle"]["layoutTolerance"])
             with Image.open(output) as source:

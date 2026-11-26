@@ -9,7 +9,8 @@
     "resumeComputes",
     "caller",
     "turnItems",
-    "minimumComputeSteps"
+    "minimumComputeSteps",
+    "cache"
   ],
   "properties": {
     "nodes": {
@@ -81,7 +82,45 @@
     },
     "minimumComputeSteps": {
       "const": 12
+    },
+    "cache": {
+      "type": "object",
+      "required": ["budgetBytes", "boundedBudgetBytes", "edit", "edited", "initialFingerprints", "editedFingerprints", "runs"],
+      "properties": {
+        "budgetBytes": { "type": "integer", "minimum": 1 },
+        "boundedBudgetBytes": { "type": "integer", "minimum": 1 },
+        "edit": {
+          "type": "object",
+          "required": ["key", "weight"],
+          "properties": { "key": { "type": "string" }, "weight": { "type": "integer" } },
+          "additionalProperties": false
+        },
+        "edited": { "type": "object", "additionalProperties": { "type": "integer" } },
+        "initialFingerprints": { "$ref": "#/definitions/fingerprints" },
+        "editedFingerprints": { "$ref": "#/definitions/fingerprints" },
+        "runs": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": ["computed", "hits"],
+            "properties": {
+              "computed": { "type": "integer", "minimum": 0 },
+              "hits": { "type": "integer", "minimum": 0 }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "definitions": {
+    "fingerprints": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+    }
+  }
 }

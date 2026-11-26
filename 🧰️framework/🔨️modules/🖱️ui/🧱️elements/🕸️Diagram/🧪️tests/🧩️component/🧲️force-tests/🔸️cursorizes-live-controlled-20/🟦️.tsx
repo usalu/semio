@@ -14,15 +14,14 @@ export function registerCursorizesLiveControlled20Tests(): void {
     const rawNodes = largeDiagramNodes(20_000);
     const rawEdges = largeDiagramEdges(20_000);
     const handoffStatusRef = React.createRef<DiagramHandoffStatus | null>();
+    let handoffTime = Date.now();
+    vi.spyOn(Date, "now").mockImplementation(() => handoffTime);
     let subscriberReads = 0;
-    let subscriberShouldBlock = false;
+    let subscriberShouldOverrun = false;
     const onNodesChange = vi.fn((proposal: typeof rawNodes) => {
       expect(diagramFrameStack).toBe(false);
       for (let index = 0; index < proposal.length; index++) if (proposal[index]) subscriberReads += 1;
-      if (subscriberShouldBlock) {
-        const until = Date.now() + 10;
-        while (Date.now() < until) {}
-      }
+      if (subscriberShouldOverrun) handoffTime += 10;
     });
     const nodes = trackArrayReads(rawNodes);
     const edges = trackArrayReads(rawEdges);
@@ -65,13 +64,13 @@ export function registerCursorizesLiveControlled20Tests(): void {
     expect(view.container.querySelector(".react-flow")).not.toBeNull();
     const lastValidGeneration = handoffStatusRef.current?.lastValidPublicationGeneration();
     expect(lastValidGeneration).toBeTypeOf("number");
-    subscriberShouldBlock = true;
+    subscriberShouldOverrun = true;
     act(() => flowCapture.props?.onNodeDragStart({} as MouseEvent, rawNodes[0], rawNodes));
     act(() => flowCapture.props?.onNodeDragStop({} as MouseEvent, rawNodes[0], rawNodes));
     runUntil(frames, () => onNodesChange.mock.calls.length === 2, 1_000, flushHandoffs);
     expect(onNodesChange).toHaveBeenCalledTimes(2);
     expect(subscriberReads).toBe(40_000);
-    expect(handoffStatusRef.current?.violations().filter((violation) => violation.kind === "consumer-publication")).toHaveLength(1);
+    expect(handoffStatusRef.current?.violations().filter((violation) => violation.kind === "consumer-publication")).toEqual([expect.objectContaining({ elapsedMs: 10 })]);
     expect(handoffStatusRef.current?.lastValidPublicationGeneration()).toBe(lastValidGeneration);
     act(() => flowCapture.props?.onNodeDragStart({} as MouseEvent, rawNodes[0], rawNodes));
     act(() => flowCapture.props?.onNodeDragStop({} as MouseEvent, rawNodes[0], rawNodes));

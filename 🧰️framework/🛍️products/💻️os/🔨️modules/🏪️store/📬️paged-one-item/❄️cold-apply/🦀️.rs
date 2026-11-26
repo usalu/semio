@@ -4,10 +4,10 @@
 use crate::OneItemOwners;
 use semio_os_spr::{apply_diff_cold, apply_diff_cold_into, ColdMutation, Edit, Mutation, MutationDiff};
 use semio_os_spr::command::MutationMessagePublication;
-use semio_os_store_replay_operation::native::{NativeSemanticPreparation, SemanticEdit, SemanticEditStep, SemanticProjection};
+use semio_os_store_replay_operation::native::{ClonedProjection, NativeSemanticPreparation, SemanticEdit, SemanticEditStep, SemanticProjection};
 use semio_os_store_replay_operation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationRequest};
 use semio_framework_value_snapshot_projection::snapshot_projection::post::{PagedOneItemPost, PagedOneItemPostMode, PagedOneItemPostRead};
-use semio_framework_value::retained_clone::{retained_clone_grant_admits, RetainedCloneClose, RetainedCloneRef};
+use semio_framework_value::retained_clone::{retained_clone_grant_admits, RetainedClone, RetainedCloneClose, RetainedCloneRef};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, OriginalRetirementPoll, RetainedAllocationEffect, RetirementDemand, RetirementPollExit};
 use std::mem::ManuallyDrop;
 use semio_os_store_command::HistoryLane;
@@ -37,18 +37,21 @@ impl<S, M> Copy for ColdPreparationBounds<S, M> {}
 
 /// 🏭️ The cold preparation factory of one snapshot and mutation family; with bounds it refuses oversize mutations and bases at preflight and meters the base clone.
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub struct ColdMutationApplyFactory<S, M> {
-    marker: PhantomData<fn() -> (S, M)>,
+pub struct ColdMutationApplyFactory<S: 'static, M, Projection = ColdReplayProjection<S>> {
+    marker: PhantomData<fn() -> (S, M, Projection)>,
     bounds: Option<ColdPreparationBounds<S, M>>,
 }
 
-impl<S, M> Default for ColdMutationApplyFactory<S, M> {
+/// 🌱️ Runs cold domain operations over a snapshot copied by a funded retained cursor.
+pub type RetainedColdMutationApplyFactory<S, M> = ColdMutationApplyFactory<S, M, ClonedProjection<S>>;
+
+impl<S: 'static, M, Projection> Default for ColdMutationApplyFactory<S, M, Projection> {
     fn default() -> Self {
         Self { marker: PhantomData, bounds: None }
     }
 }
 
-impl<S, M> ColdMutationApplyFactory<S, M> {
+impl<S: 'static, M> ColdMutationApplyFactory<S, M> {
     pub fn bounded(bounds: ColdPreparationBounds<S, M>) -> Self {
         Self { marker: PhantomData, bounds: Some(bounds) }
     }
@@ -115,7 +118,7 @@ impl<S:RetireOwned+Send+Sync+'static,M:RetireOwned+Send+'static> ColdMutationApp
     }
 }
 
-impl<S, M> ArtifactStoreOneItemPreparationFactory<S, M> for ColdMutationApplyFactory<S, M>
+impl<S, M, Projection: 'static> ArtifactStoreOneItemPreparationFactory<S, M> for ColdMutationApplyFactory<S, M, Projection>
 where
     S: Clone + RetireOwned + Send + Sync + 'static,
     M: Mutation<S> + ColdMutation<S> + ArtifactCanonicalJsonTree + RetireOwned + Send + Sync + 'static,
@@ -582,15 +585,32 @@ impl<S: Clone + RetireOwned + Send + Sync + 'static, M: Mutation<S> + ColdMutati
     }
 }
 
-/// 🪢 The cold sibling of native replay: any family with explicit cold reference semantics replays its history through the shared native producer.
-impl<S, M> ArtifactReplayPreparationFactory<S, M> for ColdMutationApplyFactory<S, M>
+trait ReplayProjection<S, M>: SemanticProjection<S> {
+    fn for_replay(bounds: Option<ColdPreparationBounds<S, M>>) -> Self;
+}
+
+impl<S: Clone + RetireOwned + Send + Sync + 'static, M> ReplayProjection<S, M> for ColdReplayProjection<S> {
+    fn for_replay(bounds: Option<ColdPreparationBounds<S, M>>) -> Self {
+        bounds.map_or_else(Self::default, |bounds| Self::bounded(bounds.snapshot_bytes, bounds.maximum_bytes))
+    }
+}
+
+impl<S: RetainedClone, M> ReplayProjection<S, M> for ClonedProjection<S> {
+    fn for_replay(_: Option<ColdPreparationBounds<S, M>>) -> Self {
+        Self::new(RetainedCloneBirthDemand { capacity_bytes: 0, depth: 1 })
+    }
+}
+
+/// 🪢 Opens the selected snapshot projection and preserves the original cold mutation operations.
+impl<S, M, Projection> ArtifactReplayPreparationFactory<S, M> for ColdMutationApplyFactory<S, M, Projection>
 where
     S: Clone + RetireOwned + Send + Sync + 'static,
     M: Mutation<S> + ColdMutation<S> + ArtifactCanonicalJsonTree + RetireOwned + Send + Sync + 'static,
+    Projection: ReplayProjection<S, M> + 'static,
 {
     fn preparation_birth_demand(&self) -> RetirementDemand {
-        type Producer<S, M> = NativeSemanticPreparation<S, M, ColdReplayProjection<S>, ColdReplayEdit<S, M>>;
-        RetirementDemand { copy_bytes: size_of::<ArtifactReplayPreparationRequest<S, M>>() + size_of::<Producer<S, M>>(), capacity_bytes: size_of::<Producer<S, M>>(), depth: 1, ..Default::default() }
+        let capacity_bytes = size_of::<NativeSemanticPreparation<S, M, Projection, ColdReplayEdit<S, M>>>();
+        RetirementDemand { copy_bytes: size_of::<ArtifactReplayPreparationRequest<S, M>>() + capacity_bytes, capacity_bytes, depth: 1, ..Default::default() }
     }
 
     fn begin(&self, request: ArtifactReplayPreparationRequest<S, M>, grant: RetainedCloneGrant) -> Result<(Box<dyn ArtifactReplayPreparation<S, M>>, RetainedCloneProgress), (ValueError, ArtifactReplayPreparationRequest<S, M>)> {
@@ -598,7 +618,7 @@ where
         if !retained_clone_grant_admits(grant, demand) {
             return Err((ValueError::literal(ValueRefusalKind::WorkLimit, "cold replay producer birth not funded"), request));
         }
-        let projection = self.bounds.map_or_else(ColdReplayProjection::<S>::default, |bounds| ColdReplayProjection::<S>::bounded(bounds.snapshot_bytes, bounds.maximum_bytes));
+        let projection = Projection::for_replay(self.bounds);
         let edit = ColdReplayEdit::<S, M> { operation_index: request.context.operation_index, ..Default::default() };
         let producer = NativeSemanticPreparation::new(request, projection, edit);
         Ok((Box::new(producer), RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() }))

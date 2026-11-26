@@ -175,7 +175,7 @@ fn a_lock_is_checked_and_never_moves_anything() {
     assert!(close(broken.total, 3.0) && broken.lock_difference.is_some_and(|difference| close(difference, 0.5)), "the value stays what the geometry says");
     let finding = set.findings.iter().find(|finding| finding.code == DiagnosticCode::DimensionLockViolated).expect("reported");
     assert!(close(finding.values["difference"], 0.5) && close(finding.values["lock"], 2.5) && close(finding.values["length"], 3.0));
-    assert!(finding.text("en").is_some_and(|text| text.contains("locked to 2.5 m")) && finding.text("de").is_some_and(|text| text.contains("gesperrt")));
+    assert!(finding.text("en").is_some_and(|text| text.contains("locked to 2.500 m")) && finding.text("de").is_some_and(|text| text.contains("auf 2.500 m gesperrt")));
     assert!(before.dimensions["dim-lock-broken"].anchors.iter().all(|anchor| anchor.free_point().is_some()), "the anchors are where they were authored");
 }
 

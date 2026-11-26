@@ -265,21 +265,23 @@ fn benign_direct_child_environment_is_preserved() -> bool {
 }
 
 /// 🧊️ The isolated compile worker's whole body — see `main`'s `compile-component` branch.
-fn compile_component_worker() -> Result<(), String> {
-    use std::io::Read as _;
+fn compile_component_worker() -> Result<i32, String> {
     let mut argv = std::env::args().skip(2);
-    let (mut engine, mut out) = (None, None);
+    let (mut engine, mut out, mut component_bytes) = (None, None, None);
     while let Some(flag) = argv.next() {
         match flag.as_str() {
             "--engine" => engine = Some(argv.next().ok_or("--engine requires a value")?),
             "--out" => out = Some(std::path::PathBuf::from(argv.next().ok_or("--out requires a value")?)),
+            "--component-bytes" => component_bytes = Some(argv.next().ok_or("--component-bytes requires a value")?.parse::<usize>().map_err(|error| error.to_string())?),
             other => return Err(format!("unknown flag {other}")),
         }
     }
     let (engine, out) = (engine.ok_or("--engine is required")?, out.ok_or("--out is required")?);
-    let mut bytes = Vec::new();
-    std::io::stdin().read_to_end(&mut bytes).map_err(|error| format!("reading the component from stdin: {error}"))?;
-    semio_plugin_host::compile_component_isolated(&engine, &bytes, &out).map_err(|error| error.to_string())
+    let result = semio_plugin_host::compile_component_isolated(&engine, std::io::stdin().lock(), component_bytes.ok_or("--component-bytes is required")?, &out);
+    if let Err(error) = &result {
+        eprintln!("[semio-os-mcp compile-component] {error}");
+    }
+    Ok(semio_plugin_host::isolated_compile_exit_code(result))
 }
 
 /// 🪞️ Credential-free schema export and isolated component compilation run before the serving-mode process seal.
@@ -293,7 +295,7 @@ pub fn run_mcp_entrypoint(services:Vec<RemoteInferenceProtocolV1>, credentials: 
     }
     if std::env::args().nth(1).as_deref() == Some("compile-component") {
         std::process::exit(match compile_component_worker() {
-            Ok(()) => 0,
+            Ok(status) => status,
             Err(message) => {
                 eprintln!("[semio-os-mcp compile-component] {message}");
                 1

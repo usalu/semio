@@ -374,9 +374,10 @@ function createInboundInvoke(scope: PluginHandleScope, instances: ReturnType<typ
    * carrying the guest's own decoded fault, so the caller's typed-refusal branch stays the one door. */
   const invoke = async (capability: string, request: Uint8Array | string, context?: PluginExtensionInvokeContext): Promise<Uint8Array> => {
     if (typeof capability !== "string" || capability.length === 0) throw new Error("extension.capability-required");
-    const payload = typeof request === "string" ? new TextEncoder().encode(request) : request;
     const refuse = (code: string, message: string): SemioFaultError =>
       new SemioFaultError({ origin: "os", code, severity: "error", message, scope: { pluginId }, retryable: false });
+    if (context?.signal?.aborted) throw refuse("extension.request-cancelled", "Extension request cancelled before guest activation");
+    const payload = typeof request === "string" ? new TextEncoder().encode(request) : request;
     if (payload.byteLength > GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES) {
       throw refuse("extension.request-too-large", `${capability} request of ${payload.byteLength} B for ${pluginId} exceeds the ${GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES}-byte contiguous guest-request ceiling`);
     }
@@ -432,7 +433,7 @@ function createDocumentPortBinder(scope: PluginHandleScope, instances: ReturnTyp
     const settle = (events: readonly ShardEventEnvelope[]) => withTypedOperationCall(actorId, `document-port#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, async () => {
       activation.assertActive();
       return settlePluginTurn(actorId, await submitTurn(actorId, events, { activation }), "Interactive", new Set(), turn => acceptUiPatches(instanceId, turn), true, activation, call);
-    }));
+    }), false);
     const binding = new ActorDocumentBindingV1({ ...identity, actorId, activationGeneration: activation.activationGeneration, instanceId }, bindingGeneration, {
       current,
       assertActive: () => activation.assertActive(),

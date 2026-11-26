@@ -1,0 +1,19 @@
+{
+  "schema": "semio.plugin.host.cold-compiler-admission.v1",
+  "sharedCacheWhileHeld": "busy",
+  "independentCacheWhileHeld": "admitted",
+  "sharedCacheAfterRelease": "admitted",
+  "invalidCacheRoot": "io-error",
+  "streamCases": [
+    {"declaredBytes": 3, "payload": "abc", "result": "admitted"},
+    {"declaredBytes": 2, "payload": "abcdef", "result": "io-error"},
+    {"declaredBytes": 4, "payload": "abc", "result": "io-error"}
+  ],
+  "memoryCases": [
+    {"componentBytes": 143779747, "totalBytes": 17179869184, "availableBytes": 9317346959, "result": "busy"},
+    {"componentBytes": 143779747, "totalBytes": 17179869184, "availableBytes": 9317346960, "result": "admitted"},
+    {"componentBytes": 8, "totalBytes": 17179869184, "availableBytes": null, "result": "busy"},
+    {"componentBytes": 8, "totalBytes": 134217728, "availableBytes": 134217728, "result": "busy"},
+    {"componentBytes": 8, "totalBytes": 17179869184, "availableBytes": 4294967296, "result": "admitted"}
+  ]
+}

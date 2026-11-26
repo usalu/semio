@@ -277,12 +277,12 @@ def apply_body_font() -> str:
     return BODY_FONT
 
 
-def apply_scene_style(scene) -> str:
-    """🎬 Apply the shared semio background and bundled typography to a scene."""
-    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
-    P_DEEP_DARK = _manim_module.P_DEEP_DARK
+def apply_scene_style(scene, *, appearance: str = "dark") -> str:
+    """🎬 Apply the window surface and bundled typography to a standalone scene."""
+    from manim import ManimColor
 
-    scene.camera.background_color = P_DEEP_DARK
+    surface = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🎨️surface.🐍️")
+    scene.camera.background_color = ManimColor(surface.surface_fill(appearance=appearance))
     return apply_body_font()
 
 

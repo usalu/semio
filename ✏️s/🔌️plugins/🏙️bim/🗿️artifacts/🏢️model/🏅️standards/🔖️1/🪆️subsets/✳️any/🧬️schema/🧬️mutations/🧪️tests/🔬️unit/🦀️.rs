@@ -34,7 +34,7 @@ async fn binary_tags_are_unique_and_registered_in_the_protocol() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_committed_mutation_round_trips_text_and_binary() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../🧫️fixtures/🧬️mutations");
+    let root = kit::fixture_root();
     let (operations, files) = protocol::mutation_fixture_ops::<ModelMutation>(&root);
     assert!(files >= KINDS.len() * 2, "every kind commits at least an applied and a rejected case, found {files} fixtures");
     assert_eq!(operations.len(), files, "every committed mutation decodes as the aggregate");
@@ -45,11 +45,47 @@ async fn every_committed_mutation_round_trips_text_and_binary() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn delete_storey_declares_a_bounded_footprint_and_the_others_one_row() {
+async fn mutations_declare_their_required_inverse_budget() {
     use semio_s_artifact_bim_model_mut_any_60::standards::v1::subsets::any::schema::mutations::delete_storey::DeleteStorey;
     use semio_s_artifact_bim_model_mut_any_2::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight;
-    assert_eq!(Mutation::<ModelSnapshot>::inverse_rows(&ModelMutation::DeleteStorey(DeleteStorey { id: "st".into() })), 8191);
-    assert_eq!(Mutation::<ModelSnapshot>::inverse_rows(&ModelMutation::SetStoreyHeight(SetStoreyHeight { id: "st".into(), height: 3.0 })), 1);
+    use semio_s_artifact_bim_model_mut_any_116::standards::v1::subsets::any::schema::mutations::delete_design_option::DeleteDesignOption;
+    use semio_s_artifact_bim_model_mut_any_117::standards::v1::subsets::any::schema::mutations::delete_workset::DeleteWorkset;
+    let inverse_rows = |mutation: ModelMutation| Mutation::<ModelSnapshot>::inverse_rows(&mutation);
+    assert_eq!(inverse_rows(ModelMutation::DeleteStorey(DeleteStorey { id: "st".into() })), 8191);
+    assert_eq!(inverse_rows(ModelMutation::DeleteDesignOption(DeleteDesignOption { id: "option".into() })), 8191);
+    assert_eq!(inverse_rows(ModelMutation::DeleteWorkset(DeleteWorkset { id: "workset".into() })), 8191);
+    assert_eq!(inverse_rows(ModelMutation::SetStoreyHeight(SetStoreyHeight { id: "st".into(), height: 3.0 })), 1);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn membership_cascades_refuse_more_than_their_inverse_capacity() {
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::INVERSE_ROWS;
+    use semio_s_artifact_bim_model_mut_any_116::standards::v1::subsets::any::schema::mutations::delete_design_option::DeleteDesignOption;
+    use semio_s_artifact_bim_model_mut_any_117::standards::v1::subsets::any::schema::mutations::delete_workset::DeleteWorkset;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{DesignOption, ElementMembership, Workset};
+
+    let mut snapshot = ModelSnapshot::default();
+    snapshot.design_options.cold_insert("lane".into(), DesignOption { group: "group".into(), name: "Lane".into(), primary: false });
+    snapshot.worksets.cold_insert("lane".into(), Workset { name: "Lane".into(), default_visible: true });
+    snapshot.element_options = (0..INVERSE_ROWS - 1).map(|id| (id.to_string(), ElementMembership { target: "lane".into() })).collect();
+    snapshot.element_worksets = snapshot.element_options.clone();
+    let operations = [
+        ModelMutation::DeleteDesignOption(DeleteDesignOption { id: "lane".into() }),
+        ModelMutation::DeleteWorkset(DeleteWorkset { id: "lane".into() }),
+    ];
+    for operation in &operations {
+        assert!(operation.diff(&snapshot).messages().is_empty());
+        assert_eq!(operation.inverse(&snapshot).unwrap().len(), INVERSE_ROWS);
+    }
+
+    snapshot.element_options.cold_insert("one-more".into(), ElementMembership { target: "lane".into() });
+    snapshot.element_worksets.cold_insert("one-more".into(), ElementMembership { target: "lane".into() });
+    for operation in &operations {
+        let outcome = operation.diff(&snapshot);
+        assert_eq!(outcome.messages()[0].code.as_str(), protocol::OutcomeCode::InverseRefused.as_str());
+        assert_eq!(outcome.diff(), &ModelDiff::default());
+        assert!(operation.inverse(&snapshot).unwrap().is_empty());
+    }
 }
 
 fn house() -> ModelSnapshot {
@@ -100,8 +136,8 @@ async fn the_rise_to_another_storey_is_the_elevation_gap() {
 #[semio_framework_async_macros::async_test]
 async fn the_inverse_of_every_committed_applied_modify_and_delete_case_fits_the_rows_its_leaf_declares() {
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../🧫️fixtures/🧬️mutations");
-    let kinds = ["copy-elements", "mirror-elements", "array-elements", "align-elements", "offset-wall", "trim-extend-wall", "split-slab", "split-beam", "set-wall-end-join", "delete-elements", "delete-site", "delete-building", "delete-storey"];
+    let root = kit::fixture_root();
+    let kinds = ["copy-elements", "mirror-elements", "array-elements", "align-elements", "offset-wall", "trim-extend-wall", "split-slab", "split-beam", "set-wall-end-join", "delete-elements", "delete-site", "delete-building", "delete-storey", "delete-design-option", "delete-workset"];
     let mut checked = 0;
     for leaf in std::fs::read_dir(&root).expect("the fixture root").flatten().filter(|leaf| kinds.contains(&leaf.file_name().to_string_lossy().trim_start_matches(|character: char| !character.is_ascii())))
     {

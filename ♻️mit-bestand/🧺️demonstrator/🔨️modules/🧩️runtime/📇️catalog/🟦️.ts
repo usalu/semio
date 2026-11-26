@@ -4,7 +4,7 @@ export const DEMONSTRATOR_HOST = catalog.host;
 export const DEMONSTRATOR_ASSETS_DIR = catalog.assetsDirectory;
 export const DEMONSTRATOR_RUNTIME_PANES = catalog.panes;
 
-/** 🧯️ Extensions this deployment neither ships nor offers, because their contributions stall the editors they extend. */
+/** 🧯️ Extensions explicitly withheld from this deployment. */
 const withheldExtensions: ReadonlySet<string> = new Set(catalog.withheldExtensions);
 
 /** 🚢️ Keeps the components this deployment ships. */

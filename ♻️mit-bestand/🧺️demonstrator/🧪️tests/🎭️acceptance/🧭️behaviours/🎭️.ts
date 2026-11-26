@@ -9,9 +9,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { expect, type Page } from "@playwright/test";
+import { gisInspectorCount, panelControl } from "../🧬️edits/🟦️.ts";
+import { latestToolRunGroup } from "../🧬️simulation/🟦️.ts";
 import {
   SHELL_READY_TIMEOUT_MS, SURFACE_CONTENT_TIMEOUT_MS, TEST_TIMEOUT_MS,
-  capturePaneArtifact, catalogText, documentWorldProjection, enterPane, historyGesture, latestToolRunGroup,
+  capturePaneArtifact, catalogText, documentWorldProjection, enterPane, historyGesture,
   openDocumentTab, openPaneTab, openWindowOptions, paneElementSelector, paneWindow, pickSelectValue, test, vortexCount, waitForPaneShellOutcome, waitWorldSettled, windowElementId, wording, worldInstanceIds,
   type Wording,
 } from "./🧰️pane/🟦️.ts";
@@ -31,6 +33,20 @@ const cases = JSON.parse(readFileSync(new URL("./🧫️cases.json", import.meta
     readonly typology: { readonly path: string; readonly rowIds: readonly string[] };
   };
   readonly chain: { readonly paneId: string; readonly catalogueRowId: string; readonly stepIds: readonly string[] };
+  readonly cadExtensions: {
+    readonly paneId: string;
+    readonly topic: string;
+    readonly appId: string;
+    readonly modules: readonly { readonly directory: string; readonly moduleId: string; readonly windowId: string; readonly modelDefinitionId: string }[];
+  };
+  readonly workshop: {
+    readonly paneId: string;
+    readonly categoryId: string;
+    readonly panelId: string;
+    readonly initialMachineCount: number;
+    readonly removeMachine: Wording;
+    readonly machines: readonly { readonly catalogId: string; readonly machineId: string; readonly seeded: boolean }[];
+  };
   readonly routes: { readonly paneId: string; readonly collection: string; readonly label: string; readonly delta: number };
   readonly model: { readonly paneId: string; readonly modelWindowId: string; readonly resultsWindowId: string; readonly coordinates: Readonly<Record<"x" | "y" | "z", number>>; readonly delta: number };
   readonly lifecycle: { readonly firstPaneId: string; readonly warmPaneId: string; readonly openedPaneId: string; readonly otherPaneId: string };
@@ -186,6 +202,7 @@ test("aggregator fill", tags("aggregator"), async ({ page }) => {
   await count.press("Tab");
   const wrapper = count.locator("xpath=ancestor::*[@data-slot='window-measure-number'][1]");
   await expect(wrapper, "the count is committed to the document config").toHaveAttribute("data-published-value", String(wanted), { timeout: SURFACE_CONTENT_TIMEOUT_MS });
+  await openDocumentTab(page, scenario.paneId, "toolRun");
   if ((await latestToolRunGroup(page, scenario.paneId)) === "") {
     await count.focus();
     await page.keyboard.press("ControlOrMeta+Enter");
@@ -211,7 +228,7 @@ test("aussuchen filter", tags("aussuchen"), async ({ page }) => {
   };
   await expectRows(scenario.poolRowIds, "the unfiltered pool lists the whole stock");
 
-  const query = pool.locator('[id="sourcing-filter-query"]').locator("xpath=self::input|.//input").first();
+  const query = pool.getByPlaceholder(wording(cases.texts.searchPlaceholder), { exact: true });
   await expect(query).toHaveAttribute("placeholder", wording(cases.texts.searchPlaceholder));
   await query.fill(scenario.query.text);
   await query.press("Tab");
@@ -220,13 +237,13 @@ test("aussuchen filter", tags("aussuchen"), async ({ page }) => {
   await query.press("Tab");
   await expectRows(scenario.poolRowIds, "clearing the query restores the pool");
 
-  const module = pool.locator(`[id="sourcing-filter-module-${scenario.module.id}"]`).first();
+  const module = pool.locator(`[data-ui-node-key="sourcing-filter-module-${scenario.module.id}"]`);
   await module.click();
   await expectRows(scenario.module.rowIds, "the module toggle narrows the pool to that module");
   await module.click();
   await expectRows(scenario.poolRowIds, "releasing the module toggle restores the pool");
 
-  const typology = pool.locator('[id="sourcing-filter-typology"]').first();
+  const typology = pool.locator('[data-ui-node-key="sourcing-filter-typology"]');
   await pickSelectValue(page, typology, scenario.typology.path);
   await expectRows(scenario.typology.rowIds, "the typology select narrows the pool to that path");
   await pickSelectValue(page, typology, "");
@@ -247,13 +264,13 @@ test("bearbeiten chain", tags("bearbeiten"), async ({ page }) => {
   const workpiece = paneWindow(page, scenario.paneId, "process-workpiece");
   await waitWorldSettled(workpiece);
   const artifact = await openDocumentTab(page, scenario.paneId, "artifact");
-  for (const id of scenario.stepIds) await expect(page.locator(paneElementSelector(scenario.paneId, id))).toHaveCount(1);
+  for (const id of scenario.stepIds) await expect(panelControl(page, scenario.paneId, "framework.panel.artifact", id)).toHaveCount(1);
   const rows = () => artifact.locator('[role="treeitem"]').count();
   const before = await rows();
   const initial = await documentWorldProjection(workpiece);
 
-  const catalogue = await openDocumentTab(page, scenario.paneId, "catalogue");
-  const capability = catalogue.locator(`[id="${scenario.catalogueRowId}"] [data-slot="tree-label"]`);
+  await openDocumentTab(page, scenario.paneId, "catalogue");
+  const capability = panelControl(page, scenario.paneId, "framework.panel.catalogue", `process3d-play-catalogue.workshop␟${scenario.catalogueRowId}`).locator('[data-slot="tree-label"]');
   await expect(capability, "the Wall Saw capability is offered for this workpiece").toBeVisible({ timeout: SURFACE_CONTENT_TIMEOUT_MS });
   await capability.click();
   await openDocumentTab(page, scenario.paneId, "artifact");
@@ -272,6 +289,62 @@ test("bearbeiten chain", tags("bearbeiten"), async ({ page }) => {
 });
 //#endregion ⛓️BearbeitenChain
 
+/** 🧩️ Loads each authored CAD contribution and waits for its corresponding model viewport. */
+test("koordinator extensions", tags("koordinator"), async ({ page, baseURL }) => {
+  test.setTimeout(TEST_TIMEOUT_MS + SURFACE_CONTENT_TIMEOUT_MS);
+  const { paneId, topic, appId, modules } = cases.cadExtensions;
+  const origin = new URL(baseURL!).origin;
+  const responses = modules.map(({ directory }) => page.waitForResponse(response => {
+    const url = new URL(response.url());
+    return response.request().method() === "GET" && url.origin === origin && decodeURIComponent(url.pathname) === `/🧩️extension-modules/${directory}/🔣️.json`;
+  }, { timeout: SHELL_READY_TIMEOUT_MS }));
+  const [, descriptors] = await Promise.all([enterPane(page, paneId), Promise.all(responses)]);
+  for (const [index, { moduleId, windowId, modelDefinitionId }] of modules.entries()) {
+    const response = descriptors[index]!;
+    expect(response.ok(), `${moduleId} descriptor loads from the served origin`).toBe(true);
+    const descriptor = await response.json() as {
+      readonly contributions: { readonly topicContributions: readonly { readonly topic: string; readonly payload: { readonly appId: string; readonly moduleId: string; readonly computersJson: string } }[] };
+    };
+    const contribution = descriptor.contributions.topicContributions.find(entry => entry.topic === topic && entry.payload.appId === appId && entry.payload.moduleId === moduleId);
+    expect(contribution, `${moduleId} contributes to the CAD host`).toBeDefined();
+    expect(JSON.parse(contribution!.payload.computersJson).modelDefinitionIds).toContain(modelDefinitionId);
+    await waitWorldSettled(paneWindow(page, paneId, windowId));
+  }
+});
+
+/** 🛠️ Installs machines through the extension catalogues in Workshop, including a Concrete machine seeded by the example. */
+test("bearbeiten extensions", tags("bearbeiten"), async ({ page }) => {
+  test.setTimeout(TEST_TIMEOUT_MS + SURFACE_CONTENT_TIMEOUT_MS);
+  const { paneId, categoryId, panelId, initialMachineCount, removeMachine, machines } = cases.workshop;
+  await enterPane(page, paneId);
+  await openPaneTab(page, paneId, categoryId, panelId);
+  const shell = page.locator(`[data-shell-id="${paneId}"]`);
+  const machinesSection = "process3d-play-workshop.machines";
+  const workshop = shell.locator(`[data-tree-window-key="${machinesSection}"]`);
+  const panelItem = (key: string) => page.locator(paneElementSelector(paneId, `panel:${panelId}/${key}`));
+  let installedCount = initialMachineCount;
+  await expect(workshop).toHaveAttribute("data-tree-window-total", String(installedCount));
+  for (const { catalogId, machineId, seeded } of machines) {
+    if (seeded) {
+      const installed = panelItem(`${machinesSection}␟machine:${machineId}`);
+      await installed.click({ button: "right" });
+      await page.getByRole("menuitem", { name: wording(removeMachine), exact: true }).click();
+      installedCount -= 1;
+      await expect(workshop).toHaveAttribute("data-tree-window-total", String(installedCount));
+    }
+    const sectionKey = `process3d-play-workshop.catalog.${catalogId}`;
+    const section = panelItem(sectionKey);
+    await expect(section, `${catalogId} contributed workshop catalogue`).toBeVisible();
+    if (await section.getAttribute("aria-expanded") !== "true") await section.click();
+    const option = panelItem(`${sectionKey}␟process3d-workshop.catalog.${catalogId}.${machineId}`);
+    await option.locator('[data-slot="tree-label"]').click();
+    installedCount += 1;
+    await expect(workshop).toHaveAttribute("data-tree-window-total", String(installedCount));
+    if (seeded) await expect(section).toHaveCount(0);
+    else await expect(option).toHaveCount(0);
+  }
+});
+
 //#region 🛣️VerfolgenRoutes
 /** 🛣️ Documented (`demonstrator.brand.pane.verfolgen.description`): "where existing components come from and where they go" and "explore the connections". Producer:
  * `gis gismap …/🎮️commands/🗺️features/🦀️.rs` `add_feature` (collection `routes` mints a two-vertex route) with the staged `collection` select of `🧾️manifest/🦀️.rs`
@@ -283,27 +356,25 @@ test("verfolgen routes", tags("verfolgen"), async ({ page }) => {
   await enterPane(page, scenario.paneId);
   const map = paneWindow(page, scenario.paneId, "gis2d-main");
   await openDocumentTab(page, scenario.paneId, "inspection");
-  const summary = (kind: string) => page.locator(paneElementSelector(scenario.paneId, `gis2d-play-inspector.${kind}-count`)).locator('[data-slot="tree-description"]');
-  const routes = Number(await summary("routes").innerText());
-  const positions = await summary("positions").innerText();
-  const regions = await summary("regions").innerText();
-  expect(Number.isSafeInteger(routes)).toBe(true);
+  const routes = await gisInspectorCount(page, "routes");
+  const positions = await gisInspectorCount(page, "positions");
+  const regions = await gisInspectorCount(page, "regions");
   await page.locator(paneElementSelector(scenario.paneId, `${windowElementId("gis2d-main")}.engagement.toggle`)).click();
-  const actions = map.locator('[data-slot="window-action-pane"]');
+  const actions = page.locator(`[data-shell-id="${scenario.paneId}"] [data-slot="window-action-pane"]`);
   await actions.locator('[id="action.addFeature"] [data-slot="tree-label"]').click();
   const collection = actions.locator('[id="action.addFeature.arg.collection"]').getByRole("combobox");
   await pickSelectValue(page, collection, scenario.collection);
   await expect(collection).toContainText(wording(cases.texts.routes));
   await actions.locator('[id="action.addFeature.arg.label"] input').fill(scenario.label);
   await page.locator(paneElementSelector(scenario.paneId, `${windowElementId("gis2d-main")}.action.addFeature.execute`)).click();
-  await expect(summary("routes")).toHaveText(String(routes + scenario.delta));
-  await expect(summary("positions")).toHaveText(positions);
-  await expect(summary("regions")).toHaveText(regions);
+  await expect.poll(() => gisInspectorCount(page, "routes")).toBe(routes + scenario.delta);
+  await expect.poll(() => gisInspectorCount(page, "positions")).toBe(positions);
+  await expect.poll(() => gisInspectorCount(page, "regions")).toBe(regions);
   for (const [direction, expected] of [["undo", routes], ["redo", routes + scenario.delta]] as const) {
     await historyGesture(page, map, direction);
-    await expect(summary("routes")).toHaveText(String(expected));
-    await expect(summary("positions")).toHaveText(positions);
-    await expect(summary("regions")).toHaveText(regions);
+    await expect.poll(() => gisInspectorCount(page, "routes")).toBe(expected);
+    await expect.poll(() => gisInspectorCount(page, "positions")).toBe(positions);
+    await expect.poll(() => gisInspectorCount(page, "regions")).toBe(regions);
   }
   await capturePaneArtifact(page, scenario.paneId);
 });
@@ -327,7 +398,7 @@ test("statik model edit", tags("statik"), async ({ page }) => {
   await expect.poll(nodes, { timeout: SURFACE_CONTENT_TIMEOUT_MS }).toBeGreaterThan(0);
   const before = await nodes();
   await page.locator(paneElementSelector(scenario.paneId, `${windowElementId(scenario.modelWindowId)}.engagement.toggle`)).click();
-  const actions = model.locator('[data-slot="window-action-pane"]');
+  const actions = page.locator(`[data-shell-id="${scenario.paneId}"] [data-slot="window-action-pane"]`);
   await actions.locator('[id="action.addNode"] [data-slot="tree-label"]').click();
   for (const axis of ["x", "y", "z"] as const) await actions.locator(`[id="action.addNode.arg.${axis}"] input`).fill(String(scenario.coordinates[axis]));
   await page.locator(paneElementSelector(scenario.paneId, `${windowElementId(scenario.modelWindowId)}.action.addNode.execute`)).click();

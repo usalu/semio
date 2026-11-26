@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
+import { Surface, SurfaceScope } from "../🌈️Surface/🟦️.tsx";
 import { useCardInterlock } from "../🃏️CardStack/🟦️.tsx";
 import { type LayeredDirection } from "../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 import type { LayeredOverviewProps } from "./📋️types/🟦️.ts";
@@ -39,14 +40,14 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
   const overlayCallback = React.useCallback((node: HTMLDivElement | null) => { setOverlayElement(node); if (swiping) cardStripCallback(node); }, [swiping, cardStripCallback]);
   useCardInterlock(swiping ? null : overlayElement);
   return (
-    <div
+    <Surface
       ref={rootRef}
       data-layered-overview=""
       data-interactive={interactive ? "" : undefined}
       data-mode={mode}
       data-layered-resting={restedOn.current ?? undefined}
       data-pan={panning ? "pointer" : "none"}
-      className="relative h-full w-full overflow-clip bg-background text-foreground"
+      className="relative h-full w-full overflow-clip text-foreground"
       style={swiping && opened === null ? { touchAction: "pinch-zoom" } : undefined}
     >
       {overviewButton}
@@ -57,12 +58,14 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
         <>
           <div ref={veilCallback} data-layered-veil="" data-level="dialog" className="ui-veil pointer-events-none absolute inset-0 z-30" />
           <div ref={overlayCallback} data-layered-overlay="" data-card-grid={swiping ? undefined : ""} role="group" aria-label={labels.grid} tabIndex={interactive ? -1 : undefined} inert={!interactive} className={swiping ? "pointer-events-none absolute left-0 top-0 z-[31] grid outline-none" : cn("pointer-events-auto absolute inset-0 z-[31] overflow-x-hidden overflow-y-auto outline-none", props.overlayClassName)} style={swiping ? stripStyle : props.overlayStyle}>
-            {panes.map((pane) => cardHost(pane, swiping ? { onCell: cellRefs.get(pane.id), style: cellStyles.get(pane.id) } : null))}
+            <SurfaceScope level="dialog">
+              {panes.map((pane) => cardHost(pane, swiping ? { onCell: cellRefs.get(pane.id), style: cellStyles.get(pane.id) } : null))}
+            </SurfaceScope>
           </div>
           {swiping ? <LayeredNeighbourHints neighbours={neighbours} moving={resting === null} insets={insets} label={labels.neighbour} onGo={goTo} /> : null}
         </>
       ) : null}
       {chrome}
-    </div>
+    </Surface>
   );
 }

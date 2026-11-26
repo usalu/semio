@@ -3,7 +3,7 @@
 import { describe, expect, it } from "bun:test";
 
 const real = "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🌓️silhouette/🟦️.ts";
-const { boundarySpread, Mask } = await import(process.env.MODULE === "real" ? real : "./silhouette.ts");
+const { boundarySpread, drawsBody, Mask } = await import(process.env.MODULE === "real" ? real : "./silhouette.ts");
 
 const [W, H] = [80, 80];
 const POCKET = 256;
@@ -83,5 +83,37 @@ describe("🧽️ one hairline closing for the drawn mask and the body mask", ()
     const { body, drawn, open } = masks(0.6);
     expect(body[7 * 24 + 10]).toBe(0);
     expect([...drawn]).toEqual([...open]);
+  });
+});
+
+describe("🫧️ a slender solid that a filled drawn shape of its own bone shows as its body", () => {
+  const ring = (x0: number, x1: number, y0: number, y1: number) => [{ x: x0, y: y0 }, { x: x1, y: y0 }, { x: x1, y: y1 }, { x: x0, y: y1 }];
+  const line = (n: number, x: number, y0: number, y1: number) => Array.from({ length: n }, (_, i) => ({ x, y: y0 + ((y1 - y0) * i) / (n - 1) }));
+  const shape = (extra: object = {}) => ({ bone: "back-b", body: true, closed: true, filled: true, rings: [ring(0.9, 1.1, 0, 10)], penM: 0.075, ...extra });
+
+  it("repaired: a centre line inside a filled closed shape of the bone is the body of that shape", () => {
+    expect(drawsBody?.("back-b", line(20, 1, 0.5, 9.5), [shape()], undefined, 0.03)).toBe(true);
+  });
+
+  it("repaired: a centre line along the rim, within half the true width of the outline, is the body as well", () => {
+    expect(drawsBody?.("back-b", line(20, 0.89, 0.5, 9.5), [shape()], undefined, 0.03)).toBe(true);
+  });
+
+  it("kept: a centre line beside the shape, a shape of another bone or material, an unfilled or open drawing is no body", () => {
+    expect(drawsBody?.("back-b", line(20, 3, 0.5, 9.5), [shape()], undefined, 0.03)).toBe(false);
+    expect(drawsBody?.("back-b", line(20, 1, 0.5, 9.5), [shape({ bone: "seat-b" })], undefined, 0.03)).toBe(false);
+    expect(drawsBody?.("back-b", line(20, 1, 0.5, 9.5), [shape({ material: "cane" })], "beech", 0.03)).toBe(false);
+    expect(drawsBody?.("back-b", line(20, 1, 0.5, 9.5), [shape({ filled: false })], undefined, 0.03)).toBe(false);
+    expect(drawsBody?.("back-b", line(20, 1, 0.5, 9.5), [shape({ closed: false })], undefined, 0.03)).toBe(false);
+  });
+
+  it("kept: a closed filled shape that is not a loft (a drawn prism or outline) is no body", () => {
+    expect(drawsBody?.("back-b", line(20, 1, 0.5, 9.5), [shape({ body: undefined })], undefined, 0.03)).toBe(false);
+  });
+
+  it("kept: one tenth of the centre line may leave the shape, one more point may not", () => {
+    const centre = [...line(18, 1, 0.5, 9.5), { x: 5, y: 5 }, { x: 5, y: 6 }];
+    expect(drawsBody?.("back-b", centre, [shape()], undefined, 0.03)).toBe(true);
+    expect(drawsBody?.("back-b", [...centre, { x: 5, y: 7 }], [shape()], undefined, 0.03)).toBe(false);
   });
 });

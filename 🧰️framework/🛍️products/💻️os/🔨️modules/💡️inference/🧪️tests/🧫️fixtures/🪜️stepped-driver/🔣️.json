@@ -59,5 +59,29 @@
     3,
     12
   ],
-  "minimumComputeSteps": 12
+  "minimumComputeSteps": 12,
+  "cache": {
+    "budgetBytes": 4096,
+    "boundedBudgetBytes": 144,
+    "edit": { "key": "leaf_a", "weight": 9 },
+    "edited": { "root": 1, "leaf_a": 10, "leaf_b": 4, "leaf_both": 18 },
+    "initialFingerprints": {
+      "root": "c496dc30db656047b2da955cf8cd37b422cbc6555e2ebca9700d0dedae503d99",
+      "leaf_a": "e06412f0cd0115e3f0b04e95c0ed462cde1bf100874b61221e53cb9827d82bdc",
+      "leaf_b": "3bde8570daacd2e85f76b03b970fd55950267881ca3b497074fb279ba476376f",
+      "leaf_both": "fc68790ac44619b2323e560e2785522127cf8aa2133afadfe5a3aa6f643c7231"
+    },
+    "editedFingerprints": {
+      "root": "c496dc30db656047b2da955cf8cd37b422cbc6555e2ebca9700d0dedae503d99",
+      "leaf_a": "c4d6268091d2c5d0d3cc9f9a090934eb7ce55ad4589bc6ba03e2953819e4c953",
+      "leaf_b": "3bde8570daacd2e85f76b03b970fd55950267881ca3b497074fb279ba476376f",
+      "leaf_both": "fe5136f8773e65b639a2ea7b08a1399f6da5ce0b1f08445297376c878c2e3ca5"
+    },
+    "runs": [
+      { "computed": 4, "hits": 0 },
+      { "computed": 0, "hits": 4 },
+      { "computed": 2, "hits": 2 },
+      { "computed": 0, "hits": 4 }
+    ]
+  }
 }

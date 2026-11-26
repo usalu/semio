@@ -14,15 +14,7 @@ pub const MAX_TOLERANCE: f64 = 1.0;
 /// 📏️ The largest clearance of a clash set in metres.
 pub const MAX_CLEARANCE: f64 = 10.0;
 
-/// 📏️ The tolerance of a new clash set in metres: an overlap of a millimetre is a modelling artefact, not a clash.
-pub const DEFAULT_TOLERANCE: f64 = 0.001;
-
-impl ClashSet {
-    /// 💥️ A clash set of `a` against `b` with the conventions of a new one: a tolerance of a millimetre and no clearance.
-    pub fn standard(name: &str, a: ElementSelector, b: ElementSelector) -> Self {
-        Self { name: name.into(), a, b, tolerance: DEFAULT_TOLERANCE, clearance: 0.0 }
-    }
-}
+pub use super::entities::DEFAULT_TOLERANCE;
 
 //#endregion 🔖️Defaults
 

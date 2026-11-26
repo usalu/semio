@@ -1,1 +1,250 @@
-{}
+{
+  "complete": {
+    "cacheHits": 0,
+    "complete": true,
+    "computed": 1,
+    "cursor": null,
+    "faulted": 0,
+    "fuelUsed": 29,
+    "progress": {
+      "completed": 4,
+      "fraction": 1.0,
+      "total": 4
+    },
+    "widgets": [
+      {
+        "dep": "",
+        "fault": null,
+        "id": "ball",
+        "outputs": [
+          {
+            "detail": "solid aaf4abdc8268d585a05fec0e0734af5c5366f7b9fc48377d91b323812be9bdb8",
+            "kind": "shape",
+            "port": "shape"
+          }
+        ],
+        "quality": "exact-analytic"
+      },
+      {
+        "dep": "",
+        "fault": null,
+        "id": "box",
+        "outputs": [
+          {
+            "detail": "solid 16387619a50b4f7b862c49a6403938d7ae6e70ca539683918cc32f55cfea38c5",
+            "kind": "shape",
+            "port": "shape"
+          }
+        ],
+        "quality": "exact-analytic"
+      },
+      {
+        "dep": "",
+        "fault": null,
+        "id": "size",
+        "outputs": [
+          {
+            "detail": "2",
+            "kind": "number",
+            "port": "number"
+          }
+        ],
+        "quality": "exact-analytic"
+      },
+      {
+        "dep": "",
+        "fault": null,
+        "id": "view",
+        "outputs": [
+          {
+            "detail": "solid 16387619a50b4f7b862c49a6403938d7ae6e70ca539683918cc32f55cfea38c5",
+            "kind": "shape",
+            "port": "shape"
+          }
+        ],
+        "quality": "exact-analytic"
+      }
+    ]
+  },
+  "faulted": {
+    "cacheHits": 0,
+    "complete": true,
+    "computed": 2,
+    "cursor": null,
+    "faulted": 1,
+    "fuelUsed": 467,
+    "progress": {
+      "completed": 4,
+      "fraction": 1.0,
+      "total": 4
+    },
+    "widgets": [
+      {
+        "dep": "",
+        "fault": {
+          "code": "generation3d.geometry.input-range",
+          "de": "Der Wert liegt außerhalb des zulässigen Bereichs.",
+          "en": "The value is outside the permitted range.",
+          "port": "radius"
+        },
+        "id": "ball",
+        "outputs": [],
+        "quality": "exact-analytic"
+      },
+      {
+        "dep": "",
+        "fault": null,
+        "id": "box",
+        "outputs": [
+          {
+            "detail": "solid 16387619a50b4f7b862c49a6403938d7ae6e70ca539683918cc32f55cfea38c5",
+            "kind": "shape",
+            "port": "shape"
+          }
+        ],
+        "quality": "exact-analytic"
+      },
+      {
+        "dep": "",
+        "fault": null,
+        "id": "size",
+        "outputs": [
+          {
+            "detail": "2",
+            "kind": "number",
+            "port": "number"
+          }
+        ],
+        "quality": "exact-analytic"
+      },
+      {
+        "dep": "",
+        "fault": null,
+        "id": "view",
+        "outputs": [
+          {
+            "detail": "solid 16387619a50b4f7b862c49a6403938d7ae6e70ca539683918cc32f55cfea38c5",
+            "kind": "shape",
+            "port": "shape"
+          }
+        ],
+        "quality": "exact-analytic"
+      }
+    ]
+  },
+  "request": {
+    "snapshot": {
+      "generation": {
+        "generations": []
+      },
+      "hostSnapshot": {
+        "camera": {
+          "x": 0.0,
+          "y": 0.0,
+          "zoom": 1.0
+        },
+        "layout": {},
+        "schema": "flow.host_snapshot",
+        "synapses": [
+          {
+            "from": "size",
+            "fromPort": "number",
+            "id": "e1",
+            "to": "box",
+            "toPort": "depth"
+          },
+          {
+            "from": "size",
+            "fromPort": "number",
+            "id": "e2",
+            "to": "box",
+            "toPort": "height"
+          },
+          {
+            "from": "box",
+            "fromPort": "shape",
+            "id": "e3",
+            "to": "view",
+            "toPort": ""
+          }
+        ],
+        "widgets": [
+          {
+            "id": "size",
+            "kind": "inputSlider",
+            "label": "Size",
+            "max": 10.0,
+            "min": 0.0,
+            "step": 0.5,
+            "value": 2.0
+          },
+          {
+            "id": "box",
+            "inputPorts": [],
+            "kind": "neuron",
+            "neuronKind": "brep.primitive.box",
+            "outputPorts": [],
+            "params": {
+              "width": {
+                "$schema": "number",
+                "value": 2.0
+              }
+            },
+            "preview": true
+          },
+          {
+            "id": "ball",
+            "inputPorts": [],
+            "kind": "neuron",
+            "neuronKind": "brep.primitive.sphere",
+            "outputPorts": [],
+            "params": {
+              "radius": {
+                "$schema": "number",
+                "value": 1.5
+              }
+            },
+            "preview": true
+          },
+          {
+            "expanded": [],
+            "id": "view",
+            "kind": "outputPreview",
+            "preview": {}
+          }
+        ]
+      }
+    }
+  },
+  "stepped": {
+    "cacheHits": 0,
+    "complete": false,
+    "computed": 1,
+    "cursor": {
+      "digest": "675ae3ecb9a09d6645014963f5c8c8b1bf7df061b374cc4d4249a04b829ad5d0",
+      "next": 1
+    },
+    "faulted": 0,
+    "fuelUsed": 999,
+    "progress": {
+      "completed": 1,
+      "fraction": 0.4751928448677063,
+      "total": 4
+    },
+    "widgets": [
+      {
+        "dep": "",
+        "fault": null,
+        "id": "size",
+        "outputs": [
+          {
+            "detail": "2",
+            "kind": "number",
+            "port": "number"
+          }
+        ],
+        "quality": "exact-analytic"
+      }
+    ]
+  }
+}

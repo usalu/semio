@@ -4,6 +4,7 @@
  * @see https://www.w3.org/TR/css-overflow-4/#scrollbar-gutter-property — the gutter a native scrollbar reserves
  */
 
+import { useLevel, windowFrameChipLevel } from "@semio-tech/ui-react/chrome";
 import { useEffect, useRef, type CSSProperties, type ReactElement } from "react";
 
 /** 📐️ What the thumb is placed from: the scroller's own measures and the clearance of the bands over it, in pixels. */
@@ -56,6 +57,7 @@ function pixels(value: string): number {
 export function ScrollThumb(): ReactElement {
   const spacer = useRef<HTMLDivElement>(null);
   const thumb = useRef<HTMLDivElement>(null);
+  const level = windowFrameChipLevel(useLevel());
   useEffect(() => {
     const row = spacer.current;
     const handle = thumb.current;
@@ -124,7 +126,7 @@ export function ScrollThumb(): ReactElement {
   }, []);
   return (
     <div ref={spacer} data-course-scroll-thumb-row="" aria-hidden="true" style={SPACER}>
-      <div ref={thumb} data-course-scroll-thumb="" data-glass-chip="" data-level="panel" className="ui-glass" style={THUMB} />
+      <div ref={thumb} data-course-scroll-thumb="" data-glass-chip="" data-level={level} className="ui-glass" style={THUMB} />
     </div>
   );
 }

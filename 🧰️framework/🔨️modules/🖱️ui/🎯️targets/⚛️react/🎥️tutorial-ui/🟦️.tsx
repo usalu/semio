@@ -1,7 +1,7 @@
 import type { TutorialCameraState, TutorialOverlayRect, TutorialGestureCue } from "@semio-tech/framework-onboarding/declaration";
 import { ephemeralMap } from "@semio-tech/framework-transient";
 import * as React from "react";
-import { useSurface, SurfaceScope, Surface } from "@semio-tech/ui/elements/Surface";
+import { useLevel, useSurface, SurfaceScope, Surface } from "@semio-tech/ui/elements/Surface";
 import { shellFloorPaints, shellFloorFillClass } from "@semio-tech/ui/modules/shell-floor-presentation";
 import { useLabel } from "@semio-tech/ui/elements/Label";
 import { Button } from "@semio-tech/ui/elements/Button";
@@ -90,6 +90,7 @@ export const TutorialBar: React.FC<TutorialBarProps> = ({
   onRecordToggle,
   onAddChapter,
 }) => {
+  const level = useLevel();
   const parent = useSurface();
   const paints = shellFloorPaints(parent);
   const bgClass = shellFloorFillClass(parent);
@@ -146,9 +147,9 @@ export const TutorialBar: React.FC<TutorialBarProps> = ({
   );
 
   return (
-    <nav id="ui.tutorial.bar" data-slot="tutorial-bar" data-level="base" data-ui-reveal-region="tutorial-bar" data-elevation-root="" className={cn("relative h-large z-navbar border-t border-border", bgClass)}>
+    <nav id="ui.tutorial.bar" data-slot="tutorial-bar" data-level={level} data-ui-reveal-region="tutorial-bar" data-elevation-root="" className={cn("relative h-large z-navbar border-t border-border", bgClass)}>
       {paints ? (
-        <SurfaceScope level="base" fill="surface">
+        <SurfaceScope level={level} fill="surface">
           {body}
         </SurfaceScope>
       ) : (
@@ -169,7 +170,7 @@ export type TutorialCaptionsProps = {
 export const TutorialCaptions: React.FC<TutorialCaptionsProps> = ({ text, visible }) => {
   if (!visible || !text) return null;
   return (
-    <Surface id="ui.tutorial.captions.text" data-slot="tutorial-captions" level="dialog" fill="glass" className={cn(GLASS_OVERLAY_BOX_CLASS, "bottom-double left-1/2 max-w-2xl -translate-x-1/2 text-center text-sm")}>
+    <Surface overlay id="ui.tutorial.captions.text" data-slot="tutorial-captions" level="dialog" fill="glass" className={cn(GLASS_OVERLAY_BOX_CLASS, "bottom-double left-1/2 max-w-2xl -translate-x-1/2 text-center text-sm")}>
       {text}
     </Surface>
   );

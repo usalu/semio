@@ -19,3 +19,16 @@ Another session reshaped the replication/editor API; the crate's unit tests were
 - `test -p semio-s-artifact-stdio-binary-mutations`: 48 passed, 2 failed.
   Remaining failures are in the shared history-edit acceptance harness, not compile: `history_edits_end_to_end` ("original report requires its installed semantic and retirement issuers") and `conflict_history_edits_end_to_end` ("archive hydration ... DecodeForward: Replay: truncated at offset 16"). Previously masked by the wrong fixture root.
 - `test -p semio-hub-stdio-pdf --lib`: compiles, 0 tests, ok.
+
+## Follow-up: history-edit harness failures (root causes, fixed)
+Result: `semio-s-artifact-stdio-binary-mutations` 50 passed, 0 failed.
+
+The binary artifact never declared the store/wire owners the history machinery requires (the earlier fixture-root fix only unmasked this). Four independent causes:
+1. `🧬️schema/🧬️mutations/🦀️.rs`: the vocabulary has an authored tagged `OpBinary`, but was registered with the Pack-Value receiver (`original_pack_value_operation_receiving` + `artifact_persisted_binary_operation`), so persisted bytes were read in another format ("Replay: truncated at offset 16"). Now `original_decoded_operation_receiving` + `artifact_persisted_encoded_binary_operation`, as the other authored-codec vocabularies (model, writer, sequence).
+2. `✏️editor/🦀️.rs`: `BinaryEditor` did not install the cold-replay store owners, so no semantic/retirement issuers existed ("original report requires its installed semantic and retirement issuers"). Added `document_store_owners_source_demands` and `build_document_store_owners` using `cold_replay_document_store_owners` (same as xlsx/pdf/process3d).
+3. Same hook: the operation wire now installs `with_original_encoded_binary_receiving()` and `with_original_target(whole_document_target)` (a byte-range edit conflicts with the one opaque buffer), fixing "no original receiving capability" and "no authored conflict path issuer".
+4. `🧰️framework/.../🗃️document/🗄️document-archive-load/🦀️.rs`: the archive admission rejected an empty `parent_pack`. The raw binary carrier law makes an empty buffer an empty pack, so a zero-byte document could not be reloaded. The check now requires only the history (`parent_spr`), which always holds the envelope.
+
+## run-s10-final.sh (PDF test group)
+- Unit stage (`s10-final`, exit 0): `-p semio-s-artifact-stdio-pdf -io-export -page-editor-tests -testkit -snapshot-2 --lib`: 38, 19, 71, 2 and 66 passed, 0 failed.
+- Routes stage (`s10-routes`, exit 101): did not run; `semio-framework-dsl-record-model` fails to compile (`unresolved import semio_framework_dsl_record_ownership::retirement::retire_field`). `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛫️encode/🦀️.rs` was edited seconds before (it replaces the local `retire_field` by a re-export), but `♻️retirement/🦀️.rs` does not define it yet. This is another session's in-progress move, so it was left untouched; rerun the routes stage once it lands.

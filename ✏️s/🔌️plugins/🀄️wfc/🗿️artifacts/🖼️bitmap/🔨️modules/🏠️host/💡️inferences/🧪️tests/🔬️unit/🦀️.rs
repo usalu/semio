@@ -143,6 +143,49 @@ fn an_oversized_output_is_refused_at_admission() {
 }
 
 #[test]
+fn a_single_observed_pattern_publishes_positive_zero_entropy() {
+    let mut sample = stripes();
+    sample.input.pixels.fill(0);
+    sample.output.width = 1;
+    sample.output.height = 1;
+    let solved = solve_with_clock(&sample, semio_framework_job::logical_now_us).expect("one pattern solves");
+    assert_eq!(solved.entropy.len(), 1);
+    assert_eq!(solved.entropy[0].to_bits(), 0);
+    assert_eq!(pattern_universe_entropy(&sample).to_bits(), 0);
+}
+
+/// 🧹️ Cancellation returns the admitted problem, extracted model and solver backing through paid close.
+#[test]
+fn bitmap_worker_cancellation_accounts_for_owned_solver_storage() {
+    use semio_s_plugin_wfc_engine_oracle::step_context::{observe_retirement_allocations,TestJobDriver};
+    for checkpoint in [None,Some(vec![0;64])] {
+        let snapshot=stripes();
+        let operation=semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(),semio_framework_job::RevisionId(0),semio_framework_job::Generation(1),snapshot.seed);
+        let mut job=BitmapInferenceJob::from_admitted_snapshot(operation,snapshot,checkpoint);
+        let mut driver=TestJobDriver::new(operation.operation,operation.generation);
+        for _ in 0..12 {
+            driver.step(&mut job,1,|outcome|{
+                assert!(!matches!(outcome,Some(semio_framework_job::JobOutcomeBorrow::Complete{..})));
+            });
+        }
+        driver.cancel(&mut job,1);
+        let mut released=0;
+        driver.close_with(&mut job,|job,cx|{
+            let (result,physical)=observe_retirement_allocations(||job.close_step(cx));
+            let step=result?;
+            let progress=step.progress();
+            assert_eq!(physical,(progress.retained_capacity_bytes,progress.released_bytes));
+            released+=progress.released_bytes;
+            Ok(step)
+        });
+        assert!(job.terminal_is_empty());
+        assert!(released>0);
+        let (_,physical)=observe_retirement_allocations(||drop(job));
+        assert_eq!(physical,(0,0));
+    }
+}
+
+#[test]
 fn the_prior_entropy_is_zero_for_a_pinned_cell_and_positive_elsewhere() {
     let mut snapshot = stripes();
     snapshot.pinned = vec![BitmapPinnedPixel { x: 0, y: 0, color: 0 }];
@@ -328,7 +371,7 @@ fn a_stated_snapshot_is_resolved_unchanged() {
 /// 🌱️ The canonical pair `artifact_create` of an `s.wfc.bitmap` answers over the semio MCP
 /// (captured live, G4 session 10): the artifact-bound carrier must decode to the genesis snapshot and
 /// that snapshot must solve, exactly like the stated-snapshot carrier.
-const GENESIS_PACK_BASE64: &str = "iVNFTQ0KGgoSAAAAd2ZjLmJpdG1hcC5wYWNrIHYxiVNQSw0KGgoBAAAAAQAAAAEAAADvZe+IAAAAAAAAAAADAxAOY+Qp1itPS9ZLyizJTSwAAClm/p8EA6ABqgPjZWBjYGRhZ2IRYGYRYGG/weTo6OgMxEDgCaHSwaSTY6Crk6MjEAe6OoLZgUB1YNoTIpcOlgPqRVED1YdVP7odUHux6UezA2IvmhqoPuz2o9kBtRebflQ7oPbicD9W+7GFn60tK4sEG4sEOxMHCzMnCwcXE48IMwsDA7PaI8ZjjIxA+h5jCyMTA7PeJUYPZgbm/4wgyCvCwAxUA5QGygAA6gTz6AEDMjBj+PH28NHH/f2nXdQftkRY3Wg5UdRX+sW6Wen6vDyVf5dlHlusYmRUkGAAglXMvAyMAOkhXcwAAAB6o2RgU1BLRk9PVDEBAAAAAQAAAOIAAAAAAAAAOgAAAAAAAAB3AQAAAAAAAIpDqEbUaRgDDs1P6htRYTSodwW++npI2e6EP3NjDg6FAAAAAAAAAAA9mtYA";
+const GENESIS_PACK_BASE64: &str = "iVNFTQ0KGgoSAAAAd2ZjLmJpdG1hcC5wYWNrIHYxiVNQSw0KGgoBAAAAAQAAAAEAAADvZe+IAAAAAAAAAAADAxAOY+Qp1itPS9ZLyizJTSwAAClm/p8EA6ABqgPjZWBjYGRhZ2IRYGYRYGG/weTo6OgMxEDgCaHSwaSTY6Crk6MjEAe6OoLZgUB1YNoTIpcOlgPqRVED1YdVP7odUHux6UezA2Ivmh1QfdjtR7MDai82/ah2QO3F4X6s9mMLP1tbVhYJNhYJdiYOFmZOFg4uJh4RZhYGBma1R4zHGBmB9D3GFkYmBma9S4wezAzM/xlBkFeEgRmoBigNlAEAfc1CJwEDMjBj+PH28NHH/f2nXdQftkRY3Wg5UdRX+sW6Wen6vDyVf5dlHlusYmRUkGAAglXMvAyMAOkhXcwAAAB6o2RgU1BLRk9PVDEBAAAAAQAAAOIAAAAAAAAAOgAAAAAAAAB3AQAAAAAAAIpDqEbUaRgDDs1P6htRYTSodwW++npI2e6EP3NjDg6FAAAAAAAAAAA9mtYA";
 const GENESIS_SPR_BASE64: &str = "iVNQUg0KGgoBAAAAAQAAAAEAAABv3uXPAAAAAAAAAAAqAwIBAAIXcy53ZmMuYml0bWFwQDEvKiNlZGl0b3IMcy53ZmMuYml0bWFwwYNpoTMAAAAHAQIBAQABAQY4LAwQAAAACQMCAQICATEBKl5NgEISAAAACkEAAQIBAQECAQNojUfJEwAAAEIMAgEAAAAAAAAAAAAAAAAAAABoAAAAAAAAAAQAAAAAAAAAT2/GOvLREraRMQ76Y5Hc2YPnnZpw7/JgKceH3PJJ3c5CncDjSwAAAA==";
 
 #[test]

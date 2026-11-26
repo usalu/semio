@@ -82,3 +82,17 @@ test("actual original engine retains ordinal values and borrowed keys through fu
  expect(engine).toContain("run.cursor.close_original_plan_step(cx)");expect(engine).toContain("run.values.close_step(cx)");expect(engine).toContain("source.close_step(parent,cx)");
  expect(engine).not.toContain("BTreeMap");expect(engine).not.toContain("previous");expect(engine).not.toContain("values.clone()");expect(engine).not.toContain("cancellation_id.to_string()");expect(engine).not.toContain("snapshot.retire_cold()");
 });
+
+
+test("preview merges connected outputs in wire order", async () => {
+ const { default: law } = await import("./👁️preview/🧫️.json");
+ const graph = new graphlib.Graph({ multigraph: true });
+ for (const widget of law.widgets) graph.setNode(widget.id, { number: String(widget.number) });
+ law.connections.forEach((wire, index) => graph.setEdge(wire.from, "preview", wire.port, String(index)));
+ const output = Object.assign({}, ...(graph.inEdges("preview") ?? []).map(edge => {
+  const source = graph.node(edge.v);
+  const port = graph.edge(edge);
+  return port ? { [port]: source[port] } : source;
+ }));
+ expect(output).toEqual(law.expected);
+});

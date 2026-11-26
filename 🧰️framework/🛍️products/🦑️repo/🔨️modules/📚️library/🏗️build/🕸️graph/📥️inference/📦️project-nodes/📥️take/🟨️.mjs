@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import {processPidExistsV1} from "../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs";
 import { execFile } from "node:child_process";
 import { closeSync, constants, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
 import { availableParallelism, loadavg } from "node:os";
@@ -326,7 +327,7 @@ export async function takePassV1({ names, attempt, concurrency = TAKE_POLICY_V1.
 
 /** 🔒️ The claims of the owners that loads of one checkout infer at the same time (a follower load runs beside the leader after the bounded wait, and an owner the leader started but has not stored would be inferred twice): `claim(stem)` creates `<directory>/<stem>.json` with `wx` (`{version,pid,startMs}`), answers `granted`, and answers `running` while another claim file names a live process younger than `staleMilliseconds`; a dead or stale claim is taken over by renaming it away first (one process wins the rename), `release(stem)` removes the claim this process holds. A claim that cannot be written or read never blocks: the owner is then inferred (`granted`), as without claims.
  * @see ./🧪️tests/🔒️claims/🟦️.ts */
-export function createOwnerClaimsV1({ directory, pid = process.pid, now = Date.now, alive = value => { try { process.kill(value, 0); return true; } catch (error) { return error?.code === "EPERM"; } }, staleMilliseconds = TAKE_POLICY_V1.claimStaleMilliseconds }) {
+export function createOwnerClaimsV1({ directory, pid = process.pid, now = Date.now, alive = value => processPidExistsV1(value), staleMilliseconds = TAKE_POLICY_V1.claimStaleMilliseconds }) {
   const held = new Set(), file = stem => join(directory, stem + ".json");
   const create = stem => { const fd = openSync(file(stem), constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL); try { writeSync(fd, JSON.stringify({ version: 1, pid, startMs: now() })); } finally { closeSync(fd); } held.add(stem); return "granted"; };
   return Object.freeze({

@@ -41,6 +41,22 @@
       ]
     },
     {
+      "id": "process-watchdog-linux",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🐧️linux/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "tools": [
+        "node"
+      ]
+    },
+    {
       "id": "cargo-source-admission",
       "budgetMs": 300000,
       "typecheck": "none",
@@ -1262,7 +1278,14 @@
         "💾️state",
         "📖️texts",
         "📋️context",
-        "🧪️tests"
+        "🧪️tests",
+        "🆓️free-space",
+        "🏗️build/🏠️machine-state",
+        "🏗️build/💽️disk",
+        "🏗️build/🎟️capacity/🧪️tests/🪜️prerequisites",
+        "🏗️build/🎟️capacity/🧮️units/🧪️tests/🛰️fleet-jobs",
+        "🔖️identity",
+        "🧹️scratch"
       ],
       "platforms": [
         "darwin",

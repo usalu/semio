@@ -35,6 +35,7 @@ async fn export_video_from_deck_emits_the_decks_video_program() {
             assert_eq!(filename, "habitat-67.mp4", "named after the deck's picture");
             assert_eq!(program.validate(), Ok(()));
             assert_eq!((program.width, program.height, program.fps), (1280, 720, 15));
+            assert_eq!(program.background.map(|channel| (channel * 255.0).round() as u8), [6, 26, 31, 255]);
             assert_eq!(program.images.iter().map(|image| image.url.as_str()).collect::<Vec<_>>(), vec![crate::DEMO_FIGURE_SRC]);
             assert_eq!(
                 program.timeline,

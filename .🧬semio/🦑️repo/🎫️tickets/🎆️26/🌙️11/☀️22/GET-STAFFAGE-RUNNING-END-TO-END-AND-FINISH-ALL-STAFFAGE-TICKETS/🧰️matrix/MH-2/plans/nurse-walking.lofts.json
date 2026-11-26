@@ -79,6 +79,7 @@
 {"scale": 500, "bone": "foot-l", "id": "shoe-l", "views": ["elevation", "front", "plan"], "solids": ["shoe-l"]},
 {"scale": 500, "bone": "arm-r", "id": "sleeve-r", "views": ["elevation", "front", "plan"], "solids": ["sleeve-r"]},
 {"scale": 500, "bone": "forearm-r", "id": "forearm-r", "views": ["elevation", "front", "plan"], "solids": ["forearm-r"]},
+{"scale": 500, "bone": "hand-r", "id": "forearm-r", "from": "forearm-r", "views": ["elevation", "front", "plan"], "as": "hand-r", "solids": ["hand-r"]},
 {"scale": 500, "bone": "thigh-r", "id": "thigh-r", "views": ["elevation", "front", "plan"], "solids": ["thigh-r"]},
 {"scale": 500, "bone": "shank-r", "id": "shank-r", "views": ["elevation", "front", "plan"], "solids": ["shank-r"]},
 {"scale": 500, "bone": "foot-r", "id": "shoe-r", "views": ["elevation", "front", "plan"], "solids": ["shoe-r"]}

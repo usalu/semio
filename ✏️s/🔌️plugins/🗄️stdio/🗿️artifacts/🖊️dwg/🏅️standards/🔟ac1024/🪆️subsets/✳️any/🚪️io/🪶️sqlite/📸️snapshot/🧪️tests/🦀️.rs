@@ -32,6 +32,16 @@ use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeAct
 use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeActionDependency;
 use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgDynamicBlockProxyNode;
 use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgExtendedEntityData;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgVisibilityEvaluationHistory;
+use semio_s_artifact_stdio_dwg_snapshot_objects_styles::DwgMlineLinetype;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockMoveCoordinateMode;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssocNetworkMemberKind;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockActionCoordinateMode;
+use semio_s_artifact_stdio_dwg_snapshot_objects_blocks::DwgBlockScaleMode;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgAssociativeActionStatus;
+use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationVariant;
+use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgXRecordValue;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgApplicationPropertyKind;
 use semio_s_artifact_stdio_dwg_snapshot_objects_xrecord::DwgObjectCategory;
 use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgMeasurement;
 use semio_s_artifact_stdio_dwg_snapshot_objects_associativity::DwgEvaluationExpressionValue;
@@ -60,7 +70,7 @@ fn sqlite_snapshot_dwg_intermediate_xrecord_native_and_sqlite_are_independent_of
     let limits=SqliteDatabaseLimits::default();let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let bytes=export_sqlite_database(&expected,limits,&mut |_|true).unwrap();
     let script="import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');if(d.query('SELECT COUNT(*) AS n FROM dwg_xrecord_binary_octet').get().n!==256)throw Error('octets');await Bun.write(Bun.stdout,d.serialize());d.close();";
     let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));assert_eq!(DwgSnapshot::from_sqlite_database(&import_sqlite_database(&output.stdout,limits,&mut |_|true).unwrap(),&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),expected);
-    for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limits, &mut |_|true, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,control, native_owner))).unwrap();let restored=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| DwgSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),expected);}
+    for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limits, &mut |_|true, |control| semio_s_artifact_stdio_contract::testing::encode_native(&snapshot,encoding,control)).unwrap();let restored=semio_s_artifact_stdio_contract::testing::decode_native::<DwgSnapshot>(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),expected);}
 }
 
 #[test]
@@ -81,13 +91,13 @@ fn sqlite_snapshot_dwg_controlled_native_admits_all_domain_rows_and_unicode() {
     let record=snapshot.__dsl_to_record();let limited=SqliteDatabaseLimits{max_rows:rows-1,..limits};let mut progress=|_|true;let mut native=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(limits.max_value_bytes,&mut progress);
     assert!(crate::standards::v_ac1024::subsets::any::io::sqlite::snapshot::construct_native_record(&record,&mut native,limited).is_err(),"all 43 borrowed body domains must admit their exact descendant frontier before typed construction");assert_eq!(native.owned_bytes(),0,"an independently counted descendant frontier must refuse before any typed string or collection allocation");
     for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
-        let payload=semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limits, &mut |_|true, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,control, native_owner))).unwrap();
-        let restored=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| DwgSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();
+        let payload=semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limits, &mut |_|true, |control| semio_s_artifact_stdio_contract::testing::encode_native(&snapshot,encoding,control)).unwrap();
+        let restored=semio_s_artifact_stdio_contract::testing::decode_native::<DwgSnapshot>(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
         assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),database);
         let limited=SqliteDatabaseLimits{max_rows:rows-1,..limits};
-        assert!(semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limited, &mut |_|true, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,control, native_owner))).is_err(),"every authored DWG occurrence consumes its row admission");
-        assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| DwgSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limited), native_owner)).is_err(),"native reconstruction must admit every authored DWG row");
-        let mut interior=false;assert!(semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limits, &mut|event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.total==snapshot.schema.len()&&event.completed>=fixture["controlledNative"]["cancelAfter"].as_u64().unwrap() as usize&&event.completed<event.total{interior=true;false}else{true}}, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,control, native_owner))).is_err());assert!(interior);
+        assert!(semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limited, &mut |_|true, |control| semio_s_artifact_stdio_contract::testing::encode_native(&snapshot,encoding,control)).is_err(),"every authored DWG occurrence consumes its row admission");
+        assert!(semio_s_artifact_stdio_contract::testing::decode_native::<DwgSnapshot>(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limited)).is_err(),"native reconstruction must admit every authored DWG row");
+        let mut interior=false;assert!(semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limits, &mut|event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.total==snapshot.schema.len()&&event.completed>=fixture["controlledNative"]["cancelAfter"].as_u64().unwrap() as usize&&event.completed<event.total{interior=true;false}else{true}}, |control| semio_s_artifact_stdio_contract::testing::encode_native(&snapshot,encoding,control)).is_err());assert!(interior);
     }
 }
 
@@ -295,8 +305,8 @@ fn erased_nan_words(encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding)
     for value in fixture["nativeEncodingFloat64Bits"].as_array().unwrap(){
         let bits=u64::from_str_radix(value.as_str().unwrap(),16).unwrap();let mut snapshot=DwgSnapshot::default();snapshot.version="noncanonical".into();snapshot.header.units.unit1_conversion=f64::from_bits(bits);
         let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
-        let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(&snapshot.schema,&dialect,&mut Some(database.clone()),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
-        let restored=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (codec.export)(&snapshot.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
+        let payload=semio_s_artifact_stdio_contract::testing::import_sqlite(&codec,&snapshot.schema,&dialect,database.clone(),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;
+        let restored=semio_s_artifact_stdio_contract::testing::export_sqlite(&codec,&snapshot.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;
         assert_eq!(DwgSnapshot::from_sqlite_database(&restored,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().header.units.unit1_conversion.to_bits(),bits,"native erased snapshot encoding must preserve every IEEE word");
         assert_eq!(restored,database);
     }

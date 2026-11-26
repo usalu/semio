@@ -26,6 +26,7 @@ await withScriptProcessEnvelope(envelope, async invocation => {
     console.log(`[DEBUG] workspace folder ${folder}`);
     const steps = await runOsMcpClientJourney(workspace, folder, pins, invocation, control);
     for (const step of steps) console.log(`${step.ok ? "PASS" : "FAIL"}  ${step.step} — ${step.detail}`);
+    if (steps.some(step => !step.ok)) process.exitCode = 1;
     console.log(`journey: ${steps.filter(s => s.ok).length}/${steps.length} green`);
   });
 });

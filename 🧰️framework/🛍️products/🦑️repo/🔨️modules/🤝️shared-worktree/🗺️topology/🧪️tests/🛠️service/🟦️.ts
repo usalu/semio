@@ -5,11 +5,11 @@ import {chmodSync,mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,writeFileSy
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
-import {readTopologyV1,serverPartsV1,workerPartsV1} from "../../🟦️.ts";
+import {bindFleetHostsV1,readTopologyV1,serverPartsV1,workerPartsV1} from "../../🟦️.ts";
 import {fileURLToPath} from "node:url";
 import {maintainServiceDefinitionV1,reloadHelperPlistV1,reloadScriptV1,serviceDefinitionTextV1,takeReloadOutcomeV1,SERVICE_DEFINITION_LIMITS_V1,serviceBootstrapScriptV1,type ServiceDefinitionPortsV1} from "../../🛠️service/🟦️.ts";
 
-const topology=readTopologyV1(fixture.topology),group=fixture.topology.groups[0]!.id,HOME="/Users/tester",QUIET=SERVICE_DEFINITION_LIMITS_V1.quietMilliseconds;
+const topology=bindFleetHostsV1(readTopologyV1(fixture.topology),Object.fromEntries(fixture.topology.groups.map(row=>[`${row.id}-server`,`nfs.${row.id}.example.test`]))),group=fixture.topology.groups[0]!.id,HOME="/Users/tester",QUIET=SERVICE_DEFINITION_LIMITS_V1.quietMilliseconds;
 const scratch:string[]=[];
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 

@@ -2,14 +2,12 @@
 
 use super::*;
 
-//#region 💡️InferenceJobTools
-/// 🏁 One finished guest run: the guest's own result bytes and whether it reported completion.
-pub struct GuestInferenceRun {
-    pub inference_schema: String,
-    pub complete: bool,
-    pub payload: Option<Vec<u8>>,
-}
+#[path = "📥️result.rs"]
+mod result;
+use result::{GuestInferenceRun, completed_guest_run};
+pub(crate) use result::inference_run_result_value;
 
+//#region 💡️InferenceJobTools
 /// 🎟️ Requested per-call retained limits are data; only the native driver can fund them.
 pub(crate) fn inference_retained_policy(grant:&serde_json::Value)->Result<semio_framework_value::RetainedCloneGrant,GatewayError>{
     let invalid=||inference_field_invalid("retainedPolicy","all five explicit retained limits are required within the cross-platform address range");
@@ -85,7 +83,7 @@ pub(super) fn run_guest_inference(workspace: &Arc<HeadlessWorkspace>, actions: &
     match actions.run_inference(INFERENCE_ROUTED_INSTANCE, command) {
         Err(_) if jobs.is_cancel_requested(job_id) => Ok(None),
         Err(error) => Err(error),
-        Ok(outcome) => Ok(Some(GuestInferenceRun { inference_schema: outcome.inference_schema, complete: outcome.complete, payload: outcome.payload })),
+        Ok(outcome) => completed_guest_run(outcome).map(Some),
     }
 }
 
@@ -168,9 +166,9 @@ pub(super) fn inference_run_handler(context: &InferenceToolContext<'_>, argument
         Ok(Some(_)) | Err(_) if jobs.is_cancel_requested(&job_id) => cancelled(&job_id, base),
         Ok(None) => cancelled(&job_id, base),
         Ok(Some(run)) => {
-            let structured = merge_inference_run_fields(base, serde_json::json!({ "status": if run.complete{"SUCCEEDED"}else{"RUNNING"}, "complete": run.complete, "payload": run.payload.as_deref().and_then(inference_run_result_value), "payloadBytes": run.payload.as_ref().map_or(0,Vec::len) }));
+            let structured = merge_inference_run_fields(base, serde_json::json!({ "status": "SUCCEEDED", "complete": true, "payload": run.payload.as_deref().and_then(inference_run_result_value), "payloadBytes": run.payload.as_ref().map_or(0,Vec::len) }));
             jobs.succeed(&job_id, structured.clone());
-            CallToolResult::ok(vec![ContentBlock::Text { text: format!("`{}` produced {} byte(s) (complete: {})", run.inference_schema, run.payload.as_ref().map_or(0,Vec::len), run.complete) }], Some(structured))
+            CallToolResult::ok(vec![ContentBlock::Text { text: format!("`{}` produced {} byte(s) (complete: true)", run.inference_schema, run.payload.as_ref().map_or(0,Vec::len)) }], Some(structured))
         }
         Err(error) => {
             let field = inference_error_field(&error);

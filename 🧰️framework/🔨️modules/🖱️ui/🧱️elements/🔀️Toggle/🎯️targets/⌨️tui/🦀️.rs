@@ -6,7 +6,7 @@ use semio_ui_tui_core::cell::{attr, Cell, CellBuffer};
 use semio_ui_tui_core::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
 use semio_ui_tui_core::geometry::{Pos, Rect};
 use semio_ui_tui_core::text::{display_width, elide, Elision};
-use semio_ui_tui_core::theme::{Glyph, Role, Surface, Theme};
+use semio_ui_tui_core::theme::{Glyph, Role, Theme};
 use semio_ui_tui_core::signal::WidgetSignal;
 
 /// 🎛️ A labelled switch.
@@ -54,7 +54,7 @@ pub fn paint_toggle(t: &ToggleState, theme: &Theme, rect: Rect, buf: &mut CellBu
     if rect.width == 0 || rect.height == 0 {
         return;
     }
-    let bg = if t.hover { theme.role(Role::HoverInteractive) } else { theme.surface(Surface::Window) };
+    let bg = if t.hover { theme.role(Role::HoverInteractive) } else { buf.owner_background() };
     let line = Rect::new(rect.x, rect.y, rect.width, 1);
     let fg = theme.role(if focused { Role::Accent } else { Role::Foreground });
     buf.fill_rect(line, Cell::blank(fg, bg));

@@ -11,7 +11,7 @@ use crate::symmetry::SymmetryGroup2d;
 
 // #region 🔖️Sample
 /// 🧪️ A row-major tile-id matrix to learn patterns from.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct Sample2d {
     pub width: usize,
     pub height: usize,
@@ -49,7 +49,7 @@ impl Default for Extract2dConfig {
 /// 🧪️ Maps extracted `PatternId`s back to the tile at each pattern window's top-left corner (the
 /// anchor convention: overlap-agreement between neighboring patterns guarantees every cell's
 /// anchor tile is mutually consistent with its neighbors' anchor tiles).
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct PatternDecoder2d {
     window: usize,
     pattern_windows: Vec<Vec<TileId>>,
@@ -77,7 +77,7 @@ impl PatternDecoder2d {
 
 // #region 🔖️Extract
 /// 🧪️ The compiled model plus everything needed to decode its patterns back to tiles.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct ExtractedModel2d {
     pub model: CompiledModel,
     pub decoder: PatternDecoder2d,

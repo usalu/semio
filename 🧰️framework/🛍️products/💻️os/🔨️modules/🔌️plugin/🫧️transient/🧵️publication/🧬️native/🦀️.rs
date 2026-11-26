@@ -89,8 +89,8 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> Preparation<P,M>{
   if self.authority.is_some(){return self.retirement.next_owner_demands::<FactoryOwnedSourceAuthority<M>>(true,&None,body);}
   if self.base.is_some(){return Ok(CapturedSnapshotSource::<P>::constructor_demand());}
   if self.captured.is_some(){return self.retirement.next_owner_demands::<CapturedSnapshotSource<P>>(true,&None,body);}
-  if self.mutation.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::FactoryOwnedRetirement::<M>::constructor_capacity_bytes(),depth:1,..Default::default()});}
-  if self.prepared.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<store::ArtifactEphemeralOneItemPrepared<P>>(),capacity_bytes:semio_framework_value::factory::shared::FactorySharedRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()});}
+  if self.mutation.is_some(){return Ok(semio_framework_value::FactoryOwnedRetirement::<M>::original_admission_demands(&*self.mutation));}
+  if self.prepared.is_some(){return Ok(semio_framework_value::factory::ArcRootRetirement::<P>::admission_demand());}
   if self.snapshots.is_some()||self.mutations.is_some()||self.semantics.is_some(){return Ok(header::<FactoryAuthority>());}
   self.factories.iter().find_map(Option::as_ref).map_or(Ok(Default::default()),|owner|owner.demands(body))
  }

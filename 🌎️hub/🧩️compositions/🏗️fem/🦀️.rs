@@ -13,10 +13,34 @@ use semio_plugin::PluginBuilder;
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the FEM 2D and 3D surfaces.
     pub enum FemApps: PluginApp {
-        Fem2dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dPlayApp>>),
-        Fem2dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_fem_2d_viewer::viewer::fem2d::Fem2dViewer>>),
-        Fem3dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dPlayApp>>),
-        Fem3dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_fem_3d_viewer::viewer::fem3d::Fem3dViewer>>),
+        Fem2dEditor(semio_hub_fem_2d_editor_app::Fem2dEditorApps),
+        Fem2dViewer(semio_hub_fem_2d_viewer_app::Fem2dViewerApps),
+        Fem3dEditor(semio_hub_fem_3d_editor_app::Fem3dEditorApps),
+        Fem3dViewer(semio_hub_fem_3d_viewer_app::Fem3dViewerApps),
+    }
+}
+
+impl From<semio_hub_fem_2d_editor_app::Fem2dEditorApp> for FemApps {
+    fn from(app: semio_hub_fem_2d_editor_app::Fem2dEditorApp) -> Self {
+        Self::Fem2dEditor(app.into())
+    }
+}
+
+impl From<semio_hub_fem_2d_viewer_app::Fem2dViewerApp> for FemApps {
+    fn from(app: semio_hub_fem_2d_viewer_app::Fem2dViewerApp) -> Self {
+        Self::Fem2dViewer(app.into())
+    }
+}
+
+impl From<semio_hub_fem_3d_editor_app::Fem3dEditorApp> for FemApps {
+    fn from(app: semio_hub_fem_3d_editor_app::Fem3dEditorApp) -> Self {
+        Self::Fem3dEditor(app.into())
+    }
+}
+
+impl From<semio_hub_fem_3d_viewer_app::Fem3dViewerApp> for FemApps {
+    fn from(app: semio_hub_fem_3d_viewer_app::Fem3dViewerApp) -> Self {
+        Self::Fem3dViewer(app.into())
     }
 }
 //#endregion 🗃️Apps

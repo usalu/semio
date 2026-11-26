@@ -1,0 +1,16 @@
+{
+  "bodyBytes": 4096,
+  "maximumTurns": 1000,
+  "cases": [
+    {
+      "input": ["", "basis of design", "Brücke"],
+      "cancel": false,
+      "expected": ["", "basis of design", "Brücke"]
+    },
+    {
+      "input": ["action", "project", "Bauwerk"],
+      "cancel": true,
+      "expected": ["action", "project", "Bauwerk"]
+    }
+  ]
+}

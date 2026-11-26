@@ -3,8 +3,11 @@
  * A part that a pose turns is one body in the three views: a `loft` shape (D54) whose sections stand across u, with the v range of the ELEVATION outline and the lateral range of the body solids of the bone (or of the drawn front or plan) at every station, so the side elevation keeps its drawn outline and the front and the plan are projections of the same body.
  *
  * Ops (`scale` is the representation key):
- * - `{ "op": "loft", scale, bone, id, "merge"?: [id…], "add"?: ["front", "plan"], "front"?: id | null, "plan"?: id | null, "side"?: boolean, "solids"?: [id…], "width"?: "volume" | "body" | "front" | "plan", "axis"?: 0 | 1, "own"?: false, "tol"?: m, "exponent"?: n, "thin"?: m, "slim"?: m, "max"?: 0.5 }`: `id` is the elevation shape; the shapes `front` and `plan` (default the shape of the same id, null = leave the view alone) take the loft and keep their paint and place; `add` draws the part in views that left it out (paint of the elevation shape, just behind the shape of the nearest related bone); `merge` are further elevation shapes of the bone whose outline belongs to the body; with `side` the elevation shape becomes the loft too (a bone that leaves the sagittal plane). `width` names where the lateral range comes from (default the body solids `solids`, all of the bone when absent; without a solid the drawn views; `body` takes the sections of the largest loft solid as the volume states them, in the three views). The sections stand across u or across v (`axis`), or are the body's own (an ear, a wing that stands out sideways; `own: false` forbids it): the candidate that differs least from the solids in the front and the plan and from the drawn outline in the side is taken. A part whose best candidate misses more than `max` is left as it is (the outline and the solids are not the same part). `thin` narrows the body to that lateral extent. `slim` narrows the thinner of the two section axes so that the least dimension of the body (the measure of `volumes-feature`) is that many metres. The loft has the fewest sections (at most 32) whose linear outlines stay within `tol` (default 0.00001 m per unit of the denominator).
+ * - `{ "op": "loft", scale, bone, id, "merge"?: [id…], "add"?: ["front", "plan"], "front"?: id | null, "plan"?: id | null, "side"?: boolean, "solids"?: [id…], "width"?: "volume" | "body" | "front" | "plan", "axis"?: 0 | 1, "own"?: false, "tol"?: m, "exponent"?: n, "thin"?: m, "slim"?: m, "swell"?: m, "max"?: 0.5 }`: `id` is the elevation shape; the shapes `front` and `plan` (default the shape of the same id, null = leave the view alone) take the loft and keep their paint and place; `add` draws the part in views that left it out (paint of the elevation shape, just behind the shape of the nearest related bone); `merge` are further elevation shapes of the bone whose outline belongs to the body; with `side` the elevation shape becomes the loft too (a bone that leaves the sagittal plane). `width` names where the lateral range comes from (default the body solids `solids`, all of the bone when absent; without a solid the drawn views; `body` takes the sections of the largest loft solid as the volume states them, in the three views, and falls back to `volume` where the bone has no such solid; with `"side": false` the side elevation keeps its drawn outline all the same). The sections stand across u or across v (`axis`), or are the body's own (an ear, a wing that stands out sideways; `own: false` forbids it): the candidate that differs least from the solids in the front and the plan and from the drawn outline in the side is taken. A part whose best candidate misses more than `max` is left as it is (the outline and the solids are not the same part). `thin` narrows the body to that lateral extent. `swell` adds metres to both half extents of every section (a part a fraction of a millimetre below what the widest denominator of its band prints). `slim` narrows the thinner of the two section axes so that the least dimension of the body (the measure of `volumes-feature`) is that many metres. The loft has the fewest sections (at most 32) whose linear outlines stay within `tol` (default 0.00001 m per unit of the denominator).
  * - `{ "op": "copy", scale, view, id, bone?, "from": view, "twin"?: id }`: the shape takes geometry and solid of the shape `twin` (default the same id) of another view.
+ * - `{ "op": "body", scale, solid, paint, "replace"?: [id…], "z"?: { view: delta } }`: the body solid `solid` (a plain loft; skin weights are kept) is drawn as a loft shape of its id on its bone in the three views, with the paint of the shape `paint` (of the view, else of the side elevation) and just before it; the shapes named in `replace` leave the three views; `z` adds a delta to the paint order of the paint shape per view (a ham stands before the trunk in the side elevation of its side and behind it in the front). This is the one way to draw a skinned trunk (`../MX-2/loft.ts` refuses skin weights).
+ * - `{ "op": "rebind-anchor", id, bone }`: the anchor is bound to the bone that draws its place (D45) and keeps its place at rest (its coordinates are restated in the frame of that bone).
+ * - `{ "op": "split-anchor", id, "into": [{ id, z, … }, …] }`: one lumped contact becomes one anchor per physical contact (D45), each a copy of the anchor with the members of its entry; every list that names the anchor names the parts instead, an entry `{ anchor }` of a list is repeated per part, a single reference takes the first part.
  * - `{ "op": "set", scale, view, id, bone?, "set": {…} }`, `{ "op": "remove", scale, view, id, bone? }`, `{ "op": "anchor", id, "set": {…} }`: single fields by hand (a null value deletes the field).
  *
  * `--propose` prints the `loft` ops for every closed elevation shape that has a counterpart in the front or the plan which is not already the same solid (small details inside a larger outline stay flat). An elevation shape that is a loft already gives its own sections, so a second run changes nothing.
@@ -380,6 +383,71 @@ for (const op of ops) {
     if (JSON.stringify(anchor) !== was) changed++;
     continue;
   }
+  if (op.op === "rebind-anchor") {
+    const anchor = asset.anchors.find((candidate: any) => candidate.id === op.id);
+    if (anchor === undefined) throw new Error(`no anchor ${op.id}`);
+    if (anchor.bone === op.bone) continue;
+    const [from, to] = [frames[anchor.bone]!.frame, frames[op.bone]!.frame];
+    const world = [0, 1, 2].map((k) => from.o[k]! + anchor.x * from.u[k]! + anchor.y * from.v[k]! + (anchor.z ?? 0) * from.w[k]!);
+    const along = (axis: V3): number => r5([0, 1, 2].reduce((sum, k) => sum + (world[k]! - to.o[k]!) * axis[k]!, 0));
+    Object.assign(anchor, { bone: op.bone, x: along(to.u), y: along(to.v), ...(anchor.z === undefined ? {} : { z: along(to.w) }) });
+    changed++;
+    continue;
+  }
+  if (op.op === "split-anchor") {
+    const at = asset.anchors.findIndex((candidate: any) => candidate.id === op.id);
+    if (at < 0) continue;
+    const parts = (op.into as any[]).map((part) => ({ ...structuredClone(asset.anchors[at]), ...part }));
+    asset.anchors.splice(at, 1, ...parts);
+    const ids = parts.map((part) => part.id as string);
+    const walk = (node: any): void => {
+      if (Array.isArray(node)) {
+        for (let i = node.length - 1; i >= 0; i--) {
+          if (node[i] === op.id) node.splice(i, 1, ...ids);
+          else if (node[i] !== null && typeof node[i] === "object" && node[i].anchor === op.id) node.splice(i, 1, ...ids.map((id) => ({ ...structuredClone(node[i]), anchor: id })));
+        }
+        for (const child of node) walk(child);
+      } else if (node !== null && typeof node === "object") {
+        for (const [key, value] of Object.entries(node)) {
+          if (value === op.id && key !== "id") node[key] = ids[0];
+          else walk(value);
+        }
+      }
+    };
+    for (const [key, value] of Object.entries(asset)) if (key !== "anchors") walk(value);
+    changed++;
+    continue;
+  }
+  if (op.op === "body") {
+    const solid = (asset.volumes?.[op.scale]?.body ?? []).find((candidate: any) => candidate.id === op.solid && candidate.kind === "loft" && candidate.transform === undefined && candidate.repeat === undefined);
+    if (solid === undefined) {
+      console.log(`${label}: REFUSED, no plain loft solid "${op.solid}"`);
+      refused++;
+      continue;
+    }
+    for (const view of VIEWS) {
+      const shapes = list(op.scale, view);
+      const next = { kind: "loft", sections: structuredClone(solid.sections), ...(solid.weights === undefined ? {} : { weights: structuredClone(solid.weights) }) };
+      const known = shapes.find((shape) => shape.id === op.solid && shape.bone === solid.bone);
+      if (known !== undefined) {
+        put(known, next);
+        continue;
+      }
+      const source = shapes.find((shape) => shape.id === op.paint) ?? list(op.scale, "elevation").find((shape) => shape.id === op.paint) ?? list(op.scale, "elevation").find((shape) => shape.id === op.solid);
+      if (source === undefined) throw new Error(`${label}: no shape "${op.paint}" to take the paint from`);
+      const paint = Object.fromEntries(PAINT_KEYS.filter((key) => source[key] !== undefined).map((key) => [key, structuredClone(source[key])]));
+      const at = shapes.findIndex((shape) => shape.id === op.paint);
+      const z = op.z?.[view] === undefined || typeof paint.z !== "number" ? {} : { z: Math.round((paint.z + op.z[view]) * 1000) / 1000 };
+      shapes.splice(at < 0 ? shapes.length : at, 0, { id: op.solid, bone: solid.bone, ...paint, ...z, ...next });
+    }
+    for (const view of VIEWS) for (const id of (op.replace ?? []) as string[]) {
+      const shapes = list(op.scale, view);
+      const at = shapes.findIndex((shape) => shape.id === id && shape.id !== op.solid);
+      if (at >= 0) shapes.splice(at, 1);
+    }
+    if (JSON.stringify(asset.representations[op.scale].geometry) !== before) changed++;
+    continue;
+  }
   if (op.op === "remove") {
     const shapes = list(op.scale, op.view);
     const at = shapes.findIndex((shape) => shape.id === op.id && (op.bone === undefined || shape.bone === op.bone));
@@ -416,15 +484,17 @@ for (const op of ops) {
       const steep = Math.abs(frames[op.bone]!.frame.u[1]) >= Math.abs(frames[op.bone]!.frame.u[0]);
       const tol = op.tol ?? 0.00001 * Number(op.scale);
       const candidates: [string, Section[]][] = [];
-      const plain = (op.width ?? "volume") === "volume" && picked.length > 0;
+      const plain = ["volume", "body"].includes(op.width ?? "volume") && picked.length > 0;
       if (plain) for (const axis of [0, 1] as const) if (op.axis === undefined || op.axis === axis) candidates.push([axis === 0 ? "across u" : "across v", sectionsOf(rings, axis, slicer(picked, axis)!, tol, op.exponent)]);
-      if (op.width === "body") candidates.length = 0;
-      if (op.width === "body" || (plain && op.axis === undefined && op.own !== false)) {
+      if (plain && ((op.axis === undefined && op.own !== false) || op.width === "body")) {
         const own = ownSections(picked);
-        if (own !== undefined && loftFault(own) === null) candidates.push(["own", own]);
+        if (own !== undefined && loftFault(own) === null) {
+          if (op.width === "body") candidates.length = 0;
+          candidates.push(["own", own]);
+        }
       }
       if (candidates.length === 0)
-        for (const view of op.width !== undefined && op.width !== "volume" ? [op.width] : steep ? ["front", "plan"] : ["plan", "front"]) {
+        for (const view of op.width === "front" || op.width === "plan" ? [op.width] : steep ? ["front", "plan"] : ["plan", "front"]) {
           const slice = op[view] === null ? undefined : drawn(op.scale, view, op[view] ?? op.id, op.bone, rings);
           if (slice === undefined) continue;
           candidates.push([`drawn ${view}`, sectionsOf(rings, 0, slice, tol, op.exponent)]);
@@ -441,7 +511,7 @@ for (const op of ops) {
         continue;
       }
       sections = scored[0]!.found;
-      if (scored[0]!.name === "own") op.side = true;
+      if (scored[0]!.name === "own" && op.side === undefined) op.side = true;
       if (op.thin !== undefined) {
         const extent = (key: 0 | 1 | 2): number => {
           const all = (loftRings({ sections }) as V3[][]).flat().map((p) => p[key]!);
@@ -455,6 +525,7 @@ for (const op of ops) {
         const factor = op.slim / (2 * Math.max(...sections.map((q) => q[key])));
         if (factor < 1) for (const section of sections) section[key] = r5(section[key] * factor);
       }
+      if (op.swell !== undefined) for (const section of sections) [section.rx, section.ry] = [r5(section.rx + op.swell), r5(section.ry + op.swell)];
       console.log(`${label}: ${sections.length} sections ${scored[0]!.name}, miss ${scored.map((c) => `${c.name} ${c.miss.toFixed(3)}`).join(", ")}; solids ${picked.map((solid: any) => solid.id).join("+")}`);
     }
     if (op.side === true && main.kind !== "loft") put(main, { kind: "loft", sections: structuredClone(sections) });

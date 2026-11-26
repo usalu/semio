@@ -62,7 +62,7 @@ export function QuantityRow(props: { readonly entry: Quantity; readonly value: n
               if (parsed !== null) set(parsed);
             }}
             onBlur={() => setDraft(null)}
-            className={cn("min-h-6 w-20 border border-border bg-panel px-single text-right font-mono text-xs text-foreground", !valid && "text-destructive")}
+            className={cn("min-h-6 w-20 border border-border bg-transparent px-single text-right font-mono text-xs text-foreground", !valid && "text-destructive")}
           />
           <Button variant="quiet" icon="rotate-ccw" disabled={!changed || props.disabled} aria-label={t("quantity.reset", { name })} title={`${t("quantity.reset", { name })} (${text(fallback)})`} onClick={() => { setDraft(null); onChange(undefined); }} />
         </span>

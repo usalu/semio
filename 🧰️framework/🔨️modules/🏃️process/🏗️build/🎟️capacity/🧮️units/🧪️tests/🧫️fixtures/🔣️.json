@@ -1,4 +1,11 @@
 {
+  "parallelismLimits": [
+    {"limit":"1","needed":null,"expected":1},
+    {"limit":"3","needed":2,"expected":2},
+    {"limit":"2","needed":4,"expected":2},
+    {"limit":"0","needed":3,"expected":3},
+    {"limit":"4096","needed":null,"expected":5}
+  ],
   "cases": [
     {
       "name": "ten idle cores plenty of memory",

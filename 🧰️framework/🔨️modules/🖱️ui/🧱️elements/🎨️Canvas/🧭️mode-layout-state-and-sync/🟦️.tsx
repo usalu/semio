@@ -4,10 +4,8 @@ import type { ResizableGroupHandle } from "../../↔️Resizable/🟦️.tsx";
 // reactHostPort.createContext/.forwardRef at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
-import { shellFloorFillClass } from "../../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
 import { useUiTranslation } from "../../🏷️Label/🟦️.tsx";
 import { useShellKeydown, useShellScopeOptional, NULL_SHELL_ROOT_REF } from "../../🐚️ShellScope/🟦️.tsx";
-import { useSurface } from "../../🌈️Surface/🟦️.tsx";
 import { type WindowLayoutDropZone, type WindowLayoutNode, type WindowLayoutPath, type WindowStackCorner, setActiveWindow } from "@semio-tech/ui-layout";
 import { focusActiveSearchInput, routeWindowSearchEscape, routeWindowSearchKeydown, routeWindowSearchSpace } from "../../🔍️WindowSearch/🟦️.tsx";
 import { type ModeWindowDescriptor } from "../🪟️template-drag/🟦️.ts";
@@ -18,8 +16,6 @@ import { type ModeDragState, type ModePendingDrag } from "../🎯️drop/🟦️
 export function useModeLayoutState({ windows, layout, onLayoutChange, activeWindowId }: { readonly windows: ModeWindowDescriptor[]; readonly layout: WindowLayoutNode | undefined; readonly onLayoutChange: ((layout: WindowLayoutNode) => void) | undefined; readonly activeWindowId: string | null }) {
   const shellScope = useShellScopeOptional();
   const { t: modeT } = useUiTranslation();
-  const parentSurface = useSurface();
-  const modeBodyFillClass = shellFloorFillClass(parentSurface);
   const windowsById = reactHostPort.useMemo(() => new Map(windows.map((window) => [window.id, window])), [windows]);
   const windowsKey = reactHostPort.useMemo(() => windows.map((window) => window.id).join("|"), [windows]);
   const layoutKey = reactHostPort.useMemo(() => JSON.stringify(layout ?? null), [layout]);
@@ -96,5 +92,5 @@ export function useModeLayoutState({ windows, layout, onLayoutChange, activeWind
     },
     [activeWindowId, windowsById, windowsKey],
   );
-  return { stackDropElementsRef, setLayoutState, setMaximizedStackPath, modeBodyRef, dropZoneRef, setDropZone, setPendingDrag, pendingDrag, dragState, dragLayoutSnapshotRef, layoutStateRef, setDragState, axisGroupRefsRef, axisGroupElementsRef, setTemplateDrag, templateDrag, windowsById, dropZone, layoutState, maximizedStackPath, modeT, modeBodyFillClass };
+  return { stackDropElementsRef, setLayoutState, setMaximizedStackPath, modeBodyRef, dropZoneRef, setDropZone, setPendingDrag, pendingDrag, dragState, dragLayoutSnapshotRef, layoutStateRef, setDragState, axisGroupRefsRef, axisGroupElementsRef, setTemplateDrag, templateDrag, windowsById, dropZone, layoutState, maximizedStackPath, modeT };
 }

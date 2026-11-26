@@ -7,6 +7,7 @@
  * `@testing-library/user-event`, whose own model of a browser types the line break a multi-line Enter means and none into a
  * single-line field. A segmented select renders as a radio group that dispatches the picked value. */
 import userEvent from "@testing-library/user-event";
+import emptySelection from "./empty-selection.json" with { type: "json" };
 import { uiTextControlsFixture as textControls } from "@semio-tech/ui/testing/fixtures";
 import { uiTextInputKey, type TextInputKey, type TextInputKeyAction } from "@semio-tech/ui-contract/component";
 import rowControlFixture from "../../../🐚️Shell/🧪️tests/🧫️fixtures/🎯️focus-row-control/🔣️.json" with { type: "json" };
@@ -109,6 +110,17 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       fireEvent.keyDown(composing.element, { key: "Enter", isComposing: true });
       expect(composing.received(), "Enter while an input method composes commits nothing").toEqual([]);
       composing.unmount();
+    });
+
+    it("renders the selected empty-valued menu option", async () => {
+      const { selected: value, items } = emptySelection;
+      const native = document.createElement("select");
+      for (const item of items) native.add(new Option(item.label, item.value));
+      native.value = value;
+      const node = { ...field("text"), component: { type: "select", appearance: "menu", value, items, placeholder: null } } as UiNodeRecord;
+      const menu = await mount(node, '[role="combobox"]');
+      expect(menu.element.textContent?.trim()).toBe(native.selectedOptions[0]!.text);
+      menu.unmount();
     });
 
     it("renders a segmented select as a radio group that dispatches the picked value and never presses the chosen one off", async () => {

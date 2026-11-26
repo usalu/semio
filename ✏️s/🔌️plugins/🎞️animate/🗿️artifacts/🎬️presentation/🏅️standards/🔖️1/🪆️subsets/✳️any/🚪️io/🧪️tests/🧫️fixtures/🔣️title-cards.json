@@ -1,6 +1,8 @@
 {
   "width": 1280,
   "height": 720,
+  "window": "#061a1f",
+  "foreground": "#f7f3e3",
   "cases": [
     {
       "document": {

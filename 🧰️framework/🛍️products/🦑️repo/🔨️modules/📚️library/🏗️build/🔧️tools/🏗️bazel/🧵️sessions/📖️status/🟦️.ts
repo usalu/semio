@@ -1,4 +1,5 @@
 import {readdirSync,readFileSync} from "node:fs";
+import {processPidExistsV1} from "../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import type {BazelSlotStateV1} from "../🟦️.ts";
@@ -9,7 +10,7 @@ import {createRequire} from "node:module";
 /** 📖️ The read-only leaf of the session slots: where the servers live, which slots exist, which server process lives in a slot and what a slot remembers. It imports no lease, no storage and no tool module, so a status command can read the Bazel servers without loading the build tools.
  * @see ../🔌️port/🟦️.ts the claims and the writes, ../🧬️schema/🔣️.json the names and the slot state */
 const policy=schema.definitions.Policy.const,slotPattern=new RegExp(policy.names.slotPattern),missing=(error:unknown)=>["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??"");
-const alive=(pid:number)=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
+const alive=(pid:number)=>processPidExistsV1(pid);
 
 /** 🗂️ The directory that holds the output bases of every slot, below the products partition. */
 export function bazelServerDirectoryV1(products:string):string{return join(products,"bazel/outputs/server");}

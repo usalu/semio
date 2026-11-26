@@ -1,0 +1,5648 @@
+{
+  "scope": "Reported paths and recent ticket records; generated directories excluded. Mtime-only records require review. Missing may be removed or stale paths.",
+  "entries": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/admission-review-25.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/bound-reconnect-25.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/changed-files.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/check-live-catalog-25.ts",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/clipboard-2026-11-24.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/clipboard-fix-2026-11-25.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/clipboard-race-25.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/close-inventory-25.json",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/compile-draw-overlay-25.py",
+      "sources": [
+        "root-owned-files.md",
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/compile-editor-fixture-25.ts",
+      "sources": [
+        "root-owned-files.md",
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/custody-review-25.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/draw-2026-11-24.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/draw-activate.sh",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/draw-e2e-until-admitted.sh",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/draw-journeys.sh",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/draw-native-rustc.sh",
+      "sources": [
+        "guest.md",
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/draw-native-tests.sh",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/draw-verification-2026-11-25.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/editor.md",
+      "sources": [
+        "editor.md",
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/extent-refusal-25.md",
+      "sources": [
+        "root-owned-files.md",
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/fresh-browser-25.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/fresh-draw-proxy-25.mjs",
+      "sources": [
+        "root-owned-files.md",
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/generator-scope.test.ts",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/guest.md",
+      "sources": [
+        "guest.md",
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/host-fixture-25.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/inspect-saved-drawing-25.ts",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/inventory-25.py",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/measure-draw-store-26.py",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/memory-incident-26.md",
+      "sources": [
+        "root-owned-files.md",
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/mounted-full.sh",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/mounted-resume.sh",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/native-clone-25.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/native-clone25.ts",
+      "sources": [
+        "root-owned-files.md",
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/nested-receiver-26.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/prepare-fresh-browser-25.ts",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-boot-paint.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-boot-refusal.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-bound-reconnect-25.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-canvas-copy.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-copy-journey.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-copy-paste-at-once.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-copy-refusal.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-copy-selection.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-copy-variants.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-existing-reload-25.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-gesture-steps.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-idle-burn.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-job-calls.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-many-adds.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-paste-record.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-pick-time.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-rapid-clipboard-25.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-select.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-utility.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-viewer-25.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/probe-window-boxes.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/recheck-history-provider-26.py",
+      "sources": [
+        "root-owned-files.md",
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/registry-25.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/release-registry-25.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/relink-draw-bounded-25.py",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/repeat-clipboard-25.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/reserved-history-selection-25.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/root-owned-files.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/rustc-serial-draw-25.py",
+      "sources": [
+        "root-owned-files.md",
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/stale-publication-smoke.rs",
+      "sources": [
+        "guest.md",
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/sync-fresh-descriptor-25.ts",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/trace-clipboard-effects-25.cjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/trace-draw-assets-25.mjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/trace-keyboard-25.cjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/trace-keyboard-fast-25.cjs",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/unwrap-cloned-buildscripts-25.py",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/verify-draw-registry-25.ts",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/verify-served-draw-cores-25.py",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/viewer-25.md",
+      "sources": [
+        "ticket-mtime-2026-11-25"
+      ],
+      "state": "present",
+      "attribution": "ambiguous_mtime_only"
+    },
+    {
+      "path": "✏️s/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/bun.lock",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🫀️foundation/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎞️animate/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎥️shooting/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏙️bim/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🧩️extensions/🌦️epw/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🕸️dag/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/📜️script.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.lock",
+      "sources": [
+        "changed-files.md",
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.toml",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🧵️trace-pointer-job/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️gesture-jobs/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️gesture-jobs/🧪️tests/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️edit-path/🧵️simplify/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️edit-path/🧵️simplify/🧪️tests/🔬️unit/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🧫️fixtures/🧾️registration/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧵️export/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧵️export/🧪️tests/🔬️unit/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧵️admission/🧪️tests/🔬️unit/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧵️publication/🧪️tests/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖼️set-active-example/🦀️.rs",
+      "sources": [
+        "editor.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️move-layer/🧪️tests/🧫️fixtures/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧵️patch-layers/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🧪️tests/🔬️unit/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-layer/🧪️tests/🧫️fixtures/🎯️selection/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/🦀️.rs",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/🦀️.rs",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🛫️encode/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🛬️decode/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧪️tests/🔬️unit/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧪️tests/🔬️unit/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧪️tests/🧫️fixtures/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧪️tests/🪟️runtime/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧵️job/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️properties/🧪️tests/🎛️selection/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️properties/🧪️tests/🧫️fixtures/🎛️selection/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️layers/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️layers/🧪️tests/🔬️unit/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🔏️proof-catalogs/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖐️gesture-owners/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖥️play-app/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🍰️companion-2/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🍰️companion-2/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️archive-load/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "editor.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️gesture-operation-owner/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️gesture-operation-owner/🧫️fixtures/🚪️empty-close/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/⌨️command-laws/🦀️.rs",
+      "sources": [
+        "editor.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/✉️envelope-laws/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/✋️gesture-laws/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🎛️selection-laws/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/👆️pointer-laws/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🔷️node-laws/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🖼️canvas-laws/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "editor.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🧰️utility-laws/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🪟️window-laws/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "editor.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🥣️companion/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧾️bounded-commands/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪆️child/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪆️child/🧪️tests/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/📄️blank/🗣️.dsl.semio",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/📖️.grammar.semio",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🪪️identity/📋️clone/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🪪️identity/📋️paste/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/🧪️tests/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/🧪️tests/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/🧪️tests/🧫️fixtures/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️unit/🦀️.rs",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️layer-tree/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🧪️tests/🔬️unit/🦀️.rs",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧵️mounted/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧵️mounted/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧵️mounted/🧪️tests/🔬️unit/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔎️lookup/⚖️equality/🧪️tests/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔎️lookup/📝️original-text/🧪️tests/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔎️lookup/🫴️original/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛬️receive/🧪️tests/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️unit/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "changed-files.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🥣️companion/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️retained/↩️inverse/🧪️tests/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧵️vector/🧪️preparation.rs",
+      "sources": [
+        "changed-files.md",
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧵️vector/🧪️tests.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/🌫️set-layer-opacity/🌫️dims/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/🎨️replace-layer-fill/🌈️solid/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/↩️inverse/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/📝️update-text/📝️edit-caption/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/🖊️replace-layer-stroke/🖊️adds/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧪️tests/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/📝️update-text/🧬️schema/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖼️update-image/🧪️tests/🔬️unit/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖼️update-image/🧬️schema/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧪️tests/🧫️fixtures/🧬️mutations/✏️rename-layer/✏️renames/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧪️tests/🧫️fixtures/🧬️mutations/👁️set-layer-visible/🙈️hides/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧪️tests/🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/🖼️set-artboard/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/📍️drag-path-points/📍️drags/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/🔀set-layer-boolean/➖️union/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/🔄️update-layer-transform/📐️translates/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/🔍️update-layer-trace-params/🔍️sharpens/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/🔺️diff/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔷️set-shape-coordinate/🧬️schema/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🧬️schema/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/📥️import-image-asset/🧬️schema/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🏗️initialization/📚️catalog/🧪️tests/🧫️fixtures/🔣️.json",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🏟️arena/🧭️layer-locator/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/📐️footprint/🦀️.rs",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🔏️digest/🪞️duplicate-rewrite/🦀️.rs",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧩️mutation-candidate/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/📋️native-owner/🟦️.ts",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/✏️edit-laws/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🏊️arena-laws/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🔎️lookup-laws/🦀️.rs",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🧩️candidate-laws/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🧬️snapshot-laws/🦀️.rs",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🧰️kit/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "editor.md",
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🪞️duplicate-laws/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🪜️candidate-step/🦀️.rs",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🧪️tests/🌐️browser/📐️.json",
+      "sources": [
+        "changed-files.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🧪️tests/🌐️browser/🔣️.json",
+      "sources": [
+        "changed-files.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🧪️tests/🌐️browser/🟦️.mjs",
+      "sources": [
+        "changed-files.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🧪️tests/🧫️fixtures/🧪️publication-authority/🔣️.json",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/⚡️idf/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/Cargo.toml",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🚪️io/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧮️function-colour/🌈️cmyk-image-clut/🌈️cmyk-image-clut.bin",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧮️function-colour/🌈️cmyk-image-clut/📜️cmyk-image-clut.py",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧮️function-colour/🌈️cmyk-image-clut/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧮️function-colour/🌈️cmyk-image-clut/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧮️function-colour/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧱️model/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬇️lift/🌳️page-tree/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬇️lift/🌳️page-tree/📦️packages/🦀️rust/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬇️lift/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬇️lift/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬇️lift/🧩️lifter-and-document/📜️page-content/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬇️lift/🧩️lifter-and-document/📜️page-content/📦️packages/🦀️rust/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬇️lift/🧩️lifter-and-document/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗒️note/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🏭️bridge/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/💡️services/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/trusted-stdio-catalog.json",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🎠️playgrounds.json",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🎮️playgrounds/🟦️.ts",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🏗️framework/🟦️.ts",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/📣️publication.json",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🔌️plugins.json",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🖥️hosts/🦀️.rs",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🗂️sources.json",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🗿️artifacts/🦀️.rs",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🚀️playgrounds.json",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🦀️catalog.json",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧰️framework.json",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🩺️diagnostics.json",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧹️fixture-sweep/Cargo.lock",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "✏️s/🧪️tests/🏘️plugin-composition/🎨️draw-canvas-svg-agreement/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🌎️hub/Cargo.lock",
+      "sources": [
+        "changed-files.md",
+        "editor.md",
+        "guest.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🌎️hub/Cargo.toml",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust/📋️project.json",
+      "sources": [
+        "guest.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust/📜️script.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖍️draw/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖍️draw/🧩️component/🔣️.json",
+      "sources": [
+        "release-registry-25.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖍️draw/🧩️component/🛂️.descriptor.semio",
+      "sources": [
+        "release-registry-25.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖍️draw/🧩️component/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖍️draw/🧪️tests/🌐️guest/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖍️draw/🧪️tests/🌐️guest/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖍️draw/🧪️tests/🌐️guest/🦀️.rs",
+      "sources": [
+        "guest.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖍️draw/🧪️tests/🔬️surface/release-policy.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖍️draw/🧪️tests/🔬️surface/release-policy.schema.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🖍️draw/🧪️tests/🔬️surface/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️tickets/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🏭️factory/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🔒️slot/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️intrinsic/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🌐️wire/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/📦️packages/🦀️rust/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🛬️receive/🗂️map/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🛬️receive/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🧪️tests/🔬️unit/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🔗️source/🧪️tests/captured-retirement.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🔁️codec/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧪️tests/♻️close/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎠️kernel/🛂️descriptor-admission/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/📇️descriptor-load/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧪️tests/💼️job-funds/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🟦️.ts",
+      "sources": [
+        "changed-files.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🧪️tests/🐍️.py",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🧪️tests/🚨️swap-churn/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🧪️tests/🚨️swap-churn/🟦️.test.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🧪️tests/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🧪️tests/🧫️fixtures/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🧬️schema/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🛰️fleet-jobs/🐍️oracle/🐍️.py",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🛰️fleet-jobs/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🛰️fleet-jobs/🧫️fixtures/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧪️tests/🧫️fixtures/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧮️units/🧬️schema/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🧵️frontend-threads/🐍️.py",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🧵️frontend-threads/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🧵️frontend-threads/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📏️paths/🧪️tests/🧫️fixtures/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧪️tests/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🧪️tests/🏃️run/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🧪️tests/🧫️fixtures/rustup-capacity.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🪝️playground-stubs/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🛟️chrome-safe-area/🟦️.tsx",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🦶️bottom-chips/🟦️.tsx",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧪️tests/footer-chips.test.tsx",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🟦️.tsx",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪢️SharedBorderRow/🟦️.tsx",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛫️encode/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧊️field-receiving/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧊️field-receiving/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/🎁️wrapping/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🔌️ports/🧩️admission/📖️provider/🧪️tests.rs",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🔌️ports/🧩️admission/🦀️.rs",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🔌️ports/🧩️admission/🧪️tests.rs",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🗣️contributions-and-examples/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛰️backbone/🎭️artifact-actor/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️owned/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️tests/📊️native-progress/retained-charge.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏗️bootstrap/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧊️compiled-components/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧪️tests/🔬️quick/🏁️child-heads-hub-commit-and-probe-pack/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧪️tests/🔬️quick/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🧪️testing/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/♻️retirement/📦️backing/🧪️tests/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/📣️replay-invalidation-announcements-and-transactions/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🌱️runtime-seed-construction-and-owned-close/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🪞️delegating-accessors-and-reads/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🏗️store-owners-retained-reads-and-retirements/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏃️runtime/📥️lifted/🔁️replay/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/📤️outbound-announcement/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📬️extension-invocation-wire/✅️completion-and-job-slices/🟦️.tsx",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📯️typed-operation-completion/🟦️.tsx",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📷️canvas-framing/🟦️.ts",
+      "sources": [
+        "changed-files.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔌️plugin-runtime-suite/🟦️.tsx",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔑️dialog-session-key/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧵️turn-dispatch-lifecycle/🟦️.tsx",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪪️window-action-panel/🟦️.ts",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎮️focus-and-input/⌨️registers-and-context-menu/🟦️.tsx",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📎️local-folders/🧪️tests/🔁️fresh-identity/reconnect-offer.test.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📤️document-transfer-tabs/🔶️scope/🟦️.tsx",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📤️document-transfer-tabs/🔸️document-transfer-ref/🟦️.tsx",
+      "sources": [
+        "changed-files.md",
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📤️document-transfer-tabs/🟦️.tsx",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖱️shell-actions/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖱️shell-actions/🧭️input-funnel/🚀️program-dispatch/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧩️shell-core-state/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📌️ChromePanels/🧪️tests/🧩️component/🟦️.tsx",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🗂️layers-session/🟦️.ts",
+      "sources": [
+        "changed-files.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📥️invocation-frames/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📬️typed-result/fault-notices.test.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🚚️handle-turn-drive/🟦️.ts",
+      "sources": [
+        "changed-files.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧩️module-loader/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/🔄️surface-refresh.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/🔔️typed-operation-fault-notices.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧵️turn-dispatch/workspace-clipboard.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧵️turn-dispatch/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🪟️retained-ui-patch/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/📋️clipboard-order.json",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🪟️window-panes/📋️clipboard-activation/🟦️.ts",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🧵️instance/🔄️reprojection-turns-and-base-watch/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🏪️stores/🧪️tests/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🎭️exports/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📥️staging/♻️reactor-lifecycle/🗃️instance-registry/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📦️instances/🔁️cleanup-turns/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🎛️registry-driver/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🧪️tests/🔬️unit/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📨️pending/⏱️command-stall/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📨️pending/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/⌨️command-ingress-turn/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/⏱️quiet-slice-turn/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/⏱️quiet-slice-turn/🧪️tests/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🌀️poll-kernel-turn/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🔦️more-work-sources-and-tracing/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🧯️retirement-drivers-and-turn-limits/🔦️more-work-sources/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🧯️retirement-drivers-and-turn-limits/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🩹️reconcile-drive-and-publication-receipts/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧪️tests/🦀️native-transpile/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧪️tests/🦀️native-transpile/🧫️cases.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧪️tests/🪞️two-checkout/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌱️initialization/♻️retirement/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧪️tests/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧪️tests/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧪️tests/🧫️fixtures/close-batch.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧪️tests/🧫️fixtures/close-batch.schema.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧪️tests/🧫️fixtures/🪜️covering-grant/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🏛️reserved/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧪️tests/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧪️tests/🧫️fixtures/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🗂️natural-file-and-media-artifacts/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🗂️natural-file-and-media-artifacts/📦️packages/🦀️rust/📋️project.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🗂️natural-file-and-media-artifacts/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🛬️lifted/♻️retirement/🌱️birth/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🛬️lifted/♻️retirement/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🛬️lifted/⚠️fault/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🛬️lifted/⚠️fault/🧪️tests/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📬️completion/⚠️fault/🟦️.ts",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📬️completion/⚠️fault/🧪️tests/🟦️.ts",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📬️completion/⚠️fault/🧪️tests/🧫️fixtures/🔣️.json",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🎭️guest-runtime/🗂️wasmtime-guest-runtime-and-codec-dispatch/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔧️engine/🔒️compile-admission/🔋️memory/🍎️/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔧️engine/🔒️compile-admission/🔋️memory/🐧️/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔧️engine/🔒️compile-admission/🔋️memory/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔧️engine/🔒️compile-admission/🔋️memory/🪟️/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔧️engine/🔒️compile-admission/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔧️engine/🔒️compile-admission/🧪️tests/🔣️.json",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔧️engine/🔒️compile-admission/🧪️tests/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔧️engine/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔧️engine/🧪️tests/🏊️capacity/🔣️.json",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔧️engine/🧪️tests/🏊️capacity/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️shared-wasmtime-engine/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🗃️document/🧰️store-replacement-initializer-and-retirement/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🚪️lifetime/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📥️snapshot-operation-and-input-records/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🔢️numeric-semantics/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧪️artifact-app-laws/🎟️fixture-dispatch-steps-and-document-loading/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧪️artifact-app-laws/🏗️registered-app-construction-and-typed-operation-settlement/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧪️artifact-app-laws/🔎️declared-verb-probing/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "missing_or_nonfile",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🏁️publication-boundaries/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🔐️two-turn-presence-and-root-retirement/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🚫️cancellation-publication-boundaries/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🟦️.ts",
+      "sources": [
+        "guest.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/⏱️close-fault/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/♻️envelope/🔣️.json",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-coverage/📤️publication-contracts/🟦️.ts",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🥇️tool-latest-wins.json",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🎟️natural-publication/🎟️picker/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🎟️natural-publication/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/👷️jobs/📥️staging/🏷️reserved/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/👷️jobs/📥️staging/🔁️document-replacement/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📄️docs/📥️staging/🧱️components/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📨️dispatch/📥️staging/🎟️producers/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📨️dispatch/📥️staging/📤️emit/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🔌️plugin-app-impl/🎟️picker-publication/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🔌️plugin-app-impl/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🖼️render/📥️staging/🧭️interaction/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧷️command-routes/📥️staging/🧊️reserved-routes/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/📬️publication/🏃️mounted-run-and-pump/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/📬️publication/📬️typed-operation-unit/🦀️.rs",
+      "sources": [
+        "changed-files.md",
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/📬️publication/🔁️stall-witness-and-unit-advance/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🪢️members/📥️staging/🧾️typed-operation-results/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/📃️mounted/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/📃️pending/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️context/🧪️tests/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🔣️.json",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍌️tests-05/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🪝️tests-12-2/📦️packages/🦀️rust/Cargo.toml",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/📥️staging/🗝️envelope-ladder/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/🦀️.rs",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪝️mounts/👥️wp3-owners/🧪️test-hosts/🧵️retained-command/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📜️contract/🔏️pack-authority-and-publication/🦀️.rs",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🗄️store-owners/🌱️initialization/🎟️birth/🧪️tests/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🗄️store-owners/🌱️initialization/🎟️birth/🧪️tests/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🗄️store-owners/🦀️.rs",
+      "sources": [
+        "guest.md",
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧭️owner-registry/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/📤️serialization/📦️owned/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧭️io-mechanism/🦀️.rs",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🪪️document-backbone-worker-wire/🔶️admits-inference-opening-only/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🪪️document-backbone-worker-wire/🔸️settles-only-exact-live/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🪪️document-backbone-worker-wire/🔹️acknowledged-status/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🧪️tests/🪪️document-backbone-worker-wire/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/🧫️fixtures/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧬️schema/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🧪️tests/🏷️observation-names/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🛠️dev/🎮️playground/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟢️ready/💾️storage/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🧾️fetched/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🧾️fetched/🧪️tests/🔣️.json",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🧾️fetched/🧪️tests/🟦️.ts",
+      "sources": [
+        "changed-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/⌨️command/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🧪️tests/🎯️generator-scope/🔣️.json",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🧪️tests/🎯️generator-scope/🟦️.ts",
+      "sources": [
+        "release-registry-25.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🔁️replan/🧪️tests/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🔁️replan/🧪️tests/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🔁️replan/🧬️schema/🔣️.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "listed"
+    },
+    {
+      "path": "📋️build-owners.json",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "root-owned"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/sample-draw-build-26.py",
+      "sources": [
+        "root-owned-files.md"
+      ],
+      "state": "present",
+      "attribution": "root-owned"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/emitter-dependencies-26.md",
+      "sources": [
+        "agent-delivery"
+      ],
+      "state": "present",
+      "attribution": "ticket-owned"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/component-memory-admission-26.md",
+      "sources": [
+        "agent-delivery"
+      ],
+      "state": "present",
+      "attribution": "ticket-owned"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/guest-native-cached.py",
+      "sources": [
+        "agent-delivery"
+      ],
+      "state": "present",
+      "attribution": "ticket-owned"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/run-draw-native-regressions.py",
+      "sources": [
+        "agent-delivery"
+      ],
+      "state": "present",
+      "attribution": "ticket-owned"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/parent-admission-probe-26.ts",
+      "sources": [
+        "agent-delivery"
+      ],
+      "state": "present",
+      "attribution": "ticket-owned"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧵️job-slots/🟦️.ts",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "agent-reported"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧵️job-slots/🧬️schema/🔣️.json",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "agent-reported"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧵️job-slots/🧪️tests/🎟️parent/🔣️.json",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "agent-reported"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧵️job-slots/🧪️tests/🎟️parent/🟦️.ts",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "agent-reported"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧵️job-slots/🧪️tests/🎟️parent/🐍️oracle/🐍️.py",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "agent-reported"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🎭️stub/🟦️.ts",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "agent-reported"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🎟️parent/🟦️.ts",
+      "sources": [
+        "editor.md"
+      ],
+      "state": "present",
+      "attribution": "agent-reported"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "agent-reported"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧬️schema/🔣️.json",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "agent-reported"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🪆️parent/🟦️.ts",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "agent-reported"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🪆️parent/🔣️.json",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "agent-reported"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🔭️probe/🟦️.ts",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "agent-reported"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🟦️.ts",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "agent-reported"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts",
+      "sources": [
+        "guest.md"
+      ],
+      "state": "present",
+      "attribution": "agent-reported"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/attest-draw-journeys-26.ts",
+      "sources": [
+        "agent-delivery"
+      ],
+      "state": "present",
+      "attribution": "ticket-owned"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/attestation-26.md",
+      "sources": [
+        "agent-delivery"
+      ],
+      "state": "present",
+      "attribution": "ticket-owned"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/guest-native-current.ts",
+      "sources": [
+        "agent-delivery"
+      ],
+      "state": "present",
+      "attribution": "ticket-owned"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/parent-admission-probe-26.md",
+      "sources": [
+        "agent-delivery"
+      ],
+      "state": "present",
+      "attribution": "ticket-owned"
+    }
+  ]
+}

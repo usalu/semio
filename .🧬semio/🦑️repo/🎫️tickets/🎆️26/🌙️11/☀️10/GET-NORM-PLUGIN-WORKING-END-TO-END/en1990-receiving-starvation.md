@@ -1,0 +1,5 @@
+# EN 1990 Receiving Starvation
+
+The failed replay reports `original replay receiving scope opened` after `Probe::run` retries 4,096 turns without its callback running. That fixture quotes `(stock(), WORK)` to `with_native_receiving_quoted` inside a `turn_with_decoder(stock())` and a `WORK`-unit loan. The quoted body requires additional scope-control grant and work; Source birth and decoder admission have already consumed caller stock. `OriginalReturnScopePlan::quote` may therefore refuse the full-stock/full-work quote on every unchanged turn. The test ignores the returned boolean and repeats until its observation assertion.
+
+The minimal candidate is to quote the actual operation grant, with nonzero item/depth for the zero-grant bootstrap, and to leave work for receiving scope control while keeping the enclosing stock turn. The body helper already derives its effect work from the available native hint. This diagnosis and repair are derived from source, not verified by replay; delivery owns the fixture and native validation.

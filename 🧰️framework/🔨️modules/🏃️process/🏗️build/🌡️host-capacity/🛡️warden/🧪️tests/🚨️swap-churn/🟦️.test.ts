@@ -17,3 +17,19 @@ test("sustained compression and swap churn reclaim paused scoped work",()=>{
  expect(decide(host,[{...subjects[0]!,suspendedSeconds:0},subjects[1]!]).actions.some(action=>action.action==="cancel")).toBe(false);
  expect(decide(host,[{...subjects[0]!,suspended:false,suspendedSeconds:0}]).actions).toContainEqual({action:"suspend",id:"paused",reason:"danger"});
 });
+
+test("continuing OS warnings with compression and swap-out release an overdue build", () => {
+ const host = fixture.warningHost as HostWardenHostV1, subjects = fixture.subjects as HostWardenSubjectV1[];
+ const decide = (sample: HostWardenHostV1, level: "calm" | "guard") => decideHostWardenV1(HOST_WARDEN_POLICY_V1, sample, subjects, {level, calmTicks:0});
+ const first = decide(host, "calm");
+ expect(first.level).toBe("guard");
+ expect(first.actions.some(action => action.action === "cancel")).toBe(false);
+ const continuing = decide(host, "guard");
+ const oracle = Bun.spawnSync([testPythonV1() ?? Bun.which("python3") ?? "python3", "-I", fileURLToPath(new URL("../🐍️.py", import.meta.url)), "--warning-churn"]);
+ expect(oracle.exitCode).toBe(0);
+ expect(continuing).toEqual(JSON.parse(oracle.stdout.toString()));
+ expect(continuing.level).toBe("danger");
+ expect(continuing.actions).toContainEqual({action:"cancel",id:"paused",reason:"danger"});
+ expect(continuing.actions.some(action => action.id === "protected")).toBe(false);
+ expect(decide({...host,swapOutMegabytesPerSecond:0}, "guard").actions.some(action => action.action === "cancel")).toBe(false);
+});

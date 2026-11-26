@@ -1,10 +1,10 @@
-import { Button, SharedBorderRow, SharedBorderRowCell, cn, glassClass, type ButtonProps } from "@semio-tech/ui-react";
+import { Button, SharedBorderRow, SharedBorderRowCell, cn, type ButtonProps } from "@semio-tech/ui-react";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 
 /** 🧱️ A floating stack of shell notices: one shared frame whose notices are cells separated by single hairlines, never a box per notice or a gap between them. `className` positions the stack. */
 export function NoticeStack({ className, children, orientation = "vertical", ...props }: Omit<ComponentProps<"div">, "children"> & { readonly children: ReactNode; readonly orientation?: ComponentProps<typeof SharedBorderRow>["orientation"] }): ReactElement {
   return (
-    <SharedBorderRow orientation={orientation} data-level="pane" data-glass-chip="" className={cn("pointer-events-auto absolute z-50 text-sm", glassClass, className)} {...props}>
+    <SharedBorderRow orientation={orientation} overlay="chip" className={cn("pointer-events-auto absolute z-50 text-sm", className)} {...props}>
       {children}
     </SharedBorderRow>
   );
@@ -18,7 +18,7 @@ export function NoticeCell({ className, ...props }: ComponentProps<"div">): Reac
 /** 🧱️ A floating pane (workspace, administration, service panel): the frame is owned by the shared-border compositor on the fixed outer box, the scroller sits inside so the hairline never scrolls away. */
 export function FloatingPane({ className, scrollClassName, children, ...props }: Omit<ComponentProps<"div">, "children"> & { readonly scrollClassName?: string; readonly children: ReactNode }): ReactElement {
   return (
-    <SharedBorderRow orientation="vertical" data-level="pane" data-glass-chip="" className={cn("pointer-events-auto absolute z-50", glassClass, className)} {...props}>
+    <SharedBorderRow orientation="vertical" overlay="chip" className={cn("pointer-events-auto absolute z-50", className)} {...props}>
       <div className={cn("min-h-0 w-full min-w-0 overflow-auto", scrollClassName)}>{children}</div>
     </SharedBorderRow>
   );

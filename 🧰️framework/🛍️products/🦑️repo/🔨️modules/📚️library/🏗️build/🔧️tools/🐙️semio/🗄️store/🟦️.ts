@@ -1,4 +1,5 @@
 import {constants} from "node:fs";
+import {ownProcessIdentityV1,processRecordAliveV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import {copyFile,link,lstat,mkdir,open,readFile,readdir,readlink,rename,rm,stat,symlink,utimes,writeFile,chmod} from "node:fs/promises";
 import {randomUUID} from "node:crypto";
 import {createReadStream} from "node:fs";
@@ -155,7 +156,7 @@ export class SemioStoreV1{
   await mkdir(dirname(lock),{recursive:true});
   for(;;){
    if(signal.aborted)throw signal.reason??Error("Cancelled");
-   const token=JSON.stringify({pid:process.pid,nonce:randomUUID(),at:Date.now()});
+   const token=JSON.stringify({pid:process.pid,startMs:ownProcessIdentityV1().startMs,nonce:randomUUID(),at:Date.now()});
    let acquired=false;
    try{
     const handle=await open(lock,"wx");
@@ -217,7 +218,7 @@ export class SemioStoreV1{
  }
  private stale(text:string,modified:number):boolean{
   let dead=false;
-  try{const owner=JSON.parse(text) as {pid:number};try{process.kill(owner.pid,0);}catch(error){dead=(error as NodeJS.ErrnoException).code==="ESRCH";}}catch{dead=false;}
+  try{const owner=JSON.parse(text) as {pid:number;startMs?:number};dead=Number.isSafeInteger(owner.pid)&&!processRecordAliveV1(owner.pid,owner.startMs);}catch{dead=false;}
   return dead||Date.now()-modified>this.timing.lockStaleMilliseconds;
  }
  private async breakStale(lock:string):Promise<void>{

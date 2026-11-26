@@ -12,6 +12,7 @@ pub mod standards {
                 pub mod io {
                     #[path = "."]
                     pub mod text {
+                        #[cfg(any(test, feature = "testkit"))]
                         #[path = "../../../../../../../🚪️io/📝️text/🔭️projection/🦀️.rs"]
                         pub mod projection;
                         

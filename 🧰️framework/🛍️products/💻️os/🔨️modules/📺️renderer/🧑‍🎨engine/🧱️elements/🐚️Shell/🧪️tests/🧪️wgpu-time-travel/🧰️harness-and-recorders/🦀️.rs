@@ -135,7 +135,7 @@ fn paint_retained_body_on(caller: &mut semio_renderer_wgpu_ui_engine_tests::fixt
     let painted = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
         let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
         let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
-        caller.turn_funded(1 << 20, |cx|render_ui_document_step(&mut cursor, document, body, &mut ctx, surface, "test", semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx))
+        caller.turn_funded(1 << 20, |cx|render_ui_document_step(&mut cursor, document, body, semio_ui_theme::Level::Window, &mut ctx, surface, "test", semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx))
     });
     assert!(painted, "{surface} painted within its opportunity ceiling");
     if surface == FRAMEWORK_PANEL_TAB_HISTORY_ID {

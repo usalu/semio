@@ -19,7 +19,7 @@ use semio_framework_value::{ValueError, ValueRefusalKind};
 mod analytic_publication;
 pub use analytic_publication::{analytic_arc_recipe, AnalyticCurveParameters, AnalyticPublication, AnalyticTransform};
 pub use analytic_publication::primitive_handle;
-pub use semio_framework_3d_brep_solid_transaction::{BoxFinish, CuboidSew, SolidGroupOwnership, SolidPatternRecipe, UnpublishedSolidPattern};
+pub use semio_framework_3d_brep_solid_transaction::{BoxFinish, CuboidSew, OwnedSolidPublication, SolidGroupOwnership, SolidPatternRecipe, UnpublishedSolidPattern};
 
 #[path = "🗃️session-state/🦀️.rs"]
 mod session_state;

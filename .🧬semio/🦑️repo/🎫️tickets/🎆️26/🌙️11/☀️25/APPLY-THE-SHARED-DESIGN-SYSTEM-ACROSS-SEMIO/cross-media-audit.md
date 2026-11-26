@@ -1,0 +1,21 @@
+# Cross-media discovery audit
+
+Source-level discovery; output rendering and exhaustive inventory were not verified. Diagram and material colours are not automatically UI surfaces.
+
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/📐️drafting/🐍️.py:39` fixes the BIM drafting background to `_art.P_DEEP_DARK`; BIM scenes and Grasshopper clips reuse it. Resolve the common presentation owner against the shared surface. Lines 404–408 distinguish filled badges from glass chips and pass appearance to the shared frame; preserve that distinction.
+- `🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🔌️exchange/🐍️.py:112` draws a label plate with scene background at 0.92 opacity; `🔗️consistency/🐍️.py:297` uses an opaque BG label plate. Classify overlays and route genuine chips through the glass appearance; test the composite over content. Other background-coloured marks can be intentional masking or geometry.
+- `🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py:32` explicitly draws a white 0.95-opacity window frame; classify as depicted domain object versus overlay before changing. `🎨️visuals/🦗️canvas/🐍️.py:25–27` defines light Grasshopper canvas and semantic node colours, which depict application content rather than establish a global surface defect.
+- `🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/🎲️sampling/🐍️.py:21,667,716` hard-codes `PANEL` for thumbnail and room geometry; classify it as scene illustration rather than blindly replacing UI owner fill. Audit standalone scenes through their common presentation adapter and sample actual output.
+- `♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🎬️deck/🟦️.ts:142` chooses dark chrome. The independent public HTML resources under `🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/` look like a captured external site, with its own palette in `🏠️main.css:3` and white fills in `📐️layout.css:121,126,190`. Confirm ownership; do not modify third-party captures.
+- The interactive quiz uses `PageFrame` with peer overlay at `🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/📖️quiz-page/🟦️.tsx:197`. Its drag preview uses `--surface-bg` and `--surface-alpha` at `🎨️styles/🤏️drag-and-spider/🎨️.css:26`, whereas record tables use `--color-background` at `🎨️styles/🗃️record-tables/🎨️.css:152`; resolve roles against the owner and separately verify the actual drag overlay. Task layout shared-border grouping appears at `🎨️styles/🧩️task-layouts/🎨️.css:23,76,242`.
+- Print token ingress is `🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🧮️resolution/🟦️.ts:5,79`; PDF inspection tests actual chip fill at `🧪️tests/🎓️thesis/📤️publication/🟦️.ts:91`. A cross-format test should distinguish paper margin base, content owner and actual glass overlay, then inspect shared edges.
+- Native WGPU has a separate shared-border layout contract at `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📐️flex/🎨️style-mapping-and-chrome-metrics/🦀️.rs:21–24,61`. Compare painted seams with browser and PDF; source alone does not establish a defect.
+
+## Final native cross-check
+
+Retained engine frames explicitly carry the host owner and overlay level (`🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🖥️frame-into-step-and-frame/🦀️.rs:40,189`); ordinary native input backgrounds resolve transparent (`🎨️styling/🎭️theme/🧩️component/🦀️.rs:291`). Remaining candidates requiring semantic classification and output comparison are native media overlay disabled button and alert rows (`🖌️paint/🖼️ui-image-sources-skeleton-and-overlays/🦀️.rs:492,500`) and native file input button (`🖌️paint/✍️retained-edit-text-steps/🦀️.rs:81`), which directly paint `theme.panel` regardless of owner. They may be intentional control affordances; this source check alone does not establish a defect. The checks did not rerun rendering tests.
+
+
+## Native findings resolved
+
+The React media transport provided the comparison for the final three candidates. Resting and disabled media buttons, media alerts and file-input captions share the owner's background. The native WebGPU painter now does the same and retains the focus outline, filenames, authored color swatches and glyphs. The relevant cases passed in the full 113-case retained paint suite. [Native comparison and test results](wgpu-engine-levels.md)

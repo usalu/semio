@@ -1,0 +1,10 @@
+{
+  "versions": {"emitter":"0.1.0","dependency":"1.0.0","unrelated":"1.0.0"},
+  "cases": [
+    {"description":"an unrelated lock row is newer","dependency":"1.0.0","unrelated":"2.0.0","config":"original","homeConfig":"original","manifest":"original","stale":[]},
+    {"description":"the selected dependency changes","dependency":"2.0.0","unrelated":"1.0.0","config":"original","homeConfig":"original","manifest":"original","stale":["Cargo.lock"]},
+    {"description":"the selected Cargo configuration changes","dependency":"1.0.0","unrelated":"1.0.0","config":"edited","homeConfig":"original","manifest":"original","stale":[".cargo/config.toml"]},
+    {"description":"the selected compiler home's configuration changes","dependency":"1.0.0","unrelated":"1.0.0","config":"original","homeConfig":"edited","manifest":"original","stale":[".cache/registry/config.toml"]},
+    {"description":"a selected manifest changes without a lock change","dependency":"1.0.0","unrelated":"1.0.0","config":"original","homeConfig":"original","manifest":"edited","stale":["emitter/Cargo.toml"]}
+  ]
+}

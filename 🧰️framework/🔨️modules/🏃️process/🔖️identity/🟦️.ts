@@ -133,6 +133,12 @@ export function processHolderAliveV1(holder: Readonly<{pid: number; startMs: num
   return !processIdentityDeadV1(identity, read, platform);
 }
 
+/** 🫀️ Whether the holder a persisted record names by `pid` and an optional `startMs` still lives: a record written before the creation time was recorded (no `startMs`) is judged by its pid alone, a pid that is not a positive integer is dead, never an error. The form for readers of records that may predate `startMs` (live daemons keep writing the old shape until their next start). */
+export function processRecordAliveV1(pid: unknown, startMs?: unknown): boolean {
+  if (!Number.isSafeInteger(pid) || (pid as number) < 1) return false;
+  return processHolderAliveV1({pid: pid as number, startMs: Number.isSafeInteger(startMs) && (startMs as number) > 0 ? (startMs as number) : 0});
+}
+
 const aliveMemo = new Map<string, number>();
 const ALIVE_MEMO_MILLISECONDS = 2000;
 

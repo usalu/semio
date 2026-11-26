@@ -258,7 +258,7 @@ pub mod testing {
     use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
     use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
     use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-    use protocol::{ColdMutation, Mutation};
+    use protocol::ColdMutation;
     use semio_framework_diagnostic::Severity;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
@@ -278,7 +278,7 @@ pub mod testing {
     }
 
     /// 🚫 The code of the single refusal of `mutation` against `base`, asserting that it produced no diff.
-    pub fn refusal<Op: Mutation<ModelSnapshot, Diff = ModelDiff>>(mutation: &Op, base: &ModelSnapshot) -> String {
+    pub fn refusal<Op: ColdMutation<ModelSnapshot, ReferenceDiff = ModelDiff>>(mutation: &Op, base: &ModelSnapshot) -> String {
         let (diff, messages) = mutation.diff(base).into_parts();
         assert_eq!(diff, ModelDiff::default(), "a refused mutation produces an empty diff");
         messages.iter().find(|message| matches!(message.level, Severity::Error | Severity::Fatal)).expect("the mutation is refused").code.0.to_string()

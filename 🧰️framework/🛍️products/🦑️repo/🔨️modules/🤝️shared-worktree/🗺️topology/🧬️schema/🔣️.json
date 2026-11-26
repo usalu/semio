@@ -63,12 +63,28 @@
     "windows": {"$ref": "#/definitions/WindowsDrive"}
    }
   },
+  "Origin": {
+   "description": "The id of one machine of the fleet: allocated once at provisioning (`<group>-server`, `<group>-m01`, ...), unique by construction and independent of operating system host names, addresses and networks.",
+   "type": "string",
+   "pattern": "^[a-z][a-z0-9-]{0,63}$"
+  },
+  "Roles": {
+   "description": "The origin that fulfils each role of the group. A client asks for a role, never for a host: the origin is resolved to its currently published addresses (see the addresses member).",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["store", "cache", "scheduler", "relay"],
+   "properties": {
+    "store": {"$ref": "#/definitions/Origin"},
+    "cache": {"$ref": "#/definitions/Origin"},
+    "scheduler": {"$ref": "#/definitions/Origin"},
+    "relay": {"$ref": "#/definitions/Origin"}
+   }
+  },
   "Nfs": {
    "type": "object",
    "additionalProperties": false,
-   "required": ["host", "export"],
+   "required": ["export"],
    "properties": {
-    "host": {"$ref": "#/definitions/Host"},
     "export": {"$ref": "#/definitions/UnixPath"}
    }
   },
@@ -76,12 +92,11 @@
    "description": "The group server: its operating system, the protocol it shares the store with and the network of its workers. On a windows server `nfs.export` is the single-segment share name (/semio-store) and `directory` the local folder; on linux and macos the export is the local folder and `directory` is absent. A smb server is windows only and serves windows workers only.",
    "type": "object",
    "additionalProperties": false,
-   "required": ["platform", "protocol", "network"],
+   "required": ["platform", "protocol"],
    "properties": {
     "platform": {"type": "string", "enum": ["linux", "macos", "windows"]},
     "protocol": {"type": "string", "enum": ["nfs", "smb"]},
-    "network": {"$ref": "#/definitions/Cidr"},
-    "advertise": {"description": "Host names or addresses by which the group server is reachable from other networks, published beside the interface addresses in the fleet facts so that a peer group finds a routable endpoint without any address in the code.", "type": "array", "maxItems": 4, "uniqueItems": true, "items": {"$ref": "#/definitions/Host"}},
+    "network": {"description": "Optional operator override (SEMIO_FLEET_NETWORK) that pins the export and firewall networks. Absent in the committed file: the networks are derived from the current interfaces of the server whenever a plan is rendered, so a move to another subnet needs no edit.", "$ref": "#/definitions/Cidr"},
     "machines": {"description": "The addresses of the fleet machines that may mount the store. When present the export names exactly these instead of the whole network; they come from SEMIO_FLEET_MACHINES, never from the committed file.", "type": "array", "minItems": 1, "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "pattern": "^(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])(\\.(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])){3}$"}},
     "directory": {"$ref": "#/definitions/WindowsPath"}
    }
@@ -89,12 +104,8 @@
   "Cache": {
    "type": "object",
    "additionalProperties": false,
-   "required": ["endpoint", "instance"],
+   "required": ["instance"],
    "properties": {
-    "endpoint": {
-     "type": "string",
-     "pattern": "^https?://[a-z0-9][a-z0-9.-]{0,251}[a-z0-9](:[0-9]{1,5})?$"
-    },
     "instance": {
      "type": "string",
      "pattern": "^[A-Za-z0-9._-]{1,64}$"
@@ -137,8 +148,9 @@
   "Group": {
    "type": "object",
    "additionalProperties": false,
-   "required": ["id", "nfs", "server", "cache", "peers"],
+   "required": ["id", "roles", "nfs", "server", "cache", "peers"],
    "properties": {
+    "roles": {"$ref": "#/definitions/Roles"},
     "ports": {"$ref": "#/definitions/Ports"},
     "access": {"$ref": "#/definitions/Access"},
     "links": {

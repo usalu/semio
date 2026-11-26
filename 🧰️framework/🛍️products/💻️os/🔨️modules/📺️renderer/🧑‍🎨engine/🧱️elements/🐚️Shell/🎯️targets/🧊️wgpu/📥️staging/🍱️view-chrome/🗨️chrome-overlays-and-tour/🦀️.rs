@@ -305,7 +305,7 @@ pub fn status_stack_ops(layout: &StatusStackLayout, theme: &Theme) -> Vec<Status
     let line_h = theme.font_size_small * 1.6;
     let baseline = |line_top: f32| line_top + line_h * 0.5 + theme.font_size_small * 0.5 - 1.0;
     let mut ops = vec![
-        StatusOp::Fill(frame, theme.input_bg),
+        StatusOp::Fill(frame, theme.surface(semio_ui_theme::Level::Base)),
         StatusOp::Fill(Rect::new(frame.x, frame.y, frame.w, hair), theme.border_normal),
         StatusOp::Fill(Rect::new(frame.x, frame.y + frame.h - hair, frame.w, hair), theme.border_normal),
         StatusOp::Fill(Rect::new(frame.x, frame.y, hair, frame.h), theme.border_normal),

@@ -1,0 +1,64 @@
+{
+  "schema": "s.wfc.bitmap.solve",
+  "cases": [
+    {
+      "pages": [
+        {
+          "declared": [
+            {
+              "owner": "first"
+            }
+          ],
+          "nextCursor": "page2"
+        },
+        {
+          "declared": [
+            {
+              "owner": "wfc"
+            }
+          ]
+        }
+      ],
+      "calls": [
+        null,
+        "page2"
+      ],
+      "owners": [
+        "first",
+        "wfc"
+      ],
+      "ok": true
+    },
+    {
+      "pages": [
+        {
+          "declared": [],
+          "nextCursor": "same"
+        },
+        {
+          "declared": [],
+          "nextCursor": "same"
+        }
+      ],
+      "calls": [
+        null,
+        "same"
+      ],
+      "owners": [],
+      "ok": false
+    },
+    {
+      "pages": [
+        {
+          "declared": [],
+          "nextCursor": ""
+        }
+      ],
+      "calls": [
+        null
+      ],
+      "owners": [],
+      "ok": false
+    }
+  ]
+}

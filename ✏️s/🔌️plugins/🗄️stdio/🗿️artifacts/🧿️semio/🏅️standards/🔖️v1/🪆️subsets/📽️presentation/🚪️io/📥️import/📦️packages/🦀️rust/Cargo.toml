@@ -21,12 +21,11 @@ semio-framework-artifact-reference = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-plugin = { workspace = true }
 semio-framework-value = { workspace = true }
-semio-s-artifact-stdio-pptx-base-model = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-document = { workspace = true }
 semio-s-artifact-stdio-semio-presentation = { workspace = true }
 # 🧩️ Capability Dependencies
-semio-s-artifact-stdio-pptx = { workspace = true }
+semio-s-artifact-stdio-pptx-base-model = { workspace = true }
 # /🧩️ Capability Dependencies
 
 [dev-dependencies]

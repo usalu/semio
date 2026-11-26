@@ -24,6 +24,8 @@
     83
   ],
   "cases": [
+    {"id":"absent-optional-statement","kind":"optional-statement","source":null,"expected":null},
+    {"id":"present-optional-statement","kind":"optional-statement","source":{"kind":"leaf","name":"A"},"expected":{"kind":"leaf","name":"A"}},
     {
       "id": "nested-value-type",
       "kind": "value-type",

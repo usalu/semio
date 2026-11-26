@@ -68,7 +68,7 @@ fn drive_layout(ui: &mut UiFixture, atlas: &mut FontAtlas, pool: &semio_framewor
 
 fn drive_frame(ui: &mut Ui, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     for _ in 0..131_072 {
-        match ui.frame_into_step::<EmptySceneHost>("fixture", Rect::new(0.0, 0.0, 320.0, 240.0), atlas, icons, None, draw, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
+        match ui.frame_into_step::<EmptySceneHost>("fixture", Rect::new(0.0, 0.0, 320.0, 240.0), semio_ui_theme::Level::Window, atlas, icons, None, draw, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
             UiFrameStep::Pending => {}
             UiFrameStep::Ready => return,
             step => panic!("tree paint answered {step:?}"),

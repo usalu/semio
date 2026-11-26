@@ -1,0 +1,17 @@
+{
+  "cases": [
+    { "locale": "de", "text": "1,5", "canonical": "1.5" },
+    { "locale": "de", "text": "-0,25", "canonical": "-0.25" },
+    { "locale": "de", "text": "1.5", "canonical": "'1.5" },
+    { "locale": "de", "text": "1,5,2", "canonical": "1,5,2" },
+    { "locale": "de", "text": "'1,5", "canonical": "'1,5" },
+    { "locale": "de", "text": "=SUM(A1,A2)", "canonical": "=SUM(A1,A2)" },
+    { "locale": "de", "text": "Hallo", "canonical": "Hallo" },
+    { "locale": "de", "text": "", "canonical": "" },
+    { "locale": "en", "text": "1.5", "canonical": "1.5" },
+    { "locale": "en", "text": "1,5", "canonical": "1,5" },
+    { "locale": "en", "text": "ID", "canonical": "ID" },
+    { "locale": "", "text": "1.5", "canonical": "1.5" },
+    { "locale": "", "text": "1,5", "canonical": "1,5" }
+  ]
+}

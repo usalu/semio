@@ -1,0 +1,44 @@
+{
+  "schema": "s.procedural.generation3d.example-geometry/v1",
+  "example": "mesh-workbench",
+  "opChain": ["brep.mesh.box", "brep.mesh.inset", "brep.mesh.extrude"],
+  "preview": {
+    "node": "extrude",
+    "channel": "meshOut",
+    "kind": "solid"
+  },
+  "tessellationTolerance": 0.05,
+  "expect": {
+    "minTriangles": 28,
+    "closed": true,
+    "volume": 1.32,
+    "volumeTolerance": 0.00001,
+    "volumeSource": "Centered unit box plus the authored 0.5 extrusion of the 0.8 by 0.8 inset face",
+    "edgePerimeter": null,
+    "edgePerimeterTolerance": 0,
+    "boundingBoxMin": [-0.5, -0.5, -1],
+    "boundingBoxMax": [0.5, 0.5, 0.5],
+    "boundingBoxTolerance": 0.000001,
+    "kernelVolumeNode": null,
+    "kernelVolumeChannel": null,
+    "kernelVolumeTolerance": null
+  },
+  "delivery": {
+    "lodMode": "",
+    "meshes": 2,
+    "meshRoles": { "solid": 2 },
+    "minTriangles": 28,
+    "minEdgeSegments": 0,
+    "boundingBoxMin": [-0.5, -0.5, -1],
+    "boundingBoxMax": [0.5, 0.5, 0.5],
+    "boundingBoxTolerance": 0.000001,
+    "maxRoundTrips": 1,
+    "maxChunks": 1
+  },
+  "budget": {
+    "maxEvaluateMicros": 20000,
+    "maxTessellateMicros": 20000,
+    "maxPreviewTessellateMicros": 20000
+  },
+  "kernelStatus": "green"
+}

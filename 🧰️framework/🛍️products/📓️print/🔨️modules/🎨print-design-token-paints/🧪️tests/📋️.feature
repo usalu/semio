@@ -12,4 +12,4 @@ Feature: Readable Print semantic foregrounds
     When a hierarchical heading number is painted
     Then both its prefix and leaf use the accent foreground
     And both satisfy normal text contrast against the filled surface
-    And outlined heading numbers use the ordinary foreground on the canvas
+    And outlined heading numbers use the ordinary foreground on the interior surface

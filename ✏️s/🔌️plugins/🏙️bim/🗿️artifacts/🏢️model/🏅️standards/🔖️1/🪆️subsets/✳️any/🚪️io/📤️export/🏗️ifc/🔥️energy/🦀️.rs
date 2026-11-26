@@ -41,13 +41,11 @@ fn authored(x: &Export<'_>, holders: &[&str], set: &str, property: &str) -> bool
 }
 
 fn derive(x: &mut Export<'_>, element: &str, authors: &[&str], set: &'static str, rows: Vec<(&'static str, V)>) {
-    let Some(entity) = x.links.elements.get(element).copied() else { return };
+    if !x.links.elements.contains_key(element) { return; }
     let rows: Vec<(&'static str, V)> = rows.into_iter().filter(|(property, _)| !authored(x, authors, set, property)).collect();
     if rows.is_empty() {
         return;
     }
-    let listed: Vec<String> = rows.iter().map(|(property, _)| format!("{set}.{property}")).collect();
-    x.links.authoring.push((entity, vec![(DERIVED_ROW, label(&listed.join(",")))]));
     x.links.derived.entry(element.to_string()).or_default().push((set, rows));
 }
 
@@ -135,6 +133,12 @@ pub fn emit(x: &mut Export<'_>) {
     spaces(x);
     opaque(x);
     frames(x);
+    for (element, sets) in &x.links.derived {
+        let listed: Vec<String> = sets.iter().flat_map(|(set, rows)| rows.iter().map(move |(property, _)| format!("{set}.{property}"))).collect();
+        if let Some(entity) = x.links.elements.get(element) {
+            x.links.authoring.push((*entity, vec![(DERIVED_ROW, label(&listed.join(",")))]));
+        }
+    }
 }
 
 //#region 🔖️Report

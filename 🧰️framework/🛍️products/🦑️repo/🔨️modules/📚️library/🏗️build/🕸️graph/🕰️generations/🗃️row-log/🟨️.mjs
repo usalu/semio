@@ -1,3 +1,4 @@
+import {processPidExistsV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs"
 import{closeSync,existsSync,mkdirSync,openSync,readSync,readdirSync,rmSync,statSync,writeSync}from"node:fs";
 import{dirname,join}from"node:path";
 import{rowKeyV1}from"../🧮️fact-rows/🟨️.mjs";
@@ -12,7 +13,7 @@ const grown=(array,length)=>{if(array.length>=length)return array;const next=new
 
 /** 🏷️ The file name of the row log one process opens: `rl-<pid>-<time in base 36>-<serial>.rows`, the shape the closure proof of the graph store knows as a private spill. */
 export const rowLogFileNameV1=(pid,time,serial)=>"rl-"+pid+"-"+time.toString(36)+"-"+serial+EXTENSION;
-const alive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error?.code!=="ESRCH";}};
+const alive=pid=>processPidExistsV1(pid);
 /** 🧹️ Removes the logs of dead or long-gone processes next to `directory`, so a killed build leaves nothing behind for long. */
 function sweepStaleLogsV1(directory){
  let names;try{names=readdirSync(directory);}catch{return;}
@@ -84,6 +85,8 @@ const descriptor=openSync(path,"w+"),table=createKeyTableV1(),exit=()=>{try{rmSy
   read(ids){require();return readBatch(ids,0,ids.length);},
   /** 🔢️ The log id of one row (the row is written when the log lacks it): what a caller that learns the rows of a stored layer by its own ids asks once per distinct row. */
   id(row){require();return intern(row);},
+  /** 🧊️ Settles the log between waves: writes the buffered lines and trims the offset and length arrays to the rows held, so a log that only waits for its owners' ids to be read at the seal keeps no slack and no unwritten text. */
+  settle(){require();flush();if(offsets.length>count){offsets=offsets.slice(0,count);lengths=lengths.slice(0,count);}scratch=Buffer.allocUnsafe(0);},
   /** 🔢️ How many distinct rows the log holds, the size of the number space of its lists. */
   size:()=>count,
   /** 🧾️ Appends rows (written once per distinct row) and answers the list of them; further rows join the list of the same owner through `concat`. */

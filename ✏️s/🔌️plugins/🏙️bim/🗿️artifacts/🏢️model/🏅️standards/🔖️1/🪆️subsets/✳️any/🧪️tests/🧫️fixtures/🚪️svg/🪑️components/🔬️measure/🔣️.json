@@ -1,0 +1,486 @@
+{
+  "width": 119.0,
+  "height": 146.0,
+  "views": {
+    "v-plan-first": {
+      "name": "Plan First",
+      "kind": "plan",
+      "scale": 100,
+      "regions": 0,
+      "lines": 2,
+      "texts": 0,
+      "styles": {
+        "cut": 0,
+        "projection": 1,
+        "hidden": 0,
+        "annotation": 1
+      },
+      "arcs": 0,
+      "pocheArea": 0.0,
+      "lineLength": {
+        "cut": 0.0,
+        "projection": 4.8,
+        "hidden": 0.0,
+        "annotation": 0.1
+      },
+      "notation": {},
+      "printed": [],
+      "elements": {
+        "cmp-table-first/ComponentFront/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-front": 1
+          },
+          "stroke": []
+        },
+        "cmp-table-first/ComponentOutline/0": {
+          "axis": 0.0,
+          "area": 1.28,
+          "count": {
+            "component-outline": 1
+          },
+          "stroke": []
+        }
+      }
+    },
+    "v-plan-ground": {
+      "name": "Plan Ground",
+      "kind": "plan",
+      "scale": 100,
+      "regions": 9,
+      "lines": 40,
+      "texts": 0,
+      "styles": {
+        "cut": 6,
+        "projection": 14,
+        "hidden": 10,
+        "annotation": 19
+      },
+      "arcs": 6,
+      "pocheArea": 8.4,
+      "lineLength": {
+        "cut": 1.2,
+        "projection": 27.610012395508402,
+        "hidden": 26.6,
+        "annotation": 2.6999784951080126
+      },
+      "notation": {},
+      "printed": [],
+      "elements": {
+        "cmp-basin/ComponentConnector/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-connector": 1
+          },
+          "stroke": [
+            "#808000"
+          ]
+        },
+        "cmp-basin/ComponentConnector/1": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-connector": 1
+          },
+          "stroke": [
+            "#808000"
+          ]
+        },
+        "cmp-basin/ComponentFront/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-front": 1
+          },
+          "stroke": []
+        },
+        "cmp-basin/ComponentOutline/0": {
+          "axis": 0.0,
+          "area": 0.2475,
+          "count": {
+            "component-outline": 1
+          },
+          "stroke": []
+        },
+        "cmp-chair-free/ComponentFront/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-front": 1
+          },
+          "stroke": []
+        },
+        "cmp-chair-free/ComponentOutline/0": {
+          "axis": 0.0,
+          "area": 0.2025,
+          "count": {
+            "component-outline": 1
+          },
+          "stroke": []
+        },
+        "cmp-chair-mirrored/ComponentFront/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-front": 1
+          },
+          "stroke": []
+        },
+        "cmp-chair-mirrored/ComponentOutline/0": {
+          "axis": 0.0,
+          "area": 0.20250300999999993,
+          "count": {
+            "component-outline": 1
+          },
+          "stroke": []
+        },
+        "cmp-diffuser/ComponentConnector/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-connector": 1
+          },
+          "stroke": [
+            "#1f77d4"
+          ]
+        },
+        "cmp-diffuser/ComponentConnector/1": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-connector": 1
+          },
+          "stroke": [
+            "#1f77d4"
+          ]
+        },
+        "cmp-diffuser/ComponentFront/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-front": 1
+          },
+          "stroke": []
+        },
+        "cmp-diffuser/ComponentOutline/0": {
+          "axis": 0.0,
+          "area": 0.36,
+          "count": {
+            "component-outline": 1
+          },
+          "stroke": []
+        },
+        "cmp-fan/ComponentFront/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-front": 1
+          },
+          "stroke": []
+        },
+        "cmp-fan/ComponentOutline/0": {
+          "axis": 0.0,
+          "area": 0.3999977000000001,
+          "count": {
+            "component-outline": 1
+          },
+          "stroke": []
+        },
+        "cmp-kitchen/ComponentFront/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-front": 1
+          },
+          "stroke": []
+        },
+        "cmp-kitchen/ComponentOutline/0": {
+          "axis": 0.0,
+          "area": 1.3019999999999998,
+          "count": {
+            "component-outline": 1
+          },
+          "stroke": []
+        },
+        "cmp-lamp/ComponentConnector/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-connector": 1
+          },
+          "stroke": [
+            "#ffbf00"
+          ]
+        },
+        "cmp-lamp/ComponentConnector/1": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-connector": 1
+          },
+          "stroke": [
+            "#ffbf00"
+          ]
+        },
+        "cmp-lamp/ComponentFront/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-front": 1
+          },
+          "stroke": []
+        },
+        "cmp-lamp/ComponentOutline/0": {
+          "axis": 0.0,
+          "area": 0.16,
+          "count": {
+            "component-outline": 1
+          },
+          "stroke": []
+        },
+        "cmp-panel/ComponentConnector/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-connector": 1
+          },
+          "stroke": [
+            "#d62728"
+          ]
+        },
+        "cmp-panel/ComponentConnector/1": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-connector": 1
+          },
+          "stroke": [
+            "#d62728"
+          ]
+        },
+        "cmp-panel/ComponentFront/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-front": 1
+          },
+          "stroke": []
+        },
+        "cmp-panel/ComponentOutline/0": {
+          "axis": 0.0,
+          "area": 0.12,
+          "count": {
+            "component-outline": 1
+          },
+          "stroke": []
+        },
+        "cmp-pillar/ComponentFront/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-front": 1
+          },
+          "stroke": []
+        },
+        "cmp-pillar/ComponentOutline/0": {
+          "axis": 0.0,
+          "area": 0.09,
+          "count": {
+            "component-outline": 1
+          },
+          "stroke": []
+        },
+        "cmp-table/ComponentFront/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-front": 1
+          },
+          "stroke": []
+        },
+        "cmp-table/ComponentOutline/0": {
+          "axis": 0.0,
+          "area": 1.61994892,
+          "count": {
+            "component-outline": 1
+          },
+          "stroke": []
+        },
+        "cmp-wc/ComponentFront/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "component-front": 1
+          },
+          "stroke": []
+        },
+        "cmp-wc/ComponentOutline/0": {
+          "axis": 0.0,
+          "area": 0.2583999999999998,
+          "count": {
+            "component-outline": 1
+          },
+          "stroke": []
+        },
+        "mep-gas/MepDrop/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "mep-drop": 1
+          },
+          "stroke": [
+            "#f2d11e"
+          ]
+        },
+        "mep-lighting/MepDrop/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "mep-drop": 1
+          },
+          "stroke": [
+            "#ffbf00"
+          ]
+        },
+        "mep-return/MepAxis/0": {
+          "axis": 6.0,
+          "area": 0.0,
+          "count": {
+            "mep-axis": 1
+          },
+          "stroke": [
+            "#f08a24"
+          ]
+        },
+        "mep-return/MepBand/0": {
+          "axis": 0.0,
+          "area": 1.8,
+          "count": {
+            "mep-band": 1
+          },
+          "stroke": [
+            "#f08a24"
+          ]
+        },
+        "mep-supply/MepAxis/0": {
+          "axis": 5.0,
+          "area": 0.0,
+          "count": {
+            "mep-axis": 1
+          },
+          "stroke": [
+            "#1f77d4"
+          ]
+        },
+        "mep-supply/MepBand/0": {
+          "axis": 0.0,
+          "area": 2.0,
+          "count": {
+            "mep-band": 1
+          },
+          "stroke": [
+            "#1f77d4"
+          ]
+        },
+        "mep-supply/MepDrop/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "mep-drop": 1
+          },
+          "stroke": [
+            "#1f77d4"
+          ]
+        },
+        "mep-tray/MepAxis/0": {
+          "axis": 10.0,
+          "area": 0.0,
+          "count": {
+            "mep-axis": 1
+          },
+          "stroke": [
+            "#d62728"
+          ]
+        },
+        "mep-tray/MepBand/0": {
+          "axis": 0.0,
+          "area": 3.0,
+          "count": {
+            "mep-band": 1
+          },
+          "stroke": [
+            "#d62728"
+          ]
+        },
+        "mep-waste/MepAxis/0": {
+          "axis": 2.85,
+          "area": 0.0,
+          "count": {
+            "mep-axis": 1
+          },
+          "stroke": [
+            "#808000"
+          ]
+        },
+        "mep-waste/MepBand/0": {
+          "axis": 0.0,
+          "area": 0.285,
+          "count": {
+            "mep-band": 1
+          },
+          "stroke": [
+            "#808000"
+          ]
+        },
+        "mep-waste/MepDrop/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "mep-drop": 1
+          },
+          "stroke": [
+            "#808000"
+          ]
+        },
+        "mep-water/MepAxis/0": {
+          "axis": 2.0,
+          "area": 0.0,
+          "count": {
+            "mep-axis": 1
+          },
+          "stroke": [
+            "#1ec8d6"
+          ]
+        },
+        "mep-water/MepBand/0": {
+          "axis": 0.0,
+          "area": 0.06399999999999864,
+          "count": {
+            "mep-band": 1
+          },
+          "stroke": [
+            "#1ec8d6"
+          ]
+        },
+        "mep-water/MepDrop/0": {
+          "axis": 0.0,
+          "area": 0.0,
+          "count": {
+            "mep-drop": 1
+          },
+          "stroke": [
+            "#1ec8d6"
+          ]
+        }
+      }
+    }
+  },
+  "audit": {
+    "sampledPocheArea": {
+      "v-plan-first": 0.0,
+      "v-plan-ground": 8.4
+    }
+  }
+}

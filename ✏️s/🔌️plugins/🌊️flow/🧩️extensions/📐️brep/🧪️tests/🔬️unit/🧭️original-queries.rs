@@ -63,7 +63,7 @@ fn analytic_plane_surface_queries_use_the_original_registry() {
         let surface = run_live_query(&registry, "brep.surf.plane", input, &mut caller, &mut born, &mut free);
         let preview = &fixture["planePreview"];
         if preview["source"].as_str() == Some(name) {
-            use flow_extension_sdk::geometry::{GeometryStep, GeometryWorkIdentity};
+            use semio_os_flow_geometry::{GeometryStep, GeometryWorkIdentity};
             let shape = semio_s_spatial_kernel_semio_session::read_geometry(&surface, "surface").unwrap();
             let identity = GeometryWorkIdentity { operation: 97148, generation: 17 };
             let tolerance = 0.025;
@@ -148,7 +148,7 @@ fn original_deconstructed_cylinder_side_previews_its_native_face() {
     use semio_s_spatial_kernel_semio_session::{map_kernel_error, read_geometry};
     let session = Session::new();
     let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-    let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 97220, generation: 17 };
+    let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 97220, generation: 17 };
     let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(identity.generation), stock(), || Some(1000), 1500, 32768);
     let (mut born, mut free) = (0, 0);
     let primitive = run_live_query(&registry, "brep.prim3d.cylinder", Dictionary::new()
@@ -174,7 +174,7 @@ fn original_deconstructed_cylinder_side_previews_its_native_face() {
 
 #[test]
 fn original_bounding_box_uses_exact_analytic_world_axes() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_s_spatial_kernel_semio_session::{point_dictionary, read_geometry, vector_dictionary};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️original-bounding-box.json")).unwrap();
     let revolve: serde_json::Value = serde_json::from_str(include_str!("🔣️original-revolve.json")).unwrap();
@@ -282,7 +282,7 @@ fn retained_analytic_projection_publishes_every_result_channel() {
 
 #[test]
 fn retained_vertex_publishes_and_previews_with_rollback_before_publication() {
-    use flow_extension_sdk::geometry::{GeometryStep, GeometryWorkIdentity};
+    use semio_os_flow_geometry::{GeometryStep, GeometryWorkIdentity};
     use neural_engine::OperatorJobStep;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️original-vertex.json")).unwrap();
     let operator = fixture["operator"].as_str().unwrap();
@@ -720,7 +720,7 @@ fn check_original_curved_classification(family: &str, operation: u64) {
 
 #[test]
 fn retained_compound_previews_each_original_planar_member() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_s_spatial_kernel_semio_session::{read_geometry,vector_dictionary};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️original-compound.json")).unwrap();
     let session=Session::new();
@@ -1626,7 +1626,7 @@ fn original_surface_intersection_emits_one_continuous_registered_curve() {
     for (index, row) in fixture["retainedPlaneIntersection"].as_array().unwrap().iter().enumerate() {
         let session = Session::new();
         let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 98420 + index as u64, generation: 17 };
+        let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 98420 + index as u64, generation: 17 };
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(identity.generation), stock(), || Some(1000), 1500, 32768);
         let grant = Grant { maximum_items: 1, maximum_copy_bytes: 128, ..stock() };
         let (mut born, mut free) = (0,0);
@@ -1704,7 +1704,7 @@ fn original_surface_intersection_publishes_axial_circles_and_preserves_tangency_
     for (index,row) in fixture["retainedAxialIntersection"].as_array().unwrap().iter().enumerate() {
         let session = Session::new();
         let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity = flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 98480 + index as u64, generation: 17 };
+        let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 98480 + index as u64, generation: 17 };
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(identity.generation), stock(), || Some(1000), 1500, 32768);
         let (mut born, mut free) = (0,0);
         let plane = ["origin","normal"].into_iter().fold(Dictionary::new(), |dict,port| {
@@ -1770,7 +1770,7 @@ fn original_surface_intersection_publishes_axial_circles_and_preserves_tangency_
 
 #[test]
 fn original_conic_plane_contacts_publish_exact_tangent_or_secant_and_retire_draft() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_s_spatial_kernel_semio_session::{point_dictionary,read_geometry,vector_dictionary};
     let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/✂️brep-intersect/🔣️.json")).unwrap();
     let tolerance=corpus["tolerance"].as_f64().unwrap();
@@ -1998,7 +1998,7 @@ fn original_queries_measure_spherical_clearance_and_nearest_point_on_orthogonal_
 
 #[test]
 fn original_bounding_box_conserves_annular_sectors_and_cylinder_shoulders() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_s_spatial_kernel_semio_session::{point_dictionary, read_geometry, vector_dictionary};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️original-bounding-box.json")).unwrap();
     for (index,row) in fixture["annular"].as_array().unwrap().iter().enumerate() {

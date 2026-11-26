@@ -3,6 +3,7 @@ import ast,importlib,json,unittest
 from pathlib import Path
 import jsonschema,numpy as np
 from manim import Camera,tempconfig
+from PIL import Image, ImageColor
 
 r=importlib.import_module('🎓️teaching.🏛️architecture.📊️excel.🎬️clip.⚡️energy.🐍️')
 HERE=Path(__file__).parent
@@ -80,13 +81,12 @@ class EnergyResult(unittest.TestCase):
      scene.play(*animations,run_time=.34)
      if extra is not None:
       full.reset();full.capture_mobjects([win,refs,extra]);framed=np.asarray(full.get_image(),dtype=int)
-      prefix=r._visuals._workbook._label('14',win.font,r._visuals._workbook.CELL_INK)
-      px0=max(fx0,int((label.get_left()[0]/fw+.5)*854)-1)
-      px1=min(fx1,px0+int(np.ceil(prefix.width/fw*854))+2)
-      expected_dark=(ideal[fy0:fy1,px0:px1,:3].max(axis=2)<120)
-      actual_dark=(framed[fy0:fy1,px0:px1,:3].max(axis=2)<120)
-      self.assertGreater(int(expected_dark.sum()),2,lang)
-      self.assertFalse(np.any(expected_dark & ~actual_dark),(lang,'leading digits'))
+      ink_left=max(fx0,int((label.get_left()[0]/fw+.5)*854)-1)
+      label_region=(slice(fy0,fy1),slice(ink_left,fx1))
+      plain=Image.fromarray(ideal[label_region].astype(np.uint8))
+      tint=(*ImageColor.getrgb(r.GOOD),round(255*CASE['b15TintOpacity']))
+      expected=Image.alpha_composite(plain,Image.new('RGBA',plain.size,tint))
+      np.testing.assert_allclose(framed[label_region],np.asarray(expected,dtype=int),rtol=0,atol=1,err_msg=f'{lang}: highlighted B15')
      cleanup=next(n for n in method.body if isinstance(n,ast.Expr) and n.lineno>stage.lineno
                   and any(isinstance(x,ast.Name) and x.id=='refs' for x in ast.walk(n))
                   and isinstance(n.value,ast.Call))

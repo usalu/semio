@@ -1,0 +1,13 @@
+[
+  {"kind":"work", "compound":false, "code":"BUDGET_EXCEEDED", "message":"producer work refused"},
+  {"kind":"ownership", "compound":false, "code":"BUDGET_EXCEEDED", "message":"producer capacity refused"},
+  {"kind":"allocation", "compound":false, "code":"BUDGET_EXCEEDED", "message":"producer allocation refused"},
+  {"kind":"depth", "compound":false, "code":"BUDGET_EXCEEDED", "message":"producer depth refused"},
+  {"kind":"cancel", "compound":false, "code":"CANCELLED", "message":"producer cancelled"},
+  {"kind":"invalid", "compound":false, "code":"SIDE_EFFECT_REJECTED", "message":"producer input refused"},
+  {"kind":"unsupported", "compound":false, "code":"SIDE_EFFECT_REJECTED", "message":"producer destination refused"},
+  {"kind":"invariant", "compound":false, "code":"SIDE_EFFECT_REJECTED", "message":"producer claim refused"},
+  {"kind":null, "compound":false, "code":"SIDE_EFFECT_REJECTED", "message":"text claiming a Cancelled WorkLimit"},
+  {"kind":"work", "compound":true, "code":"SIDE_EFFECT_REJECTED", "message":"producer work refused"},
+  {"kind":"cancel", "compound":true, "code":"SIDE_EFFECT_REJECTED", "message":"producer cancelled"}
+]

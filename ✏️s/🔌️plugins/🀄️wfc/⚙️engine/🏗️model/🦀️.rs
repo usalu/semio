@@ -12,7 +12,7 @@ use crate::weights::WeightTable;
 
 // #region 🔖️Info
 /// 🧩️ Per-pattern metadata carried alongside the compiled compatibility tables.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct PatternInfo {
     pub weight: f64,
     /// 🧩️ Interned tag ids (see [`CompiledModel::tag_name`]); order-independent, deduplicated.
@@ -22,7 +22,7 @@ pub struct PatternInfo {
 }
 
 /// ↔ Per-relation metadata: a display name and its declared directed inverse.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct RelationInfo {
     pub name: String,
     pub inverse: RelationId,
@@ -163,7 +163,7 @@ impl ModelBuilder {
 // #region 🔖️Compiled
 /// 🗂️ The immutable, validated result of [`ModelBuilder::compile`]. Every solver reads
 /// compatibility exclusively through [`CompiledModel::allowed`]/[`CompiledModel::supporters`].
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct CompiledModel {
     patterns: Vec<PatternInfo>,
     relations: Vec<RelationInfo>,

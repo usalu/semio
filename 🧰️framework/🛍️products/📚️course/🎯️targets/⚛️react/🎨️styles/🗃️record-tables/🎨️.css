@@ -149,17 +149,18 @@
 
 .course-table :is(th, td) {
   white-space: nowrap;
-  background: var(--color-background);
 }
 
 .course-table > thead > tr > th {
   position: sticky;
+  background: var(--surface-bg, var(--base));
   inset-block-start: 0;
   z-index: 2;
 }
 
 .course-table > :is(thead, tbody) > tr > :is(th, td):nth-child(1):not([colspan]) {
   position: sticky;
+  background: var(--surface-bg, var(--base));
   inset-inline-start: 0;
   inline-size: 4.5rem;
   min-inline-size: 4.5rem;
@@ -169,6 +170,7 @@
 
 .course-table > :is(thead, tbody) > tr > :is(th, td):nth-child(2) {
   position: sticky;
+  background: var(--surface-bg, var(--base));
   inset-inline-start: 4.5rem;
   z-index: 1;
   border-inline-end: var(--stroke-hairline) solid var(--border-normal-color);

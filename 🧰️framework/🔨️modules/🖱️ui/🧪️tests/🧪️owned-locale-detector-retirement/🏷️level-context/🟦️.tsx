@@ -4,7 +4,7 @@ import type { TestSource, Tests1Vitest, Tests1Dependencies } from "../🧰️har
 
 export async function registerLevelContextTests(vitest: Tests1Vitest, dependencies: Tests1Dependencies, testSource: TestSource): Promise<void> {
   const { Canvas, Footer, LEVELS, Layout, LevelProvider, Mode, Navbar, Popover, PopoverContent, PopoverTrigger, React, Surface, WindowChrome, borderNormalClass, cn, glassClass, renderToStaticMarkup, shellFloorFillClass, shellFloorPaints, surfaceClass, uiDataLabel, useLevel, useSurface, windowChromeTitleChipClass } = dependencies;
-  const { describe, expect, it, vi } = vitest;
+  const { describe, expect, it } = vitest;
   const { render, screen } = await import("@testing-library/react");
 
   describe("Level Context", () => {
@@ -94,45 +94,29 @@ export async function registerLevelContextTests(vitest: Tests1Vitest, dependenci
       expect(probe?.getAttribute("data-fill")).toBe("glass");
     });
 
-    it("Surface warns (dev-only) when nested inside an ancestor Surface painting the same level, never when levels differ or fill is none", () => {
-      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-      render(
-        <Surface level="panel" fill="glass">
-          <Surface level="panel" fill="surface">
-            <span />
-          </Surface>
-        </Surface>,
-      );
-      expect(warnSpy).toHaveBeenCalledTimes(1);
-      warnSpy.mockClear();
-
-      render(
-        <Surface level="panel" fill="glass">
-          <Surface level="pane" fill="glass">
-            <span />
-          </Surface>
-        </Surface>,
-      );
-      expect(warnSpy).not.toHaveBeenCalled();
-
-      render(
+    it("only the owner paints a level, including through transparent wrappers", () => {
+      const Probe = () => <output>{useSurface()?.fill}</output>;
+      const { container } = render(
         <Surface level="panel" fill="glass">
           <Surface level="panel" fill="none">
-            <span />
+            <Surface level="panel">
+              <Canvas><Probe /></Canvas>
+            </Surface>
           </Surface>
         </Surface>,
       );
-      expect(warnSpy).not.toHaveBeenCalled();
-      warnSpy.mockRestore();
+      expect(container.querySelectorAll(".ui-surface,.ui-glass")).toHaveLength(1);
+      expect(container.querySelector("output")?.textContent).toBe("glass");
+      expect(container.querySelector('[data-slot="canvas"]')?.getAttribute("data-level")).toBe("panel");
     });
 
-    it("shellFloorPaints/shellFloorFillClass defer opaque fill only on an already-painted base floor", () => {
+    it("paints a standalone shell floor and inherits an enclosing owner at every level", () => {
       expect(shellFloorPaints(null)).toBe(true);
       expect(shellFloorFillClass(null)).toBe(surfaceClass);
-      expect(shellFloorPaints({ level: "base", fill: "surface" })).toBe(false);
-      expect(shellFloorFillClass({ level: "base", fill: "surface" })).toBe("bg-transparent");
-      expect(shellFloorPaints({ level: "base", fill: "none" })).toBe(true);
-      expect(shellFloorPaints({ level: "window", fill: "surface" })).toBe(true);
+      for (const level of LEVELS) {
+        expect(shellFloorFillClass({ level, fill: "surface" })).toBe("bg-transparent");
+        expect(shellFloorPaints({ level, fill: "none" })).toBe(true);
+      }
     });
 
     it("Layout paints one continuous base floor; navbar and footer are panel-level glass bands above it; canvas and mode-body stay transparent over it", () => {

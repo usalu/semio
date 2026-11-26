@@ -1,5 +1,87 @@
 {
   "version": 1,
+  "compositionSelection": [
+    {
+      "args": [
+        "build",
+        "-pfem",
+        "--package=gis",
+        "-p",
+        "fem",
+        "--",
+        "--package",
+        "cad"
+      ],
+      "selected": [
+        "fem",
+        "gis"
+      ]
+    },
+    {
+      "args": [
+        "build",
+        "--package",
+        "gis",
+        "-p",
+        "fem"
+      ],
+      "selected": [
+        "fem",
+        "gis"
+      ]
+    },
+    {
+      "args": [
+        "build",
+        "-p",
+        "gis",
+        "--workspace"
+      ],
+      "selected": null
+    },
+    {
+      "args": [
+        "build",
+        "--all",
+        "--package",
+        "gis"
+      ],
+      "selected": null
+    },
+    {
+      "args": [
+        "build",
+        "-p",
+        "fem",
+        "--exclude=cad"
+      ],
+      "selected": null
+    },
+    {
+      "args": [
+        "build",
+        "-p",
+        "gis*"
+      ],
+      "selected": null
+    },
+    {
+      "args": [
+        "build",
+        "-p"
+      ],
+      "selected": null
+    },
+    {
+      "args": [
+        "build",
+        "--",
+        "-p",
+        "gis"
+      ],
+      "selected": null
+    }
+  ],
   "owners": [
     {
       "manifest": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/Cargo.toml",
@@ -1546,7 +1628,9 @@
         "target": "wasm32-wasip2",
         "producer": "artifact",
         "operation": "build",
-        "composition": "semio-hub-sourcing-component"
+        "compositions": [
+          "semio-hub-procedural-component"
+        ]
       },
       "target": {
         "inherits": "dev",
@@ -1574,7 +1658,39 @@
         "target": "wasm32-wasip2",
         "producer": "artifact",
         "operation": "build",
-        "composition": "semio-hub-gis-component"
+        "compositions": [
+          "semio-hub-sourcing-component"
+        ]
+      },
+      "target": {
+        "inherits": "dev",
+        "opt-level": "s",
+        "debug": 0,
+        "codegen-units": 16,
+        "incremental": false,
+        "lto": "off",
+        "debug-assertions": true,
+        "overflow-checks": true,
+        "strip": "symbols",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "target": "wasm32-wasip2",
+        "producer": "artifact",
+        "operation": "build",
+        "compositions": [
+          "semio-hub-gis-component"
+        ]
       },
       "target": {
         "inherits": "dev",
@@ -1681,6 +1797,182 @@
         "target": "wasm32-wasip2",
         "producer": "wasm-component",
         "operation": "build"
+      },
+      "target": {
+        "opt-level": "s",
+        "debug": 0,
+        "codegen-units": 16,
+        "incremental": false,
+        "lto": "thin",
+        "debug-assertions": false,
+        "overflow-checks": false,
+        "strip": "symbols",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "target": "wasm32-wasip2",
+        "producer": "wasm-component",
+        "operation": "build",
+        "compositions": [
+          "semio-hub-fem-component"
+        ]
+      },
+      "target": {
+        "opt-level": "s",
+        "debug": 0,
+        "codegen-units": 16,
+        "incremental": false,
+        "lto": "off",
+        "debug-assertions": false,
+        "overflow-checks": false,
+        "strip": "symbols",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "target": "wasm32-wasip2",
+        "producer": "artifact",
+        "operation": "build",
+        "compositions": [
+          "semio-hub-procedural-component"
+        ]
+      },
+      "target": {
+        "opt-level": "s",
+        "debug": 0,
+        "codegen-units": 16,
+        "incremental": false,
+        "lto": "off",
+        "debug-assertions": false,
+        "overflow-checks": false,
+        "strip": "symbols",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "target": "wasm32-wasip2",
+        "producer": "wasm-component",
+        "operation": "build",
+        "compositions": [
+          "semio-hub-sourcing-component"
+        ]
+      },
+      "target": {
+        "opt-level": "s",
+        "debug": 0,
+        "codegen-units": 16,
+        "incremental": false,
+        "lto": "off",
+        "debug-assertions": false,
+        "overflow-checks": false,
+        "strip": "symbols",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "target": "wasm32-wasip2",
+        "producer": "wasm-component",
+        "operation": "build",
+        "compositions": [
+          "semio-hub-gis-component"
+        ]
+      },
+      "target": {
+        "opt-level": "s",
+        "debug": 0,
+        "codegen-units": 16,
+        "incremental": false,
+        "lto": "off",
+        "debug-assertions": false,
+        "overflow-checks": false,
+        "strip": "symbols",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "target": "wasm32-wasip2",
+        "producer": "wasm-component",
+        "operation": "build",
+        "compositions": [
+          "semio-hub-fem-component",
+          "semio-hub-gis-component"
+        ]
+      },
+      "target": {
+        "opt-level": "s",
+        "debug": 0,
+        "codegen-units": 16,
+        "incremental": false,
+        "lto": "off",
+        "debug-assertions": false,
+        "overflow-checks": false,
+        "strip": "symbols",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "target": "wasm32-wasip2",
+        "producer": "wasm-component",
+        "operation": "build",
+        "compositions": [
+          "semio-hub-gis-component",
+          "semio-hub-flow-component"
+        ]
       },
       "target": {
         "opt-level": "s",

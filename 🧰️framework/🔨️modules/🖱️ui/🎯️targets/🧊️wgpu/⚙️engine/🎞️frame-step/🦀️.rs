@@ -66,7 +66,8 @@ impl Ui {
                 sync_node: None,
                 node_sync: RetainedInteractiveSyncCursor::default(),
                 paint_node: None,
-                paint_overlay: false,
+                owner: presentation.owner,
+                paint_overlay: None,
                 paint_glass: None,
                 overlay_glass: [None; UI_FRAME_OVERLAY_CHROME],
                 overlay_chrome,
@@ -90,7 +91,7 @@ impl Ui {
         let fresh = window
             .paint_frame
             .as_ref()
-            .is_some_and(|frame| frame.revision == window.revision && frame.theme_revision == window.theme_revision && frame.viewport_revision == window.viewport_revision && frame.interaction_epoch == window.presented_interaction_epoch);
+            .is_some_and(|frame| frame.owner == presentation.owner && frame.revision == window.revision && frame.theme_revision == window.theme_revision && frame.viewport_revision == window.viewport_revision && frame.interaction_epoch == window.presented_interaction_epoch);
         if !fresh {
             if let Some(frame) = window.paint_frame.as_mut() {
                 frame.node_paint.cancel_draw_route(&mut frame.candidate);
@@ -145,7 +146,7 @@ impl Ui {
                         frame.candidate.push_scissor(clip);
                     }
                 }
-                if frame.paint_overlay {
+                if frame.paint_overlay.is_some() {
                     frame.candidate.begin_overlay_route();
                     if let Some(region) = frame.paint_glass {
                         frame.candidate.begin_glass_content(region);
@@ -160,14 +161,14 @@ impl Ui {
                     atlas,
                     icons,
                     scene_host.is_some(),
-                    presentation,
+                    semio_ui_wgpu_paint::RetainedPaintPresentation { owner: frame.paint_overlay.unwrap_or(frame.owner), ..presentation },
                     window.router.flow().block.is_reversed(),
                     window.router.flow().inline,
                     window.router.hover_pointer(),
                     &mut frame.candidate,
                     &mut frame.node_paint,
                 );
-                if frame.paint_overlay {
+                if frame.paint_overlay.is_some() {
                     if frame.paint_glass.is_some() {
                         frame.candidate.end_glass_content();
                     }
@@ -272,7 +273,7 @@ impl Ui {
                 RetainedPaintWalkStep::Visit(node, origin_x, origin_y, overlay_root) => {
                     frame.paint_node = Some((node, origin_x, origin_y));
                     let chrome = overlay_root.and_then(|root| frame.overlay_chrome.iter().position(|placement| placement.is_some_and(|placement| placement.root == root)));
-                    frame.paint_overlay = chrome.is_some();
+                    frame.paint_overlay = chrome.and_then(|i| frame.overlay_chrome[i]).map(|p| semio_ui_wgpu_paint::overlay_surface_level(p.backdrop));
                     frame.paint_glass = chrome.and_then(|index| frame.overlay_glass[index]);
                     UiFrameStep::Pending
                 }

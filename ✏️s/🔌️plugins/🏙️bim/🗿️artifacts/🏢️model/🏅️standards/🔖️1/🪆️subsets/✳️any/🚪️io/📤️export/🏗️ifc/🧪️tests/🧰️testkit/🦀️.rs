@@ -220,7 +220,7 @@ pub fn with_ramp(left: bool) -> ModelSnapshot {
 }
 
 pub fn rectangle(x0: f64, y0: f64, x1: f64, y1: f64) -> Vec<Vertex> {
-    vec![vertex(x0, y0), vertex(x1, y0), vertex(x1, y1), vertex(x0, y1)]
+    vec![vertex(x0, y0, 0.0), vertex(x1, y0, 0.0), vertex(x1, y1, 0.0), vertex(x0, y1, 0.0)]
 }
 
 /// 🧗️ The part of the house the import understands plus three walls on the ground storey: one under a level ceiling with a baseboard and a window with a reveal, one under a sloped ceiling (a brep) with a hand rail, one standing on a level slab.

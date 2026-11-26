@@ -1,6 +1,7 @@
 /** 🗣️ The app labels overlay, the program and topic contributions, the space index, the manifest examples with their asset names and the plugin manifest type. */
 import { type ArtifactDialect } from "@semio-tech/schema-ts/artifact-reference";
 import { dialectCoordinate } from "../../🚪️io/🧬️schema/📦️packages/🟦️typescript/🟦️.ts";
+import type { ManifestWithActionSets } from "../🧺️action-sets/🟦️.ts";
 import type { CommandDefinition } from "../🔘️definitions-action-ids-and-shell-brand/🟦️.ts";
 
 // #region 🛂️Manifest
@@ -145,7 +146,8 @@ export type PluginManifest = {
   readonly pluginId: string;
   readonly label: string;
   readonly version: string;
-  readonly apps: readonly Record<string, unknown>[];
+  readonly apps: readonly (Record<string, unknown> & ManifestWithActionSets["apps"][number])[];
+  readonly actionSets?: ManifestWithActionSets["actionSets"];
   readonly workflows: readonly {
     readonly workflowStepId: string;
     readonly appId: string;

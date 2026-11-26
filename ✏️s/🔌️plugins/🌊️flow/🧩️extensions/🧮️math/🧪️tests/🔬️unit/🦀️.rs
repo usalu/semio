@@ -96,3 +96,6 @@ async fn divide_rejects_zero() {
     let input = Dictionary::new().insert("a", Value::Dictionary(number_dictionary(1.0))).insert("b", Value::Dictionary(number_dictionary(0.0)));
     assert!(reg.dispatch_cold("math.divide", input).is_err());
 }
+
+#[path = "⏱️retained.rs"]
+mod retained_math;

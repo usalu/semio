@@ -32,7 +32,7 @@ function Poster(props: { readonly clip: Clip; readonly enabled?: boolean; readon
   const posters = useContext(ClipPostersContext);
   const url = props.enabled === false ? undefined : posters[props.clip.poster.file];
   return (
-    <div data-clip-poster="" data-window-content-layout={props.fill ? "edgeless" : undefined} data-unavailable={props.available === false ? "" : undefined} {...CELL} className={`relative flex w-full items-center justify-center overflow-hidden bg-background ${props.fill ? "min-h-0 flex-1" : "aspect-video"}`}>
+    <div data-clip-poster="" data-window-content-layout={props.fill ? "edgeless" : undefined} data-unavailable={props.available === false ? "" : undefined} {...CELL} className={`relative flex w-full items-center justify-center overflow-hidden ${props.fill ? "min-h-0 flex-1" : "aspect-video"}`}>
       {url === undefined ? <Glyph emoji={props.clip.emoji} className="text-2xl" /> : <img src={url} alt="" width={640} height={360} loading="lazy" decoding="async" className={props.fill ? "size-full object-contain" : "size-full object-cover"} />}
       {props.available === false ? <UnavailableTint /> : null}
     </div>

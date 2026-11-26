@@ -61,7 +61,28 @@ $Worktree = $topology.worktree.windows
 $Drive = $topology.storeMount.windows.Substring(0, 2)
 $group = @($topology.groups | Where-Object { $_.id -eq $GroupId })
 if ($group.Count -ne 1 -or -not $Worktree) { throw "The topology has no worktree for windows or no group ${GroupId}." }
-$NfsHost = if ($env:SEMIO_FLEET_GROUP -eq $GroupId -and $env:SEMIO_FLEET_NFS_HOST) { $env:SEMIO_FLEET_NFS_HOST } else { $group[0].nfs.host }
+$StoreOrigin = $group[0].roles.store
+function Find-StoreAddress([string]$Origin) {
+    # Bonjour (dns-sd.exe): the instance of the service _semio-fleet._tcp is the origin; nothing is written to the machine.
+    $tool = Get-Command dns-sd.exe -ErrorAction SilentlyContinue
+    if (-not $tool) { return $null }
+    $run = {
+        param([string[]]$Arguments)
+        $out = Join-Path ([IO.Path]::GetTempPath()) ("semio-dnssd-" + [guid]::NewGuid().ToString('N') + '.txt')
+        $process = Start-Process -FilePath $tool.Source -ArgumentList $Arguments -NoNewWindow -PassThru -RedirectStandardOutput $out
+        if (-not $process.WaitForExit(2500)) { try { $process.Kill() } catch {} }
+        $text = if (Test-Path -LiteralPath $out) { Get-Content -Raw -LiteralPath $out } else { '' }
+        Remove-Item -LiteralPath $out -Force -ErrorAction SilentlyContinue
+        $text
+    }
+    $lookup = & $run @('-L', $Origin, '_semio-fleet._tcp', 'local')
+    if ($lookup -notmatch 'can be reached at (\S+?)\.?:\d+') { return $null }
+    $answer = & $run @('-G', 'v4', $Matches[1])
+    foreach ($line in ($answer -split "`n")) { $cells = @($line.Trim() -split '\s+'); if ($cells.Count -ge 6 -and $cells[1] -eq 'Add' -and $cells[5] -notlike '169.254.*') { return $cells[5] } }
+    return $null
+}
+$NfsHost = if ($env:SEMIO_FLEET_GROUP -eq $GroupId -and $env:SEMIO_FLEET_STORE_ADDRESS) { $env:SEMIO_FLEET_STORE_ADDRESS } else { Find-StoreAddress $StoreOrigin }
+if (-not $NfsHost) { throw "The address of the store ($StoreOrigin) could not be found: no Bonjour answer. Run the script again with `$env:SEMIO_FLEET_GROUP='$GroupId'; `$env:SEMIO_FLEET_STORE_ADDRESS='<address of $StoreOrigin>' once (it is never stored) / Die Adresse des Speichers ($StoreOrigin) wurde nicht gefunden." }
 $NfsSource = "\\$NfsHost$($group[0].nfs.export.Replace('/', '\'))"
 $ServerPlatform = $group[0].server.platform
 $ServerProtocol = $group[0].server.protocol
@@ -290,7 +311,13 @@ if ($Server) {
             Say "enabled feature $feature"
         }
     }
-    if (Test-Path -LiteralPath "$Drive\") { Say "already mounted $Drive" } else {
+    if (Test-Path -LiteralPath "$Drive\") {
+        Say "already mounted $Drive"
+        $mountedSource = @(& mount.exe 2>$null | Where-Object { $_ -match "^\s*$([regex]::Escape($Drive.TrimEnd('\')))" }) -join ' '
+        if ($mountedSource -and $mountedSource.ToLowerInvariant() -notlike "*$($NfsSource.ToLowerInvariant())*") {
+            Say "WARNING: $Drive is mapped from another source ($mountedSource), the topology names $NfsSource (a host name that follows the server to another network): stop the replica service, then run: mount.exe -u $Drive; mount.exe $($MountOptions -split ',' | ForEach-Object { "-o $_" }) $NfsSource $Drive / WARNUNG: $Drive ist von einer anderen Quelle verbunden, die Topologie nennt $NfsSource"
+        }
+    } else {
         $mountFlags = @($MountOptions -split ',' | ForEach-Object { '-o'; $_ })
         & mount.exe @mountFlags $NfsSource $Drive
         if ($LASTEXITCODE -ne 0) { throw "mount.exe failed with exit code $LASTEXITCODE" }
@@ -383,7 +410,7 @@ if (Get-Command repo -ErrorAction SilentlyContinue) { Say 'repo launcher present
     Say "installed the launcher in $LauncherBin and put it on the user PATH"
 }
 
-$facts = @(Invoke-Fleet @('facts', '--group', $GroupId, '--platform', 'windows', '--shell', 'powershell') | Where-Object { $_ -like '$FLEET_*' })
+$facts = @(Invoke-Fleet @('facts', '--group', $GroupId, '--platform', 'windows', '--shell', 'powershell', '--addresses', "$StoreOrigin=$NfsHost") | Where-Object { $_ -like '$FLEET_*' })
 if ($facts.Count -eq 0) { throw 'The topology command printed no facts.' }
 foreach ($fact in $facts) {
     $match = [regex]::Match($fact, '^\$(FLEET_[A-Z0-9_]+)=''((?:[^'']|'''')*)''$')
@@ -391,7 +418,7 @@ foreach ($fact in $facts) {
     Set-Variable -Name $match.Groups[1].Value -Value $match.Groups[2].Value.Replace("''", "'")
 }
 if ($FLEET_WORKTREE -ne $Worktree -or $FLEET_NFS_SOURCE -ne $NfsSource -or $FLEET_DRIVE -ne $Drive -or $FLEET_MOUNT_OPTIONS -ne $MountOptions -or $FLEET_SERVER_PLATFORM -ne $ServerPlatform -or $FLEET_SERVER_PROTOCOL -ne $ServerProtocol -or $FLEET_SMB_CACHE -ne (ConvertTo-List $SmbCache) -or $FLEET_NFS_CACHE -ne (ConvertTo-List $NfsCache) -or $FLEET_NFS_CACHE_KEY -ne $NfsCacheKey) { throw "The topology file next to this script differs from the one in the worktree ($FLEET_WORKTREE, $FLEET_NFS_SOURCE, $FLEET_DRIVE, $FLEET_MOUNT_OPTIONS, $FLEET_SERVER_PLATFORM, $FLEET_SERVER_PROTOCOL): copy the topology directory from the worktree and run again." }
-Say "canonical worktree $FLEET_WORKTREE, store $FLEET_NFS_SOURCE at $FLEET_DRIVE, cache $FLEET_CACHE_ENDPOINT"
+Say "canonical worktree $FLEET_WORKTREE, store $FLEET_NFS_SOURCE (role of $StoreOrigin) at $FLEET_DRIVE"
 
 if ($Plan) {
     Say 'plan: nothing below this line is registered or changed'

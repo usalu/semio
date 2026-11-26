@@ -154,6 +154,23 @@
       "accepted": false
     },
     {
+      "name": "resolver-config-lock-redirection",
+      "args": [
+        "build",
+        "--config",
+        "resolver.lockfile-path=\"/outside/Cargo.lock\""
+      ],
+      "accepted": false
+    },
+    {
+      "name": "inline-resolver-config-lock-redirection",
+      "args": [
+        "build",
+        "--config=resolver.lockfile-path=\"/outside/Cargo.lock\""
+      ],
+      "accepted": false
+    },
+    {
       "name": "install-root-redirection",
       "args": [
         "install",

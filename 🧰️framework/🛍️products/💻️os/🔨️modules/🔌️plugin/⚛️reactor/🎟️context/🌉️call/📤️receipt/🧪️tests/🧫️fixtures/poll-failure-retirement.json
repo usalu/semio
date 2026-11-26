@@ -1,0 +1,7 @@
+[
+  { "kind": "Poll", "accepted": false, "frameReleased": true, "advanceClose": false },
+  { "kind": "Poll", "accepted": true, "frameReleased": false, "advanceClose": false },
+  { "kind": "Poll", "accepted": true, "frameReleased": true, "advanceClose": true },
+  { "kind": "AdmitActorInput", "accepted": false, "frameReleased": true, "advanceClose": true },
+  { "kind": "AdmitActorInput", "accepted": true, "frameReleased": false, "advanceClose": true }
+]

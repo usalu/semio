@@ -3,13 +3,13 @@ import {spawnSync} from "node:child_process";
 import {existsSync,mkdtempSync,mkdirSync,readFileSync,readdirSync,realpathSync,rmdirSync,statSync,unlinkSync,writeFileSync} from "node:fs";
 import {tmpdir,totalmem} from "node:os";
 import {basename,join,resolve} from "node:path";
-import {admitFactsV1,expandRustcArgumentsV1,extraFilenameV1,extraNeutralV1,extraRestoreV1,withCanonicalMetadataV1,keyEnvironmentV1,laneRestoreV1,normalizeRustcArgumentsV1,parseRustcUnitV1,rustcBypassV1,rustSysrootV1,sha256V1,sourceValueV1,toolchainIdentityV1,withoutIncrementalV1,unitKeyComponentsV1,unitKeyPartsV1,unitKeyV1,UNIT_CACHE_POLICY_V1} from "./🔏️key/🟦️.ts";
+import {admitFactsV1,expandRustcArgumentsV1,extraFilenameV1,extraNeutralV1,extraRestoreV1,withCanonicalMetadataV1,keyEnvironmentV1,laneRestoreV1,localCompilerInputKeyV1,normalizeRustcArgumentsV1,parseRustcUnitV1,rustcBypassV1,rustSysrootV1,sha256V1,sourceValueV1,toolchainIdentityV1,withoutIncrementalV1,unitKeyComponentsV1,unitKeyPartsV1,unitKeyV1,UNIT_CACHE_POLICY_V1} from "./🔏️key/🟦️.ts";
 import {acquireLightSlotV1,acquireSlotV1,acquireUnitClaimV1,tryAcquireSlotV1,type ClaimV1} from "./🔒️lock/🟦️.ts";
 import {digestFileV1,emitUnitEventV1,forgetCrateEntriesV1,lookupUnitV1,newestEntryV1,publishUnitV1,churnReportV1,readEvictionsV1,readLookupsV1,recordLookupV1,restoreUnitV1,type UnitEventV1} from "./💾️store/🟦️.ts";
 import {compilerTemporaryArgumentsV1,lanePathsV1} from "./🧵️lane/🟦️.ts";
 import {jobserverChildEnvironmentV1,jobserverClosedMessageV1,jobserverPlanV1,jobserverStdioV1} from "./🎰️jobserver/🟦️.ts";
 import {buildScriptsEnabledV1,installBuildScriptShimV1,isBuildScriptUnitV1} from "./🏗️buildscript/🟦️.ts";
-import {brokerOfV1,brokerWouldWaitV1,recallProvenanceV1,replayCachedUnitV1} from "./🛰️broker/🟦️.ts";
+import {brokerOfV1,brokerWouldWaitV1,compilerBrokerOfV1,recallProvenanceV1,replayCachedUnitV1} from "./🛰️broker/🟦️.ts";
 import {collectGarbageSingleFlightV1,collectGarbageV1,measureGcV1,measureVolumeV1,planGcV1,watchUnitCachePressureV1} from "./🧹️gc/🟦️.ts";
 import {fillRatesV1,readFillSamplesV1} from "./🧹️gc/📈️fill/🟦️.ts";
 import {keyGapV1,sourceEnvironmentV1,unitSourcesV1} from "./🔏️key/🔗️sources/🟦️.ts";
@@ -63,7 +63,7 @@ function run(inner:readonly string[],args:readonly string[],environment:Environm
  const pump=async(stream:unknown,chunks:Buffer[],sink:NodeJS.WriteStream):Promise<void>=>{if(!(stream instanceof ReadableStream))return;for await(const chunk of stream as AsyncIterable<Uint8Array>){const buffer=Buffer.from(chunk);chunks.push(buffer);sink.write(buffer);}};
  return Promise.all([child.exited,pump(child.stdout,out,process.stdout),pump(child.stderr,err,process.stderr)]).then(async([code])=>{
   const signal=child.signalCode,peak=child.resourceUsage()?.maxRSS;
-  if(signal==="SIGKILL")await reportWardenCancelV1(child.pid);
+  if(signal==="SIGTERM"||signal==="SIGKILL")await reportWardenCancelV1(child.pid);
   return{status:signal?128+({SIGINT:2,SIGTERM:15,SIGKILL:9} as Record<string,number>)[signal]!:code,stdout:Buffer.concat(out).toString("utf8"),stderr:Buffer.concat(err).toString("utf8"),...(peak!==undefined&&peak>0?{peakRssBytes:peak}:{})};
  }).finally(()=>{prepared.close();jobs.release?.();});
 }
@@ -96,17 +96,6 @@ export function withoutCompilerPathV1(argv:readonly string[]):readonly string[]{
 /** 🧭️ Appended to every compilation that Cargo gave a `--remap-path-scope` (the repository's `trim-paths = "object"` profile remaps only object code): rustc then remaps the source names of the metadata as well, so a unit gives the same bytes on every machine and at every checkout path, whoever compiles it (an extern's content hash is part of the key of its dependants). The scope Cargo gave is replaced (rustc refuses the option twice). */
 export const PATH_NEUTRAL_FLAGS_V1:readonly string[]=Object.freeze(["--remap-path-scope=all"]);
 
-/** 🔍️ The first compiled output (not the dependency file) whose bytes contain one of this machine's roots or their resolved spelling (the checkout, the Cargo home and the Rust home among them), as `<file>: <root>`, `undefined` when none does: such a unit holds a real path of this machine and may be shared only between machines with the same paths (`pathSensitiveV1`), never under a key that ignores them. */
-export function leakedPathsV1(outputs:readonly string[],roots:readonly (string|undefined)[]):string|undefined{
- const given=roots.filter((root):root is string=>root!==undefined&&root.length>=4),known=[...new Set([...given,...given.flatMap(root=>{try{return[realpathSync(root)];}catch{return[];}})])];
- for(const path of outputs){
-  if(path.endsWith(".d"))continue;
-  let bytes:Buffer;try{bytes=readFileSync(path);}catch{continue;}
-  for(const root of known)if(bytes.includes(root))return path.split("/").at(-1)+": "+root;
- }
- return undefined;
-}
-
 /** 🛠️ Serves one rustc command line from the cache or compiles it exactly once across all lanes. Never throws on cache faults: any fault is a miss. A miss compiles the command line Cargo gave, so a workspace unit Cargo compiles incrementally keeps rustc's incremental session in the lane (the next edit of that crate, also when it is a dependency of the focused one, recompiles incrementally) and is published locally with its session marked (`session`), so it is never shared with the fleet, neither on the compile nor on a later local hit; a unit that is shared through the fleet is always compiled without a session, the focused crates keep theirs and stay local. */
 export async function wrapRustcV1(argv:readonly string[],environment:Environment,cwd:string,ports:Readonly<{admission?:OffloadAdmissionPortsV1}>={}):Promise<number>{
  argv=withoutCompilerPathV1(argv);const settings=readSettingsV1(environment);
@@ -133,11 +122,13 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
  let args=expandRustcArgumentsV1(argv,cwd);const unit=parseRustcUnitV1(args),refused=rustcBypassV1(unit,args),natives=refused==="native-link"?await(async()=>{try{return (await import("../../../🏗️build/🌐️remote-execution/🚀️offload/🗺️paths/🟦️.ts")).nativeKeyInputsV1({args,cwd,digest:path=>digestFileV1(path,settings.stamps)});}catch{return undefined;}})():undefined,bypass=natives===undefined?refused:undefined,crate=unit.crateName||"-";
  const event=(kind:UnitEventV1["kind"],key:string|null,milliseconds:number,waitedMs=0,reason?:string,peakRssBytes?:number)=>emitUnitEventV1(settings.root,{lane:settings.lane,kind,crate,key,milliseconds,waitedMs,...(reason?{reason}:{}),...(peakRssBytes?{peakRssBytes}:{})});
  let shared=false,held:ClaimV1|undefined,ranMs=0;
- const compile=async(capture:boolean):Promise<Outcome>=>{
+ const stripIncremental=()=>shared&&unit.incremental!==undefined&&!settings.focus.has(crate);
+ const incrementalSession=()=>unit.incremental!==undefined&&!stripIncremental();
+ const compile=async(capture:boolean,localInputKey?:string):Promise<Outcome>=>{
   let slot=held;held=undefined;
   if(slot===undefined&&settings.slots>0&&unit.source.endsWith(".rs")){slot=await acquireSlotV1(settings.root,settings.slots,{since:started,onWait:waited=>event("slot-wait",null,0,waited)});}
   const began=Date.now();
-  try{return await run(settings.inner,[...(shared&&unit.incremental!==undefined&&!settings.focus.has(crate)?withoutIncrementalV1(argv):argv),...linkRootArgumentsV1(args,resolve(cwd,unit.outDir)),...compilerTemporaryArgumentsV1(settings.laneRoot?join(settings.laneRoot,policy.layout.compilerTemporaries):lanePathsV1(settings.root,settings.lane).temporaries,args)],environment,capture);}finally{ranMs=Date.now()-began;slot?.release();}
+  try{return await run(settings.inner,[...(stripIncremental()?withoutIncrementalV1(argv):argv),...linkRootArgumentsV1(args,resolve(cwd,unit.outDir)),...compilerTemporaryArgumentsV1(settings.laneRoot?join(settings.laneRoot,policy.layout.compilerTemporaries):lanePathsV1(settings.root,settings.lane).temporaries,args)],{...environment,SEMIO_RUSTC_UNIT_LOCAL_INPUT_KEY:localInputKey},capture);}finally{ranMs=Date.now()-began;slot?.release();}
  };
  const started=Date.now(),workspaceOf=environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||undefined;
  if(bypass){
@@ -149,13 +140,21 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
  let key:string,parts="",keyInput:Parameters<typeof unitKeyV1>[0],sourcesRead:Awaited<ReturnType<typeof unitSourcesV1>>=null,keyedNames:ReadonlySet<string>=new Set();
  const digests=new Map<string,string>(),rawExterns:string[]=[],producers:string[]=[],metadataOnly=unit.emit.every(kind=>kind==="metadata"||kind==="dep-info");let ifaceKeyed=false;
  const remaps=remapsOfV1(args),covered=remappedV1(remaps,cwd),manifestDir=environment.CARGO_MANIFEST_DIR,tools=toolRootsV1(environment,(()=>{try{return rustSysrootV1(settings.root,settings.inner,environment);}catch{return undefined;}})()),roots=portableRootsV1({cwd,workspace:workspaceOf,hints:[manifestDir,environment.PWD],...tools});
+ const outDir=resolve(cwd,unit.outDir),named:Readonly<Record<string,string|undefined>>={cwd,manifest:manifestDir,workspace:workspaceOf,"cargo-home":tools.cargoHome,"rustup-home":tools.rustupHome,sysroot:tools.sysroot,lane:settings.laneRoot,output:outDir,generated:environment.OUT_DIR};
+ const scope=(kinds:readonly string[])=>{
+  const paths=rootPathsV1(kinds,named);if(paths===undefined)return undefined;
+  return paths.flatMap(path=>{const index=path.indexOf("="),value=path.slice(index+1);try{const actual=realpathSync(value);if(actual!==value)return[path,path.slice(0,index)+"-resolved="+actual];}catch{}return[path];});
+ };
  const basicsEarly=unitBasicsV1({root:settings.root,environment,inner:settings.inner,unit,args,cwd}),slotEarly=basicsEarly?.slot,manifestId=slotEarly===undefined||!unit.source.endsWith(".rs")?undefined:manifestIdV1(slotEarly),manifestClient=manifestId===undefined?undefined:fleetClientV1(settings.root,environment);
  const manifestHeld=manifestId===undefined?undefined:await obtainManifestV1(settings.root,manifestId,manifestClient),manifestUsed0=manifestHeld?.state?.manifest,recorded=manifestUsed0===undefined?[]:manifestFilesV1(manifestUsed0,roots);
  let manifestUsed=manifestUsed0;
  if(manifestHeld?.from==="fleet")event("manifest-fetch",null,Date.now()-started,0,"fleet");
  let sensitive:readonly string[]=[];
+ let scopedPaths:readonly string[]|undefined;
+ const scopedKey=()=>localKeyV1(keyInput,roots,[...sensitive,"⟨output-root-scope⟩",...(scopedPaths??=scope(Object.keys(named).filter(kind=>Boolean(named[kind])))!)]);
+ const sensitiveTo=(paths:readonly string[])=>[...new Set([...sensitive,...paths])].sort();
  let fixed:Pick<Parameters<typeof unitKeyV1>[0],"toolchain"|"normalized"|"externs">|undefined;
- const inputsOf=(sources:NonNullable<typeof sourcesRead>):Parameters<typeof unitKeyV1>[0]=>({...fixed!,sourceSha256:sources.sha256,environment:[...keyEnvironmentV1(environment,settings.laneRoot),...sourceEnvironmentV1(sources.names,environment,new Set(keyEnvironmentV1(environment,settings.laneRoot).map(row=>row[0])),(name,text)=>sourceValueV1(name,text,settings.laneRoot)),...covered?[["⟨recorded-name⟩",remappedNameV1(remaps,cwd)] as [string,string]]:[]]});
+ const inputsOf=(sources:NonNullable<typeof sourcesRead>):Parameters<typeof unitKeyV1>[0]=>({...fixed!,sourceSha256:sources.sha256,environment:[...keyEnvironmentV1(environment,settings.laneRoot),...sourceEnvironmentV1(sources.names,environment,new Set(keyEnvironmentV1(environment,settings.laneRoot).map(row=>row[0])),(name,text)=>sourceValueV1(name,text,settings.laneRoot)),...covered?[["⟨recorded-name⟩",remappedNameV1(remaps,cwd)] as [string,string],["⟨output-root-scan⟩",policy.key.outputRootScanVersion] as [string,string]]:[]]});
  try{
   const sourceFile=resolve(cwd,unit.source),sources=await unitSourcesV1(sourceFile,manifestDir,environment.OUT_DIR,path=>digestFileV1(path,settings.stamps),recorded,manifestUsed0?.env??[]);if(sources===null)throw Error("source");
   const sourceSha=sources.sha256;sourcesRead=sources;
@@ -164,9 +163,10 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
   fixed={toolchain:unitToolchainV1({root:settings.root,environment,inner:settings.inner,unit,args},()=>toolchainIdentityV1(settings.root,settings.inner,environment)),normalized:normalizeRustcArgumentsV1(args,digests,settings.laneRoot),externs:[...unit.externs.map(row=>({name:row.flags+row.name,sha256:row.path===""?"builtin":digests.get(row.path)!})),...natives??[]]};keyInput=inputsOf(sources);key=localKeyV1(keyInput,roots,sensitive);{const metadata=slotMetadataV1(keyInput,roots,basicsEarly?.slotParts);argv=withCanonicalMetadataV1(argv,metadata);args=withCanonicalMetadataV1(args,metadata);}parts=unitKeyPartsV1(keyInput);keyedNames=new Set([...keyInput.environment.map(row=>row[0]),...sources.names]);
  }catch(error){const outcome=await compile(false);const unreadable=/^extern /u.test(String((error as Error)?.message));event("bypass",null,Date.now()-started,0,"unreadable-input"+(unreadable?": "+(error as Error).message:""));if(environment.SEMIO_REMOTE_CACHE_ENDPOINT)countSkipV1(workspaceOf,unreadable?"unreadable-extern":"unreadable-source");return outcome.status;}
  const producer=interfaceEligibilityV1(unit,args)===undefined,crateHashOf=(path:string):string|undefined=>currentHashV1(path,file=>digestFileV1(file,settings.stamps),settings.inner,environment);
+ let outputSensitive:readonly string[]=sensitive,restoredKinds:readonly string[]|undefined,verifiedOutputs=true;
  const settle=(outputs:readonly string[],entry:Parameters<typeof settleUnitInterfaceV1>[0]["entry"]):void=>{
   if(!ifaceKeyed&&!producer)return;
-  try{settleUnitInterfaceV1({outputs,entry,producer,identityOf:digest=>sha256V1(JSON.stringify(["iface",portableKeyV1({...keyInput,sourceSha256:"iface:"+digest},roots),sensitive,entry.environment.map(row=>[row.name,row.value===null?null:portableTextV1(row.value,roots)])])),neutralName:path=>portableTextV1(path,roots),readFile:path=>{try{return readFileSync(resolve(cwd,laneRestoreV1(path,settings.laneRoot)));}catch{return null;}},digest:path=>digestFileV1(path,settings.stamps),inner:settings.inner,environment});}catch{}
+  try{settleUnitInterfaceV1({outputs,entry,producer,...covered?{identityScope:[policy.key.outputRootScanVersion,...outputSensitive]}:{},identityOf:digest=>sha256V1(JSON.stringify(["iface",portableKeyV1({...keyInput,sourceSha256:"iface:"+digest},roots),outputSensitive,entry.environment.map(row=>[row.name,row.value===null?null:portableTextV1(row.value,roots)])])),neutralName:path=>portableTextV1(path,roots),readFile:path=>{try{return readFileSync(resolve(cwd,laneRestoreV1(path,settings.laneRoot)));}catch{return null;}},digest:path=>digestFileV1(path,settings.stamps),inner:settings.inner,environment});}catch{}
  };
  const lookup=(outcome:"local-hit"|"fleet-hit"|"miss",remote?:string):void=>{
   const portable=keyInput.normalized.map(argument=>portableTextV1(argument,roots)),named=unitKeyComponentsV1({...keyInput,normalized:portable,environment:keyInput.environment.map(([name,value])=>[name,portableTextV1(value,roots)] as [string,string])},{platform:process.platform+"/"+process.arch,roots:JSON.stringify(keyInput.normalized.filter((argument,index)=>portable[index]!==argument))});
@@ -174,22 +174,29 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
   const slot=unitBasicsV1({root:settings.root,environment,inner:settings.inner,unit,args,cwd})?.slot;
   recordLookupV1(settings.root,{lane:settings.lane,crate,key,...(remote===undefined?{}:{remote}),...(slot===undefined?{}:{slot}),outcome,components:named.components,values:named.values,...environment.SEMIO_UNIT_CACHE_TRACE_KEYS?{trace:{args:portable,environment:keyInput.environment.map(([name,value])=>[name,portableTextV1(value,roots)] as [string,string]),...platform()===undefined?{}:{platform:platform()!}}}:{}});
  };
- const context={cwd,laneRoot:settings.laneRoot,environment,stampDirectory:settings.stamps},outDir=resolve(cwd,unit.outDir),shimming=isBuildScriptUnitV1(unit)&&buildScriptsEnabledV1(environment),facts=brokerOfV1(environment)?admitFactsV1(args,environment,cwd):undefined;
- const shim=(outputs:readonly string[]):void=>{if(!shimming)return;const artifact=outputs.find(path=>!path.endsWith(".d")&&!path.endsWith(".rmeta"));if(artifact){const real=installBuildScriptShimV1(artifact);if(real)markBuildScriptIdentityV1(real,portableKeyV1(keyInput,roots),sensitive,digestFileV1(real,settings.stamps),key);}};
- const serve=async():Promise<boolean>=>{
-  const entry=lookupUnitV1(settings.root,key,{...context,expected:neutralExpected});if(!entry)return false;
+ const context={cwd,laneRoot:settings.laneRoot,environment,stampDirectory:settings.stamps},shimming=isBuildScriptUnitV1(unit)&&buildScriptsEnabledV1(environment),facts=compilerBrokerOfV1(environment)?admitFactsV1(args,environment,cwd):undefined;
+ const shim=(outputs:readonly string[]):void=>{if(!shimming)return;const artifact=outputs.find(path=>!path.endsWith(".d")&&!path.endsWith(".rmeta"));if(artifact){const real=installBuildScriptShimV1(artifact);if(real&&verifiedOutputs)markBuildScriptIdentityV1(real,portableKeyV1(keyInput,roots),outputSensitive,digestFileV1(real,settings.stamps),key);}};
+ const serve=async(candidate=key):Promise<boolean>=>{
+  const entry=lookupUnitV1(settings.root,candidate,{...context,expected:neutralExpected});if(!entry)return false;
   const messages=restoreUnitV1(settings.root,entry,{outDir,laneRoot:settings.laneRoot,stampDirectory:settings.stamps,extra,...environment.OUT_DIR?{generated:environment.OUT_DIR}:{}}),absent=missingOutputsV1({directory:outDir,cwd,expected,text:messages.stderr+messages.stdout});
   if(absent.length>0){event("incomplete",key,0,0,"restored unit lacks "+absent.join(","));return false;}
   const restoredFiles=entry.outputs.filter(row=>!row.template).map(row=>join(outDir,extraRestoreV1(row.name,extra)));
   if(ifaceKeyed&&!rebaseRestoredUnitV1({outputs:restoredFiles,directories:dependencyDirectoriesV1(args,unit,cwd),digest:path=>digestFileV1(path,settings.stamps),inner:settings.inner,environment})){event("incomplete",key,0,0,"interface: the restored metadata cannot be rebased onto its dependencies");return false;}
   if(!ifaceKeyed){const violation=restoredClosureViolationV1({outputs:restoredFiles,directories:dependencyDirectoriesV1(args,unit,cwd),digest:path=>digestFileV1(path,settings.stamps),inner:settings.inner,environment});if(violation!==undefined){event("incomplete",key,0,0,"closure: "+violation);return false;}}
+  if(candidate!==key){
+   const leak=leakedRootKindsV1(restoredFiles,named),paths=leak?scope(leak.kinds):[];
+   if(paths===undefined)return false;
+   outputSensitive=sensitiveTo(paths);restoredKinds=leak?.kinds??[];key=candidate;
+  }
   settle(restoredFiles,entry);
-  shim(entry.outputs.filter(row=>!row.template).map(row=>join(outDir,extraRestoreV1(row.name,extra))));
-  markExternIdentityV1(entry.outputs.filter(row=>!row.template).map(row=>join(outDir,extraRestoreV1(row.name,extra))),portableKeyV1(keyInput,roots),sensitive,settings.stamps,crateHashOf);
-  markProducerKeyV1(entry.outputs.filter(row=>!row.template).map(row=>join(outDir,extraRestoreV1(row.name,extra))),key,settings.stamps);
-  if(facts){const replayed=await replayCachedUnitV1(environment,facts,key,entry.provenance);if(!replayed)event("broker-unreachable",key,0,0,"replay");else event("broker-replay",key,0);}
+  shim(restoredFiles);
+  markExternIdentityV1(restoredFiles,portableKeyV1(keyInput,roots),outputSensitive,settings.stamps,crateHashOf);
+  markProducerKeyV1(restoredFiles,key,settings.stamps);
+  if(facts&&brokerOfV1(environment)){const replayed=await replayCachedUnitV1(environment,facts,key,entry.provenance);if(!replayed)event("broker-unreachable",key,0,0,"replay");else event("broker-replay",key,0);}
   process.stdout.write(messages.stdout);process.stderr.write(messages.stderr);return true;
  };
+ const serveLocal=async()=>covered&&await serve(scopedKey())||await serve();
+ const forecastKey=()=>facts?localCompilerInputKeyV1(key,facts.package,facts.version,incrementalSession(),rawExterns):undefined;
  const offloadUnitV1=async():Promise<(Outcome&{origin:string})|undefined>=>{
   const mode=offloadModeV1(environment);
   if(mode==="never")return undefined;
@@ -199,7 +206,7 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
   const handlers=(["SIGINT","SIGTERM"] as const).map(name=>{const handler=()=>{received=name==="SIGINT"?130:143;controller.abort();};process.once(name,handler);return[name,handler] as const;});
   try{
    const offload=await import("../../../🏗️build/🌐️remote-execution/🚀️offload/🟦️.ts"),admission=await import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts");
-   const spend=offload.readUnitExpenseV1(settings.root,crate,unit.crateTypes,unit.target),beyondHost=()=>{const learned=[true,false].map(linked=>offload.readUnitPeakV1(settings.root,crate,offload.offloadDeclaredThreadsV1(linked))).filter((value):value is number=>value!==undefined);return admission.unitBeyondHostV1(admission.ADMISSION_POLICY_V1.unitCeiling,{crate,target:unit.target??"host"},learned.length>0?Math.max(...learned):undefined,Math.round(totalmem()/1048576));},gate=await offload.offloadGateV1({mode,door:environment.SEMIO_OFFLOAD_PRESSURE==="door",expensive:()=>spend.expense.expensive,workerFits:waitMilliseconds=>offload.awaitFleetFitV1(environment,{peakMegabytes:spend.peak,signal:controller.signal,waitMilliseconds,pollMilliseconds:offload.OFFLOAD_POLICY_V1.finals.pollMilliseconds}),localSlot:async waitMilliseconds=>{if(settings.slots<1||!unit.source.endsWith(".rs"))return false;if(held!==undefined)return true;try{held=waitMilliseconds>0?await acquireSlotV1(settings.root,settings.slots,{since:started,signal:AbortSignal.any([controller.signal,AbortSignal.timeout(waitMilliseconds)])}):tryAcquireSlotV1(settings.root,settings.slots);}catch{held=undefined;}return held!==undefined;},worth:()=>offload.worthARoundTripV1(settings.root,crate),beyondHost:()=>beyondHost(),slotQueueMilliseconds:()=>offload.slotQueueMillisecondsV1(settings.root,settings.slots),host:async()=>(await offload.sharedUnitAdmissionV1(settings.root,ports.admission)).verdict,broker:async()=>{const wait=facts?await brokerWouldWaitV1(environment,facts):undefined;return wait===undefined?"unknown":wait?"wait":"admit";}});
+   const spend=offload.readUnitExpenseV1(settings.root,crate,unit.crateTypes,unit.target),beyondHost=()=>{const learned=[true,false].map(linked=>offload.readUnitPeakV1(settings.root,crate,offload.offloadDeclaredThreadsV1(linked))).filter((value):value is number=>value!==undefined);return admission.unitBeyondHostV1(admission.ADMISSION_POLICY_V1.unitCeiling,{crate,target:unit.target??"host"},learned.length>0?Math.max(...learned):undefined,Math.round(totalmem()/1048576),admission.localHoldableMegabytesV1(Math.round(totalmem()/1048576)));},gate=await offload.offloadGateV1({mode,fleetRequired:environment[admission.ADMISSION_POLICY_V1.placementEnvironment]==="fleet-only",door:environment.SEMIO_OFFLOAD_PRESSURE==="door",expensive:()=>spend.expense.expensive,workerFits:waitMilliseconds=>offload.awaitFleetFitV1(environment,{peakMegabytes:spend.peak,signal:controller.signal,waitMilliseconds,pollMilliseconds:offload.OFFLOAD_POLICY_V1.finals.pollMilliseconds}),localSlot:async waitMilliseconds=>{if(settings.slots<1||!unit.source.endsWith(".rs"))return false;if(held!==undefined)return true;try{held=waitMilliseconds>0?await acquireSlotV1(settings.root,settings.slots,{since:started,signal:AbortSignal.any([controller.signal,AbortSignal.timeout(waitMilliseconds)])}):tryAcquireSlotV1(settings.root,settings.slots);}catch{held=undefined;}return held!==undefined;},worth:()=>offload.worthARoundTripV1(settings.root,crate),beyondHost:()=>beyondHost(),slotQueueMilliseconds:()=>offload.slotQueueMillisecondsV1(settings.root,settings.slots),host:async()=>(await offload.sharedUnitAdmissionV1(settings.root,ports.admission)).verdict,broker:async()=>{const wait=facts?await brokerWouldWaitV1(environment,facts,forecastKey()):undefined;return wait===undefined?"unknown":wait?"wait":"admit";}});
    if(!gate.offload){offload.declineOffloadV1(settings.root,environment,{crate,key,reason:gate.reason==="local-slot"||gate.reason==="unmeasured"||gate.reason==="final-wait"?gate.reason:"cheap",silent:true});return undefined;}
    const light=settings.lightSlots>0?await acquireLightSlotV1(settings.root,settings.lightSlots,{signal:controller.signal,onWait:waited=>event("slot-wait",null,0,waited)}):undefined;
    const answer=await offload.offloadRustcUnitV1({args,environment,cwd,recorded:recorded.map(row=>row.path),root:settings.root,lane:settings.lane,crate,key,compiler:settings.inner,digest:path=>digestFileV1(path,settings.stamps),signal:controller.signal,queue:gate.queue,...gate.reason==="final-beyond-host"?{beyondHost:{report:text=>{process.stderr.write(`[unit-cache] ${text}\n`);}}}:{}}).finally(()=>light?.release());
@@ -211,10 +218,17 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
  };
  const declareManifest=()=>manifestDeclarationV1({toolchain:keyInput.toolchain,entry:resolve(cwd,unit.source),entrySha256:digestFileV1(resolve(cwd,unit.source),settings.stamps),cwd,workspace:workspaceOf});
  const shareHeldManifest=async():Promise<void>=>{if(manifestId!==undefined&&manifestHeld?.from==="local"&&manifestHeld.state?.shared===false&&manifestClient?.settings.upload===true&&manifestClient.usable()){const shared=await shareManifestV1(settings.root,manifestId,manifestHeld.state.manifest,declareManifest(),manifestClient);event("manifest-publish",null,0,0,shared+": "+manifestHeld.state.manifest.files.length+" files, "+manifestHeld.state.manifest.env.length+" names");}};
- try{if(await serve()){event("hit",key,Date.now()-started);await shareHeldManifest();lookup("local-hit");countUnitV1(workspaceOf,"localHit");if(environment.SEMIO_REMOTE_CACHE_ENDPOINT&&environment.SEMIO_REMOTE_CACHE_ACCESS==="read-write"){const basics=unitBasicsV1({root:settings.root,environment,inner:settings.inner,unit,args,cwd}),shared=basics?prepareFleetV1({root:settings.root,environment,basics,unit,args,cwd,laneRoot:settings.laneRoot,localKey:key,keyInput,toolchain:keyInput.toolchain,crate,sensitive,expected:neutralExpected,tools}):undefined;if(shared&&newestEntryV1(settings.root,key)?.session!==true)offerFleetUnitV1(shared);}return 0;}}catch{}
- const basics=unitBasicsV1({root:settings.root,environment,inner:settings.inner,unit,args,cwd}),prepare=(paths:readonly string[])=>basics?prepareFleetV1({root:settings.root,environment,basics,unit,args,cwd,laneRoot:settings.laneRoot,localKey:key,keyInput,toolchain:keyInput.toolchain,crate,sensitive:paths,expected:neutralExpected,tools}):undefined;
- let fleet=prepare(sensitive),rooted:readonly string[]|undefined;shared=fleet!==undefined;let neutral=fleet;const named={cwd,manifest:manifestDir,workspace:workspaceOf,"cargo-home":environment.CARGO_HOME,"rustup-home":environment.RUSTUP_HOME,lane:settings.laneRoot};
- const adopt=async():Promise<FleetUnitV1|undefined>=>{if(rooted!==undefined||neutral===undefined||sensitive.length>0)return undefined;const kinds=await rootHintV1(neutral),paths=kinds&&rootPathsV1(kinds,named),alt=paths?prepare(paths):undefined;if(alt&&kinds){rooted=kinds;fleet=alt;return alt;}return undefined;};
+ const basics=unitBasicsV1({root:settings.root,environment,inner:settings.inner,unit,args,cwd}),prepare=(paths:readonly string[],localKey=key)=>basics?prepareFleetV1({root:settings.root,environment,basics,unit,args,cwd,laneRoot:settings.laneRoot,localKey,keyInput,toolchain:keyInput.toolchain,crate,sensitive:paths,expected:neutralExpected,tools}):undefined;
+ const offer=()=>{
+  if(!environment.SEMIO_REMOTE_CACHE_ENDPOINT||environment.SEMIO_REMOTE_CACHE_ACCESS!=="read-write"||newestEntryV1(settings.root,key)?.session===true)return;
+  if(restoredKinds===undefined){const unit=prepare(sensitive);if(unit)offerFleetUnitV1(unit);return;}
+  if(restoredKinds.length===0||!restoredKinds.every(kind=>(ROOT_KINDS_V1 as readonly string[]).includes(kind)))return;
+  const unit=prepare(outputSensitive),base=prepare(sensitive);
+  if(unit&&base)offerFleetUnitV1(unit,{neutralKey:base.key,kinds:restoredKinds});
+ };
+ try{if(await serveLocal()){event("hit",key,Date.now()-started);await shareHeldManifest();lookup("local-hit");countUnitV1(workspaceOf,"localHit");offer();return 0;}}catch{}
+ let fleet=prepare(sensitive),rooted:readonly string[]|undefined;shared=fleet!==undefined;let neutral=fleet;
+ const adopt=async():Promise<FleetUnitV1|undefined>=>{if(!covered||rooted!==undefined||neutral===undefined)return undefined;const kinds=await rootHintV1(neutral),paths=kinds&&scope(kinds),alt=paths?prepare(sensitiveTo(paths),scopedKey()):undefined;if(alt&&kinds){rooted=kinds;fleet=alt;return alt;}return undefined;};
  if(!fleet){const why=fleetUnidentifiedReasonV1(settings.root,environment);if(why!==undefined){event("remote-skip",key,0,0,why);countSkipV1(workspaceOf,why);countFallbackV1(settings.root,why);}}
  const breaker=fleet?.client.state()??"ok";if(fleet&&breaker!=="ok"){event("remote-skip",key,0,0,"breaker: "+breaker+", the upload waits in the spool");countFallbackV1(settings.root,"breaker-"+breaker);}
 
@@ -245,7 +259,7 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
  };
  await shareHeldManifest();
  if(await refreshManifest()){
-  try{if(await serve()){event("hit",key,Date.now()-started,0,"manifest-refreshed");lookup("local-hit");countUnitV1(workspaceOf,"localHit");return 0;}}catch{}
+  try{if(await serveLocal()){event("hit",key,Date.now()-started,0,"manifest-refreshed");lookup("local-hit");countUnitV1(workspaceOf,"localHit");return 0;}}catch{}
   fleet=prepare(sensitive);neutral=fleet;shared=fleet!==undefined;
  }
  let claim:ClaimV1|undefined;
@@ -253,53 +267,61 @@ export async function wrapRustcV1(argv:readonly string[],environment:Environment
  const waited=claim?.waitedMs??0;
  if(waited>50||!claim)event(claim?"lock-wait":"lock-timeout",key,0,waited);
  try{
-  if(claim){try{if(await serve()){event("hit",key,Date.now()-started,waited,"after-wait");lookup("local-hit");countUnitV1(workspaceOf,"localHit");return 0;}}catch{}}
+  if(claim){try{if(await serveLocal()){event("hit",key,Date.now()-started,waited,"after-wait");lookup("local-hit");countUnitV1(workspaceOf,"localHit");return 0;}}catch{}}
   let explaining:ReturnType<typeof explainFleetMissV1>|undefined;
   if(fleet&&breaker==="ok"){
    await adopt();
    const decision=await obtainFleetUnitV1(fleet!,(kind,milliseconds,waitedMs,reason)=>event(kind,key,milliseconds,waitedMs,reason),{},adopt);
-   if(decision.outcome==="hit"){try{if(await serve()){lookup("fleet-hit",fleet.key);countUnitV1(workspaceOf,"remoteHit");await awaitFleetSettlesV1();return 0;}}catch{}countFallbackV1(settings.root,"hit-unservable");}
+   if(decision.outcome==="hit"){try{if(await serve(fleet!.localKey)){lookup("fleet-hit",fleet!.key);countUnitV1(workspaceOf,"remoteHit");await awaitFleetSettlesV1();return 0;}}catch{}countFallbackV1(settings.root,"hit-unservable");}
    else{hold=decision.hold;if(decision.reason!=="granted")countFallbackV1(settings.root,decision.reason);if(fleet.keyComponents!==undefined)explaining=explainFleetMissV1(fleet);}
   }
   const compiled=Date.now();let remote=await offloadUnitV1();
   if(remote&&remote.status===0){const absent=missingOutputsV1({directory:outDir,cwd,expected,text:remote.stderr+remote.stdout});if(absent.length>0){event("incomplete",key,Date.now()-compiled,0,"offload "+remote.origin+" returned a unit without "+absent.join(","));remote=undefined;}}
-  const outcome=remote??await compile(true);
+  const localInputKey=remote?undefined:forecastKey();
+  const outcome=remote??await compile(true,localInputKey);
   if(remote){process.stdout.write(remote.stdout);process.stderr.write(remote.stderr);}
   if(outcome.status!==0){await hold?.release();event("failed",key,Date.now()-compiled,waited);return outcome.status;}
   if(explaining!==undefined){const nearest=await Promise.race([explaining,new Promise<undefined>(done=>{const wait=setTimeout(()=>done(undefined),1500);wait.unref?.();})]);if(nearest!==undefined)process.stderr.write((["en","de"] as const).map(language=>laneMessageV1("missNearest",{crate,key:nearest.key.slice(0,12),differs:nearest.differs.length===0?"-":nearest.differs.join(",")},language)).join(" / ")+"\n");}
-  event("miss",key,Date.now()-compiled,waited,(unit.incremental===undefined?parts:parts+" incremental:lane")+(remote?" offloaded:"+remote.origin:""),remote?undefined:outcome.peakRssBytes);if(!remote&&outcome.peakRssBytes)void reportUnitCeilingV1(crate,unit.target,unit.crateTypes,environment,outcome.peakRssBytes);countUnitV1(workspaceOf,"miss");lookup("miss",fleet?.key);
+  if(!remote&&outcome.peakRssBytes)void reportUnitCeilingV1(crate,unit.target,unit.crateTypes,environment,outcome.peakRssBytes);countUnitV1(workspaceOf,"miss");
   const outputs=[...new Set([...announcedPathsV1(outcome.stderr),...announcedPathsV1(outcome.stdout)])].map(path=>resolve(cwd,path)).filter(path=>existsSync(path)),lacking=uncoveredOutputsV1(outputs.map(path=>basename(path)),expected);
   const published=Date.now();
   try{
    const gap=outputs.length===0||lacking.length>0?[]:await completeInputsV1(outputs);
-   markExternIdentityV1(outputs,portableKeyV1(keyInput,roots),sensitive,settings.stamps,crateHashOf);
-   markProducerKeyV1(outputs,key,settings.stamps);
+   const leak=covered?leakedRootKindsV1(outputs,named):undefined,paths=scope(leak?.kinds??[]);
+   verifiedOutputs=paths!==undefined;
+   if(leak&&paths!==undefined){outputSensitive=sensitiveTo(paths);key=scopedKey();}
+   event("miss",key,Date.now()-compiled,waited,(unit.incremental===undefined?parts:parts+" incremental:lane")+(remote?" offloaded:"+remote.origin:""),remote?undefined:outcome.peakRssBytes);lookup("miss",fleet?.key);
+   if(paths!==undefined){
+    markExternIdentityV1(outputs,portableKeyV1(keyInput,roots),outputSensitive,settings.stamps,crateHashOf);
+    markProducerKeyV1(outputs,key,settings.stamps);
+   }
    let tables=true;
    for(const path of outputs.filter(path=>path.endsWith(".rmeta"))){const written=writeDependenciesV1(path,settings.inner,environment);if(written!==undefined)outputs.push(written);else if(ifaceKeyed)tables=false;}
-   const incrementalBuild=unit.incremental!==undefined&&remote===undefined&&!(shared&&!settings.focus.has(crate));
-   const provenance=facts&&!remote?await recallProvenanceV1(environment,facts):undefined;
+   const incrementalBuild=remote===undefined&&incrementalSession();
+   const verifiedInput=verifiedOutputs&&outputs.length>0&&lacking.length===0&&gap.length===0&&localInputKey===forecastKey()?localInputKey:undefined;
+   const provenance=facts&&!remote?await recallProvenanceV1(environment,facts,verifiedInput):undefined;
    if(!remote){const took=ranMs,measure=provenance===undefined?undefined:{wallMs:provenance.wallMs,userMs:provenance.userMs,sysMs:provenance.sysMs};void import("../../../🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts").then(module=>{module.writeUnitCostV1(settings.root,crate,took,measure);}).catch(()=>undefined);}
    if(provenance!==undefined&&provenance.peakRssBytes>0)void import("../../../🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts").then(module=>{module.writeUnitPeakV1(settings.root,crate,provenance.peakRssBytes/1048576,1);}).catch(()=>undefined);
    const publish=(spill=false)=>publishUnitV1(settings.root,{key,crate,cwd,outDir,...environment.OUT_DIR?{generated:environment.OUT_DIR}:{},laneRoot:settings.laneRoot,outputs,expected,stdout:outcome.stdout,stderr:outcome.stderr,stampDirectory:settings.stamps,extra,provenance:provenance??null,retention:{workspace:workspaceOf,externs:[...keyInput.externs.map(row=>row.sha256),...rawExterns],units:[...producers,...[buildRunKeyV1(environment.OUT_DIR)].filter((name):name is string=>name!==undefined)],toolchain:keyInput.toolchain},...(basics?{slot:basics.slot}:{}),...(incrementalBuild?{session:true}:{}),...(spill?{spill:true}:{})});
    let entry:ReturnType<typeof publishUnitV1>;
-   if(outputs.length===0||lacking.length>0||!tables)entry=undefined;else try{entry=publish();}catch{await new Promise(done=>setTimeout(done,250));try{entry=publish();}catch(error){if(!fleet)throw error;entry=publish(true);if(entry)event("publish",key,Date.now()-published,0,"spill: the host store refused the objects, the fleet upload reads them from the spill folder");}}
+   if(paths===undefined||outputs.length===0||lacking.length>0||!tables)entry=undefined;else try{entry=publish();}catch{await new Promise(done=>setTimeout(done,250));try{entry=publish();}catch(error){if(!fleet)throw error;entry=publish(true);if(entry)event("publish",key,Date.now()-published,0,"spill: the host store refused the objects, the fleet upload reads them from the spill folder");}}
    if(entry)event("publish",key,Date.now()-published,0);
-   else{const why=outputs.length===0?"no-outputs":lacking.length>0?"incomplete: "+lacking.join(","):!tables?"interface: the compiler did not list the crate hashes":outputs.some(path=>path.endsWith(".d"))?"refused":"no-dep-info";event("publish-skip",key,Date.now()-compiled,0,why);if(fleet)countSkipV1(workspaceOf,"publish-"+skipNameV1(why));}
+   else{const why=paths===undefined?"unreadable-outputs":outputs.length===0?"no-outputs":lacking.length>0?"incomplete: "+lacking.join(","):!tables?"interface: the compiler did not list the crate hashes":outputs.some(path=>path.endsWith(".d"))?"refused":"no-dep-info";event("publish-skip",key,Date.now()-compiled,0,why);if(fleet)countSkipV1(workspaceOf,"publish-"+skipNameV1(why));}
    if(entry)settle(outputs,entry);
-   const leak=fleet&&entry&&sensitive.length===0&&gap.length===0?leakedRootKindsV1(outputs,named):undefined,kinds=leak?.kinds.filter(kind=>(ROOT_KINDS_V1 as readonly string[]).includes(kind)),shareable=leak!==undefined&&kinds!==undefined&&kinds.length===leak.kinds.length&&rootPathsV1(kinds,named)!==undefined&&(rooted===undefined||kinds.every(kind=>rooted!.includes(kind)));
+   const kinds=leak?.kinds,shareable=kinds!==undefined&&paths!==undefined&&kinds.every(kind=>(ROOT_KINDS_V1 as readonly string[]).includes(kind)&&(rooted===undefined||rooted.includes(kind)));
    if(fleet&&entry&&incrementalBuild){event("remote-skip",key,0,0,"incremental: the unit was compiled with an incremental session, whose bytes differ on every run");countSkipV1(workspaceOf,"incremental");await hold?.release();}
    else if(fleet&&entry&&gap.length>0){event("remote-skip",key,0,0,"key-incomplete: "+gap.slice(0,4).join(", ")+(gap.length>4?" and "+(gap.length-4)+" more":""));countSkipV1(workspaceOf,"key-incomplete");await hold?.release();}
-   else if(fleet&&entry&&(leak===undefined||(shareable&&rooted!==undefined))){if(!await shareFleetUnitAwaitingV1(fleet,{claimed:hold,costMs:Date.now()-compiled})){countSkipV1(workspaceOf,unsharedReasonV1(fleet));await hold?.release();}}
+   else if(fleet&&entry&&(rooted===undefined?leak===undefined:shareable)){if(!await shareFleetUnitAwaitingV1(fleet,{claimed:hold,costMs:Date.now()-compiled})){countSkipV1(workspaceOf,unsharedReasonV1(fleet));await hold?.release();}}
    else if(fleet&&entry&&shareable&&neutral&&!neutral.client.usable()){
-    const paths0=rootPathsV1(kinds!,named),alt0=paths0?prepare(paths0):undefined;
+    const alt0=prepare(outputSensitive);
     await hold?.release();
     if(alt0&&shareFleetUnitV1(alt0,{claimed:undefined,costMs:Date.now()-compiled,hint:{neutralKey:neutral.key,kinds:kinds!}}))countFallbackV1(settings.root,"root-keyed-deferred");
     else{countSkipV1(workspaceOf,"root-key-failed");countFallbackV1(settings.root,"root-key-failed");}
    }
    else if(fleet&&entry&&shareable&&neutral){
-    const paths0=rootPathsV1(kinds!,named),alt0=paths0?prepare(paths0):undefined,held0=alt0?await holdFleetKeyV1(alt0):undefined,effective=alt0?await publishRootHintV1(neutral,kinds!):undefined;
+    const alt0=prepare(outputSensitive),held0=alt0?await holdFleetKeyV1(alt0):undefined,effective=alt0?await publishRootHintV1(neutral,kinds!):undefined;
     let alt=effective===undefined?undefined:alt0,held=held0;
-    if(effective!==undefined&&alt0!==undefined&&(effective.length!==kinds!.length||!kinds!.every(kind=>(effective as readonly string[]).includes(kind)))){await held0?.release();const paths=kinds!.every(kind=>(effective as readonly string[]).includes(kind))?rootPathsV1(effective,named):undefined;alt=paths?prepare(paths):undefined;held=alt?await holdFleetKeyV1(alt):undefined;}
+    if(effective!==undefined&&alt0!==undefined&&(effective.length!==kinds!.length||!kinds!.every(kind=>(effective as readonly string[]).includes(kind)))){await held0?.release();const effectivePaths=kinds!.every(kind=>(effective as readonly string[]).includes(kind))?scope(effective):undefined;alt=effectivePaths?prepare(sensitiveTo(effectivePaths)):undefined;held=alt?await holdFleetKeyV1(alt):undefined;}
     await hold?.release();
     if(alt&&shareFleetUnitV1(alt,{claimed:held,costMs:Date.now()-compiled}))countFallbackV1(settings.root,"root-keyed");
     else{await held?.release();countSkipV1(workspaceOf,"root-key-failed");countFallbackV1(settings.root,"root-key-failed");}

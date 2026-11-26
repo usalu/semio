@@ -11,23 +11,24 @@ type Insert=RetainedOrderedMapInsertCursor<String,Localized>;
 pub fn insert_advance<V:RetireOwned+Sync>(insertion:&mut RetainedOrderedMapInsertCursor<String,V>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
     let grant=cx.retained_grant();
     let insert=RetainedOrderedMapInsertGrant{retirement:grant,comparison:BoundedOrdGrant{maximum_items:1,maximum_bytes:1},maximum_moved_items:grant.maximum_items,maximum_moved_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes};
-    let Some((step,_))=cx.with_original_effect(grant,|_,effect|insertion.advance_turn(grant.maximum_copy_bytes,insert,effect)).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?else{return Ok(())};
-    settle_insert(cx,step)
+    let Some((step, work))=cx.with_original_source_effect(grant,|_,effect|insertion.advance_turn(grant.maximum_copy_bytes,insert,effect)).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?else{return Ok(())};
+    settle_insert(cx, step, work)
 }
 /// 📤️ Donates the finished dictionary of one original insertion cursor under the calling turn's effect.
 pub fn insert_take<V:RetireOwned+Sync>(insertion:&mut RetainedOrderedMapInsertCursor<String,V>,output:&mut Option<RetainedOrderedMap<String,V>>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
-    let Some((step,_))=cx.with_original_effect(cx.retained_grant(),|_,effect|insertion.take_turn(output,effect)).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?else{return Ok(())};
-    settle_insert(cx,step)
+    let Some((step, work))=cx.with_original_source_effect(cx.retained_grant(),|_,effect|insertion.take_turn(output,effect)).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?else{return Ok(())};
+    settle_insert(cx, step, work)
 }
 /// ♻️ Closes one original insertion cursor, starting the close first, under the calling turn's effect.
 pub fn insert_close<V:RetireOwned+Sync>(insertion:&mut RetainedOrderedMapInsertCursor<String,V>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
     let grant=cx.retained_grant();
-    let Some((step,_))=cx.with_original_effect(grant,|_,effect|insertion.close_turn(grant.maximum_copy_bytes,effect)).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?else{return Ok(())};
-    settle_insert(cx,step)
+    let Some((step, work))=cx.with_original_source_effect(grant,|_,effect|insertion.close_turn(grant.maximum_copy_bytes,effect)).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?else{return Ok(())};
+    settle_insert(cx, step, work)
 }
-fn settle_insert(cx:&mut StepContext<'_>,step:Result<Option<RetainedCloneStep>,ValueError>)->Result<(),OriginalTurnFailure>{
+fn settle_insert(cx: &mut StepContext<'_>, step: Result<Option<RetainedCloneStep>, ValueError>, work: u128) -> Result<(), OriginalTurnFailure> {
+    cx.consume_work(work);
     let Some(step)=step.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?else{return Ok(())};
-    let receipt=step.progress();let result=cx.consume_retained(receipt);cx.consume_fuel(1);result.map_err(|error|error.with_retained_progress(receipt).into())
+    let receipt=step.progress();cx.consume_retained(receipt).map_err(|error|error.with_retained_progress(receipt).into())
 }
 
 #[derive(Clone,Copy,PartialEq,Eq)]

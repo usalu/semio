@@ -63,7 +63,7 @@ fn a_new_curtain_wall_type_is_created_in_the_first_material_and_a_missing_materi
 fn with_wall() -> ModelSnapshot {
     let base = snapshot();
     let base = applied(&base, &create_curtain_wall_type(&base, "cwt", "", "Facade").expect("a type"));
-    applied(&base, &ModelMutation::CreateCurtainWall(semio_s_artifact_bim_model_mut_any_172::standards::v1::subsets::any::schema::mutations::create_curtain_wall::CreateCurtainWall {
+    applied(&base, &ModelMutation::CreateCurtainWall(semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::leaves::create_curtain_wall::CreateCurtainWall {
         id: "cw".into(),
         curtain_wall: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CurtainWall { storey: "st".into(), curtain_wall_type: "cwt".into(), axis: Axis::Line { start: Point2 { x: 0.0, y: 0.0 }, end: Point2 { x: 6.0, y: 0.0 } }, base_offset: 0.0, top: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint::StoreyTop { offset: 0.0 }, u_grid: None, v_grid: None, phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, name: "Facade".into() },
     }))

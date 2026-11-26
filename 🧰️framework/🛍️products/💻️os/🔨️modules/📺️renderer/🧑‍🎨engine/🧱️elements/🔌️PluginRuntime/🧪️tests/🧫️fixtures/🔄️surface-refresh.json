@@ -1,4 +1,5 @@
 {
+  "clipboard": { "fragment": { "schema": "drawing", "label": "Path" }, "copies": 1 },
   "acknowledgement": { "surfaces": ["main", "catalogue"], "maxUnacknowledged": 1 },
   "quiescent": { "instance": 7, "requested": ["main", "catalogue"], "published": ["main"], "missing": ["7:catalogue"] },
   "cases": [

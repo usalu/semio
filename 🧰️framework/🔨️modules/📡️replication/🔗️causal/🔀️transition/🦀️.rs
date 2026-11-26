@@ -540,8 +540,9 @@ pub struct FoldAlternative {
 /// (`refused`, transition ids in fold order), the current checkpoint and alternative, every
 /// change/checkpoint/alternative fact, and the effective supersession of every superseded operation
 /// (every fold site folds an operation's effective input, never its original, once it is listed here).
-/// `alternative` is `None` while the folded head is the trunk. The trunk ([`trunk_alternative_id`]) is listed
-/// first in `alternatives`, with an empty name the UI localizes, as soon as a commit made on it gives it a chain.
+/// `alternative` is `None` while the folded head is the trunk. `alternatives` lists the named alternatives only; the
+/// implicit trunk ([`trunk_alternative_id`]) is never a row, its checkpoint chain is `trunk_checkpoint_ids` and
+/// [`HistoryFold::lines`] walks the trunk chain (when it has one) followed by the named alternatives.
 /// Which head was folded is the caller's [`ViewerHead`]; the event log does not store it.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct HistoryFold {
@@ -554,7 +555,15 @@ pub struct HistoryFold {
     pub changes: Vec<FoldChange>,
     pub checkpoints: Vec<FoldCheckpoint>,
     pub alternatives: Vec<FoldAlternative>,
+    pub trunk_checkpoint_ids: Vec<String>,
     pub supersessions: HistoryFoldIndex<MutationId, EffectiveSupersession>,
+}
+
+impl HistoryFold {
+    /// 🌳️ Every line with a checkpoint chain as `(id, checkpoint ids)`: the trunk first, once a commit gave it a chain, then each named alternative.
+    pub fn lines(&self) -> impl Iterator<Item = (&str, &[String])> {
+        (!self.trunk_checkpoint_ids.is_empty()).then_some((self.trunk.as_str(), self.trunk_checkpoint_ids.as_slice())).into_iter().chain(self.alternatives.iter().map(|alternative| (alternative.id.as_str(), alternative.checkpoint_ids.as_slice())))
+    }
 }
 
 fn fold_error(detail: impl Into<String>) -> semio_framework_replication_error::ProtocolError {
@@ -606,7 +615,7 @@ pub fn fold_history_for(document_id: &ArtifactId, edits: &[FoldEdit], transition
 
 mod owned_retirement {
     use super::*;
-    semio_framework_value::artifact_retire_struct!(HistoryFold { applied, redo, refused, checkpoint, alternative, trunk, changes, checkpoints, alternatives, supersessions });
+    semio_framework_value::artifact_retire_struct!(HistoryFold { applied, redo, refused, checkpoint, alternative, trunk, changes, checkpoints, alternatives, trunk_checkpoint_ids, supersessions });
     semio_framework_value::artifact_retire_struct!(EffectiveSupersession { transition_id, actor, timestamp, scope, replacement });
     semio_framework_value::artifact_retire_struct!(FoldChange { id, edit_ids, description, saved_at });
     semio_framework_value::artifact_retire_struct!(FoldCheckpoint { id, change_ids, parent_id, authors, message, timestamp, pins });

@@ -20,7 +20,8 @@ async function fleet(){
  const store=directory("store"),cache=directory("cache"),root=directory("client"),bare=directory("bare");machine(root,store,"g1-m01");
  const server:RemoteCacheServerV1=await startRemoteCacheServerV1({directory:cache,host:"127.0.0.1",port:0,maximumBytes:2**26,maximumEntryBytes:2**24,maximumAgeDays:30,defaultInstance:"semio",tokens:{},validation:"off",fleet:{storeRoot:store,group:"g1",networks:["10.77.0.0/16"],registryTtlMilliseconds:200}});
  stoppers.push(()=>server.stop());
- await publishFleetCacheFactsV1({admin:{role:"admin",originId:"g1-server"},storeRoot:store,directory:cache,group:"g1",instance:"semio",endpoints:[server.url],port:6090,host:"h1",now:Date.now()});
+ await publishFleetCacheFactsV1({admin:{role:"admin",originId:"g1-server"},storeRoot:store,directory:cache,group:"g1",instance:"semio",port:Number(new URL(server.url).port),now:Date.now()});
+ mkdirSync(join(root,".cache","f"),{recursive:true});writeFileSync(join(root,".cache","f","last-good.json"),JSON.stringify({"g1-server/cache":server.url}));
  await refreshFleetCacheFactsV1({root,force:true,probeMilliseconds:300});
  const environment={SEMIO_WORKSPACE_ROOT:root},resolved=resolveRemoteCacheV1(environment,{root})!;
  return {server,root,bare,environment,resolved,signed:remoteCacheFetchV1({...environment,...resolved.environment},{root})};

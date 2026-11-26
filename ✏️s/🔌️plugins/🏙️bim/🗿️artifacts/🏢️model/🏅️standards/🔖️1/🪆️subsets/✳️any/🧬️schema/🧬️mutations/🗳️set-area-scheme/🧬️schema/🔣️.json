@@ -6,11 +6,7 @@
   "additionalProperties": false,
   "required": [
     "mutation",
-    "id",
-    "name",
-    "measure",
-    "usages",
-    "zones"
+    "id"
   ],
   "properties": {
     "mutation": {

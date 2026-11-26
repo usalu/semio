@@ -53,7 +53,7 @@ use semio_framework_job::InteractiveJob as _;
 use semio_plugin_job::original_emission::OriginalEmissionInput;
 use semio_plugin_instance_app::VcsArtifactApp;
 use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::TestMembers;
-use semio_plugin_testing_laws::artifact_app_laws::{self, OriginalFixtureScope};
+use semio_plugin_testing_laws::artifact_app_laws::OriginalFixtureScope;
 
 async fn mount_owned_emit(app: &mut VcsArtifactApp<TestApp, TestMembers>, verb: &str, emit: Emit<TestMutation, TestConfigMutation>, receipt: &mut Option<semio_framework::kernel::InvocationResult>, scope: &mut OriginalFixtureScope) -> Result<(), semio_framework_job::OriginalTurnFailure> {
     artifact_app_laws::ensure_fixture_cancellation_issuer(app, scope.cx())?;

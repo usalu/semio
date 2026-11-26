@@ -25,12 +25,19 @@ pub(super) fn ui_common_label(locale: Option<semio_ui_locale::Locale>, pick: imp
 }
 
 /// 🧭️ What the host decides about presentation and the retained node must not: the resolved UI driver (captions or icons only, drag affordance) and the language its own default strings speak. `locale` is `None` until the host names one — there is no default language, so a default string paints empty rather than in a guessed language.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct RetainedPaintPresentation {
+    pub owner: Level,
     pub driver: UiDriverChrome,
     pub locale: Option<semio_ui_locale::Locale>,
     /// 🔑️ The handle of the window being painted ([`semio_ui_wgpu_paint_overlay::media_window_handle`]), so a host overlay is found by (window, node).
     pub window: u64,
+}
+
+impl Default for RetainedPaintPresentation {
+    fn default() -> Self {
+        Self { owner: Level::Window, driver: UiDriverChrome::default(), locale: None, window: 0 }
+    }
 }
 
 #[allow(clippy::too_many_arguments, reason = "one retained paint context plus the canonical presentation")]
@@ -106,7 +113,7 @@ pub fn paint_node_step_with_driver(
             UiNode::Section(section) => paint_section_node_step(section, tree, id, atlas, draw, cursor, theme, bounds, presence),
             UiNode::CardStack(_) => {
                 let pointer = hover_pointer.filter(|_| node.flags.contains(NodeFlags::HOVERED));
-                paint_card_stack_node_step(tree, id, atlas, draw, cursor, theme, bounds, presence, pointer)
+                paint_card_stack_node_step(tree, id, atlas, draw, cursor, theme, bounds, presence, pointer, presentation.owner)
             }
             UiNode::OverviewCard(_) | UiNode::Table(_) => retained_presence_step(draw, bounds, theme, presence),
             UiNode::Group(_) if semio_ui_wgpu_mounted_layout::owning_tree_spec(tree, id).is_some() => retained_presence_step(draw, bounds, theme, presence),

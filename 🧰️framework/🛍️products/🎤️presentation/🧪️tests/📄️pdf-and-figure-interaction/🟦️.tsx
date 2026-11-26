@@ -5,6 +5,7 @@ import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { act } from "@semio-tech/ui-react/test";
 import { SLIDE_INTERACTIVE_ENLARGE_FRAME, mountPresentation, pdfScrollCoverScale, resetPdfCanvasPort, setPdfCanvasPort, unmountPresentation } from "@semio-tech/presentation-react";
 import { globalsCssSource } from "../🧰️presentation-deck-helpers/🟦️.tsx";
+import { applyPresentationPrintSurfaces } from "../../🎯️targets/⚛️react/🔨️modules/🎚️deck-chrome/🟦️.ts";
 import { mockClientRect, pointerClick, testPdfCanvasPort, waitForPdfCanvas } from "../🧱️interaction-dom-kit/🟦️.ts";
 
 describe("presentation interaction dom", () => {
@@ -20,6 +21,15 @@ describe("presentation interaction dom", () => {
     unmountPresentation();
     resetPdfCanvasPort();
     container.remove();
+  });
+
+  it("assigns distinct print levels to the sheet, the slide and its number chip", () => {
+    container.innerHTML = '<div class="pdf-page"><div class="slide-background"></div><section>Slide</section><div class="slide-number-pdf">1</div></div>';
+    applyPresentationPrintSurfaces(container);
+    expect(container.querySelector(".pdf-page")?.getAttribute("data-level")).toBe("base");
+    expect(container.querySelector(".slide-background")?.getAttribute("data-level")).toBe("window");
+    expect(container.querySelector(".slide-number-pdf")?.getAttribute("data-level")).toBe("pane");
+    expect(container.querySelector(".slide-number-pdf.ui-glass[data-glass-chip]")?.textContent).toBe("1");
   });
 
   it("scales pdf pages to cover the disposition frame", async () => {

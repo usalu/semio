@@ -48,6 +48,36 @@
       "expected": "C:\\workspace\\semio\\🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🌉️mcp\\📦️packages\\🦀️rust\\dist\\build\\semio-os-mcp.exe"
     }
   ],
+  "builtPathCases": [
+    {
+      "platform": "linux",
+      "repoRoot": "/workspace/semio",
+      "environment": { "CARGO_TARGET_DIR": "scratch/cargo", "CARGO_BUILD_TARGET_DIR": "ignored" },
+      "profile": "debug",
+      "expected": "/workspace/semio/scratch/cargo/debug/semio-os-mcp"
+    },
+    {
+      "platform": "darwin",
+      "repoRoot": "/workspace/semio",
+      "environment": { "CARGO_TARGET_DIR": "/builds/cargo" },
+      "profile": "release",
+      "expected": "/builds/cargo/release/semio-os-mcp"
+    },
+    {
+      "platform": "win32",
+      "repoRoot": "C:\\workspace\\semio",
+      "environment": { "CARGO_TARGET_DIR": "scratch\\cargo" },
+      "profile": "debug",
+      "expected": "C:\\workspace\\semio\\scratch\\cargo\\debug\\semio-os-mcp.exe"
+    },
+    {
+      "platform": "win32",
+      "repoRoot": "C:\\workspace\\semio",
+      "environment": { "CARGO_BUILD_TARGET_DIR": "D:\\builds\\cargo" },
+      "profile": "release",
+      "expected": "D:\\builds\\cargo\\release\\semio-os-mcp.exe"
+    }
+  ],
   "artifactRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build",
   "releaseArtifactRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build-release",
   "sourcesFile": "semio-os-mcp.sources.json",

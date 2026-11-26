@@ -34,10 +34,16 @@ fn counts(check: &CheckResult) -> bool {
 
 /// 🌡️ The governing check filed under each owner in one pass: the most severe, then the highest utilisation; informative and not applicable rows never govern.
 pub fn worst_by_owner(report: &CheckReport) -> BTreeMap<&str, &CheckResult> {
+    worst_by_owner_with(report, |owner| Some(owner))
+}
+
+/// 🗂️ Resolves each applicable subject to the owner used by the caller, preserving report order on ties.
+pub fn worst_by_owner_with(report: &CheckReport, owner_of: impl Fn(&str) -> Option<&str>) -> BTreeMap<&str, &CheckResult> {
     let mut worst: BTreeMap<&str, &CheckResult> = BTreeMap::new();
-    for check in report.checks.iter().filter(|c| !c.subject.entity_id.is_empty() && counts(c)) {
-        if worst.get(check.subject.entity_id.as_str()).is_none_or(|known| governs(known, check)) {
-            worst.insert(check.subject.entity_id.as_str(), check);
+    for check in report.checks.iter().filter(|c| counts(c)) {
+        let Some(owner) = owner_of(&check.subject.entity_id).filter(|owner| !owner.is_empty()) else { continue };
+        if worst.get(owner).is_none_or(|known| governs(known, check)) {
+            worst.insert(owner, check);
         }
     }
     worst
@@ -90,11 +96,19 @@ pub fn with_site(fragment: Fragment, report: &CheckReport) -> Fragment {
 
 /// 🔦️ `fragment` with the main entity of every owner coloured by its worst check (the entity whose id is the owner, else the first entity of that owner), never softening a stronger binding a module already set; the whole-run and global fragments also carry the project site and the global badge of the checks filed under no entity.
 pub fn highlight_owners(mut fragment: Fragment, report: &CheckReport, part: Part<'_>) -> Fragment {
-    let owners: BTreeSet<String> = fragment.entities.iter().map(|e| base_id(&e.entity.id).to_owned()).collect();
     let worst = worst_by_owner(report);
-    for owner in &owners {
-        let Some(governing) = worst.get(owner.as_str()) else { continue };
-        let Some(index) = fragment.entities.iter().position(|e| e.entity.id == *owner).or_else(|| fragment.entities.iter().position(|e| base_id(&e.entity.id) == owner)) else { continue };
+    let mut owners = BTreeMap::<&str, (usize, bool)>::new();
+    for (index, entity) in fragment.entities.iter().enumerate() {
+        let id = entity.entity.id.as_str();
+        let owner = base_id(id);
+        let exact = id == owner;
+        let best = owners.entry(owner).or_insert((index, exact));
+        if exact && !best.1 {
+            *best = (index, exact);
+        }
+    }
+    let updates: Vec<_> = owners.into_iter().filter_map(|(owner, (index, _))| worst.get(owner).map(|check| (index, *check))).collect();
+    for (index, governing) in updates {
         colour(&mut fragment.entities[index], governing);
     }
     if matches!(part, Part::All | Part::Global) {

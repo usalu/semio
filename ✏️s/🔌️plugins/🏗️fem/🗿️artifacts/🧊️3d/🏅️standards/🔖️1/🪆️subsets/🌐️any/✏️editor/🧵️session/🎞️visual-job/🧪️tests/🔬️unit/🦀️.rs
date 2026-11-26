@@ -223,3 +223,9 @@ fn fem3d_numerical_child_classifies_every_lent_outcome_without_retaining_it() {
     }
 }
 
+
+#[path = "../🎵️modal-buckling/🦀️.rs"]
+mod modal_buckling;
+
+#[path = "../⏱️settle/🦀️.rs"]
+mod settle;

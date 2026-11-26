@@ -3,6 +3,7 @@
 //! Validation uses the document owner codec; exports use the owning app media-out port.
 
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use semio_os_mcp_capabilities::capability_declarations::artifact_capabilities;
 use semio_os_mcp_catalog::capability_tools::tool_from_capability;
 use semio_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, find_repo_root, load_plugin_registry, load_registry_plugin_descriptor};
@@ -27,6 +28,15 @@ fn require_workspace(workspace: &Option<Arc<HeadlessWorkspace>>) -> Result<&Arc<
 fn require_resolvable_export_plugin(workspace: &HeadlessWorkspace, artifact_id: &str) -> Result<String, GatewayError> {
     if let Some(binding) = workspace.plugin_artifact_binding(artifact_id) {
         return Ok(binding.plugin_id);
+    }
+    if matches!(workspace.origin(), WorkspaceOrigin::Folder { .. }) {
+        if let Some((pack,spr)) = workspace.read_open_artifact_bytes(artifact_id)? {
+            if workspace.bind_folder_session_document(artifact_id,&pack,&spr)? {
+                let binding = workspace.plugin_artifact_binding(artifact_id)
+                    .ok_or_else(|| GatewayError::new(GatewayErrorCode::PreconditionFailed,"artifact owner changed during export admission").retryable())?;
+                return Ok(binding.plugin_id);
+            }
+        }
     }
     let plugin_ids = workspace.catalog_plugin_ids();
     match plugin_ids.len() {
@@ -380,28 +390,64 @@ fn artifact_export_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments
             }
         },
     };
-    match workspace.export_artifact_media(&plugin_id, &artifact_id, &port) {
-        Ok((descriptor, data, answered_port)) => {
-            let provenance = match workspace.untrusted_artifact_provenance(&artifact_id, UntrustedSource::ArtifactExport, &[&data]) {
-                Ok(provenance) => provenance,
-                Err(error) => return CallToolResult::tool_error(&error),
-            };
-            CallToolResult::ok(
-                vec![ContentBlock::Text { text: format!("exported {artifact_id} through `{answered_port}` ({} byte(s))", data.len()) }],
-                Some(serde_json::json!({
-                    "artifactId": artifact_id,
-                    "format": answered_port,
-                    "mimeType": serde_json::Value::Null,
-                    "pluginId": plugin_id,
-                    "contentBytes": data.len(),
-                    "descriptorBytes": descriptor.len(),
-                    "availablePorts": ports,
-                    "declaredExportFormats": declared_formats,
-                    "untrusted": untrusted_content(&provenance, serde_json::json!({ "contentBase64": base64_encode(&data) })),
-                })),
-            )
+    let jobs = job_registry();
+    let job_id = jobs.begin("artifact.export");
+    let cancel = semio_framework_async::CancelToken::root_now();
+    let hook = cancel.clone();
+    jobs.bind_cancel(&job_id, move || hook.cancel_now());
+    let reporter = job_id.clone();
+    let previous_progress = std::sync::Mutex::new(None);
+    let scope = ActivationScope::new(cancel, move |phase, fraction| {
+        let mut previous = previous_progress.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if previous.replace((phase, fraction)) == Some((phase, fraction)) { return; }
+        job_registry().report_progress(&reporter, phase.at(fraction), Some(format!("exporting: {}", phase.id())));
+    });
+    let worker_job = job_id.clone();
+    let worker_succeeded = Arc::new(AtomicBool::new(false));
+    let settled = Arc::clone(&worker_succeeded);
+    let exported = workspace.export_artifact_media_cancellably(&plugin_id, &artifact_id, &port, scope, move |outcome| {
+        let jobs = job_registry();
+        match outcome {
+            Err(error) if error.code == GatewayErrorCode::Cancelled => { jobs.mark_cancelled(&worker_job); }
+            Err(error) => { jobs.fail(&worker_job, error); }
+            Ok(()) => {
+                settled.store(true, Ordering::Release);
+                if jobs.is_cancel_requested(&worker_job) { jobs.mark_cancelled(&worker_job); }
+            }
         }
-        Err(error) => CallToolResult::tool_error(&error),
+    }).and_then(|(descriptor, data, answered_port)| {
+        if jobs.is_cancel_requested(&job_id) {
+            jobs.mark_cancelled(&job_id);
+            return Err(GatewayError::new(GatewayErrorCode::Cancelled, "the caller cancelled the artifact export"));
+        }
+        let provenance = workspace.untrusted_artifact_provenance(&artifact_id, UntrustedSource::ArtifactExport, &[&data])?;
+        let text = format!("exported {artifact_id} through `{answered_port}` ({} byte(s))", data.len());
+        let structured = serde_json::json!({
+            "artifactId": artifact_id,
+            "format": answered_port,
+            "mimeType": serde_json::Value::Null,
+            "pluginId": plugin_id,
+            "contentBytes": data.len(),
+            "descriptorBytes": descriptor.len(),
+            "availablePorts": ports,
+            "declaredExportFormats": declared_formats,
+            "untrusted": untrusted_content(&provenance, serde_json::json!({ "contentBase64": base64_encode(&data) })),
+        });
+        Ok((text, structured))
+    });
+    match exported {
+        Ok((text, structured)) => {
+            jobs.succeed(&job_id, structured.clone());
+            CallToolResult::ok(vec![ContentBlock::Text { text }], Some(structured))
+        }
+        Err(error) => {
+            if error.code != GatewayErrorCode::Cancelled {
+                jobs.fail(&job_id, error.clone());
+            } else if worker_succeeded.load(Ordering::Acquire) {
+                jobs.mark_cancelled(&job_id);
+            }
+            CallToolResult::tool_error(&error)
+        }
     }
 }
 

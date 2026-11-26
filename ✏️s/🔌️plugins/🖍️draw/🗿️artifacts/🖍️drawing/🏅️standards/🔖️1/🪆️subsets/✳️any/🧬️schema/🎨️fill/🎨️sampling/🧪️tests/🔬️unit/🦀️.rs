@@ -1,7 +1,8 @@
 //! 🧪️ Neutral paint samples and immutable preparation boundaries.
+use crate::work_fixture as fill_wallet;
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::work::RetainedWorkLedger;
-use semio_s_artifact_draw_drawing_model::fill::sampling::{GradientRamp, GradientRampRetirement, PreparedFill, PreparedFillProgress, PreparedFillRetirement};
+use semio_s_artifact_draw_drawing_model::fill::sampling::{GradientRamp, PreparedFill, PreparedFillProgress};
 use semio_s_artifact_draw_drawing_model::{FillStyle, GradientStop};
 
 #[test]
@@ -46,19 +47,18 @@ fn prepared_paint_retirement_drains_actual_stop_owners_and_composes_the_real_ram
         let source=sources.as_array().unwrap().iter().find(|source|source["name"]==row["source"]).unwrap();let mut fill:FillStyle=serde_json::from_value(source["fill"].clone()).unwrap();
         if let Some(repeat)=row["repeat"].as_u64(){match &mut fill {FillStyle::LinearGradient{stops,..}|FillStyle::RadialGradient{stops,..}=>*stops=vec![stops[0].clone();repeat as usize].into(),_=>panic!("gradient required")}}
         let mut wallet=finite_fill_wallet();let paint=finish_preparation(PreparedFill::new(fill.clone()),&mut wallet).unwrap_or_else(|(error,_)|panic!("{error}"));let samples:Vec<[f64;4]>=source["samples"].as_array().unwrap().iter().map(|sample|paint.sample(serde_json::from_value(sample["point"].clone()).unwrap()).unwrap()).collect();
-        let mut owner=paint.into_retirement();let(zero,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(Default::default()).unwrap());assert_eq!(zero.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut work=0;
-        for _ in 0..5000{if owner.terminal_is_empty(){break}let before=work;for _ in 0..grant{if owner.terminal_is_empty(){break}let d=fill_close_demand(&owner);let p=wallet.close_turn(d,|g|owner.close_step(g)).unwrap().progress();assert_ne!(p,Default::default());work+=p.copied_items as u64;}assert!(work>before&&work-before<=grant as u64);}
-        assert!(work>0);assert!(owner.terminal_is_empty());assert!(owner.owner.original().is_none());let stable=owner.close_step(Default::default()).unwrap();assert!(matches!(stable,semio_framework_value::RetainedCloneStep::Complete(_)));assert_eq!(stable.progress(),Default::default());wallet.close_owned(owner);
+        let mut owner=paint.into_retirement();let(zero,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||fill_wallet::with_effect(Default::default(), fill_wallet::WORK, &mut None, |effect| fill_wallet::settled(owner.close_step(0, effect)).result.unwrap()));assert_eq!(zero.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut work=0;
+        for _ in 0..5000{if owner.terminal_is_empty(){break}let before=work;for _ in 0..grant{if owner.terminal_is_empty(){break}let body=wallet.remaining().maximum_copy_bytes;let d=owner.next_demand(body).unwrap();let p=wallet.close_turn(d,|effect|owner.close_step(body,effect)).unwrap().progress();assert_ne!(p,Default::default());work+=p.copied_items as u64;}assert!(work>before&&work-before<=grant as u64);}
+        assert!(work>0);assert!(owner.terminal_is_empty());assert!(owner.owner.original().is_none());let stable=fill_wallet::with_effect(Default::default(), fill_wallet::WORK, &mut None, |effect| fill_wallet::settled(owner.close_step(0, effect)).result.unwrap());assert!(matches!(stable,semio_framework_value::RetainedCloneStep::Complete(_)));assert_eq!(stable.progress(),Default::default());wallet.close_owned(owner);
         for (sample,actual) in source["samples"].as_array().unwrap().iter().zip(samples){let expected:[f64;4]=serde_json::from_value(sample["color"].clone()).unwrap();for c in 0..4{assert!((actual[c]-expected[c]).abs()<1e-12);}}
         if matches!(fill,FillStyle::LinearGradient{..}|FillStyle::RadialGradient{..}){
             let mut paint=finish_preparation(PreparedFill::new(fill),&mut wallet).unwrap_or_else(|(error,_)|panic!("{error}"));let pointer=paint.ramp.stops.as_ptr();let ramp=std::mem::replace(&mut paint.ramp,GradientRamp{stops:Vec::new(),scratch:Vec::new()});wallet.close_owned(paint.into_retirement());let mut retired=ramp.into_retirement();assert_eq!(retired.owner.original().unwrap().stops.as_ptr(),pointer);let mut work=0;
-            for _ in 0..5000{if retired.terminal_is_empty(){break}let before=work;for _ in 0..grant{if retired.terminal_is_empty(){break}let d=ramp_close_demand(&retired);let p=wallet.close_turn(d,|g|retired.close_step(g)).unwrap().progress();assert_ne!(p,Default::default());work+=p.copied_items as u64;}assert!(work-before<=grant as u64);}assert!(work>0);assert!(retired.terminal_is_empty());assert!(retired.owner.original().is_none());wallet.close_owned(retired);
+            for _ in 0..5000{if retired.terminal_is_empty(){break}let before=work;for _ in 0..grant{if retired.terminal_is_empty(){break}let body=wallet.remaining().maximum_copy_bytes;let d=retired.next_demand(body).unwrap();let p=wallet.close_turn(d,|effect|retired.close_step(body,effect)).unwrap().progress();assert_ne!(p,Default::default());work+=p.copied_items as u64;}assert!(work-before<=grant as u64);}assert!(work>0);assert!(retired.terminal_is_empty());assert!(retired.owner.original().is_none());wallet.close_owned(retired);
         }
     }}
 }
 
 
-#[path="../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/🎟️work/🧪️tests/🦀️.rs"] mod fill_wallet;
 fn finite_fill_wallet()->fill_wallet::Wallet{let v:serde_json::Value=serde_json::from_str(include_str!("../../🎟️work/🧫️fixtures/🔣️.json")).unwrap();let stock=&v["stock"];let n=|key|stock[key].as_u64().unwrap()as usize;fill_wallet::Wallet::from_grant(semio_framework_value::RetainedCloneGrant{maximum_items:n("items"),maximum_copy_bytes:n("copy"),maximum_capacity_bytes:n("capacity"),maximum_release_bytes:n("release"),maximum_depth:n("depth")},v["maxTurns"].as_u64().unwrap()as usize)}
 #[test]
 fn owned_fill_preparation_is_funded_and_matches_tiny_skia(){
@@ -83,5 +83,3 @@ fn advance_fill(job: &mut PreparedFill, work: &mut RetainedWorkLedger) -> Result
     result
 }
 fn finish_preparation(mut job:PreparedFill,wallet:&mut fill_wallet::Wallet)->Result<PreparedFill,(&'static str,PreparedFill)>{for _ in 0..100_000{match wallet.turn(1,|work|advance_fill(&mut job,work)){Ok(p)if p.done=>return Ok(job),Ok(_)=>assert!(job.last_turn_work()>0,"finite preparation stock exhausted"),Err(error)=>return Err((error,job))}}panic!("finite fill preparation did not finish")}
-fn fill_close_demand(owner:&PreparedFillRetirement)->semio_framework_value::RetirementDemand{let copy_bytes=owner.next_copy_byte_demand().unwrap();let release_bytes=owner.next_release_byte_demand().unwrap();semio_framework_value::RetirementDemand{copy_bytes,capacity_bytes:owner.next_capacity_byte_demand(if copy_bytes>0{copy_bytes}else{release_bytes}).unwrap(),release_bytes,depth:owner.next_depth_demand().unwrap()}}
-fn ramp_close_demand(owner:&GradientRampRetirement)->semio_framework_value::RetirementDemand{let copy_bytes=owner.next_copy_byte_demand().unwrap();let release_bytes=owner.next_release_byte_demand().unwrap();semio_framework_value::RetirementDemand{copy_bytes,capacity_bytes:owner.next_capacity_byte_demand(if copy_bytes>0{copy_bytes}else{release_bytes}).unwrap(),release_bytes,depth:owner.next_depth_demand().unwrap()}}

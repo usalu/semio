@@ -1,0 +1,3 @@
+# 🤸️ Stretching: the unswollen trial v7 under the live guard and under the prepared pocket rule of MX-2, then the sheets of v10 (sourced by q.sh).
+cap 1800 "$P" "$B" "$U/🧰️matrix/MX-2/pocket/measure.ts" "$GEN/try/person-stretching.v7.json" 2>&1 | cut -c1-300
+source "$W/sheet.sh" x v10=try/person-stretching.v10.json:50 v10=try/person-stretching.v10.json:100 before=base/person-stretching.json:200 v10=try/person-stretching.v10.json:200 before=base/person-stretching.json:500 v10=try/person-stretching.v10.json:500 v10=try/person-stretching.v10.json:50:hamstring-stretch before=base/person-stretching.json:50:hamstring-stretch v10=try/person-stretching.v10.json:50:side-bend

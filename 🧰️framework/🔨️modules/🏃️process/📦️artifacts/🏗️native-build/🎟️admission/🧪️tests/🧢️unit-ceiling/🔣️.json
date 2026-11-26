@@ -537,7 +537,7 @@
   },
   {
    "id": "listed-final-declared-budget",
-   "command": "rustc --crate-name semio_hub_sourcing_component --crate-type cdylib --target=wasm32-wasip2 /w/c.rs"
+   "command": "rustc --crate-name semio_hub_cad_component --crate-type cdylib --target=wasm32-wasip2 /w/c.rs"
   },
   {
    "id": "unlisted-final-budget",
@@ -620,8 +620,24 @@
    "command": "rustc --crate-name semio_hub_stdio_component --edition=2021 /w/sc.rs --crate-type cdylib --target wasm32-wasip2"
   },
   {
-   "id": "unlisted-hub-stdio-office-component-final-until-measured",
+   "id": "listed-hub-stdio-office-component-final-declared-budget",
    "command": "rustc --crate-name semio_hub_stdio_office_component --edition=2021 /w/oc.rs --crate-type cdylib --target wasm32-wasip2"
+  },
+  {
+   "id": "listed-fem-2d-model-just-above-library-ceiling",
+   "command": "rustc --crate-name semio_s_artifact_fem_2d_model --edition=2021 /w/f.rs --crate-type lib --target wasm32-wasip2"
+  },
+  {
+   "id": "listed-ifc-catalog-entities-shard-00",
+   "command": "rustc --crate-name semio_s_artifact_stdio_ifc4x3_add2_catalog_entities_00 --edition=2021 /w/i0.rs --crate-type lib --target wasm32-wasip2"
+  },
+  {
+   "id": "listed-ifc4-family-shard-06",
+   "command": "rustc --crate-name semio_s_artifact_stdio_ifc4_catalog_entities_06 --edition=2021 /w/i4.rs --crate-type lib --target wasm32-wasip2"
+  },
+  {
+   "id": "unmatched-ifc-name-stays-unlisted",
+   "command": "rustc --crate-name semio_s_artifact_stdio_ifc4x3_add2_catalog_entities_extra --edition=2021 /w/i1.rs --crate-type lib --target wasm32-wasip2"
   },
   {
    "id": "listed-hub-space-component-final-declared-budget",
@@ -634,6 +650,14 @@
   {
    "id": "listed-bim-model-snapshot-library-declared-budget",
    "command": "rustc --crate-name semio_s_artifact_bim_model_snapshot --edition=2021 /w/b.rs --crate-type lib --target wasm32-wasip2"
+  },
+  {
+   "id": "family-wrong-target-is-unlisted",
+   "command": "rustc --crate-name semio_s_artifact_stdio_ifc4_catalog_entities_06 --crate-type lib /w/h.rs"
+  },
+  {
+   "id": "listed-ifc2x3-family-variance",
+   "command": "rustc --crate-name semio_s_artifact_stdio_ifc2x3_catalog_entities_00 --edition=2021 /w/v.rs --crate-type lib --target wasm32-wasip2"
   }
  ]
 }

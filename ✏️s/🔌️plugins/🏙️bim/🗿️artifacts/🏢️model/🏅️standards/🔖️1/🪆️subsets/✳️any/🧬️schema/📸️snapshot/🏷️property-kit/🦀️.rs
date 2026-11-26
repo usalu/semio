@@ -2,7 +2,6 @@
 //! navigation of an entry table. Pure and base-free: whether the elements a template applies to exist, and which values they carry, is decided by the leaves and by the inference, never here.
 
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ClassificationItem, PropertyDef, TemplateTarget};
-use crate::standards::v1::subsets::any::schema::snapshot::entities::ClassificationSystem;
 use std::collections::BTreeSet;
 
 /// 🧐️ Why a property set template cannot be stored, `None` when it can: the field of the template it is about and the message. A name; every kind at most once in `applies_to`; sound property definitions with unique names.
@@ -57,54 +56,6 @@ pub fn entries_problem(entries: &[ClassificationItem]) -> Option<String> {
         }
     }
     None
-}
-
-impl ClassificationSystem {
-    /// 🔎️ The row of a code.
-    pub fn entry(&self, code: &str) -> Option<&ClassificationItem> {
-        self.entries.iter().find(|entry| entry.code == code)
-    }
-
-    /// 🌳️ The rows whose parent is `parent` (the roots for `None`), in table order.
-    pub fn children(&self, parent: Option<&str>) -> Vec<&ClassificationItem> {
-        self.entries.iter().filter(|entry| entry.parent.as_deref() == parent).collect()
-    }
-
-    /// 🧭️ The rows from the root down to the row of `code`, empty when the code is no row.
-    pub fn lineage(&self, code: &str) -> Vec<&ClassificationItem> {
-        let mut path = Vec::new();
-        let mut at = self.entry(code);
-        while let Some(entry) = at {
-            if path.len() > self.entries.len() {
-                break;
-            }
-            path.push(entry);
-            at = entry.parent.as_deref().and_then(|parent| self.entry(parent));
-        }
-        path.reverse();
-        path
-    }
-
-    /// 🔢️ How deep the row of `code` stands: zero for a root, none for an unknown code.
-    pub fn depth(&self, code: &str) -> Option<usize> {
-        self.entry(code).map(|_| self.lineage(code).len().saturating_sub(1))
-    }
-
-    /// 📖️ The rows in tree order: every root with its descendants below it, depth first, each branch in table order.
-    pub fn tree(&self) -> Vec<(usize, &ClassificationItem)> {
-        fn walk<'a>(system: &'a ClassificationSystem, parent: Option<&str>, depth: usize, out: &mut Vec<(usize, &'a ClassificationItem)>) {
-            if depth > system.entries.len() {
-                return;
-            }
-            for entry in system.children(parent) {
-                out.push((depth, entry));
-                walk(system, Some(entry.code.as_str()), depth + 1, out);
-            }
-        }
-        let mut out = Vec::new();
-        walk(self, None, 0, &mut out);
-        out
-    }
 }
 
 

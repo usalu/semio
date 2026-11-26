@@ -477,7 +477,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             let viewport_height_for_widgets = panel_draw.screen_height();
             let mut ctx = framework_widget_context(panel_draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
             ctx.pick_clip = Some(content);
-            render_ui_document_step(&mut cursor.document, &document, content, &mut ctx, window, controller.as_str(), self.chrome.chrome_build.driver.drag, &mut hosts, cx)
+            render_ui_document_step(&mut cursor.document, &document, content, semio_ui_theme::Level::Panel, &mut ctx, window, controller.as_str(), self.chrome.chrome_build.driver.drag, &mut hosts, cx)
         };
         self.docs.panel_documents.insert(window.to_string(), document);
         Some(complete)
@@ -701,7 +701,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                     let viewport_height_for_widgets = panel_draw.screen_height();
                     let mut ctx = framework_widget_context(panel_draw, None, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
                     ctx.pick_clip = Some(content);
-                    render_ui_document_step(&mut cursor.document, &document, content, &mut ctx, window.as_str(), controller.as_str(), self.chrome.chrome_build.driver.drag, &mut hosts, cx)
+                    render_ui_document_step(&mut cursor.document, &document, content, semio_ui_theme::Level::Panel, &mut ctx, window.as_str(), controller.as_str(), self.chrome.chrome_build.driver.drag, &mut hosts, cx)
                 };
                 self.docs.panel_documents.insert(window.as_str().to_string(), document);
                 if !complete {

@@ -239,16 +239,26 @@ impl OriginalInferenceJob {
     }
 }
 impl OriginalInferenceJob {
+    const GATEWAY_SLICES_PER_STEP:usize=64;
+
     fn step_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->JobStep{
         if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return JobStep::Running(None)}
         if let Some(gateway)=&mut self.gateway{
             if self.cancelled||self.failure.is_some(){gateway.begin_close();}
             if self.closing_failure.is_some(){if let Err(error)=Self::close_field(&mut self.closing_failure,&mut self.active,cx){self.secondary=Some(error)}return JobStep::Running(None)}
             if self.secondary.is_some()||self.active.is_some(){if let Err(error)=Self::close_field(&mut self.secondary,&mut self.active,cx){self.secondary=Some(error)}return JobStep::Running(None)}
-            let answer=semio_plugin_extension::inference_gateway::wire_artifact_infer(gateway,self.input.as_ref().unwrap(),cx);
-            if let Some(cause)=answer.refusal{if self.failure.is_none(){self.failure=Some(cause);}else{assert!(self.closing_failure.is_none());self.closing_failure=Some(cause);}gateway.begin_close();}
-            if let Some(payload)=answer.payload{assert!(self.output.is_none());self.output=Some(payload);}
-            if gateway.terminal_is_empty(){self.gateway=None;}
+            for _ in 0..Self::GATEWAY_SLICES_PER_STEP {
+                let answer=semio_plugin_extension::inference_gateway::wire_artifact_infer(gateway,self.input.as_ref().unwrap(),cx);
+                let crossed=answer.refusal.is_some()||answer.payload.is_some();
+                if let Some(cause)=answer.refusal{
+                    if self.failure.is_none(){self.failure=Some(cause);}
+                    else{assert!(self.closing_failure.is_none());self.closing_failure=Some(cause);}
+                    gateway.begin_close();
+                }
+                if let Some(payload)=answer.payload{assert!(self.output.is_none());self.output=Some(payload);}
+                if gateway.terminal_is_empty(){self.gateway=None;break;}
+                if crossed||answer.retained_progress==Default::default()||cx.should_yield()||cx.is_cancelled()||gateway.closing{break;}
+            }
             return JobStep::Running(None);
         }
         match self.close_sources(cx){Ok(false)=>return JobStep::Running(None),Err(error)=>{assert!(self.secondary.is_none());self.secondary=Some(error.into());return JobStep::Running(None)},Ok(true)=>{}}
@@ -283,8 +293,7 @@ impl BoundedJob for OriginalInferenceJob {
         Ok(false)
     }
     fn retirement_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
-        use semio_framework_value::{RetirementDemand,retirement::RetireOwned};
-        fn source<T:RetireOwned>(source:&T)->Result<RetirementDemand,semio_framework_value::ValueError>{Ok(RetirementDemand{capacity_bytes:source.retirement_birth_bytes().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original inference source has no declared close birth"))?,depth:1,..Default::default()})}
+        use semio_framework_value::{RetirementDemand,retirement::controlled::controlled_retirement_birth_demand as source};
         if let Some(active)=&self.active{return semio_framework_value::factory_ticket_demands(active,copy)}
         if let Some(value)=&self.closing_failure{return source(value)}if let Some(value)=&self.secondary{return source(value)}
         if let Some(gateway)=&self.gateway{return if gateway.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{semio_plugin_extension::inference_gateway::original_inference_gateway_demands(gateway,copy)}}

@@ -273,7 +273,7 @@ let mut child=effect.reborrow(cursor_grant,maximum_work)?;let step=invoke(cursor
             RetirementStep::Pending(_) => return Ok(None),
             RetirementStep::Progress(progress,_) => {
                 self.step_progress = progress;
-                if !progress.fits(cursor_grant) || (progress.copied_items!=0 && progress.retained_capacity_bytes!=birth) { return Err(refusal("typed retirement receipt exceeded or changed its declared full grant").into()); }
+                if !progress.fits(cursor_grant) || (progress.copied_items!=0 && progress.retained_capacity_bytes!=birth && progress.retained_capacity_bytes!=0) { return Err(refusal("typed retirement receipt exceeded or changed its declared full grant").into()); }
                 return Ok(Some(RetainedCloneStep::Progress(progress)));
             }
             RetirementStep::Child(child) => { self.cursors.push_reserved(child).map_err(|_| refusal("retirement child lost its admitted frontier slot"))?; (0, 0, true) }

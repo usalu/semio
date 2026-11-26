@@ -8,6 +8,13 @@
 pub struct DepHash(pub [u8; 32]);
 
 impl DepHash {
+    pub(super) fn with_parent(self, parent: Self) -> Self {
+        let mut hash = semio_framework_hash::Sha256::new();
+        hash.update(b"parent\0");
+        hash.update(&self.0);
+        hash.update(&parent.0);
+        Self(hash.finalize())
+    }
     /// 🏗️ Roots a chain: `blake3(field_id ‖ 0 ‖ schema_version ‖ 0 ‖ input)`, no parent hashes folded in.
     pub fn root(field_id: &str, schema_version: u32, input: &[u8]) -> Self {
         let mut data = field_id.as_bytes().to_vec();
@@ -38,6 +45,23 @@ impl DepHash {
         }
         Self(*semio_framework_hash::hash(&data).as_bytes())
     }
+}
+
+/// 🔏️ Accumulates already funded borrowed dependency fragments without backing allocation.
+pub struct OriginalDependencyHasher(semio_framework_hash::Sha256);
+
+impl OriginalDependencyHasher {
+    pub fn new(field: &str, version: u32) -> Self {
+        let mut hash = semio_framework_hash::Sha256::new();
+        hash.update(b"semio.original-inference.v1\0");
+        hash.update(field.as_bytes());
+        hash.update(&[0]);
+        hash.update(&version.to_le_bytes());
+        Self(hash)
+    }
+
+    pub fn append(&mut self, fragment: &[u8]) { self.0.update(fragment); }
+    pub fn finish(&self) -> DepHash { DepHash(self.0.clone().finalize()) }
 }
 
 fn push_hex(out: &mut Vec<u8>, bytes: &[u8; 32]) {

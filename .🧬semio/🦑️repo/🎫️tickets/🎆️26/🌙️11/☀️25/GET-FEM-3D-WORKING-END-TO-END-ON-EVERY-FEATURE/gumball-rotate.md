@@ -19,16 +19,17 @@ Verified by baseline run of the new law with the fix disabled: 12 of 361 turns f
 - `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/.../✏️editor/🕹️interaction/🧭️gumball/🦀️.rs`: `fem3d_turn_then` (rotation composition).
 - `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/.../🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🦀️.rs`: relative planarity tolerance in `map_solid`.
 
-## Laws
-- 3D engine `a_turned_slab_always_meshes_with_its_area_and_volume` (`⚙️engine/🧊️3d/🧪️tests/🔬️unit/🦀️.rs`): 361 turns, tet volume equals area x height.
-- 2D engine `a_turned_region_always_meshes` (`⚙️engine/◻️2d/🧪️tests/🔬️unit/🦀️.rs`).
-- Interaction `a_sixty_pixel_ring_drag_turns_the_slab_into_a_valid_solid`, `degenerate_scale_ticks_never_reach_the_slab`, extended `ticks_compose_into_one_net_leaf` (`✏️editor/🕹️interaction/🧭️gumball/🧪️tests/🔬️unit/🦀️.rs`).
-- Editor `a_ring_turn_of_a_solid_keeps_it_and_its_analysis_alive` (replaces the `p3_probe` print probe in `✏️editor/🎮️commands/🧭️gumball/🧪️tests/🔬️unit/🦀️.rs`): Z/noisy/negative axes follow, X/Y refuse, model builds and solves in all cases.
+- Scene `an_unmeshable_solid_is_marked_and_the_others_still_draw` (`🎬️scene/🧪️tests/🔬️unit/🦀️.rs`): a solid with a degenerate outline next to `sol1`: `sol1` keeps its mesh and label, the failing one gets an error-tinted outline prism mesh under its own id and a label in the requested locale only: `Solid <id> cannot be meshed: <reason>` for En, `Körper <id> lässt sich nicht vernetzen: <reason>` for De; the law asserts the other language and any ` | ` joiner are absent.
 
-## Status
-- 3D engine `a_turned_slab_always_meshes_with_its_area_and_volume`: FAIL without fix (12 of 361, `🗑️generated/gb/eng3.log`), PASS with fix (`eng5.log`).
-- 2D engine `a_turned_region_always_meshes`, interaction laws and editor law `a_ring_turn_of_a_solid_keeps_it_and_its_analysis_alive`: written, NOT yet run. Native runs were blocked by the shared build-lane file lock and by concurrent breakage in other agents' framework crates (`semio-os-kernel`, `semio-plugin-instance-commands`, dwg crates). Detached chains `/c/t/gb-run.sh` and `/c/t/gb-run2.sh` (logs `/c/t/gb-run.log`, `/c/t/gb-run2.log`, per-run logs in `🗑️generated/gb/`) are still queued; scripts `gb-law.sh`, `gb-engine.sh`, `gb-engine2d.sh` in this folder. The new interaction/editor code is therefore uncompiled; the law `ticks_compose_into_one_net_leaf` was updated to the new composition semantics.
-- Dirs `C:\t\g*` are still in use by the queued runs and must be deleted afterwards.
+## Scene gap (closed)
+`mesh_solids` was all-or-nothing and `fem3d_solid_mesh_entries` swallowed its error, so one bad solid hid all solids. Now `meshing::mesh_solids_partial` and `mesh_preview::fem3d_mesh_preview_partial` return every meshable solid plus `(solid id, reason)` per failure (`mesh_solids` keeps its strict contract on top of it). The scene draws each failure as a red prism marker (pickable under its own id) labelled with `fem3d_unmeshable_solid_label(id, reason, locale)`: one language per view. The active `semio_plugin::Locale` is threaded into `fem3d_scene_parts`, `fem3d_solid_mesh_entries` and `model_scene` (the same route the model/results captions and `surface_name` use); the model window, results window and viewer pass the locale they already hold.
 
-## Remaining hardening (not done, out of scope)
-`fem3d_solid_mesh_entries` still hides ALL solids when any one fails to mesh; a per-solid fallback or a visible error would make such failures diagnosable.
+## Status (all native, all green)
+- 3D engine turned-slab law: FAIL without fix (12 of 361), PASS with fix.
+- 2D engine `a_turned_region_always_meshes`: PASS.
+- Interaction (`ticks_compose_into_one_net_leaf`, `a_sixty_pixel_ring_drag...`, `degenerate_scale_ticks...`): 3 passed.
+- Editor `a_ring_turn_of_a_solid_keeps_it_and_its_analysis_alive`: PASS (18 s).
+- Scene unmeshable-solid law (EN-only and DE-only assertions): PASS. Editor `renders_fem3d_model_scene` (new `locale` argument): PASS.
+- Not recompiled after the locale change: the identity test call sites in `🕹️interaction/🧪️tests/👥️identity/🦀️.rs` (only a `Locale::En` argument was appended), because other agents' `semio-plugin-instance-stores` build was broken and the disk filled up during my last runs.
+- Fixed along the way: my law had a type-inference compile error (`step.abs()` on an untyped float).
+- `C:\t\g`, `gb`, `gbt`, `gc`, `gcb`, `gct`, `gd`, `gdb` deleted; generated logs deleted. Scripts `gb-law.sh`, `gb-engine.sh`, `gb-engine2d.sh` kept.

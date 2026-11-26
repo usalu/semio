@@ -1,4 +1,4 @@
-import {rmSync} from "node:fs";
+import {readFileSync,rmSync} from "node:fs";
 import {join} from "node:path";
 import {createSidecarClosureWatchV1,createSidecarRestartDebounceV1,type SidecarRestartPolicyV1} from "./🧮️closure/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
@@ -7,6 +7,7 @@ import {startSidecarIdleCompactionV1} from "../../🧹️cache-gc/🛌️idle/�
 import type {RemoteExecutionSidecarContextV1,RemoteExecutionSidecarRoleV1,SidecarWorkV1} from "./🧰️shared/🟦️.ts";
 import {sidecarHandsOverV1} from "./🧰️shared/🟦️.ts";
 import {ownProcessIdentityV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
+import {readySidecarSilenceV1,readySilenceChildNoticeV1,readySilenceChildWatchV1,readySilencePolicyV1,readySilenceStatusFileV1} from "./🚦️ready/💔️silence/🟦️.ts";
 
 export {remoteExecutionPortsV1,remoteExecutionWorkerApiV1,sidecarHandsOverV1,settleSidecarSuccessorV1} from "./🧰️shared/🟦️.ts";
 export type {RemoteExecutionSidecarContextV1,RemoteExecutionSidecarRoleV1,SidecarWorkV1} from "./🧰️shared/🟦️.ts";
@@ -107,11 +108,12 @@ export const REMOTE_EXECUTION_SIDECAR_RESTART_V1=Object.freeze({initialMilliseco
 
 /** 🔁️ The process the replica daemon supervises: a small launcher that runs the role in a child process and starts the child again by itself, a moment later and with the new code, when the child ends because the code it runs changed (exit status 75). A code landing therefore never depends on the daemon's loop to bring the service back (a daemon that is busy for minutes used to leave the cache and the scheduler down after they exited for new code). A child that crashes (a module that is missing for a moment while another landing replaces a folder is the usual cause) is started again by the launcher after a back-off of 1 s doubling to 15 s, with a log line that names the status: the role is back, with its worker, within seconds of the cause going away, instead of after the daemon's own back-off of up to a minute. The launcher ends only when it is told to (SIGTERM) or when the lease of its daemon (`SEMIO_FLEET_SIDECAR_LEASE`, renewed by the daemon every 5 s) was not renewed for `SEMIO_FLEET_SIDECAR_LEASE_MS` (10 min); a daemon that restarts meanwhile adopts the launcher, which proves that it lives and runs the same entry script by its record (`SEMIO_FLEET_SIDECAR_RECORD`, rewritten every 2 s). It forwards SIGTERM and keeps no other state. */
 export async function runRemoteExecutionSidecarLauncherV1(role:RemoteExecutionSidecarRoleV1,entry:string,environment:Readonly<Record<string,string|undefined>>,restart:typeof REMOTE_EXECUTION_SIDECAR_RESTART_V1=REMOTE_EXECUTION_SIDECAR_RESTART_V1):Promise<never>{
- const lease=environment.SEMIO_FLEET_SIDECAR_LEASE,record=environment.SEMIO_FLEET_SIDECAR_RECORD,protocol=await import("../../../../🤝️shared-worktree/🔁️replica/🧷️sidecars/🟦️.ts"),startedMs=Date.now();
+ const base=environment.SEMIO_FLEET_SIDECAR_LEASE,record=environment.SEMIO_FLEET_SIDECAR_RECORD,protocol=await import("../../../../🤝️shared-worktree/🔁️replica/🧷️sidecars/🟦️.ts"),startedMs=Date.now(),lease=base===undefined||base===""?undefined:protocol.sidecarLeaseOfV1(base,process.pid);
  type Child=ReturnType<typeof Bun.spawn>;
- let stopping=false,alive=false,child:Child|undefined,successor:Child|undefined;
+ let stopping=false,alive=false,child:Child|undefined,successor:Child|undefined,launchedMs=Date.now();
  const stop=():void=>{stopping=true;if(!alive)process.exit(0);try{successor?.kill("SIGTERM");}catch{}try{child?.kill("SIGTERM");}catch{}};
  const launch=(extra:Readonly<Record<string,string>>={}):Child=>{
+  launchedMs=Date.now();
   const created:Child=Bun.spawn([process.execPath,entry,role],{windowsHide:true,stdin:"ignore",stdout:"inherit",stderr:"inherit",env:{...environment,SEMIO_SIDECAR_CHILD:"1",...extra},ipc:(message:unknown)=>{hear(created,message);}});
   return created;
  };
@@ -136,9 +138,22 @@ export async function runRemoteExecutionSidecarLauncherV1(role:RemoteExecutionSi
   setInterval(()=>{if(protocol.sidecarLeaseExpiredV1(lease,Date.now(),expire,startedMs)){process.stderr.write(`${new Date().toISOString()} ${role} lease not renewed for ${Math.round(expire/1000)} s, leaving\n`);stop();}},2000).unref();
  }
  if(record!==undefined&&record!==""){
-  const entrySha256=protocol.sidecarEntryHashV1(entry)??"0".repeat(64),name=environment.SEMIO_FLEET_SIDECAR??role,beat=():void=>{try{protocol.writeSidecarRecordV1(record,{version:1,name,...ownProcessIdentityV1(),startedMs,wallMs:Date.now(),entrySha256});}catch{}};
+  const entrySha256=protocol.sidecarEntryHashV1(entry)??"0".repeat(64),name=environment.SEMIO_FLEET_SIDECAR??role,beat=():void=>{try{const other=stopping?undefined:protocol.readSidecarRecordV1(record);if(other!==undefined&&other.pid!==process.pid&&other.startedMs>startedMs&&protocol.sidecarRecordLivesV1(other)){process.stderr.write(`${new Date().toISOString()} ${role} superseded by launcher ${other.pid} (started later), leaving / ersetzt durch Starter ${other.pid} (später gestartet), beendet sich\n`);stop();return;}protocol.writeSidecarRecordV1(record,{version:1,name,...ownProcessIdentityV1(),startedMs,wallMs:Date.now(),entrySha256});}catch{}};
   beat();setInterval(beat,protocol.sidecarProtocolV1.recordMilliseconds).unref();
   process.on("exit",()=>{try{if(protocol.readSidecarRecordV1(record)?.pid===process.pid)rmSync(record,{force:true});}catch{}});
+ }
+ const silenceFile=role==="ready"?readySilenceStatusFileV1(environment):undefined;
+ if(silenceFile!==undefined){
+  const pick=(name:string,fallback:number):number=>Number(environment[name])||fallback,watch=readySilenceChildWatchV1({...readySilencePolicyV1,silenceChildGraceMilliseconds:pick("SEMIO_SIDECAR_SILENCE_GRACE_MILLISECONDS",readySilencePolicyV1.silenceChildGraceMilliseconds)});
+  setInterval(()=>{
+   if(stopping||!alive||child===undefined)return;
+   try{
+    const status=JSON.parse(readFileSync(silenceFile,"utf8")),now=Date.now();
+    if(watch.observe(status,now,launchedMs)!=="restart")return;
+    process.stderr.write(`${new Date().toISOString()} ${role} ${readySilenceChildNoticeV1(readySidecarSilenceV1({status,nowMs:now}))}\n`);
+    child.kill("SIGKILL");
+   }catch{}
+  },pick("SEMIO_SIDECAR_SILENCE_POLL_MILLISECONDS",5000)).unref();
  }
  let delay=restart.initialMilliseconds;
  for(;;){

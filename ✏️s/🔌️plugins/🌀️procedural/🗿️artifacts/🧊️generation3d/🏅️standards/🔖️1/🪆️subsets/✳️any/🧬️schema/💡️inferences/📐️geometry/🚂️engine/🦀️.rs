@@ -5,7 +5,7 @@ use semio_s_artifact_procedural_3d_geometry_value::SharedEvaluation;
 use super::{Generation3dGeometry, GeometryInput};
 use semio_s_artifact_procedural_3d_model::catalogue::Catalogue;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use protocol::{infer_field_step, InferenceCache, InferenceCacheConfig, InferenceCacheStats, InferenceCursor, InferenceValues, InferenceWorkFailure};
+use protocol::{infer_field_step, OriginalInferenceCache, InferenceCacheStats, InferenceCursor, InferenceValues, InferenceWorkFailure};
 use std::mem::ManuallyDrop;
 use semio_framework_job::{StepContext,OriginalCallerSourceLoan};
 use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind,retirement::{controlled::ControlledRetirement}};
@@ -99,6 +99,13 @@ pub struct EngineAdmission {payload:ManuallyDrop<Option<(String,Generation3dSnap
 impl EngineAdmission {
     pub fn new(digest:String,snapshot:Generation3dSnapshot,mode:CacheMode,cancellation_id:String)->Self{Self{payload:ManuallyDrop::new(Some((digest,snapshot,cancellation_id))),mode,closing:None,scope:None}}
     pub fn digest(&self)->Option<&str>{self.payload.as_ref().map(|(digest,_,_)|digest.as_str())}
+    pub fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        if let Some(owner) = &self.closing {
+            if !owner.terminal_is_empty() { return owner.selected_demand(body); }
+        }
+        let copy_bytes = if self.payload.is_some() { size_of::<(String, Generation3dSnapshot, String)>() } else { 0 };
+        Ok(semio_framework_value::RetirementDemand { copy_bytes, depth: 1, ..Default::default() })
+    }
     pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,InferenceWorkFailure>{
         if let Some(source)=self.scope.as_ref(){if !source.matches(cx)?{return Err(changed().into())}}else{self.scope=Some(Source::capture(cx)?);}
         if self.closing.is_none()&&self.payload.is_some(){if !metadata(cx,size_of::<(String,Generation3dSnapshot,String)>())?{return Ok(false)}let original=self.payload.take().unwrap();match ControlledRetirement::new(original){Ok(owner)=>self.closing=Some(owner),Err((error,original))=>{*self.payload=Some(original);return Err(error.into())}}return Ok(false)}
@@ -112,7 +119,7 @@ impl Drop for EngineAdmission{fn drop(&mut self){assert!(std::thread::panicking(
 pub struct GeometryEngine {
     catalogue:Arc<Catalogue>,
     computes:Arc<dyn semio_s_artifact_procedural_3d_geometry_compute::GeometryComputeContext>,
-    cache:InferenceCache,
+    cache:OriginalInferenceCache<SharedEvaluation>,
     owners:ManuallyDrop<Owners>,
     totals:EngineTotals,
     pub(super) failure:ManuallyDrop<Option<InferenceWorkFailure>>,
@@ -126,8 +133,7 @@ fn metadata(cx:&mut StepContext<'_>,bytes:usize)->Result<bool,InferenceWorkFailu
 impl GeometryEngine {
     /// 🏗️ An engine whose cache holds at most `budget_bytes`; a zero budget disables the cache.
     pub fn new(catalogue: Arc<Catalogue>, computes:Arc<dyn semio_s_artifact_procedural_3d_geometry_compute::GeometryComputeContext>, budget_bytes: usize) -> Self {
-        let config = InferenceCacheConfig { enabled: budget_bytes > 0, budget_bytes, record_stats: true, ..Default::default() };
-        Self { catalogue, computes, cache: semio_framework_async::poll::resolve_ready(InferenceCache::new(config)), owners:ManuallyDrop::new(Owners{base:None,run:None,closing:None,source:None,scope:None,admission_identity:None}), totals: EngineTotals::default(),failure:ManuallyDrop::new(None),failure_place:Default::default() }
+        Self { catalogue, computes, cache: OriginalInferenceCache::new(budget_bytes), owners:ManuallyDrop::new(Owners{base:None,run:None,closing:None,source:None,scope:None,admission_identity:None}), totals: EngineTotals::default(),failure:ManuallyDrop::new(None),failure_place:Default::default() }
     }
 
     /// 🧷️ Whether the retained run of the request with this digest is open: neither finished nor replaced. A cancelled run stays open, so continuing it reports the cancellation.
@@ -149,6 +155,7 @@ impl GeometryEngine {
         if request.closing.is_some()||self.owners.admission_identity.as_ref().is_some_and(|original|*original!=identity){return Err(changed().into())}
         if cx.should_yield()||cx.is_cancelled(){return Ok(false)}
         if self.owners.source.is_none(){let scope=Source::capture(cx)?;let parent=cx.original_source_parent()?;if !parent.admit_loan(&mut self.owners.source,cx)?{return Ok(false)}self.owners.scope=Some(scope);self.owners.admission_identity=Some(identity);return Ok(false)}
+        if request.mode == CacheMode::Cold && !self.cache.clear_step(cx)? { return Ok(false); }
         if !metadata(cx,size_of::<Base>()+size_of::<Run>())?{return Ok(false)}
         let mut request=donor.take().unwrap();let(digest,snapshot,cancellation_id)=request.payload.take().unwrap();
         self.owners.base=Some(Base{digest,snapshot});self.owners.run=Some(Run{cursor:InferenceCursor::new(),values:InferenceValues::new(),bypass:request.mode==CacheMode::Bypass,cancellation_id});self.owners.admission_identity=None;self.totals.runs+=1;Ok(true)
@@ -156,10 +163,35 @@ impl GeometryEngine {
 
     fn validate(&self,cx:&StepContext<'_>)->Result<(),InferenceWorkFailure>{if let Some(source)=self.owners.scope.as_ref(){if !source.matches(cx)?{return Err(changed().into())}}Ok(())}
 
+    /// 📏️ Quotes the current run's next original retirement operation.
+    pub fn original_run_close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        use semio_framework_value::RetirementDemand;
+        if self.has_failure() {
+            return Ok(if self.failure_place.terminal_is_empty() && !matches!(self.failure.as_ref(), Some(InferenceWorkFailure::Original(_))) {
+                semio_framework_job::original_domain_failure_demand::<InferenceWorkFailure>()
+            } else { RetirementDemand { depth: 1, ..Default::default() } });
+        }
+        if let Some(demand) = self.cache.pending_retirement_demands(body)? { return Ok(demand); }
+        if let Some(run) = &self.owners.run {
+            if let Some(pending) = run.cursor.original_pending() { return pending.original_retirement_demands(body); }
+            if run.cursor.original_plan().is_some() { return run.cursor.original_plan_retirement_demands(); }
+            let demand = run.values.retirement_demands(body)?;
+            if demand != RetirementDemand::default() { return Ok(demand); }
+            return Ok(RetirementDemand { copy_bytes: size_of::<BaseClose>(), depth: 1, ..Default::default() });
+        }
+        if let Some(owner) = &self.owners.closing {
+            if !owner.terminal_is_empty() { return owner.selected_demand(body); }
+        }
+        if !self.failure_place.terminal_is_empty() { return self.failure_place.retirement_demands(body); }
+        if let Some(source) = &self.owners.source { return Ok(source.retirement_demands()); }
+        Ok(RetirementDemand { depth: 1, ..Default::default() })
+    }
+
     /// ♻️ Closes compute, plan, typed values, snapshot and request IDs before returning the initiating source loan.
     pub fn close_original_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,InferenceWorkFailure>{
         self.validate(cx)?;
         if self.failure.is_some(){return Ok(false)}
+        if !self.cache.finish_pending_step(cx)? { return Ok(false); }
         if let Some(run)=self.owners.run.as_mut(){
             run.cursor.cancel();
             if !run.cursor.close_original_plan_step(cx)?{return Ok(false)}
@@ -181,7 +213,7 @@ impl GeometryEngine {
         let (Some(base), Some(run)) = (owners.base.as_ref(), owners.run.as_mut()) else {return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"geometry engine has no original run").into())};
         let cache = if run.bypass { None } else { Some(&mut self.cache) };
         let input = GeometryInput::new(&base.snapshot,&self.catalogue,self.computes.as_ref());
-        let report = infer_field_step::<GeometryInput<'_>, Generation3dGeometry>(&input, &input, cache, &mut run.cursor, &mut run.values,cx)?;
+        let report = infer_field_step::<GeometryInput<'_>, Generation3dGeometry>(&input, &base.snapshot, cache, &mut run.cursor, &mut run.values,cx)?;
         self.totals.computed += report.computed as u64;
         self.totals.hits += report.hits as u64;
         Ok(EngineStep { done: report.done, fuel_used: report.fuel_used, computed: report.computed, hits: report.hits, completed: run.cursor.completed(), total: run.cursor.total(), fraction: report.progress })
@@ -189,8 +221,9 @@ impl GeometryEngine {
 
     /// 🪢️ Retains the whole field refusal until the actual caller pays its original envelope handoff.
     pub fn hold_failure(&mut self,original:InferenceWorkFailure){assert!(self.failure.is_none(),"original geometry engine already retains its field refusal");*self.failure=Some(original);}
-    pub fn has_failure(&self)->bool{self.failure.is_some()}
+    pub fn has_failure(&self) -> bool { self.failure.is_some() || self.failure_place.pending() }
     pub fn admit_failure(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::OriginalTurnFailure>,semio_framework_job::OriginalTurnFailure>{
+        if !self.has_failure() { return Ok(None); }
         protocol::admit_inference_failure(&mut self.failure,&mut self.failure_place,cx)
     }
     /// 🛑️ Cancels the run in flight: the in-flight widget job is cancelled and finished widgets stay valid.
@@ -198,6 +231,11 @@ impl GeometryEngine {
         if let Some(run) = self.owners.run.as_mut() {
             run.cursor.cancel();
         }
+    }
+
+    /// 🛑️ Exposes cancellation of the retained run before a checkpoint resumes it.
+    pub fn run_cancelled(&self) -> bool {
+        self.owners.run.as_ref().is_some_and(|run| run.cursor.is_cancelled())
     }
 
     /// 🏃️ Cancels the run in flight when it was started under `cancellation_id`; answers whether it was.
@@ -219,8 +257,12 @@ impl GeometryEngine {
         self.owners.base.as_ref().zip(self.owners.run.as_ref()).into_iter().flat_map(move|(base,run)|run.values.iter().filter_map(move|(source,value)|super::source_widget_key(&base.snapshot,source).map(|key|(key,value))))
     }
 
-    /// 🔗️ Formats a cold diagnostic hash from the existing borrowed source key.
-    pub fn dependency_hash(&self,widget:&str)->Option<String>{let(key,_)=self.evaluations().find(|(key,_)|key.as_str()==widget)?;self.owners.run.as_ref()?.cursor.hash(key).map(|hash|hash.0.iter().map(|byte|format!("{byte:02x}")).collect())}
+    /// 🔗️ Formats the published dependency fingerprint of the requested retained source row.
+    pub fn dependency_hash(&self, widget: &str) -> Option<String> {
+        let (base, run) = self.owners.base.as_ref().zip(self.owners.run.as_ref())?;
+        let (source, _) = run.values.iter().find(|(source, _)| super::source_widget_key(&base.snapshot, *source).is_some_and(|key| key == widget))?;
+        Some(run.values.fingerprint(source)?.0.iter().map(|byte| format!("{byte:02x}")).collect())
+    }
 
     /// 🧮️ Finished and total widgets of the current run.
     pub fn progress(&self) -> (usize, usize) {
@@ -229,7 +271,7 @@ impl GeometryEngine {
 
     /// 🗄️ The cache's hit, miss and eviction counters.
     pub fn cache_stats(&self) -> InferenceCacheStats {
-        semio_framework_async::poll::resolve_ready(self.cache.stats())
+        self.cache.stats()
     }
 
     /// ⏳️ Lifetime counters of the engine: runs started, widgets computed and cache hits served.
@@ -237,13 +279,26 @@ impl GeometryEngine {
         self.totals
     }
 
+    pub fn cache_enabled(&self) -> bool { self.cache.enabled() }
+
     /// 📏️ The bytes the cache currently holds.
     pub fn cache_bytes(&self) -> usize {
         self.cache.used_bytes()
     }
 
-    /// 🧊️ An empty engine needs no cold cleanup; original sources remain held for their paid closure.
-    pub fn retire_cold(&mut self){if self.terminal_is_empty(){semio_framework_async::poll::resolve_ready(self.cache.clear());}}
+    /// 📏️ Quotes the exact next retirement crossing for the reusable evaluation cache.
+    pub fn cache_retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        self.cache.retirement_demands(body)
+    }
+
+    /// ♻️ Retires the reusable cache at the enclosing geometry owner's closure.
+    pub fn close_cache_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, InferenceWorkFailure> {
+        if !self.terminal_is_empty() { return Err(changed().into()); }
+        self.cache.clear_step(cx)
+    }
+
+    /// 🧾️ Every reusable cache value and page has paid its original retirement.
+    pub fn cache_terminal_is_empty(&self) -> bool { self.cache.terminal_is_empty() }
 
     /// 🧾️ Every original request, value and source loan has returned through its paid closure.
     pub fn terminal_is_empty(&self)->bool{self.failure.is_none()&&self.failure_place.terminal_is_empty()&&self.owners.base.is_none()&&self.owners.run.is_none()&&self.owners.closing.is_none()&&self.owners.source.is_none()&&self.owners.scope.is_none()&&self.owners.admission_identity.is_none()}

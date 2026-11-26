@@ -1,0 +1,21 @@
+{
+  "owner": {
+    "package": "libc",
+    "crate": "libc",
+    "version": "0.2.186",
+    "crateTypes": ["lib"],
+    "profile": "prototype",
+    "target": "host"
+  },
+  "lines": 127423,
+  "peakRssBytes": 149176320,
+  "outputBytes": 1024,
+  "accepted": [{"name": "local success", "exit": 0}],
+  "ignored": [
+    {"name": "failed compiler", "exit": 1},
+    {"name": "cancelled", "exit": 143},
+    {"name": "remote", "exit": 0, "cache": {"key": "remote", "recorded": false}},
+    {"name": "cache replay", "exit": 0, "cache": {"key": "local-cache", "recorded": true}},
+    {"name": "unmeasured", "exit": 0, "peakRssBytes": 0}
+  ]
+}

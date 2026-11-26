@@ -9,7 +9,7 @@
 import * as React from "react";
 import { deviceSnappedRect, paintSharedWindowBorder, useSharedWindowBorder, sizeSharedBorderOverlay, type SharedBorderPaintSegment } from "./shared-border.ts";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
-import { LEVELS, SurfaceScope, surfaceFillClass, useLevel, type Level, type SurfaceActiveBindProps, type SurfaceFill } from "../🌈️Surface/🟦️.tsx";
+import { surfaceLevelAbove as windowFrameChipLevel, SurfaceScope, surfaceFillClass, useLevel, useSurface, type Level, type SurfaceActiveBindProps, type SurfaceFill } from "../🌈️Surface/🟦️.tsx";
 import {
   WINDOW_FRAME_CHIP_EPSILON,
   createWindowFrameGeometry,
@@ -194,10 +194,7 @@ export const windowCapFrameClass = "pointer-events-auto relative border-0 bg-tra
 /** 🔲️ Maximize/controls glass cell — host stamps {@link glassClass}. */
 export const windowControlsCapClass = "pointer-events-auto relative flex shrink-0 items-stretch border-0 bg-transparent text-element";
 
-/** 🪜️ The level one elevation above `level`, which a chip glass takes so it reads as a different surface than the content beneath it (the topmost level stays). */
-export function windowFrameChipLevel(level: Level): Level {
-  return LEVELS[Math.min(LEVELS.indexOf(level) + 1, LEVELS.length - 1)]!;
-}
+export { windowFrameChipLevel };
 
 /** 🗂️ `WindowChrome`'s own internal stacking, as inline z-indexes.
  *
@@ -231,7 +228,7 @@ export interface WindowChromeProps {
   readonly stackClassName?: string;
   readonly bodyClassName?: string;
   /** 🎨️ Fill painted by the frame beneath its content. */
-  readonly bodySurfaceFill?: SurfaceFill;
+  readonly bodySurfaceFill?: SurfaceFill | "inherit";
   readonly bodySurfaceLevel?: Level;
   /** 🎈️ Sets the frame level and supplies the content level when no body override is given. */
   readonly level?: Level;
@@ -382,7 +379,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
       className,
       stackClassName,
       bodyClassName,
-      bodySurfaceFill = "glass",
+      bodySurfaceFill: requestedFill,
       bodySurfaceLevel,
       level,
       style,
@@ -428,10 +425,13 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
     );
 
     const inheritedLevel = useLevel();
-    const contentLevel = bodySurfaceLevel ?? level ?? inheritedLevel;
+    const owner = useSurface();
+    const contentLevel = requestedFill === "inherit" ? inheritedLevel : bodySurfaceLevel ?? level ?? inheritedLevel;
+    const bodySurfaceFill = requestedFill ?? (contentLevel === "window" || contentLevel === "base" ? "surface" : "glass");
     const chipLevel = windowFrameChipLevel(contentLevel);
     const chipSurfaceClass = cn(windowCapFrameClass, glassClass);
-    const bodySurfaceClass = cn(surfaceFillClass(bodySurfaceFill), "pointer-events-none absolute inset-0 z-0 border-0");
+    const bodyFill = bodySurfaceFill === "inherit" ? owner?.fill ?? "none" : bodySurfaceFill;
+    const bodySurfaceClass = cn(bodySurfaceFill === "inherit" ? undefined : surfaceFillClass(bodySurfaceFill), "pointer-events-none absolute inset-0 z-0 border-0");
     const controlsSurfaceClass = cn(windowControlsCapClass, glassClass);
     const setCapRef = reactHostPort.useCallback(
       (element: HTMLDivElement | null) => {
@@ -531,7 +531,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
         {...stackDataAttrs}
       >
         <WindowChromeFrameBorder stack={stackEl} geometry={geometry} active={active} introduceTarget={introduceTarget} borderKind={borderKind} frameBorderSlot={frameBorderSlot} />
-        <div data-slot="window-chrome-body-surface" data-level={contentLevel} data-dim aria-hidden className={bodySurfaceClass} />
+        {bodySurfaceFill !== "inherit" && <div data-slot="window-chrome-body-surface" data-level={contentLevel} data-dim aria-hidden className={bodySurfaceClass} />}
         {capDock === "bottom" ? null : capRow}
         <div
           ref={bodyRef}
@@ -543,7 +543,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
           className={cn("window-frame-content-plane relative min-h-0 flex-1 border-0", bodyClassName)}
           style={{ ...bodyStyle, ...WINDOW_CHROME_BODY_PLANE_STYLE }}
         >
-          <SurfaceScope level={contentLevel} fill={bodySurfaceFill}>
+          <SurfaceScope level={contentLevel} fill={bodyFill}>
             <WindowFrameHostContext.Provider value={true}>{body}</WindowFrameHostContext.Provider>
           </SurfaceScope>
         </div>

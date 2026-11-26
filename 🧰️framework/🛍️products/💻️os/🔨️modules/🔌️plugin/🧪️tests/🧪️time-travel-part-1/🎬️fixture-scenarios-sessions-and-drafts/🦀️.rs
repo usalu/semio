@@ -37,7 +37,7 @@ async fn every_fixture_scenario_reaches_its_status_body_and_rows() {
         if let Some(refusal) = scenario.get("finalizeRefusal") {
             assert_eq!(app.time_travel.session().finalize_refusal().map(|refusal| refusal.code()), refusal.as_str(), "{id}: finalize refusal");
         }
-        assert_eq!(render_body(&mut app).await.contains(text(&scenario["body"])), true, "{id}: body {}", render_body(&mut app).await);
+        assert_eq!(render_body(&mut app,cx).await.contains(text(&scenario["body"])), true, "{id}: body {}", render_body(&mut app,cx).await);
         if !commits {
             assert_eq!(app.stores.store.generation(), generation, "{id}: no commit, no store change");
         }
@@ -80,28 +80,28 @@ async fn an_open_session_freezes_document_verbs_and_refuses_stale_or_invalid_dra
     let refusals = &fixture["refusals"];
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity,cx).await;
-    let emitted = app.dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { artifact_mutations: vec![SetCount { value: 3 }.into()], ..Default::default() }, &meta(&fixture), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+    let emitted = app.dispatch_ctx().dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { artifact_mutations: vec![SetCount { value: 3 }.into()], ..Default::default() }, &meta(&fixture), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
     assert_eq!(emitted.err().map(|fault| fault.code), Some(FaultCode::new(text(&refusals["frozen"]))), "an artifact emit is frozen");
     for action in refusals["frozenVerbs"].as_array().expect("frozen verbs") {
-        let refused = app.handle_action(text(action), None, &meta(&fixture), &mut identity).await;
+        let refused = dispatch(&mut app, text(action), None, &meta(&fixture), mounted_policy, &mut identity, cx).await;
         assert_eq!(refused.err().map(|fault| fault.code), Some(FaultCode::new(text(&refusals["frozen"]))), "{action} is frozen");
     }
-    let filtered = app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&DslValue::object([("value".to_string(), DslValue::String("all".into()))])), &meta(&fixture), &mut identity).await;
+    let filtered = dispatch(&mut app, SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(DslValue::object([("value".to_string(), DslValue::String("all".into()))])), &meta(&fixture), mounted_policy, &mut identity, cx).await;
     assert!(filtered.is_ok(), "a view verb keeps working: {filtered:?}");
     let generation = app.time_travel.session().generation;
-    let stale = verb(&mut app, &fixture, "historyEditInput", vec![("path".into(), DslValue::String("/value".into())), ("value".into(), DslValue::uint(9)), ("generation".into(), DslValue::uint(u64::from(generation) + 1))], mounted_policy, &mut identity).await;
+    let stale = verb(&mut app, &fixture, "historyEditInput", vec![("path".into(), DslValue::String("/value".into())), ("value".into(), DslValue::uint(9)), ("generation".into(), DslValue::uint(u64::from(generation) + 1))], mounted_policy, &mut identity, cx).await;
     assert_eq!(rejected(&stale), Some(text(&refusals["stale"])));
-    let invalid = verb(&mut app, &fixture, "historyEditInput", vec![("path".into(), DslValue::String("/value".into())), ("value".into(), dsl(&refusals["invalidInputValue"]))], mounted_policy, &mut identity).await;
+    let invalid = verb(&mut app, &fixture, "historyEditInput", vec![("path".into(), DslValue::String("/value".into())), ("value".into(), dsl(&refusals["invalidInputValue"]))], mounted_policy, &mut identity, cx).await;
     assert_eq!(rejected(&invalid), Some(text(&refusals["invalidInput"])));
     assert!(app.time_travel.editor().is_some_and(|editor| editor.refused.is_some()), "the refused value names its reason on the editor");
     assert_eq!(app.time_travel.session().generation, generation, "refusals leave the session untouched");
-    let history = render_history(&mut app, Locale::De).await;
+    let history = render_history(&mut app, Locale::De,cx).await;
     assert!(find_node(&history, "framework.history.timeTravel").is_some(), "the band leads the history body");
     assert!(find_node(&history, "framework.history.editor").is_some(), "the draft editor is shown while editing");
     assert!(find_node(&history, "framework.history.editor.input.value").is_some(), "the input's control is derived from its descriptor");
     assert!(history.to_string().contains("Verlaufsbearbeitung"), "German copy in a German shell");
-    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
-    assert!(app.handle_action("undo", None, &meta(&fixture), &mut identity).await.is_ok(), "exit lifts the freeze");
+    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity, cx).await;
+    assert!(dispatch(&mut app, "undo", None, &meta(&fixture), mounted_policy, &mut identity, cx).await.is_ok(), "exit lifts the freeze");
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     close(&mut app,cx);
 
@@ -124,7 +124,7 @@ async fn cancel_keeps_drafts_and_a_remote_edit_replays_again() {
     for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } }), serde_json::json!({ "accept": null })] {
         run_step(&mut app, &fixture, &step, mounted_policy, &mut identity,cx).await;
     }
-    let cancelled = verb(&mut app, &fixture, "historyEditCancelReplay", Vec::new(), mounted_policy, &mut identity).await;
+    let cancelled = verb(&mut app, &fixture, "historyEditCancelReplay", Vec::new(), mounted_policy, &mut identity, cx).await;
     assert_eq!(rejected(&cancelled), None);
     assert_eq!(app.time_travel.session().stage, TimeTravelStage::Reviewing);
     assert!(app.time_travel.session().report.is_none() && app.time_travel.session().accepted.len() == 1, "the draft stays, no report");
@@ -134,9 +134,9 @@ async fn cancel_keeps_drafts_and_a_remote_edit_replays_again() {
         (Some(semio_framework::kernel::HistoryTimeTravelReview::NeedsReplay), true, Some(semio_framework_time_travel::TIME_TRAVEL_CANCELLED_CODE)),
         "a cancelled replay needs a rerun, never reads as no changes"
     );
-    let history = render_history(&mut app, Locale::En).await;
+    let history = render_history(&mut app, Locale::En,cx).await;
     assert!(find_node(&history, "framework.history.timeTravel.rerun").is_some_and(|rerun| rerun["disabled"] != Value::Bool(true)), "the band offers Replay again");
-    let rerun = verb(&mut app, &fixture, "historyEditRerun", Vec::new(), mounted_policy, &mut identity).await;
+    let rerun = verb(&mut app, &fixture, "historyEditRerun", Vec::new(), mounted_policy, &mut identity, cx).await;
     assert_eq!(rejected(&rerun), None);
     assert_eq!(app.time_travel.session().stage, TimeTravelStage::Replaying, "rerun replays the kept drafts");
     run_step(&mut app, &fixture, &serde_json::json!({ "replay": "clean" }), mounted_policy, &mut identity,cx).await;
@@ -150,12 +150,12 @@ async fn cancel_keeps_drafts_and_a_remote_edit_replays_again() {
         probe.send(message).await.expect("forward remote edit");
     }
     let generation = app.stores.store.generation();
-    app.tick_backbone(&mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("ingest remote edit");
+    app.tick_backbone(&mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("ingest remote edit");
     assert!(app.stores.store.generation() > generation, "the remote edit is ingested while the session reviews");
     pump_until(&mut app, "the moved base replays again", |app| app.time_travel.session().stage == TimeTravelStage::Reviewing && app.time_travel.session().report.is_some() && app.time_travel.session().base.content_revision == app.stores.store.content_revision(), mounted_policy, &mut identity,cx)
         .await;
-    assert!(render_body(&mut app).await.contains("label=b"), "the replayed head keeps the draft");
-    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity).await;
+    assert!(render_body(&mut app,cx).await.contains("label=b"), "the replayed head keeps the draft");
+    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity, cx).await;
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     drop((probe, remote_probe));
     close(&mut app,cx);

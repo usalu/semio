@@ -167,6 +167,11 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       assert.equal(target.metadata?.semio?.orchestrator, true);
       assert.equal(target.executor, "nx:run-commands", `${row.project}:${row.target} must not be wrapped by an owner command deadline`);
       assert.deepEqual(target.metadata.semio.release.jobs.map((job: any) => job.id), row.jobs);
+      for (const job of target.metadata.semio.release.jobs) {
+        assert.equal(job.command[0], "repo", job.id);
+        const entry = resolve(root, job.root, job.command[1]);
+        assert.ok(existsSync(entry) && lstatSync(entry).isFile(), `${job.id} release command entry: ${entry}`);
+      }
       for (const prerequisite of row.prerequisites) assert.ok(target.dependsOn.includes(prerequisite), `${row.project}:${row.target} needs ${prerequisite}`);
       const generators = new Set(Object.values(JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")).generatorContracts ?? {}).map((contract: any) => contract.target));
       assert.ok(target.dependsOn.every((dependency: string) => row.prerequisites.includes(dependency) || generators.has(dependency)), `${row.project}:${row.target} depends on generators and prerequisites only: ${target.dependsOn.filter((dependency: string) => !row.prerequisites.includes(dependency) && !generators.has(dependency)).join(", ")}`);

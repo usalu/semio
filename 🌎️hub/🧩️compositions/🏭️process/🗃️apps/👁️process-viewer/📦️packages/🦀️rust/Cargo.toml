@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-hub-process-viewer-app"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Original mounted app dispatch for the Process 3D viewer"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-hash = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-tool-run = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
+semio-plugin-instance-construction = { workspace = true }
+semio-s-artifact-process-process3d-viewer = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }

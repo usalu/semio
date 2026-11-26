@@ -252,6 +252,7 @@
     { "operation": "units", "subcommand": "emit", "reason": { "en": "Writes build files into a directory of the caller's choice; part of the generated-target plumbing.", "de": "Schreibt Build-Dateien in ein frei gewähltes Verzeichnis; Teil der Installation generierter Targets." } },
     { "operation": "units", "subcommand": "exec", "reason": { "en": "The action of generated Nx targets and Bazel rules, not an operation of its own.", "de": "Die Aktion generierter Nx-Targets und Bazel-Regeln, keine eigene Operation." } },
     { "operation": "cache", "subcommand": "cas", "reason": { "en": "Cache adoption and collection operate on the machine store through the native cache commands.", "de": "Übernahme und Bereinigung des Maschinenspeichers erfolgen über die nativen Cache-Befehle." } },
+    { "operation": "fleet", "subcommand": "hostname", "reason": { "en": "Renames this machine through sudo after a confirmation read from the terminal; a human decision.", "de": "Benennt diese Maschine über sudo nach einer vom Terminal gelesenen Bestätigung um; eine menschliche Entscheidung." } },
     { "operation": "remote-cache", "subcommand": "rotate", "reason": { "en": "Rotates this machine’s fleet signing keys through the native administration command.", "de": "Wechselt die Flotten-Signaturschlüssel dieses Rechners über den nativen Verwaltungsbefehl." } }
   ]
 }

@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 
 //#region 🔖️Context
 /// 🪜️ One storey as written: its entity, its placement and its building-relative elevation.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, semio_framework_value::RetireOwned)]
 pub struct StoreyRef {
     pub ifc: u64,
     pub placement: u64,
@@ -19,14 +19,14 @@ pub struct StoreyRef {
 }
 
 /// 🏢️ One building as written: its entity and its placement.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, semio_framework_value::RetireOwned)]
 pub struct BuildingRef {
     pub ifc: u64,
     pub placement: u64,
 }
 
 /// 🔢️ One base quantity of an element.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub enum Quantity {
     Length(&'static str, f64),
     Area(&'static str, f64),
@@ -35,7 +35,7 @@ pub enum Quantity {
 }
 
 /// 🔗️ Everything the families record while writing so the relationships can be emitted once, in canonical order.
-#[derive(Default)]
+#[derive(Default, semio_framework_value::RetireOwned)]
 pub struct Links {
     pub elements: BTreeMap<String, u64>,
     pub contained: BTreeMap<String, Vec<u64>>,
@@ -58,6 +58,7 @@ pub struct Links {
 }
 
 /// 🧳️ Everything an export keeps between two stages: it owns no borrow, so a job can drop the inference between steps and read it again.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct Staged {
     pub ifc: Ifc,
     pub storeys: BTreeMap<String, StoreyRef>,

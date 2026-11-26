@@ -758,7 +758,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
             let viewport_height_for_widgets = draw.screen_height();
             let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
             ctx.pick_clip = Some(rect);
-            render_ui_document_step(&mut cursor.document, &document, rect, &mut ctx, surface.as_str(), controller.as_str(), self.chrome.chrome_build.driver.drag, &mut hosts, cx)
+            render_ui_document_step(&mut cursor.document, &document, rect, semio_ui_theme::Level::Pane, &mut ctx, surface.as_str(), controller.as_str(), self.chrome.chrome_build.driver.drag, &mut hosts, cx)
         };
         self.docs.window_projection_documents.insert(window_id.to_string(), document);
         if complete {

@@ -200,7 +200,7 @@ impl ArtifactEditor for XlsxStrictEditor {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
             "set-cell" => {
                 let edit = semio_s_artifact_stdio_contract::window_kit_stable_cell_edit(args)?;
-                Ok(XlsxStrictEditorCommand::SetCell { sheet_name: edit.sheet_name, row: edit.row, column: edit.column, revision: edit.revision, value: edit.value })
+                Ok(XlsxStrictEditorCommand::SetCell { sheet_name: edit.sheet_name, row: edit.row, column: edit.column, revision: edit.revision, value: semio_s_artifact_stdio_xlsx_base::editor::xlsx::standards::v_ecma_376::subsets::base::xlsx_canonical_cell_text(&edit.value, &edit.locale) })
             }
             other => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("stdio.xlsx.strict.unhandled-action"), format!("unknown xlsx editor action '{other}'"))),
         })
@@ -223,7 +223,7 @@ impl ArtifactEditor for XlsxStrictEditor {
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_plugin::app::InteractionView<'_>,
-        view_state: Option<&semio_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
@@ -231,7 +231,7 @@ impl ArtifactEditor for XlsxStrictEditor {
             let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
             return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
         };
-        xlsx_set_cell_emit(doc.snapshot, command, view_state.map(|view| view.locale))
+        xlsx_set_cell_emit(doc.snapshot, command, None)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {

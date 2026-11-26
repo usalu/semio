@@ -18,6 +18,9 @@ def plan(policy, host):
     if host["availableMegabytes"] is not None:
         room = max(0, host["availableMegabytes"] - policy["reserveMegabytes"] - local * host["unitMegabytes"])
         limits.append((room // policy["lightUnitMegabytes"], "fleet-memory"))
+    if host["grantedMegabytes"] is not None:
+        remaining = host["grantedMegabytes"] - local * host["unitMegabytes"]
+        limits.append((max(0, remaining) // policy["lightUnitMegabytes"], "fleet-memory"))
     for value, why in limits:
         if value < remote:
             remote, reason = max(0, value), why

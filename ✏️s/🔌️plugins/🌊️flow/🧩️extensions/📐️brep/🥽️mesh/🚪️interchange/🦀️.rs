@@ -1,5 +1,5 @@
 //! 📼️ Binary mesh interchange inside the Flow mesh job.
-use flow_extension_sdk::mesh::decode_base64;
+use semio_os_flow_mesh::decode_base64;
 use neural_engine::EvalError;
 use semio_framework_mesh_engine::{MeshData, io::binary::{BinaryStlReader, BinaryStlWriter, glb_document::GlbDocumentReader, stream::GlbCursor}};
 use super::{LIMIT, invalid};

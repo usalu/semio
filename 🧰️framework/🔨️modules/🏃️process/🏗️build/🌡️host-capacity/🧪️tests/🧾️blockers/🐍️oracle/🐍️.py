@@ -38,7 +38,7 @@ def blockers(policy, ledger, waiters, evaluation, ident, now, limit=3):
         if waiter is not None:
             r = waiter["request"]
             admitted.append(({"label": name(r, r["id"]), "state": "running", "jobs": row["jobs"], "megabytes": row["reservedMegabytes"]}, r.get("rampSlot") is True))
-    if reason == "memory": rows = [of_grant(g) for g in grants] + [row for row, _ in admitted]
+    if reason in ("memory", "starved"): rows = [of_grant(g) for g in grants] + [row for row, _ in admitted]
     elif reason == "load": rows = [of_grant(g) for g in grants if g["cpu"] > 0] + [row for row, _ in admitted]
     elif reason == "ramp": rows = [of_grant(g) for g in grants if g.get("rampSlot") is True and ramping(g)] + [row for row, slot in admitted if slot]
     elif reason == "quiet-limit": rows = [of_grant(g) for g in grants if g.get("quiet") is True]

@@ -94,7 +94,7 @@ fn scoped_load_commands_modify_only_the_addressed_case_and_reject_raw_ids() {
 #[test]
 fn viewport_identity_collisions_are_distinct_and_unencodable_ids_refuse_scene() {
     let doc = collision_document();
-    let scene = semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_scene_parts(&doc, None, 1.0, None).unwrap();
+    let scene = semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_scene_parts(&doc, None, 1.0, None, semio_plugin::Locale::En).unwrap();
     let instances = semio_framework_pack_json::parse(&scene.1, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let targets: std::collections::HashSet<_> = instances.as_array().unwrap().iter().filter_map(|instance| instance.get("interactionId").or_else(|| instance.get("id")).and_then(semio_framework_pack_json::Value::as_str)).collect();
     for kind in ["node", "element", "solid", "support"] { assert!(targets.contains(fem3d_entity_target(kind, "same").unwrap().as_str())); }
@@ -102,7 +102,7 @@ fn viewport_identity_collisions_are_distinct_and_unencodable_ids_refuse_scene() 
     let mut malformed = reference(&doc);
     malformed.nodes[0].id.clear();
     if let Ok(malformed) = Fem3dSnapshot::from_reference(malformed).map(Retiring::new) {
-        assert!(semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_scene_parts(&malformed, None, 1.0, None).is_err());
+        assert!(semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_scene_parts(&malformed, None, 1.0, None, semio_plugin::Locale::En).is_err());
     }
 }
 

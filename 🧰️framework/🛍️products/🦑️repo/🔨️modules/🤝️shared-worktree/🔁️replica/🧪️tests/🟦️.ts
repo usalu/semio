@@ -13,7 +13,7 @@ import stateSchema from "../💾️state/🧬️schema/🔣️.json" with {type:
 import {decodeRecordsV1,frameV1,payloadsV1,readCheckpointV1,scanWalV1,walHeaderV1} from "../💾️state/🟦️.ts";
 import {blobPathV1,foldEventsV1,formatHlcV1,readEventsV1,readHeadV1,readNewestSnapshotV1,type FleetEventV1,type FleetManifestEntryV1} from "../../📒️journal/🟦️.ts";
 import {checkpointReplicaV1,closeReplicaV1,flushRefusalsV1,CompactTableV1,compactV1,conflictWinnerV1,followOnceV1,foldStoreV1,homedOriginsV1,joinV1,localPathsV1,JoinRefusedV1,openReplicaV1,publishOnceV1,relayOnceV1,recallV1,relayV1,ReplicaBookV1,scanDelayV1,ReplicaBusyV1,ReplicaFoldsV1,requireReplicaShapeV1,runV1,seedV1,setSyncEnabledV1,snapshotV1,statusV1,syncEnabledV1,verifyV1,type ReplicaEventV1,type ReplicaOptionsV1,type ReplicaV1} from "../🟦️.ts";
-import {readProcessStartV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
+import {ownProcessIdentityV1,readProcessStartV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`}),headerValidator=ajv.compile({$schema:stateSchema.$schema,definitions:stateSchema.definitions,$ref:"#/definitions/Header"}),python=testPythonV1(),scratch:string[]=[];
 const oracle=join(import.meta.dirname,"🐍️.py"),fixturePath=join(import.meta.dirname,"🧫️fixtures","🔣️.json"),posixTest=process.platform==="win32"?test.skip:test;
@@ -582,10 +582,10 @@ test("opening a replica reclaims the staging files that a kill -9 left, in the s
  child.kill(9);await child.exited;
  const tmp=join(store,"v1","tmp"),local=join(a.options.worktree,".cache","f","tmp"),hex="0123456789abcdef";
  mkdirSync(tmp,{recursive:true});mkdirSync(local,{recursive:true});
- for(const name of [`a-${pid}-${hex}`,`a-${hex}`,`a-${process.pid}-${hex}`,`b-${pid}-${hex}`,`relay-${hex}`])writeFileSync(join(tmp,name),"torn");
+ const own=ownProcessIdentityV1().startMs;for(const name of [`a-${pid}-1000-${hex}`,`a-${process.pid}-${own}-${hex}`,`b-${pid}-1000-${hex}`,`relay-${hex}`])writeFileSync(join(tmp,name),"torn");
  writeFileSync(join(local,"torn"),"torn");
  await open(a);
- expect(readdirSync(tmp).sort()).toEqual([`a-${process.pid}-${hex}`,`b-${pid}-${hex}`,`relay-${hex}`].sort());
+ expect(readdirSync(tmp).sort()).toEqual([`a-${process.pid}-${own}-${hex}`,`b-${pid}-1000-${hex}`,`relay-${hex}`].sort());
  expect(readdirSync(local)).toEqual([]);
 });
 

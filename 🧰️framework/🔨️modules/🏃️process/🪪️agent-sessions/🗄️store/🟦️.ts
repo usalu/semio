@@ -1,4 +1,5 @@
 import {createHash} from "node:crypto";
+import {processPidExistsV1} from "../../🔖️identity/🟦️.ts"
 import {appendFileSync,mkdirSync,readdirSync,readFileSync,realpathSync,renameSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {homedir} from "node:os";
 import {isAbsolute,join,resolve} from "node:path";
@@ -14,7 +15,7 @@ export type AgentSessionRowV1=Readonly<{session:AgentSessionV1;state:AgentSessio
 /** 🔌️ The process facts the store depends on, replaceable in tests. */
 export type AgentSessionPortsV1=Readonly<{alive?:(pid:number)=>boolean;now?:number}>;
 
-const defaultAlive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
+const defaultAlive=(pid:number):boolean=>processPidExistsV1(pid);
 const sleep=(milliseconds:number):void=>{Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,milliseconds);};
 const zero="0".repeat(policy.store.worktreeCharacters);
 

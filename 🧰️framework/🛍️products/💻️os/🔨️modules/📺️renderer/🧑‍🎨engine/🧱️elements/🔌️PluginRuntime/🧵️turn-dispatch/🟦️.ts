@@ -14,6 +14,7 @@ import { TurnScheduler, type Lane } from "@semio-tech/framework/actor";
 import { hostContinuations } from "@semio-tech/framework/async/continuation";
 import { createCommandStallWatchV1, type CommandStallWatchV1 } from "../⏱️command-stall/🟦️.ts";
 import { TYPED_OPERATION_ACK_MAGIC } from "@semio-tech/framework/actor/wire-turn";
+import { deliverWorkspaceClipboardTurn } from "./workspace-clipboard.ts";
 import { coerceTurnResult, type WireTurnResult } from "../🪝️wire-codec/🟦️.ts";
 import { typedOperationRoutersByActor } from "../📬️typed-result/🟦️.ts";
 import { DEFAULT_SHARD_BUDGET, getShardClient } from "../🛰️runtime-singletons/🟦️.ts";
@@ -168,12 +169,12 @@ export async function runPluginLifecycleTurn(owner: ShardInstanceLifecycleLease,
     case "issued-ui-acks": {
       const { results, receipts } = await owner.submitUiAcknowledgements(work.entries, budget);
       if (results.length !== work.entries.length || receipts.length !== results.length || !results.length) throw new Error("plugin-ui.acknowledgement-count");
-      const turns = results.map(result => coerceTurnResult(result));
+      const turns = results.map(result => deliverWorkspaceClipboardTurn(owner.activation.actorId, coerceTurnResult(result)));
       return Object.freeze({ owner, raw: results.at(-1), turn: turns.at(-1)!, turns, submissions: receipts });
     }
     default: throw new Error("actor-lifecycle.work-kind");
   }
-  const turn = coerceTurnResult(raw);
+  const turn = deliverWorkspaceClipboardTurn(owner.activation.actorId, coerceTurnResult(raw));
   return Object.freeze({ owner, raw, turn, turns: [turn], submissions: null });
 }
 
@@ -253,7 +254,7 @@ export function getPluginTurnScheduler(): TurnScheduler<PendingPluginTurn, Shard
         payload.activation?.assertActive();
         const raw = await (payload.activation ? payload.activation.turn(payload.events, budget, payload.commandPage) : getShardClient().turn(actorId, payload.events, budget, payload.commandPage));
         payload.activation?.assertActive();
-        const result = coerceTurnResult(raw);
+        const result = deliverWorkspaceClipboardTurn(actorId, coerceTurnResult(raw));
         noteCrossingCensusV1(payload.commandPage ? [...payload.events, { kind: "command-page", payload: null }] : payload.events, result);
         for (const waiter of payload.waiters) waiter.resolve(result);
       } catch (error) {

@@ -14,7 +14,7 @@ use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
 use semio_framework_geometry::placement::ZPlane;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
-use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::sheets::pdf::arcs::Point;
+use semio_framework_geometry::Point;
 
 fn square_prism(side: f64, height: f64) -> TriMesh {
     semio_framework_geometry::mesh::extrude(&[Point::new(0.0, 0.0), Point::new(side, 0.0), Point::new(side, side), Point::new(0.0, side)], &[], ZPlane::flat(0.0), ZPlane::flat(height))
@@ -165,17 +165,28 @@ fn blessed_meshes(solids: &BTreeMap<String, ElementSolid>) -> serde_json::Value 
     serde_json::Value::Object(solids.iter().map(|(id, solid)| (id.clone(), welded_row(solid))).collect())
 }
 
-fn bless(name: &str, meshes: &serde_json::Value) {
-    let path = format!("{FIXTURES_ROOT}/{name}/🔣️.json");
-    let text = std::fs::read_to_string(&path).expect("the case file");
+fn fixture_path(name: &str) -> std::path::PathBuf {
+    let mut cases = std::fs::read_dir(FIXTURES_ROOT).expect("element-solid fixture directory")
+        .map(|entry| entry.expect("fixture directory entry"))
+        .filter(|entry| entry.file_name().to_str().is_some_and(|folder| folder.ends_with(name)));
+    let path = cases.next().expect("the named case").path().join("🔣️.json");
+    assert!(cases.next().is_none(), "the case name must be unique");
+    path
+}
+
+fn bless(path: &std::path::Path, text: &str, meshes: &serde_json::Value) {
     let cut = text.rfind("\n  \"meshes\": ").expect("the case file ends with its meshes");
-    std::fs::write(&path, format!("{}\n  \"meshes\": {}\n}}\n", &text[..cut], meshes)).expect("the case file is writable");
+    std::fs::write(path, format!("{}\n  \"meshes\": {}\n}}\n", &text[..cut], meshes)).expect("the case file is writable");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn the_committed_expectations_and_meshes_match_the_inference() {
     for (name, _) in CASES {
-        let (snapshot, document) = case(name);
+        let path = fixture_path(name);
+        let text = std::fs::read_to_string(&path).expect("the case file");
+        let document: serde_json::Value = serde_json::from_str(&text).expect("the case is JSON");
+        let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str(&document["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject)
+            .expect("the fixture snapshot decodes");
         let solids = compute_element_solids(&snapshot);
         let tolerance = if name == "arc-window" { 1e-4 } else { 1e-9 };
         let close = |want: &serde_json::Value, got: f64| (want.as_f64().expect("a number") - got).abs() <= tolerance * got.abs().max(1.0);
@@ -194,7 +205,7 @@ async fn the_committed_expectations_and_meshes_match_the_inference() {
         }
         let meshes = if solids.values().map(ElementSolid::triangle_count).sum::<usize>() > MESH_LIMIT { serde_json::json!({}) } else { blessed_meshes(&solids) };
         if std::env::var("BIM_BLESS").is_ok() {
-            bless(name, &meshes);
+            bless(&path, &text, &meshes);
         } else {
             assert_eq!(document["meshes"], meshes, "{name}: the committed meshes are stale; run with BIM_BLESS=1 to rewrite them");
         }

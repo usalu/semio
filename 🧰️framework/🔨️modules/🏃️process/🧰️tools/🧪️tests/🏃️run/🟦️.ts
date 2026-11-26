@@ -129,3 +129,21 @@ describe("caller and probe", () => {
     expect(probeToolV1(entry, resolution, environment)).toBe(Bun.version);
   });
 });
+
+test("rustup delegates compiler capacity and clamps only Cargo's own arguments", async () => {
+  const cases = (await import("../🧫️fixtures/rustup-capacity.json")).default;
+  const input = structuredClone(registryDocument);
+  const rustup = input.tools.find(tool => tool.id === "rustup")!;
+  Object.assign(rustup, {locate: [{kind:"script", path:"🧰️framework/🔨️modules/🏃️process/🧰️tools/🧪️tests/🧫️fixtures/🎟️capacity-probe.mjs", via:"bun"}]});
+  for (const item of cases) {
+    const admissions: string[] = [];
+    const admission: ToolAdmissionV1 = async (ask, execute) => {
+      admissions.push(ask.tool);
+      expect(ask.operation).toBe(item.operation);
+      return execute({jobs:1, environment:{}});
+    };
+    const result = await runToolV1("rustup", item.args, {...options, registry:readToolRegistryV1(input), trusted:true, heavy:false, capture:true, admission});
+    expect(admissions).toEqual(item.tool ? [item.tool] : []);
+    expect(JSON.parse(result.stdout)).toEqual(item.output);
+  }
+});

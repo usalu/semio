@@ -484,12 +484,13 @@ pub fn submit_ui_image_upload(key: &str, width: u32, height: u32, pixels: Vec<u8
     .unwrap_or(false)
 }
 
-/// 🖍️ Draws one media row's box (the caption follows as its own text step).
+/// 🖍️ Draws a media row's range or focus chrome. Captions paint in their own text step.
 pub fn paint_media_overlay_row(draw: &mut DrawList, row: &MediaOverlayRow, theme: &Theme) {
     let [x, y, w, h] = row.rect;
-    let fill = if row.focused { theme.selected } else { theme.muted };
     match row.shape {
-        MediaOverlayShape::Button => draw.push_solid([x, y, w, h], if row.enabled { fill } else { theme.panel }),
+        MediaOverlayShape::Button if row.enabled && row.focused => {
+            draw.push_shared_border(Rect::new(x, y, w, h), theme.stroke_hairline, theme.selected, semio_ui_draw_contract::SharedBorderState::Focus);
+        }
         MediaOverlayShape::Slider => {
             let track = [x, y + h * 0.5 - 2.0, w, 4.0];
             draw.push_solid(track, theme.muted);
@@ -497,8 +498,7 @@ pub fn paint_media_overlay_row(draw: &mut DrawList, row: &MediaOverlayRow, theme
             draw.push_solid([x, track[1], w * filled, 4.0], theme.accent);
             draw.push_solid([x + w * filled - 4.0, y + h * 0.5 - 4.0, 8.0, 8.0], if row.focused { theme.accent_hover } else { theme.accent });
         }
-        MediaOverlayShape::Alert => draw.push_solid([x, y, w, h], theme.panel),
-        MediaOverlayShape::Text => {}
+        MediaOverlayShape::Button | MediaOverlayShape::Alert | MediaOverlayShape::Text => {}
     }
 }
 //#endregion 🎞️MediaOverlay

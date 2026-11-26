@@ -41,7 +41,7 @@ fn grid_extent(sheet: &XlsxSheet) -> (usize, usize) {
     (rows, columns)
 }
 
-fn cell_arguments(sheet_name: &str, row: u32, column: u32, revision: &str) -> semio_plugin::UiAssemblyResult<UiValue> {
+fn cell_arguments(sheet_name: &str, row: u32, column: u32, revision: &str, locale: Locale) -> semio_plugin::UiAssemblyResult<UiValue> {
     let mut arguments = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("xlsx.cell-arguments", "cell argument map capacity"))?;
     arguments
         .try_insert("sheetName".into(), UiValue::Text(UiText::try_from_str(sheet_name).ok_or_else(|| PluginAssemblyError::new("xlsx.sheet-name", "worksheet name exceeds the UI text bound"))?))
@@ -51,6 +51,9 @@ fn cell_arguments(sheet_name: &str, row: u32, column: u32, revision: &str) -> se
     arguments
         .try_insert("revision".into(), UiValue::Text(UiText::try_from_str(revision).ok_or_else(|| PluginAssemblyError::new("xlsx.cell-revision", "cell revision exceeds the UI text bound"))?))
         .map_err(|_| PluginAssemblyError::new("xlsx.cell-arguments", "revision argument capacity"))?;
+    arguments
+        .try_insert("locale".into(), UiValue::Text(UiText::try_from_str(locale.as_str()).ok_or_else(|| PluginAssemblyError::new("xlsx.cell-locale", "input locale exceeds the UI text bound"))?))
+        .map_err(|_| PluginAssemblyError::new("xlsx.cell-arguments", "locale argument capacity"))?;
     Ok(UiValue::Map(arguments.finish()))
 }
 
@@ -92,7 +95,7 @@ fn render_sheet_grid(
                     None => (String::new(), worksheet.revision.clone()),
                 };
                 let label = format!("{}{}", column_letter(column), row);
-                projected.push(WindowedEditableTableCell::new(value, label, "set-cell", cell_arguments(&sheet.name, row, column, &revision)?).publication_revision(publication_revision));
+                projected.push(WindowedEditableTableCell::new(value, label, "set-cell", cell_arguments(&sheet.name, row, column, &revision, locale)?).publication_revision(publication_revision));
             }
             editable_table_window_row_at(&format!("xlsx-sheet-{sheet_ordinal}-row-{row}"), controller_id, locale, columns.start, projected, Vec::new(), None)
         },

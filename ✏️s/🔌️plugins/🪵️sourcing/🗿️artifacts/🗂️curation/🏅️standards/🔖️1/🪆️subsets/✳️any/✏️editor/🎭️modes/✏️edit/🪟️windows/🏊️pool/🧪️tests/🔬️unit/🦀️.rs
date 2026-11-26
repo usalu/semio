@@ -133,7 +133,7 @@ async fn pool_sort_applies_only_to_its_own_columns() {
 async fn pool_scene_names_columns_by_id_and_drops_onto_the_pool() {
     let _arena = arena();
     let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    let node = render(&document, &SourcingCurationConfig::default(), crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)),semio_ui_locale::Locale::En).expect("bounded pool");
+    let node = render(&document, &SourcingCurationConfig::default(), crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), &[], semio_ui_locale::Locale::En).expect("bounded pool");
     assert_eq!(node.children.len(), 2, "filter row above the table");
     let semio_plugin::Component::Surface(props) = &node.children.get(1).expect("table surface").component else { panic!("expected a table surface") };
     let scene = crate::editor_unit_tests::context::table_scene_of(node.children.get(1).expect("table surface")).expect("complete retained table scene");

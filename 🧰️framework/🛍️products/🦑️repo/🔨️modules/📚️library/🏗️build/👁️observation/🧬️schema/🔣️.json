@@ -166,11 +166,6 @@
         }
       }
     },
-    "portableSourceAnalysisOwner": {
-      "description": "EN: Portable parser owner identity written into a shared project record. DE: Portable Parser-Identität in einem geteilten Projektdatensatz.",
-      "type": "string",
-      "pattern": "^(?<role>build:[a-z0-9-]+:v1:)⟦analysis-owner⟧$"
-    },
     "sourceAnalysisOwner": {
       "description": "EN: Generated parser owner identity, whose owner hash can vary across processes if role and revision match. DE: Erzeugte Parser-Identität, deren Owner-Hash sich bei identischer Rolle und Revision zwischen Prozessen unterscheiden darf.",
       "type": "string",
@@ -555,6 +550,8 @@
         "sweepBlockProgressRows": 1024,
         "settledReadMaximumFileBytes": 4194304,
         "settleRounds": 64,
+        "conflictRounds": 5,
+        "conflictPauseMilliseconds": 25,
         "fileDigestChunkBytes": 65536,
         "holdNestingLimit": 64,
         "holdProgressRows": 64,
@@ -595,6 +592,8 @@
           "sweepBlockProgressRows": "After how many blocks the sweep reports progress.",
           "settledReadMaximumFileBytes": "The largest file whose read is remembered as a settled read (4 MiB).",
           "settleRounds": "The most rounds a computation is repeated while the files it read keep changing.",
+          "conflictRounds": "How many times a computation that read one source in two states (a concurrent edit by the replica) is repeated after a pause before the conflict counts as genuine and fails the owner.",
+          "conflictPauseMilliseconds": "The pause before the first repetition after a conflicting read; each further repetition waits four times as long.",
           "fileDigestChunkBytes": "Maximum chunk size for validating the digest of a physical file after its timestamp or identity changed.",
           "holdNestingLimit": "The deepest nesting of analyses whose recorded observations are checked again.",
           "holdProgressRows": "The minimum new contiguous verified observations for reporting source validation progress.",
@@ -632,6 +631,8 @@
           "sweepBlockProgressRows": "Nach wie vielen Blöcken der Sweep Fortschritt meldet.",
           "settledReadMaximumFileBytes": "Die grösste Datei, deren Lesung als beruhigte Lesung gemerkt wird (4 MiB).",
           "settleRounds": "Die meisten Runden, die eine Berechnung wiederholt wird, solange sich die gelesenen Dateien weiter ändern.",
+          "conflictRounds": "Wie oft eine Berechnung, die eine Quelle in zwei Zuständen las (gleichzeitige Änderung durch das Replikat), nach einer Pause wiederholt wird, bevor der Konflikt als echt gilt und den Owner scheitern lässt.",
+          "conflictPauseMilliseconds": "Die Pause vor der ersten Wiederholung nach einem widersprüchlichen Lesen; jede weitere Wiederholung wartet viermal so lange.",
           "fileDigestChunkBytes": "Maximale Blockgröße bei der Prüfung des Inhalts einer physischen Datei nach einer Änderung ihres Zeitstempels oder ihrer Identität.",
           "holdNestingLimit": "Die tiefste Verschachtelung von Analysen, deren aufgezeichnete Beobachtungen erneut geprüft werden.",
           "holdProgressRows": "Die Mindestzahl weiterer zusammenhängend bestätigter Beobachtungen pro Fortschrittsmeldung.",

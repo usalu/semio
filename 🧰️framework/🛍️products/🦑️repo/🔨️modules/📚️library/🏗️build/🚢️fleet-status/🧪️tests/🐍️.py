@@ -254,6 +254,8 @@ def summarize(facts,language):
         if w["liveness"]=="offline": say("worker-offline","warn",w["origin"],values)
         elif w["liveness"]=="silent": say("worker-silent","warn",w["origin"],dict(values,age=duration(language,w["recordAgeSeconds"] or 0)))
         elif w["liveness"]=="absent" and (w["heartbeatAgeSeconds"] is None or w["heartbeatAgeSeconds"]>=facts["workers"]["offlineSeconds"]): say("worker-absent","info",w["origin"],{"origin":w["origin"]})
+        h=w.get("hostName")
+        if h and h["state"] in ("duplicate","named-as"): say("worker-host-name-"+h["state"],"warn",w["origin"],{"origin":w["origin"],"label":h["label"] if h["label"] is not None else "-","others":", ".join(h["others"])})
     wardens={};stale=POLICY["findings"]["workerMemoryStaleSeconds"];mem=facts.get("memory");local=mem["local"] if mem else None
     for o,r in ((mem or {}).get("origins") or {}).items():
         if r is not None: wardens[o]=r
@@ -417,6 +419,11 @@ def generate(seed,count):
                 none=live=="absent"
                 return {"origin":origin,"platform":None if none and wr.random()<0.5 else wr.choice(["linux","macos","windows"]),"liveness":live,"recorded":None if none else wr.choice(["running","waiting","backoff","ready","observing"]),"stage":None if none else wr.choice(["tools","workspace","dependencies",None]),"stageIndex":0 if none else wr.randint(0,5),"stageCount":0 if none else 5,"attempts":0 if none else wr.randint(0,60),"recordAgeSeconds":None if none else wr.choice([0,5,95,599,600,7200,86400]),"heartbeatAgeSeconds":wr.choice([None,0,3,700,86400]),"refusal":wr.choice([None,{"code":"stage-timeout","en":"timed out","de":"Zeit überschritten"}])}
             facts["workers"]={"offlineSeconds":600,"rows":[worker(n) for n in wr.sample(["g1-m01","g1-m04","g1-m09","g1-m12","g1-server"],wr.randint(1,5))]}
+            hr=random.Random(seed*15485863+index)
+            for row in facts["workers"]["rows"]:
+                kind=hr.choice(["none","ok","duplicate","named-as","unknown"])
+                if kind=="none": continue
+                row["hostName"]={"state":kind,"label":None if kind=="unknown" else hr.choice(["uelis-mac-mini","semio-g1-m08","ueli-mac"]),"others":[] if kind in ("ok","unknown") else sorted(hr.sample(["g1-m08","g1-m10","g1-m13"],hr.randint(1,2)))}
         mr=random.Random(seed*32452843+index)
         if mr.random()<0.75:
             def memrec(origin):

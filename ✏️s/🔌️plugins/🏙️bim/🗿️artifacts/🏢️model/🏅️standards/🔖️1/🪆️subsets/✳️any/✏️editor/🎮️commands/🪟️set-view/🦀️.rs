@@ -1,6 +1,7 @@
 //! 🪟️ `setView`: sets one named view parameter of the addressed window, persisted in that window's own config: the plan and section windows' authored view, the world's projection, storey
 //! isolation and visibility and section plane. It never touches the document. Choosing a plan view shares its storey as the working storey in presence.
 
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{OptionSelection, WorksetVisibility};
 use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, section, sheet, world};
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
@@ -30,16 +31,26 @@ fn unknown(window: &str, field: &str) -> Fault {
     fault("bim.view.field-unknown", format!("the window '{window}' has no view parameter '{field}'"))
 }
 
-fn membership_view(payload: &SetView, snapshot: &ModelSnapshot, options: &mut std::collections::BTreeMap<String, String>, worksets: &mut std::collections::BTreeMap<String, bool>) -> Result<bool, Fault> {
+fn membership_view(payload: &SetView, snapshot: &ModelSnapshot, options: &mut Vec<OptionSelection>, worksets: &mut Vec<WorksetVisibility>) -> Result<bool, Fault> {
     if let Some(group) = payload.field.strip_prefix("option:") {
         if !snapshot.option_groups.contains_key(group) || !payload.value.is_empty() && !snapshot.design_options.get(&payload.value).is_some_and(|option| option.group == group) { return Err(fault("bim.view.option-missing", "Option must belong to the addressed group")); }
-        options.remove(group);
-        if !payload.value.is_empty() { options.insert(group.to_owned(), payload.value.clone()); }
+        if payload.value.is_empty() {
+            options.retain(|selection| selection.group != group);
+        } else if let Some(selection) = options.iter_mut().find(|selection| selection.group == group) {
+            selection.option.clone_from(&payload.value);
+        } else {
+            options.push(OptionSelection { group: group.to_owned(), option: payload.value.clone() });
+        }
         return Ok(true);
     }
     if let Some(workset) = payload.field.strip_prefix("workset:") {
         if !snapshot.worksets.contains_key(workset) { return Err(fault("bim.view.workset-missing", "Workset is missing")); }
-        worksets.insert(workset.to_owned(), flag(payload)?);
+        let visible = flag(payload)?;
+        if let Some(entry) = worksets.iter_mut().find(|entry| entry.workset == workset) {
+            entry.visible = visible;
+        } else {
+            worksets.push(WorksetVisibility { workset: workset.to_owned(), visible });
+        }
         return Ok(true);
     }
     Ok(false)

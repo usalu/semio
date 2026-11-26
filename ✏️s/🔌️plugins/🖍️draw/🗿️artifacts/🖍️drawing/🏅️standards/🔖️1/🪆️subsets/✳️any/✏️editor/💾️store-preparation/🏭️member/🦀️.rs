@@ -1,6 +1,6 @@
 //! 🏭️ Drawing member opening installs one actual original snapshot receiver and shared retained semantic issuer.
 use super::{DrawingSnapshot,DrawingMutation,DrawingArtifactStorePreparationFactory};
-#[path="📨️wire/🦀️.rs"]pub mod wire;
+pub use semio_s_artifact_draw_drawing_editor_member_wire as wire;
 pub use wire::{DrawingMemberWirePreparationFactory,DRAWING_MEMBER_OPERATION_SCHEMA};
 use std::sync::Arc;
 use store::os_store::document_store_owners::{DocumentStoreOwners,DocumentStoreOwnersAdmissionError,producer::DocumentStoreOwnerProducer,member_producer::MemberStoreProducer,bounded_artifact_store_owners_shared_semantic_source_demands,bounded_artifact_store_owners_with_shared_semantic_preparation};
@@ -16,7 +16,7 @@ impl DocumentStoreOwnerProducer<DrawingSnapshot,DrawingMutation> for DrawingMemb
  fn admit_sources(g:RetainedCloneGrant)->Result<(DocumentStoreOwners<DrawingSnapshot,DrawingMutation>,RetainedCloneProgress),DocumentStoreOwnersAdmissionError<DrawingSnapshot,DrawingMutation>>{
     bounded_artifact_store_owners_with_shared_semantic_preparation(g,Self::wire_birth(),Self::wire_copy(),DrawingArtifactStorePreparationFactory::default).map(|(mut owners,p)|{
         let typed=Arc::clone(owners.one_item_preparation.as_ref().expect("admitted shared Drawing semantic issuer"));
-        owners.one_item_wire_preparation=Some(Arc::new(DrawingMemberWirePreparationFactory{typed}));
+        owners.one_item_wire_preparation=Some(Arc::new(DrawingMemberWirePreparationFactory::new(typed)));
         owners.operation_wire=super::drawing_history_wire(owners.operation_wire);
         (owners,p)
     })

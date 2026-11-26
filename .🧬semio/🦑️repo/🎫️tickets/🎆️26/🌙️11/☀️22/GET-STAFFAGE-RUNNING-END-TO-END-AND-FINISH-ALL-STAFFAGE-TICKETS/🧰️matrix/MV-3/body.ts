@@ -2,8 +2,9 @@
  *
  * `carry.ts` lays flat plates `mvc-*` under the front and plan outlines of the parts the wind turns; in a wind pose every plate shows as a straight cut beside the outline. This tool takes every part (scale, view, bone) that carries plates and lays one `loft` shape `mvb-<bone>` in their place, below the drawn outlines:
  * - the stations run along the height (front) or the forward axis (plan); at every station the section is the ellipse over the lateral interval INSIDE the drawn outlines of the part (the run of intervals that hangs together, starting at the widest one, so the body never bridges a notch) and over the depth interval of the elevation outlines of the bone at that station;
- * - every interval is drawn in by `paper` millimetres on the paper of the scale plus `margin` metres, and the run is evaluated in the default pose: a body that shows beside the drawn outlines there is drawn in further (up to five times) or left out and named, so the default pose draws what it drew before;
+ * - every interval is drawn in by `paper` millimetres on the paper of the scale plus `margin` metres, across and along the stations (a station takes what its neighbours within that distance share, so the body keeps clear of level edges too), and the run is evaluated in the default pose: a body that shows beside the drawn outlines there is drawn in further (up to five times) or left out and named, so the default pose draws what it drew before;
  * - stations are kept until the straight edge between two of them is within `paper` millimetres of both outlines.
+ * The body takes the tone, region and material of the outlines that cover most of the part, and the paint order of the plates.
  * In a wind pose the bone turns the body itself, so what shows beside the foreshortened outline is the smooth edge of one body. The outlines themselves (and the suffix `-mvs` `carry.ts` gave them) stay as they are.
  * `--save` writes the bodies as absolute values with the place they stand at and the ids of the sheets that carry `-mvs`; `--ops` applies such a file: it removes every `mvc-*` plate and every `mvb-*` body, sets the suffixes as saved and lays the saved bodies, so the step is idempotent and runs after `carry.ts` whatever that step wrote.
  * @see ./carry.ts — the plates this tool replaces
@@ -41,6 +42,7 @@ const PLATE = "mvc-";
 const BODY = "mvb-";
 const SHEET = "-mvs";
 const COMMON = ["bone", "role", "z", "filled", "tone", "region", "regions", "material", "hatch", "penMm"];
+const LOOK = ["tone", "region", "regions", "material", "hatch", "penMm"];
 const VIEWS: readonly View[] = ["front", "plan"];
 const TINY = 5e-4;
 const authored = Object.keys(asset.representations).filter((key) => engine.authoredOf(asset, key) !== undefined && (scales === undefined || scales.includes(key)));
@@ -122,7 +124,21 @@ function sectionsOf(view: View, bone: string, drawn: P[][][], side: P[][][], bud
     const list = spans(world, along, e0 + ((s - d0) * (e1 - e0)) / (d1 - d0) + 1.3e-6);
     return list.length === 0 ? undefined : [list[0]![0], list[list.length - 1]![1]];
   };
-  const rows = keep.map((i) => ({ s: fine[i]!, drawn: [chosen.get(i)![0] + inset, chosen.get(i)![1] - inset] as Span, deep: deepAt(fine[i]!) })).filter((row) => row.deep !== undefined) as { s: number; drawn: Span; deep: Span }[];
+  const eroded = (at: number): Span | undefined => {
+    const s = fine[keep[at]!]!;
+    let [lo, hi] = chosen.get(keep[at]!)!;
+    for (const step of [1, -1]) for (let j = at + step; ; j += step) {
+      if (j < 0 || j >= keep.length) return undefined;
+      const span = chosen.get(keep[j]!)!;
+      [lo, hi] = [Math.max(lo, span[0]), Math.min(hi, span[1])];
+      if (Math.abs(fine[keep[j]!]! - s) >= inset) break;
+    }
+    return hi - lo > 2 * inset + 2 * TINY ? [lo + inset, hi - inset] : undefined;
+  };
+  const all2 = keep.map((i, at) => ({ s: fine[i]!, drawn: eroded(at), deep: deepAt(fine[i]!) }));
+  let first = 0, span2: Span = [0, -1];
+  for (let i = 0; i <= all2.length; i++) if (i === all2.length || all2[i]!.drawn === undefined || all2[i]!.deep === undefined) { if (i - 1 - first > span2[1] - span2[0]) span2 = [first, i - 1]; first = i + 1; }
+  const rows = all2.slice(span2[0], span2[1] + 1) as { s: number; drawn: Span; deep: Span }[];
   if (rows.length < 3) return "no depth";
   const kept = new Set<number>([0, rows.length - 1]);
   const split = (i: number, j: number): void => {
@@ -213,7 +229,15 @@ else {
         const plate = list.find((shape) => shape.bone === bone && String(shape.id).startsWith(PLATE));
         const under = list.slice(list.indexOf(plate)).find((shape) => shape.bone === bone && !made(shape));
         if (under === undefined) { console.log(`left ${key} ${view} ${bone}: no shape above the plates`); continue; }
-        parts.push({ key, view, bone, under: baseId(String(under.id)), common: Object.fromEntries(Object.keys(plate).filter((name) => COMMON.includes(name)).map((name) => [name, plate[name]])), inset: budget + MARGIN });
+        const groups = new Map<string, { area: number; sheet: any }>();
+        for (const sheet of list.filter((shape) => shape.bone === bone && sheetOf(shape))) {
+          const area = Math.abs(flattenGeometry(sheet).rings.reduce((sum: number, ring: P[]) => sum + ring.reduce((part: number, p: P, i: number) => part + p.x * ring[(i + 1) % ring.length]!.y - ring[(i + 1) % ring.length]!.x * p.y, 0) / 2, 0));
+          const name = LOOK.map((field) => JSON.stringify(sheet[field])).join("|");
+          groups.set(name, { area: (groups.get(name)?.area ?? 0) + area, sheet: groups.get(name)?.sheet ?? sheet });
+        }
+        const main = [...groups.values()].sort((m, n) => n.area - m.area)[0]?.sheet ?? plate;
+        const common = Object.fromEntries(COMMON.filter((name) => (LOOK.includes(name) ? main[name] : plate[name]) !== undefined).map((name) => [name, LOOK.includes(name) ? main[name] : plate[name]]));
+        parts.push({ key, view, bone, under: baseId(String(under.id)), common, inset: budget + MARGIN });
       }
     }
     const sheets = (view: View | "elevation", bone: string): P[][][] => geometry[view].filter((shape: any) => shape.bone === bone && sheetOf(shape)).map((shape: any) => flattenGeometry(shape).rings);
@@ -238,6 +262,7 @@ else {
         const body: P[] = here.filter((shape) => shape.shape.id === part.shape.id).flatMap((shape) => shape.rings).flat();
         const drawn: P[][][] = here.filter((shape) => !made(shape.shape) && shape.shape.filled === true).map((shape) => shape.rings);
         const beyond = body.length === 0 ? 0 : Math.max(...body.map((p) => outside(p, drawn)));
+        if (args.includes("--trace")) { const worst = body.reduce((far, p) => (outside(p, drawn) > outside(far, drawn) ? p : far), body[0] ?? { x: 0, y: 0 }); const box = (list: P[]): string => `x ${Math.min(...list.map((p) => p.x)).toFixed(3)} … ${Math.max(...list.map((p) => p.x)).toFixed(3)}, y ${Math.min(...list.map((p) => p.y)).toFixed(3)} … ${Math.max(...list.map((p) => p.y)).toFixed(3)}`; console.log(`[DEBUG] ${key} ${part.view} ${part.bone} round ${round}: inset ${mm(part.inset)} mm, ${body.length} points, beyond ${mm(beyond)} mm at (${worst.x.toFixed(3)}, ${worst.y.toFixed(3)}); body ${box(body)}; ${drawn.length} outlines ${box(drawn.flat(2))}`); }
         if (beyond <= 1e-6) { if (round === 5 || again === 0) console.log(`${key} ${part.view} ${part.bone}: ${part.shape.sections.length} sections, drawn in ${mm(part.inset)} mm, inside the outlines of the default pose`); continue; }
         if (round === 5) { console.log(`left ${key} ${part.view} ${part.bone}: shows ${mm(beyond)} mm beside the outlines of the default pose`); part.shape = undefined; continue; }
         part.inset = part.inset * 1.5 + beyond;

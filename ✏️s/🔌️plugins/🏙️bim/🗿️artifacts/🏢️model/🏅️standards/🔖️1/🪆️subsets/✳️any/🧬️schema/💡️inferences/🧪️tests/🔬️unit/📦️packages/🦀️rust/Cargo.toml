@@ -60,7 +60,7 @@ semio-s-artifact-bim-model-modify = { path = "../../../../../🧬️mutations/�
 semio-s-artifact-bim-model-plan-linework = { path = "../../../../🗺️plan-linework/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-quantities = { path = "../../../../🧮️quantities/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-ramp-runs = { path = "../../../../🛝️ramp-runs/📦️packages/🦀️rust" }
-semio-s-artifact-bim-model-sheets = { path = "../../../../../../🚪️io/📤️export/📄️sheets/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-sheets = { path = "../../../../../../🚪️io/📤️export/📄️sheets/📦️packages/🦀️rust", optional = true }
 semio-s-artifact-bim-model-snapshot = { path = "../../../../../📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-spaces = { path = "../../../../🏠️spaces/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-storey-levels = { path = "../../../../🏢️storey-levels/📦️packages/🦀️rust" }
@@ -69,19 +69,18 @@ semio-s-artifact-bim-model-tests = { path = "../../../../../📸️snapshot/🕰
 semio-s-artifact-bim-model-wall-geometry = { path = "../../../../../🧬️mutations/🦉️wall-geometry/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-wall-layout = { path = "../../../../🧱️wall-layout/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract = { workspace = true }
-semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-gltf-model = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base-model = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-pdf = { workspace = true }
+semio-s-artifact-stdio-pdf = { workspace = true, optional = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 serde_json = { workspace = true, optional = true }
 semio-s-artifact-bim-model-schema = { path = "../../../../../📦️packages/🦀️rust" }
 
 [features]
-testkit = ["dep:serde_json", "dep:quick-xml", "dep:gltf", "dep:semio-framework-test-fixtures", "semio-plugin/artifact-app-testing", "semio-os-kernel/protocol-laws", "semio-os-kernel/mutation-testing", "semio-s-artifact-bim-model-examples/testkit", "semio-s-artifact-bim-model-formula/testkit", "semio-s-artifact-bim-model-tests/testkit", "semio-s-artifact-bim-model-snapshot/testkit", "semio-s-artifact-bim-model-authored/testkit", "semio-s-artifact-bim-model-storey-levels/testkit", "semio-s-artifact-bim-model-diff/testkit", "semio-s-artifact-bim-model-ramp-runs/testkit", "semio-s-artifact-bim-model-wall-layout/testkit", "semio-s-artifact-bim-model-spaces/testkit", "semio-s-artifact-bim-model-curtain-walls/testkit", "semio-s-artifact-bim-model-components/testkit", "semio-s-artifact-bim-model-quantities/testkit", "semio-s-artifact-bim-model-plan-linework/testkit", "semio-s-artifact-bim-model-incremental-tests/testkit", "semio-s-artifact-bim-model-inferences/testkit", "semio-s-artifact-bim-model-wall-geometry/testkit", "semio-s-artifact-bim-model-svg/testkit", "semio-s-artifact-bim-model-gbxml/testkit", "semio-s-artifact-bim-model-modify/testkit", "semio-s-artifact-bim-model-sheets/testkit"]
+testkit = ["dep:semio-s-artifact-stdio-pdf", "dep:serde_json", "dep:quick-xml", "dep:gltf", "dep:semio-framework-test-fixtures", "semio-plugin/artifact-app-testing", "semio-os-kernel/protocol-laws", "semio-os-kernel/mutation-testing", "semio-s-artifact-bim-model-examples/testkit", "semio-s-artifact-bim-model-formula/testkit", "semio-s-artifact-bim-model-tests/testkit", "semio-s-artifact-bim-model-snapshot/testkit", "semio-s-artifact-bim-model-authored/testkit", "semio-s-artifact-bim-model-storey-levels/testkit", "semio-s-artifact-bim-model-diff/testkit", "semio-s-artifact-bim-model-ramp-runs/testkit", "semio-s-artifact-bim-model-wall-layout/testkit", "semio-s-artifact-bim-model-spaces/testkit", "semio-s-artifact-bim-model-curtain-walls/testkit", "semio-s-artifact-bim-model-components/testkit", "semio-s-artifact-bim-model-quantities/testkit", "semio-s-artifact-bim-model-plan-linework/testkit", "semio-s-artifact-bim-model-incremental-tests/testkit", "semio-s-artifact-bim-model-inferences/testkit", "semio-s-artifact-bim-model-wall-geometry/testkit", "semio-s-artifact-bim-model-svg/testkit", "semio-s-artifact-bim-model-gbxml/testkit", "semio-s-artifact-bim-model-modify/testkit", "semio-s-artifact-bim-model-sheets/testkit"]
 
 [dev-dependencies]
 serde.workspace = true

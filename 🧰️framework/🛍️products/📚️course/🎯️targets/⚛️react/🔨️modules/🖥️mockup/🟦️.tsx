@@ -3,7 +3,7 @@ import { useId, type ReactElement } from "react";
 import type { ExcelMockup, GrasshopperMockup, Mockup, MockupEndpoint, SheetItem, Text } from "@semio-tech/course";
 import type { CourseLocale } from "../🌐️i18n/🟦️.ts";
 
-import { sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
+import { sharedBorderlessBoxProps, useLevel, windowFrameChipLevel } from "@semio-tech/ui-react/chrome";
 /** 🌍️ Preview content always uses the learner's explicit language. */
 const localized = (value: Text, locale: CourseLocale): string => value[locale];
 
@@ -19,13 +19,14 @@ function Highlight({ shown, locale }: { readonly shown: boolean; readonly locale
 
 /** 📗️ Native table semantics preserve every cell, coordinate, selection and formula. */
 function Workbook({ value, locale }: { readonly value: ExcelMockup; readonly locale: CourseLocale }): ReactElement {
+  const level = windowFrameChipLevel(useLevel());
   const words = phrases[locale];
   const selected = value.selection;
   const address = `${value.columns[selected.column]}${selected.row + 1}`;
   const range = `${address}${selected.rowEnd !== undefined || selected.columnEnd !== undefined ? `:${value.columns[selected.columnEnd ?? selected.column]}${(selected.rowEnd ?? selected.row) + 1}` : ""}`;
   const target = (part: ExcelMockup["target"]): boolean => value.target === part;
-  return <div className="course-workbook ui-surface" data-level="pane" data-highlight={target("workbook") || undefined}>
-    <div className="course-workbook-title ui-glass" data-glass-chip="" data-level="panel"><b>Excel</b><span>{localized(value.workbook, locale)}<Highlight shown={target("workbook")} locale={locale} /></span></div>
+  return <div className="course-workbook" data-highlight={target("workbook") || undefined}>
+    <div className="course-workbook-title ui-glass" data-glass-chip="" data-level={level}><b>Excel</b><span>{localized(value.workbook, locale)}<Highlight shown={target("workbook")} locale={locale} /></span></div>
     <div className="course-formula-bar">
       <span className="course-name-box" data-highlight={target("name-box") || undefined}>{range}<Highlight shown={target("name-box")} locale={locale} /></span>
       <span aria-hidden="true">fx</span>
@@ -65,7 +66,7 @@ function NodeGraph({ value, locale }: { readonly value: GrasshopperMockup; reado
     const port = (input ? node.inputs : node.outputs).find((port) => port.id === endpoint.port)!;
     return `${localized(node.label, locale)} · ${localized(port.label, locale)}`;
   };
-  return <div className="course-grasshopper ui-surface" data-level="pane">
+  return <div className="course-grasshopper">
     <div className="course-graph" style={{ width, height }}>
       <svg width={width} height={height} aria-hidden="true">{value.wires.map((wire, index) => {
         const [x1, y1] = point(wire.from, false);
@@ -98,8 +99,9 @@ function NodeGraph({ value, locale }: { readonly value: GrasshopperMockup; reado
 /** 🪟️ A keyboard-scrollable, labelled preview, without controls that could alter an answer. */
 export function MockupView({ value, locale }: { readonly value: Mockup; readonly locale: CourseLocale }): ReactElement {
   const id = useId();
-  return <figure className="course-mockup ui-surface" data-level="window" data-border-probe-art="" data-mockup={value.kind}>
-    <figcaption id={id} className="ui-glass" data-level="pane" data-glass-chip="">{localized(value.caption, locale)}</figcaption>
+  const level = windowFrameChipLevel(useLevel());
+  return <figure className="course-mockup" data-border-probe-art="" data-mockup={value.kind}>
+    <figcaption id={id} className="ui-glass" data-level={level} data-glass-chip="">{localized(value.caption, locale)}</figcaption>
     <div className="course-mockup-scroll" role="region" aria-labelledby={id} tabIndex={0} {...sharedBorderlessBoxProps}>{value.kind === "excel" ? <Workbook value={value} locale={locale} /> : <NodeGraph value={value} locale={locale} />}</div>
   </figure>;
 }

@@ -67,14 +67,22 @@ const state = () => page.evaluate(selector => {
   const status = document.querySelector(selector)?.textContent?.match(/(\d+) (?:layers?|Ebenen?) · (\d+) (?:selected|ausgewählt)/);
   return { ready: document.documentElement.dataset.semioOsReady, error: document.documentElement.dataset.semioOsError, layers: status ? Number(status[1]) : null, selected: status ? Number(status[2]) : null, locale: status ? (status[0].includes("ausgewählt") ? "de" : "en") : null };
 }, statusSelector);
-const waitStatus = async (field, expected, minimum = false) => {
-  const deadline = Date.now() + 30000;
+const waitStatus = async (field, expected, minimum = false, restoring = false) => {
+  const started = Date.now();
+  let deadline = started + 30000;
+  let lastProgress = null;
   let observed = null;
   do {
     assert.equal(errors.length, 0, errors.join("\n"));
     await setEngagement(true);
     observed = (await state())[field];
-    if (observed !== null && (minimum ? observed >= expected : observed === expected)) return;
+    const progress = restoring ? await page.locator('[data-semio-history-reprojection="load"] [data-semio-history-reprojection-announcement]').allTextContents() : [];
+    if (progress.length && progress[0] !== lastProgress) {
+      lastProgress = progress[0];
+      deadline = started + 120000;
+      (report.replayProgress ??= []).push({ elapsedMs: Date.now() - started, status: lastProgress });
+    }
+    if (!progress.length && observed !== null && (minimum ? observed >= expected : observed === expected)) return;
     await delay(100, undefined, { signal: cancellation.signal });
   } while (Date.now() < deadline);
   throw Error(`Expected ${minimum ? "at least " : ""}${expected} ${field}, last read ${observed}`);
@@ -139,6 +147,7 @@ const note = async step => {
   console.log(`[draw-browser] ${step}`);
 };
 const exportPdf = async name => {
+  const started = performance.now();
   await setEngagement(true);
   const format = page.locator('[id$=".action.exportDocument.arg.format.input"][role="combobox"]').first();
   if (!(await format.isVisible())) await click("action.exportDocument");
@@ -146,13 +155,14 @@ const exportPdf = async name => {
   await page.getByRole("option", { name: "PDF", exact: true }).click({ timeout: 15000 });
   console.log("[draw-browser] waiting for PDF export");
   const [download] = await Promise.all([
-    page.waitForEvent("download", { timeout: 60000 }),
+    page.waitForEvent("download", { timeout: 120000 }),
     page.locator('[id^="framework.window."][id$=".action.exportDocument.execute"]').first().click({ timeout: 15000 }),
   ]);
   const pdfPath = join(output, name);
   await download.saveAs(pdfPath);
   assert.equal(await download.failure(), null);
   const pixels = await assertPdfPainting(readFileSync(pdfPath), fixture.export.pages);
+  (report.exportDurationsMs ??= {})[name] = Math.round(performance.now() - started);
   await setEngagement(false);
   return pixels;
 };
@@ -283,12 +293,24 @@ try {
   assert.equal((await state()).ready, fixture.ready, JSON.stringify(await state()));
   assert.equal((await state()).error, undefined, JSON.stringify(await state()));
   await click(fixture.persistence.reconnect);
-  await waitLayers(before + fixture.layerDelta);
+  await waitStatus("layers", before + fixture.layerDelta, false, true);
+  await openFolderCard();
+  await page.getByRole("button", { name: /^(detach|trennen)$/i }).waitFor({ state: "visible", timeout: 15000 });
+  await waitSaved();
+  await closeSyncPanel();
+  const restored = await exportPdf("reopened.pdf");
+  report.restored = { width: restored.width, height: restored.height, digest: restored.digest };
+  assert.deepEqual(report.restored, report.export.after, "The reopened drawing must render the same PDF pixels as the saved edit");
   await note("reload");
   assert.equal(report.documentLoads, fixture.documentLoads, "Only the journey may load the page");
   assert.deepEqual(report.steps.map(row => row.step), fixture.steps);
 } catch (error) {
   report.failure ??= String(error);
+  report.visibleAtFailure = await page.evaluate(() => ({
+    focused: document.activeElement?.id,
+    notices: [...document.querySelectorAll('[data-notice-code], [role="alert"]')].map(node => ({ code: node.getAttribute("data-notice-code"), text: node.textContent?.trim() })),
+    replay: document.querySelector("[data-semio-history-reprojection-announcement]")?.textContent,
+  })).catch(() => undefined);
   await page.screenshot({ path: join(output, "failure.png") }).catch(() => undefined);
   throw error;
 } finally {

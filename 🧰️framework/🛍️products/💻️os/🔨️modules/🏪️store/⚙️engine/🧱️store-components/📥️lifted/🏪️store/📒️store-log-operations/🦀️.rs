@@ -174,8 +174,8 @@ where
     }
 
     //#region 🔖️TimeTravelReads
-    /// 🌳️ The id of this document's trunk — the implicit root line, a first-class alternative listed first in
-    /// `envelope().vcs.alternatives` (with an empty name the UI localizes) once a commit made on it gives it a chain.
+    /// 🌳️ The id of this document's trunk — the implicit root line. It is never a row of
+    /// `envelope().vcs.alternatives`, which holds named alternatives only; presentations list it first with an empty name the UI localizes.
     pub fn trunk_alternative_id(&self) -> String {
         semio_os_spr::trunk_alternative_id(&ArtifactId(self.envelope.id.clone()))
     }

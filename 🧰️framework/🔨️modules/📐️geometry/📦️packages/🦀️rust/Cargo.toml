@@ -36,6 +36,7 @@ name = "collision_oracles"
 path = "../../🧪️tests/💥️collision-oracles/🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-geometry-solids = { path="../../🕸️mesh/📦️packages/🦀️rust" }
 semio-framework-geometry-skeleton = { path="../../🦴️skeleton/📦️packages/🦀️rust" }
 semio-framework-geometry-bulge = { path="../../🌙️bulge/📦️packages/🦀️rust" }

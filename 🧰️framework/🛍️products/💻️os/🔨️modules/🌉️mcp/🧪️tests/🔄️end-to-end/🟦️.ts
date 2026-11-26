@@ -60,7 +60,10 @@ const GATEWAY_PROMPT_NAMES = ["explore_workspace", "safe_mutation", "inspect_art
 const WORKSPACE_BACKED_TOOLS = ["artifact_open", "artifact_validate", "artifact_snapshot", "artifact_export", "inference_list"] as const;
 
 /** 🖥️ The tools that need an attached shell, which stdio never has. */
-const SHELL_BACKED_TOOLS = ["ui_focus", "ui_reveal"] as const;
+const SHELL_BACKED_TOOLS = [
+  { name: "ui_focus", arguments: { windowId: "w1" } },
+  { name: "ui_reveal", arguments: { anchor: "left", path: [] } },
+] as const;
 
 type ToolListResult = { tools: Array<{ name: string; description?: string; inputSchema: Record<string, unknown>; outputSchema?: Record<string, unknown> }> };
 type ResourceListResult = { resources: Array<{ uri: string; name: string }> };
@@ -243,8 +246,9 @@ describe("semio-os-mcp — end to end", () => {
 
   it("tier 2 (stdio, no shell): UI tools report the missing shell, not a missing workspace", async () => {
     const proc = await openServer(["stdio", "--folder", freshFolder(), "--scopes", "ui.control"]);
-    for (const name of SHELL_BACKED_TOOLS) {
-      const response = await proc.request("tools/call", { name, arguments: { windowId: "w1", anchor: "left", path: [] } });
+    for (const call of SHELL_BACKED_TOOLS) {
+      const { name } = call;
+      const response = await proc.request("tools/call", call);
       expect(response.error, `${name} must not fail at the protocol level`).toBeUndefined();
       const result = response.result as CallToolResult;
       expect(result.isError).toBe(true);

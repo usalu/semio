@@ -1,0 +1,532 @@
+[
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l-finger-1",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 2.21
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l-finger-1-mid",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 2.21
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l-finger-1-tip",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 2.21
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l-finger-2",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 2.21
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l-finger-2-mid",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 2.21
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l-finger-2-tip",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 2.21
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l-finger-3",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 2.21
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l-finger-3-mid",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 2.21
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l-finger-3-tip",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 2.21
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l-finger-4",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 2.21
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l-finger-4-mid",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 2.21
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l-finger-4-tip",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 2.21
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l-thumb",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 2.21
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l-thumb-mid",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 2.21
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-l-thumb-tip",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 2.21
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r-finger-1",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 7.61
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r-finger-1-mid",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 7.61
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r-finger-1-tip",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 7.61
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r-finger-2",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 7.61
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r-finger-2-mid",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 7.61
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r-finger-2-tip",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 7.61
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r-finger-3",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 7.61
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r-finger-3-mid",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 7.61
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r-finger-3-tip",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 7.61
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r-finger-4",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 7.61
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r-finger-4-mid",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 7.61
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r-finger-4-tip",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 7.61
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r-thumb",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 7.61
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r-thumb-mid",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 7.61
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "copy",
+  "scale": "50",
+  "id": "hand-r-thumb-tip",
+  "from": "front",
+  "to": [
+   "elevation"
+  ],
+  "create": "only",
+  "paint": {
+   "z": 7.61
+  },
+  "why": "hand: the side elevation drew the whole hand as one prism on the hand bone while front and plan draw the palm there and every phalanx on its own bone; the elevation takes the same prisms (one body in three views)"
+ },
+ {
+  "op": "set",
+  "scale": "200",
+  "view": "elevation",
+  "id": "sleeve-l",
+  "set": {
+   "penMm": 0.15
+  },
+  "why": "print: at 1:150, the fine end of the 1:200 band, the sliver this part shows beside the parts painted over it was 0.190 to 0.1995 mm with its outline (limit 0.2 mm); the outline is 0.02 mm (sleeve) and 0.01 mm (shanks) stronger"
+ },
+ {
+  "op": "set",
+  "scale": "200",
+  "view": "elevation",
+  "id": "dog-far-hind-shank",
+  "set": {
+   "penMm": 0.19
+  },
+  "why": "print: at 1:150, the fine end of the 1:200 band, the sliver this part shows beside the parts painted over it was 0.190 to 0.1995 mm with its outline (limit 0.2 mm); the outline is 0.02 mm (sleeve) and 0.01 mm (shanks) stronger"
+ },
+ {
+  "op": "set",
+  "scale": "200",
+  "view": "elevation",
+  "id": "dog-near-hind-shank",
+  "set": {
+   "penMm": 0.19
+  },
+  "why": "print: at 1:150, the fine end of the 1:200 band, the sliver this part shows beside the parts painted over it was 0.190 to 0.1995 mm with its outline (limit 0.2 mm); the outline is 0.02 mm (sleeve) and 0.01 mm (shanks) stronger"
+ },
+ {
+  "op": "set",
+  "scale": "200",
+  "view": "front",
+  "id": "sleeve-l",
+  "set": {
+   "penMm": 0.15
+  },
+  "why": "print: at 1:150, the fine end of the 1:200 band, the sliver this part shows beside the parts painted over it was 0.190 to 0.1995 mm with its outline (limit 0.2 mm); the outline is 0.02 mm (sleeve) and 0.01 mm (shanks) stronger"
+ },
+ {
+  "op": "set",
+  "scale": "200",
+  "view": "front",
+  "id": "dog-far-hind-shank",
+  "set": {
+   "penMm": 0.19
+  },
+  "why": "print: at 1:150, the fine end of the 1:200 band, the sliver this part shows beside the parts painted over it was 0.190 to 0.1995 mm with its outline (limit 0.2 mm); the outline is 0.02 mm (sleeve) and 0.01 mm (shanks) stronger"
+ },
+ {
+  "op": "set",
+  "scale": "200",
+  "view": "front",
+  "id": "dog-near-hind-shank",
+  "set": {
+   "penMm": 0.19
+  },
+  "why": "print: at 1:150, the fine end of the 1:200 band, the sliver this part shows beside the parts painted over it was 0.190 to 0.1995 mm with its outline (limit 0.2 mm); the outline is 0.02 mm (sleeve) and 0.01 mm (shanks) stronger"
+ },
+ {
+  "op": "set",
+  "scale": "200",
+  "view": "plan",
+  "id": "sleeve-l",
+  "set": {
+   "penMm": 0.15
+  },
+  "why": "print: at 1:150, the fine end of the 1:200 band, the sliver this part shows beside the parts painted over it was 0.190 to 0.1995 mm with its outline (limit 0.2 mm); the outline is 0.02 mm (sleeve) and 0.01 mm (shanks) stronger"
+ },
+ {
+  "op": "set",
+  "scale": "200",
+  "view": "plan",
+  "id": "dog-far-hind-shank",
+  "set": {
+   "penMm": 0.19
+  },
+  "why": "print: at 1:150, the fine end of the 1:200 band, the sliver this part shows beside the parts painted over it was 0.190 to 0.1995 mm with its outline (limit 0.2 mm); the outline is 0.02 mm (sleeve) and 0.01 mm (shanks) stronger"
+ },
+ {
+  "op": "set",
+  "scale": "200",
+  "view": "plan",
+  "id": "dog-near-hind-shank",
+  "set": {
+   "penMm": 0.19
+  },
+  "why": "print: at 1:150, the fine end of the 1:200 band, the sliver this part shows beside the parts painted over it was 0.190 to 0.1995 mm with its outline (limit 0.2 mm); the outline is 0.02 mm (sleeve) and 0.01 mm (shanks) stronger"
+ }
+]

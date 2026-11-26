@@ -6,7 +6,7 @@ fn demo() -> Fem3dSnapshot {
 }
 
 fn instances(doc: &Fem3dSnapshot) -> Vec<Value> {
-    let (_, instances_json) = fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None).unwrap();
+    let (_, instances_json) = fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None, semio_plugin::Locale::En).unwrap();
     semio_framework_pack_json::parse(&instances_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("instances json").as_array().cloned().expect("array")
 }
 
@@ -51,7 +51,7 @@ fn bundled_solid_surfaces_publish_opaque_rgba_per_vertex() {
     let doc = demo();
     let stress = doc.nodes.iter().enumerate().map(|(index, node)| (node.id.as_str().to_owned(), index as f64)).collect::<HashMap<_, _>>();
     for stress in [None, Some(&stress)] {
-        let (meshes, _) = fem3d_solid_mesh_entries(&doc, None, 1.0, stress).expect("bundled solid mesh");
+        let (meshes, _) = fem3d_solid_mesh_entries(&doc, None, 1.0, stress, semio_plugin::Locale::En).expect("bundled solid mesh");
         assert!(!meshes.is_empty(), "the bundled demo exercises the custom solid mesh lane");
         for mesh in meshes {
             let data = mesh.get("data").expect("mesh data");
@@ -79,8 +79,8 @@ fn solid_surfaces_share_positions_and_preserve_every_boundary_face() {
     let doc = demo();
     let fixture = semio_framework_pack_json::parse(include_str!("🧫️boundary.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let original = mesh_preview::fem3d_mesh_preview(&doc).unwrap();
-    let (scene, _) = fem3d_solid_mesh_entries(&doc, None, 1.0, None).unwrap();
-    assert_eq!(scene, fem3d_solid_mesh_entries(&doc, None, 1.0, None).unwrap().0);
+    let (scene, _) = fem3d_solid_mesh_entries(&doc, None, 1.0, None, semio_plugin::Locale::En).unwrap();
+    assert_eq!(scene, fem3d_solid_mesh_entries(&doc, None, 1.0, None, semio_plugin::Locale::En).unwrap().0);
     assert_eq!(original.len(), scene.len());
     for (solid, mesh) in original.iter().zip(&scene) {
         let data = mesh.get("data").unwrap();
@@ -139,7 +139,7 @@ fn displacements_move_nodes_members_supports_and_load_glyphs_together() {
     let doc = demo();
     let mut displacements = HashMap::new();
     displacements.insert("n20_l1".to_string(), [0.0, 0.0, -0.01, 0.0, 0.0, 0.0]);
-    let (_, json) = fem3d_scene_parts(&doc, Some(&displacements), 100.0, None).unwrap();
+    let (_, json) = fem3d_scene_parts(&doc, Some(&displacements), 100.0, None, semio_plugin::Locale::En).unwrap();
     let all: Vec<Value> = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("json").as_array().cloned().expect("array");
     let z = |id: &str| find(&all, id).get("position").and_then(Value::as_array).expect("position")[2].as_f64().expect("z");
     assert!((z(&fem3d_entity_target("node", "n20_l1").unwrap()) - 1.8).abs() < 1e-9, "the node dropped by one metre at scale 100");
@@ -166,8 +166,8 @@ fn cone_orientation_takes_y_onto_the_direction() {
 
 
 /// 🚨️ LAW (F2): a solid the mesher refuses never takes the others with it: every meshable solid keeps its surface mesh and
-/// instance, the refused one is still drawn as an error-tinted prism under its own id and its label is the bilingual
-/// (English | German) diagnostic naming it — never silently missing.
+/// instance, the refused one is still drawn as an error-tinted prism under its own id and its label is the diagnostic
+/// naming it in the requested locale ONLY (English text for `En`, German text for `De`, never both).
 #[test]
 fn an_unmeshable_solid_is_marked_and_the_others_still_draw() {
     let mut doc = demo();
@@ -175,13 +175,15 @@ fn an_unmeshable_solid_is_marked_and_the_others_still_draw() {
     bad.id = "bad".into();
     bad.outline = vec![[0.0, 0.0], [1.0, 0.0]];
     doc.solids.push(bad);
-    let (meshes_json, instances_json) = fem3d_scene_parts(&doc, None, doc.analysis.deformation_scale, None).unwrap();
-    let meshes = semio_framework_pack_json::parse(&meshes_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let ids: Vec<&str> = meshes.as_array().unwrap().iter().filter_map(|mesh| mesh.get("id").and_then(Value::as_str)).collect();
-    assert!(ids.contains(&"solid-sol1") && ids.contains(&"solid-bad"), "{ids:?}");
-    let all = semio_framework_pack_json::parse(&instances_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap().as_array().cloned().unwrap();
-    assert_eq!(find(&all, &fem3d_entity_target("solid", "sol1").unwrap()).get("label").and_then(Value::as_str), Some("sol1"));
-    let label = find(&all, &fem3d_entity_target("solid", "bad").unwrap()).get("label").and_then(Value::as_str).unwrap().to_owned();
-    assert!(label.starts_with("Solid bad cannot be meshed") && label.contains("| Körper bad lässt sich nicht vernetzen"), "{label}");
+    for (locale, present, absent) in [(semio_plugin::Locale::En, "Solid bad cannot be meshed", "Körper"), (semio_plugin::Locale::De, "Körper bad lässt sich nicht vernetzen", "Solid bad")] {
+        let (meshes_json, instances_json) = fem3d_scene_parts(&doc, None, doc.analysis.deformation_scale, None, locale).unwrap();
+        let meshes = semio_framework_pack_json::parse(&meshes_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let ids: Vec<&str> = meshes.as_array().unwrap().iter().filter_map(|mesh| mesh.get("id").and_then(Value::as_str)).collect();
+        assert!(ids.contains(&"solid-sol1") && ids.contains(&"solid-bad"), "{ids:?}");
+        let all = semio_framework_pack_json::parse(&instances_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap().as_array().cloned().unwrap();
+        assert_eq!(find(&all, &fem3d_entity_target("solid", "sol1").unwrap()).get("label").and_then(Value::as_str), Some("sol1"));
+        let label = find(&all, &fem3d_entity_target("solid", "bad").unwrap()).get("label").and_then(Value::as_str).unwrap().to_owned();
+        assert!(label.starts_with(present) && !label.contains(absent) && !label.contains(" | "), "{locale:?}: {label}");
+    }
     retire(doc);
 }

@@ -32,7 +32,9 @@ export class RuntimeInputScript extends Script {
 export class CapabilityContractScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("capability-contract-check accepts no overrides");
-    const { runCargoCapabilityContributionChecks, runCargoCapabilityPhysicalChecks } = await import("../../🧩️capabilities/🧪️tests/🟦️.ts");
+    const { runCargoCapabilityContributionChecks, runCargoCapabilityPhysicalChecks, runCargoManifestOwnerRowLawV1, runCargoManifestParseLawV1 } = await import("../../🧩️capabilities/🧪️tests/🟦️.ts");
     console.log(`cargo capability contract: ${runCargoCapabilityContributionChecks() + runCargoCapabilityPhysicalChecks()} laws`);
+    console.log(`cargo manifests parsing without duplicate keys: ${runCargoManifestParseLawV1(getWorkspaceRoot())}`);
+    console.log(`crate manifests without a build owner row: ${runCargoManifestOwnerRowLawV1(getWorkspaceRoot())}`);
   }
 }

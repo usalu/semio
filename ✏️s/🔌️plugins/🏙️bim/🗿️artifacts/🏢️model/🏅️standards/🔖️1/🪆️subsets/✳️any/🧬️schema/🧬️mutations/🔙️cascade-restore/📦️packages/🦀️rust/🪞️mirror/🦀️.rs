@@ -153,8 +153,9 @@ pub mod standards {
                     
                     #[path = "."]
                     pub mod mutations {
-                        #[path = "../../../🦀️.rs"]
-                        pub mod cascade_restore;
+                        pub mod cascade_restore {
+                            pub use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+                        }
                         #[path = "."]
                         pub mod split_wall {
                             #[cfg(test)]

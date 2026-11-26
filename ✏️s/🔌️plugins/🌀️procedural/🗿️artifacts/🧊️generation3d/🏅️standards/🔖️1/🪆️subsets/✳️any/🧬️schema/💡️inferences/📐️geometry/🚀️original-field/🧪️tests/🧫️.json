@@ -170,6 +170,7 @@
     "sameCallerClose": true
   },
   "engine": {
+    "sourceOwner": "retainedSnapshot",
     "sourceOrdinalRows": true,
     "borrowedSourceKeys": true,
     "completedPayloadCloned": false,

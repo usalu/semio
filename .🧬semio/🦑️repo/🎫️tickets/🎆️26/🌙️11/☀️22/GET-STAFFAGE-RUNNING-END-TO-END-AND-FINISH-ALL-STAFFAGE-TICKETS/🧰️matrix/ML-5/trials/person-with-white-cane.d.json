@@ -1,0 +1,144 @@
+[
+ {
+  "scale": "50",
+  "bone": "hand-l",
+  "paint": "hand-l",
+  "replace": [
+   "hand-l"
+  ],
+  "fit": [
+   {
+    "id": "hand-l-fingers",
+    "stations": 10,
+    "solids": [],
+    "across": [
+     "index-proximal-l",
+     "index-middle-l",
+     "index-distal-l",
+     "middle-proximal-l",
+     "middle-middle-l",
+     "middle-distal-l",
+     "ring-proximal-l",
+     "ring-middle-l",
+     "ring-distal-l",
+     "little-proximal-l",
+     "little-middle-l",
+     "little-distal-l"
+    ]
+   },
+   {
+    "id": "hand-l-thumb",
+    "stations": 8,
+    "solids": [],
+    "across": [
+     "thumb-metacarpal-l",
+     "thumb-proximal-l",
+     "thumb-distal-l"
+    ]
+   }
+  ]
+ },
+ {
+  "scale": "50",
+  "bone": "hand-r",
+  "paint": "hand-r",
+  "replace": [
+   "hand-r"
+  ],
+  "fit": [
+   {
+    "id": "hand-r-fingers",
+    "stations": 10,
+    "solids": [],
+    "across": [
+     "index-proximal-r",
+     "index-middle-r",
+     "index-distal-r",
+     "middle-proximal-r",
+     "middle-middle-r",
+     "middle-distal-r",
+     "ring-proximal-r",
+     "ring-middle-r",
+     "ring-distal-r",
+     "little-proximal-r",
+     "little-middle-r",
+     "little-distal-r"
+    ]
+   },
+   {
+    "id": "hand-r-thumb",
+    "stations": 8,
+    "solids": [],
+    "across": [
+     "thumb-metacarpal-r",
+     "thumb-proximal-r",
+     "thumb-distal-r"
+    ]
+   }
+  ]
+ },
+ {
+  "scale": "50",
+  "bone": "forearm-l",
+  "solids": [
+   "forearm-l"
+  ],
+  "paint": "forearm-l"
+ },
+ {
+  "scale": "50",
+  "bone": "forearm-l",
+  "solids": [
+   "wrist-l"
+  ],
+  "paint": "wrist-l"
+ },
+ {
+  "scale": "50",
+  "bone": "forearm-r",
+  "solids": [
+   "forearm-r"
+  ],
+  "paint": "forearm-r"
+ },
+ {
+  "scale": "50",
+  "bone": "forearm-r",
+  "solids": [
+   "wrist-r"
+  ],
+  "paint": "wrist-r"
+ },
+ {
+  "scale": "50",
+  "bone": "arm-r",
+  "solids": [
+   "sleeve-r"
+  ],
+  "paint": "sleeve-r"
+ },
+ {
+  "scale": "50",
+  "bone": "arm-l",
+  "solids": [
+   "sleeve-l"
+  ],
+  "paint": "sleeve-l"
+ },
+ {
+  "scale": "500",
+  "bone": "thigh-l",
+  "solids": [
+   "thigh-l"
+  ],
+  "paint": "thigh-l"
+ },
+ {
+  "scale": "500",
+  "bone": "thigh-r",
+  "solids": [
+   "thigh-r"
+  ],
+  "paint": "thigh-r"
+ }
+]

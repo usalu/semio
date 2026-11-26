@@ -88,14 +88,17 @@
 	color: var(--color-primary);
 }
 
-.reveal .slide-number,
-.reveal .slide-number a {
+.reveal .slide-number {
 	font-family: var(--font-sans);
 	font-size: var(--text-sm);
 	line-height: 1.2;
 	color: var(--foreground);
-	background-color: color-mix(in srgb, var(--panel) 88%, transparent);
+	background-color: color-mix(in srgb, var(--surface-bg) calc(var(--surface-alpha) * 100%), transparent);
 	padding: var(--spacing-single) var(--spacing-double);
+}
+
+.reveal .slide-number a {
+	color: inherit;
 }
 
 .reveal .jump-to-slide-input {

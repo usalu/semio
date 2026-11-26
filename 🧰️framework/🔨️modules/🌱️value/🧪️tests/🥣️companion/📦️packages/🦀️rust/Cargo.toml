@@ -45,6 +45,10 @@ semio-framework-value-paged-list = { path = "../../../../📋️list/📦️pack
 semio-framework-value-ordered = { path = "../../../../🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-value-read = { path = "../../../../🔗️read/📦️packages/🦀️rust" }
 
+semio-framework-value-testing-effect-bank = { path = "../../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
+semio-framework-value-clone-source = { path = "../../../../🧬️retained-clone/🔗️source/📦️packages/🦀️rust" }
+semio-framework-value-control-contract = { path = "../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+
 [[test]]
 name = "value-arc-root"
 path = "../../../../♻️retirement/🔗️arc-custody/🏭️factory/🌳️root/🧪️tests/🦀️.rs"

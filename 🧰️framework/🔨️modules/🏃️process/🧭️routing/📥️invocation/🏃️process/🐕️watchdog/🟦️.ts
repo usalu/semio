@@ -1,3 +1,4 @@
+import {processPidExistsV1} from "../../../../🔖️identity/🟦️.ts"
 import{linuxProcessDescendantsV1,linuxProcessCpuMillisecondsV1}from"./🐧️linux/🟦️.ts";
 import{spawnSync}from"node:child_process";
 import{setTimeout as pause}from"node:timers/promises";
@@ -116,7 +117,7 @@ export function scriptProcessOwnerLostV1(facts:ScriptProcessOwnerFactsV1):boolea
 }
 /** 📥️ The owner pid a spawner handed over, `null` when it handed none or the value is no pid. */
 export function readScriptProcessOwnerV1(environment:Readonly<Record<string,string|undefined>>):number|null{const value=Number(environment[SCRIPT_PROCESS_OWNER_ENV_V1]);return Number.isSafeInteger(value)&&value>1&&value!==process.pid?value:null;}
-const processExists=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return(error as NodeJS.ErrnoException).code==="EPERM";}};
+const processExists=(pid:number):boolean=>processPidExistsV1(pid);
 /** 👻️ Watches the owner of this process (POSIX and Windows alike: a pid probe and the parent pid, no signal): `onLost` runs once with the owner pid when the owner is gone, so work and leases end with their owner instead of outliving it as an orphan. */
 export function startScriptProcessOwnerWatchV1(options:Readonly<{onLost:(owner:number)=>void;environment?:Readonly<Record<string,string|undefined>>;alive?:(pid:number)=>boolean;parent?:()=>number;checkMilliseconds?:number}>):()=>void{
  const owner=readScriptProcessOwnerV1(options.environment??process.env);if(owner===null)return()=>{};

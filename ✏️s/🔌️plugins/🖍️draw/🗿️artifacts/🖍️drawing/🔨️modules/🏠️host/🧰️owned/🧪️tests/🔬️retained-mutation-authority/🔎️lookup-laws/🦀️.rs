@@ -53,8 +53,9 @@ fn drawing_rename_and_inverse_keep_the_original_name_and_id() {
             _ => panic!("unsupported fixture disposition"),
         }
         let inverse = inverse_drawing_mutation(&snapshot, &mutation).unwrap();
-        assert_eq!(inverse.len(), usize::from(original_name.is_some()));
-        if let Some(original_name) = original_name {
+        let inverse_name = original_name.filter(|_| case["disposition"] == "changed");
+        assert_eq!(inverse.len(), usize::from(inverse_name.is_some()));
+        if let Some(original_name) = inverse_name {
             let DrawingMutation::RenameLayer(inverse) = &inverse[0] else { panic!("rename inverse kind") };
             assert_eq!(inverse.layer_id.to_string_owner(), target);
             assert_eq!(inverse.new_name.to_string_owner(), original_name);

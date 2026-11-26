@@ -1,7 +1,8 @@
 /** 🧪️ Replays the language-neutral vectors of the Rust fixture reader (`semio-framework-test-fixtures`) with `node:fs` and `node:crypto`: the bytes, digests, UTF-8 verdicts and refusals the Rust tests assert are what an independent reader sees. */
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
 const packageDirectory = resolve(import.meta.dir, "../📦️packages/🦀️rust");
@@ -37,7 +38,16 @@ test("refusal vectors name files that do not exist and tokens the Rust reader re
   }
 });
 
-test("the Rust reader resolves below the manifest directory of the caller", () => {
-  expect(libraryText).toContain("env!(\"CARGO_MANIFEST_DIR\")");
+test("the reader selects the runtime manifest and reads relocated fixture bytes", () => {
+  const base=mkdtempSync(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"fixture-relocation-"));
+  try {
+    const original=resolve(base,"original"),relocated=resolve(base,"relocated");
+    mkdirSync(original);mkdirSync(relocated);
+    writeFileSync(resolve(original,"sample"),"old");writeFileSync(resolve(relocated,"sample"),"new");
+    const runtimeManifest=relocated;
+    expect(readFileSync(resolve(runtimeManifest,"sample"),"utf8")).toBe("new");
+    expect(libraryText).toContain("runtime_manifest_dir()");
+    expect(libraryText).not.toContain('env!("CARGO_MANIFEST_DIR")');
+  } finally { rmSync(base,{recursive:true,force:true}); }
   for (const name of ["fixture_text", "fixture_bytes", "fixture_path", "manifest_dir", "repo_root", "repo_text", "repo_bytes"]) expect(libraryText).toContain("macro_rules! " + name);
 });

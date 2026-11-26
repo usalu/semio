@@ -1,0 +1,11 @@
+{
+  "cases": [
+    { "kind": 9, "exportTag": 9, "sameProducer": true, "length": 184, "accepted": true },
+    { "kind": 10, "exportTag": 10, "sameProducer": true, "length": 184, "accepted": true },
+    { "kind": 12, "exportTag": 12, "sameProducer": true, "length": 184, "accepted": true },
+    { "kind": 13, "exportTag": 13, "sameProducer": true, "length": 184, "accepted": true },
+    { "kind": 9, "exportTag": 8, "sameProducer": true, "length": 184, "accepted": false },
+    { "kind": 9, "exportTag": 9, "sameProducer": false, "length": 184, "accepted": false },
+    { "kind": 9, "exportTag": 9, "sameProducer": true, "length": 152, "accepted": false }
+  ]
+}

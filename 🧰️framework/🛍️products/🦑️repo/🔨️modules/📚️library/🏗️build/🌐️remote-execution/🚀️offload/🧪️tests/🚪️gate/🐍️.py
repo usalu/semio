@@ -3,6 +3,7 @@ import json, sys
 def gate(row, threshold):
     if row["mode"] == "never": return (False, False, "never")
     if row["mode"] == "pin": return (True, True, "pin")
+    if row.get("fleetRequired"): return (True, True, "fleet-required")
     if row["expensive"]:
         if row["fits"]: return (True, True, "final")
         return (True, True, "final-beyond-host") if row.get("beyondHost") else (False, False, "final-wait")

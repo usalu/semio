@@ -1,4 +1,5 @@
 import {concurrentEditV1,retryOnConcurrentEditSyncV1,type ChurnOptionsV1} from "../../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import {ownProcessIdentityV1,processRecordAliveV1} from "../../../../🔖️identity/🟦️.ts";
 import {spawnSync} from "node:child_process";
 import {readProcessStartV1} from "../../../../🔖️identity/🟦️.ts";
 import {mkdirSync,readdirSync,readFileSync,renameSync,statSync,unlinkSync,writeFileSync} from "node:fs";
@@ -37,7 +38,11 @@ export function hostBootAtV1(directory:string,nowMs:number,uptimeMs:number=Math.
  return anchor.bootAtMs;
 }
 
-export const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
+/** 🫀️ Whether the holder of a grant, waiter or lock lives: pid and, when the record carries it, creation time (a record written before `startMs` is judged by its pid). */
+export const alive=(pid:number,startMs?:number):boolean=>processRecordAliveV1(pid,startMs);
+
+/** 🪪️ The `startMs` a record written on behalf of `pid` carries: the creation time of this process, nothing for a pid that is another process. */
+export const holderStartV1=(pid:number):Readonly<{startMs?:number}>=>pid===process.pid?{startMs:ownProcessIdentityV1().startMs}:{};
 /** 🕳️ Says whether an error only reports that a file or directory is not there. */
 export const absentV1=(error:unknown):boolean=>["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException)?.code??"");
 export const readJson=(path:string):unknown=>{try{return JSON.parse(readFileSync(path,"utf8"));}catch(error){if(absentV1(error)||error instanceof SyntaxError)return undefined;throw error;}};
@@ -94,7 +99,7 @@ export function readGrants(directory:string,now:number,policy:HostCapacityPolicy
   if(!isHostCapacityV1("Grant",value)){if(reclaim&&now-modifiedAtMs>policy.wait.lockStaleMilliseconds)reclaimStale(path,modifiedAtMs);continue;}
   const grant=value as HostGrantV1;
   const heartbeatAgeMs=now-modifiedAtMs;
-  const pidAlive=alive(grant.pid)&&!(heartbeatAgeMs>2*policy.wait.heartbeatMilliseconds&&hostGrantPidReusedV1({grant,heartbeatAgeMs,heartbeatMs:policy.wait.heartbeatMilliseconds,startMs:startOf(grant.pid)}));
+  const pidAlive=alive(grant.pid,grant.startMs)&&!(heartbeatAgeMs>2*policy.wait.heartbeatMilliseconds&&hostGrantPidReusedV1({grant,heartbeatAgeMs,heartbeatMs:policy.wait.heartbeatMilliseconds,startMs:startOf(grant.pid)}));
   if(isCurrentHostGrantV1({grant,expectedId:name.slice(0,-5),pidAlive,nowMs:now,bootAtMs:boot,modifiedAtMs},policy))rows.push(grant);
   else if(reclaim)reclaimStale(path,modifiedAtMs);
  }
@@ -107,7 +112,7 @@ export function readWaiters(directory:string,now:number,policy:HostCapacityPolic
   const path=join(directory,"queue",name),modifiedAtMs=modified(path),value=readJson(path);
   if(!isHostCapacityV1("Waiter",value)){if(reclaim&&now-modifiedAtMs>policy.wait.lockStaleMilliseconds)reclaimStale(path,modifiedAtMs);continue;}
   const waiter=value as HostWaiterV1;
-  if(alive(waiter.pid)&&now-modifiedAtMs<=stale)rows.push(waiter);
+  if(alive(waiter.pid,waiter.startMs)&&now-modifiedAtMs<=stale)rows.push(waiter);
   else if(reclaim)reclaimStale(path,modifiedAtMs);
  }
  return rows;

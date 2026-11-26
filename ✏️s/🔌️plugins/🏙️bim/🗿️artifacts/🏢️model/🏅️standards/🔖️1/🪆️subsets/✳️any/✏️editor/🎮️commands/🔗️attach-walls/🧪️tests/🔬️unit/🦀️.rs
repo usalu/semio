@@ -71,7 +71,7 @@ async fn without_a_wall_or_without_a_surface_the_command_is_refused_with_its_own
 
 #[semio_framework_async_macros::async_test]
 async fn the_command_is_reachable_by_its_action_id_and_the_shift_r_key() {
-    let command = semio_s_artifact_bim_model_bim::editor::bim::BimModelApp::command_from_action("attachWalls", None, None).expect("decodes without arguments");
+    let command = semio_s_artifact_bim_model_bim::editor::bim::BimModelApp::command_from_action("attachWalls", &mut None, &mut None).expect("decodes without arguments");
     assert!(semio_s_artifact_bim_model_bim::editor::bim::BIM_TOOL_IDS.contains(&command.command_id()));
     assert!(semio_s_artifact_bim_model_bim::editor::bim::all_keybindings().contains(&("shift+r", "attachWalls")));
 }

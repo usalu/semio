@@ -155,9 +155,13 @@ def property_problems(model, snapshot):
     own = {}
     for element in model.by_type("IfcElement"):
         if element.Tag and ":" not in element.Tag:
-            for name, rows in ifcopenshell.util.element.get_psets(element, psets_only=True, should_inherit=False).items():
+            sets = ifcopenshell.util.element.get_psets(element, psets_only=True, should_inherit=False)
+            derived = set(sets.get("Semio_Authoring", {}).get("DerivedRows", "").split(","))
+            for name, rows in sets.items():
                 if not name.startswith("Semio_"):
-                    own.setdefault(element.Tag, {}).setdefault(name, {}).update({key: value for key, value in rows.items() if key != "id"})
+                    authored = {key: value for key, value in rows.items() if key != "id" and name + "." + key not in derived}
+                    if authored:
+                        own.setdefault(element.Tag, {}).setdefault(name, {}).update(authored)
     for tag in sorted((set(own) | {tag for tag in properties if tag not in types}) & {element.Tag for element in model.by_type("IfcElement")}):
         wanted = {name: {prop: written_value(value)[1] for prop, value in rows.items()} for name, rows in properties.get(tag, {}).items()}
         if not same_value(own.get(tag, {}), wanted):

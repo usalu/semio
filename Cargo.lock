@@ -5395,6 +5395,7 @@ dependencies = [
  "semio-framework-geometry-skeleton",
  "semio-framework-geometry-solids",
  "semio-framework-geometry-vector",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -5408,6 +5409,9 @@ dependencies = [
 [[package]]
 name = "semio-framework-geometry-primitives"
 version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
 
 [[package]]
 name = "semio-framework-geometry-skeleton"
@@ -5424,6 +5428,7 @@ dependencies = [
  "semio-framework-geometry-bulge",
  "semio-framework-geometry-primitives",
  "semio-framework-geometry-vector",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -9556,6 +9561,7 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-testing-admission",
  "semio-framework-value-testing-effect-bank",
  "semio-os-flow-drawing",
  "semio-os-flow-host-core",
@@ -9585,6 +9591,7 @@ dependencies = [
  "semio-framework-value-native-storage",
  "semio-framework-value-ordered",
  "semio-framework-value-persistent",
+ "semio-framework-value-testing-admission",
  "semio-os-flow-host-core",
  "semio-os-flow-host-source",
  "semio-os-flow-operators",
@@ -14614,8 +14621,10 @@ dependencies = [
  "semio-framework-replication",
  "semio-framework-trace-memory-testing",
  "semio-framework-value",
+ "semio-os-dsl",
  "semio-os-spr",
  "semio-os-store-engine-owners",
+ "semio-os-store-one-item-publication",
  "semio-os-store-snapshot-clone",
  "semio-os-store-testing-doubles",
  "semio-os-store-testing-fixtures",
@@ -18394,6 +18403,7 @@ dependencies = [
  "semio-plugin-testing-fixtures-publication",
  "semio-plugin-testing-laws",
  "semio-plugin-time-travel",
+ "semio-plugin-time-travel-turns",
  "semio-plugin-window-config",
  "semio-ui-contract",
  "serde_json",
@@ -19050,10 +19060,13 @@ name = "semio-plugin-tests-07-2"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-actor",
  "semio-framework-artifact-reference",
+ "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-diagnostic",
  "semio-framework-job",
+ "semio-framework-pack-json",
  "semio-framework-time-travel",
  "semio-framework-tool-machine",
  "semio-framework-tool-run",
@@ -19077,8 +19090,10 @@ dependencies = [
  "semio-plugin-ownership",
  "semio-plugin-plugin-program",
  "semio-plugin-reactor-app",
+ "semio-plugin-store-lifecycle",
  "semio-plugin-testing-caller",
  "semio-plugin-testing-fixtures",
+ "semio-plugin-testing-instance-laws",
  "semio-plugin-testing-laws",
  "semio-plugin-tests-06",
  "semio-plugin-time-travel",
@@ -19119,6 +19134,8 @@ dependencies = [
  "semio-plugin-ownership",
  "semio-plugin-plugin-program",
  "semio-plugin-reactor-app",
+ "semio-plugin-reactor-lifecycle",
+ "semio-plugin-runtime-instances",
  "semio-plugin-testing-fixtures",
  "semio-plugin-testing-laws",
  "semio-plugin-tests-06",
@@ -19345,6 +19362,7 @@ dependencies = [
  "semio-plugin-testing-caller",
  "semio-plugin-testing-fixtures",
  "semio-plugin-testing-fixtures-publication",
+ "semio-plugin-testing-instance-laws",
  "semio-plugin-testing-laws",
  "semio-plugin-tests-05",
  "semio-plugin-tests-06",
@@ -25805,6 +25823,7 @@ dependencies = [
 name = "semio-ui-tui-widgets"
 version = "0.1.0"
 dependencies = [
+ "semio-ui-locale",
  "semio-ui-tui-core",
  "semio-ui-tui-vt",
 ]

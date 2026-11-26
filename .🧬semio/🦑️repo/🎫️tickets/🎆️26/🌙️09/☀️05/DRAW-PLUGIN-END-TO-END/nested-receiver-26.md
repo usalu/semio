@@ -1,0 +1,9 @@
+# Nested Drawing Receiver Refusal
+
+`original_operation_receives_nested_drawing_pages_from_the_declared_range` round-trips a `CreateLayer` with absent parent and index, one Group, one Path child and 181 path segments. Its failure is the shared `DslOwnedReceiving` invalid-value diagnostic, which carries no field identifier. The generic error is produced by multiple scalar, array, list, statements and record-shape admission sites, so the log alone cannot establish the offending nested field.
+
+`CreateLayer.layer` is a boxed statement-shaped `DrawingLayerNode`; the path's `Move` and `Line` positional `to` fields are `[f64; 2]`. `RenameLayer` instead contains two paged UTF-8 fields and does not traverse this nested Group/Path structure. This red does not establish whether RenameLayer receives successfully. The exact field needs either a focused reduction of the fixture or a diagnostic at the retained receiver's actual source mismatch, with original field path retained through ownership cleanup.
+
+A read-only LLDB attempt located three generic invalid symbols but the local debugger did not start the test process within a minute; it supplied no field evidence.
+
+The subsequent reduction proves RenameLayer passes and an empty Group fails. The initial hypothesis that its persistent children use `PersistentReceiving` was incorrect: `PagedList<T,N>` resolves to `VectorReceiving<T,Self>`, which accepts statements when `T::RECEIVES_STATEMENT`; the `DrawingLayerNode` derive supplies that flag. The field derive unwraps a block for `VecBlockStatements` before invoking the vector. A boxed required statement passes its value to the inner enum receiver; the Box implementation's default statement flag affects sequences of boxes, not this direct field. Isolating a rectangle CreateLayer, both present parent/index values, and a standalone DrawingLayerNode will discriminate address handling from wrapper, shared base, and group-specific fields.

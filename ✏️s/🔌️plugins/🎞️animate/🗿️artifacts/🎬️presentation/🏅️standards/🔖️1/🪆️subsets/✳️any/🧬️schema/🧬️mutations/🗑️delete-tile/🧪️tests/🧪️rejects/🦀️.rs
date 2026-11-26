@@ -106,8 +106,7 @@ fn semantics_bind_this_fixture_to_delete_tile() {
     assert_eq!(<PresentationMutation as protocol::SemanticMutation<PresentationSnapshot>>::target(&mutation()), vec!["tiles".to_string(), "t-ghost".to_string()], "delete-tile addresses the collection then exactly one tile id");
 }
 
-/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
 #[semio_framework_async_macros::async_test]
-async fn inverse_diffs_sum_to_the_negative_diff() {
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+async fn missing_delete_obeys_the_missing_target_law() {
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&before(), &mutation()).await;
 }

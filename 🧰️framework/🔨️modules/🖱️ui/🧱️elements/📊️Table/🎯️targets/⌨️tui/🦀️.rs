@@ -8,7 +8,7 @@ use semio_ui_tui_core::event::{Key, KeyEvent, MouseEvent};
 use semio_ui_tui_core::geometry::{Pos, Rect};
 use semio_ui_tui_core::rows::{navigate_to, paint_scroll_bar, row_style, Pointer, Rows};
 use semio_ui_tui_core::text::{elide, truncate_to, Elision};
-use semio_ui_tui_core::theme::{Glyph, Role, Surface, Theme};
+use semio_ui_tui_core::theme::{Glyph, Role, Theme};
 use semio_ui_tui_core::signal::WidgetSignal;
 
 //#region 🗂️State
@@ -202,7 +202,7 @@ pub fn paint_table(t: &TableState, theme: &Theme, rect: Rect, buf: &mut CellBuff
     if rect.width == 0 || rect.height == 0 || t.columns.is_empty() {
         return;
     }
-    let bg = buf.get(rect.x, rect.y).map_or(theme.surface(Surface::Window), |c| c.bg);
+    let bg = buf.owner_background();
     buf.fill_rect(rect, Cell::blank(theme.role(Role::MutedForeground), bg));
 
     let visible = t.visible_indices();

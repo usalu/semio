@@ -1,6 +1,6 @@
 //! 🧰️ Owned original callers drive WFC test jobs and return every payload and source before teardown.
 
-use semio_framework_value_testing_allocator as _;
+pub use semio_framework_value_testing_allocator::observe_retirement_allocations;
 use semio_framework_job::{Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, JobOutcomeBorrow, OperationId, OriginalJobReturn, OriginalJobReturnOrigin, OriginalTurnFailure, RetainedCloneGrant, StepContext};
 use semio_framework_job_testing_caller::OriginalJobFixtureCaller;
 
@@ -131,6 +131,11 @@ impl TestJobDriver {
 
     /// 🧹️ Returns descriptor custody, closes the real job, then retires its once-issued source.
     pub fn close<J: InteractiveJob>(&mut self, job: &mut J) {
+        self.close_with(job, |job,cx|job.close_step(cx));
+    }
+
+    /// 🧾️ Observes each real job close before retiring the original caller.
+    pub fn close_with<J: InteractiveJob>(&mut self, job:&mut J, mut close:impl FnMut(&mut J,&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>) {
         let Some(caller) = self.caller.as_mut() else {
             assert!(job.terminal_is_empty(), "closed test driver cannot own another job");
             return;
@@ -143,7 +148,7 @@ impl TestJobDriver {
         job.begin_close();
         for turn in 0..2_000_000 {
             if job.terminal_is_empty() { break; }
-            let step = caller.turn(TEST_TURN, |cx| job.close_step(cx)).expect("same-source test job close");
+            let step = caller.turn(TEST_TURN, |cx| close(job,cx)).expect("same-source test job close");
             assert!(!matches!(step, InteractiveJobCloseStep::Blocked), "same-source test job close blocked");
             assert!(turn < 1_999_999, "same-source test job close stalled");
         }

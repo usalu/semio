@@ -31,7 +31,7 @@ async fn the_typed_line_goes_to_the_window_transient_and_the_presence_and_never_
     let emit = type_into(&mut ctx, "3, 4");
     assert!(emit.artifact_mutations.is_empty() && emit.effects.is_empty());
     assert_eq!(ctx.transient_out.as_ref().map(|transient| transient.engagement_input.as_str()), Some("3, 4"));
-    assert!(matches!(ctx.presence_out.as_slice(), [BimPresenceMutation::Set { engagement_input, .. }] if engagement_input == "3, 4"));
+    assert!(matches!(ctx.presence_out.as_slice(), [BimPresenceMutation::Snapshot { transient: presence }] if presence.engagement_input == "3, 4"));
 }
 
 #[semio_framework_async_macros::async_test]

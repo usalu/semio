@@ -236,6 +236,78 @@ fn paged_semantic_projection_places_boxed_output_under_the_original_grant(){
 }
 
 #[test]
+fn retained_replay_projection_pays_nested_copy_and_cancellation() {
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📦️retained-projection.json")).unwrap();
+ let body=law["bodyBytes"].as_u64().unwrap() as usize;
+ let maximum=law["maximumTurns"].as_u64().unwrap() as usize;
+ let mut bank=bank();
+ for row in law["cases"].as_array().unwrap(){
+  let input:Vec<String>=serde_json::from_value(row["input"].clone()).unwrap();
+  let cancel=row["cancel"].as_bool().unwrap();
+  let mut source=admit_source(&mut bank,input);
+  let mut projection=ClonedProjection::new(RetainedCloneBirthDemand{capacity_bytes:0,depth:1});
+  let g=grant(projection.birth_demand());
+  let ((progress,heap),_)=with_effect(&mut bank,g,OriginalLawCaller::WORK,|effect|observe(||projection.begin(effect).unwrap()));
+  assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);
+  assert_eq!(heap.released_bytes,progress.released_bytes);
+  let mut born=heap.requested_bytes;
+  let mut released=heap.released_bytes;
+  let mut nested_allocation=false;
+  let mut complete=false;
+  for _ in 0..maximum {
+   let demand=projection.demands(source.borrow(),body,OriginalLawCaller::WORK).unwrap();
+   let g=grant(demand);
+   if demand.capacity_bytes>0 {
+    let denied=RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..g};
+    let ((step,heap),_)=with_effect(&mut bank,denied,OriginalLawCaller::WORK,|effect|observe(||projection.advance(source.borrow(),body,effect).unwrap()));
+    assert_eq!(step.progress(),RetainedCloneProgress::default());
+    assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+    assert_eq!(projection.demands(source.borrow(),body,OriginalLawCaller::WORK).unwrap(),demand);
+   }
+   let ((step,heap),_)=with_effect(&mut bank,g,OriginalLawCaller::WORK,|effect|observe(||projection.advance(source.borrow(),body,effect).unwrap()));
+   let progress=step.progress();
+   assert!(progress.fits(g));
+   assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
+   born+=heap.requested_bytes;
+   released+=heap.released_bytes;
+   nested_allocation|=heap.requested_bytes>0;
+   complete=matches!(step,RetainedCloneStep::Complete(_));
+   if complete||cancel&&nested_allocation{break}
+  }
+  assert!(nested_allocation,"fixture must exercise nested heap allocation");
+  if !cancel {
+   assert!(complete,"funded retained snapshot completes");
+   let g=grant(projection.take_demand().unwrap());
+   let ((output,heap),_)=with_effect(&mut bank,g,OriginalLawCaller::WORK,|effect|observe(||projection.take(effect).unwrap().unwrap()));
+   let (value,progress)=output;
+   assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
+   assert_eq!(serde_json::to_value(&value).unwrap(),row["expected"]);
+   close_typed(&mut bank,value);
+  }
+  projection.begin_close();
+  for _ in 0..maximum {
+   if projection.terminal_is_empty(){break}
+   let g=grant(projection.close_demand(body).unwrap());
+   let (step,heap)=drive_observed(&mut bank,g,|effect|projection.close_step(effect));
+   let progress=step.unwrap().progress();
+   assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
+   born+=heap.requested_bytes;
+   released+=heap.released_bytes;
+  }
+  assert!(projection.terminal_is_empty());
+  if cancel {assert_eq!(born,released,"cancelled projection releases all of its original allocations")}
+  assert_eq!(serde_json::to_value(source.borrow().get()).unwrap(),row["input"]);
+  for _ in 0..maximum {
+   if source.terminal_is_empty(){break}
+   let g=grant(source.next_close_demand(body).unwrap());
+   settled(fx(&mut bank,g,|effect|source.close_step(body,effect))).result.unwrap();
+  }
+  assert!(source.terminal_is_empty());
+ }
+ finish(bank);
+}
+
+#[test]
 fn original_history_source_birth_keeps_original_frame_through_zero_work_and_funded_publication(){
  use semio_framework_value_native_owned::native_decoding::{NativeReceivingEffect,NativeReceivingEffectPhase};
  use semio_os_spr::history::{OriginalHistorySource,HistoryLog};

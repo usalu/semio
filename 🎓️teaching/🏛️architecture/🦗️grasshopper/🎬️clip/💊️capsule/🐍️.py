@@ -29,7 +29,7 @@ _scene_interop = importlib.import_module("🎓️teaching.🧰️interop.🎬️
 
 def _light_card(width: float, height: float, header: float):
     """🧾 A light square card on the shared frame owner: one glass header chip across the top edge, rows below."""
-    return _draft._art.window_frame(width, height, color="#8A8A8A", stroke_width=_draft.W_THIN, fill_color="#FFFFFF", fill_opacity=0.95,
+    return _draft._art.window_frame(width, height, stroke_width=_draft.W_THIN,
                                     top_depth=header, top_chips=((0, width),), appearance="light")
 
 TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"

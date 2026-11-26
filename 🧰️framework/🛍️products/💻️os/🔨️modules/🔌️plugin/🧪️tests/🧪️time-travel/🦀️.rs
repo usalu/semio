@@ -36,7 +36,6 @@ use semio_plugin_interaction::UiAssemblyResult;
 use semio_plugin_instance_app::VcsArtifactApp;
 use semio_plugin_window_config::WindowConfigOwner;
 use semio_plugin_window_transient::window_transient::WindowTransientOwner;
-#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_testing_laws::artifact_app_laws;
 use semio_plugin_builder as builder;
 use semio_plugin_window_transient::built_text_to_component_tree;

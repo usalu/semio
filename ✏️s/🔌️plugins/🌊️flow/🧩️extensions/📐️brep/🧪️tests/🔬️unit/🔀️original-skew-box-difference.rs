@@ -1,6 +1,6 @@
 #[test]
 fn original_skew_box_cut_keeps_exact_complements_cavities_and_sewn_recesses(){
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_framework_3d_brep_surface::Surface;
     use semio_framework_3d_brep_vector::{Pnt3,Vec3};

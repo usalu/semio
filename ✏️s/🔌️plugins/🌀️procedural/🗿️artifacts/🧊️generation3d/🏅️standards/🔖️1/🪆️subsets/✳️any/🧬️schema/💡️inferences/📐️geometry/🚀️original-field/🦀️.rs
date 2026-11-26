@@ -15,6 +15,11 @@ use semio_framework_value::{ValueError, ValueRefusalKind, RetainedCloneProgress,
 use semio_framework_value_persistent::list::PagedList;
 use std::mem::{ManuallyDrop,size_of};
 
+#[path="👁️preview/🦀️.rs"]
+mod preview;
+#[path="🔑️dependency/🦀️.rs"]
+pub(super) mod dependency;
+
 type Insert=RetainedOrderedMapInsertCursor<String,GeometryValue>;
 #[derive(Clone,Copy)]
 struct Source{operation:u64,generation:u64,parent:usize,snapshot:usize,catalogue:usize,key:usize,key_bytes:usize,recipient:usize,clock:fn()->Option<u64>,clock_binding:Option<u64>,deadline:u64}
@@ -31,7 +36,7 @@ impl Equality{
 }
 #[derive(Default,semio_framework_value::RetireOwned)]
 #[value(send_only)]
-struct State{completed:usize,phase:u8,widget:usize,category:usize,kind:usize,link:usize,probe:usize,duplicate:usize,port:usize,wire:usize,selected_wire:Option<usize>,parent:usize,output:usize,parent_identity:Option<usize>,parents:PagedList<usize,{usize::MAX}>,equality:Equality,values:Option<Outputs>,value:Option<GeometryValue>,key:String,byte:usize,reserved:bool,text_source:Option<(usize,usize)>,insertion:Option<Insert>,construction:WidgetInputsConstruction,inputs:Option<WidgetInputs>,job:Option<OriginalFixedOutputJob>,fault:Option<OriginalWidgetFaultProduction>}
+struct State{range_fault:RangeFault,preview_copy:preview::ValueCopy,preview_replaced:Option<ControlledRetirement<GeometryValue>>,completed:usize,phase:u8,widget:usize,category:usize,kind:usize,link:usize,probe:usize,duplicate:usize,port:usize,wire:usize,selected_wire:Option<usize>,parent:usize,output:usize,parent_identity:Option<usize>,parents:PagedList<usize,{usize::MAX}>,equality:Equality,values:Option<Outputs>,value:Option<GeometryValue>,key:String,byte:usize,reserved:bool,text_source:Option<(usize,usize)>,insertion:Option<Insert>,construction:WidgetInputsConstruction,inputs:Option<WidgetInputs>,job:Option<OriginalFixedOutputJob>,fault:Option<OriginalWidgetFaultProduction>}
 
 /// 🧳️ One actual erased pending frame; every retained output stays outside ordinary Drop until donated or paid closed.
 pub struct OriginalGeometryPending{source:Source,cyclic:bool,owner:ControlledRetirement<State>,evaluation:ManuallyDrop<Option<WidgetEvaluation>>,output:ManuallyDrop<Option<SharedEvaluation>>,output_close:Option<ControlledRetirement<(Option<WidgetEvaluation>,Option<SharedEvaluation>)>>,cancelled:bool}
@@ -57,6 +62,64 @@ impl OriginalGeometryPending{
    if let Some(fault)=fault{let quality=match widget{Widget::Neuron{..}=>snapshot.catalogue.categories().get(state.category).and_then(|category|category.kinds.get(state.kind)).map_or(Quality::ExactAnalytic,|kind|kind.quality),_=>Quality::ExactAnalytic};*self.evaluation=Some(WidgetEvaluation::faulted(fault,quality));state.phase=20;}
    return Ok(())
   }
+  if state.phase == 21 && matches!(widget, Widget::OutputPreview { .. }) {
+      state.phase = 25;
+      post(cx, RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
+      return Ok(());
+  }
+  if state.phase == 25 {
+      if let Some(wire) = host.synapses.get(state.wire) {
+          if let Some(incoming) = state.equality.step(&wire.to, key, cx)? {
+              if incoming {
+                  state.port += 1;
+                  state.selected_wire = Some(state.wire);
+              }
+              state.wire += 1;
+          }
+          return Ok(());
+      }
+      if state.port == 0 {
+          *self.evaluation = Some(WidgetEvaluation::ok(Outputs::default(), Quality::ExactAnalytic));
+          state.phase = 20;
+      } else {
+          state.phase = 26;
+      }
+      post(cx, RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
+      return Ok(());
+  }
+  if state.phase == 26 {
+      let wire = state.selected_wire.and_then(|index| host.synapses.get(index)).ok_or_else(|| invalid("preview lost its selected connection"))?;
+      if let [parent] = parents {
+          if state.port == 1 && (parent.fault.is_some() || parent.quality == Quality::ExactAnalytic) {
+              let whole = if parent.fault.is_some() || wire.from_port.is_empty() { Some(true) }
+                  else if parent.outputs.len() == 1 {
+                      let (port, _) = parent.outputs.get_index(0).ok_or_else(|| invalid("preview source lost its output"))?;
+                      state.equality.step(port, &wire.from_port, cx)?
+                  } else { Some(false) };
+              let Some(whole) = whole else { return Ok(()) };
+              if whole {
+                  state.phase = 27;
+                  return Ok(());
+              }
+          }
+      }
+      state.phase=1; state.link=0; state.selected_wire=None;
+      post(cx, RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
+      return Ok(());
+  }
+  if state.phase == 27 {
+      let [parent] = parents else { return Err(invalid("preview source changed during publication").into()) };
+      let bytes = size_of::<SharedEvaluation>();
+      if cx.retained_grant().maximum_copy_bytes < bytes { return Ok(()); }
+      post(cx, RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() })?;
+      *self.output = Some(parent.clone());
+      state.phase = 20;
+      return Ok(());
+  }
+  if matches!(widget, Widget::OutputPreview { .. }) {
+      if (1..=6).contains(&state.phase) { return roster_step(state, snapshot, key, parents, None, cx); }
+      return preview::project(state, &mut self.evaluation, &mut self.output, snapshot, key, parents, cx);
+  }
   if state.phase==21{if let Some(job)=snapshot.computes.start_original_widget(widget,cx)?{state.job=Some(job);state.phase=19;}return Ok(())}
   let Widget::Neuron{neuron_kind,params,..}=widget else{if state.phase==19{return step_job(state,&mut self.evaluation,cx)}return Err(invalid("original geometry pending source changed its widget variant").into())};
   if state.phase==24{
@@ -64,13 +127,66 @@ impl OriginalGeometryPending{
    if let Some(equal)=state.equality.step(neuron_kind,&kind.id,cx)?{if equal{state.phase=if self.cyclic{22}else{1};}else{state.kind+=1;}}return Ok(())
   }
   let kind=snapshot.catalogue.categories().get(state.category).and_then(|category|category.kinds.get(state.kind)).ok_or_else(||invalid("original geometry admitted catalogue ordinal changed"))?;
+  if (1..=6).contains(&state.phase) { return roster_step(state, snapshot, key, parents, Some(kind), cx); }
   match state.phase{
+   7=>{
+    if state.port==kind.inputs.len(){post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;state.phase=17;return Ok(())}
+    if state.wire==host.synapses.len(){post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;state.phase=if state.selected_wire.is_some(){9}else{11};state.parent=0;return Ok(())}
+    let wire=&host.synapses[state.wire];if let Some(equal)=state.equality.step(&wire.to,key,cx)?{if equal{state.phase=8;}else{state.wire+=1;}}
+   }
+   8=>{
+    let wire=&host.synapses[state.wire];let port=&kind.inputs[state.port];if let Some(equal)=state.equality.step(&wire.to_port,&port.name,cx)?{if equal{if state.selected_wire.is_some(){return Err(invalid("original geometry input accepts only one connection").into())}state.selected_wire=Some(state.wire);}state.wire+=1;state.phase=7;}
+   }
+   9=>{
+    if cx.retained_grant().maximum_depth<state.parents.next_get_depth_demand(state.parent).map_err(ValueError::from)?{return Ok(())}
+    let wire=&host.synapses[state.selected_wire.unwrap()];let ordinal=*state.parents.get(state.parent).ok_or_else(||invalid("original geometry wire source is missing from its plan parent roster"))?;let parent=host.widgets.get(ordinal).ok_or_else(||invalid("original geometry source parent widget changed"))?;
+    if let Some(equal)=state.equality.step(widget_id(parent),&wire.from,cx)?{if equal{let evaluation=parents.get(state.parent).ok_or_else(||invalid("original geometry source parent evaluation is absent"))?;if evaluation.fault.is_some(){return Err(invalid("original geometry input parent evaluation is faulted").into())}state.parent_identity=Some(Arc::as_ptr(evaluation)as usize);state.output=0;state.phase=10;}else{state.parent+=1;}}
+   }
+   10=>{
+    let evaluation=parents.get(state.parent).ok_or_else(||invalid("original geometry source parent evaluation changed"))?;if state.parent_identity!=Some(Arc::as_ptr(evaluation)as usize){return Err(invalid("original geometry source parent owner identity changed").into())}let wire=&host.synapses[state.selected_wire.unwrap()];
+    let(port,_)=evaluation.outputs.get_index(state.output).ok_or_else(||invalid("original geometry source parent has no named output"))?;
+    if wire.from_port.is_empty(){post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;if evaluation.outputs.len()!=1{return Err(invalid("original geometry implicit source requires exactly one output").into())}state.phase=12;}
+    else if let Some(equal)=state.equality.step(port,&wire.from_port,cx)?{if equal{state.phase=12;}else{state.output+=1;}}
+   }
+   11=>{
+    let port=&kind.inputs[state.port];match literal(port,params,cx)?{Literal::Blocked=>return Ok(()),Literal::OutOfRange=>{state.phase=40;post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;},Literal::Missing=>{if port.optional{post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;next_port(state);return Ok(())}return Err(invalid("original geometry required input has no literal or default").into())},Literal::Value(value,receipt)=>{state.value=Some(value);post(cx,receipt)?;state.phase=13;}}
+   }
+   12=>{
+    let evaluation=parents.get(state.parent).ok_or_else(||invalid("original geometry source parent evaluation disappeared"))?;if state.parent_identity!=Some(Arc::as_ptr(evaluation)as usize){return Err(invalid("original geometry source parent owner identity changed").into())}let value=evaluation.outputs.get_index(state.output).ok_or_else(||invalid("original geometry source output ordinal changed"))?.1;let port=&kind.inputs[state.port];if outside_range(port,value){state.phase=40;post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(())}if let Some((value,receipt))=copy_value(port,value,cx)?{state.value=Some(value);post(cx,receipt)?;state.phase=13;}
+   }
+   13=>{let port=&kind.inputs[state.port];if semio_s_artifact_procedural_3d_geometry_inputs::construction::text_event(&mut state.key,&port.name,&mut state.byte,&mut state.reserved,&mut state.text_source,cx)?{state.phase=14;}}
+   14=>{
+    let bytes=size_of::<Insert>();if cx.retained_grant().maximum_copy_bytes<bytes{return Ok(())}let map=state.values.take().ok_or_else(||invalid("original geometry input dictionary workspace disappeared"))?;let key=std::mem::take(&mut state.key);let value=state.value.take().ok_or_else(||invalid("original geometry resolved input donor disappeared"))?;
+    state.insertion=Some(Insert::new(map,key,value));state.phase=15;post(cx,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;
+   }
+   15=>{
+    let insertion=state.insertion.as_mut().ok_or_else(||invalid("original geometry input insertion disappeared"))?;if insertion.output_ready(){insert_take(insertion,&mut state.values,cx)?;if state.values.is_some(){state.phase=16;}}else{insert_advance(insertion,cx)?;}
+   }
+   16=>{let insertion=state.insertion.as_mut().ok_or_else(||invalid("original geometry input insertion closure disappeared"))?;insert_close(insertion,cx)?;if insertion.terminal_is_empty(){state.insertion.take();next_port(state);}}
+   17=>{if let Some(inputs)=WidgetInputs::new(key,kind,&mut state.values,&mut state.construction,cx)?{state.inputs=Some(inputs);state.phase=18;}}
+   18=>{if let Some(job)=snapshot.computes.start_original(kind,&mut state.inputs,cx)?{state.job=Some(job);state.phase=19;}}
+   40 => {
+       let port = kind.inputs.get(state.port).ok_or_else(|| invalid("faulted geometry input disappeared"))?;
+       if let Some(fault) = state.range_fault.step(&port.name, cx)? {
+           *self.evaluation = Some(WidgetEvaluation::faulted(fault, kind.quality));
+           state.phase = 20;
+       }
+   }
+   19=>return step_job(state,&mut self.evaluation,cx),
+   _=>return Err(invalid("original geometry pending phase is invalid").into()),
+  }
+  Ok(())
+ }
+}
+fn roster_step(state: &mut State, snapshot: &GeometryInput<'_>, key: &str, parents: &[SharedEvaluation], kind: Option<&Kind>, cx: &mut StepContext<'_>) -> Result<(), OriginalTurnFailure> {
+ let host = &snapshot.snapshot.host_snapshot;
+ match state.phase {
    1=>{
-    if state.link==host.synapses.len(){post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;if state.parents.len()!=parents.len(){return Err(invalid("original geometry plan parent values do not match its distinct source order").into())}state.phase=7;state.wire=0;return Ok(())}
-    let wire=&host.synapses[state.link];if let Some(equal)=state.equality.step(&wire.to,key,cx)?{if equal{state.probe=0;state.phase=2;}else{state.link+=1;}}
+    if state.link==host.synapses.len(){post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;if state.parents.len()!=parents.len(){return Err(invalid("original geometry plan parent values do not match its distinct source order").into())}state.phase=if kind.is_some(){7}else{28};state.wire=0;return Ok(())}
+    let wire=&host.synapses[state.link];if let Some(equal)=state.equality.step(&wire.to,key,cx)?{if equal{state.probe=0;state.phase=if kind.is_some(){2}else{3};}else{state.link+=1;}}
    }
    2=>{
-    let wire=&host.synapses[state.link];let port=kind.inputs.get(state.probe).ok_or_else(||invalid("original geometry wire names an unknown input port"))?;
+    let wire=&host.synapses[state.link];let port=kind.ok_or_else(||invalid("operator declaration disappeared"))?.inputs.get(state.probe).ok_or_else(||invalid("original geometry wire names an unknown input port"))?;
     if let Some(equal)=state.equality.step(&wire.to_port,&port.name,cx)?{if equal{state.probe=0;state.phase=3;}else{state.probe+=1;}}
    }
    3=>{
@@ -96,47 +212,9 @@ impl OriginalGeometryPending{
    6=>{
     if cx.retained_grant().maximum_depth<state.parents.next_push_depth_demand().map_err(ValueError::from)?{return Ok(())}state.parents.push_reserved(state.probe).map_err(|_|invalid("original parent roster reserved slot changed"))?;post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;state.link+=1;state.phase=1;
    }
-   7=>{
-    if state.port==kind.inputs.len(){post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;state.phase=17;return Ok(())}
-    if state.wire==host.synapses.len(){post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;state.phase=if state.selected_wire.is_some(){9}else{11};state.parent=0;return Ok(())}
-    let wire=&host.synapses[state.wire];if let Some(equal)=state.equality.step(&wire.to,key,cx)?{if equal{state.phase=8;}else{state.wire+=1;}}
-   }
-   8=>{
-    let wire=&host.synapses[state.wire];let port=&kind.inputs[state.port];if let Some(equal)=state.equality.step(&wire.to_port,&port.name,cx)?{if equal{if state.selected_wire.is_some(){return Err(invalid("original geometry input accepts only one connection").into())}state.selected_wire=Some(state.wire);}state.wire+=1;state.phase=7;}
-   }
-   9=>{
-    if cx.retained_grant().maximum_depth<state.parents.next_get_depth_demand(state.parent).map_err(ValueError::from)?{return Ok(())}
-    let wire=&host.synapses[state.selected_wire.unwrap()];let ordinal=*state.parents.get(state.parent).ok_or_else(||invalid("original geometry wire source is missing from its plan parent roster"))?;let parent=host.widgets.get(ordinal).ok_or_else(||invalid("original geometry source parent widget changed"))?;
-    if let Some(equal)=state.equality.step(widget_id(parent),&wire.from,cx)?{if equal{let evaluation=parents.get(state.parent).ok_or_else(||invalid("original geometry source parent evaluation is absent"))?;if evaluation.fault.is_some(){return Err(invalid("original geometry input parent evaluation is faulted").into())}state.parent_identity=Some(Arc::as_ptr(evaluation)as usize);state.output=0;state.phase=10;}else{state.parent+=1;}}
-   }
-   10=>{
-    let evaluation=parents.get(state.parent).ok_or_else(||invalid("original geometry source parent evaluation changed"))?;if state.parent_identity!=Some(Arc::as_ptr(evaluation)as usize){return Err(invalid("original geometry source parent owner identity changed").into())}let wire=&host.synapses[state.selected_wire.unwrap()];
-    let(port,_)=evaluation.outputs.get_index(state.output).ok_or_else(||invalid("original geometry source parent has no named output"))?;
-    if wire.from_port.is_empty(){post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;if evaluation.outputs.len()!=1{return Err(invalid("original geometry implicit source requires exactly one output").into())}state.phase=12;}
-    else if let Some(equal)=state.equality.step(port,&wire.from_port,cx)?{if equal{state.phase=12;}else{state.output+=1;}}
-   }
-   11=>{
-    let port=&kind.inputs[state.port];match literal(port,params,cx)?{Literal::Blocked=>return Ok(()),Literal::Missing=>{if port.optional{post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;next_port(state);return Ok(())}return Err(invalid("original geometry required input has no literal or default").into())},Literal::Value(value,receipt)=>{state.value=Some(value);post(cx,receipt)?;state.phase=13;}}
-   }
-   12=>{
-    let evaluation=parents.get(state.parent).ok_or_else(||invalid("original geometry source parent evaluation disappeared"))?;if state.parent_identity!=Some(Arc::as_ptr(evaluation)as usize){return Err(invalid("original geometry source parent owner identity changed").into())}let value=evaluation.outputs.get_index(state.output).ok_or_else(||invalid("original geometry source output ordinal changed"))?.1;let port=&kind.inputs[state.port];if let Some((value,receipt))=copy_value(port,value,cx)?{state.value=Some(value);post(cx,receipt)?;state.phase=13;}
-   }
-   13=>{let port=&kind.inputs[state.port];if semio_s_artifact_procedural_3d_geometry_inputs::construction::text_event(&mut state.key,&port.name,&mut state.byte,&mut state.reserved,&mut state.text_source,cx)?{state.phase=14;}}
-   14=>{
-    let bytes=size_of::<Insert>();if cx.retained_grant().maximum_copy_bytes<bytes{return Ok(())}let map=state.values.take().ok_or_else(||invalid("original geometry input dictionary workspace disappeared"))?;let key=std::mem::take(&mut state.key);let value=state.value.take().ok_or_else(||invalid("original geometry resolved input donor disappeared"))?;
-    state.insertion=Some(Insert::new(map,key,value));state.phase=15;post(cx,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;
-   }
-   15=>{
-    let insertion=state.insertion.as_mut().ok_or_else(||invalid("original geometry input insertion disappeared"))?;if insertion.output_ready(){insert_take(insertion,&mut state.values,cx)?;if state.values.is_some(){state.phase=16;}}else{insert_advance(insertion,cx)?;}
-   }
-   16=>{let insertion=state.insertion.as_mut().ok_or_else(||invalid("original geometry input insertion closure disappeared"))?;insert_close(insertion,cx)?;if insertion.terminal_is_empty(){state.insertion.take();next_port(state);}}
-   17=>{if let Some(inputs)=WidgetInputs::new(key,kind,&mut state.values,&mut state.construction,cx)?{state.inputs=Some(inputs);state.phase=18;}}
-   18=>{if let Some(job)=snapshot.computes.start_original(kind,&mut state.inputs,cx)?{state.job=Some(job);state.phase=19;}}
-   19=>return step_job(state,&mut self.evaluation,cx),
-   _=>return Err(invalid("original geometry pending phase is invalid").into()),
-  }
-  Ok(())
+   _ => return Err(invalid("geometry parent roster phase changed").into()),
  }
+ Ok(())
 }
 fn step_job(state:&mut State,evaluation:&mut Option<WidgetEvaluation>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{if let Some(WidgetStep::Done(value))=state.job.as_mut().ok_or_else(||invalid("original geometry pending has no admitted job"))?.step_original(cx)?{*evaluation=Some(value);state.phase=20;}Ok(())}
 fn next_port(state:&mut State){state.port+=1;state.wire=0;state.selected_wire=None;state.parent_identity=None;state.parent=0;state.output=0;state.phase=7;}
@@ -146,16 +224,36 @@ fn open(cx:&StepContext<'_>)->bool{let grant=cx.retained_grant();!cx.should_yiel
 fn post(cx:&mut StepContext<'_>,receipt:RetainedCloneProgress)->Result<(),OriginalTurnFailure>{let result=cx.consume_retained(receipt);cx.consume_fuel(1);result.map_err(|error|error.with_retained_progress(receipt).into())}
 fn close_owner<T:semio_framework_value::retirement::RetireOwned>(owner:&mut ControlledRetirement<T>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;Ok(())}
 
-fn range(port:&Port,number:f64)->Result<(),ValueError>{if !number.is_finite()||port.min.is_some_and(|minimum|if port.exclusive_min{number<=minimum}else{number<minimum})||port.max.is_some_and(|maximum|number>maximum){return Err(invalid("original geometry input number is outside its declared range"))}Ok(())}
+fn outside_range(port: &Port, value: &GeometryValue) -> bool {
+ let number = match value { GeometryValue::Number(number) => *number, GeometryValue::Integer(number) => *number as f64, _ => return false };
+ !number.is_finite() || port.min.is_some_and(|minimum| if port.exclusive_min { number <= minimum } else { number < minimum })
+     || port.max.is_some_and(|maximum| number > maximum)
+}
+
+#[derive(Default, semio_framework_value::RetireOwned)]
+struct RangeFault { fields: [String; 4], field: usize, byte: usize, reserved: bool, binding: Option<(usize, usize)> }
+
+impl RangeFault {
+ fn step(&mut self, port: &str, cx: &mut StepContext<'_>) -> Result<Option<WidgetFault>, OriginalTurnFailure> {
+     let sources = [semio_s_artifact_procedural_3d_geometry_inputs::INPUT_RANGE, "The value is outside the permitted range.", "Der Wert liegt außerhalb des zulässigen Bereichs.", port];
+     if self.field == sources.len() {
+         let [code, en, de, name] = std::mem::take(&mut self.fields);
+         post(cx, RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
+         return Ok(Some(WidgetFault::new(code, en, de).at(name)));
+     }
+     if semio_s_artifact_procedural_3d_geometry_inputs::construction::text_event(&mut self.fields[self.field], sources[self.field], &mut self.byte, &mut self.reserved, &mut self.binding, cx)? { self.field += 1; }
+     Ok(None)
+ }
+}
 fn component(port:&Port)->Result<SelectionKind,ValueError>{use semio_s_artifact_procedural_3d_model::catalogue::SelectionComponent;match port.selection.as_ref().map(|selection|selection.component){Some(SelectionComponent::Vertex)=>Ok(SelectionKind::Vertex),Some(SelectionComponent::Edge)=>Ok(SelectionKind::Edge),Some(SelectionComponent::Face)=>Ok(SelectionKind::Face),_=>Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original input selection has no fixed component producer"))}}
 fn selection_value(port:&Port,id:u64,cx:&StepContext<'_>)->Result<Option<(GeometryValue,RetainedCloneProgress)>,ValueError>{let grant=cx.retained_grant();if grant.maximum_copy_bytes<8||grant.maximum_capacity_bytes<8{return Ok(None)}let component=component(port)?;let mut ids=Vec::new();ids.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original selection id backing reserve failed"))?;ids.push(id);let capacity=ids.capacity()*size_of::<u64>();Ok(Some((GeometryValue::Selection(SelectionValue{component,ids}),RetainedCloneProgress{copied_items:1,copied_bytes:8,retained_capacity_bytes:capacity,..Default::default()})))}
 fn copy_value(port:&Port,value:&GeometryValue,cx:&StepContext<'_>)->Result<Option<(GeometryValue,RetainedCloneProgress)>,ValueError>{
  let bytes=match value{GeometryValue::Number(_)|GeometryValue::Integer(_)=>8,GeometryValue::Boolean(_)=>1,GeometryValue::Vector(_)|GeometryValue::Point(_)=>24,GeometryValue::Plane(_)=>48,GeometryValue::Shape(_)=>size_of::<Arc<semio_framework_3d_brep_engine::ShapeValue>>(),GeometryValue::Mesh(_)=>size_of::<Arc<semio_framework_3d::mesh::HalfedgeMesh>>(),GeometryValue::Selection(selection)=>{if port.port_type!=PortType::Selection||selection.component!=component(port)?||selection.ids.len()!=1{return Err(invalid("original selected input requires one matching selection id"))}return selection_value(port,selection.ids[0],cx)},_=>return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original input payload has no funded fixed-output resolution producer"))};
  if port.list||cx.retained_grant().maximum_copy_bytes<bytes{return if port.list{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original input list payload has no funded resolution producer"))}else{Ok(None)}}
  let value=match(port.port_type,value){
-  (PortType::Number|PortType::Length|PortType::Angle,GeometryValue::Number(value))=>{range(port,*value)?;GeometryValue::Number(*value)},
-  (PortType::Number|PortType::Length|PortType::Angle,GeometryValue::Integer(value))=>{range(port,*value as f64)?;GeometryValue::Number(*value as f64)},
-  (PortType::Integer,GeometryValue::Integer(value))=>{range(port,*value as f64)?;GeometryValue::Integer(*value)},
+  (PortType::Number|PortType::Length|PortType::Angle,GeometryValue::Number(value))=>{GeometryValue::Number(*value)},
+  (PortType::Number|PortType::Length|PortType::Angle,GeometryValue::Integer(value))=>{GeometryValue::Number(*value as f64)},
+  (PortType::Integer,GeometryValue::Integer(value))=>{GeometryValue::Integer(*value)},
   (PortType::Boolean,GeometryValue::Boolean(value))=>GeometryValue::Boolean(*value),
   (PortType::Vector,GeometryValue::Vector(value))if value.iter().all(|v|v.is_finite())=>GeometryValue::Vector(*value),
   (PortType::Point,GeometryValue::Point(value))if value.iter().all(|v|v.is_finite())=>GeometryValue::Point(*value),
@@ -166,7 +264,7 @@ fn copy_value(port:&Port,value:&GeometryValue,cx:&StepContext<'_>)->Result<Optio
  };
  Ok(Some((value,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})))
 }
-enum Literal{Blocked,Missing,Value(GeometryValue,RetainedCloneProgress)}
+enum Literal{Blocked,Missing,OutOfRange,Value(GeometryValue,RetainedCloneProgress)}
 fn literal(port:&Port,params:&semio_framework_artifact_flow_flow::neural::Dictionary,cx:&StepContext<'_>)->Result<Literal,ValueError>{
  let copy=match port.port_type{PortType::Number|PortType::Length|PortType::Angle|PortType::Integer|PortType::Selection=>8,PortType::Boolean=>1,PortType::Point|PortType::Vector=>24,PortType::Plane=>48,_=>0};let grant=cx.retained_grant();if grant.maximum_copy_bytes<copy||port.port_type==PortType::Selection&&grant.maximum_capacity_bytes<8{return Ok(Literal::Blocked)}
  if port.port_type==PortType::Selection{
@@ -177,6 +275,7 @@ fn literal(port:&Port,params:&semio_framework_artifact_flow_flow::neural::Dictio
  }
  if port.list||!matches!(port.port_type,PortType::Number|PortType::Length|PortType::Angle|PortType::Integer|PortType::Boolean|PortType::Vector|PortType::Point|PortType::Plane){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original input literal type has no allocation-free scalar decoder"))}
  let value=if let Some(stored)=params.get(&port.name){semio_s_artifact_procedural_3d_geometry_inputs::element_literal(port.port_type,stored).ok_or_else(||invalid("original geometry stored literal has the wrong declared type"))?}else if let Some(default)=port.default.as_ref(){semio_s_artifact_procedural_3d_geometry_inputs::element_default(port.port_type,default).ok_or_else(||invalid("original geometry input default has the wrong declared type"))?}else{return Ok(Literal::Missing)};
+ if outside_range(port, &value) { return Ok(Literal::OutOfRange); }
  Ok(copy_value(port,&value,cx)?.map_or(Literal::Blocked,|(value,receipt)|Literal::Value(value,receipt)))
 }
 impl InferencePending for OriginalGeometryPending{
@@ -188,6 +287,13 @@ impl InferencePending for OriginalGeometryPending{
   if self.output_close.is_none()&&(self.evaluation.is_some()||self.output.is_some()){if cx.retirement_should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;self.output_close=Some(ControlledRetirement::new((self.evaluation.take(),self.output.take())).ok().unwrap());return Ok(false)}
   if let Some(owner)=self.output_close.as_mut(){if !owner.terminal_is_empty(){close_owner(owner,cx)?;return Ok(false)}self.output_close.take();}
   Ok(self.terminal_is_empty())
+ }
+ fn original_retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand,ValueError> {
+  if !self.owner.terminal_is_empty() { return self.owner.selected_demand(body); }
+  if let Some(owner) = &self.output_close {
+   if !owner.terminal_is_empty() { return owner.selected_demand(body); }
+  }
+  Ok(semio_framework_value::RetirementDemand { release_bytes: self.original_box_release_bytes().unwrap_or_default(), depth: 1, ..Default::default() })
  }
  fn original_box_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }

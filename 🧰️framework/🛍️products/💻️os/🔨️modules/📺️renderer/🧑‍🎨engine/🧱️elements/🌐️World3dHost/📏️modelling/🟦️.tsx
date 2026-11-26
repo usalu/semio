@@ -1,3 +1,4 @@
+import { useLevel, windowFrameChipLevel } from "@semio-tech/ui-react/chrome";
 // #region 🧲️Header
 /** 📏️ The React World3d modelling layer: annotations (dimension, angle, point marker, leader label) drawn at
  * screen-constant size with an accessible list, scalar-field heatmaps with an accessible legend, the pick
@@ -389,6 +390,7 @@ function markerShape(marker: NonNullable<World3dProjectedAnnotation["marker"]>):
 /** 📏️ The annotation layer as DOM: an SVG for the lines, arrowheads, arcs and markers, absolutely positioned labels, and a visually hidden
  * list that names every annotation for assistive technology (the visual layer is `aria-hidden`). Screen-constant by construction: every size is a CSS pixel. */
 export function World3dAnnotationOverlay({ layer, store, locale, toneHex = resolveWorld3dToneHex, className }: { readonly layer: World3dAnnotationLayer; readonly store: World3dAnnotationStore; readonly locale?: string; readonly toneHex?: (tone: World3dTone) => string; readonly className?: string }): ReactElement {
+  const labelLevel = windowFrameChipLevel(useLevel());
   const projected = useSyncExternalStore(store.subscribe, store.get, store.get);
   const strings = world3dModellingStrings(locale);
   const language = locale ?? "en";
@@ -431,7 +433,7 @@ export function World3dAnnotationOverlay({ layer, store, locale, toneHex = resol
             aria-hidden="true"
             data-slot="world-annotation-label"
             data-annotation-id={item.id}
-            data-glass-chip="" className="ui-glass absolute whitespace-nowrap px-1 text-xs"
+            data-level={labelLevel} data-glass-chip="" className="ui-glass absolute whitespace-nowrap px-1 text-xs"
             style={{ left: 0, top: 0, transform: `translate(${label.x}px, ${label.y}px) translate(${shift}, -50%)`, color: toneHex(item.tone) }}
           >
             {resolveWorld3dText(item.text, language)}

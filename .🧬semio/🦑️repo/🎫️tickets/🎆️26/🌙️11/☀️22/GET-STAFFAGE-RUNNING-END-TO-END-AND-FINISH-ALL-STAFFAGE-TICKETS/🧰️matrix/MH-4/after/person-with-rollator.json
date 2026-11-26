@@ -1,0 +1,14 @@
+[
+  {"op": "set", "scale": "50", "view": "elevation", "id": "tyre-rear-l", "set": {"solid": {"kind": "extruded", "sweep": "w", "z0": 0.265, "z1": 0.301}}, "why": "the frame turns about the vertical between seated-rest and the other poses (aid-turn, twist 180): the side elevation drew the four wheels flat in the middle plane, front and plan draw the tyres as prisms at their track; with the same span the wheels of the side elevation move with the turn (sync-forward 55 mm in seated-rest>stoop-to-basket), and the ring outlines keep their openings"},
+  {"op": "set", "scale": "50", "view": "elevation", "id": "rim-rear-l", "set": {"solid": {"kind": "extruded", "sweep": "w", "z0": 0.265, "z1": 0.301}}},
+  {"op": "set", "scale": "50", "view": "elevation", "id": "hub-rear-l", "set": {"solid": {"kind": "extruded", "sweep": "w", "z0": 0.265, "z1": 0.301}}},
+  {"op": "set", "scale": "50", "view": "elevation", "id": "tyre-rear-r", "set": {"solid": {"kind": "extruded", "sweep": "w", "z0": -0.301, "z1": -0.265}}},
+  {"op": "set", "scale": "50", "view": "elevation", "id": "rim-rear-r", "set": {"solid": {"kind": "extruded", "sweep": "w", "z0": -0.301, "z1": -0.265}}},
+  {"op": "set", "scale": "50", "view": "elevation", "id": "hub-rear-r", "set": {"solid": {"kind": "extruded", "sweep": "w", "z0": -0.301, "z1": -0.265}}},
+  {"op": "set", "scale": "50", "view": "elevation", "id": "tyre-front-l", "set": {"solid": {"kind": "extruded", "sweep": "w", "z0": 0.217, "z1": 0.253}}},
+  {"op": "set", "scale": "50", "view": "elevation", "id": "rim-front-l", "set": {"solid": {"kind": "extruded", "sweep": "w", "z0": 0.217, "z1": 0.253}}},
+  {"op": "set", "scale": "50", "view": "elevation", "id": "hub-front-l", "set": {"solid": {"kind": "extruded", "sweep": "w", "z0": 0.217, "z1": 0.253}}},
+  {"op": "set", "scale": "50", "view": "elevation", "id": "tyre-front-r", "set": {"solid": {"kind": "extruded", "sweep": "w", "z0": -0.253, "z1": -0.217}}},
+  {"op": "set", "scale": "50", "view": "elevation", "id": "rim-front-r", "set": {"solid": {"kind": "extruded", "sweep": "w", "z0": -0.253, "z1": -0.217}}},
+  {"op": "set", "scale": "50", "view": "elevation", "id": "hub-front-r", "set": {"solid": {"kind": "extruded", "sweep": "w", "z0": -0.253, "z1": -0.217}}}
+]

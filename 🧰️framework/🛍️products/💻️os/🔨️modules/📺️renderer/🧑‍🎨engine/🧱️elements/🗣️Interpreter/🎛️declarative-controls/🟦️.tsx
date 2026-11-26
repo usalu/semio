@@ -132,6 +132,7 @@ function useDeclarativeLane(onAction: (action: ActionDescriptor) => void, descri
 
 function DeclarativeSliderControl({ control, onAction, path }: { readonly control: Extract<DeclarativeUiControl, { type: "slider" }>; readonly onAction: (action: ActionDescriptor) => void; readonly path?: string }) {
   const lane = useDeclarativeLane(onAction, control.onChange, control.id);
+  const scalar = (values: readonly number[]) => values[0] ?? control.value;
   const slider = (
     <Slider
       id={control.id}
@@ -144,7 +145,8 @@ function DeclarativeSliderControl({ control, onAction, path }: { readonly contro
       value={[control.value]}
       aria-valuetext={uiAccessibilityValueV1({ type: "slider", value: control.value, min: control.min, max: control.max, step: control.step, unit: control.unit ?? null, snaps: [...(control.snaps ?? [])] }).valueText ?? undefined}
       onValueChange={(values) => lane.offer(values[0] ?? control.value)}
-      onValueCommit={(values) => lane.commit(values[0] ?? control.value)}
+      onValueCommit={(values) => lane.commit(scalar(values))}
+      onValueTypedCommit={(values) => lane.commitExact(scalar(values))}
       onPointerCancel={() => lane.abort("captureLost")}
       onBlur={() => lane.abort("blur")}
     />

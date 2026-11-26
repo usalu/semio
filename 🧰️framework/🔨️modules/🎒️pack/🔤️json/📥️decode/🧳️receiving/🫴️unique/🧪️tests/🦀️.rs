@@ -99,3 +99,82 @@ fn invalid_utf8_keeps_its_paid_prefix_and_failure_owner(){
 
 #[path="📏️work-equivalence/🦀️.rs"]
 mod work_equivalence;
+
+thread_local! {
+    static SLICED_CLOCK: std::cell::Cell<Option<u64>> = const { std::cell::Cell::new(None) };
+}
+
+fn sliced_clock() -> Option<u64> {
+    SLICED_CLOCK.with(|clock| {
+        let remaining = clock.get();
+        clock.set(remaining.map(|reads| reads.saturating_sub(1)));
+        (remaining != Some(0)).then_some(1)
+    })
+}
+
+#[test]
+fn yielded_output_retirement_preserves_the_accepted_payload() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🔣️.json")).unwrap();
+    let fixture = corpus["cases"].as_array().unwrap().iter().find(|row| row["name"] == "compact").unwrap();
+    let wire = fixture["wire"].as_str().unwrap().as_bytes();
+    let expected: Projection = serde_json::from_slice(wire).unwrap();
+    let grant = RetainedCloneGrant { maximum_items: 1_000_000, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 64 };
+    let limits = JsonReadLimits { maximum_bytes: 2048, maximum_allocation_bytes: grant.maximum_capacity_bytes, maximum_depth: 16, maximum_items: 10_000 };
+    let mut slices = Vec::new();
+    for reads in 0..24 {
+        SLICED_CLOCK.with(|clock| clock.set(None));
+        let mut caller = OriginalJobFixtureCaller::admit(OperationId(945), Generation(1), grant, sliced_clock, 100_000_000, 1_000_000);
+        caller.retain_dispatch().unwrap();
+        let mut source = OriginalJsonOutputSource::<Projection>::new(OriginalNativeDecodePolicy { maximum_owned_bytes: grant.maximum_capacity_bytes }, limits);
+        let mut captured = None;
+        let mut closes = Vec::new();
+        let mut sliced = false;
+        let mut refused = None;
+        for _ in 0..1000 {
+            let phase = source.receiver().map(|receiver| receiver.phase());
+            let offered = RetainedCloneGrant { maximum_items: if phase == Some("take") { 1 } else { grant.maximum_items }, ..grant };
+            let outcome = funded(&mut caller, offered, |cx| {
+                if !sliced && phase == Some("closeReceiver") {
+                    cx.restore_clock_stride(semio_framework_job::ClockStride::new());
+                    SLICED_CLOCK.with(|clock| clock.set(Some(reads)));
+                    sliced = true;
+                }
+                assert!(!cx.is_cancelled());
+                let outcome = if source.ready() { source.take_step(&mut captured, cx) } else { source.receive_step(wire, cx) };
+                SLICED_CLOCK.with(|clock| clock.set(None));
+                outcome
+            });
+            if let Some(outcome) = outcome {
+                if outcome.value.is_err() || outcome.receiving_refusal.is_some() {
+                    refused = Some(format!("{:?}; {:?}", outcome.value, source.failure()));
+                }
+                closes.push(ControlledRetirement::retain(outcome));
+                drain(&mut caller, grant, &mut source, &mut closes);
+            }
+            if captured.is_some() || refused.is_some() { break; }
+        }
+        assert!(sliced);
+        let correct = captured.as_ref() == Some(&expected);
+        caller.cancel().cancel_now();
+        let mut output = captured.map(ControlledRetirement::retain);
+        for _ in 0..1000 {
+            if output.as_ref().is_none_or(ControlledRetirement::terminal_is_empty) { break; }
+            if let Some(outcome) = funded(&mut caller, grant, |cx| source.close_owned_step(output.as_mut().unwrap(), cx)) {
+                assert!(outcome.receiving_refusal.is_none());
+                outcome.value.unwrap();
+            }
+        }
+        assert!(output.as_ref().is_none_or(ControlledRetirement::terminal_is_empty));
+        for _ in 0..1000 {
+            if source.terminal_is_empty() { break; }
+            if let OriginalJsonOutputClose::Producer(Some(outcome)) = funded(&mut caller, grant, |cx| source.close_step(cx)) {
+                assert!(outcome.receiving_refusal.is_none());
+                outcome.value.unwrap();
+            }
+        }
+        assert!(source.terminal_is_empty());
+        caller.retire(grant);
+        if !correct || refused.is_some() { slices.push((reads, refused)); }
+    }
+    assert!(slices.is_empty(), "{slices:?}");
+}

@@ -169,12 +169,8 @@ pub fn paint_waiting_border(draw: &mut DrawList, bounds: Rect, color: Rgba, them
 /// 🎴️ A `Stack`'s `activate`/`selected` visual affordances, ported from
 /// `framework/renderer/react/ui-interpreter.tsx`'s `case "stack"` (`widgets::WidgetNode::Stack` has
 /// neither field to port from — see this region's own doc comment on why `widgets` is an incomplete
-/// reference for fixtures like this one): `activate` (React's `"border bg-panel cursor-pointer
-/// rounded-md"`) paints a filled `theme.panel` background (brighter, `theme.button_hover`, while
-/// `events::EventRouter`'s hover-chain has flagged it `NodeFlags::HOVERED` — see
-/// `events::is_plain_stack_container`'s matching hit-test exception for why an activatable Stack can
-/// be hovered/clicked at all) with a normal border; `selected` (`"ring-primary border-primary
-/// ring-1"`) paints an accent-colored border plus a slightly outset accent ring, approximating the
+/// reference for fixtures like this one). An activatable stack shares the enclosing content
+/// surface. Its hover target paints the interactive fill, and selection contributes an outline.
 /// DOM's separate `ring`+`border` layers with this crate's single stroke-rect primitive.
 /// `dropAction`'s accept-a-drop affordance has no dedicated visual in the React reference either
 /// (`onDragOver`/`onDrop` are behavioral only) — its only paint-visible effect is keeping
@@ -186,7 +182,7 @@ pub fn paint_stack_frame(stack: &UiStackNode, bounds: Rect, flags: NodeFlags, th
         return;
     }
     let hovered = hover_owner(flags);
-    let bg = if hovered { theme.button_hover } else { theme.panel };
+    let bg = if hovered { theme.button_hover } else { Rgba::TRANSPARENT };
     push_control_border(draw, bounds, theme, if hovered { theme.border_emphasized } else { theme.border_normal }, bg, if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else { semio_ui_draw_contract::SharedBorderState::Normal });
 }
 

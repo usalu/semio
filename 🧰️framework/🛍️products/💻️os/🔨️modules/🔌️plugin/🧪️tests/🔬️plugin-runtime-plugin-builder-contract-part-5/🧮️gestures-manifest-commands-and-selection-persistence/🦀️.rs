@@ -132,7 +132,7 @@
             arguments: std::collections::BTreeMap::from([("windowId".into(),DslValue::String("main-instance-2".into()))]),
         };
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
-        let mut args=Some(DslValue::Object(invocation.arguments.into_iter().collect()));let mut fault=None;artifact_app_laws::dispatch_addressed_fixture_on_original(&mut app.0,&invocation.address,&mut args,&mut fault,Some("edit"),&meta(),&mut identity,cx).await.expect("addressed window action");
+        let mut args=Some(DslValue::Object(invocation.arguments.into_iter().collect()));let mut fault=None;semio_plugin_testing_instance_laws::dispatch_addressed_fixture_on_original(&mut app.0,&invocation.address,&mut args,&mut fault,Some("edit"),&meta(),&mut identity,cx).await.expect("addressed window action");
         settle_contract_app(&mut app,&mut identity,cx).await;
         assert_eq!(app.stores.test_snapshot().await.label, "main-instance-2");
 

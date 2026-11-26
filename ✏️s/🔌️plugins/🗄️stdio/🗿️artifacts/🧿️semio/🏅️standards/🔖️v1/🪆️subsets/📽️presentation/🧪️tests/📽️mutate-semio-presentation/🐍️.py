@@ -47,7 +47,7 @@ from semio_repo_test import Adapter, Context, Outcome, digest
 
 
 # region 🔖️Carrier
-DSL_PREAMBLE = "semio s.stdio.semio.presentation.dsl v1"
+DSL_PREAMBLE = "semio stdio.semio.presentation.dsl v1"
 
 #: 🧩️ `shape = "X"… | "P"… | "T"… | "H"…`.
 SHAPE_LETTER = {"textBox": "X", "picture": "P", "table": "T", "placeholder": "H"}

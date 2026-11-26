@@ -1,7 +1,7 @@
 //! 📇️ Registration of the mesh schema and every polygon operator in the flow registry.
 
 use semio_s_spatial_kernel_semio_session::*;
-use flow_extension_sdk::mesh::*;
+use semio_os_flow_mesh::*;
 use neural_engine::ChannelSpec;
 use neural_engine::Dictionary;
 use neural_engine::Registry;

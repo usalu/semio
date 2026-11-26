@@ -121,6 +121,67 @@ fn mount_presence_operation<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, cx: &mu
     panic!("original publication cancellation lease was never admitted")
 }
 
+pub(super) async fn retained_stale_window_publication<A: ArtifactApp, W: semio_plugin_window_config::WindowConfigOwner>(view: semio_framework::ViewModel, mutation: fn() -> W::Mutation) {
+    use semio_plugin_window_config::WindowConfigMutation;
+    let fixture: Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧪️tests/🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
+    let law = fixture["publicationCases"].as_array().unwrap().iter().find(|case| case["root"] == "window-config").unwrap();
+    let mut scope = artifact_app_laws::OriginalFixtureScope::admit();
+    let policy = artifact_app_laws::fixture_mounted_policy();
+    let mut app = artifact_app_laws::new_app::<A>(protocol::ActorId("fixture".into()), policy, &mut artifact_app_laws::fixture_identity()).await;
+    app.bind_instance_id(7).await;
+    app.stores.window_config_store.register::<W>().unwrap();
+    let window = view.window_id.as_deref().unwrap();
+    for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+        if app.stores.window_config_store.ensure_for_roster(Some(&view), scope.cx()).unwrap() { break; }
+    }
+    let before = app.stores.window_config_store.borrow(W::WINDOW_KIND_ID, window).expect("mounted fixture window").revision;
+    artifact_app_laws::ensure_fixture_cancellation_issuer(&mut app, scope.cx()).unwrap();
+    let mut fresh_commits = 0;
+    for stale in [true, false] {
+        let mut mounted = mount_presence_operation(&mut app, scope.cx());
+        let mut authority = app.stores.window_config_store.capture(Some(&view)).await.unwrap().unwrap();
+        if stale { authority.revision[31] ^= 1; }
+        mounted.publication_lanes = &[ArtifactToolPublicationLane::WindowConfig];
+        mounted.window_config_authority = Some(authority);
+        let Some(ArtifactToolCompletionValue::Emit(Ok(emit), _)) = mounted.publication.as_mut() else { unreachable!() };
+        emit.window_config_mutations.push(WindowConfigMutation::of::<W>(window, mutation()));
+        let mut window_receipt = false;
+        for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+            publish_mounted_fixture_unit(&mut app, &mut mounted, policy.maintenance, scope.cx());
+            if mounted.stage != MountedTypedCommandFullOperationStage::AwaitingAck { continue; }
+            let mut page = present_mounted_page(&mut mounted, policy.preparation, scope.cx()).unwrap();
+            let lane = page.lane;
+            if stale {
+                assert_eq!(lane, TypedOperationResultLane::Fault);
+                let fault = semio_plugin_decl_app::tool_contract::decode_typed_operation_fault_page(page.bytes());
+                assert_eq!(fault.code.as_str(), law["faultCode"].as_str().unwrap());
+                assert!(fault.message.contains("stale window configuration root"));
+            } else {
+                assert_ne!(lane, TypedOperationResultLane::Fault);
+                window_receipt |= lane == TypedOperationResultLane::WindowConfig;
+            }
+            let token = artifact_app_laws::close_fixture_result_page(&mut page, policy.close);
+            assert!(mounted.acknowledge_result_page(token).unwrap());
+            retire_acknowledged_mounted_page(&mut mounted, policy.close, scope.cx());
+            if stale || lane == TypedOperationResultLane::Terminal { break; }
+        }
+        assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::Retiring);
+        let changed = app.stores.window_config_store.borrow(W::WINDOW_KIND_ID, window).unwrap().revision != before;
+        if stale {
+            assert_eq!(changed, law["committed"].as_bool().unwrap());
+        } else {
+            assert!(changed && window_receipt);
+            fresh_commits += 1;
+        }
+        close_mounted(&mut mounted, &app.tools.tool_cancellations, "window publication freshness", policy.close, scope.cx());
+        assert!(mounted.terminal_is_empty());
+        assert_eq!(app.tools.tool_cancellations.active_operation_count(), 0);
+    }
+    assert_eq!(fresh_commits, law["nextGeneration"].as_u64().unwrap());
+    close_app(&mut app, "window publication freshness", scope.cx());
+    scope.retire();
+}
+
 pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>(stale_only: bool) {
         let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();
         let cx = original_scope.cx();
@@ -130,6 +191,7 @@ pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<
         assert_eq!(grant.maximum_items, 1);
         assert_eq!(bytes, TYPED_OPERATION_RESULT_PAGE_BYTES);
         for case in fixture["publicationCases"].as_array().unwrap() {
+            if case["root"] == "window-config" { continue; }
             let stale = case["staleAt"].as_str();
             if stale_only != stale.is_some() { continue; }
             let boundary = stale.or_else(|| case["cancelAt"].as_str()).unwrap();

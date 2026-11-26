@@ -54,7 +54,6 @@ semio-s-artifact-bim-model-snapshot = { path = "../../../../../🧬️schema/�
 semio-s-artifact-bim-model-svg = { path = "../../../🎨️svg/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-wall-geometry = { path = "../../../../../🧬️schema/🧬️mutations/🦉️wall-geometry/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract = { workspace = true }
-semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-gltf-model = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base-model = { workspace = true }

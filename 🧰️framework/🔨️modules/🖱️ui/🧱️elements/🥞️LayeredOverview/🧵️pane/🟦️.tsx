@@ -116,7 +116,7 @@ class LayeredPaneBoundary extends React.Component<{ readonly failed: string; rea
   }
   override render(): React.ReactNode {
     return this.state.crashed ? (
-      <div role="alert" data-layered-pane-error="" className="flex h-full w-full items-center justify-center bg-background p-double text-center text-sm text-muted-foreground">
+      <div role="alert" data-layered-pane-error="" className="flex h-full w-full items-center justify-center p-double text-center text-sm text-muted-foreground">
         {this.props.failed}
       </div>
     ) : (
@@ -133,7 +133,7 @@ function LayeredPage({ render, state }: { readonly render: LayeredPane["render"]
 /** ⏳️ What a pane shows before it first mounts: its glyph at 40 % and a pulsing page behind a loading border. */
 function LayeredPanePlaceholder({ icon, busy, label }: { readonly icon?: IconName; readonly busy: boolean; readonly label: string }): React.ReactElement {
   return (
-    <div role="status" aria-busy={busy} aria-label={label} className={cn("flex h-full w-full flex-col items-center justify-center gap-double bg-background p-double", loadingBorderClass)}>
+    <div role="status" aria-busy={busy} aria-label={label} className={cn("flex h-full w-full flex-col items-center justify-center gap-double p-double", loadingBorderClass)}>
       {icon ? <Icon icon={icon} size="large" className="text-foreground opacity-40" /> : null}
       <div aria-hidden className="min-h-0 w-full max-w-4xl flex-1 animate-pulse bg-muted-foreground/10 motion-reduce:animate-none" />
     </div>
@@ -176,7 +176,7 @@ export const LayeredPaneView = /* @__PURE__ */ React.memo(function LayeredPaneVi
       aria-hidden={opened ? undefined : true}
       tabIndex={opened ? -1 : undefined}
       inert={!opened}
-      className="relative h-full w-full overflow-hidden bg-background outline-none"
+      className="relative h-full w-full overflow-hidden outline-none"
       style={{ contain: "layout paint", ...props.style }}
       onPointerDownCapture={dirty}
       onKeyDownCapture={dirty}

@@ -1,0 +1,2420 @@
+{
+  "counts": {
+    "campuses": 1,
+    "buildings": 1,
+    "storeys": 4,
+    "spaces": 12,
+    "zones": 9,
+    "surfaces": 92,
+    "openings": 29,
+    "constructions": 23,
+    "layers": 21,
+    "materials": 21,
+    "window_types": 4
+  },
+  "spaces": {
+    "sp-a1": {
+      "name": "2.01 Roof Space",
+      "storey": "Attic",
+      "zone": "Service zone (1)",
+      "condition": "Unconditioned",
+      "area": 73.9956,
+      "volume": 177.58944,
+      "people": 0.369978
+    },
+    "sp-b1": {
+      "name": "B.01 Cellar Stair",
+      "storey": "Basement",
+      "zone": "Service zone (1)",
+      "condition": "Unconditioned",
+      "area": 25.1027,
+      "volume": 57.73621,
+      "people": 0.251027,
+      "lighting": 2.0
+    },
+    "sp-b2": {
+      "name": "B.02 Hobby and Storage",
+      "storey": "Basement",
+      "zone": "Service zone (1)",
+      "condition": "Unconditioned",
+      "area": 47.948269112,
+      "volume": 110.281018958,
+      "people": 0.479482691,
+      "lighting": 3.0
+    },
+    "sp-g1": {
+      "name": "0.01 Hall",
+      "storey": "Ground Floor",
+      "zone": "Day zone (1)",
+      "condition": "Heated",
+      "area": 15.61015625,
+      "volume": 39.025390625,
+      "heating": 18.0,
+      "people": 0.312203125,
+      "lighting": 4.0,
+      "equipment": 1.0,
+      "outdoor_air": 0.2
+    },
+    "sp-g2": {
+      "name": "0.02 WC",
+      "storey": "Ground Floor",
+      "zone": "Service zone (2)",
+      "condition": "Heated",
+      "area": 4.18403125,
+      "volume": 10.460078125,
+      "heating": 20.0,
+      "people": 0.083680625,
+      "lighting": 5.0,
+      "equipment": 1.0,
+      "outdoor_air": 0.5
+    },
+    "sp-g3": {
+      "name": "0.03 Cellar Stair Room",
+      "storey": "Ground Floor",
+      "zone": "Day zone (1)",
+      "condition": "Heated",
+      "area": 4.4078125,
+      "volume": 11.01953125,
+      "heating": 18.0,
+      "people": 0.08815625,
+      "lighting": 4.0,
+      "equipment": 1.0,
+      "outdoor_air": 0.2
+    },
+    "sp-g4": {
+      "name": "0.04 Living Room",
+      "storey": "Ground Floor",
+      "zone": "Day zone (2)",
+      "condition": "HeatedAndCooled",
+      "area": 30.286725362,
+      "volume": 73.82389307,
+      "heating": 21.0,
+      "cooling": 26.0,
+      "people": 1.514336268,
+      "lighting": 6.0,
+      "equipment": 4.0,
+      "outdoor_air": 0.3
+    },
+    "sp-g5": {
+      "name": "0.05 Kitchen and Dining",
+      "storey": "Ground Floor",
+      "zone": "Day zone (3)",
+      "condition": "HeatedAndCooled",
+      "area": 16.58015625,
+      "volume": 37.927107422,
+      "heating": 21.0,
+      "cooling": 26.0,
+      "people": 0.829007812,
+      "lighting": 6.0,
+      "equipment": 8.0,
+      "outdoor_air": 0.4
+    },
+    "sp-u1": {
+      "name": "1.01 Landing",
+      "storey": "Upper Floor",
+      "zone": "Night zone (1)",
+      "condition": "Heated",
+      "area": 20.40171875,
+      "volume": 48.964125,
+      "heating": 18.0,
+      "people": 0.408034375,
+      "lighting": 4.0,
+      "equipment": 1.0,
+      "outdoor_air": 0.2
+    },
+    "sp-u2": {
+      "name": "1.02 Bathroom",
+      "storey": "Upper Floor",
+      "zone": "Night zone (4)",
+      "condition": "Heated",
+      "area": 4.23030625,
+      "volume": 10.152735,
+      "heating": 24.0,
+      "people": 0.084606125,
+      "lighting": 5.0,
+      "equipment": 2.0,
+      "outdoor_air": 0.5
+    },
+    "sp-u3": {
+      "name": "1.03 Master Bedroom",
+      "storey": "Upper Floor",
+      "zone": "Night zone (2)",
+      "condition": "HeatedAndCooled",
+      "area": 27.413850362,
+      "volume": 62.105024629,
+      "heating": 18.0,
+      "cooling": 26.0,
+      "people": 0.822415511,
+      "lighting": 4.0,
+      "equipment": 2.0,
+      "outdoor_air": 0.3
+    },
+    "sp-u4": {
+      "name": "1.04 Child Room",
+      "storey": "Upper Floor",
+      "zone": "Night zone (3)",
+      "condition": "HeatedAndCooled",
+      "area": 19.81978125,
+      "volume": 45.337749609,
+      "heating": 20.0,
+      "cooling": 26.0,
+      "people": 0.594593437,
+      "lighting": 4.0,
+      "equipment": 2.0,
+      "outdoor_air": 0.3
+    }
+  },
+  "surfaces": {
+    "sp-a1/w1": {
+      "cad": [
+        "sp-a1/w1"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-a1"
+      ],
+      "azimuth": 272.864788978,
+      "tilt": 90.0,
+      "width": 7.66,
+      "height": 2.4,
+      "area": 18.38400000094419,
+      "openings": {},
+      "construction": "Attic Knee Wall 34 U=0.145751582",
+      "u_value": 0.145751582
+    },
+    "sp-a1/w2": {
+      "cad": [
+        "sp-a1/w2"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-a1"
+      ],
+      "azimuth": 182.864788975,
+      "tilt": 90.0,
+      "width": 9.66,
+      "height": 2.4,
+      "area": 23.18399999898579,
+      "openings": {},
+      "construction": "Attic Knee Wall 34 U=0.145751582",
+      "u_value": 0.145751582
+    },
+    "sp-a1/w3": {
+      "cad": [
+        "sp-a1/w3"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-a1"
+      ],
+      "azimuth": 92.864788978,
+      "tilt": 90.0,
+      "width": 7.66,
+      "height": 2.4,
+      "area": 18.38400000094419,
+      "openings": {},
+      "construction": "Attic Knee Wall 34 U=0.145751582",
+      "u_value": 0.145751582
+    },
+    "sp-a1/w4": {
+      "cad": [
+        "sp-a1/w4"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-a1"
+      ],
+      "azimuth": 2.864788975,
+      "tilt": 90.0,
+      "width": 9.66,
+      "height": 2.4,
+      "area": 23.18399999898579,
+      "openings": {},
+      "construction": "Attic Knee Wall 34 U=0.145751582",
+      "u_value": 0.145751582
+    },
+    "sp-a1/f1": {
+      "cad": [
+        "sp-a1/f1",
+        "sp-u1/c1"
+      ],
+      "kind": "InteriorFloor",
+      "exposed": false,
+      "spaces": [
+        "sp-a1",
+        "sp-u1"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 3.6897013,
+      "height": 7.701680637,
+      "area": 20.401718752725415,
+      "openings": {},
+      "construction": "Timber Floor 30 U=0.166990861",
+      "u_value": 0.166990861
+    },
+    "sp-a1/f2": {
+      "cad": [
+        "sp-a1/f2",
+        "sp-u2/c1"
+      ],
+      "kind": "InteriorFloor",
+      "exposed": false,
+      "spaces": [
+        "sp-a1",
+        "sp-u2"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 1.677640149,
+      "height": 2.816165458,
+      "area": 4.230306250804221,
+      "openings": {},
+      "construction": "Timber Floor 30 U=0.166990861",
+      "u_value": 0.166990861
+    },
+    "sp-a1/f3": {
+      "cad": [
+        "sp-a1/f3",
+        "sp-u3/c1"
+      ],
+      "kind": "InteriorFloor",
+      "exposed": false,
+      "spaces": [
+        "sp-a1",
+        "sp-u3"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 6.316897593,
+      "height": 4.542695652,
+      "area": 25.974263185027255,
+      "openings": {},
+      "construction": "Timber Floor 30 U=0.166990861",
+      "u_value": 0.166990861
+    },
+    "sp-a1/f4": {
+      "cad": [
+        "sp-a1/f4",
+        "sp-u4/c1"
+      ],
+      "kind": "InteriorFloor",
+      "exposed": false,
+      "spaces": [
+        "sp-a1",
+        "sp-u4"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 6.266918423,
+      "height": 3.543945392,
+      "area": 19.819781253569914,
+      "openings": {},
+      "construction": "Timber Floor 30 U=0.166990861",
+      "u_value": 0.166990861
+    },
+    "sp-a1/f5": {
+      "cad": [
+        "sp-a1/f5"
+      ],
+      "kind": "ExposedFloor",
+      "exposed": true,
+      "spaces": [
+        "sp-a1"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 10.030767952,
+      "height": 8.13322577,
+      "area": 73.99560000056331,
+      "openings": {},
+      "construction": "Timber Floor 30 U=0.170696479",
+      "u_value": 0.170696479
+    },
+    "sp-a1/c1": {
+      "cad": [
+        "sp-a1/c1"
+      ],
+      "kind": "Roof",
+      "exposed": true,
+      "spaces": [
+        "sp-a1"
+      ],
+      "azimuth": 0.0,
+      "tilt": 0.0,
+      "width": 10.030767952,
+      "height": 8.13322577,
+      "area": 73.99560000056334,
+      "openings": {},
+      "construction": "Pitched Roof 34.8 U=0.134113335",
+      "u_value": 0.134113335
+    },
+    "sp-b1/w1g": {
+      "cad": [
+        "sp-b1/w1g"
+      ],
+      "kind": "UndergroundWall",
+      "exposed": false,
+      "spaces": [
+        "sp-b1"
+      ],
+      "azimuth": 182.864788977,
+      "tilt": 90.0,
+      "width": 3.29,
+      "height": 2.3,
+      "area": 7.567000000701861,
+      "openings": {},
+      "construction": "Basement Wall 37 U=0.320060434",
+      "u_value": 0.320060434
+    },
+    "sp-b1/w2": {
+      "cad": [
+        "sp-b1/w2",
+        "sp-b2/w11"
+      ],
+      "kind": "InteriorWall",
+      "exposed": false,
+      "spaces": [
+        "sp-b1",
+        "sp-b2"
+      ],
+      "azimuth": 92.864788979,
+      "tilt": 90.0,
+      "width": 7.63,
+      "height": 2.3,
+      "area": 17.549000000481627,
+      "openings": {
+        "o-b-door": {
+          "kind": "NonSlidingDoor",
+          "area": 1.8000000013530613,
+          "width": 0.900000001,
+          "height": 2.0,
+          "offset": [
+            1.365,
+            0.0
+          ],
+          "construction": "Cellar Door U=1.8"
+        }
+      },
+      "construction": "Basement Bearing Wall 25 U=2.712264151",
+      "u_value": 2.712264151
+    },
+    "sp-b1/w3g": {
+      "cad": [
+        "sp-b1/w3g"
+      ],
+      "kind": "UndergroundWall",
+      "exposed": false,
+      "spaces": [
+        "sp-b1"
+      ],
+      "azimuth": 2.864788977,
+      "tilt": 90.0,
+      "width": 3.29,
+      "height": 2.3,
+      "area": 7.567000000701862,
+      "openings": {},
+      "construction": "Basement Wall 37 U=0.320060434",
+      "u_value": 0.320060434
+    },
+    "sp-b1/w4g": {
+      "cad": [
+        "sp-b1/w4g"
+      ],
+      "kind": "UndergroundWall",
+      "exposed": false,
+      "spaces": [
+        "sp-b1"
+      ],
+      "azimuth": 272.864788979,
+      "tilt": 90.0,
+      "width": 7.63,
+      "height": 2.3,
+      "area": 17.549000000481627,
+      "openings": {},
+      "construction": "Basement Wall 37 U=0.320060434",
+      "u_value": 0.320060434
+    },
+    "sp-b1/f1": {
+      "cad": [
+        "sp-b1/f1"
+      ],
+      "kind": "SlabOnGrade",
+      "exposed": false,
+      "spaces": [
+        "sp-b1"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 3.667229419,
+      "height": 7.784895954,
+      "area": 25.102700003017276,
+      "openings": {},
+      "construction": "Foundation Slab 49 U=0.264619835",
+      "u_value": 0.264619835
+    },
+    "sp-g1/f1": {
+      "cad": [
+        "sp-g1/f1",
+        "sp-b1/c1"
+      ],
+      "kind": "InteriorFloor",
+      "exposed": false,
+      "spaces": [
+        "sp-g1",
+        "sp-b1"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 3.521415192,
+      "height": 4.871042069,
+      "area": 15.504124998770388,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.749569347",
+      "u_value": 0.749569347
+    },
+    "sp-g2/f1": {
+      "cad": [
+        "sp-g2/f1",
+        "sp-b1/c2"
+      ],
+      "kind": "InteriorFloor",
+      "exposed": false,
+      "spaces": [
+        "sp-g2",
+        "sp-b1"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 1.676140774,
+      "height": 2.78620295,
+      "area": 4.184031251212074,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.749569347",
+      "u_value": 0.749569347
+    },
+    "sp-g3/f1": {
+      "cad": [
+        "sp-g3/f1",
+        "sp-b1/c3"
+      ],
+      "kind": "InteriorFloor",
+      "exposed": false,
+      "spaces": [
+        "sp-g3",
+        "sp-b1"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 1.736065789,
+      "height": 2.789201701,
+      "area": 4.3467812516955355,
+      "openings": {},
+      "construction": "Unspecified construction"
+    },
+    "sp-b1/c4": {
+      "cad": [
+        "sp-b1/c4"
+      ],
+      "kind": "Roof",
+      "exposed": true,
+      "spaces": [
+        "sp-b1"
+      ],
+      "azimuth": 0.0,
+      "tilt": 0.0,
+      "width": 3.667229419,
+      "height": 7.784895954,
+      "area": 25.102700003017276,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.881756942",
+      "u_value": 0.881756942
+    },
+    "sp-b2/w1g": {
+      "cad": [
+        "sp-b2/w1g"
+      ],
+      "kind": "UndergroundWall",
+      "exposed": false,
+      "spaces": [
+        "sp-b2"
+      ],
+      "azimuth": 182.864788977,
+      "tilt": 90.0,
+      "width": 6.09,
+      "height": 2.3,
+      "area": 14.007000000463421,
+      "openings": {},
+      "construction": "Basement Wall 37 U=0.320060434",
+      "u_value": 0.320060434
+    },
+    "sp-b2/w2g": {
+      "cad": [
+        "sp-b2/w2g"
+      ],
+      "kind": "UndergroundWall",
+      "exposed": false,
+      "spaces": [
+        "sp-b2"
+      ],
+      "azimuth": 92.864788963,
+      "tilt": 90.0,
+      "width": 0.910542809,
+      "height": 2.3,
+      "area": 2.0942484616223376,
+      "openings": {},
+      "construction": "Basement Wall 37 U=0.320060434",
+      "u_value": 0.320060434
+    },
+    "sp-b2/w3g": {
+      "cad": [
+        "sp-b2/w3g"
+      ],
+      "kind": "UndergroundWall",
+      "exposed": false,
+      "spaces": [
+        "sp-b2"
+      ],
+      "azimuth": 139.100515854,
+      "tilt": 90.0,
+      "width": 0.585186027,
+      "height": 2.3,
+      "area": 1.3459278615271493,
+      "openings": {},
+      "construction": "Basement Wall 37 U=0.320060434",
+      "u_value": 0.320060434
+    },
+    "sp-b2/w4g": {
+      "cad": [
+        "sp-b2/w4g"
+      ],
+      "kind": "UndergroundWall",
+      "exposed": false,
+      "spaces": [
+        "sp-b2"
+      ],
+      "azimuth": 119.160579679,
+      "tilt": 90.0,
+      "width": 0.585186026,
+      "height": 2.3,
+      "area": 1.3459278603502178,
+      "openings": {},
+      "construction": "Basement Wall 37 U=0.320060434",
+      "u_value": 0.320060434
+    },
+    "sp-b2/w5g": {
+      "cad": [
+        "sp-b2/w5g"
+      ],
+      "kind": "UndergroundWall",
+      "exposed": false,
+      "spaces": [
+        "sp-b2"
+      ],
+      "azimuth": 99.220643546,
+      "tilt": 90.0,
+      "width": 0.585186027,
+      "height": 2.3,
+      "area": 1.3459278620542172,
+      "openings": {},
+      "construction": "Basement Wall 37 U=0.320060434",
+      "u_value": 0.320060434
+    },
+    "sp-b2/w6g": {
+      "cad": [
+        "sp-b2/w6g"
+      ],
+      "kind": "UndergroundWall",
+      "exposed": false,
+      "spaces": [
+        "sp-b2"
+      ],
+      "azimuth": 79.280707515,
+      "tilt": 90.0,
+      "width": 0.585186026,
+      "height": 2.3,
+      "area": 1.3459278604289395,
+      "openings": {},
+      "construction": "Basement Wall 37 U=0.320060434",
+      "u_value": 0.320060434
+    },
+    "sp-b2/w7g": {
+      "cad": [
+        "sp-b2/w7g"
+      ],
+      "kind": "UndergroundWall",
+      "exposed": false,
+      "spaces": [
+        "sp-b2"
+      ],
+      "azimuth": 59.340771497,
+      "tilt": 90.0,
+      "width": 0.585186026,
+      "height": 2.3,
+      "area": 1.3459278601678448,
+      "openings": {},
+      "construction": "Basement Wall 37 U=0.320060434",
+      "u_value": 0.320060434
+    },
+    "sp-b2/w8g": {
+      "cad": [
+        "sp-b2/w8g"
+      ],
+      "kind": "UndergroundWall",
+      "exposed": false,
+      "spaces": [
+        "sp-b2"
+      ],
+      "azimuth": 43.014948657,
+      "tilt": 90.0,
+      "width": 0.374176879,
+      "height": 2.3,
+      "area": 0.8606068222961211,
+      "openings": {},
+      "construction": "Basement Wall 37 U=0.320060434",
+      "u_value": 0.320060434
+    },
+    "sp-b2/w9g": {
+      "cad": [
+        "sp-b2/w9g"
+      ],
+      "kind": "UndergroundWall",
+      "exposed": false,
+      "spaces": [
+        "sp-b2"
+      ],
+      "azimuth": 92.864788975,
+      "tilt": 90.0,
+      "width": 3.91054281,
+      "height": 2.3,
+      "area": 8.994248463516335,
+      "openings": {},
+      "construction": "Basement Wall 37 U=0.320060434",
+      "u_value": 0.320060434
+    },
+    "sp-b2/w10g": {
+      "cad": [
+        "sp-b2/w10g"
+      ],
+      "kind": "UndergroundWall",
+      "exposed": false,
+      "spaces": [
+        "sp-b2"
+      ],
+      "azimuth": 2.864788967,
+      "tilt": 90.0,
+      "width": 6.09,
+      "height": 2.3,
+      "area": 14.007000000348471,
+      "openings": {},
+      "construction": "Basement Wall 37 U=0.320060434",
+      "u_value": 0.320060434
+    },
+    "sp-b2/f1": {
+      "cad": [
+        "sp-b2/f1"
+      ],
+      "kind": "SlabOnGrade",
+      "exposed": false,
+      "spaces": [
+        "sp-b2"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 6.949265618,
+      "height": 7.924837627,
+      "area": 47.94826911193077,
+      "openings": {},
+      "construction": "Foundation Slab 49 U=0.264619835",
+      "u_value": 0.264619835
+    },
+    "sp-g4/f1": {
+      "cad": [
+        "sp-g4/f1",
+        "sp-b2/c1"
+      ],
+      "kind": "InteriorFloor",
+      "exposed": false,
+      "spaces": [
+        "sp-g4",
+        "sp-b2"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 6.949265618,
+      "height": 5.010983743,
+      "area": 30.180694113010304,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.749569347",
+      "u_value": 0.749569347
+    },
+    "sp-g5/f1": {
+      "cad": [
+        "sp-g5/f1",
+        "sp-b2/c2"
+      ],
+      "kind": "InteriorFloor",
+      "exposed": false,
+      "spaces": [
+        "sp-g5",
+        "sp-b2"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 6.217957583,
+      "height": 3.013483222,
+      "area": 16.519125001672926,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.749569347",
+      "u_value": 0.749569347
+    },
+    "sp-b2/c3": {
+      "cad": [
+        "sp-b2/c3"
+      ],
+      "kind": "Roof",
+      "exposed": true,
+      "spaces": [
+        "sp-b2"
+      ],
+      "azimuth": 0.0,
+      "tilt": 0.0,
+      "width": 6.949265618,
+      "height": 7.924837627,
+      "area": 47.94826911193084,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.881756942",
+      "u_value": 0.881756942
+    },
+    "sp-g1/w1": {
+      "cad": [
+        "sp-g1/w1"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-g1"
+      ],
+      "azimuth": 182.864788972,
+      "tilt": 90.0,
+      "width": 3.3125,
+      "height": 2.5,
+      "area": 8.281250001076677,
+      "openings": {
+        "o-g-entry": {
+          "kind": "NonSlidingDoor",
+          "area": 2.15000000127011,
+          "width": 1.000000001,
+          "height": 2.15,
+          "offset": [
+            2.215,
+            0.0
+          ],
+          "construction": "Front Door U=1.3"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-g1/w2": {
+      "cad": [
+        "sp-g1/w2",
+        "sp-g4/w11"
+      ],
+      "kind": "InteriorWall",
+      "exposed": false,
+      "spaces": [
+        "sp-g1",
+        "sp-g4"
+      ],
+      "azimuth": 92.864788973,
+      "tilt": 90.0,
+      "width": 4.7125,
+      "height": 2.5,
+      "area": 11.781249999698652,
+      "openings": {
+        "o-g-living-door": {
+          "kind": "NonSlidingDoor",
+          "area": 1.8899999993233392,
+          "width": 0.9,
+          "height": 2.1,
+          "offset": [
+            0.965,
+            0.0
+          ],
+          "construction": "Interior Door 90 U=2"
+        }
+      },
+      "construction": "Bearing Partition 20.5 U=0.643974241",
+      "u_value": 0.643974241
+    },
+    "sp-g1/w3": {
+      "cad": [
+        "sp-g1/w3",
+        "sp-g3/w2"
+      ],
+      "kind": "InteriorWall",
+      "exposed": false,
+      "spaces": [
+        "sp-g1",
+        "sp-g3"
+      ],
+      "azimuth": 2.864788974,
+      "tilt": 90.0,
+      "width": 1.625,
+      "height": 2.5,
+      "area": 4.062499999637789,
+      "openings": {
+        "o-g-cellar-door": {
+          "kind": "NonSlidingDoor",
+          "area": 1.8900000013157578,
+          "width": 0.900000001,
+          "height": 2.1,
+          "offset": [
+            0.347499999,
+            0.0
+          ],
+          "construction": "Interior Door 90 U=2"
+        }
+      },
+      "construction": "Bearing Partition 20.5 U=0.643974241",
+      "u_value": 0.643974241
+    },
+    "sp-g1/w4": {
+      "cad": [
+        "sp-g1/w4"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-g1"
+      ],
+      "azimuth": 2.864788756,
+      "tilt": 90.0,
+      "width": 0.145,
+      "height": 2.5,
+      "area": 0.36250000053806425,
+      "openings": {},
+      "construction": "Bearing Partition 20.5 U=0.68359375",
+      "u_value": 0.68359375
+    },
+    "sp-g1/w5": {
+      "cad": [
+        "sp-g1/w5",
+        "sp-g2/w1"
+      ],
+      "kind": "InteriorWall",
+      "exposed": false,
+      "spaces": [
+        "sp-g1",
+        "sp-g2"
+      ],
+      "azimuth": 2.864788992,
+      "tilt": 90.0,
+      "width": 1.542499999,
+      "height": 2.5,
+      "area": 3.856249998403947,
+      "openings": {
+        "o-g-wc-door": {
+          "kind": "NonSlidingDoor",
+          "area": 1.6799999993985235,
+          "width": 0.8,
+          "height": 2.1,
+          "offset": [
+            0.4275,
+            0.0
+          ],
+          "construction": "Interior Door 80 U=2"
+        }
+      },
+      "construction": "Bearing Partition 20.5 U=0.643974241",
+      "u_value": 0.643974241
+    },
+    "sp-g1/w6": {
+      "cad": [
+        "sp-g1/w6"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-g1"
+      ],
+      "azimuth": 272.864788986,
+      "tilt": 90.0,
+      "width": 4.7125,
+      "height": 2.5,
+      "area": 11.781249999823602,
+      "openings": {
+        "o-g-hall-west": {
+          "kind": "FixedWindow",
+          "area": 1.3499999995166705,
+          "width": 1.0,
+          "height": 1.35,
+          "offset": [
+            1.3975,
+            0.9
+          ],
+          "window_type": "Casement Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-g1/f2": {
+      "cad": [
+        "sp-g1/f2"
+      ],
+      "kind": "ExposedFloor",
+      "exposed": true,
+      "spaces": [
+        "sp-g1"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 3.543887073,
+      "height": 4.8721666,
+      "area": 15.610156249359722,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.830496234",
+      "u_value": 0.830496234
+    },
+    "sp-u1/f1": {
+      "cad": [
+        "sp-u1/f1",
+        "sp-g1/c1"
+      ],
+      "kind": "InteriorFloor",
+      "exposed": false,
+      "spaces": [
+        "sp-u1",
+        "sp-g1"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 3.543887073,
+      "height": 4.8721666,
+      "area": 15.610156249359722,
+      "openings": {},
+      "construction": "Unspecified construction"
+    },
+    "sp-g2/w2": {
+      "cad": [
+        "sp-g2/w2",
+        "sp-g3/w1"
+      ],
+      "kind": "InteriorWall",
+      "exposed": false,
+      "spaces": [
+        "sp-g2",
+        "sp-g3"
+      ],
+      "azimuth": 92.864788983,
+      "tilt": 90.0,
+      "width": 2.7125,
+      "height": 2.5,
+      "area": 6.78124999924178,
+      "openings": {},
+      "construction": "Partition 14.5 U=0.889453621",
+      "u_value": 0.889453621
+    },
+    "sp-g2/w3": {
+      "cad": [
+        "sp-g2/w3"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-g2"
+      ],
+      "azimuth": 2.86478899,
+      "tilt": 90.0,
+      "width": 1.5425,
+      "height": 2.5,
+      "area": 3.8562500009008236,
+      "openings": {
+        "o-g-wc-north": {
+          "kind": "FixedWindow",
+          "area": 0.35999999984112463,
+          "width": 0.6,
+          "height": 0.6,
+          "offset": [
+            0.527500001,
+            1.3
+          ],
+          "window_type": "Small Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-g2/w4": {
+      "cad": [
+        "sp-g2/w4"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-g2"
+      ],
+      "azimuth": 272.864788982,
+      "tilt": 90.0,
+      "width": 2.712500001,
+      "height": 2.5,
+      "area": 6.781250001738658,
+      "openings": {},
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-u2/f1": {
+      "cad": [
+        "sp-u2/f1",
+        "sp-g2/c1"
+      ],
+      "kind": "InteriorFloor",
+      "exposed": false,
+      "spaces": [
+        "sp-u2",
+        "sp-g2"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 1.676140774,
+      "height": 2.78620295,
+      "area": 4.184031251212074,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.749569347",
+      "u_value": 0.749569347
+    },
+    "sp-g3/w3": {
+      "cad": [
+        "sp-g3/w3",
+        "sp-g5/w1"
+      ],
+      "kind": "InteriorWall",
+      "exposed": false,
+      "spaces": [
+        "sp-g3",
+        "sp-g5"
+      ],
+      "azimuth": 92.864788983,
+      "tilt": 90.0,
+      "width": 2.7125,
+      "height": 2.5,
+      "area": 6.78124999924178,
+      "openings": {},
+      "construction": "Bearing Partition 20.5 U=0.643974241",
+      "u_value": 0.643974241
+    },
+    "sp-g3/w4": {
+      "cad": [
+        "sp-g3/w4"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-g3"
+      ],
+      "azimuth": 2.864789007,
+      "tilt": 90.0,
+      "width": 1.625000001,
+      "height": 2.5,
+      "area": 4.062500002259613,
+      "openings": {
+        "o-g-cellar-north": {
+          "kind": "FixedWindow",
+          "area": 0.35999999987111214,
+          "width": 0.6,
+          "height": 0.6,
+          "offset": [
+            0.4975,
+            1.3
+          ],
+          "window_type": "Small Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-g3/f2": {
+      "cad": [
+        "sp-g3/f2"
+      ],
+      "kind": "ExposedFloor",
+      "exposed": true,
+      "spaces": [
+        "sp-g3"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 1.75853767,
+      "height": 2.790326232,
+      "area": 4.407812501307376,
+      "openings": {},
+      "construction": "Unspecified construction"
+    },
+    "sp-u1/f2": {
+      "cad": [
+        "sp-u1/f2",
+        "sp-g3/c1"
+      ],
+      "kind": "InteriorFloor",
+      "exposed": false,
+      "spaces": [
+        "sp-u1",
+        "sp-g3"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 1.75853767,
+      "height": 2.790326232,
+      "area": 4.407812501307376,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.749569347",
+      "u_value": 0.749569347
+    },
+    "sp-g4/w1": {
+      "cad": [
+        "sp-g4/w1"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-g4"
+      ],
+      "azimuth": 182.864788974,
+      "tilt": 90.0,
+      "width": 6.1125,
+      "height": 2.4375,
+      "area": 14.899218750797065,
+      "openings": {
+        "o-g-living": {
+          "kind": "FixedWindow",
+          "area": 2.5200000004260636,
+          "width": 1.8,
+          "height": 1.4,
+          "offset": [
+            1.2975,
+            0.75
+          ],
+          "window_type": "Picture Window"
+        },
+        "o-g-patio": {
+          "kind": "NonSlidingDoor",
+          "area": 3.600000000845856,
+          "width": 1.6,
+          "height": 2.25,
+          "offset": [
+            3.8975,
+            0.0
+          ],
+          "construction": "Patio Door U=1.1"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-g4/w2": {
+      "cad": [
+        "sp-g4/w2"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-g4"
+      ],
+      "azimuth": 92.864788963,
+      "tilt": 90.0,
+      "width": 0.910542809,
+      "height": 2.4375,
+      "area": 2.219448097914977,
+      "openings": {},
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-g4/w3": {
+      "cad": [
+        "sp-g4/w3"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-g4"
+      ],
+      "azimuth": 139.100515854,
+      "tilt": 90.0,
+      "width": 0.585186027,
+      "height": 2.4375,
+      "area": 1.4263909402054027,
+      "openings": {},
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-g4/w4": {
+      "cad": [
+        "sp-g4/w4"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-g4"
+      ],
+      "azimuth": 119.160579679,
+      "tilt": 90.0,
+      "width": 0.585186026,
+      "height": 2.4375,
+      "area": 1.4263909389581113,
+      "openings": {
+        "o-g-bay-1": {
+          "kind": "FixedWindow",
+          "area": 1.4327443032017069,
+          "width": 0.89546519,
+          "height": 1.6,
+          "offset": [
+            -0.284844597,
+            0.6
+          ],
+          "window_type": "Bay Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-g4/w5": {
+      "cad": [
+        "sp-g4/w5"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-g4"
+      ],
+      "azimuth": 99.220643546,
+      "tilt": 90.0,
+      "width": 0.585186027,
+      "height": 2.4375,
+      "area": 1.42639094076398,
+      "openings": {
+        "o-g-bay-2": {
+          "kind": "FixedWindow",
+          "area": 1.432744304882253,
+          "width": 0.895465191,
+          "height": 1.6,
+          "offset": [
+            0.048701437,
+            0.6
+          ],
+          "window_type": "Bay Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-g4/w6": {
+      "cad": [
+        "sp-g4/w6"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-g4"
+      ],
+      "azimuth": 79.280707515,
+      "tilt": 90.0,
+      "width": 0.585186026,
+      "height": 2.4375,
+      "area": 1.4263909390415392,
+      "openings": {},
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-g4/w7": {
+      "cad": [
+        "sp-g4/w7"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-g4"
+      ],
+      "azimuth": 59.340771497,
+      "tilt": 90.0,
+      "width": 0.585186026,
+      "height": 2.4375,
+      "area": 1.4263909387648355,
+      "openings": {
+        "o-g-bay-3": {
+          "kind": "FixedWindow",
+          "area": 1.4327443038072554,
+          "width": 0.89546519,
+          "height": 1.6,
+          "offset": [
+            -0.262711679,
+            0.6
+          ],
+          "window_type": "Bay Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-g4/w8": {
+      "cad": [
+        "sp-g4/w8"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-g4"
+      ],
+      "azimuth": 43.014948657,
+      "tilt": 90.0,
+      "width": 0.374176879,
+      "height": 2.4375,
+      "area": 0.9120561431942587,
+      "openings": {},
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-g4/w9": {
+      "cad": [
+        "sp-g4/w9"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-g4"
+      ],
+      "azimuth": 92.864788936,
+      "tilt": 90.0,
+      "width": 0.99304281,
+      "height": 2.4375,
+      "area": 2.420541849117973,
+      "openings": {},
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-g4/w10": {
+      "cad": [
+        "sp-g4/w10",
+        "sp-g5/w2"
+      ],
+      "kind": "InteriorWall",
+      "exposed": false,
+      "spaces": [
+        "sp-g4",
+        "sp-g5"
+      ],
+      "azimuth": 2.864788974,
+      "tilt": 90.0,
+      "width": 6.112499999,
+      "height": 2.4375,
+      "area": 14.89921874836261,
+      "openings": {},
+      "construction": "Bearing Partition 20.5 U=0.643974241",
+      "u_value": 0.643974241
+    },
+    "sp-g4/f2": {
+      "cad": [
+        "sp-g4/f2"
+      ],
+      "kind": "ExposedFloor",
+      "exposed": true,
+      "spaces": [
+        "sp-g4"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 6.971737499,
+      "height": 5.012108274,
+      "area": 30.286725361398517,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.830496234",
+      "u_value": 0.830496234
+    },
+    "sp-u3/f1": {
+      "cad": [
+        "sp-u3/f1",
+        "sp-g4/c1"
+      ],
+      "kind": "InteriorFloor",
+      "exposed": false,
+      "spaces": [
+        "sp-u3",
+        "sp-g4"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 6.971737499,
+      "height": 4.542695652,
+      "area": 27.413850364851477,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.749569347",
+      "u_value": 0.749569347
+    },
+    "sp-u4/f1": {
+      "cad": [
+        "sp-u4/f1",
+        "sp-g4/c2"
+      ],
+      "kind": "InteriorFloor",
+      "exposed": false,
+      "spaces": [
+        "sp-u4",
+        "sp-g4"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 6.121104196,
+      "height": 0.630091507,
+      "area": 1.9865625020465048,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.749569347",
+      "u_value": 0.749569347
+    },
+    "sp-g4/c3": {
+      "cad": [
+        "sp-g4/c3"
+      ],
+      "kind": "Roof",
+      "exposed": true,
+      "spaces": [
+        "sp-g4"
+      ],
+      "azimuth": 0.0,
+      "tilt": 0.0,
+      "width": 6.971737499,
+      "height": 5.012108274,
+      "area": 30.28672536139851,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.881756942",
+      "u_value": 0.881756942
+    },
+    "sp-g5/w3": {
+      "cad": [
+        "sp-g5/w3"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-g5"
+      ],
+      "azimuth": 92.864788982,
+      "tilt": 90.0,
+      "width": 2.712500001,
+      "height": 2.2875,
+      "area": 6.204843751590871,
+      "openings": {
+        "o-g-kitchen-east": {
+          "kind": "FixedWindow",
+          "area": 1.6199999993525334,
+          "width": 1.2,
+          "height": 1.35,
+          "offset": [
+            0.297500001,
+            0.9
+          ],
+          "window_type": "Casement Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-g5/w4": {
+      "cad": [
+        "sp-g5/w4"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-g5"
+      ],
+      "azimuth": 2.864788974,
+      "tilt": 90.0,
+      "width": 6.1125,
+      "height": 2.2875,
+      "area": 13.982343750748019,
+      "openings": {
+        "o-g-kitchen-north": {
+          "kind": "FixedWindow",
+          "area": 2.4300000003433757,
+          "width": 1.8,
+          "height": 1.35,
+          "offset": [
+            2.115,
+            0.9
+          ],
+          "window_type": "Casement Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-g5/f2": {
+      "cad": [
+        "sp-g5/f2"
+      ],
+      "kind": "ExposedFloor",
+      "exposed": true,
+      "spaces": [
+        "sp-g5"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 6.240429464,
+      "height": 3.014607754,
+      "area": 16.580156255138007,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.830496234",
+      "u_value": 0.830496234
+    },
+    "sp-u4/f2": {
+      "cad": [
+        "sp-u4/f2",
+        "sp-g5/c1"
+      ],
+      "kind": "InteriorFloor",
+      "exposed": false,
+      "spaces": [
+        "sp-u4",
+        "sp-g5"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 6.240429464,
+      "height": 3.014607754,
+      "area": 16.580156255138007,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.749569347",
+      "u_value": 0.749569347
+    },
+    "sp-u1/w1": {
+      "cad": [
+        "sp-u1/w1"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-u1"
+      ],
+      "azimuth": 182.864788972,
+      "tilt": 90.0,
+      "width": 3.3125,
+      "height": 2.4,
+      "area": 7.950000001033611,
+      "openings": {
+        "o-u-landing-south": {
+          "kind": "FixedWindow",
+          "area": 1.349999999449198,
+          "width": 1.0,
+          "height": 1.35,
+          "offset": [
+            0.815000001,
+            0.9
+          ],
+          "window_type": "Casement Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-u1/w2": {
+      "cad": [
+        "sp-u1/w2",
+        "sp-u3/w1"
+      ],
+      "kind": "InteriorWall",
+      "exposed": false,
+      "spaces": [
+        "sp-u1",
+        "sp-u3"
+      ],
+      "azimuth": 92.864788981,
+      "tilt": 90.0,
+      "width": 4.242499999,
+      "height": 2.4,
+      "area": 10.18199999830491,
+      "openings": {
+        "o-u-master-door": {
+          "kind": "NonSlidingDoor",
+          "area": 1.8899999992183831,
+          "width": 0.9,
+          "height": 2.1,
+          "offset": [
+            0.365,
+            0.0
+          ],
+          "construction": "Interior Door 90 U=2"
+        }
+      },
+      "construction": "Bearing Partition 20.5 U=0.643974241",
+      "u_value": 0.643974241
+    },
+    "sp-u1/w3": {
+      "cad": [
+        "sp-u1/w3",
+        "sp-u4/w4"
+      ],
+      "kind": "InteriorWall",
+      "exposed": false,
+      "spaces": [
+        "sp-u1",
+        "sp-u4"
+      ],
+      "azimuth": 92.864788977,
+      "tilt": 90.0,
+      "width": 3.3875,
+      "height": 2.4,
+      "area": 8.129999999800654,
+      "openings": {
+        "o-u-child-door": {
+          "kind": "NonSlidingDoor",
+          "area": 1.8899999992183834,
+          "width": 0.9,
+          "height": 2.1,
+          "offset": [
+            1.622500001,
+            0.0
+          ],
+          "construction": "Interior Door 90 U=2"
+        }
+      },
+      "construction": "Bearing Partition 20.5 U=0.643974241",
+      "u_value": 0.643974241
+    },
+    "sp-u1/w4": {
+      "cad": [
+        "sp-u1/w4"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-u1"
+      ],
+      "azimuth": 2.864789007,
+      "tilt": 90.0,
+      "width": 1.625000001,
+      "height": 2.4,
+      "area": 3.9000000021692296,
+      "openings": {
+        "o-u-landing-north": {
+          "kind": "FixedWindow",
+          "area": 1.2149999994975316,
+          "width": 0.9,
+          "height": 1.35,
+          "offset": [
+            0.447500001,
+            0.9
+          ],
+          "window_type": "Casement Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-u1/w5": {
+      "cad": [
+        "sp-u1/w5",
+        "sp-u2/w2"
+      ],
+      "kind": "InteriorWall",
+      "exposed": false,
+      "spaces": [
+        "sp-u1",
+        "sp-u2"
+      ],
+      "azimuth": 272.86478897,
+      "tilt": 90.0,
+      "width": 2.8875,
+      "height": 2.4,
+      "area": 6.93000000023028,
+      "openings": {},
+      "construction": "Partition 14.5 U=0.889453621",
+      "u_value": 0.889453621
+    },
+    "sp-u1/w6": {
+      "cad": [
+        "sp-u1/w6",
+        "sp-u2/w1"
+      ],
+      "kind": "InteriorWall",
+      "exposed": false,
+      "spaces": [
+        "sp-u1",
+        "sp-u2"
+      ],
+      "azimuth": 2.864788971,
+      "tilt": 90.0,
+      "width": 1.6875,
+      "height": 2.4,
+      "area": 4.049999998984331,
+      "openings": {
+        "o-u-bath-door": {
+          "kind": "NonSlidingDoor",
+          "area": 1.679999999398524,
+          "width": 0.8,
+          "height": 2.1,
+          "offset": [
+            0.7225,
+            0.0
+          ],
+          "construction": "Interior Door 80 U=2"
+        }
+      },
+      "construction": "Partition 14.5 U=0.889453621",
+      "u_value": 0.889453621
+    },
+    "sp-u1/w7": {
+      "cad": [
+        "sp-u1/w7"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-u1"
+      ],
+      "azimuth": 272.864788984,
+      "tilt": 90.0,
+      "width": 4.7425,
+      "height": 2.4,
+      "area": 11.382000000272287,
+      "openings": {
+        "o-u-landing-west": {
+          "kind": "FixedWindow",
+          "area": 1.3499999994491985,
+          "width": 1.0,
+          "height": 1.35,
+          "offset": [
+            1.8275,
+            0.9
+          ],
+          "window_type": "Casement Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-u1/f3": {
+      "cad": [
+        "sp-u1/f3"
+      ],
+      "kind": "ExposedFloor",
+      "exposed": true,
+      "spaces": [
+        "sp-u1"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 3.6897013,
+      "height": 7.701680637,
+      "area": 20.401718752725415,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.830496234",
+      "u_value": 0.830496234
+    },
+    "sp-u2/w3": {
+      "cad": [
+        "sp-u2/w3"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-u2"
+      ],
+      "azimuth": 2.86478899,
+      "tilt": 90.0,
+      "width": 1.5425,
+      "height": 2.4,
+      "area": 3.7020000008647913,
+      "openings": {
+        "o-u-bath-north": {
+          "kind": "FixedWindow",
+          "area": 0.3599999998411251,
+          "width": 0.6,
+          "height": 0.6,
+          "offset": [
+            0.527500001,
+            1.3
+          ],
+          "window_type": "Small Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-u2/w4": {
+      "cad": [
+        "sp-u2/w4"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-u2"
+      ],
+      "azimuth": 272.864788982,
+      "tilt": 90.0,
+      "width": 2.7425,
+      "height": 2.4,
+      "area": 6.581999999713739,
+      "openings": {},
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-u2/f2": {
+      "cad": [
+        "sp-u2/f2"
+      ],
+      "kind": "ExposedFloor",
+      "exposed": true,
+      "spaces": [
+        "sp-u2"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 1.677640149,
+      "height": 2.816165458,
+      "area": 4.230306250804221,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.830496234",
+      "u_value": 0.830496234
+    },
+    "sp-u3/w2": {
+      "cad": [
+        "sp-u3/w2"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-u3"
+      ],
+      "azimuth": 182.864788974,
+      "tilt": 90.0,
+      "width": 6.1125,
+      "height": 2.265461575,
+      "area": 13.847633877928306,
+      "openings": {
+        "o-u-master": {
+          "kind": "FixedWindow",
+          "area": 2.5200000004260663,
+          "width": 1.8,
+          "height": 1.4,
+          "offset": [
+            1.3975,
+            0.75
+          ],
+          "window_type": "Picture Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-u3/w3": {
+      "cad": [
+        "sp-u3/w3"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-u3"
+      ],
+      "azimuth": 92.864788963,
+      "tilt": 90.0,
+      "width": 0.910542809,
+      "height": 2.265461575,
+      "area": 2.062799747090551,
+      "openings": {},
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-u3/w4": {
+      "cad": [
+        "sp-u3/w4"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-u3"
+      ],
+      "azimuth": 139.100515854,
+      "tilt": 90.0,
+      "width": 0.585186027,
+      "height": 2.265461575,
+      "area": 1.325716457831164,
+      "openings": {},
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-u3/w5": {
+      "cad": [
+        "sp-u3/w5"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-u3"
+      ],
+      "azimuth": 119.160579679,
+      "tilt": 90.0,
+      "width": 0.585186026,
+      "height": 2.265461575,
+      "area": 1.3257164566719062,
+      "openings": {
+        "o-u-bay-1": {
+          "kind": "FixedWindow",
+          "area": 1.4327443032017069,
+          "width": 0.89546519,
+          "height": 1.6,
+          "offset": [
+            -0.284844597,
+            0.6
+          ],
+          "window_type": "Bay Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-u3/w6": {
+      "cad": [
+        "sp-u3/w6"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-u3"
+      ],
+      "azimuth": 99.220643546,
+      "tilt": 90.0,
+      "width": 0.585186027,
+      "height": 2.265461575,
+      "area": 1.3257164583503167,
+      "openings": {
+        "o-u-bay-2": {
+          "kind": "FixedWindow",
+          "area": 1.432744304882253,
+          "width": 0.895465191,
+          "height": 1.6,
+          "offset": [
+            0.048701437,
+            0.6
+          ],
+          "window_type": "Bay Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-u3/w7": {
+      "cad": [
+        "sp-u3/w7"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-u3"
+      ],
+      "azimuth": 79.280707515,
+      "tilt": 90.0,
+      "width": 0.585186026,
+      "height": 2.265461575,
+      "area": 1.3257164567494455,
+      "openings": {},
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-u3/w8": {
+      "cad": [
+        "sp-u3/w8"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-u3"
+      ],
+      "azimuth": 59.340771497,
+      "tilt": 90.0,
+      "width": 0.585186026,
+      "height": 2.265461575,
+      "area": 1.3257164564922719,
+      "openings": {
+        "o-u-bay-3": {
+          "kind": "FixedWindow",
+          "area": 1.4327443038072554,
+          "width": 0.89546519,
+          "height": 1.6,
+          "offset": [
+            -0.262711679,
+            0.6
+          ],
+          "window_type": "Bay Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-u3/w9": {
+      "cad": [
+        "sp-u3/w9"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-u3"
+      ],
+      "azimuth": 43.014948657,
+      "tilt": 90.0,
+      "width": 0.374176879,
+      "height": 2.265461575,
+      "area": 0.8476833422150936,
+      "openings": {},
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-u3/w10": {
+      "cad": [
+        "sp-u3/w10"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-u3"
+      ],
+      "azimuth": 92.864788959,
+      "tilt": 90.0,
+      "width": 0.52304281,
+      "height": 2.265461575,
+      "area": 1.1849333888317783,
+      "openings": {},
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-u3/w11": {
+      "cad": [
+        "sp-u3/w11",
+        "sp-u4/w1"
+      ],
+      "kind": "InteriorWall",
+      "exposed": false,
+      "spaces": [
+        "sp-u3",
+        "sp-u4"
+      ],
+      "azimuth": 2.864788974,
+      "tilt": 90.0,
+      "width": 6.1125,
+      "height": 2.265461575,
+      "area": 13.847633877928308,
+      "openings": {},
+      "construction": "Partition 14.5 U=0.889453621",
+      "u_value": 0.889453621
+    },
+    "sp-u3/c2": {
+      "cad": [
+        "sp-u3/c2"
+      ],
+      "kind": "Roof",
+      "exposed": true,
+      "spaces": [
+        "sp-u3"
+      ],
+      "azimuth": 0.0,
+      "tilt": 0.0,
+      "width": 6.971737499,
+      "height": 4.542695652,
+      "area": 27.413850364851463,
+      "openings": {},
+      "construction": "Timber Floor 30 U=0.172760755",
+      "u_value": 0.172760755
+    },
+    "sp-u4/w2": {
+      "cad": [
+        "sp-u4/w2"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-u4"
+      ],
+      "azimuth": 92.864788986,
+      "tilt": 90.0,
+      "width": 3.242500001,
+      "height": 2.2875,
+      "area": 7.417218751602311,
+      "openings": {
+        "o-u-child-east": {
+          "kind": "FixedWindow",
+          "area": 1.6199999993525327,
+          "width": 1.2,
+          "height": 1.35,
+          "offset": [
+            0.827500001,
+            0.9
+          ],
+          "window_type": "Casement Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-u4/w3": {
+      "cad": [
+        "sp-u4/w3"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-u4"
+      ],
+      "azimuth": 2.864788974,
+      "tilt": 90.0,
+      "width": 6.1125,
+      "height": 2.2875,
+      "area": 13.982343750748022,
+      "openings": {
+        "o-u-child-north-1": {
+          "kind": "FixedWindow",
+          "area": 1.6200000007683162,
+          "width": 1.200000001,
+          "height": 1.35,
+          "offset": [
+            2.415,
+            0.9
+          ],
+          "window_type": "Casement Window"
+        },
+        "o-u-child-north-2": {
+          "kind": "FixedWindow",
+          "area": 1.6200000007008444,
+          "width": 1.200000001,
+          "height": 1.35,
+          "offset": [
+            4.615,
+            0.9
+          ],
+          "window_type": "Casement Window"
+        }
+      },
+      "construction": "Exterior Wall 37 U=0.165523764",
+      "u_value": 0.165523764
+    },
+    "sp-u4/f3": {
+      "cad": [
+        "sp-u4/f3"
+      ],
+      "kind": "ExposedFloor",
+      "exposed": true,
+      "spaces": [
+        "sp-u4"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 6.266918423,
+      "height": 3.543945392,
+      "area": 19.819781253569914,
+      "openings": {},
+      "construction": "Floor Slab 30 U=0.830496234",
+      "u_value": 0.830496234
+    }
+  },
+  "constructions": {
+    "Attic Knee Wall 34 U=0.145751582": {
+      "u_value": 0.145751582,
+      "layers": [
+        "Lime Gypsum Plaster 16 mm",
+        "Spruce Timber 100 mm",
+        "Mineral Wool 200 mm",
+        "Spruce Timber 24 mm"
+      ]
+    },
+    "Timber Floor 30 U=0.166990861": {
+      "u_value": 0.166990861,
+      "layers": [
+        "Spruce Timber 24 mm",
+        "Mineral Wool 160 mm",
+        "Spruce Timber 116 mm"
+      ]
+    },
+    "Timber Floor 30 U=0.170696479": {
+      "u_value": 0.170696479,
+      "layers": [
+        "Spruce Timber 24 mm",
+        "Mineral Wool 160 mm",
+        "Spruce Timber 116 mm"
+      ]
+    },
+    "Pitched Roof 34.8 U=0.134113335": {
+      "u_value": 0.134113335,
+      "layers": [
+        "Clay Roof Tile 40 mm",
+        "Spruce Timber 50 mm",
+        "Bitumen Membrane 2 mm",
+        "Mineral Wool 240 mm",
+        "Lime Gypsum Plaster 16 mm"
+      ]
+    },
+    "Basement Wall 37 U=0.320060434": {
+      "u_value": 0.320060434,
+      "layers": [
+        "Lime Gypsum Plaster 20 mm",
+        "Reinforced Concrete 250 mm",
+        "Mineral Wool 100 mm"
+      ]
+    },
+    "Basement Bearing Wall 25 U=2.712264151": {
+      "u_value": 2.712264151,
+      "layers": [
+        "Reinforced Concrete 250 mm"
+      ]
+    },
+    "Foundation Slab 49 U=0.264619835": {
+      "u_value": 0.264619835,
+      "layers": [
+        "Cement Screed 70 mm",
+        "Mineral Wool 120 mm",
+        "Reinforced Concrete 300 mm"
+      ]
+    },
+    "Floor Slab 30 U=0.837451235": {
+      "u_value": 0.837451235,
+      "layers": [
+        "Cement Screed 70 mm",
+        "Mineral Wool 30 mm",
+        "Reinforced Concrete 200 mm"
+      ]
+    },
+    "Floor Slab 30 U=0.881756942": {
+      "u_value": 0.881756942,
+      "layers": [
+        "Cement Screed 70 mm",
+        "Mineral Wool 30 mm",
+        "Reinforced Concrete 200 mm"
+      ]
+    },
+    "Exterior Wall 37 U=0.165523764": {
+      "u_value": 0.165523764,
+      "layers": [
+        "Lime Gypsum Plaster 15 mm",
+        "Clay Block 175 mm",
+        "Mineral Wool 160 mm",
+        "Lime Gypsum Plaster 20 mm"
+      ]
+    },
+    "Bearing Partition 20.5 U=0.643974241": {
+      "u_value": 0.643974241,
+      "layers": [
+        "Lime Gypsum Plaster 15 mm",
+        "Clay Block 175 mm",
+        "Lime Gypsum Plaster 15 mm"
+      ]
+    },
+    "Bearing Partition 20.5 U=0.68359375": {
+      "u_value": 0.68359375,
+      "layers": [
+        "Lime Gypsum Plaster 15 mm",
+        "Clay Block 175 mm",
+        "Lime Gypsum Plaster 15 mm"
+      ]
+    },
+    "Floor Slab 30 U=0.749569347": {
+      "u_value": 0.749569347,
+      "layers": [
+        "Cement Screed 70 mm",
+        "Mineral Wool 30 mm",
+        "Reinforced Concrete 200 mm"
+      ]
+    },
+    "Floor Slab 30 U=0.830496234": {
+      "u_value": 0.830496234,
+      "layers": [
+        "Cement Screed 70 mm",
+        "Mineral Wool 30 mm",
+        "Reinforced Concrete 200 mm"
+      ]
+    },
+    "Partition 14.5 U=0.889453621": {
+      "u_value": 0.889453621,
+      "layers": [
+        "Lime Gypsum Plaster 15 mm",
+        "Clay Block 115 mm",
+        "Lime Gypsum Plaster 15 mm"
+      ]
+    },
+    "Timber Floor 30 U=0.17098835": {
+      "u_value": 0.17098835,
+      "layers": [
+        "Spruce Timber 24 mm",
+        "Mineral Wool 160 mm",
+        "Spruce Timber 116 mm"
+      ]
+    },
+    "Timber Floor 30 U=0.172760755": {
+      "u_value": 0.172760755,
+      "layers": [
+        "Spruce Timber 24 mm",
+        "Mineral Wool 160 mm",
+        "Spruce Timber 116 mm"
+      ]
+    },
+    "Unspecified construction": {
+      "u_value": null,
+      "layers": []
+    },
+    "Cellar Door U=1.8": {
+      "u_value": 1.8,
+      "layers": []
+    },
+    "Front Door U=1.3": {
+      "u_value": 1.3,
+      "layers": []
+    },
+    "Interior Door 80 U=2": {
+      "u_value": 2.0,
+      "layers": []
+    },
+    "Interior Door 90 U=2": {
+      "u_value": 2.0,
+      "layers": []
+    },
+    "Patio Door U=1.1": {
+      "u_value": 1.1,
+      "layers": []
+    }
+  },
+  "window_types": {
+    "Bay Window": {
+      "description": "frame fraction 0.25",
+      "u_value": 1.0,
+      "g_value": 0.5
+    },
+    "Casement Window": {
+      "description": "frame fraction 0.25",
+      "u_value": 0.95,
+      "g_value": 0.5
+    },
+    "Picture Window": {
+      "description": "frame fraction 0.15",
+      "u_value": 0.8,
+      "g_value": 0.5
+    },
+    "Small Window": {
+      "description": "frame fraction 0.25",
+      "u_value": 1.1,
+      "g_value": 0.5
+    }
+  },
+  "totals": {
+    "by_type": {
+      "ExteriorWall": 245.5186021958592,
+      "InteriorFloor": 211.34339518240319,
+      "ExposedFloor": 185.33225662486652,
+      "Roof": 204.74714484176144,
+      "UndergroundWall": 79.37574305466039,
+      "InteriorWall": 108.85035262031666,
+      "SlabOnGrade": 73.05096911494805
+    },
+    "opening_area": 47.36146582396005
+  }
+}

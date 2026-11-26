@@ -38,7 +38,7 @@ fn focus_of(element: &EnvelopeElement) -> EntityRef {
 pub fn depths(element: &EnvelopeElement) -> Vec<f64> {
     let mut depth = vec![0.0];
     for layer in &element.layers {
-        depth.push(depth.last().copied().unwrap_or(0.0) + super::elements::layer_thickness(layer));
+        depth.push(depth.last().copied().unwrap_or(0.0) + layer.thickness_m);
     }
     depth
 }

@@ -45,7 +45,7 @@ async function run(head:readonly string[],command:readonly string[],context:Capa
  const {agentSessionAddressV1,currentAgentSessionV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts");
  const {newHostCapacityIdV1,readLiveHostCapacityReservationV1,withHostCapacityV1}=await import("../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts");
  const memory=positive(flag(head,"memory"),"memory"),cpu=positive(flag(head,"cpu"),"cpu"),jobs=positive(flag(head,"jobs"),"jobs"),operation=flag(head,"operation")??"command";
- const sized:HostRequestV1|undefined=memory!==undefined?requireHostCapacityV1<HostRequestV1>("Request",{id:newHostCapacityIdV1(),operation:"command",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:memory,minimumMegabytes:memory,perJobMegabytes:0,cpuPerJob:cpu??1}):sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation,...jobs!==undefined?{preferredJobs:jobs}:{}});
+ const sized:HostRequestV1|undefined=memory!==undefined?requireHostCapacityV1<HostRequestV1>("Request",{id:newHostCapacityIdV1(),operation:"command",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:0,minimumMegabytes:memory,perJobMegabytes:memory,cpuPerJob:cpu??1}):sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation,...jobs!==undefined?{preferredJobs:jobs}:{}});
  if(!sized)throw Error(`Unknown capacity operation: ${operation}`);
  const waiting=createCapacityControlV1();
  try{

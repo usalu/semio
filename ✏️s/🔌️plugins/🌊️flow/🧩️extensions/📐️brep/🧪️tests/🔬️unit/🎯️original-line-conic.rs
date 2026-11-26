@@ -1,6 +1,6 @@
 //! 🎯️ Registered line and conic contacts publish the portable points through the original source lane.
 use super::*;
-use flow_extension_sdk::geometry::GeometryWorkIdentity;
+use semio_os_flow_geometry::GeometryWorkIdentity;
 use semio_framework_3d_brep_curve::{bspline::KnotVector, Curve3};
 use semio_framework_3d_brep_engine::{GeometryKind, ShapeRoot, ShapeValue, ShapeWire};
 use semio_framework_3d_brep_representation::{arena::{EdgeId, VertexId}, topology::{Body, Edge, Vertex}};

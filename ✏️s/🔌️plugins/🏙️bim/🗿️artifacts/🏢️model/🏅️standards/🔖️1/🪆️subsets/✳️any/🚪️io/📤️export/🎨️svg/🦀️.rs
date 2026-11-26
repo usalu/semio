@@ -6,6 +6,7 @@
 //! The tree is the typed SVG model of the `s.stdio.svg` artifact and the text is written by the XML writer of `s.stdio.xml`, both behind [`codec`].
 //! 📎 https://www.w3.org/TR/SVG11/
 
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{instance, kinds};
 use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
@@ -13,7 +14,8 @@ use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoRe
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use std::collections::BTreeMap;
 
-use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::path;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::{path, style};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::svg::codec;
 
 
 /// 🪪️ The SVG 1.1 dialect this leaf writes.
@@ -47,7 +49,7 @@ pub fn views_to_svg(model: &ModelSnapshot, drawings: &BTreeMap<String, ViewLinew
 
 /// 🎨️ The SVG text of the views of `model`.
 pub fn export_svg(model: &ModelSnapshot) -> Result<String, String> {
-    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| views_to_svg(model, &inferred.view_linework)).map_err(|error| error.to_string())?
+    instance::probe::<{ kinds::VIEWS }, _>(None, model, |inferred| views_to_svg(model, &inferred.view_linework)).map_err(|error| error.to_string())?
 }
 
 //#region 🔖️Serializer

@@ -136,6 +136,30 @@ pub enum CommitValidation {
 pub fn validate_commit(op: &Operation, live_revision: RevisionId, live_generation: Generation) -> CommitValidation {
     if op.base_revision == live_revision && op.generation == live_generation { CommitValidation::Accepted } else { CommitValidation::Stale { live_revision, live_generation } }
 }
+/// 🔁️ How a commit relates to a document that moved on since its operation began.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CommitPolicy {
+    /// 🔒️ The candidate was computed against its base, so any newer revision or generation makes it stale.
+    Strict,
+    /// 🔁️ The commit resolves its target against the live root when it is applied (history moves: undo and redo), so it rebases onto whatever the root is at admission.
+    RebaseOnLive,
+}
+
+impl CommitPolicy {
+    /// 🔁️ The policy of a framework verb: undo and redo resolve against the live root when applied; every other verb commits what it computed against its base.
+    pub fn for_verb(verb: &str) -> CommitPolicy {
+        if matches!(verb, "undo" | "redo") { CommitPolicy::RebaseOnLive } else { CommitPolicy::Strict }
+    }
+}
+
+/// ✅️ [`validate_commit`] under an explicit [`CommitPolicy`]: a [`CommitPolicy::RebaseOnLive`] commit is never stale.
+pub fn validate_commit_with(policy: CommitPolicy, op: &Operation, live_revision: RevisionId, live_generation: Generation) -> CommitValidation {
+    match policy {
+        CommitPolicy::Strict => validate_commit(op, live_revision, live_generation),
+        CommitPolicy::RebaseOnLive => CommitValidation::Accepted,
+    }
+}
+
 //#endregion 🪪️Identity
 
 //#region ⛽️Budget

@@ -1,6 +1,34 @@
 [
-  { "scale": "500", "bone": "back-b", "paint": "b-frame-bow" },
-  { "scale": "500", "bone": "front-legs-b", "paint": "b-front-leg-l", "views": ["front", "plan"] },
-  { "scale": "500", "bone": "back-d", "paint": "d-frame-bow" },
-  { "scale": "500", "bone": "front-legs-d", "paint": "d-front-leg-l", "views": ["front", "plan"] }
+  {
+    "scale": "500",
+    "bone": "back-b",
+    "paint": "b-frame-bow",
+    "filled": true
+  },
+  {
+    "scale": "500",
+    "bone": "front-legs-b",
+    "paint": "b-front-leg-l",
+    "views": [
+      "front",
+      "plan"
+    ],
+    "filled": true
+  },
+  {
+    "scale": "500",
+    "bone": "back-d",
+    "paint": "d-frame-bow",
+    "filled": true
+  },
+  {
+    "scale": "500",
+    "bone": "front-legs-d",
+    "paint": "d-front-leg-l",
+    "views": [
+      "front",
+      "plan"
+    ],
+    "filled": true
+  }
 ]

@@ -1,3 +1,4 @@
+import {processPidExistsV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import{createHash,randomBytes}from"node:crypto";
 import{mkdir,readFile,readdir,rm,rename,writeFile}from"node:fs/promises";
 import{brotliCompressSync,brotliDecompressSync,constants}from"node:zlib";
@@ -205,7 +206,7 @@ export function createClosureEntryLaneV1(input:Readonly<{root:string;environment
   pump(travel);
   return"queued" as const;
  };
- const alive=(pid:number)=>{try{process.kill(pid,0);return true;}catch(error){return(error as NodeJS.ErrnoException)?.code==="EPERM";}};
+ const alive=(pid:number)=>processPidExistsV1(pid);
  return Object.freeze({
   async take(recipe,travel,signal){
    const scope=scopeOf();

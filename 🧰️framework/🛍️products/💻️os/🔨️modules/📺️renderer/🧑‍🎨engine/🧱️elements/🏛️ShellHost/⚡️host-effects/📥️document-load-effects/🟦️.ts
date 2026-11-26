@@ -1,12 +1,12 @@
 /** 📥️ The host effects that bring a document in: archive loading and file open requests.
  *
  * 🧱️ Child module of {@link ../🟦️.ts | useApplyHostEffects}: each function is one effect arm of the `applyHostEffects` pass, moved verbatim. */
-import { type Effect, type UiDirtyScope } from "@semio-tech/framework";
+import type { Effect } from "@semio-tech/framework";
 import { programHistoryKeyV1 } from "../../🪟️spawned-program/🟦️.ts";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { documentTransferNoticeCodeV1, documentLoadCancelledV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import { FileOpenSizeRefusalV1, readSelectedFilesBoundedV1, requestFileOpen, requestFileSelectionV1 } from "../../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
-import { makeEffectDispatchOne, ownedEffectInvocationV1, type EffectDispatchOne } from "../../../🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
+import { makeEffectDispatchOne, ownedEffectInvocationV1, type EffectDispatchOne, type EffectInvocationSink } from "../../../🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
 import { programHistoryProjectionsWithLoadV1 } from "../../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 import { importOpenedFilesV1 } from "../../../🛠️ShellHelpers/🎞️media-import/🟦️.ts";
 import { resolveManifestLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
@@ -70,11 +70,11 @@ export async function applyLoadDocumentEffect({ loadedPlugins, uiTerminologyRef,
 }
 
 /** 📂️ Reads the files the user picks and imports them through the program's import action. */
-export async function applyRequestFileOpenEffect({ loadedPlugins, isCurrentEffectOwner, resolvedTargetViewState, effect, baseSession, core, applyHostEffects, effectOwner }: Pick<ShellCoreAfterSpawnedSession, "loadedPlugins" | "isCurrentEffectOwner" | "resolvedTargetViewState"> & {
+export async function applyRequestFileOpenEffect({ loadedPlugins, isCurrentEffectOwner, resolvedTargetViewState, effect, baseSession, core, applyDeferredResponse, effectOwner }: Pick<ShellCoreAfterSpawnedSession, "loadedPlugins" | "isCurrentEffectOwner" | "resolvedTargetViewState"> & {
   readonly effect: Extract<Effect, Readonly<Record<"requestFileOpen", unknown>>>;
   readonly baseSession: ActiveSession;
   readonly core: ShellCoreAfterSpawnedSession;
-  readonly applyHostEffects: (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<ShellCoreAfterSpawnedSession["captureEffectOwner"]>) => Promise<void>;
+  readonly applyDeferredResponse: EffectInvocationSink;
   readonly effectOwner: ReturnType<ShellCoreAfterSpawnedSession["captureEffectOwner"]>;
 }) {
   const { accept, readAs, importAction, multiple, args, maxFileBytes } = effect.requestFileOpen;
@@ -120,7 +120,7 @@ export async function applyRequestFileOpenEffect({ loadedPlugins, isCurrentEffec
     const opened = selected === undefined || maxFileBytes === undefined ? unbounded :
       await readSelectedFilesBoundedV1(selected, readAs, maxFileBytes, { signal: task.signal, progress: phaseProgress(0) });
     const dispatchOne: EffectDispatchOne = actor === null
-      ? makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null })
+      ? makeEffectDispatchOne(pluginEntry, baseSession, applyDeferredResponse, () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null })
       : async (action, args) => {
         if (!isCurrentEffectOwner(effectOwner)) throw new Error("action-owner-mismatch: selected file owner retired");
         const viewState = resolvedTargetViewState(baseSession);

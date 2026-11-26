@@ -64,8 +64,13 @@ const CORE_INSTANCES_PER_COMPONENT: u32 = 8;
 /// the whole pooling design is lost. Core-instance slots are cheap bookkeeping; memory slots are not.
 const MEMORIES_PER_COMPONENT: u32 = 1;
 
-/// 🪑️ Tables per component instance — bookkeeping like core instances, not address space.
+/// 🪑️ Table slots per component instance. Each slot reserves virtual address space for its capacity.
 const TABLES_PER_COMPONENT: u32 = 4;
+
+/// 📏️ Finite native bounds for the shipped guests' indirect-call tables and their escaped function contexts.
+const MAXIMUM_GUEST_TABLE_ELEMENTS: u32 = 1 << 18;
+const MAXIMUM_GUEST_CORE_CONTEXT_BYTES: usize = 16 << 20;
+const MAXIMUM_GUEST_COMPONENT_CONTEXT_BYTES: usize = 32 << 20;
 
 impl Default for SharedEngineConfig {
     fn default() -> Self {
@@ -108,6 +113,7 @@ pub async fn build_shared_engine(cfg: SharedEngineConfig) -> Result<(Engine, boo
         config.wasm_component_model_async(true);
         config.consume_fuel(cfg.fuel_metering);
         config.epoch_interruption(true);
+        config.parallel_compilation(false);
         if pooling {
             let mut pooling_cfg = PoolingAllocationConfig::default();
             pooling_cfg.total_component_instances(cfg.total_component_instances);
@@ -116,6 +122,9 @@ pub async fn build_shared_engine(cfg: SharedEngineConfig) -> Result<(Engine, boo
             pooling_cfg.total_tables(cfg.total_component_instances * TABLES_PER_COMPONENT);
             pooling_cfg.total_gc_heaps(cfg.total_component_instances * MEMORIES_PER_COMPONENT);
             pooling_cfg.max_memory_size(cfg.max_memory_bytes);
+            pooling_cfg.table_elements(MAXIMUM_GUEST_TABLE_ELEMENTS as usize);
+            pooling_cfg.max_core_instance_size(MAXIMUM_GUEST_CORE_CONTEXT_BYTES);
+            pooling_cfg.max_component_instance_size(MAXIMUM_GUEST_COMPONENT_CONTEXT_BYTES);
             pooling_cfg.linear_memory_keep_resident(cfg.linear_memory_keep_resident_bytes);
             config.allocation_strategy(InstanceAllocationStrategy::Pooling(pooling_cfg));
         } else {
@@ -391,7 +400,7 @@ pub struct BudgetLimiter {
 /// rather than re-guess if a legitimate component ever trips it.
 impl Default for BudgetLimiter {
     fn default() -> Self {
-        Self { max_memory_bytes: 512 * 1024 * 1024, peak_memory_bytes: 0, max_table_elements: 100_000, max_instances: 256, max_tables: 128, max_memories: 128 }
+        Self { max_memory_bytes: 512 * 1024 * 1024, peak_memory_bytes: 0, max_table_elements: MAXIMUM_GUEST_TABLE_ELEMENTS, max_instances: 256, max_tables: 128, max_memories: 128 }
     }
 }
 
@@ -445,6 +454,12 @@ pub async fn compiled_cache_path(cache_root: &Path, engine_config_hash: &[u8; 32
     cache_root.join(hex_encode(engine_config_hash)).join(format!("{}.cwasm", hex_encode(package_hash)))
 }
 
+#[path = "🔒️compile-admission/🦀️.rs"]
+mod compile_admission;
+
+pub use compile_admission::{require_compile_memory, try_native_compile};
+use compile_admission::{native_compile_lock, read_compile_input};
+
 /// ⚠️ SAFETY: `deserialize_file` trusts the file completely (wasmtime docs). Callers MUST only point
 /// this at paths written via [`store_compiled_component`] by an engine of the SAME config (so the
 /// same compiled ABI) — this process's own, or an isolated compile process that rebuilt it from
@@ -483,7 +498,7 @@ pub fn compiled_cache_scratch_path(path: &Path, pid: u32) -> PathBuf {
 }
 //#region 🧊️IsolatedCompile
 /// 🧊️ Compiling a component is the one guest-preparation step with no interruption point inside it:
-/// cranelift runs to its end once started, on every core it can get. A host that must be able to
+/// Cranelift runs to its end once started. A host that must be able to
 /// abandon a compile runs it in a process of its own — [`compile_component_isolated`] is that
 /// process's whole body — and kills the process, which returns every thread and byte the compile
 /// held. The compiled code reaches the host through the same on-disk cache every other load reads,
@@ -525,11 +540,35 @@ impl SharedEngineConfig {
 /// its way out tears down — no unwind frame: macOS deregisters each frame by a linear scan of every frame,
 /// which kept a finished 330 MB compile (stdio) stuck in `__deregister_frame` for more than 15 minutes
 /// after its `.cwasm` was written, while the host waited for its exit (ticket 26/09/23, G12 session 14c).
-pub fn compile_component_isolated(engine: &str, bytes: &[u8], cache_path: &Path) -> Result<(), PluginHostError> {
+pub fn compile_component_isolated(engine: &str, input: impl std::io::Read, component_bytes: usize, cache_path: &Path) -> Result<(), PluginHostError> {
+    let cache_root = cache_path.parent().and_then(Path::parent).filter(|path| !path.as_os_str().is_empty())
+        .ok_or_else(|| PluginHostError::Io(std::io::Error::new(std::io::ErrorKind::InvalidInput, "isolated compile requires a cache root and engine namespace")))?;
+    let cache_was_absent = !cache_path.try_exists().map_err(PluginHostError::Io)?;
+    let admission = native_compile_lock(cache_root).map_err(PluginHostError::Io)?;
+    admission.lock().map_err(PluginHostError::Io)?;
+    if cache_was_absent && cache_path.try_exists().map_err(PluginHostError::Io)? {
+        return Ok(());
+    }
     let cfg = SharedEngineConfig::from_isolated_arg(engine)?;
+    require_compile_memory(component_bytes).map_err(PluginHostError::Io)?;
+    let bytes = read_compile_input(input, component_bytes).map_err(PluginHostError::Io)?;
+    require_compile_memory(component_bytes).map_err(PluginHostError::Io)?;
     let (engine, _pooling_active) = semio_framework_async::block_on(build_shared_engine(cfg))?;
-    let compiled = engine.precompile_component(bytes).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+    let compiled = engine.precompile_component(&bytes).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+    drop(bytes);
     write_compiled_cache_entry(&compiled, cache_path).map_err(|error| PluginHostError::Plugin(format!("storing {}: {error}", cache_path.display())))
+}
+
+/// ⏳️ The isolated worker's temporary host admission refusal.
+pub const ISOLATED_COMPILE_DEFERRED_EXIT: i32 = 75;
+
+/// 🚪️ The isolated worker exit status preserves a retryable capacity refusal.
+pub fn isolated_compile_exit_code(result: Result<(), PluginHostError>) -> i32 {
+    match result {
+        Ok(()) => 0,
+        Err(PluginHostError::Io(error)) if error.kind() == std::io::ErrorKind::WouldBlock => ISOLATED_COMPILE_DEFERRED_EXIT,
+        Err(_) => 1,
+    }
 }
 //#endregion 🧊️IsolatedCompile
 #[cfg(any(test, feature = "testkit"))]
@@ -537,3 +576,7 @@ pub fn minimal_component_without_actor_world() -> &'static [u8] {
     b"\0asm\x0d\0\x01\0"
 }
 //#endregion 🔧️SharedWasmtimeEngine
+
+#[cfg(test)]
+#[path = "🧪️tests/🏊️capacity/🦀️.rs"]
+mod native_capacity_tests;

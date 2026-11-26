@@ -399,6 +399,12 @@ path = "../🗽️obj/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-pdf]
 path = "../📖️pdf/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-stdio-pdf-conformance-support]
+path = "../📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🏅️conformance-support/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-pdf-lower]
+path = "../📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬆️lower/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-stdio-ply]
 path = "../🧱️ply/📦️packages/🦀️rust"
 

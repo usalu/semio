@@ -39,6 +39,7 @@ pub fn plan_view(snapshot: &ModelSnapshot, id: &str, view: &View, inputs: &Input
     }
     for text in plan.texts.iter().filter(|text| lets_through(snapshot, view, &text.element, text.kind, style(text.style))) {
         sheet.text(&text.element, text.kind, style(text.style), Point::new(text.x, text.y), text.rotation, &text.label, &text.detail, text.measure);
+        if let Some(output) = sheet.texts.last_mut() { output.height = text.height; }
     }
     let lines = sheet.finish(storey, plan.cut_elevation);
     let lines = PlanLinework { cut_height: cut, ..lines };

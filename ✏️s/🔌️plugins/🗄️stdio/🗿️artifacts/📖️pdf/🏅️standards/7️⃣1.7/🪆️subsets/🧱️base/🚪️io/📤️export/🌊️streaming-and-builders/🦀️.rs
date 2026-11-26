@@ -7,6 +7,7 @@ use super::*;
 /// lanes are lowered up front, then every `page` call yields that page's bytes, and `finish`
 /// closes the file. Pages appended this way reference the snapshot's fonts, images, forms and
 /// graphics states by id exactly like [`PdfPage::content`] does.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct DocumentStream {
     writer: PdfWriter,
     lowered: LoweredDocument,

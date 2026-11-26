@@ -27,7 +27,7 @@
               },
               "applied": 1,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             },
             "b": {
               "line": "trunk",
@@ -37,7 +37,7 @@
               },
               "applied": 0,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             }
           }
         },
@@ -61,7 +61,7 @@
               },
               "applied": 2,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             },
             "b": {
               "line": "trunk",
@@ -71,7 +71,7 @@
               },
               "applied": 0,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             }
           }
         },
@@ -91,7 +91,7 @@
               },
               "applied": 2,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             },
             "b": {
               "line": "trunk",
@@ -101,7 +101,7 @@
               },
               "applied": 2,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             }
           }
         },
@@ -142,7 +142,7 @@
               },
               "applied": 2,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             }
           }
         },
@@ -442,7 +442,7 @@
               },
               "applied": 1,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             },
             "b": {
               "line": "trunk",
@@ -452,7 +452,7 @@
               },
               "applied": 0,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             }
           }
         },
@@ -482,7 +482,7 @@
               },
               "applied": 0,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             }
           }
         },
@@ -978,7 +978,7 @@
               },
               "applied": 1,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             },
             "b": {
               "line": "trunk",
@@ -988,7 +988,7 @@
               },
               "applied": 0,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             }
           }
         },
@@ -1018,7 +1018,7 @@
               },
               "applied": 0,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             }
           }
         },
@@ -1054,7 +1054,7 @@
               },
               "applied": 0,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             }
           }
         },
@@ -1084,7 +1084,7 @@
               },
               "applied": 0,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             }
           }
         },
@@ -1444,7 +1444,7 @@
               },
               "applied": 1,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             },
             "b": {
               "line": "trunk",
@@ -1454,7 +1454,7 @@
               },
               "applied": 0,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             }
           }
         },
@@ -1478,7 +1478,7 @@
               },
               "applied": 2,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             },
             "b": {
               "line": "trunk",
@@ -1488,7 +1488,7 @@
               },
               "applied": 0,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             }
           }
         },
@@ -1508,7 +1508,7 @@
               },
               "applied": 2,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             },
             "b": {
               "line": "trunk",
@@ -1518,7 +1518,7 @@
               },
               "applied": 2,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             }
           }
         },
@@ -1559,7 +1559,7 @@
               },
               "applied": 2,
               "supersessions": 0,
-              "alternatives": []
+              "alternatives": [""]
             }
           }
         },

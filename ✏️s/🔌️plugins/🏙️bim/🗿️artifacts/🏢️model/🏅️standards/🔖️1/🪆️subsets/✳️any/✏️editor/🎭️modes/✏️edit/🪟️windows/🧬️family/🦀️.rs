@@ -4,6 +4,7 @@
 //! is the one shown, the first family of the model when nothing is selected. Nothing here stores or computes a value: every cell is read from the `families` inference, every edit is the `editFamily` command.
 
 
+use semio_s_artifact_bim_model_wall_layout::editor::bim::modes::edit::windows::family::vocabulary;
 use semio_s_artifact_bim_model_kit::editor::bim::kit::bim_window_action;
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_s_artifact_bim_model_tests_5::render::world::{mesh_data, overview_orbit, world_bounds};
@@ -125,7 +126,7 @@ fn volume_text(solid: Option<&FamilySolidMesh>) -> String {
 fn family_rows(snapshot: &ModelSnapshot, id: &str, value: &FamilyValue, labels: &BimLabels) -> Vec<DslValue> {
     let Some(family) = snapshot.families.get(id) else { return Vec::new() };
     let general: Vec<&FamilyIssue> = value.issues.iter().filter(|issue| issue.owner == IssueOwner::Family).collect();
-    let categories = semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::CATEGORIES.iter().filter(|category| **category != family.category).map(|category| button("tag", &semio_s_artifact_bim_model_wall_layout::editor::bim::modes::edit::windows::family::vocabulary::category_label(labels, *category), id, "family", "category", "", &format!("{category:?}"))).collect();
+    let categories = semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::CATEGORIES.iter().filter(|category| **category != family.category).map(|category| button("tag", &vocabulary::category_label(labels, *category), id, "family", "category", "", &format!("{category:?}"))).collect();
     vec![row("family", vec![("part", text(labels.fam_section_family.as_str())), ("item", text(labels.column_name.as_str())), ("formula", input(id, "family", "rename", "", &family.name)), ("value", text(vocabulary::category_label(labels, family.category))), ("issue", text(issue_text(&general, labels))), ("actions", TableCell::Buttons { buttons: categories })])]
 }
 
@@ -133,7 +134,7 @@ fn parameter_rows(snapshot: &ModelSnapshot, id: &str, value: &FamilyValue, label
     let mut rows: Vec<DslValue> = Vec::new();
     for parameter in semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::parameters_in_order(snapshot, id) {
         let resolved = value.parameters.get(&parameter.name);
-        let shown = resolved.and_then(|row| row.value.as_ref()).map_or_else(String::new, |found| semio_s_artifact_bim_model_wall_layout::editor::bim::modes::edit::windows::family::vocabulary::value_text(labels, found));
+        let shown = resolved.and_then(|row| row.value.as_ref()).map_or_else(String::new, |found| vocabulary::value_text(labels, found));
         let next = semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::KINDS[(semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::KINDS.iter().position(|kind| *kind == parameter.kind).unwrap_or(0) + 1) % semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::KINDS.len()];
         let buttons = vec![
             button("refresh-cw", &BimLabels::named(labels.fam_act_kind_named, &vocabulary::kind_label(labels, next)), id, "parameter", "kind", &parameter.name, &format!("{next:?}")),
@@ -151,7 +152,7 @@ fn parameter_rows(snapshot: &ModelSnapshot, id: &str, value: &FamilyValue, label
             ],
         ));
     }
-    let adds = semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::KINDS.iter().map(|kind| button("plus", &BimLabels::named(labels.fam_act_add_parameter_named, &semio_s_artifact_bim_model_wall_layout::editor::bim::modes::edit::windows::family::vocabulary::kind_label(labels, *kind)), id, "parameter", "add", &format!("{kind:?}"), "")).collect();
+    let adds = semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::KINDS.iter().map(|kind| button("plus", &BimLabels::named(labels.fam_act_add_parameter_named, &vocabulary::kind_label(labels, *kind)), id, "parameter", "add", &format!("{kind:?}"), "")).collect();
     rows.push(row("parameter:add", vec![("part", text(labels.fam_section_parameters.as_str())), ("item", text(labels.fam_add_parameter.as_str())), ("formula", text("")), ("value", text("")), ("issue", text("")), ("actions", TableCell::Buttons { buttons: adds })]));
     rows
 }
@@ -164,7 +165,7 @@ fn solid_rows(snapshot: &ModelSnapshot, id: &str, value: &FamilyValue, labels: &
         let mut buttons = vec![button("trash", &BimLabels::named(labels.act_delete_named, &solid.name), id, "solid", "remove", solid_id, "")];
         if let SolidShape::Revolution { axis, .. } = &solid.shape {
             let next = semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::AXES[(semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::AXES.iter().position(|known| known == axis).unwrap_or(0) + 1) % semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::AXES.len()];
-            buttons.push(button("rotate-3d", &BimLabels::named(labels.fam_act_axis_named, semio_s_artifact_bim_model_wall_layout::editor::bim::modes::edit::windows::family::vocabulary::axis_label(next)), id, "solid", "axis", solid_id, semio_s_artifact_bim_model_wall_layout::editor::bim::modes::edit::windows::family::vocabulary::axis_label(next)));
+            buttons.push(button("rotate-3d", &BimLabels::named(labels.fam_act_axis_named, vocabulary::axis_label(next)), id, "solid", "axis", solid_id, vocabulary::axis_label(next)));
         }
         let slots = semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::solid_slots(solid);
         let whole: Vec<&FamilyIssue> = value.issues.iter().filter(|issue| issue.owner == IssueOwner::Solid && issue.subject == *solid_id && !slots.iter().any(|(field, _)| *field == issue.field)).collect();
@@ -186,7 +187,7 @@ fn solid_rows(snapshot: &ModelSnapshot, id: &str, value: &FamilyValue, labels: &
             rows.push(row(&format!("slot:{solid_id}#{field}"), vec![("part", text("")), ("item", text(field.clone())), ("formula", input(id, "solid", "slot", &format!("{solid_id}#{field}"), formula)), ("value", text("")), ("issue", text(issue_text(&issues, labels))), ("actions", TableCell::Buttons { buttons: Vec::new() })]));
         }
     }
-    let adds = semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::SHAPES.iter().map(|token| button("plus", &BimLabels::named(labels.fam_act_add_solid_named, &semio_s_artifact_bim_model_wall_layout::editor::bim::modes::edit::windows::family::vocabulary::shape_label(labels, token)), id, "solid", "add", token, "")).collect();
+    let adds = semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::SHAPES.iter().map(|token| button("plus", &BimLabels::named(labels.fam_act_add_solid_named, &vocabulary::shape_label(labels, token)), id, "solid", "add", token, "")).collect();
     rows.push(row("solid:add", vec![("part", text(labels.fam_section_solids.as_str())), ("item", text(labels.fam_add_solid.as_str())), ("formula", text("")), ("value", text("")), ("issue", text("")), ("actions", TableCell::Buttons { buttons: adds })]));
     rows
 }

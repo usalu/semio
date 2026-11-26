@@ -18,6 +18,7 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, View};
 use semio_framework_2d::booleans::BooleanOperation;
 use semio_framework_2d::regions::{region_boolean, Region};
+use semio_framework_2d::retirement::BlockingTurns;
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 
@@ -99,7 +100,7 @@ impl ViewLinework {
         match regions.len() {
             0 => 0.0,
             1 => regions[0].area(),
-            _ => region_boolean(BooleanOperation::Union, &regions, &[], &mut |_| true).map_or(f64::NAN, |united| united.iter().map(Region::area).sum()),
+            _ => region_boolean(BooleanOperation::Union, &regions, &[], &mut |_| true, &mut BlockingTurns::new(1 << 20)).map_or(f64::NAN, |united| united.iter().map(Region::area).sum()),
         }
     }
 

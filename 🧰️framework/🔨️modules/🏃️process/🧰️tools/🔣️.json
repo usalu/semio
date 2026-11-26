@@ -827,7 +827,18 @@
       "capacity": {
         "mode": "admit",
         "operation": "cargo",
-        "kind": "build"
+        "kind": "build",
+        "rules": [
+          {"command": "cargo", "argumentsPrefix": ["--version"], "operation": "tool-query", "kind": "script"},
+          {"command": "cargo", "argumentsPrefix": ["-V"], "operation": "tool-query", "kind": "script"},
+          {"command": "cargo", "argumentsPrefix": ["-vV"], "operation": "tool-query", "kind": "script"},
+          {"command": "rustc", "argumentsPrefix": ["--version"], "operation": "tool-query", "kind": "script"},
+          {"command": "rustc", "argumentsPrefix": ["-V"], "operation": "tool-query", "kind": "script"},
+          {"command": "rustc", "argumentsPrefix": ["-vV"], "operation": "tool-query", "kind": "script"},
+          {"command": "rustdoc", "argumentsPrefix": ["--version"], "operation": "tool-query", "kind": "script"},
+          {"command": "rustdoc", "argumentsPrefix": ["-V"], "operation": "tool-query", "kind": "script"},
+          {"command": "rustdoc", "argumentsPrefix": ["-vV"], "operation": "tool-query", "kind": "script"}
+        ]
       },
       "probe": {
         "arguments": [

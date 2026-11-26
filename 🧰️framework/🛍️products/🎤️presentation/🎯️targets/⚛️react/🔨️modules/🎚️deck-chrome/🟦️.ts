@@ -103,4 +103,16 @@ export function syncRevealBackgroundKind(deckEl: HTMLElement | null): void {
   deckEl.classList.toggle("has-dark-background", dark);
   deckEl.classList.toggle("has-light-background", !dark);
 }
+
+/** 🖨️ Assigns shared surface roles to Reveal's generated PDF chrome. */
+export function applyPresentationPrintSurfaces(deck: HTMLElement): void {
+  for (const sheet of deck.querySelectorAll(".pdf-page")) {
+    sheet.setAttribute("data-level", "base");
+    sheet.querySelector(":scope > .slide-background")?.setAttribute("data-level", "window");
+    const number = sheet.querySelector(":scope > .slide-number-pdf");
+    number?.setAttribute("data-level", "pane");
+    number?.setAttribute("data-glass-chip", "");
+    number?.classList.add("ui-glass");
+  }
+}
 //#endregion 🔖️RevealChrome

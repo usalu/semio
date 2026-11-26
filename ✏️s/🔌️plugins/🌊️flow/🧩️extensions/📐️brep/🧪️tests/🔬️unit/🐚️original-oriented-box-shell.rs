@@ -1,6 +1,6 @@
 #[test]
 fn original_oriented_box_shell_preserves_caps_and_closed_material_in_the_authored_frame(){
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_framework_3d_brep_surface::Surface;
     use semio_framework_3d_brep_vector::{Pnt3,Vec3};

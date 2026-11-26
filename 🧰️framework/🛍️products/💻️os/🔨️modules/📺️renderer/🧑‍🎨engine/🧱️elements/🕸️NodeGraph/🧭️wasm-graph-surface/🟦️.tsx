@@ -1,6 +1,7 @@
+import { Surface } from "@semio-tech/ui-react";
 import * as React from "../../⚛️react-port/🟦️.ts";
 import { WasmCanvas } from "@semio-tech/framework/canvas/react-renderer";
-import { CanvasPickMenu, cn, ContextMenuController, SelectionMarquee, surfaceClass, type CanvasPickTarget } from "@semio-tech/ui-react";
+import { CanvasPickMenu, ContextMenuController, SelectionMarquee, type CanvasPickTarget } from "@semio-tech/ui-react";
 import { type ActionDescriptor, type ContextMenuItemSpec, type NodeGraphScene, type PluginContextMenuRequest, type PluginContextMenuSurfaceTarget } from "@semio-tech/framework";
 import { openSurfaceContextMenu } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu";
 import { parseSelectionDomainsFromSession, selectionGroupsFromDomains } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/scene-host-contract";
@@ -31,10 +32,9 @@ export function WasmGraphSurface({
   const { sessionRef, paintOverlays, emitInteractionState, dispatch, containerRef, sceneRef, windowInstanceId, mapContextMenu, shellContextMenuFallback, setContextMenu, sessionFactory, onSessionReady, labelCanvasRef, selectionBounds, marquee, gestureRecognizer, pinchLogScaleRef, sliderStateJson, overlaySize, sliderLane, contextMenuTitleLabel, contextMenu } = useWindowInstanceIdState({ scene, onAction, controllerId, surfaceId });
   const { pickInteraction, dispatchGraphEdits } = useDispatchGraphEditsState({ keyboardPort, sessionRef, paintOverlays, emitInteractionState, dispatch, containerRef, sceneRef });
   return (
-    <div
+    <Surface
       ref={containerRef}
-      className={cn("relative h-full w-full", surfaceClass)}
-      data-level="base"
+      className="relative h-full w-full"
       onContextMenu={(event) => {
         if (!editable || !requestContextMenu) return;
         event.preventDefault();
@@ -211,7 +211,7 @@ export function WasmGraphSurface({
           if (!open) setContextMenu(null);
         }}
       />
-    </div>
+    </Surface>
   );
 }
 

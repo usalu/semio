@@ -319,7 +319,7 @@ pub fn ui_capabilities() -> Vec<CapabilityDefinition> {
 // 📐️ Every `artifact_*` tool schema is a named export of `🧬️schema/🦀️.rs` (scope `os.mcp`), imported
 // above — this facet stamps none of its own.
 fn artifact_capability(id: &str, tool_name: &str, kind: CapabilityKind, icon_id: &str, title: &str, description: &str, use_when: Vec<String>, input_schema: serde_json::Value, output_schema: serde_json::Value) -> CapabilityDefinition {
-    CapabilityDefinition {
+    let mut capability = CapabilityDefinition {
         id: CapabilityRef(id.to_string()),
         version: 1,
         owner: CapabilityOwner::Gateway,
@@ -341,7 +341,9 @@ fn artifact_capability(id: &str, tool_name: &str, kind: CapabilityKind, icon_id:
         presentation: CapabilityPresentation { icon_id: Some(icon_id.to_string()), category: Some("gateway".to_string()), keys: None, in_palette: false, args: Vec::new() },
         examples: Vec::new(),
         source: CapabilitySource::Gateway,
-    }
+    };
+    capability.execution.cancellable = id == "artifact.export";
+    capability
 }
 
 /// 🗿️ The five artifact capabilities, folded into `CatalogSource.gateway` exactly like the 3 core

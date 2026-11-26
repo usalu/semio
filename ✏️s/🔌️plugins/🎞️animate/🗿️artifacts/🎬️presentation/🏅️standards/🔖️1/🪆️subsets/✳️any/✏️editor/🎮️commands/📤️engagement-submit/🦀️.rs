@@ -3,7 +3,7 @@
 #![allow(clippy::result_large_err)]
 
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
-use crate::editor::animate::support::{interaction_select_effect, new_tile_id, tile_morph_prompt_effect, tile_roster_mutations, PresentationDispatchCtx};
+use crate::editor::animate::support::{interaction_select_effect, tile_morph_prompt_effect, tile_roster_mutations, PresentationDispatchCtx};
 use crate::mutations::create_tile::CreateTile;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::standards::v1::subsets::any::schema::tile_grid::{parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
@@ -33,7 +33,7 @@ pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, PresentationSna
     }
     match trimmed.to_lowercase().as_str() {
         "add" => {
-            let id = new_tile_id("tile");
+            let id = doc.operation()?.entity_id("tile", "new-tile")?;
             let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
             Ok(Emit {
                 artifact_mutations: vec![PresentationMutation::CreateTile(CreateTile { index: deck_tiles.len(), tile })],

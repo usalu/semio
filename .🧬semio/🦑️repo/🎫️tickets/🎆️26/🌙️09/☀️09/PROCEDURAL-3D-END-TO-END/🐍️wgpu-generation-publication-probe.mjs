@@ -14,7 +14,7 @@ import { join } from "node:path";
 import { PNG } from "pngjs";
 
 const origin = process.env.SEMIO_PROBE_ORIGIN ?? "http://127.0.0.1:6118";
-const outDir = join(import.meta.dir, "🗑️generated", process.env.SEMIO_PROBE_OUT ?? "wgpu-generation/run-1");
+const outDir = join(import.meta.dirname, "🗑️generated", process.env.SEMIO_PROBE_OUT ?? "wgpu-generation/run-1");
 const example = process.env.SEMIO_PROBE_EXAMPLE ?? "hexagonal-mushroom-column";
 const settleSeconds = Number(process.env.SEMIO_PROBE_SETTLE ?? 45);
 const afterSeconds = Number(process.env.SEMIO_PROBE_AFTER ?? 40);
@@ -23,6 +23,10 @@ mkdirSync(outDir, { recursive: true });
 
 const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", "--use-angle=metal"] });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+if (process.env.SEMIO_PROBE_BINDINGS) await page.context().route(/semio-renderer-wgpu-component(?:_bg\.wasm|\.js)(?:\?.*)?$/, async route => {
+  const name = new URL(route.request().url()).pathname.split("/").pop();
+  await route.fulfill({ status: 302, headers: { location: `${process.env.SEMIO_PROBE_BINDINGS}/${name}` } });
+});
 await page.addInitScript(() => {
   const trace = [];
   globalThis.__pointerAudit = trace;

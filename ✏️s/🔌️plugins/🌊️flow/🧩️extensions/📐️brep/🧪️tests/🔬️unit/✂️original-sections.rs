@@ -19,7 +19,7 @@ fn original_oblique_box_split_publishes_two_exact_signed_planar_solids() {
     for (index,row) in fixture["cases"].as_array().unwrap().iter().enumerate(){
         let session=Session::new();
         let registry=neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity=flow_extension_sdk::geometry::GeometryWorkIdentity{operation:99180+index as u64,generation:17};
+        let identity=semio_os_flow_geometry::GeometryWorkIdentity{operation:99180+index as u64,generation:17};
         let mut caller=OriginalJobFixtureCaller::admit(OperationId(identity.operation),Generation(17),stock(),||Some(1000),1500,131072);
         let (mut born,mut free)=(0,0);
         let size=fixture_xyz(&row["size"]);
@@ -130,7 +130,7 @@ fn original_oblique_box_split_publishes_two_exact_signed_planar_solids() {
 
 #[test]
 fn original_section_publishes_exact_sphere_and_oblique_cylinder_faces() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_curve::Curve3;
     use semio_framework_3d_brep_surface::Surface;
     use semio_framework_3d_brep_vector::{Pnt3,Vec3};
@@ -240,7 +240,7 @@ fn original_section_publishes_exact_sphere_and_oblique_cylinder_faces() {
 
 #[test]
 fn original_axial_cylinder_section_publishes_the_signed_rectangle_and_retires_its_draft() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_s_spatial_kernel_semio_session::{point_dictionary,read_channel_number,read_geometry,vector_dictionary};
     let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/✂️brep-intersect/🔣️.json")).unwrap();
     let session=Session::new();
@@ -308,7 +308,7 @@ fn original_axial_cylinder_section_publishes_the_signed_rectangle_and_retires_it
 
 #[test]
 fn original_clipped_cylinder_section_publishes_mixed_trim_and_preview_labels() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_curve::Curve3;
     use semio_framework_3d_brep_surface::Surface;
     use semio_framework_3d_brep_vector::Pnt3;
@@ -408,7 +408,7 @@ fn original_clipped_cylinder_section_publishes_mixed_trim_and_preview_labels() {
 
 #[test]
 fn original_cone_and_frustum_section_publish_funded_exact_contours() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_curve::Curve3;
     use semio_framework_3d_brep_surface::Surface;
     use semio_framework_3d_brep_vector::Pnt3;
@@ -890,7 +890,7 @@ fn original_convert_to_nurbs_cuboid_preserves_trims_and_retires_cancelled_rows()
 
 #[test]
 fn original_section_publishes_disconnected_faces_together_and_rolls_back_private_topology() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_s_spatial_kernel_semio_session::{point_dictionary, read_channel_number, read_geometry, vector_dictionary};
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/🧪️tests/🧫️fixtures/disconnected-planar-section.json")).unwrap();

@@ -4,7 +4,7 @@ name = "semio-hub-process"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Process plugin - one crate for the process3d artifact (diff/op/dsl/pack/spr/engine) and the process 3d play app (commands/modes/windows/panels)"
+description = "Process plugin composition and native editor and viewer routing"
 
 [lints]
 workspace = true
@@ -13,15 +13,18 @@ workspace = true
 role = "hub"
 
 [lib]
+name = "semio_hub_process_router"
 path = "🦀️.rs"
 
 [dependencies]
+semio-hub-process-editor-app = { workspace = true }
+semio-hub-process-viewer-app = { workspace = true }
+semio-framework-tool-run = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-s-artifact-process-process3d = { workspace = true }
 semio-s-artifact-process-process3d-editor = { workspace = true }
 semio-s-artifact-process-process3d-model = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true }
 semio-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-3d = { path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
@@ -33,7 +36,6 @@ serde_json.workspace = true
 base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-s-artifact-process-process3d-viewer = { workspace = true }
-semio-plugin-instance-construction = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧱️construction/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-job = { path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }

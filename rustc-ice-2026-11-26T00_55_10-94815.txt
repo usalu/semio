@@ -1,0 +1,22 @@
+thread 'rustc' panicked at /rustc-dev/9f36de775bc636c8e88c31a173c2bcb6995956a0/compiler/rustc_serialize/src/opaque.rs:319:9:
+MemDecoder exhausted
+stack backtrace:
+   0:        0x108fe2ebc - <std[3e23b466ac191d88]::backtrace::Backtrace>::create
+   1:        0x106ebdd04 - std[3e23b466ac191d88]::panicking::update_hook::<alloc[d97f5b479a8d2901]::boxed::Box<rustc_driver_impl[5865b28a2aa2da18]::install_ice_hook::{closure#1}>>::{closure#0}
+   2:        0x108ff7518 - std[3e23b466ac191d88]::panicking::panic_with_hook
+   3:        0x108fd885c - std[3e23b466ac191d88]::panicking::panic_handler::{closure#0}
+   4:        0x108fcf650 - std[3e23b466ac191d88]::sys::backtrace::__rust_end_short_backtrace::<std[3e23b466ac191d88]::panicking::panic_handler::{closure#0}, !>
+   5:        0x108fd9d58 - __rustc[7432b9eb82595c9b]::rust_begin_unwind
+   6:        0x1090c22f4 - core[fdb3bf8d302f9586]::panicking::panic_fmt
+   7:        0x109240b94 - <rustc_serialize[71b20535ea984d72]::opaque::MemDecoder>::decoder_exhausted
+   8:        0x1079a3638 - <rustc_metadata[eafd25c94aa199ca]::rmeta::decoder::MetadataBlob>::get_root
+   9:        0x1079b313c - rustc_metadata[eafd25c94aa199ca]::locator::list_file_metadata
+  10:        0x106ebc6e8 - rustc_interface[3077c9d13c53a97b]::interface::run_compiler::<(), rustc_driver_impl[5865b28a2aa2da18]::run_compiler::{closure#0}>::{closure#2}
+  11:        0x106eb1c94 - std[3e23b466ac191d88]::sys::backtrace::__rust_begin_short_backtrace::<rustc_interface[3077c9d13c53a97b]::util::run_in_thread_with_globals<rustc_interface[3077c9d13c53a97b]::util::run_in_thread_pool_with_globals<rustc_interface[3077c9d13c53a97b]::interface::run_compiler<(), rustc_driver_impl[5865b28a2aa2da18]::run_compiler::{closure#0}>::{closure#2}, ()>::{closure#0}, ()>::{closure#0}::{closure#0}, ()>
+  12:        0x106ec1c00 - <std[3e23b466ac191d88]::thread::lifecycle::spawn_unchecked<rustc_interface[3077c9d13c53a97b]::util::run_in_thread_with_globals<rustc_interface[3077c9d13c53a97b]::util::run_in_thread_pool_with_globals<rustc_interface[3077c9d13c53a97b]::interface::run_compiler<(), rustc_driver_impl[5865b28a2aa2da18]::run_compiler::{closure#0}>::{closure#2}, ()>::{closure#0}, ()>::{closure#0}::{closure#0}, ()>::{closure#1} as core[fdb3bf8d302f9586]::ops::function::FnOnce<()>>::call_once::{shim:vtable#0}
+  13:        0x109002674 - <std[3e23b466ac191d88]::sys::thread::unix::Thread>::new::thread_start
+  14:        0x187270ce4 - __pthread_exit
+
+
+rustc version: 1.99.0-nightly (9f36de775 2026-07-19)
+platform: aarch64-apple-darwin

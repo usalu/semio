@@ -84,14 +84,17 @@ impl DrawingDuplicateRewriteAuthority {
 
     fn run_effect(cx: &mut semio_framework_job::StepContext<'_>, run: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError>) -> Result<RetainedCloneStep, &'static str> {
         let grant = cx.retained_grant();
-        let Some((result, work)) = cx.with_original_effect(grant, |_, effect| run(effect)).map_err(|_| "drawing-store.duplicate-close-work")? else {
+        let Some((result, work)) = cx.with_original_effect(grant, |_, effect| run(effect)).map_err(|_| "drawing-store.duplicate-native-work")? else {
             return Ok(RetainedCloneStep::Progress(Default::default()));
         };
         let progress = result.as_ref().map_or_else(ValueError::retained_progress, |step| step.progress());
         let receipt = cx.consume_retained(progress);
-        cx.consume_fuel(u64::try_from(work).map_err(|_| "drawing-store.duplicate-close-work")?);
-        let step = result.map_err(|_| "drawing-store.duplicate-close-fault")?;
-        receipt.map_err(|_| "drawing-store.duplicate-close-grant")?;
+        cx.consume_fuel(u64::try_from(work).map_err(|_| "drawing-store.duplicate-native-work")?);
+        let step = result.map_err(|error| match error.message {
+            std::borrow::Cow::Borrowed(message) => message,
+            std::borrow::Cow::Owned(_) => "drawing-store.duplicate-native-fault",
+        })?;
+        receipt.map_err(|_| "drawing-store.duplicate-native-grant")?;
         Ok(step)
     }
 
@@ -114,14 +117,7 @@ impl DrawingDuplicateRewriteAuthority {
     }
 
     fn append_text<const N: usize>(append: &mut semio_framework_value::paged::PagedUtf8AppendCursor, source: &str, output: &mut semio_framework_value::paged::PagedUtf8<N>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<RetainedCloneStep, &'static str> {
-        let grant = cx.retained_grant();
-        let turn = append.advance(source, output, source.len().min(grant.maximum_copy_bytes), grant);
-        let progress = turn.result.as_ref().map_or_else(ValueError::retained_progress, |step| step.progress());
-        let receipt = cx.consume_retained(progress);
-        cx.consume_fuel(u64::try_from(turn.work).map_err(|_| "drawing-store.duplicate-append-work")?);
-        let step = turn.result.map_err(|_| "drawing-store.duplicate-append-fault")?;
-        receipt.map_err(|_| "drawing-store.duplicate-append-grant")?;
-        Ok(step)
+        Self::run_effect(cx, |effect| append.advance_funded(source, output, source.len().min(effect.grant().maximum_copy_bytes), effect).result)
     }
 
     fn append_paged(&mut self, source: &DrawingNativeText, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
@@ -190,7 +186,7 @@ impl DrawingDuplicateRewriteAuthority {
             self.frames[self.depth].phase=9;return Ok(false);
         }
         let phase=if self.frames[self.depth].phase==9{0}else{self.frames[self.depth].phase};
-        if self.mode == 0 && phase < 7 {
+        if self.mode == 0 && matches!(phase, 0..=6 | 10..=12) {
             match phase {
                 0 => {
                     let step = self.identity.step(&target_identity.target, 1, DRAWING_OWNED_FIELD_BYTES)?;
@@ -210,12 +206,23 @@ impl DrawingDuplicateRewriteAuthority {
                 }
                 4 => { if matches!(Self::run_effect(cx, |effect| self.retire_displaced(effect))?, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 5; } }
                 5 if self.depth == 0 => {
-                    self.append_active = true;
-                    let step = Self::append_text(&mut self.append, " copy", &mut semio_s_artifact_draw_drawing_model::layer_base_mut(node).name, cx)?;
-                    if matches!(step, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 6; }
+                    if self.append_paged(&semio_s_artifact_draw_drawing_model::layer_base(source).name, cx)? {
+                        self.frames[self.depth].phase = 6;
+                    }
                 }
                 5 => { self.frames[self.depth].phase = 7;cx.consume_fuel(1); }
-                6 => { if matches!(Self::run_effect(cx, |effect| self.close_append(effect))?, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 7; } }
+                6 => {
+                    self.append_active = true;
+                    let step = Self::append_text(&mut self.append, " copy", &mut self.native_id, cx)?;
+                    if matches!(step, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 10; }
+                }
+                10 => { if matches!(Self::run_effect(cx, |effect| self.close_append(effect))?, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 11; } }
+                11 => {
+                    std::mem::swap(&mut semio_s_artifact_draw_drawing_model::layer_base_mut(node).name, &mut self.native_id);
+                    self.frames[self.depth].phase = 12;
+                    cx.consume_fuel(size_of::<DrawingNativeText>() as u64);
+                }
+                12 => { if matches!(Self::run_effect(cx, |effect| self.retire_displaced(effect))?, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 7; } }
                 _ => unreachable!(),
             }
             return Ok(false);

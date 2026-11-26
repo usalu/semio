@@ -88,7 +88,7 @@ impl Ui {
     }
 
     pub(super) fn presentation(&self) -> semio_ui_wgpu_paint::RetainedPaintPresentation {
-        semio_ui_wgpu_paint::RetainedPaintPresentation { driver: self.driver, locale: Some(self.locale), window: 0 }
+        semio_ui_wgpu_paint::RetainedPaintPresentation { driver: self.driver, locale: Some(self.locale), ..Default::default() }
     }
 
     pub fn set_driver(&mut self, driver: UiDriverChrome) {

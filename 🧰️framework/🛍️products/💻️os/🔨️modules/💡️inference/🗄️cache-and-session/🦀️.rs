@@ -31,7 +31,7 @@ impl InferenceValueRetirement{
   let(rest,turn)=original.admit_retirement(&mut child);*self.original=rest;
   match turn.result{Ok(Some((cursor,progress)))=>RetirementStep::ChildProgress(cursor,progress,turn.work),Ok(None)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error.into(),turn.work)}
  }
- fn demand(&self)->RetirementDemand{let Some(original)=self.original.as_ref()else{return Default::default()};let capacity_bytes=original.boxed_retirement_birth_bytes();RetirementDemand{copy_bytes:size_of::<Option<Box<dyn InferenceOwnedValue>>>()+capacity_bytes,capacity_bytes,depth:2,..Default::default()}}
+ fn demand(&self)->RetirementDemand{let Some(original)=self.original.as_ref()else{return Default::default()};let capacity_bytes=original.as_ref().boxed_retirement_birth_bytes();RetirementDemand{copy_bytes:size_of::<Option<Box<dyn InferenceOwnedValue>>>()+capacity_bytes,capacity_bytes,depth:2,..Default::default()}}
 }
 impl RetirementCursor for InferenceValueRetirement{
  semio_framework_value::native_retirement_reply!();
@@ -39,7 +39,7 @@ impl RetirementCursor for InferenceValueRetirement{
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(self.demand())}
  fn terminal_is_empty(&self)->bool{self.original.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
- fn next_birth_bytes(&self,_:usize)->Option<usize>{self.original.as_ref().map_or(Some(0),|original|Some(original.boxed_retirement_birth_bytes()))}
+ fn next_birth_bytes(&self,_:usize)->Option<usize>{self.original.as_ref().map_or(Some(0),|original|Some(original.as_ref().boxed_retirement_birth_bytes()))}
  fn next_close_byte_demand(&self)->Option<usize>{Some(0)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(if self.original.is_some(){2}else{0})}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}

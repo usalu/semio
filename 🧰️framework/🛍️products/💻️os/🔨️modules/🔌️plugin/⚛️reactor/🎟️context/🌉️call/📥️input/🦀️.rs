@@ -14,6 +14,13 @@ mod job_frame;
 #[path="🌀️empty-poll.rs"]
 mod empty_poll;
 
+#[path="🚪️ordinary-open.rs"]
+mod ordinary_open;
+#[path="🌀️poll-wire.rs"]
+mod poll_wire;
+#[path="🪪️lifecycle-ack.rs"]
+mod lifecycle_ack;
+
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum InputAdmission { Pending, Ready, Failed, Closed }
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -58,6 +65,8 @@ pub struct OriginalActorInputReceiving {
     job_retirement:ManuallyDrop<Option<ControlledRetirement<semio_framework_actor::OriginalJobSource>>>, job_id:Option<u64>,
     job_frame:Option<job_frame::JobFrame>,
     empty_poll_bytes:Option<u64>,
+    lifecycle_ack_bytes:Option<u64>,
+    ordinary_open_limits:Option<ordinary_open::Limits>,
     failed:bool, closing:bool, returning:bool, returned:bool,
 }
 
@@ -79,7 +88,7 @@ fn charge(cx:&mut StepContext<'_>,retiring:bool,bytes:usize)->Result<bool,Origin
 }
 impl OriginalActorInputReceiving {
     /// 🌱️ Construction declares limits but admits no parser, source loan or byte owner.
-    pub const fn new(policy:OriginalNativeDecodePolicy,limits:JsonReadLimits)->Self{Self{binding:None,pointer:0,length:0,capture:OriginalCallerReturnPlace::empty(),decoder:ManuallyDrop::new(OriginalJsonOutputSource::new(policy,limits)),input:ManuallyDrop::new(None),outcome:ManuallyDrop::new(None),settlement:ManuallyDrop::new(None),retirement:ManuallyDrop::new(None),event:ManuallyDrop::new(None),job:ManuallyDrop::new(None),job_retirement:ManuallyDrop::new(None),job_id:None,job_frame:None,empty_poll_bytes:empty_poll::select(limits),failed:false,closing:false,returning:false,returned:false}}
+    pub const fn new(policy:OriginalNativeDecodePolicy,limits:JsonReadLimits)->Self{Self{binding:None,pointer:0,length:0,capture:OriginalCallerReturnPlace::empty(),decoder:ManuallyDrop::new(OriginalJsonOutputSource::new(policy,limits)),input:ManuallyDrop::new(None),outcome:ManuallyDrop::new(None),settlement:ManuallyDrop::new(None),retirement:ManuallyDrop::new(None),event:ManuallyDrop::new(None),job:ManuallyDrop::new(None),job_retirement:ManuallyDrop::new(None),job_id:None,job_frame:None,empty_poll_bytes:empty_poll::select(limits),lifecycle_ack_bytes:lifecycle_ack::select(policy,limits),ordinary_open_limits:ordinary_open::select(policy,limits),failed:false,closing:false,returning:false,returned:false}}
     /// 🎟️ The containing Source pays the frame before binding its exact wire and caller.
     pub fn new_bound(policy:OriginalNativeDecodePolicy,limits:JsonReadLimits,wire:&[u8],cx:&StepContext<'_>)->Self{let mut owner=Self::new(policy,limits);owner.binding=Some(OriginalSourceBinding::borrow(cx));owner.pointer=wire.as_ptr() as usize;owner.length=wire.len();owner.job_frame=job_frame::JobFrame::select(wire,limits.maximum_bytes,policy.maximum_owned_bytes);owner}
     fn validate(&self,wire:Option<&[u8]>,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{
@@ -250,9 +259,7 @@ impl OriginalActorInputReceiving {
                     Ok(ready)=>{self.returning=ready;None},
                     Err(error)=>Some(input_refusal(error)),
                 }
-            }else if self.decoder.receiver().is_none() && empty_poll::advance(wire.ok_or_else(invalid)?, &mut self.empty_poll_bytes, &mut self.input, cx)? {
-                None
-            }else if self.decoder.ready(){self.decoder.take_step(&mut *self.input,cx)?}else{self.decoder.receive_step(wire.ok_or_else(invalid)?,cx)?};
+            }else{self.advance_json(wire.ok_or_else(invalid)?,cx)?};
             *decoder_progress=before!=(cx.original_work_units_spent(),cx.retained_progress());
             let failure=raw.filter(|raw|raw.value.is_err()||raw.receiving_refusal.is_some()).or_else(||{
                 (self.job_frame.is_none()&&matches!(self.input.as_ref(),Some(ActorInput::Job(_))))
@@ -267,6 +274,19 @@ impl OriginalActorInputReceiving {
         Ok(if self.returned&&self.capture.terminal_is_empty(){if self.closing{InputAdmission::Closed}else if self.failed{InputAdmission::Failed}else{InputAdmission::Ready}}else if self.failed{InputAdmission::Failed}else{InputAdmission::Pending})
     }
 }
+impl OriginalActorInputReceiving {
+    fn advance_json(&mut self,wire:&[u8],cx:&mut StepContext<'_>)->Result<Option<OriginalJsonOutputOutcome>,OriginalTurnFailure>{
+        if self.decoder.receiver().is_none(){
+            if empty_poll::advance(wire,&mut self.empty_poll_bytes,&mut self.input,cx)?{return Ok(None)}
+            if let Some(opening)=ordinary_open::advance(wire,&mut self.ordinary_open_limits,&mut self.input,cx)?{return Ok(opening.err().map(input_refusal))}
+            if let Some(acknowledgment)=lifecycle_ack::advance(wire,&mut self.lifecycle_ack_bytes,&mut self.input,cx)?{
+                return Ok(acknowledgment.err().map(input_refusal))
+            }
+        }
+        if self.decoder.ready(){self.decoder.take_step(&mut *self.input,cx)}else{self.decoder.receive_step(wire,cx)}
+    }
+}
+
 impl Drop for OriginalActorInputReceiving{fn drop(&mut self){assert!(std::thread::panicking()||self.capture.terminal_is_empty()&&self.decoder.terminal_is_empty()&&self.input.is_none()&&self.outcome.is_none()&&self.settlement.is_none()&&self.retirement.is_none()&&self.job.is_none()&&self.job_retirement.is_none(),"actor input retains original decoder or payload")}}
 
 #[cfg(test)]

@@ -16,7 +16,7 @@ import {HOST_PHASES_V1,hostPhaseSegmentsV1,type HostPhaseTransitionV1,type HostP
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {HOST_WARDEN_POLICY_V1,formatHostWardenHoldV1,hostWardenHoldsV1,type HostWardenStateV1} from "../🛡️warden/🟦️.ts";
 import {currentHostOrphanWatchV1} from "./👻️orphan/🟦️.ts";
-import {absentV1,alive,currentSample,hostBootAtV1,hostCapacityDirectoryV1,modified,names,prepare,readGrants,readJson,readWaiters,remove,writeJson,type HostCapacityStatusV1} from "./📖️status/🟦️.ts";
+import {absentV1,alive,holderStartV1,currentSample,hostBootAtV1,hostCapacityDirectoryV1,modified,names,prepare,readGrants,readJson,readWaiters,remove,writeJson,type HostCapacityStatusV1} from "./📖️status/🟦️.ts";
 export {hostBootAtV1,hostCapacityDirectoryV1,readHostCapacityStatusV1,type HostCapacityStatusV1} from "./📖️status/🟦️.ts";
 
 const protocol=schema.definitions.Protocol.const,limits=schema.definitions.Limits.const;
@@ -294,7 +294,7 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
  const inheritedId=environment[protocol.grantEnvironment];
  if(inheritedId!==undefined&&!new RegExp(schema.definitions.Grant.properties.id.pattern,"u").test(inheritedId))throw hostCapacityErrorV1("inheritedIdentifier",{},environment);
  const directory=prepare(options.directory),inheritedPath=inheritedId?grantPath(directory,inheritedId):undefined,inherited=inheritedPath?readJson(inheritedPath):undefined,at=now();
- if(inheritedPath&&isCurrentHostGrantV1({grant:inherited,expectedId:inheritedId,pidAlive:isHostCapacityV1("Grant",inherited)&&alive((inherited as HostGrantV1).pid),nowMs:at,bootAtMs:hostBootAtV1(directory,at),modifiedAtMs:modified(inheritedPath)},policy)){
+ if(inheritedPath&&isCurrentHostGrantV1({grant:inherited,expectedId:inheritedId,pidAlive:isHostCapacityV1("Grant",inherited)&&alive((inherited as HostGrantV1).pid,(inherited as HostGrantV1).startMs),nowMs:at,bootAtMs:hostBootAtV1(directory,at),modifiedAtMs:modified(inheritedPath)},policy)){
   const grant=inherited as HostGrantV1,carried=readHostCapacityPlanV1(environment),plan=carried?.id===grant.id?followHostGrantPlanV1(carried,grant):requireHostCapacityV1<HostPlanV1>("Plan",{version:1,id:grant.id,jobs:grant.jobs,cpu:grant.cpu,memoryMegabytes:grant.reservedMegabytes,fixedMegabytes:0,floorMegabytes:0});
   return body(Object.freeze({id:grant.id,jobs:plan.jobs,cpu:plan.cpu,reservedMegabytes:grant.reservedMegabytes,plan,inherited:true,adopted:false,bypassed:false,environment:Object.freeze({[protocol.grantEnvironment]:grant.id,[protocol.planEnvironment]:JSON.stringify(plan),[protocol.marksEnvironment]:grant.pid===pid||grant.pid===(options.ppid??process.ppid)?"on":"off"})}));
  }
@@ -302,7 +302,7 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
  if(offered!==undefined){const claimed=await(await import("./🤝️handover/🟦️.ts")).claimHostGrantHandoverV1(custody(),options,directory,offered,request,language,now,pid);if(claimed)return holdHostGrantV1(options,claimed,undefined,request,directory,pid,body);}
  if(names(directory,"queue",{retry:{signal:options.control.signal}}).length>=policy.wait.maximumWaiters
   &&readWaiters(directory,now(),policy,options.control.signal,false).length>=policy.wait.maximumWaiters)throw Error(schema.definitions.Messages.const[language].errors.queueFull);
- const arrivedAtMs=now(),waiterPath=queuePath(directory,arrivedAtMs,request.id),record:HostWaiterV1={request,arrivedAtMs,pid,...options.session===undefined?{}:{session:options.session.address,weight:options.session.weight}};
+ const arrivedAtMs=now(),waiterPath=queuePath(directory,arrivedAtMs,request.id),record:HostWaiterV1={request,arrivedAtMs,pid,...holderStartV1(pid),...options.session===undefined?{}:{session:options.session.address,weight:options.session.weight}};
  writeJson(waiterPath,record);
  let grant:HostGrantV1|undefined,admittedHost:HostSampleV1|undefined,lastProgress=-Infinity,continuation:(()=>Promise<T>)|undefined,lastWait:HostDecisionV1["reason"]|undefined;
  let sweptAtMs=-Infinity,split:string|undefined;
@@ -340,7 +340,7 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
      const before=lastWait;if(mine.verdict==="wait")lastWait=mine.reason;
      if(mine.verdict==="admit"){
       if(!holdsLock(directory,pid))continue;
-      grant=requireHostCapacityV1<HostGrantV1>("Grant",{id:request.id,operation:request.operation,jobs:mine.jobs,cpu:mine.jobs*request.cpuPerJob,reservedMegabytes:mine.reservedMegabytes,admittedAtMs:at,observedMegabytes:null,pid,bootAtMs:hostBootAtV1(directory,at),...options.session===undefined?{}:{session:options.session.address},...request.label===undefined?{}:{label:request.label},...request.holder===undefined||mine.reason!=="lent"?{}:{holder:request.holder},...request.rampMilliseconds===undefined?{}:{rampMilliseconds:request.rampMilliseconds},...request.rampSlot===undefined?{}:{rampSlot:request.rampSlot},...request.quiet===true?{quiet:true,arrivedAtMs}:{}});
+      grant=requireHostCapacityV1<HostGrantV1>("Grant",{id:request.id,operation:request.operation,jobs:mine.jobs,cpu:mine.jobs*request.cpuPerJob,reservedMegabytes:mine.reservedMegabytes,admittedAtMs:at,observedMegabytes:null,pid,...holderStartV1(pid),bootAtMs:hostBootAtV1(directory,at),...options.session===undefined?{}:{session:options.session.address},...request.label===undefined?{}:{label:request.label},...request.holder===undefined||mine.reason!=="lent"?{}:{holder:request.holder},...request.rampMilliseconds===undefined?{}:{rampMilliseconds:request.rampMilliseconds},...request.rampSlot===undefined?{}:{rampSlot:request.rampSlot},...request.quiet===true?{quiet:true,arrivedAtMs}:{}});
       writeJson(grantPath(directory,request.id),grant);remove(waiterPath);admittedHost=host;
       const seconds=Math.round((at-arrivedAtMs)/1000);
       if(lone)write(formatHostCapacityV1(language,"unsatisfiable",{operation:request.operation,seconds,reserved:mine.reservedMegabytes,asked,available:Math.max(0,drained),floor:evaluation.floorMegabytes}));

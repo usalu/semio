@@ -1,4 +1,5 @@
 import {execFile,spawn} from "node:child_process";
+import {ownProcessIdentityV1,processRecordAliveV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import {randomBytes} from "node:crypto";
 import {existsSync,mkdirSync,readFileSync,readdirSync,realpathSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {readFile} from "node:fs/promises";
@@ -48,12 +49,12 @@ export function changeLockHeldV1(facts:Readonly<{pid:unknown;alive:boolean;heart
 export function takeChangeLockV1(directory:string,policy:ChangeJournalPolicyV1,now:number):void{
  const lock=join(directory,CHANGE_JOURNAL_FILES_V1.lock);
  for(let attempt=0;attempt<2;attempt++){
-  try{mkdirSync(lock,{mode:0o700});writeFileSync(join(lock,"owner.json"),JSON.stringify({pid:process.pid,at:now}),{mode:0o600});return;}
+  try{mkdirSync(lock,{mode:0o700});writeFileSync(join(lock,"owner.json"),JSON.stringify({pid:process.pid,startMs:ownProcessIdentityV1().startMs,at:now}),{mode:0o600});return;}
   catch(error){
    if((error as NodeJS.ErrnoException).code!=="EEXIST")throw error;
-   let owner:{pid?:unknown;at?:unknown}={};
+   let owner:{pid?:unknown;at?:unknown;startMs?:unknown}={};
    try{owner=JSON.parse(readFileSync(join(lock,"owner.json"),"utf8"));}catch{}
-   const pid=owner.pid,alive=Number.isSafeInteger(pid)&&(pid as number)>0&&(()=>{try{process.kill(pid as number,0);return true;}catch(failure){return(failure as NodeJS.ErrnoException).code==="EPERM";}})();
+   const pid=owner.pid,alive=processRecordAliveV1(pid,owner.startMs);
    const at=typeof owner.at==="number"?owner.at:(()=>{try{return statSync(lock).mtimeMs;}catch{return 0;}})();
    if(changeLockHeldV1({pid,alive,heartbeatAgeMilliseconds:changeHeartbeatAgeV1(directory,now),ageMilliseconds:now-at},policy))throw new ChangeJournalRunningErrorV1(directory);
    rmSync(lock,{recursive:true,force:true});

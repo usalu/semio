@@ -81,7 +81,21 @@ pub async fn poll_kernel<PA: semio_plugin_reactor_app::PluginApp + 'static>(
     poll_kernel_output(runtime, events, command_page, cold_pair_page, budget, |_| Ok(()), |result, ()| result, identity,cx).await
 }
 
-/// 🧠️ One guest turn under [`with_turn_execution`] accounting — the only door into [`poll_kernel_turn`].
+/// ⛽️ The paid owned scalar dispatch can schedule a bounded opening independently of the interactive quiet slice.
+#[doc(hidden)]
+pub async fn poll_kernel_owned<PA: semio_plugin_reactor_app::PluginApp + 'static>(
+    runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,
+    events: &mut Option<Event>,
+    command_page: &mut Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
+    cold_pair_page: Option<&semio_framework::kernel::ColdDocumentPairPage>,
+    budget: semio_framework::kernel::Budget,
+    identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
+    cx: &mut semio_framework_job::StepContext<'_>,
+) -> Result<semio_framework::kernel::TurnResult, semio_framework_job::OriginalTurnFailure> {
+    with_turn_execution(std::pin::pin!(poll_kernel_turn(runtime, events, command_page, cold_pair_page, budget, OpeningPacing::Metered, |_| Ok(()), |result, ()| result, identity, cx))).await
+}
+
+/// 🧠️ One interactive guest turn under [`with_turn_execution`] accounting.
 #[doc(hidden)]
 #[expect(clippy::result_large_err, reason = "Patch reservation and publication callbacks return the original fixed surface or patch owner on refusal; these transfers must not allocate an error wrapper.")]
 pub async fn poll_kernel_output<PA: semio_plugin_reactor_app::PluginApp, T, Prepared>(
@@ -95,7 +109,7 @@ pub async fn poll_kernel_output<PA: semio_plugin_reactor_app::PluginApp, T, Prep
     identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     cx:&mut semio_framework_job::StepContext<'_>,
 ) -> Result<T, semio_framework_job::OriginalTurnFailure> {
-    with_turn_execution(std::pin::pin!(poll_kernel_turn(runtime, events, command_page, cold_pair_page, budget, prepare, publish, identity,cx))).await
+    with_turn_execution(std::pin::pin!(poll_kernel_turn(runtime, events, command_page, cold_pair_page, budget, OpeningPacing::Interactive, prepare, publish, identity, cx))).await
 }
 
 /// 🔀️ Borrows the retained command and partial output; its data remains in the actual Source home.

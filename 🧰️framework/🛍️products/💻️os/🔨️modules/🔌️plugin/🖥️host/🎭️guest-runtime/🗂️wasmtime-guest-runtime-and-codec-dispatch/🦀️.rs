@@ -116,6 +116,11 @@ impl GuestRuntime for WasmtimeRuntime {
         if let Some(component) = load_compiled_component(&self.engine, &cache_path).await {
             return Ok(CompiledHandle { package_hash: package.hash.0, component: Some(Arc::new(component)), owned: None });
         }
+        let _admission = semio_plugin_host_engine::try_native_compile(&self.cache_root).map_err(PluginHostError::Io)?;
+        if let Some(component) = load_compiled_component(&self.engine, &cache_path).await {
+            return Ok(CompiledHandle { package_hash: package.hash.0, component: Some(Arc::new(component)), owned: None });
+        }
+        semio_plugin_host_engine::require_compile_memory(bytes.len()).map_err(PluginHostError::Io)?;
         let component = Component::from_binary(&self.engine, bytes).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let _ = store_compiled_component(&component, &cache_path).await;
         Ok(CompiledHandle { package_hash: package.hash.0, component: Some(Arc::new(component)), owned: None })

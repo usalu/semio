@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import {Vector3,Vector4,PlaneGeometry,LineCurve3} from "three";
+import {Vector3,Vector4,PlaneGeometry,LineCurve3,BoxGeometry,SphereGeometry} from "three";
 import {NURBSCurve} from "three/examples/jsm/curves/NURBSCurve.js";
 import fixture from "./🧫️.json";
 import schema from "./🧬️.json";
@@ -28,4 +28,28 @@ test("generic clone implementations price actual composite type parameters while
  const root=frameworkSourcePath("🔨️modules/🌱️value/✨️derive/🧪️tests/🧫️fixtures/🧬️generic-owner");
  const law=await Bun.file(`${root}/🔣️.json`).json();const contract=await Bun.file(`${root}/🧬️.json`).json();expect(new Ajv({strict:true}).validate(contract,law)).toBe(true);expect(JSON.parse(JSON.stringify(law.entry))).toEqual(["key Ä",[1,2,3]]);
  const production=await Bun.file(frameworkSourcePath("🔨️modules/🧊️3d/🥽️mesh/🛠️modeling/📥️input/↔️translation/🦀️.rs")).text();expect(production).toContain("RetainedCloneOwner<HalfedgeMesh>");expect(production).toContain("self.owner.advance_demands(self.hold.original()?");expect(production).toContain("artifact_retire_struct!(MeshTranslationProduction{hold,owner,");expect(production).toContain("state.owner.recover_advance_into(source,body,u64::MAX,effect,scope.borrow()?)");expect(production).not.toContain("original.clone()");expect(production).not.toContain("translate_job_owned");
+});
+
+
+test("original BRep solid dimensions agree with independent Three geometry", () => {
+ for (const row of fixture.solids) {
+  const {width, depth, height, radius} = row.inputs;
+  const geometry = radius === undefined
+   ? new BoxGeometry(width, depth, height).translate(width! / 2, depth! / 2, height! / 2)
+   : new SphereGeometry(radius, 512, 256);
+  geometry.computeBoundingBox();
+  expect([geometry.boundingBox!.min.toArray(), geometry.boundingBox!.max.toArray()]).toEqual(row.bounds);
+  const index = geometry.index!;
+  const position = geometry.attributes.position;
+  const a = new Vector3(), b = new Vector3(), c = new Vector3();
+  let signedVolume = 0;
+  for (let i = 0; i < index.count; i += 3) {
+   a.fromBufferAttribute(position, index.getX(i));
+   b.fromBufferAttribute(position, index.getX(i + 1));
+   c.fromBufferAttribute(position, index.getX(i + 2));
+   signedVolume += a.dot(b.cross(c)) / 6;
+  }
+  expect(Math.abs(Math.abs(signedVolume) - row.volume)).toBeLessThan(radius === undefined ? 1e-12 : 0.01);
+  geometry.dispose();
+ }
 });

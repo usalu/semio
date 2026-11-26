@@ -6,6 +6,7 @@ import type { Environment } from "../../🧬️schema/🟦️.ts";
 import { THERMAL_QUANTITIES, type DrawingItem, type DrawingScene, type DepictionOptions } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { defaultDepictionOptions, depict } from "../../🔨️modules/🎨️depiction/🟦️.ts";
 import { catalogAsset } from "../../🧫️fixtures/🌡️thermal/🟦️.ts";
+import { mergedSilhouette } from "../../🧫️fixtures/🎨️thermal-legend/🟦️.ts";
 import { UNCHECKED_PROFILE } from "../../🧫️fixtures/🧱️synthetic-figure/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { QUANTITY_SPECS, solveThermal } from "../../🔨️modules/🌡️thermal/🟦️.ts";
@@ -62,14 +63,15 @@ describe("🎨️ thermal view", () => {
   });
 
   it("weights the merged regions by area × exposed fraction in the of the 1:500 silhouette and says so", () => {
-    const { scene: s, field, state } = scene(human, 500, "surface-temperature");
-    const merged = items(s).find((i) => i.kind === "path" && i.id === "shape:sil-torso" && i.value);
+    const subject = mergedSilhouette();
+    expect(subject.regionIds.length).toBeGreaterThan(1);
+    const { scene: s, field, state } = scene(subject.asset, 500, "surface-temperature", undefined, subject.pose);
+    const merged = items(s).find((i) => i.kind === "path" && i.id === `shape:${subject.shapeId}` && i.value);
     expect(merged).toBeDefined();
-    const ids = ["coat", "face-skin", "hair", "scarf", "hand-skin"];
     const regions = state.asset.thermal.regions;
     const w = (id: string) => regions.find((r) => r.id === id)!.areaM2 * Math.max(field.regions[id]!.exposedFraction, 1e-9);
-    const weight = ids.reduce((sum, id) => sum + w(id), 0);
-    const expected = ids.reduce((sum, id) => sum + w(id) * field.regions[id]!.surfaceTempC, 0) / weight;
+    const weight = subject.regionIds.reduce((sum, id) => sum + w(id), 0);
+    const expected = subject.regionIds.reduce((sum, id) => sum + w(id) * field.regions[id]!.surfaceTempC, 0) / weight;
     const value = (merged as { value: { value: number; label: { en: string } } }).value;
     expect(value.value).toBeCloseTo(expected, 9);
     expect(value.label.en).toContain("area-weighted");

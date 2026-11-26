@@ -1,9 +1,9 @@
 /** 🔸️ The handle pointer up phase of useWorldPointerAndDrop. */
 import * as React from "../../../⚛️react-port/🟦️.ts";
-import { useCallback, useEffect } from "../../../⚛️react-port/🟦️.ts";
+import { useCallback, useEffect, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { getActiveCatalogueDragPayload } from "@semio-tech/ui-react";
 import { celebrateWorldInstances } from "../../🎨️mesh-render/🎊️instance-celebration/🟦️.ts";
-import { clientPointOverHost, hoveredInteractionTargetV1, world3dLeftReleaseIsDrag, worldInstancePickBlocked } from "../../🔗️instance-selection/🟦️.ts";
+import { clientPointOverHost, hoveredInteractionTargetV1, world3dLeftReleaseIsDrag, world3dMissedClickBelongsToPickRelease, worldInstancePickBlocked } from "../../🔗️instance-selection/🟦️.ts";
 import { paneSuffixFromSurfaceId, resolveClickInstanceId, resolveWorldMergeMode } from "../../🎯️marquee-and-bridges/🟦️.tsx";
 import { clearWorldCatalogueDropPreview, parsePuzzle3dCatalogueDragPayload, resolveCatalogueDropOrigin, setWorldCatalogueDropPreview, worldCatalogueDropHostContainsPoint } from "../../🗂️catalogue-drop/🟦️.tsx";
 import { axisDragParam } from "../../🪟️window-view-store/🟦️.tsx";
@@ -12,6 +12,7 @@ import type { useActiveUtilityState } from "../🔶️active-utility/🟦️.ts"
 
 /** 🔹 Builds handlePointerUp, handleEmptyClick, clearCatalogueDrop, readCatalogueDragEncoded of useWorldPointerAndDrop. */
 export function useHandlePointerUpState({ gestureRecognizer, setMarqueePath, marqueeStartRef, endHandleDrag, endRelocateDrag, faceDragSession, setFaceDragSession, hostRef, cameraRef, dispatch, node, finalizeMarqueeSelection, marqueeDragActiveRef, paintMode, selection, activeUtility, toLocalPoint, instancesRef, meshesRef, handleInstancePointerDown, setVortexPointerArm, connectDropConsumedRef, handleConnectDragCancel, interactionDomainId, interactionGranularity, persistentSelectionMode, selectionMode, marqueeDown, wasMarqueeDragRef, contextMenu, dismissContextMenu, interaction, handleSuggestionClose, hoveredInstanceInteractionTargetRef, catalogueDragEncodedRef, catalogueDragDepthRef, gridSnapEnabled, gridFactor, pendingCelebrateCatalogueDropIdsRef, instances }: Pick<ReturnType<typeof useActiveUtilityState>, "gestureRecognizer" | "setMarqueePath" | "marqueeStartRef" | "endHandleDrag" | "endRelocateDrag" | "faceDragSession" | "setFaceDragSession" | "hostRef" | "cameraRef" | "dispatch" | "node" | "finalizeMarqueeSelection" | "marqueeDragActiveRef" | "paintMode" | "selection" | "activeUtility" | "toLocalPoint" | "instancesRef" | "meshesRef" | "handleInstancePointerDown" | "setVortexPointerArm" | "connectDropConsumedRef" | "handleConnectDragCancel" | "interactionDomainId" | "interactionGranularity" | "persistentSelectionMode" | "selectionMode" | "marqueeDown" | "wasMarqueeDragRef" | "contextMenu" | "dismissContextMenu" | "interaction" | "handleSuggestionClose" | "hoveredInstanceInteractionTargetRef" | "catalogueDragEncodedRef" | "catalogueDragDepthRef" | "gridSnapEnabled" | "gridFactor" | "pendingCelebrateCatalogueDropIdsRef" | "instances">) {
+  const paddedPickReleaseRef = useRef<number | null>(null);
   const wholePickEnabled = !selection.targets?.exclusive || selection.targets.mesh === true;
   const handlePointerUp = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
@@ -59,6 +60,7 @@ export function useHandlePointerUpState({ gestureRecognizer, setMarqueePath, mar
           const local = toLocalPoint(event);
           const id = resolveClickInstanceId(instancesRef.current, meshesRef.current, local, rect, camera);
           if (id) {
+            paddedPickReleaseRef.current = event.timeStamp;
             const index = instancesRef.current.findIndex((entry) => entry.id === id);
             handleInstancePointerDown(id, index < 0 ? 0 : index, event);
           }
@@ -96,6 +98,9 @@ export function useHandlePointerUpState({ gestureRecognizer, setMarqueePath, mar
         wasMarqueeDragRef.current = false;
         return;
       }
+      const pickRelease = paddedPickReleaseRef.current;
+      paddedPickReleaseRef.current = null;
+      if (world3dMissedClickBelongsToPickRelease(pickRelease, event.timeStamp)) return;
       if (selection.engagementSessionActive || paintMode) return;
       if (contextMenu) dismissContextMenu();
       if (interaction.suggestionMenu?.open) {

@@ -43,6 +43,15 @@
     "foreignSourceSameBusiness": true,
     "terminalState": "Closed"
   },
+  "retirementScalarImports": {
+    "clockMicroseconds": 1000,
+    "clockNanoseconds": 1000000,
+    "cases": [
+      { "module": "wasi:clocks/monotonic-clock@0.2.0", "name": "now", "allowed": true },
+      { "module": "semio:framework/pure@1.0.0", "name": "now-ms", "allowed": false },
+      { "module": "wasi:random/random@0.2.9", "name": "get-random-u64", "allowed": false }
+    ]
+  },
   "clockImport": {
     "clockMicroseconds": 1000,
     "actualTag": 1,

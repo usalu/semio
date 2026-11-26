@@ -189,6 +189,13 @@
       "description": { "en": "cache status|gc: the disk budget of this machine for this call (an integer or a number with KiB, MiB, GiB, TiB, e.g. 40GiB); it beats the SEMIO_CACHE_BUDGET_BYTES variable, which beats the machine file in the repository cache root, which beats the declared default.", "de": "cache status|gc: das Platzbudget dieses Rechners für diesen Aufruf (eine ganze Zahl oder eine Zahl mit KiB, MiB, GiB, TiB, z. B. 40GiB); es schlägt die Variable SEMIO_CACHE_BUDGET_BYTES, diese die Rechnerdatei im Repository-Cache-Wurzelordner, diese den deklarierten Standard." }
     },
     {
+      "name": "--reclaim",
+      "value": "required",
+      "valueName": "size",
+      "operations": ["cache"],
+      "description": { "en": "cache gc: aim to reclaim this many bytes in total (an integer or a size such as 5GiB); if age and budget collection is insufficient, select additional oldest eligible entries, including below-budget ones. Held, recently used and pressure-pinned entries remain protected; the target may not be met.", "de": "cache gc: versucht insgesamt diese Anzahl Bytes freizugeben (eine ganze Zahl oder eine Größe wie 5GiB); reichen Alters- und Budgetregeln nicht aus, werden weitere älteste geeignete Einträge auch unterhalb des Budgets gewählt. Gehaltene, kürzlich benutzte und gegen Speicherdruck gepinnte Einträge bleiben geschützt; das Ziel wird möglicherweise nicht erreicht." }
+    },
+    {
       "name": "--deep",
       "value": "none",
       "operations": ["cache"],
@@ -808,6 +815,16 @@
       "description": { "en": "session close: close a session although its owner process is still alive.", "de": "session close: schließt eine Sitzung, obwohl ihr Eigentümerprozess noch lebt." }
     }
   ],
+  "repairs": [
+    {
+      "id": "build-owners-sync",
+      "command": "repo ./📜️script.ts verify build-owners sync",
+      "description": {
+        "en": "Bring the build owner registry in line with the tree: add a row for every crate or project manifest without one, drop and move rows of vanished modules.",
+        "de": "Bringt das Eigentümerregister des Builds mit dem Baum in Einklang: trägt für jedes Crate- oder Projekt-Manifest ohne Zeile eine ein, entfernt und verschiebt Zeilen verschwundener Module."
+      }
+    }
+  ],
   "operations": [
     {
       "name": "run",
@@ -1387,7 +1404,7 @@
         },
         {
           "name": "gc",
-          "synopsis": "cache gc [--dry-run] [--area=<id>] [--budget=<size>]", "flags": ["--dry-run", "--area", "--budget", "--json"],
+          "synopsis": "cache gc [--dry-run] [--area=<id>] [--budget=<size>] [--reclaim=<size>]", "flags": ["--dry-run", "--area", "--budget", "--reclaim", "--json"],
           "summary": {
             "en": "Collect the cache: remove retired roots, units unused longer than their area allows and the oldest units beyond an area's budget, and entries nobody declared; it never removes a unit that is held by a lease or used recently. It also returns the host blocks that an idle image no longer uses (progress and cancellation included).",
             "de": "Sammelt den Cache ein: entfernt stillgelegte Wurzeln, länger als erlaubt unbenutzte Einheiten, die ältesten Einheiten über dem Budget eines Bereichs und nicht deklarierte Einträge; eine durch Lease gehaltene oder kürzlich benutzte Einheit wird nie entfernt. Außerdem gibt es die Host-Blöcke zurück, die ein ruhendes Image nicht mehr nutzt (mit Fortschritt und Abbruch)."
@@ -1420,7 +1437,7 @@
         },
         { "name": "clear", "synopsis": "cache clear", "flags": [], "summary": { "en": "Empty the cache and print a CacheClear.", "de": "Leert den Cache und gibt einen CacheClear aus." } }
       ],
-      "flags": ["--json", "--dry-run", "--area", "--budget", "--deep", "--tasks", "--unreferenced"],
+      "flags": ["--json", "--dry-run", "--area", "--budget", "--reclaim", "--deep", "--tasks", "--unreferenced"],
       "examples": [
         { "command": "repo cache status", "description": { "en": "Show every cache partition and area against its budget.", "de": "Zeigt jede Cache-Partition und jeden Bereich gegen sein Budget." } },
         { "command": "repo cache gc --dry-run", "description": { "en": "List what the collector would remove.", "de": "Listet auf, was der Sammler entfernen würde." } },
@@ -1646,7 +1663,7 @@
     {
       "name": "fleet",
       "requires": "none",
-      "synopsis": "fleet status",
+      "synopsis": "fleet status|hostname",
       "summary": {
         "en": "Show one picture of the shared workspace: who runs what (phase, progress, age, priority, code freshness), the queues with waiting-time estimates, memory admitted against really used, the Bazel servers, storage against its budgets, the sealed implementation and the last graph generation.",
         "de": "Zeigt ein Gesamtbild des gemeinsamen Arbeitsbereichs: wer was ausführt (Phase, Fortschritt, Alter, Priorität, Aktualität des Codes), die Warteschlangen mit Wartezeitschätzungen, zugesagter gegen tatsächlich genutzten Speicher, die Bazel-Server, den Speicher auf dem Datenträger gegen seine Budgets, die versiegelte Implementierung und die letzte Graph-Generation."
@@ -1662,6 +1679,14 @@
             "en": "Print the fleet picture as compact text, or with --json as one document whose schema is validated before it is printed.",
             "de": "Gibt das Gesamtbild als kompakten Text aus, mit --json als ein Dokument, dessen Schema vor der Ausgabe geprüft wird."
           }
+        },
+        {
+          "name": "hostname",
+          "synopsis": "fleet hostname apply",
+          "summary": {
+            "en": "Give this Mac or Linux machine its semantic host name semio-<origin>, derived from the origin id in .cache/f/machine.json: prints the plan and the exact sudo command, asks on the terminal and runs it only after a yes (no --yes; refused without a terminal; nothing to do when the name is already right).",
+            "de": "Gibt diesem Mac oder Linux-Rechner seinen semantischen Rechnernamen semio-<origin>, abgeleitet aus der Origin-ID in .cache/f/machine.json: gibt den Plan und den genauen sudo-Befehl aus, fragt im Terminal und führt ihn erst nach einem Ja aus (kein --yes; ohne Terminal abgelehnt; nichts zu tun, wenn der Name schon stimmt)."
+          }
         }
       ],
       "flags": [
@@ -1672,6 +1697,10 @@
         {
           "command": "repo fleet status",
           "description": { "en": "See at a glance who runs what, who waits for what and for how long, and what the disk and memory budgets look like.", "de": "Zeigt auf einen Blick, wer was ausführt, wer worauf wie lange wartet und wie es um die Speicher- und Datenträgerbudgets steht." }
+        },
+        {
+          "command": "repo fleet hostname apply",
+          "description": { "en": "Rename this machine to semio-<origin> after you confirm the printed sudo command; every machine runs the same command, no name is typed.", "de": "Benennt diese Maschine nach Ihrer Bestätigung des ausgegebenen sudo-Befehls in semio-<origin> um; jede Maschine führt denselben Befehl aus, kein Name wird getippt." }
         },
         {
           "command": "repo fleet status --json",

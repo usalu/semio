@@ -16,12 +16,12 @@ use semio_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault, NoConfig, N
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
 use semio_s_artifact_bim_model_bim::editor::bim::commands::analyse_model::{handle, AnalyseModel};
-use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{ctx, demo, run};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{ctx, demo, empty_instance, run};
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 
 #[semio_framework_async_macros::async_test]
 async fn the_command_settles_the_session_and_changes_nothing_else() {
-    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = empty_instance();
     let snapshot = demo();
     let mut context = ctx(&[]);
     context.gestures = Some(instance.clone());
@@ -33,17 +33,17 @@ async fn the_command_settles_the_session_and_changes_nothing_else() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_analysis_is_stepped_with_progress_and_a_cancel_keeps_what_it_finished() {
-    let instance = semio_plugin::ArtifactInstanceOperationOwnerHandle::detached();
+    let instance = empty_instance();
     let snapshot = demo();
-    let mut cancelled = Analysis::new(Some(&instance), 2);
-    let first = cancelled.advance(&snapshot).expect("a step");
+    let mut cancelled = Analysis::new(Some(&instance));
+    let first = cancelled.advance_cold(&snapshot, 2).expect("a step");
     assert!(!first.done && cancelled.fraction() > 0.0);
-    cancelled.cancel(&snapshot);
+    cancelled.cancel_cold(&snapshot);
     let report = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::report(Some(&instance));
     assert!(report.cancelled && report.computed > 0, "{report:?}");
-    let mut next = Analysis::new(Some(&instance), 1_000);
+    let mut next = Analysis::new(Some(&instance));
     while !next.is_done() {
-        next.advance(&snapshot).expect("a step");
+        next.advance_cold(&snapshot, 1_000).expect("a step");
     }
     assert!(inference::report(Some(&instance)).reused >= report.computed, "the finished nodes were not computed again");
 }

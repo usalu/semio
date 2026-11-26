@@ -3,6 +3,7 @@
 use super::*;
 use serde::Deserialize;
 use semio_framework_job::InteractiveJob;
+use semio_framework_value::RetainedAllocationEffect;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -330,7 +331,7 @@ fn detach_and_close(registry: &Arc<ArtifactEnvelopeFieldDecoderRegistry<(), ()>>
             }
             note(failures, "detach is not close completion", registry.ticket_reclaimed(ticket) && !returned.terminal_is_empty(), returned.terminal_is_empty());
             for _ in 0..returned_owner_close_bound() {
-                let result = envelope_close_turn(Grant::generous(1).retained(), |effect| ErasedSnapshotRetirement::close_step(&mut returned, effect)).result;
+                let result = envelope_close_turn(Grant::generous(1).retained(), |effect| ErasedSnapshotRetirement::close_step(&mut returned, effect.grant().maximum_copy_bytes, effect)).result;
                 if matches!(result, Ok(RetainedCloneStep::Complete(_))) && returned.terminal_is_empty() {
                     break;
                 }
@@ -357,7 +358,7 @@ impl Subject {
                 let close_bound = unadmitted_close_bound(record.decode_pages().page_count());
                 let mut rejected = ArtifactEnvelopeUnadmittedDecodeRejected::new(record, fields);
                 for _ in 0..close_bound {
-                    let result = envelope_close_turn(Grant::generous(1).retained(), |effect| ErasedSnapshotRetirement::close_step(&mut rejected, effect)).result;
+                    let result = envelope_close_turn(Grant::generous(1).retained(), |effect| ErasedSnapshotRetirement::close_step(&mut rejected, effect.grant().maximum_copy_bytes, effect)).result;
                     if matches!(result, Ok(RetainedCloneStep::Complete(_))) && rejected.terminal_is_empty() {
                         break;
                     }
@@ -407,8 +408,8 @@ impl Subject {
 
     fn close_step(&mut self, grant: Grant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
         match self {
-            Self::Registered { rejected, .. } => envelope_close_turn(grant.retained(), |effect| ErasedSnapshotRetirement::close_step(rejected, effect)).result.map_err(artifact_envelope_failure_error),
-            Self::Unadmitted(rejected) => envelope_close_turn(grant.retained(), |effect| ErasedSnapshotRetirement::close_step(rejected, effect)).result.map_err(artifact_envelope_failure_error),
+            Self::Registered { rejected, .. } => envelope_close_turn(grant.retained(), |effect| ErasedSnapshotRetirement::close_step(&mut **rejected, effect.grant().maximum_copy_bytes, effect)).result.map_err(artifact_envelope_failure_error),
+            Self::Unadmitted(rejected) => envelope_close_turn(grant.retained(), |effect| ErasedSnapshotRetirement::close_step(&mut **rejected, effect.grant().maximum_copy_bytes, effect)).result.map_err(artifact_envelope_failure_error),
         }
     }
 
@@ -433,7 +434,7 @@ impl Subject {
         note(failures, "actual field shell close", field_close == Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: shell_bytes, ..Default::default() })), &field_close);
         if let Self::Registered { rejected, registry, ticket } = self {
             note(failures, "registry retained until detach", !registry.ticket_reclaimed(*ticket) && !registry.terminal_is_empty(), registry.ticket_reclaimed(*ticket));
-            let waiting = envelope_close_turn(Grant::generous(1).retained(), |effect| ErasedSnapshotRetirement::close_step(rejected, effect)).result;
+            let waiting = envelope_close_turn(Grant::generous(1).retained(), |effect| ErasedSnapshotRetirement::close_step(&mut **rejected, effect.grant().maximum_copy_bytes, effect)).result;
             note(failures, "pages wait for exact reclamation", waiting == Ok(RetainedCloneStep::Progress(Default::default())), &waiting);
             detach_and_close(registry, Some(*ticket), Some(field_identity), failures);
             note(failures, "exact ticket reclaimed", registry.ticket_reclaimed(*ticket), registry.ticket_reclaimed(*ticket));

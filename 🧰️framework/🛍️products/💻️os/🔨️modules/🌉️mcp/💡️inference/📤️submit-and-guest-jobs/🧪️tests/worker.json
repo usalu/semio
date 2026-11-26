@@ -1,0 +1,7 @@
+[
+  {"name":"active worker unwinds","before":"RUNNING","unwind":true,"expected":"FAILED"},
+  {"name":"completed worker returns","before":"SUCCEEDED","unwind":false,"expected":"SUCCEEDED"},
+  {"name":"approval stays pending","before":"AWAITING_APPROVAL","unwind":false,"expected":"AWAITING_APPROVAL"},
+  {"name":"completed job keeps its receipt","before":"SUCCEEDED","unwind":true,"expected":"SUCCEEDED"},
+  {"name":"cancelled job stays terminal","before":"CANCELLED","unwind":true,"expected":"CANCELLED"}
+]

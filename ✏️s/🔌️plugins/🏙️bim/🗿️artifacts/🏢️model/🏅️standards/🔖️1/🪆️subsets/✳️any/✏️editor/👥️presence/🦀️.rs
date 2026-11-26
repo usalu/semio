@@ -6,8 +6,9 @@ use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of an author's view: working storey, plan camera, the line being typed into a window's entry field.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value_derive::NativeReceive)]
-#[value(rename_all = "camelCase", default)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::SnapshotProjection, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase", default, by_value_projection)]
 #[artifact(extension = "bim.presence")]
 #[dsl(layout = "lines")]
 pub struct BimPresence {
@@ -137,18 +138,28 @@ impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for BimPr
 
 //#region 🔖️PresenceMutation
 /// 👥️ The one presence mutation: set the whole shareable record.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum BimPresenceMutation {
     #[dsl(key = "set")]
-    Set {
-        engagement_input: String,
-        storey: String,
-        owned_worksets: Vec<String>,
+    Snapshot {
         #[dsl(block)]
-        camera: store::Viewport2d,
+        transient: BimPresence,
     },
 }
+
+protocol::retained_root_record!(
+    state: BimPresence,
+    mutation: BimPresenceMutation,
+    diff: BimPresenceDiff,
+    fields: {
+        engagement_input: String,
+        storey: String,
+        camera: store::Viewport2d,
+        owned_worksets: Vec<String>,
+    }
+);
 
 impl Mutation<BimPresence> for BimPresenceMutation {
     type Diff = BimPresenceDiff;
@@ -159,7 +170,7 @@ impl Mutation<BimPresence> for BimPresenceMutation {
         semantic_kind: "set-presence",
         display_name: "Set Presence",
         emoji: "👥️",
-        aggregate_variant: "Set",
+        aggregate_variant: "Snapshot",
         payload_schema: "🧬️schema/🔣️.json",
         text_opcode: None,
         binary_tag: None,
@@ -178,17 +189,16 @@ impl Mutation<BimPresence> for BimPresenceMutation {
 impl protocol::ColdMutation<BimPresence> for BimPresenceMutation {
     type ReferenceDiff = BimPresenceDiff;
     fn diff(&self, base: &BimPresence) -> protocol::MutationOutcome<BimPresenceDiff> {
-        match self {
-            Self::Set { engagement_input, storey, owned_worksets, camera } => protocol::MutationOutcome::new(BimPresenceDiff {
-                engagement_input: (&base.engagement_input != engagement_input).then(|| engagement_input.clone()),
-                storey: (&base.storey != storey).then(|| storey.clone()),
-                owned_worksets: (&base.owned_worksets != owned_worksets).then(|| owned_worksets.clone()),
-                camera: (&base.camera != camera).then_some(*camera),
-            }),
-        }
+        let Self::Snapshot { transient: presence } = self;
+        protocol::MutationOutcome::new(BimPresenceDiff {
+            engagement_input: (base.engagement_input != presence.engagement_input).then(|| presence.engagement_input.clone()),
+            storey: (base.storey != presence.storey).then(|| presence.storey.clone()),
+            owned_worksets: (base.owned_worksets != presence.owned_worksets).then(|| presence.owned_worksets.clone()),
+            camera: (base.camera != presence.camera).then_some(presence.camera),
+        })
     }
     fn inverse(&self, base: &BimPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-        Ok(vec![Self::Set { engagement_input: base.engagement_input.clone(), storey: base.storey.clone(), owned_worksets: base.owned_worksets.clone(), camera: base.camera }])
+        Ok(vec![Self::Snapshot { transient: base.clone() }])
     }
 }
 
@@ -203,28 +213,33 @@ impl protocol::OpText for BimPresenceMutation {
 
 impl protocol::OpBinary for BimPresenceMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
+        Ok(store::pack_rt::encode_pack_value(&semio_framework_value::ToValue::to_value(self)))
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
+        let value = store::pack_rt::decode_pack_value(bytes).map_err(protocol::ProtocolError::from)?;
+        semio_framework_value::FromValue::from_value(store::pack_rt::renormalize_whole_number_floats(value))
+            .map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
     }
 }
+
+::semio_os_kernel::original_pack_value_operation_receiving!(BimPresenceMutation);
+::semio_os_kernel::artifact_persisted_encoded_binary_operation!(BimPresenceMutation);
 //#endregion 🔖️PresenceMutation
 
 impl BimPresence {
     /// 👥️ The presence of an author working on `storey`, keeping the rest of the record.
     pub fn on_storey(&self, storey: &str) -> BimPresenceMutation {
-        BimPresenceMutation::Set { engagement_input: self.engagement_input.clone(), storey: storey.to_string(), owned_worksets: self.owned_worksets.clone(), camera: self.camera }
+        BimPresenceMutation::Snapshot { transient: Self { storey: storey.to_owned(), ..self.clone() } }
     }
 
     /// 👥️ The presence of an author typing `input` into a window entry field, keeping the rest of the record.
     pub fn typing(&self, input: &str) -> BimPresenceMutation {
-        BimPresenceMutation::Set { engagement_input: input.to_string(), storey: self.storey.clone(), owned_worksets: self.owned_worksets.clone(), camera: self.camera }
+        BimPresenceMutation::Snapshot { transient: Self { engagement_input: input.to_owned(), ..self.clone() } }
     }
 
     /// 👥️ The presence of an author looking through `camera`, keeping the rest of the record.
     pub fn looking_through(&self, camera: store::Viewport2d) -> BimPresenceMutation {
-        BimPresenceMutation::Set { engagement_input: self.engagement_input.clone(), storey: self.storey.clone(), owned_worksets: self.owned_worksets.clone(), camera }
+        BimPresenceMutation::Snapshot { transient: Self { camera, ..self.clone() } }
     }
 }
 
@@ -238,6 +253,6 @@ impl BimPresence {
         let mut owned_worksets = self.owned_worksets.clone();
         owned_worksets.retain(|workset| workset != id);
         if claim { owned_worksets.push(id.to_owned()); owned_worksets.sort(); }
-        BimPresenceMutation::Set { engagement_input: self.engagement_input.clone(), storey: self.storey.clone(), owned_worksets, camera: self.camera }
+        BimPresenceMutation::Snapshot { transient: Self { owned_worksets, ..self.clone() } }
     }
 }

@@ -33,9 +33,10 @@ impl PluginExchangeOutput{
         if self.constructor_receipt.is_none()&&self.preparation_receipt.is_none()&&self.retirement_receipt.is_none(){self.history_command_receipt=app.take_history_command_receipt();}
         if self.constructor_receipt.is_none()&&self.preparation_receipt.is_none()&&self.retirement_receipt.is_none()&&self.history_command_receipt.is_none(){self.tool_run_receipt=app.take_tool_run_receipt();}
     }
-    /// 🧾️ Binds what one publication window posted straight into its recipient to the one family receipt it served; a window with no pending receipt owes no receiving, so control-metadata claims such as the command-scope lease stay direct and uncounted here. See `ops/🧪️tests/🦀️.rs`.
+    /// 🧾️ Binds what one publication window posted straight into its recipient to the one family receipt it served; a History receipt is its own producer's progress (sources closed, previews stepped), never what the window posted, so it binds nothing; a window with no pending receipt owes no receiving, so control-metadata claims such as the command-scope lease stay direct and uncounted here. See `ops/🧪️tests/🦀️.rs`.
     pub(crate) fn bind_window_posting(&mut self,before:RetainedCloneProgress,after:RetainedCloneProgress,reserved:RetainedCloneProgress,grant:semio_framework_value::RetainedCloneGrant,recipient:usize)->Result<(),semio_framework_value::ValueError>{
         if !self.ownership_receipt_pending(){return Ok(())}
+        if self.original_receipt_family()==Some(OriginalPublicationFamily::History){return Ok(())}
         // Redeemed returns use their own reservation. The physical recipient records
         // both payments, while the publication family reports only its own loan.
         let before = before.checked_add(reserved)?;

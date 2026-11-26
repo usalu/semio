@@ -19,8 +19,8 @@ macro_rules! __semio_plugin_descriptor_fresh_test {
             const DESCRIPTOR_MIGRATED_PLUGINS: &[&str] = &["note", "sequence", "vcs", "forms", "sourcing", "dag", "mathematical", "writer", "reasoning", "animate", "draw", "energy", "layout"];
             match std::fs::read(expected_path) {
                 Ok(expected) => {
-                    if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::canonical_semantic_descriptor_bytes(&assembled), $crate::plugin_runtime::canonical_semantic_descriptor_bytes(&expected)) {
-                        assert_eq!(assembled, expected, "{expected_path} is stale — run `repo run workspace:components describe <plugin-id>` (📓️design-abi.md §3) and commit the refreshed 🛂️.descriptor.semio + 🔣️.json");
+                    if let Some(fault) = $crate::describe::descriptor_freshness_fault(&assembled, &expected) {
+                        panic!("{expected_path}: {fault} — run `repo run workspace:components describe <plugin-id>` (📓️design-abi.md §3) and commit the refreshed 🛂️.descriptor.semio + 🔣️.json");
                     }
                 }
                 Err(_) => {
@@ -51,8 +51,8 @@ macro_rules! __semio_extension_descriptor_fresh_test {
             const DESCRIPTOR_MIGRATED_EXTENSIONS: &[&str] = &[];
             match std::fs::read(expected_path) {
                 Ok(expected) => {
-                    if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::canonical_semantic_descriptor_bytes(&assembled), $crate::plugin_runtime::canonical_semantic_descriptor_bytes(&expected)) {
-                        assert_eq!(assembled, expected, "{expected_path} is stale — run `repo run workspace:components describe <plugin-id>` (📓️design-abi.md §3) and commit the refreshed 🛂️.descriptor.semio + 🔣️.json");
+                    if let Some(fault) = $crate::describe::descriptor_freshness_fault(&assembled, &expected) {
+                        panic!("{expected_path}: {fault} — run `repo run workspace:components describe <plugin-id>` (📓️design-abi.md §3) and commit the refreshed 🛂️.descriptor.semio + 🔣️.json");
                     }
                 }
                 Err(_) => {

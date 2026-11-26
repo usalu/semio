@@ -14,12 +14,6 @@ pub(super) fn inference_run_payload_bytes(arguments: &serde_json::Value) -> Vec<
     }
 }
 
-/// 🔎️ The guest's result bytes, projected for the tool reply: a UTF-8 JSON body becomes structured
-/// `payload`, anything else is reported by length alone rather than guessed at.
-pub(super) fn inference_run_result_value(payload: &[u8]) -> Option<serde_json::Value> {
-    std::str::from_utf8(payload).ok().and_then(|text| serde_json::from_str(text).ok())
-}
-
 /// 📜️ The published contract check, BEFORE a single guest is touched. Three named refusals, each [Design notes](README.md#source-notes-23).
 pub(crate) fn validate_inference_request(item: &DeclaredInference, payload: Option<&serde_json::Value>, artifact_id: Option<&str>) -> Result<(), GatewayError> {
     let Some(contract) = item.payload.as_ref() else {

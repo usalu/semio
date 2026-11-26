@@ -193,9 +193,9 @@ export async function vortexCount(container: Locator): Promise<number> {
   return (await host.count()) === 0 ? 0 : jsonArrayLength(await host.first().getAttribute("data-vortices-json"));
 }
 
-/** ↩️ Undo or redo through the pane's keyboard route after focusing its scene canvas. */
+/** ↩️ Undo or redo through the pane's keyboard route after activating its window. */
 export async function historyGesture(page: Page, container: Locator, direction: "undo" | "redo"): Promise<void> {
-  await container.locator("canvas").first().click({ position: { x: 8, y: 8 } });
+  await container.click();
   await page.keyboard.press(direction === "undo" ? "ControlOrMeta+z" : "ControlOrMeta+Shift+z");
 }
 //#endregion 🪟️Surfaces
@@ -220,16 +220,6 @@ export async function openPaneTab(page: Page, paneId: string, categoryId: string
 export async function openWindowOptions(page: Page, paneId: string, windowId: string): Promise<void> {
   const unfold = page.locator(paneElementSelector(paneId, `${windowElementId(windowId)}.measures.unfold`));
   if (await unfold.first().isVisible().catch(() => false)) await unfold.first().click();
-}
-
-/** 🪪️ The newest framework tool-run group id rendered in a pane, `""` while none exists. */
-export async function latestToolRunGroup(page: Page, paneId: string): Promise<string> {
-  return page.locator(`[data-shell-id="${paneId}"] [id], [data-shell-id="${paneId}"] [data-element-alias]`).evaluateAll((elements) => {
-    const runs = elements.flatMap((element) => [element.id, ...(element.getAttribute("data-element-alias") ?? "").split(/\s+/)])
-      .flatMap((id) => /^framework\.toolRun\.(\d+)(?:\.|$)/.exec(id)?.[1] ?? []);
-    const latest = runs.reduce((highest, run) => BigInt(run) > BigInt(highest) ? run : highest, "0");
-    return runs.length ? `framework.toolRun.${latest}` : "";
-  });
 }
 
 /** 🔽️ Picks one option of a window-measure or staged-argument select by its `data-value`. */

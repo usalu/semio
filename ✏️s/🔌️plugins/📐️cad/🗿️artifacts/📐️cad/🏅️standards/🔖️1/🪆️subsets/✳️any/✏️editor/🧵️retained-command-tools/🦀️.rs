@@ -5,6 +5,10 @@ use semio_s_artifact_cad_cad_kit::CAD_INTERACTION_DOMAIN;
 use semio_s_artifact_cad_cad_kit::CadInteractionSnapshot;
 use semio_s_artifact_cad_cad_modes::windows::config::addressed;
 
+#[path = "➕️add-object/🦀️.rs"]
+mod add_object_work;
+pub(super) use add_object_work::CadAddObjectWork;
+
 //#region 🔖️PlayApp
 //#region 🧵️RetainedCommands
 // 🤝️ `engagementSubmit`/`engagementPossibleSelect`/`worldPointerDown` are admitted against the document like every object
@@ -137,7 +141,7 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
 /// send: [`cad_retained_raw_bytes`] is what the payload reserves and what the wire factory refuses
 /// past, per tool id.
 pub(super) fn cad_retained_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, 64, CAD_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
+    ToolExecutionContract::resumable(semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, 64, 16, 16_384, 7_500, 64, 1)
 }
 
 /// 📏️ The raw-wire ceiling one retained tool id is admitted against — the twin of its registered

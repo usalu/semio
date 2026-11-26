@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {
+      "crate": "rooted",
+      "leaksRoot": true,
+      "checkoutOrder": ["first", "second", "first"],
+      "expected": ["miss", "miss", "local-hit"]
+    },
+    {
+      "crate": "portable",
+      "leaksRoot": false,
+      "checkoutOrder": ["first", "second", "first"],
+      "expected": ["miss", "local-hit", "local-hit"]
+    }
+  ]
+}

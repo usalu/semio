@@ -105,16 +105,11 @@ fn declared_outcome_holds() {
     assert_eq!(declared_path, message.target, "the declared path must match the emitted target");
 }
 
-/// ↩️ `create-tile`'s inverse is PAYLOAD-derived — a `delete-tile` of the id it was asked to create,
-/// produced even here where the create was refused as a duplicate.
+/// ↩️ A refused create leaves the existing tile outside undo history.
 #[test]
-fn inverse_is_a_delete_of_the_requested_id_even_when_refused() {
+fn a_duplicate_create_has_an_empty_inverse() {
     let inverse = inverse_presentation_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
-    assert_eq!(inverse.len(), 1, "create-tile always undoes with exactly one step, got {inverse:?}");
-    let PresentationMutation::DeleteTile(undo) = &inverse[0] else {
-        panic!("create-tile's inverse must be a delete-tile, got {:?}", inverse[0]);
-    };
-    assert_eq!(undo.id, "t-hero", "the inverse deletes exactly the id the payload carried");
+    assert!(inverse.is_empty(), "undo must preserve the existing tile");
 }
 
 /// 🪪️ The fixture is bound to `create-tile`'s own descriptor and its `tiles`-scoped address.
@@ -125,8 +120,9 @@ fn semantics_bind_this_fixture_to_create_tile() {
     assert_eq!(<PresentationMutation as protocol::SemanticMutation<PresentationSnapshot>>::target(&mutation()), vec!["tiles".to_string(), "t-hero".to_string()], "create-tile addresses the collection then the new tile id");
 }
 
-/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
 #[semio_framework_async_macros::async_test]
-async fn inverse_diffs_sum_to_the_negative_diff() {
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+async fn duplicate_create_obeys_the_fatal_outcome_law() {
+    let outcome = <PresentationMutation as protocol::ColdMutation<PresentationSnapshot>>::diff(&mutation(), &before());
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
 }

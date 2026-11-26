@@ -81,7 +81,7 @@ fn push_kind_copies(instances: &mut Vec<semio_framework_value::DslValue>, kind: 
 }
 
 /// 🧊️ The grid scene: every curated row laid out as instances that stand for their kind in the `rows` interaction domain, so a pick, a marquee or a hover selects the kind and the selected kinds draw highlighted.
-pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, window: &GridWindowConfig, selected_ids: &[String], locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, window: &GridWindowConfig, selected_ids: &[String], hovered_id: Option<&str>, locale: semio_plugin::Locale) -> UiAssemblyResult<BuiltNode> {
     let rows = curated_grid_rows(document, cfg);
     let display = window.instance_display.as_str();
     let mut meshes = Vec::new();
@@ -114,7 +114,7 @@ pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, window:
         world3d_default_camera(),
         semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(meshes)),
         semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(instances)),
-        world3d_selection_json("rectangle", selected_ids, None),
+        world3d_selection_json("rectangle", selected_ids, hovered_id),
         &WorldSunConfig::default(),
     );
     scene.domain_id = Some(SOURCING_ROWS_DOMAIN.into());

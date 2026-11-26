@@ -5,5 +5,12 @@ use crate::insert_accidental::InsertAccidental;
 use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 
 pub fn inverse<Op>(payload: &RemoveAccidental, base: &En1990Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::insert_accidental::InsertAccidental> {
-    Ok(base.accidentals.get(payload.index).map(|item| vec![Op::from(InsertAccidental { index: Some(payload.index), item: item.clone() })]).unwrap_or_default())
+    Ok(match previous(payload, base) {
+        Some(inverse) => vec![Op::from(inverse)],
+        None => Vec::new(),
+    })
+}
+
+fn previous(payload: &RemoveAccidental, base: &En1990Snapshot) -> Option<crate::insert_accidental::InsertAccidental> {
+    base.accidentals.get(payload.index).map(|item| InsertAccidental { index: Some(payload.index), item: item.clone() })
 }

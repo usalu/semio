@@ -17,8 +17,8 @@ export type CompileUnitsDecisionV1=Readonly<{preferred:number;minimum:number;rea
 
 /** 🛰️ Why a build is sized below every idle fleet slot: no fleet known, the authored cap, the memory the light remote jobs may hold here or raised memory pressure. */
 export type FleetJobsReasonV1="fleet-local-only"|"fleet-all"|"fleet-cap"|"fleet-memory"|"fleet-pressure";
-/** 🌐️ What one fleet-sized plan reads: the cores this machine granted (`local`), the idle worker slots of the same platform and toolchain the scheduler reports (`fleetIdle`, `null` when no fleet answers) and the live memory facts of this machine. */
-export type FleetJobsHostV1=Readonly<{local:number;fleetIdle:number|null;availableMegabytes:number|null;pressure:"normal"|"warn"|"critical"|null;unitMegabytes:number}>;
+/** 🌐️ What one fleet-sized plan reads: the cores this machine granted (`local`), the idle worker slots of the same platform and toolchain the scheduler reports (`fleetIdle`, `null` when no fleet answers) and the local host and reservation memory budgets. */
+export type FleetJobsHostV1=Readonly<{local:number;fleetIdle:number|null;grantedMegabytes:number|null;availableMegabytes:number|null;pressure:"normal"|"warn"|"critical"|null;unitMegabytes:number}>;
 /** 🎟️ The planned jobs of one build: `jobs` is cargo's `-j` (`local` + `remote`), `local` the compile slots and CPU/memory grant of this machine, `remote` the light jobs that only ship inputs and wait for a worker. */
 export type FleetJobsDecisionV1=Readonly<{jobs:number;local:number;remote:number;reason:FleetJobsReasonV1}>;
 
@@ -73,7 +73,7 @@ export function planCompileUnitsV1(hostValue:CompileUnitsHostV1,intentValue:Comp
  return Object.freeze(requireDefinition<CompileUnitsDecisionV1>("Decision",{preferred:units,minimum:Math.max(1,Math.ceil(units*policy.minimumShareBasisPoints/10000)),reason,budgetMegabytes:host.grantedMegabytes===null?null:Math.max(1,host.grantedMegabytes,units*host.unitMegabytes)}));
 }
 
-/** 🛰️ Sizes the jobs of one build to the fleet: the local grant plus the idle fleet slots, bounded by the authored cap (`fleetJobsMaximum`) and by the memory the light remote jobs (`lightUnitMegabytes` each, the wait and the input shipping, not a compile) may hold here beside the local compiles; none under critical memory pressure. Raised pressure takes nothing off the remote share: a waiting remote job is one idle wrapper process (`lightUnitMegabytes`, measured in the policy), so the memory term alone bounds it. Chosen once at the start of a build (cargo's jobserver cannot change its size while it runs); the wrapper places each unit, so a fleet that shrinks later only makes remote units compile here or wait.
+/** 🛰️ Sizes the jobs of one build to the fleet: the local grant plus the idle fleet slots, bounded by the authored cap (`fleetJobsMaximum`) and by the memory the light remote jobs (`lightUnitMegabytes` each, the wait and the input shipping, not a compile) may hold here beside the local compiles; none under critical memory pressure. Raised pressure takes nothing off the remote share: a waiting remote job is one idle wrapper process (`lightUnitMegabytes`, measured in the policy), so both host headroom and the enclosing reservation must carry it alongside local compiles. Chosen once at the start of a build (cargo's jobserver cannot change its size while it runs); the wrapper places each unit, so a fleet that shrinks later only makes remote units compile here or wait.
  * @see ./🧬️schema/🔣️.json
  * @see ./🧪️tests/🛰️fleet-jobs/🐍️oracle/🐍️.py */
 export function planFleetJobsV1(hostValue:FleetJobsHostV1):FleetJobsDecisionV1{
@@ -83,6 +83,7 @@ export function planFleetJobsV1(hostValue:FleetJobsHostV1):FleetJobsDecisionV1{
  const limit=(value:number,why:FleetJobsReasonV1)=>{if(value<remote){remote=Math.max(0,value);reason=why;}};
  limit(Math.max(0,policy.fleetJobsMaximum-host.local),"fleet-cap");
  if(host.availableMegabytes!==null)limit(Math.floor(Math.max(0,host.availableMegabytes-policy.reserveMegabytes-host.local*host.unitMegabytes)/policy.lightUnitMegabytes),"fleet-memory");
+ if(host.grantedMegabytes!==null)limit(Math.floor(Math.max(0,host.grantedMegabytes-host.local*host.unitMegabytes)/policy.lightUnitMegabytes),"fleet-memory");
  if(host.pressure==="critical")limit(0,"fleet-pressure");
  return Object.freeze(requireDefinition<FleetJobsDecisionV1>("FleetDecision",{jobs:host.local+remote,local:host.local,remote,reason}));
 }
@@ -93,9 +94,9 @@ export function compileUnitsRequestV1(decision:CompileUnitsDecisionV1):CompilerC
  return Object.freeze({kind:"available" as const,maximumParallelism:plan.preferred,minimumParallelism:plan.minimum});
 }
 
-/** 🔌️ Reads the live host facts: cores, free memory and memory pressure of the platform probe, the jobs and job memory the enclosing machine admission holds now (its grant row, so a run that grew after this process started is seen grown) and the unit footprint measured in the compiler broker's `history`. A counter that cannot be read stays `null`, no fact, no limit. */
+/** 🔌️ Reads live host counters, the compiler job budget of the enclosing grant, and the measured compiler footprint. A fixed-only orchestration grant supplies no compiler job budget. */
 export async function readCompileUnitsHostV1(options:Readonly<{environment?:Readonly<Record<string,string|undefined>>;signal?:AbortSignal;probe?:HostProbeV1;cores?:number;history?:ReadonlyMap<string,readonly Readonly<{peakRssBytes:number}>[]>}>={}):Promise<CompileUnitsHostV1>{
- const environment=options.environment??process.env,plan=readLiveHostCapacityPlanV1(environment);let counters:Awaited<ReturnType<typeof readHostCountersV1>>|undefined;
+ const environment=options.environment??process.env,carried=readLiveHostCapacityPlanV1(environment),plan=carried?.memoryMegabytes===0?undefined:carried;let counters:Awaited<ReturnType<typeof readHostCountersV1>>|undefined;
  try{
   const probe=options.probe??currentHostProbeV1(options.signal);
   counters=probe.platform==="darwin"?parseDarwinCountersV1(...await Promise.all([probe.run("vm_stat",[],probe.signal),probe.run("sysctl",["-n","vm.swapusage"],probe.signal),probe.run("sysctl",["-n","kern.memorystatus_vm_pressure_level"],probe.signal)])):await readHostCountersV1(probe);
@@ -106,7 +107,11 @@ export async function readCompileUnitsHostV1(options:Readonly<{environment?:Read
 
 /** 🚦️ Plans and requests in one step from the live host: the request the compile hands to the compiler capacity scope and the plan it logs. */
 export async function compileUnitsForHostV1(options:Readonly<{environment?:Readonly<Record<string,string|undefined>>;signal?:AbortSignal;needed?:number;probe?:HostProbeV1;cores?:number;history?:ReadonlyMap<string,readonly Readonly<{peakRssBytes:number}>[]>}>={}):Promise<Readonly<{host:CompileUnitsHostV1;decision:CompileUnitsDecisionV1;request:CompilerCapacityRequestV1}>>{
- const host=await readCompileUnitsHostV1(options),decision=planCompileUnitsV1(host,{needed:options.needed??null});
+ const environment=options.environment??process.env;
+ const limit=Number(environment.SEMIO_COMPILER_PARALLELISM);
+ const host=await readCompileUnitsHostV1(options);
+ const needed=Number.isSafeInteger(limit)&&limit>0&&limit<host.cores?Math.min(limit,options.needed??limit):options.needed??null;
+ const decision=planCompileUnitsV1(host,{needed});
  return Object.freeze({host,decision,request:compileUnitsRequestV1(decision)});
 }
 

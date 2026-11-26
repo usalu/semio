@@ -1,6 +1,6 @@
 #[test]
 fn original_skew_box_intersect_keeps_the_certified_tool_support_and_refuses_other_overlap(){
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_framework_3d_brep_surface::Surface;
     use semio_framework_3d_brep_vector::{Pnt3,Vec3};
@@ -169,7 +169,7 @@ fn original_skew_box_intersect_keeps_the_certified_tool_support_and_refuses_othe
 
 #[test]
 fn disconnected_skew_booleans_keep_closed_original_components() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_s_spatial_kernel_semio_session::{point_dictionary, read_channel_number, read_geometry, vector_dictionary};
     let intersection: serde_json::Value = serde_json::from_str(include_str!("🔣️original-skew-box-intersection.json")).unwrap();
@@ -338,7 +338,7 @@ fn fixture_union_operands(
 
 #[test]
 fn overlapping_skew_union_keeps_a_single_original_solid(){
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_s_spatial_kernel_semio_session::{read_channel_number,read_geometry};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️original-skew-box-intersection.json")).unwrap();

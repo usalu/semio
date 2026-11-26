@@ -1,0 +1,1206 @@
+{
+  "schema": "IFC2X3",
+  "elements": {
+    "o-b-door": {
+      "Pset_DoorCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          1.8
+        ]
+      }
+    },
+    "o-g-cellar-door": {
+      "Pset_DoorCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          2.0
+        ]
+      }
+    },
+    "o-g-entry": {
+      "Pset_DoorCommon": {
+        "IsExternal": [
+          "IFCBOOLEAN",
+          true
+        ],
+        "SecurityRating": [
+          "IFCLABEL",
+          "RC2"
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          1.3
+        ]
+      }
+    },
+    "o-g-living-door": {
+      "Pset_DoorCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          2.0
+        ]
+      }
+    },
+    "o-g-patio": {
+      "Pset_DoorCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          1.1
+        ]
+      }
+    },
+    "o-g-wc-door": {
+      "Pset_DoorCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          2.0
+        ]
+      }
+    },
+    "o-u-bath-door": {
+      "Pset_DoorCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          2.0
+        ]
+      }
+    },
+    "o-u-child-door": {
+      "Pset_DoorCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          2.0
+        ]
+      }
+    },
+    "o-u-master-door": {
+      "Pset_DoorCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          2.0
+        ]
+      }
+    },
+    "rf-main": {
+      "Pset_RoofCommon": {
+        "FireRating": [
+          "IFCLABEL",
+          "RF1"
+        ],
+        "ThermalTransmittance": [
+          "IFCREAL",
+          0.12
+        ]
+      }
+    },
+    "sl-a": {
+      "Pset_SlabCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.169068596
+        ]
+      }
+    },
+    "sl-b": {
+      "Pset_SlabCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.264619835
+        ]
+      }
+    },
+    "sl-g": {
+      "Pset_SlabCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.795094883
+        ]
+      }
+    },
+    "sl-u": {
+      "Pset_SlabCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.794767648
+        ]
+      }
+    },
+    "w-a-east": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.145751582
+        ]
+      }
+    },
+    "w-a-north-1-0": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.145751582
+        ]
+      }
+    },
+    "w-a-south": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.145751582
+        ]
+      }
+    },
+    "w-a-west-1-0": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.145751582
+        ]
+      }
+    },
+    "w-b-bay": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.320060434
+        ]
+      }
+    },
+    "w-b-east-1": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.320060434
+        ]
+      }
+    },
+    "w-b-east-2": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.320060434
+        ]
+      }
+    },
+    "w-b-north": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.320060434
+        ]
+      }
+    },
+    "w-b-south": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.320060434
+        ]
+      }
+    },
+    "w-b-spine": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          2.712264151
+        ]
+      }
+    },
+    "w-b-west": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.320060434
+        ]
+      }
+    },
+    "w-g-bay": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.165523764
+        ]
+      }
+    },
+    "w-g-cross": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.644446964
+        ]
+      }
+    },
+    "w-g-east-1": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.165523764
+        ]
+      }
+    },
+    "w-g-east-2": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.165523764
+        ]
+      }
+    },
+    "w-g-north": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.165523764
+        ]
+      }
+    },
+    "w-g-south": {
+      "Pset_WallCommon": {
+        "FireRating": [
+          "IFCLABEL",
+          "REI 60"
+        ],
+        "IsExternal": [
+          "IFCBOOLEAN",
+          true
+        ],
+        "LoadBearing": [
+          "IFCBOOLEAN",
+          true
+        ],
+        "ThermalTransmittance": [
+          "IFCREAL",
+          0.18
+        ]
+      }
+    },
+    "w-g-spine": {
+      "Pset_WallCommon": {
+        "FireRating": [
+          "IFCLABEL",
+          "REI 60"
+        ],
+        "IsExternal": [
+          "IFCBOOLEAN",
+          false
+        ],
+        "LoadBearing": [
+          "IFCBOOLEAN",
+          true
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.643974241
+        ]
+      }
+    },
+    "w-g-wc": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.889453621
+        ]
+      }
+    },
+    "w-g-west": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.165523764
+        ]
+      }
+    },
+    "w-u-bath": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.889453621
+        ]
+      }
+    },
+    "w-u-bath-east": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.889453621
+        ]
+      }
+    },
+    "w-u-bay": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.165523764
+        ]
+      }
+    },
+    "w-u-bedrooms": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.889453621
+        ]
+      }
+    },
+    "w-u-east-1": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.165523764
+        ]
+      }
+    },
+    "w-u-east-2": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.165523764
+        ]
+      }
+    },
+    "w-u-north": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.165523764
+        ]
+      }
+    },
+    "w-u-south": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.165523764
+        ]
+      }
+    },
+    "w-u-spine": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.643974241
+        ]
+      }
+    },
+    "w-u-west": {
+      "Pset_WallCommon": {
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.165523764
+        ]
+      }
+    },
+    "o-b-light-n1": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.7
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          1.4
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.55
+        ]
+      }
+    },
+    "o-b-light-n2": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.7
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          1.4
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.55
+        ]
+      }
+    },
+    "o-b-light-s1": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.7
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          1.4
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.55
+        ]
+      }
+    },
+    "o-b-light-s2": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.7
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          1.4
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.55
+        ]
+      }
+    },
+    "o-b-light-w": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.7
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          1.4
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.55
+        ]
+      }
+    },
+    "o-g-bay-1": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          1.0
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-g-bay-2": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          1.0
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-g-bay-3": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          1.0
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-g-cellar-north": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          1.1
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-g-hall-west": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.95
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-g-kitchen-east": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.95
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-g-kitchen-north": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.95
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-g-living": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCREAL",
+          0.78
+        ],
+        "ThermalTransmittance": [
+          "IFCREAL",
+          0.9
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-g-wc-north": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          1.1
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-u-bath-north": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          1.1
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-u-bay-1": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          1.0
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-u-bay-2": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          1.0
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-u-bay-3": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          1.0
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-u-child-east": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.95
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-u-child-north-1": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.95
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-u-child-north-2": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.95
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-u-landing-north": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.95
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-u-landing-south": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.95
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-u-landing-west": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.75
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.95
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "o-u-master": {
+      "Pset_WindowCommon": {
+        "GlazingAreaFraction": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.85
+        ],
+        "ThermalTransmittance": [
+          "IFCTHERMALTRANSMITTANCEMEASURE",
+          0.8
+        ]
+      },
+      "Pset_DoorWindowGlazingType": {
+        "SolarHeatGainTransmittance": [
+          "IFCPOSITIVERATIOMEASURE",
+          0.5
+        ]
+      }
+    },
+    "sp-b1": {
+      "Pset_SpaceThermalRequirements": {
+        "AirConditioning": [
+          "IFCBOOLEAN",
+          false
+        ]
+      }
+    },
+    "sp-b2": {
+      "Pset_SpaceThermalRequirements": {
+        "AirConditioning": [
+          "IFCBOOLEAN",
+          false
+        ]
+      }
+    },
+    "sp-g1": {
+      "Pset_SpaceThermalRequirements": {
+        "AirConditioning": [
+          "IFCBOOLEAN",
+          false
+        ],
+        "MechanicalVentilationRate": [
+          "IFCCOUNTMEASURE",
+          0.288
+        ],
+        "SpaceTemperatureMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          291.15
+        ],
+        "SpaceTemperatureWinterMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          291.15
+        ]
+      }
+    },
+    "sp-g2": {
+      "Pset_SpaceThermalRequirements": {
+        "AirConditioning": [
+          "IFCBOOLEAN",
+          false
+        ],
+        "MechanicalVentilationRate": [
+          "IFCCOUNTMEASURE",
+          0.72
+        ],
+        "SpaceTemperatureMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          293.15
+        ],
+        "SpaceTemperatureWinterMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          293.15
+        ]
+      }
+    },
+    "sp-g3": {
+      "Pset_SpaceThermalRequirements": {
+        "AirConditioning": [
+          "IFCBOOLEAN",
+          false
+        ],
+        "MechanicalVentilationRate": [
+          "IFCCOUNTMEASURE",
+          0.288
+        ],
+        "SpaceTemperatureMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          291.15
+        ],
+        "SpaceTemperatureWinterMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          291.15
+        ]
+      }
+    },
+    "sp-g4": {
+      "Pset_SpaceThermalRequirements": {
+        "AirConditioning": [
+          "IFCBOOLEAN",
+          true
+        ],
+        "MechanicalVentilationRate": [
+          "IFCCOUNTMEASURE",
+          0.443076923
+        ],
+        "SpaceTemperatureMax": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          299.15
+        ],
+        "SpaceTemperatureMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          294.15
+        ],
+        "SpaceTemperatureSummerMax": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          299.15
+        ],
+        "SpaceTemperatureWinterMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          294.15
+        ]
+      }
+    },
+    "sp-g5": {
+      "Pset_SpaceThermalRequirements": {
+        "AirConditioning": [
+          "IFCBOOLEAN",
+          true
+        ],
+        "MechanicalVentilationRate": [
+          "IFCCOUNTMEASURE",
+          0.629508197
+        ],
+        "SpaceTemperatureMax": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          299.15
+        ],
+        "SpaceTemperatureMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          294.15
+        ],
+        "SpaceTemperatureSummerMax": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          299.15
+        ],
+        "SpaceTemperatureWinterMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          294.15
+        ]
+      }
+    },
+    "sp-u1": {
+      "Pset_SpaceThermalRequirements": {
+        "AirConditioning": [
+          "IFCBOOLEAN",
+          false
+        ],
+        "MechanicalVentilationRate": [
+          "IFCCOUNTMEASURE",
+          0.3
+        ],
+        "SpaceTemperatureMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          291.15
+        ],
+        "SpaceTemperatureWinterMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          291.15
+        ]
+      }
+    },
+    "sp-u2": {
+      "Pset_SpaceThermalRequirements": {
+        "AirConditioning": [
+          "IFCBOOLEAN",
+          false
+        ],
+        "MechanicalVentilationRate": [
+          "IFCCOUNTMEASURE",
+          0.75
+        ],
+        "SpaceTemperatureMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          297.15
+        ],
+        "SpaceTemperatureWinterMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          297.15
+        ]
+      }
+    },
+    "sp-u3": {
+      "Pset_SpaceThermalRequirements": {
+        "AirConditioning": [
+          "IFCBOOLEAN",
+          true
+        ],
+        "MechanicalVentilationRate": [
+          "IFCCOUNTMEASURE",
+          0.476724042
+        ],
+        "SpaceTemperatureMax": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          299.15
+        ],
+        "SpaceTemperatureMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          291.15
+        ],
+        "SpaceTemperatureSummerMax": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          299.15
+        ],
+        "SpaceTemperatureWinterMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          291.15
+        ]
+      }
+    },
+    "sp-u4": {
+      "Pset_SpaceThermalRequirements": {
+        "AirConditioning": [
+          "IFCBOOLEAN",
+          true
+        ],
+        "MechanicalVentilationRate": [
+          "IFCCOUNTMEASURE",
+          0.472131148
+        ],
+        "SpaceTemperatureMax": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          299.15
+        ],
+        "SpaceTemperatureMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          293.15
+        ],
+        "SpaceTemperatureSummerMax": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          299.15
+        ],
+        "SpaceTemperatureWinterMin": [
+          "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+          293.15
+        ]
+      }
+    }
+  },
+  "derived": {
+    "o-b-door": "Pset_DoorCommon.ThermalTransmittance",
+    "o-g-cellar-door": "Pset_DoorCommon.ThermalTransmittance",
+    "o-g-entry": "Pset_DoorCommon.ThermalTransmittance",
+    "o-g-living-door": "Pset_DoorCommon.ThermalTransmittance",
+    "o-g-patio": "Pset_DoorCommon.ThermalTransmittance",
+    "o-g-wc-door": "Pset_DoorCommon.ThermalTransmittance",
+    "o-u-bath-door": "Pset_DoorCommon.ThermalTransmittance",
+    "o-u-child-door": "Pset_DoorCommon.ThermalTransmittance",
+    "o-u-master-door": "Pset_DoorCommon.ThermalTransmittance",
+    "sl-a": "Pset_SlabCommon.ThermalTransmittance",
+    "sl-b": "Pset_SlabCommon.ThermalTransmittance",
+    "sl-g": "Pset_SlabCommon.ThermalTransmittance",
+    "sl-u": "Pset_SlabCommon.ThermalTransmittance",
+    "w-a-east": "Pset_WallCommon.ThermalTransmittance",
+    "w-a-north-1-0": "Pset_WallCommon.ThermalTransmittance",
+    "w-a-south": "Pset_WallCommon.ThermalTransmittance",
+    "w-a-west-1-0": "Pset_WallCommon.ThermalTransmittance",
+    "w-b-bay": "Pset_WallCommon.ThermalTransmittance",
+    "w-b-east-1": "Pset_WallCommon.ThermalTransmittance",
+    "w-b-east-2": "Pset_WallCommon.ThermalTransmittance",
+    "w-b-north": "Pset_WallCommon.ThermalTransmittance",
+    "w-b-south": "Pset_WallCommon.ThermalTransmittance",
+    "w-b-spine": "Pset_WallCommon.ThermalTransmittance",
+    "w-b-west": "Pset_WallCommon.ThermalTransmittance",
+    "w-g-bay": "Pset_WallCommon.ThermalTransmittance",
+    "w-g-cross": "Pset_WallCommon.ThermalTransmittance",
+    "w-g-east-1": "Pset_WallCommon.ThermalTransmittance",
+    "w-g-east-2": "Pset_WallCommon.ThermalTransmittance",
+    "w-g-north": "Pset_WallCommon.ThermalTransmittance",
+    "w-g-spine": "Pset_WallCommon.ThermalTransmittance",
+    "w-g-wc": "Pset_WallCommon.ThermalTransmittance",
+    "w-g-west": "Pset_WallCommon.ThermalTransmittance",
+    "w-u-bath": "Pset_WallCommon.ThermalTransmittance",
+    "w-u-bath-east": "Pset_WallCommon.ThermalTransmittance",
+    "w-u-bay": "Pset_WallCommon.ThermalTransmittance",
+    "w-u-bedrooms": "Pset_WallCommon.ThermalTransmittance",
+    "w-u-east-1": "Pset_WallCommon.ThermalTransmittance",
+    "w-u-east-2": "Pset_WallCommon.ThermalTransmittance",
+    "w-u-north": "Pset_WallCommon.ThermalTransmittance",
+    "w-u-south": "Pset_WallCommon.ThermalTransmittance",
+    "w-u-spine": "Pset_WallCommon.ThermalTransmittance",
+    "w-u-west": "Pset_WallCommon.ThermalTransmittance",
+    "o-b-light-n1": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-b-light-n2": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-b-light-s1": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-b-light-s2": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-b-light-w": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-g-bay-1": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-g-bay-2": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-g-bay-3": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-g-cellar-north": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-g-hall-west": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-g-kitchen-east": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-g-kitchen-north": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-g-living": "Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-g-wc-north": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-u-bath-north": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-u-bay-1": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-u-bay-2": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-u-bay-3": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-u-child-east": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-u-child-north-1": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-u-child-north-2": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-u-landing-north": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-u-landing-south": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-u-landing-west": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "o-u-master": "Pset_WindowCommon.ThermalTransmittance,Pset_WindowCommon.GlazingAreaFraction,Pset_DoorWindowGlazingType.SolarHeatGainTransmittance",
+    "sp-b1": "Pset_SpaceThermalRequirements.AirConditioning",
+    "sp-b2": "Pset_SpaceThermalRequirements.AirConditioning",
+    "sp-g1": "Pset_SpaceThermalRequirements.SpaceTemperatureMin,Pset_SpaceThermalRequirements.SpaceTemperatureWinterMin,Pset_SpaceThermalRequirements.AirConditioning,Pset_SpaceThermalRequirements.MechanicalVentilationRate",
+    "sp-g2": "Pset_SpaceThermalRequirements.SpaceTemperatureMin,Pset_SpaceThermalRequirements.SpaceTemperatureWinterMin,Pset_SpaceThermalRequirements.AirConditioning,Pset_SpaceThermalRequirements.MechanicalVentilationRate",
+    "sp-g3": "Pset_SpaceThermalRequirements.SpaceTemperatureMin,Pset_SpaceThermalRequirements.SpaceTemperatureWinterMin,Pset_SpaceThermalRequirements.AirConditioning,Pset_SpaceThermalRequirements.MechanicalVentilationRate",
+    "sp-g4": "Pset_SpaceThermalRequirements.SpaceTemperatureMin,Pset_SpaceThermalRequirements.SpaceTemperatureWinterMin,Pset_SpaceThermalRequirements.SpaceTemperatureMax,Pset_SpaceThermalRequirements.SpaceTemperatureSummerMax,Pset_SpaceThermalRequirements.AirConditioning,Pset_SpaceThermalRequirements.MechanicalVentilationRate",
+    "sp-g5": "Pset_SpaceThermalRequirements.SpaceTemperatureMin,Pset_SpaceThermalRequirements.SpaceTemperatureWinterMin,Pset_SpaceThermalRequirements.SpaceTemperatureMax,Pset_SpaceThermalRequirements.SpaceTemperatureSummerMax,Pset_SpaceThermalRequirements.AirConditioning,Pset_SpaceThermalRequirements.MechanicalVentilationRate",
+    "sp-u1": "Pset_SpaceThermalRequirements.SpaceTemperatureMin,Pset_SpaceThermalRequirements.SpaceTemperatureWinterMin,Pset_SpaceThermalRequirements.AirConditioning,Pset_SpaceThermalRequirements.MechanicalVentilationRate",
+    "sp-u2": "Pset_SpaceThermalRequirements.SpaceTemperatureMin,Pset_SpaceThermalRequirements.SpaceTemperatureWinterMin,Pset_SpaceThermalRequirements.AirConditioning,Pset_SpaceThermalRequirements.MechanicalVentilationRate",
+    "sp-u3": "Pset_SpaceThermalRequirements.SpaceTemperatureMin,Pset_SpaceThermalRequirements.SpaceTemperatureWinterMin,Pset_SpaceThermalRequirements.SpaceTemperatureMax,Pset_SpaceThermalRequirements.SpaceTemperatureSummerMax,Pset_SpaceThermalRequirements.AirConditioning,Pset_SpaceThermalRequirements.MechanicalVentilationRate",
+    "sp-u4": "Pset_SpaceThermalRequirements.SpaceTemperatureMin,Pset_SpaceThermalRequirements.SpaceTemperatureWinterMin,Pset_SpaceThermalRequirements.SpaceTemperatureMax,Pset_SpaceThermalRequirements.SpaceTemperatureSummerMax,Pset_SpaceThermalRequirements.AirConditioning,Pset_SpaceThermalRequirements.MechanicalVentilationRate"
+  },
+  "conditions": {
+    "sp-b1": "{\"occupancy\":\"Circulation\",\"occupancy_density\":0.01,\"lighting_power_density\":2.0,\"schedule\":\"Residential day\"}",
+    "sp-b2": "{\"occupancy\":\"Storage\",\"occupancy_density\":0.01,\"lighting_power_density\":3.0,\"schedule\":\"Residential day\"}",
+    "sp-g1": "{\"occupancy\":\"Circulation\",\"occupancy_density\":0.02,\"heating_setpoint\":18.0,\"ventilation_rate\":0.2,\"lighting_power_density\":4.0,\"equipment_power_density\":1.0,\"schedule\":\"Residential day\"}",
+    "sp-g2": "{\"occupancy\":\"Sanitary\",\"occupancy_density\":0.02,\"heating_setpoint\":20.0,\"ventilation_rate\":0.5,\"lighting_power_density\":5.0,\"equipment_power_density\":1.0,\"schedule\":\"Residential day\"}",
+    "sp-g3": "{\"occupancy\":\"Circulation\",\"occupancy_density\":0.02,\"heating_setpoint\":18.0,\"ventilation_rate\":0.2,\"lighting_power_density\":4.0,\"equipment_power_density\":1.0,\"schedule\":\"Residential day\"}",
+    "sp-g4": "{\"occupancy\":\"Living\",\"occupancy_density\":0.05,\"heating_setpoint\":21.0,\"cooling_setpoint\":26.0,\"ventilation_rate\":0.3,\"lighting_power_density\":6.0,\"equipment_power_density\":4.0,\"schedule\":\"Residential day\"}",
+    "sp-g5": "{\"occupancy\":\"Kitchen\",\"occupancy_density\":0.05,\"heating_setpoint\":21.0,\"cooling_setpoint\":26.0,\"ventilation_rate\":0.4,\"lighting_power_density\":6.0,\"equipment_power_density\":8.0,\"schedule\":\"Residential day\"}",
+    "sp-u1": "{\"occupancy\":\"Circulation\",\"occupancy_density\":0.02,\"heating_setpoint\":18.0,\"ventilation_rate\":0.2,\"lighting_power_density\":4.0,\"equipment_power_density\":1.0,\"schedule\":\"Residential night\"}",
+    "sp-u2": "{\"occupancy\":\"Sanitary\",\"occupancy_density\":0.02,\"heating_setpoint\":24.0,\"ventilation_rate\":0.5,\"lighting_power_density\":5.0,\"equipment_power_density\":2.0,\"schedule\":\"Residential night\"}",
+    "sp-u3": "{\"occupancy\":\"Sleeping\",\"occupancy_density\":0.03,\"heating_setpoint\":18.0,\"cooling_setpoint\":26.0,\"ventilation_rate\":0.3,\"lighting_power_density\":4.0,\"equipment_power_density\":2.0,\"schedule\":\"Residential night\"}",
+    "sp-u4": "{\"occupancy\":\"Sleeping\",\"occupancy_density\":0.03,\"heating_setpoint\":20.0,\"cooling_setpoint\":26.0,\"ventilation_rate\":0.3,\"lighting_power_density\":4.0,\"equipment_power_density\":2.0,\"schedule\":\"Residential night\"}"
+  },
+  "types": {
+    "wn-bay": {
+      "UValue": 1.0,
+      "GValue": 0.5,
+      "FrameFraction": 0.25
+    },
+    "wn-casement": {
+      "UValue": 0.95,
+      "GValue": 0.5,
+      "FrameFraction": 0.25
+    },
+    "wn-cellar": {
+      "UValue": 1.4,
+      "GValue": 0.55,
+      "FrameFraction": 0.3
+    },
+    "wn-picture": {
+      "UValue": 0.8,
+      "GValue": 0.5,
+      "FrameFraction": 0.15
+    },
+    "wn-wc": {
+      "UValue": 1.1,
+      "GValue": 0.5,
+      "FrameFraction": 0.25
+    },
+    "dr-cellar": {
+      "UValue": 1.8
+    },
+    "dr-entry": {
+      "UValue": 1.3
+    },
+    "dr-int-80": {
+      "UValue": 2.0
+    },
+    "dr-int-90": {
+      "UValue": 2.0
+    },
+    "dr-patio": {
+      "UValue": 1.1
+    }
+  }
+}

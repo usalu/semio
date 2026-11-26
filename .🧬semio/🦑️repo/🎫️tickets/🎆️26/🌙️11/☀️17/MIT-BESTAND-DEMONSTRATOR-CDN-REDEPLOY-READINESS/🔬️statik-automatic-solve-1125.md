@@ -1,0 +1,9 @@
+# Statik Automatic Solve on the Compact Candidate
+
+The English interaction run reached the ready Statik shell and displayed Concrete Forest, the Model, and the Results window. The Results caption stayed at “Analysis queued” for all 60 seconds allocated to the initial solve by the unchanged acceptance test. The canvas alone does not prove a solved or current result.
+
+The compact site’s compressed FEM core inflates to exactly 91,802,095 bytes with SHA-256 `90345f9e9be2050eea3ffb11cb8b82f5a685317a16d25624429d37acd88e4e2c`, matching the November 20 staged core. The compact site and staged directory share the same receipt, bridge and shim. The receipt’s raw WASI component hash is `4f2ba087d7f711333c4fad8e1efd273ea5fd1821499196d4c67c9b7c4d2b2efa`. The compact module JavaScript differs because it fetches and decodes the compressed core.
+
+The caption is the fallback for `result_stage == None`. It indicates that the Results consumer has no readable current mounted stage, which can occur before a request owner or fresh solve is bound. The November 21 DEV-FEM-3D-END-TO-END Results delivery audit documents an identical queued state lasting ten minutes on its pre-fix guest. It identifies the source-preparation continuation as the first correction to check in a fresh build. The local framework snapshot-preparation owner and FEM 3D session were edited November 24 and the FEM app entry November 25. The latest Windows FEM work is active in a separate ticket, and its current module is not staged locally.
+
+The next verification owner is the fresh managed `fem` browser release. Capture its source and receipt, then probe a current Static Results caption and the official undo/redo interaction under both locales. Resource scheduling places it after the current Procedural and Demonstrator work and preserves the active compact browser run. No production sources were changed on the evidence of the old guest.

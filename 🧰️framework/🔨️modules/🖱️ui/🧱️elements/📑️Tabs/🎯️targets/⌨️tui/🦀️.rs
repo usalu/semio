@@ -6,7 +6,7 @@ use semio_ui_tui_core::cell::{attr, Cell, CellBuffer};
 use semio_ui_tui_core::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
 use semio_ui_tui_core::geometry::{Pos, Rect};
 use semio_ui_tui_core::text::display_width;
-use semio_ui_tui_core::theme::{Role, Surface, Theme};
+use semio_ui_tui_core::theme::{Role, Theme};
 use crate::widget::TabsState;
 use semio_ui_tui_core::signal::WidgetSignal;
 
@@ -75,7 +75,7 @@ pub fn tabs_set_hover(t: &mut TabsState, rect: Rect, pos: Option<Pos>) -> bool {
 }
 
 pub fn paint_tabs(t: &TabsState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
-    let bg = theme.surface(Surface::Panel);
+    let bg = buf.owner_background();
     buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), bg));
     for (i, (tab, span)) in t.tabs.iter().zip(tab_spans(t, rect)).enumerate() {
         let (fg, tab_bg, attrs) = if i == t.active {

@@ -8,6 +8,33 @@
     "windowInstanceId": "procedural-preview"
   },
   "appCommandIds": ["setActiveExample", "setContributions", "nodeGraphEdit"],
+  "commandResponse": {
+    "action": "nodeGraphEdit",
+    "args": { "operationsJson": "[{\"operation\":\"setSlider\",\"widgetId\":\"height\",\"value\":8}]" },
+    "response": {
+      "output": { "interactionView": { "windowId": "procedural-preview", "selectedIds": ["height"], "gumball": { "active": false } } },
+      "mutations": [],
+      "inverseGroup": { "invocationId": "nodeGraphEdit:8", "mutations": [], "inverseMutations": [] },
+      "historyPatch": {
+        "cursor": 8,
+        "canUndo": true,
+        "canRedo": false,
+        "upserts": [{
+          "seq": 8,
+          "editId": "edit-8",
+          "actionId": "nodeGraphEdit",
+          "label": { "native": { "en": "Edit graph", "de": "Graph bearbeiten" }, "reuse": { "en": "Edit graph", "de": "Graph bearbeiten" } },
+          "kind": "mutation",
+          "timestamp": "2026-11-25T20:00:00Z",
+          "opCount": 1,
+          "applied": true,
+          "revertible": true
+        }]
+      },
+      "uiScope": { "kind": "none" },
+      "requestedEffects": ["requestSync"]
+    }
+  },
   "cases": [
     {
       "why": "A declared app command keeps the typed command channel it was declared on.",

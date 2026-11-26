@@ -231,42 +231,28 @@ pub fn canvas_surface(surface_id: &str, viewport: store::Viewport2d, framing: Op
 }
 //#endregion 🔖️CanvasRecords
 
-//#region 🔖️WindowConfig
-/// 🎚️ Declares the persisted-local state of one window kind from its field table: the record with its default, then the shared `crate::bim_window_config!` for the codecs, the
-/// sparse diff, the `Replace` mutation and the `WindowConfigOwner` with `current`, `from_snapshot` and `addressed`, and the owner's `register`.
-macro_rules! window_config {
-    (
-        window: $window:expr,
-        schema: $schema:literal,
-        envelope: $envelope:literal,
-        extension: $extension:literal,
-        owner_path: $owner_path:literal,
-        display: $display:literal,
-        type $Config:ident, $Diff:ident, $Mutation:ident, $Owner:ident;
-        $( $(#[$attr:meta])* $field:ident : $ty:ty = $default:expr; )+
-    ) => {
-        #[derive(semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact)]
-        #[canonical_json(owner = semio_framework_pack_json)]
-        #[value(rename_all = "camelCase", deny_unknown_fields)]
-        #[dsl(layout = "lines")]
-        #[artifact(id = $envelope, extension = $extension)]
-        pub struct $Config {
-            $( $(#[$attr])* pub $field: $ty, )+
-        }
+pub use semio_s_artifact_bim_model_window_config::{OptionSelection, WorksetVisibility};
+pub(crate) use semio_s_artifact_bim_model_window_config::window_config;
 
-        impl Default for $Config {
-            fn default() -> Self {
-                Self { $( $field: $default, )+ }
-            }
-        }
-
-        crate::bim_window_config! { config: $Config, diff: $Diff, mutation: $Mutation, owner: $Owner, window: $window, schema: $schema, owner_path: $owner_path, display: $display, bytes: 4_096, fields: { $($field: $ty),+ } }
-
-        pub fn register(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_plugin::Fault> {
-            registry.register::<$Owner>()
-        }
-    };
+/// 🎚️ The selected option for one group in a window.
+pub fn selected_option<'a>(selections: &'a [OptionSelection], group: &str) -> Option<&'a str> {
+    selections.iter().find(|selection| selection.group == group).map(|selection| selection.option.as_str())
 }
 
-pub(crate) use window_config;
-//#endregion 🔖️WindowConfig
+/// 🪟️ The local visibility override of one workset.
+pub fn workset_visibility(overrides: &[WorksetVisibility], workset: &str) -> Option<bool> {
+    overrides.iter().find(|entry| entry.workset == workset).map(|entry| entry.visible)
+}
+
+/// 🧭️ Whether an element and its host are visible under the window's local choices.
+pub fn visible_in_options(inference: &semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference, id: &str, selections: &[OptionSelection], overrides: &[WorksetVisibility]) -> bool {
+    let scope = &inference.option_scope;
+    let accepts = |id: &str| {
+        scope.effective_options.get(id).is_none_or(|option| scope.groups.get(option).is_some_and(|group| {
+            selected_option(selections, group).or_else(|| scope.defaults.get(group).map(String::as_str)) == Some(option.as_str())
+        })) && scope.effective_worksets.get(id).is_none_or(|workset| {
+            workset_visibility(overrides, workset).unwrap_or_else(|| !scope.hidden_worksets.contains(workset))
+        })
+    };
+    accepts(id) && scope.hosts.get(id).is_none_or(|parent| accepts(parent))
+}

@@ -9,6 +9,8 @@ macro_rules! id_newtype {
         #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
         pub struct $name(pub u32);
 
+        semio_framework_value::artifact_retire_leaf!($name);
+
         impl $name {
             $(id_newtype!(@method $method, $scope);)*
         }

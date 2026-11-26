@@ -12,7 +12,7 @@ import { settleOwnedChildV1 } from "../../🎛️owned-execution/🏁️settleme
 import { estimateHostRatioV1, hostCapacityDirectoryV1, hostClassBoundV1, hostFloorMegabytesV1, hostLearnCeilingV1, learnableHostRunV1, newHostCapacityIdV1, rampHostRequestV1, readHostEstimateStoreV1, recordHostOutcomeV1, scaleHostRequestV1, sizeHostRequestV1, updateHostEstimateStoreV1, withHostCapacityV1, type HostActionKindV1, type HostCapacityPolicyV1, type HostCapacityPortsV1, type HostRunV1 } from "../../🏗️build/🌡️host-capacity/🟦️.ts";
 import { hostProfileV1 } from "../../🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts";
 import { CARGO_GRANT_POLICY_V1, capCargoGrantJobsV1, cargoGrantEnvironmentV1, cargoGrantJobsV1, cargoGrantLineageV1 } from "../../🏗️build/🌡️host-capacity/🦀️cargo-grant/🟦️.ts";
-import { findToolV1, toolCallerAllowedV1, toolLanguageV1, toolMessageV1, TOOL_REGISTRY_V1, type ToolEntryV1, type ToolRegistryV1 } from "../📖️registry/🟦️.ts";
+import { findToolV1, toolCommandNameV1, toolForCommandV1, toolCallerAllowedV1, toolLanguageV1, toolMessageV1, TOOL_REGISTRY_V1, type ToolEntryV1, type ToolRegistryV1 } from "../📖️registry/🟦️.ts";
 import { resolveToolV1, systemToolHostV1, toolRootV1, type ToolHostV1, type ToolResolutionV1 } from "../🔎️resolve/🟦️.ts";
 import { toolEnvironmentV1 } from "../🌿️environment/🟦️.ts";
 
@@ -175,13 +175,29 @@ const capture = (command: string, args: readonly string[], cwd: string, environm
   });
 });
 
+function rustupCommandOffset(args: readonly string[]): number {
+  let index = 0;
+  while (["-v", "--verbose", "-q", "--quiet"].includes(args[index] ?? "")) index++;
+  if (args[index++] !== "run") return -1;
+  while (args[index] === "--install" || args[index] === "--") index++;
+  if (!args[index++] || index >= args.length) return -1;
+  while (args[index] === "--install" || args[index] === "--") index++;
+  return index < args.length ? index : -1;
+}
+
 /** 🏃️ Runs a registered tool: checks the declared caller (`caller: import.meta.url`; the static law reads the call sites, because a stack cannot attribute tail calls) against the registry, finds the executable, builds the sanitized environment, waits for machine capacity when the tool is heavy, and runs it with progress and process-tree cancellation. A failed run throws unless `check: false`; `capture: true` returns the output instead of forwarding it. */
 export async function runToolV1(toolId: string, args: readonly string[], options: ToolRunOptionsV1 = {}): Promise<ToolRunResultV1> {
   const { entry, registry, language, resolution, environment, cwd } = prepare(toolId, options);
   const started = performance.now(), label = options.label ?? entry.id, command = resolution.command!, fullArguments = [...resolution.prefix, ...args, ...resolution.suffix ?? []];
-  const requested = (options.command ?? entry.commands[0]!).replace(/\\/gu, "/").split("/").pop()!.replace(/\.(?:exe|cmd|bat)$/iu, ""), capacity = entry.capacity.rules?.find(rule => rule.command === requested && rule.argumentsPrefix.every((value, index) => args[index] === value)) ?? entry.capacity;
+  const requested = toolCommandNameV1(options.command ?? entry.commands[0]!);
+  const offset = requested === "rustup" ? rustupCommandOffset(args) : -1;
+  const delegated = offset >= 0 && args[offset] ? toolForCommandV1(args[offset]!, registry) : undefined;
+  const owner = delegated ?? entry;
+  const commandName = delegated ? toolCommandNameV1(args[offset]!) : requested;
+  const commandArgs = delegated ? args.slice(offset + 1) : args;
+  const capacity = owner.capacity.rules?.find(rule => rule.command === commandName && rule.argumentsPrefix.every((value, index) => commandArgs[index] === value)) ?? owner.capacity;
   const emit = (event: Omit<ToolProgressV1, "tool" | "elapsedMs">): void => options.onProgress?.({ tool: entry.id, elapsedMs: Math.round(performance.now() - started), ...event });
-  const admit = options.admission === false || entry.capacity.mode === "none" || entry.capacity.mode === "inherit" && options.heavy !== true ? undefined : options.admission ?? defaultAdmission;
+  const admit = options.admission === false || owner.capacity.mode === "none" || owner.capacity.mode === "inherit" && options.heavy !== true ? undefined : options.admission ?? defaultAdmission;
   const execute = async (granted: Readonly<Record<string, string>>, invoked: readonly string[] = fullArguments): Promise<ToolRunResultV1> => {
     const childEnvironment = { ...environment, ...granted };
     emit({ phase: "running" });
@@ -207,8 +223,12 @@ export async function runToolV1(toolId: string, args: readonly string[], options
   };
   if (admit === undefined) return execute({});
   emit({ phase: "admitting" });
-  const cargo = requested === "cargo" && capacity.operation === CARGO_GRANT_POLICY_V1.operation;
-  return admit({ tool: entry.id, operation: capacity.operation ?? "command", kind: capacity.kind, label, ...cargo ? { arguments: args, cwd } : {} }, grant => execute(grant.environment, cargo ? capCargoGrantJobsV1(fullArguments, grant.jobs) : fullArguments), options.signal);
+  const cargo = commandName === "cargo" && capacity.operation === CARGO_GRANT_POLICY_V1.operation;
+  return admit({ tool: owner.id, operation: capacity.operation ?? "command", kind: capacity.kind, label, ...cargo ? { arguments: commandArgs, cwd } : {} }, grant => {
+    if (!cargo) return execute(grant.environment, fullArguments);
+    const prefix = delegated ? args.slice(0, offset + 1) : [];
+    return execute(grant.environment, [...resolution.prefix, ...prefix, ...capCargoGrantJobsV1(commandArgs, grant.jobs), ...resolution.suffix ?? []]);
+  }, options.signal);
 }
 
 /** ⏱️ What a finished synchronous tool run left behind: Node's `spawnSync` result plus the resolution; `stdout` and `stderr` are strings under a text `encoding` and buffers otherwise. */

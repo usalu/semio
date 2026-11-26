@@ -59,6 +59,9 @@ use semio_s_artifact_draw_drawing_transform::update_layer_transform::mutation::U
 /// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
 const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
 
+/// ⛽️ Funds one bounded native field page for comparisons, controlled copies and retirement.
+const MUTATION_STEP_FUEL: u64 = DRAWING_OWNED_FIELD_BYTES as u64;
+
 #[path = "🧬️snapshot-laws/🦀️.rs"]
 mod snapshot_laws;
 use snapshot_laws::*;

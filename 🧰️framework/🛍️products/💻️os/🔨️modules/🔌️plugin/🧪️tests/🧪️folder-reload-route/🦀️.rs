@@ -176,7 +176,8 @@ async fn route_view(app: &mut ToyApp) -> RouteView {
         })
         .collect();
     let envelope = app.stores.store.envelope();
-    let alternatives: Vec<String> = envelope.vcs.alternatives.iter().map(|alternative| alternative.name.clone()).collect();
+    let named: Vec<String> = envelope.vcs.alternatives.iter().map(|alternative| alternative.name.clone()).collect();
+    let alternatives = if named.is_empty() { named } else { std::iter::once(String::new()).chain(named).collect() };
     let line = patch.active_alternative_id.as_deref().and_then(|active| envelope.vcs.alternatives.iter().find(|alternative| alternative.id == active)).map(|alternative| alternative.name.clone()).unwrap_or_default();
     RouteView { head: head(app), line, alternatives, rows }
 }
@@ -371,8 +372,8 @@ async fn merge_through_the_host(app: &mut ToyApp, folder: &RouteFolder, cx: &mut
 }
 
 /// 🔁️ Detaches `app` from its folder and closes it, then walks the route a page reload and a re-attach take: a fresh
-/// program holding its own example document reports the same identity, binds its port (publishing nothing, so the folder
-/// is not overwritten before it is read back), has the port retired for the load, restores the folder's archive and is
+/// program holding its own example document binds its port (publishing nothing, so the folder
+/// is not overwritten before it is read back), has the port retired for the load, restores the folder's archive, which restores the remembered document identity, and is
 /// bound again. Answers the fresh program and the host's end of its port.
 async fn reload_from_folder(findings: &mut RouteFindings, mut app: ToyApp, port: MemoryBackbone, folder: &RouteFolder, fixture: &Value, actor: &str, uri: &str, cx: &mut semio_framework_job::StepContext<'_>) -> (ToyApp, MemoryBackbone) {
     let identity = PluginApp::document_identity(&app).expect("a bound program holds a document");
@@ -382,7 +383,6 @@ async fn reload_from_folder(findings: &mut RouteFindings, mut app: ToyApp, port:
     close(&mut app, cx);
     let mut fresh = fresh_program(actor).await;
     author_edit(&mut fresh, &fixture["example"]).await;
-    findings.same(&PluginApp::document_identity(&fresh), &Some(identity), &format!("{actor}: a fresh program of the same app holds the document identity its folder was remembered under"));
     let mut bound = bind_document_port(&mut fresh, uri).await;
     findings.holds(bound.receive().await.expect("the fresh port drains").is_empty(), || format!("{actor}: binding the port published the fresh program's own document, which would overwrite the folder before its read-back"));
     PluginApp::detach_backbone(&mut fresh).await.expect("the host retires the port for the load");
@@ -395,6 +395,7 @@ async fn reload_from_folder(findings: &mut RouteFindings, mut app: ToyApp, port:
     let (outcome, polls) = load_through_the_host(&mut fresh, archive, cx).await;
     findings.same(&outcome, &protocol::DocumentArchiveLoadOutcome::Ready, &format!("{actor}: the folder's archive loads"));
     findings.holds(polls >= 1, || format!("{actor}: the load reached its terminal status without one poll"));
+    findings.same(&PluginApp::document_identity(&fresh), &Some(identity), &format!("{actor}: the restored program holds the document identity its folder was remembered under"));
     let mut rebound = bind_document_port(&mut fresh, uri).await;
     findings.holds(rebound.receive().await.expect("the rebound port drains").is_empty(), || format!("{actor}: binding the port after the load published the restored document again"));
     (fresh, rebound)
@@ -677,6 +678,11 @@ async fn a_cancel_at_any_point_of_a_load_restores_the_previous_document_or_is_re
             findings.same(&ended, &protocol::DocumentArchiveLoadState::Cancelled, &format!("cancel after {polls_before} polls: the cancelled load's terminal state"));
             findings.same(&head(&target), &before, &format!("cancel after {polls_before} polls: the document after the cancelled load"));
             cancelled_runs += 1;
+            author_edit(&mut target, &serde_json::json!({ "kind": "setCount", "value": 9_001 })).await;
+            findings.holds(head(&target) != before, || format!("cancel after {polls_before} polls: the cancelled program refused a further edit"));
+            maintain_turn(&mut target, cx).await.expect("a maintenance turn after the cancelled load");
+            let undone = verb(&mut target, &fixture, "undo", Vec::new(), cx).await;
+            findings.holds(rejected(&undone).is_none(), || format!("cancel after {polls_before} polls: the cancelled program refused a further action: {:?}", undone.output));
         }
         pump_until(&mut target, "the program settles", |app| !app.time_travel.has_pending_work(), cx).await;
         close(&mut target, cx);
@@ -687,6 +693,110 @@ async fn a_cancel_at_any_point_of_a_load_restores_the_previous_document_or_is_re
     close(&mut source, cx);
     let fuel=cx.fuel_remaining();drop(context);caller.retire(fuel).expect("original load caller paid retirement");
     assert!(findings.0.is_empty(), "{cancelled_runs} cancelled and {refused_runs} refused cancels depart in {} place(s):\n{}", findings.0.len(), findings.0.join("\n"));
+}
+
+/// 🔁️ One live-cleanup turn of the runtime on a renewed host turn, with the program holding its cancellation issuer.
+async fn live_turn(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<ToyApp>, cell: &std::sync::Arc<semio_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell<ToyApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
+    let refused = |failure: &dyn std::fmt::Debug| Fault::from(format!("the live cleanup turn was refused: {failure:?}"));
+    let (grant, _) = cx.original_turn_ceiling();
+    artifact_app_laws::fixture_renew_turn(cx, semio_plugin_testing_laws::OriginalFixtureCaller::turn_fuel(), grant).map_err(|failure| refused(&failure))?;
+    artifact_app_laws::ensure_fixture_cancellation_issuer(&mut cell.instance.lock().map_err(|_| refused(&"poisoned"))?.app, cx).map_err(|failure| refused(&failure))?;
+    cx.consume_fuel(1);
+    semio_plugin_runtime_instances::inst_cleanup_turns::plugin_step_live_cleanup(runtime, cx).map(|_| ()).map_err(|failure| refused(&failure))
+}
+
+/// 🧹️ Closes one runtime instance and pays its close ladder, turn by turn, until it leaves quarantine.
+async fn retire_instance(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<ToyApp>, cell: std::sync::Arc<semio_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell<ToyApp>>, id: u32, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
+    let refused = |failure: &dyn std::fmt::Debug| Fault::from(format!("the close ladder was refused: {failure:?}"));
+    drop(cell);
+    semio_plugin_runtime_instances::inst_cleanup_turns::plugin_destroy_app(runtime, id).await?;
+    for _ in 0..100_000 {
+        if !cx.is_cancelled() {
+            let (grant, _) = cx.original_turn_ceiling();
+            artifact_app_laws::fixture_renew_turn(cx, semio_plugin_testing_laws::OriginalFixtureCaller::turn_fuel(), grant).map_err(|failure| refused(&failure))?;
+        }
+        cx.consume_fuel(1);
+        semio_plugin_runtime_instances::inst_cleanup_turns::plugin_step_close_cleanup(runtime, cx).map_err(|failure| refused(&failure))?;
+        if runtime.close_quarantine.borrow().get(id).is_none() {
+            return Ok(());
+        }
+    }
+    Err(Fault::from("the closed instance never left quarantine"))
+}
+
+/// ⚖️ LAW (live fault F9, browser): cancelling a replaying whole-document load is a normal outcome. A replay cancelled through the
+/// same action the browser uses leaves the runtime instance live: no live-cleanup turn after the cancel is refused or leaves the
+/// instance faulted, the load retires cancelled over the previous document, and a further edit and action are accepted.
+#[semio_framework_async_macros::async_test]
+async fn a_cancelled_replay_leaves_the_runtime_instance_live_and_accepting_actions() {
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original runtime caller");let mut context=caller.context();let cx=&mut context;
+    let fixture = route_fixture();
+    let mut findings = RouteFindings::default();
+    let (mut source, archive) = program_with_history(24).await;
+    let mut cancelled_runs = 0usize;
+    for turns_before in [0usize, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987] {
+        let mut scan_caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original scan caller");let mut scan_context=scan_caller.context();let cx=&mut scan_context;
+        let mut app = fresh_program("author").await;
+        author_edit(&mut app, &fixture["example"]).await;
+        let before = head(&app);
+        let id = PluginApp::birth_identity(&app).expect("a registered program has its instance").0;
+        let runtime = semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<ToyApp>::new(artifact_app_laws::fixture_mounted_policy()).expect("the runtime");
+        let cell = std::sync::Arc::new(semio_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(semio_plugin_plugin_program::AppInstance { id, app, surface_contexts: Default::default() }, runtime.mounted_owner_policy()));
+        runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
+        let running = |cell: &std::sync::Arc<semio_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell<ToyApp>>| cell.instance.lock().expect("the instance").app.ingest.document_archive_loads.get(66).is_some_and(|load| !load.terminal());
+        artifact_app_laws::admit_document_archive_load(&mut cell.instance.lock().expect("the instance").app, 66, archive.clone(), cx).expect("the archive is admitted");
+        for _ in 0..turns_before {
+            live_turn(&runtime, &cell, cx).await.expect("a live cleanup turn before the cancel");
+        }
+        if !running(&cell) {
+            retire_instance(&runtime, cell, id, cx).await.expect("the instance retires through its close ladder");
+            let fuel=cx.fuel_remaining();drop(scan_context);scan_caller.retire(fuel).expect("original scan caller paid retirement");
+            break;
+        }
+        let cancelled = verb(&mut cell.instance.lock().expect("the instance").app, &fixture, semio_framework::history_edit::HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, Vec::new(), cx).await;
+        findings.holds(rejected(&cancelled).is_none(), || format!("cancel after {turns_before} live turns was refused: {:?}", cancelled.output));
+        for _ in 0..4 {
+            if let Err(fault) = live_turn(&runtime, &cell, cx).await {
+                findings.holds(false, || format!("cancel after {turns_before} live turns: a live turn right after the cancel was refused: {fault:?}"));
+            }
+        }
+        let mut turns = 0usize;
+        while running(&cell) && turns < 100_000 {
+            if let Err(fault) = live_turn(&runtime, &cell, cx).await {
+                findings.holds(false, || format!("cancel after {turns_before} live turns: live turn {turns} after the cancel was refused: {fault:?}"));
+                break;
+            }
+            turns += 1;
+        }
+        let status = semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::RuntimeMaintenanceStatus::from_repr(cell.maintenance_status.load(std::sync::atomic::Ordering::SeqCst));
+        findings.holds(!matches!(status, semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::RuntimeMaintenanceStatus::Fault(_)), || format!("cancel after {turns_before} live turns left the instance faulted: {status:?}"));
+        {
+            let mut active = cell.instance.lock().expect("the instance");
+            findings.holds(active.app.ingest.document_archive_loads.get(66).is_some_and(|load| load.terminal()), || format!("cancel after {turns_before} live turns: the cancelled load did not retire"));
+            let ended = PluginApp::poll_document_archive_load(&mut active.app, 66, &mut artifact_app_laws::fixture_identity(), cx).await.expect("the host's next poll").state;
+            findings.same(&ended, &protocol::DocumentArchiveLoadState::Cancelled, &format!("cancel after {turns_before} live turns: the terminal state"));
+            PluginApp::acknowledge_document_archive_load(&mut active.app, 66).expect("the cancelled load is acknowledged");
+            findings.same(&head(&active.app), &before, &format!("cancel after {turns_before} live turns: the document after the cancelled load"));
+        }
+        author_edit(&mut cell.instance.lock().expect("the instance").app, &serde_json::json!({ "kind": "setCount", "value": 9_001 })).await;
+        findings.holds(head(&cell.instance.lock().expect("the instance").app) != before, || format!("cancel after {turns_before} live turns: the instance refused a further edit"));
+        let undone = verb(&mut cell.instance.lock().expect("the instance").app, &fixture, "undo", Vec::new(), cx).await;
+        findings.holds(rejected(&undone).is_none(), || format!("cancel after {turns_before} live turns: the instance refused a further action: {:?}", undone.output));
+        for _ in 0..8 {
+            if let Err(fault) = live_turn(&runtime, &cell, cx).await {
+                findings.holds(false, || format!("cancel after {turns_before} live turns: a live turn after the further edit was refused: {fault:?}"));
+                break;
+            }
+        }
+        retire_instance(&runtime, cell, id, cx).await.expect("the instance retires through its close ladder");
+        cancelled_runs += 1;
+        let fuel=cx.fuel_remaining();drop(scan_context);scan_caller.retire(fuel).expect("original scan caller paid retirement");
+    }
+    findings.holds(cancelled_runs > 0, || "no cancel in the scan took effect".to_string());
+    pump_until(&mut source, "the program settles", |app| !app.time_travel.has_pending_work(), cx).await;
+    close(&mut source, cx);
+    let fuel=cx.fuel_remaining();drop(context);caller.retire(fuel).expect("original load caller paid retirement");
+    assert!(findings.0.is_empty(), "{cancelled_runs} cancelled replays depart in {} place(s):\n{}", findings.0.len(), findings.0.join("\n"));
 }
 
 /// ⚖️ LAW (live fault F7, receipts): a cancel at ANY point of a load, paid through every ladder stage it reaches, receipts each
@@ -803,33 +913,27 @@ fn hold_settled(findings: &mut RouteFindings, view: &RouteView, expected: &Value
 /// 📏️ The causal batch message payload maximum a replay may encode in one message.
 const ONE_BATCH_PAYLOAD_BYTES: usize = 262_144;
 
-/// ⚖️ LAW (replay extent): a reloaded document replays a history whose persisted payload is larger than one causal batch
+/// ⚖️ LAW (replay extent): a document replays a history whose persisted payload is larger than one causal batch
 /// message, because every replacement Store carries the app's persisted operation wire and a replay only ever encodes the
 /// few operations it touches, never the history length.
 #[semio_framework_async_macros::async_test]
-async fn a_reloaded_history_larger_than_one_batch_payload_replays_through_a_history_edit() {
+async fn a_history_larger_than_one_batch_payload_replays_through_a_history_edit() {
     let mut caller = semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original route caller");
     let mut context = caller.context();
     let cx = &mut context;
     let fixture = route_fixture();
     let mut findings = RouteFindings::default();
-    let label = "x".repeat(4000);
+    let label = "x".repeat(60_000);
     let edits = 2 * (ONE_BATCH_PAYLOAD_BYTES / label.len() + 1);
     let mut source = fresh_program("author").await;
     author_edit(&mut source, &serde_json::json!({ "kind": "setCount", "value": 100 })).await;
     for _ in 0..edits {
         author_edit(&mut source, &serde_json::json!({ "kind": "setLabel", "value": label })).await;
     }
-    for step in [serde_json::json!({ "begin": 0 }), serde_json::json!({ "input": { "path": "/value", "value": 180 } }), serde_json::json!({ "accept": null }), serde_json::json!({ "replay": "clean" }), serde_json::json!({ "finalize": null }), serde_json::json!({ "commit": { "choice": "overwrite" } })] {
+    for step in [serde_json::json!({ "begin": 0 }), serde_json::json!({ "input": { "path": "/value", "value": 180 } }), serde_json::json!({ "accept": null }), serde_json::json!({ "replay": "clean" })] {
         route_step(&mut findings, &mut source, &fixture, &step, cx).await;
     }
-    findings.same(&head(&source), &(180, label.clone()), "the replayed head");
-    let archive = PluginApp::document_archive(&source).await.expect("the program archives its replayed document");
-    let mut target = fresh_program("author").await;
-    let (loaded, _) = load_through_the_host(&mut target, archive, cx).await;
-    findings.same(&loaded, &protocol::DocumentArchiveLoadOutcome::Ready, "the load of a history beyond one batch payload");
-    findings.same(&head(&target), &head(&source), "the reloaded head");
-    for app in [&mut source, &mut target] {
+    for app in [&mut source] {
         pump_until(app, "the program settles", |app| !app.time_travel.has_pending_work(), cx).await;
         close(app, cx);
     }
@@ -878,6 +982,7 @@ async fn two_programs_on_one_folder_converge_through_an_open_history_edit() {
     for step in scenario["session"].as_array().expect("session steps") {
         route_step(&mut findings, &mut author, &fixture, step, cx).await;
     }
+    pump_until(&mut author, "the draft's preview settles", |app| !app.time_travel.has_pending_work(), cx).await;
     let preview = render_body(&mut author, cx).await;
     findings.holds(preview.contains(text(&expected["previewBody"])), || format!("the author's preview while editing reads {preview}, expected {}", expected["previewBody"]));
     let target = author.time_travel.editor().map(|editor| editor.value.clone());
@@ -894,6 +999,7 @@ async fn two_programs_on_one_folder_converge_through_an_open_history_edit() {
     let status = author.time_travel.status();
     findings.holds(status.as_ref().is_some_and(|status| serde_json::to_value(status.stage).ok() == Some(Value::from("editing"))), || format!("the author's history edit did not stay open in editing: {:?}", status.map(|status| status.stage)));
     findings.same(&author.time_travel.editor().map(|editor| editor.value.clone()), &target, "the author's draft after the read-back");
+    pump_until(&mut author, "the preview over the moved base settles", |app| !app.time_travel.has_pending_work(), cx).await;
     let preview = render_body(&mut author, cx).await;
     findings.holds(preview.contains(text(&expected["previewBody"])), || format!("the read-back changed the author's preview to {preview}, expected {}", expected["previewBody"]));
     findings.same(&pending_positions(&mut author).await, &expected["pendingWhileEditing"].as_array().expect("pending").iter().map(|position| position.as_u64().expect("position")).collect(), "the mutations listed as not applied while editing, the peer's included");

@@ -853,6 +853,12 @@ export type UiTranslationSchema = {
     readonly nullableInput: {
       readonly clear: UiLabelValue;
     };
+    /** 🛑️ A staged input still unresolved: the field's own message and the disabled Execute's reason naming the fields. */
+    readonly requiredInput: {
+      readonly missing: UiLabelValue;
+      readonly invalidChoice: UiLabelValue;
+      readonly blocked: UiLabelValue;
+    };
   };
   readonly settings: {
     readonly layout: {

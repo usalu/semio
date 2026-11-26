@@ -10,16 +10,19 @@ use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_vector::{Pnt3,matrix::Frame3};
 use semio_framework_value::{RetainedAllocationEffect, RetainedCloneGrant as Grant, RetainedCloneProgress as Progress, RetainedCloneStep as Step, RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::retained_clone_grant_admits;
+use semio_framework_3d_brep_solid_topology::{clip_boundary, rounded_box_boundary, sector_boundary, spherical_cap_boundary};
 use std::mem::{size_of, take};
 
 use semio_framework_3d_brep_spline_construction::nurbs_cuboid::{self, Payload as SplinePayload, Recipe as SplineRecipe};
+
+#[path = "🪅️owned-solid/🦀️.rs"]
+mod owned_solid;
+pub use owned_solid::OwnedSolidPublication;
 
 #[path = "🪷️conic-face-draft/🦀️.rs"]
 mod conic_face_draft;
 pub use conic_face_draft::{Conic,ConicBoundary,ConicFacePublication,SectionArc};
 
-#[path = "🍩️sector-boundary/🦀️.rs"]
-mod sector_boundary;
 
 #[path = "🧿️annular-boundary/🦀️.rs"]
 mod annular_boundary;
@@ -90,13 +93,7 @@ pub use plane_split::plane_split;
 mod circular_prism_query;
 pub use circular_prism_query::circular_prism_distance;
 
-#[path="🌗️spherical-cap-boundary/🦀️.rs"]
-mod spherical_cap_boundary;
-#[path="🟠️rounded-box-boundary/🦀️.rs"]
-pub mod rounded_box_boundary;
 
-#[path="✂️clip-boundary/🦀️.rs"]
-mod clip_boundary;
 #[path="📍️solid-distance/🦀️.rs"]
 mod solid_distance;
 #[path="↔️solid-offset/🦀️.rs"]

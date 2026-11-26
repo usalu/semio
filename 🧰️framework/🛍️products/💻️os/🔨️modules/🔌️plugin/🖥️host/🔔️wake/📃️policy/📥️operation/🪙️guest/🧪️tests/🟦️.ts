@@ -40,3 +40,14 @@ test("fixed Core grants preserve wasm32 integers with wider host stock",()=>{
   for(const rejected of coreWidth.invalidInfrastructure)expect(rejected.every(fitsCore)).toBe(false);
  }finally{db.close();}
 });
+
+import cancellation from "./🧫️fixtures/cancel-crossing.json" with {type:"json"};
+test("cancelled operations refuse new crossings and retain their cleanup allocation",()=>{
+ const db=new Database(":memory:");
+ try{
+  for(const cleanup of [false,true]){
+   const row=db.query("select case when ? and not ? then 'canceled' else 'admitted' end as state").get(Number(cancellation.canceled),Number(cleanup)) as {state:string};
+   expect(row.state).toBe(cleanup?cancellation.cleanup:cancellation.ordinary);
+  }
+ }finally{db.close();}
+});

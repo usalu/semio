@@ -8,6 +8,7 @@ import { checkScriptInvocation, type ScriptInvocation } from "../../../🧭️ro
 import{requireIssuedResourceControlV1,createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,createRenewableIssuedResourceControlV1}from"../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import type{ProgressDeadlinePolicyV1}from"../../../⏱️budget/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
+import {compileUnitsShareV1} from "../🧮️units/🟦️.ts";
 
 /** 🎛️ Requires the original compiler caller's cancellation, deadline, progress and continuation ports. */
 export type CompilerAdmissionControl = ResourceLeaseControl;
@@ -60,10 +61,14 @@ export type CompilerCapacityRequestV1=Readonly<{kind:"exact";parallelism:number}
 /** 🛂️ Snapshots one closed request before any asynchronous admission. */
 export function readCompilerCapacityRequestV1(value:CompilerCapacityRequestV1):CompilerCapacityRequestV1{const snapshot=Object.freeze({...value});if(validateJsonSchemaSubset(schema.definitions.Request,snapshot).length||snapshot.kind==="available"&&(snapshot.minimumParallelism??1)>snapshot.maximumParallelism)throw Error("Invalid compiler capacity request");return snapshot;}
 /** 🧮️ Owns exclusive host capacity or actual bounded cores behind the fair shared admission, and counts the whole queued wait as admission wait so a deadline starts when the work is admitted, never while it queues (@see beginAdmissionWaitV1); the picker is held only for one non-blocking attempt to take every core, never while waiting for cores another claimant holds, because a picker holder blocked on cores deadlocks with any holder of those cores that queues for the picker. */
-export async function acquireCompilerCapacityLeaseV1(options: {readonly directory:string;readonly control:CompilerAdmissionControl;readonly request:CompilerCapacityRequestV1;readonly environment?:Readonly<Record<string,string|undefined>>}):Promise<CompilerCapacityLeaseV1>{
+export async function acquireCompilerCapacityLeaseV1(options: {readonly directory:string;readonly control:CompilerAdmissionControl;readonly request:CompilerCapacityRequestV1;readonly environment?:Readonly<Record<string,string|undefined>>;readonly independentJobs?:true}):Promise<CompilerCapacityLeaseV1>{
  const control=options.control;requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);
  const request=readCompilerCapacityRequestV1(options.request),environment=Object.freeze({...options.environment??process.env}),protocol=schema.definitions.Protocol.const;if(environment[protocol.inheritedEnvironment]==="true")throw Error("Actual compiler capacity owner required; environment markers cannot lend CPUs");
- const host=availableParallelism(),maximum=request.kind==="whole-host"?host:request.kind==="exact"?request.parallelism:Math.min(host,request.maximumParallelism);if(maximum>host||request.kind==="available"&&(request.minimumParallelism??1)>host)throw Error("Invalid compiler capacity request");const minimum=request.kind==="available"?request.minimumParallelism??1:maximum;
+ const host=availableParallelism();
+ const coreLimit=options.independentJobs===true?host-compileUnitsShareV1(host).minimum:host;
+ const maximum=request.kind==="whole-host"?host:request.kind==="exact"?request.parallelism:Math.min(coreLimit,request.maximumParallelism);
+ const minimum=request.kind==="available"?request.minimumParallelism??1:maximum;
+ if(maximum>coreLimit||minimum>maximum)throw Error("Invalid compiler capacity request");
  const signal=control.signal,owner=randomBytes(16).toString("base64url"),directory=options.directory,resource=schema.properties.resource.const,mode=request.kind==="whole-host"?"exclusive":"shared";
  resourceLeasePathV1(directory,resource,resourceQueueTicketV1({arrivedAtMs:Date.now(),pid:process.pid,owner}));
  const endAdmissionWait=beginAdmissionWaitV1();let gate:ResourceLease;try{gate=await acquireQueuedResourceLease({directory,resource,mode,sharedCohort:mode==="shared",owner,signal,control});}catch(error){endAdmissionWait();throw error;}const cores:ResourceLease[]=[];let released=false;const started=Date.now();let nextProgress=0;
@@ -74,7 +79,7 @@ export async function acquireCompilerCapacityLeaseV1(options: {readonly director
   const pick=async():Promise<boolean>=>{
    const picker=await acquireQueuedResourceLease({directory,resource:protocol.pickerResource,mode:"exclusive",owner,signal,control});
    let failed=false,failure:unknown;try{
-    for(let index=0;index<host&&cores.length<maximum;index++){try{cores.push(await acquireResourceLease({directory,resource:protocol.coreResourcePrefix+index,mode:"exclusive",signal,control,timeoutMs:0}));}catch(error){if(!(error instanceof Error)||!error.message.startsWith("Resource lease timed out: "))throw error;}}
+    for(let index=0;index<coreLimit&&cores.length<maximum;index++){try{cores.push(await acquireResourceLease({directory,resource:protocol.coreResourcePrefix+index,mode:"exclusive",signal,control,timeoutMs:0}));}catch(error){if(!(error instanceof Error)||!error.message.startsWith("Resource lease timed out: "))throw error;}}
     checkResourceLeaseControl(control);if(cores.length===maximum||request.kind==="available"&&cores.length>=minimum)return true;
     releaseCores();return false;
    }catch(error){failed=true;failure=error;throw error;}finally{try{picker.release();}catch(error){if(failed)throw new AggregateError([failure,error],"Compiler picker work and retirement failed");throw error;}}

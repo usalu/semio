@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 
 const generated = resolve(import.meta.dirname, "🗑️generated");
-const build = join(generated, "native-host", "debug", "build");
+const build = join(generated, process.argv.includes("--native-mcp") ? "native-mcp" : "native-host", "debug", "build");
 const arguments_ = process.argv.slice(2);
 const variantFlag = arguments_.find(argument => argument.startsWith("--linked-variant="));
 const variant = variantFlag?.slice("--linked-variant=".length) ?? "16449bd215be69a1";
@@ -70,4 +70,4 @@ for (const directory of native) args.push("-L", `native=${directory}`);
 console.log("[DEBUG] Relinking Actor Input test against", visited.size, "exact Rust dependencies");
 const compiled = Bun.spawn([rustup, ...args], { env: { ...process.env, CARGO_MANIFEST_DIR: dirname(manifest), CARGO_PKG_NAME: basename(manifest) }, stdout: "inherit", stderr: "inherit" });
 if (await compiled.exited) throw Error("Exact Actor Input relink failed");
-process.exitCode = await Bun.spawn([executable, ...arguments_.filter(argument => argument !== variantFlag)], { env: process.env, stdout: "inherit", stderr: "inherit" }).exited;
+process.exitCode = await Bun.spawn([executable, ...arguments_.filter(argument => argument !== variantFlag && argument !== "--native-mcp")], { env: process.env, stdout: "inherit", stderr: "inherit" }).exited;

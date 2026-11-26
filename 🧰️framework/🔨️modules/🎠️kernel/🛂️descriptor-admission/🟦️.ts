@@ -130,6 +130,7 @@ async function fetchDescriptorDocument(pluginId: string, moduleUrl: string, sign
     if (!manifest || typeof manifest !== "object" || !("pluginId" in manifest) || typeof manifest.pluginId !== "string") throw fault("plugin.descriptor-invalid", "missing manifest owner");
     if (manifest.pluginId !== pluginId) throw fault("plugin.descriptor-identity-mismatch", `expected ${pluginId}, received ${manifest.pluginId}`);
     if (!("apps" in manifest) || !Array.isArray(manifest.apps)) throw fault("plugin.descriptor-invalid", "missing app roster");
+    if (manifest.apps.some(app => typeof app?.id !== "string" || !app.id.length)) throw fault("plugin.descriptor-invalid", "missing app identity");
     if ("examples" in manifest && Array.isArray(manifest.examples)) for (const row of manifest.examples) if (!row?.dialect) throw fault("plugin.descriptor-invalid", `example ${String(row?.id ?? "?")} misses its dialect`);
     const actionSetFault = actionSetsFault(manifest as PluginManifest);
     if (actionSetFault !== undefined) throw fault("plugin.descriptor-invalid", actionSetFault);

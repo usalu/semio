@@ -27,8 +27,8 @@ pub struct Case {
     pub outcome: String,
 }
 
-fn fixture_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../🧫️fixtures/🧬️mutations")
+pub(crate) fn fixture_root() -> PathBuf {
+    semio_framework_test_fixtures::fixture_path!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations")
 }
 
 fn entry_name(path: &Path) -> String {

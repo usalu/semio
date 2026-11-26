@@ -185,6 +185,15 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     let mut window_config_owners = semio_plugin::WindowConfigOwnerRegistry::new(protocol::ActorId("drawing-contract-owner".into()));
     <DrawingPlayApp as ArtifactEditor>::register_window_config_owners(&mut window_config_owners).expect("register canvas window config owner");
     assert!(!window_config_owners.is_empty(), "the canvas window config owns its own retained publication authority");
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    for _ in 0..semio_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_close_turns() {
+        if window_config_owners.terminal_is_empty() { break; }
+        scope.cx().with_original_retirement(|cx| {
+            window_config_owners.close_step_context(cx.retained_grant(), cx).map(|_| ()).map_err(Into::into)
+        }).expect("retire the registered window configuration");
+    }
+    assert!(window_config_owners.terminal_is_empty());
+
 
     let definition = create_drawing_app();
     let classified = definition

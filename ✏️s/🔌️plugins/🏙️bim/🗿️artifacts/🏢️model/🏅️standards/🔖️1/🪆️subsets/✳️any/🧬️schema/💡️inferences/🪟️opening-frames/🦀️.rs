@@ -167,7 +167,7 @@ impl Default for OpeningFrame {
 
 /// 🏗️ The resolved host of openings (the `Host` node of the model graph): its axis, vertical extent and thickness, the building placement it lives in and `trim`, the arc-length
 /// extent `lo..hi` over which it has its full thickness (the join-trimmed extent of a wall, the whole axis of a curtain wall).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq)]
 pub struct HostExtent {
     pub axis: Axis,
     pub base_z: f64,
@@ -232,7 +232,7 @@ impl HostExtent {
 }
 
 /// 📐️ The resolved size and cut rectangle of one opening (the `Cut` node of the model graph).
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq)]
 pub struct CutRect {
     pub size: Resolved,
     pub cut: OpeningCut,

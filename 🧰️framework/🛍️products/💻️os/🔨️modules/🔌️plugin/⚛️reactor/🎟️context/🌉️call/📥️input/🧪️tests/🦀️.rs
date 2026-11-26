@@ -128,61 +128,66 @@ fn check_mcp_instance_open() {
         assert_eq!(vector["Poll"]["limits"].as_array().unwrap().len(), semio_plugin_abi::owned_abi::OwnedCorePollLimits::ARITY);
         let typed: ActorInput = serde_json::from_value(vector.clone()).unwrap();
         assert_eq!(serde_json::to_value(&typed).unwrap(), *vector);
-        let wire = serde_json::to_vec(&typed).unwrap();
-        let wire_identity = (wire.as_ptr(), wire.len());
-        let profiles = [("infrastructure", infrastructure), ("bounded", bounded)].map(|(scope, grant)| {
-            let mut caller = OriginalJobFixtureCaller::admit(OperationId(948), Generation(2), stock, clock, 10_000_000, 100_000);
-            caller.retain_dispatch().unwrap();
-            caller.admit_return_table();
-            let mut receiver = OriginalActorInputReceiving::new(
-                OriginalNativeDecodePolicy { maximum_owned_bytes: infrastructure.maximum_capacity_bytes },
-                JsonReadLimits {
-                    maximum_bytes: infrastructure.maximum_copy_bytes as u64,
-                    maximum_allocation_bytes: infrastructure.maximum_capacity_bytes,
-                    maximum_depth: infrastructure.maximum_depth,
-                    maximum_items: infrastructure.maximum_items as u64,
-                },
-            );
-            let mut receipt = RetainedCloneProgress::default();
-            let mut position = 0;
-            let start_fuel = caller.fuel_remaining();
-            let ready_turn = (1..=1024).find(|turn| {
-                let admission = funded(&mut caller, grant, |cx| receiver.advance_in_turn(&wire, cx));
-                receipt = receipt.checked_add(caller.receipt()).unwrap();
-                assert_eq!((wire.as_ptr(), wire.len()), wire_identity);
-                if receiver.decoder.receiver().is_some() && !receiver.input_returned() {
-                    assert!(receiver.owns_wire(&wire));
+        for canonical in [true,false] {
+            let mut wire = serde_json::to_vec(&typed).unwrap();
+            if !canonical { wire.insert(0,b' '); }
+            let wire_identity = (wire.as_ptr(), wire.len());
+            let profiles = [("infrastructure", infrastructure), ("bounded", bounded)].map(|(scope, grant)| {
+                let mut caller = OriginalJobFixtureCaller::admit(OperationId(948), Generation(2), stock, clock, 10_000_000, 100_000);
+                caller.retain_dispatch().unwrap();
+                caller.admit_return_table();
+                let mut receiver = OriginalActorInputReceiving::new(
+                    OriginalNativeDecodePolicy { maximum_owned_bytes: infrastructure.maximum_capacity_bytes },
+                    JsonReadLimits {
+                        maximum_bytes: infrastructure.maximum_copy_bytes as u64,
+                        maximum_allocation_bytes: infrastructure.maximum_capacity_bytes,
+                        maximum_depth: infrastructure.maximum_depth,
+                        maximum_items: infrastructure.maximum_items as u64,
+                    },
+                );
+                let mut receipt = RetainedCloneProgress::default();
+                let mut position = 0;
+                let start_fuel = caller.fuel_remaining();
+                let ready_turn = (1..=1024).find(|turn| {
+                    let admission = funded(&mut caller, grant, |cx| receiver.advance_in_turn(&wire, cx));
+                    receipt = receipt.checked_add(caller.receipt()).unwrap();
+                    assert_eq!((wire.as_ptr(), wire.len()), wire_identity);
+                    if receiver.decoder.receiver().is_some() && !receiver.input_returned() {
+                        assert!(receiver.owns_wire(&wire));
+                    }
+                    if let Some(decoder) = receiver.decoder.receiver() {
+                        assert!(decoder.bytes_read() >= position);
+                        position = decoder.bytes_read();
+                    }
+                    assert!(matches!(admission, InputAdmission::Pending | InputAdmission::Ready),
+                        "{app} {scope} turn {turn} at {position}/{}: {:?}, {:?}, {:?}, {receipt:?}",
+                        wire.len(), receiver.failure_kind(), receiver.decoder.receiver().map(|decoder| decoder.phase()),
+                        receiver.decoder.failure().map(NativeReceivingFailure::primary));
+                    assert_eq!(receiver.input_returned(), admission == InputAdmission::Ready);
+                    admission == InputAdmission::Ready
+                }).unwrap_or_else(|| panic!("{app} {scope} did not admit at {position}/{}: receipt {receipt:?}", wire.len()));
+                let work = start_fuel - caller.fuel_remaining();
+                assert_eq!(serde_json::to_value(receiver.input().unwrap()).unwrap(), *vector);
+                assert_eq!(position, if canonical { 0 } else { wire.len() });
+                assert!(work >= wire.len() as u64);
+                assert!(work > 0 && receipt.copied_bytes > wire.len() && receipt.retained_capacity_bytes > 0);
+                if scope == "infrastructure" {
+                    assert_eq!(ready_turn, 1);
+                    assert!(receipt.fits(grant), "{app} spent {receipt:?}");
                 }
-                if let Some(decoder) = receiver.decoder.receiver() {
-                    assert!(decoder.bytes_read() >= position);
-                    position = decoder.bytes_read();
+                assert!(funded(&mut caller, grant, |cx| cx.with_original_retirement(|cx| receiver.begin_close(None, cx))));
+                for _ in 0..1024 {
+                    if receiver.terminal_is_empty() { break; }
+                    funded(&mut caller, grant, |cx| cx.with_original_retirement(|cx| receiver.advance(None, cx)));
                 }
-                assert!(matches!(admission, InputAdmission::Pending | InputAdmission::Ready),
-                    "{app} {scope} turn {turn} at {position}/{}: {:?}, {:?}, {:?}, {receipt:?}",
-                    wire.len(), receiver.failure_kind(), receiver.decoder.receiver().map(|decoder| decoder.phase()),
-                    receiver.decoder.failure().map(NativeReceivingFailure::primary));
-                assert_eq!(receiver.input_returned(), admission == InputAdmission::Ready);
-                admission == InputAdmission::Ready
-            }).unwrap_or_else(|| panic!("{app} {scope} did not admit at {position}/{}: receipt {receipt:?}", wire.len()));
-            let work = start_fuel - caller.fuel_remaining();
-            assert_eq!(serde_json::to_value(receiver.input().unwrap()).unwrap(), *vector);
-            assert_eq!(position, wire.len());
-            assert!(work > 0 && receipt.copied_bytes > wire.len() && receipt.retained_capacity_bytes > 0);
-            if scope == "infrastructure" {
-                assert_eq!(ready_turn, 1);
-                assert!(receipt.fits(grant), "{app} spent {receipt:?}");
-            }
-            assert!(funded(&mut caller, grant, |cx| cx.with_original_retirement(|cx| receiver.begin_close(None, cx))));
-            for _ in 0..1024 {
-                if receiver.terminal_is_empty() { break; }
-                funded(&mut caller, grant, |cx| cx.with_original_retirement(|cx| receiver.advance(None, cx)));
-            }
-            assert!(receiver.terminal_is_empty());
-            caller.retire(grant);
-            (ready_turn, receipt.retained_capacity_bytes, receipt.released_bytes)
-        });
-        assert!(profiles[1].0 > profiles[0].0);
-        assert_eq!((profiles[0].1, profiles[0].2), (profiles[1].1, profiles[1].2));
+                assert!(receiver.terminal_is_empty());
+                caller.retire(grant);
+                (ready_turn, receipt.retained_capacity_bytes, receipt.released_bytes)
+            });
+            if canonical { assert_eq!((profiles[0].0, profiles[1].0), (1,1)); }
+            else { assert!(profiles[1].0 > profiles[0].0); }
+            assert_eq!((profiles[0].1, profiles[0].2), (profiles[1].1, profiles[1].2));
+        }
     }
 }
 

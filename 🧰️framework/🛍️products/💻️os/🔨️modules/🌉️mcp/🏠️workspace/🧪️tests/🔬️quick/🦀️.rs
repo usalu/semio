@@ -39,7 +39,7 @@ use semio_os_mcp_routing::hub_relay::{commits_with_nothing_relayed, hub_edit_ref
 #[cfg(not(target_arch = "wasm32"))]
 use semio_os_mcp_routing::routing_and_shell_routed::{AppRoute, PluginComponentSource, RoutingArtifactChannel, app_instance_slot, capability_instance_slot, distinct_plugin_ids, distinct_routes, plugin_instance_slot, route_for_slot};
 #[cfg(test)]
-use semio_os_mcp_plugin_runtime::compiled_components::{ISOLATED_COMPILE_TEST_ENGINE, ISOLATED_COMPILE_TEST_OUT};
+use semio_os_mcp_plugin_runtime::compiled_components::{ISOLATED_COMPILE_TEST_BYTES, ISOLATED_COMPILE_TEST_ENGINE, ISOLATED_COMPILE_TEST_OUT};
 #[cfg(test)]
 use semio_os_mcp_port::channel_port::MockArtifactChannel;
 

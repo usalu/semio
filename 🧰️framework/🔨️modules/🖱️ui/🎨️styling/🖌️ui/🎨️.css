@@ -136,19 +136,6 @@
 }
 
 /* #region 🪟️PageChrome */
-.ui-chrome-tint {
-  background-color: var(--base);
-  background-color: color-mix(in srgb, var(--base) var(--chrome-tint-opacity, 76%), transparent);
-}
-
-@media (prefers-reduced-transparency: reduce) {
-  .ui-chrome-tint { background-color: var(--base); }
-}
-
-@media (forced-colors: active) {
-  .ui-chrome-tint { background-color: Canvas; }
-}
-
 [data-slot="layout-scrollport"] {
   display: flex;
   flex: 1 1 0%;

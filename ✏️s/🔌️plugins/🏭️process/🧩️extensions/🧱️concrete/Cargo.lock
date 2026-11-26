@@ -2483,6 +2483,7 @@ dependencies = [
  "semio-framework-3d-brep-construction",
  "semio-framework-3d-brep-curve",
  "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-solid-topology",
  "semio-framework-3d-brep-spline-construction",
  "semio-framework-3d-brep-surface",
  "semio-framework-3d-brep-tolerance",
@@ -3122,6 +3123,9 @@ dependencies = [
 [[package]]
 name = "semio-framework-geometry-primitives"
 version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
 
 [[package]]
 name = "semio-framework-geometry-skeleton"

@@ -78,7 +78,7 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
                 id: SOURCING_ROWS_DOMAIN.into(),
                 label: LocalizedLabel::native("Rows", "Zeilen"),
                 granularities: vec![GranularityDefinition { id: SOURCING_OBJECT_GRANULARITY.into(), label: LocalizedLabel::native("Object", "Objekt"), icon_id: "box".into() }],
-                hierarchy: HierarchyProvider::Flat,
+                hierarchy: HierarchyProvider::Topology,
                 hover: HoverSpec::default(),
                 selection: SelectionSpec {
                     modes: vec![SelectionMode::Single, SelectionMode::Multiple],

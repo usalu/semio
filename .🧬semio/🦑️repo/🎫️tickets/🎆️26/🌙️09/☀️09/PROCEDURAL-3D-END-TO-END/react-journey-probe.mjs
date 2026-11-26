@@ -6,7 +6,9 @@
  * Usage: cd <ticket> && repo tools exec --light bun -- react-journey-probe.mjs
  * Env: SEMIO_PROBE_URL, SEMIO_PROBE_OUT (under 🗑️generated/journey), SEMIO_PROBE_ONLY (comma list of row numbers), SEMIO_PROBE_HEADED=1.
  * SEMIO_PROBE_MATH_DIR and SEMIO_PROBE_BREP_DIR optionally supply locally built component files at the installed extension URLs.
- * SEMIO_PROBE_BASELINE_MS sets the edit row's initial geometry deadline. SEMIO_PROBE_MAX_MS sets the overall cap.
+ * SEMIO_PROBE_MOUNT_MS sets the editor mount deadline. SEMIO_PROBE_BASELINE_MS sets the initial geometry deadline. SEMIO_PROBE_MAX_MS sets the overall cap.
+ * SEMIO_PROBE_GEOMETRY_EXAMPLE=rectangle runs the same geometry and history assertions on Rectangle Wire Preview.
+ * SEMIO_PROBE_CPU_PORT selects a loopback DevTools listener for the optional worker profile. Use with SEMIO_PROBE_WORKER_TRACE=1.
  * @see 🐍️journey-probe.mjs, 🐍️interaction-matrix-probe.mjs, 🐍️editor-verbs-keyboard-probe.mjs, 🐍️io-surface-probe.mjs
  */
 import { chromium } from "playwright";
@@ -14,7 +16,8 @@ import { createHash } from "node:crypto";
 import { inflateSync } from "node:zlib";
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { gradeCameraFrames, gradeMeshes, meshStatsScript, oracleForLabel } from "./🐍️example-oracle.mjs";
+import { gradeCameraFrames, gradeMeshes, meshStatsScript, oracleAtHeight, oracleForLabel } from "./🐍️example-oracle.mjs";
+import { connectWorkerProfiler } from "./react-worker-profiler.mjs";
 
 const URL_ = process.env.SEMIO_PROBE_URL ?? "http://127.0.0.1:6018/?plugin=generation3d";
 const OUT = join(import.meta.dirname ?? import.meta.dir, "🗑️generated", "journey", process.env.SEMIO_PROBE_OUT ?? "react-journey");
@@ -37,6 +40,9 @@ let browser;
 let browserServer;
 let page;
 let progressTimer;
+let workerProfiler;
+let profileStopper;
+let shuttingDown = false;
 
 const flush = () => {
   writeFileSync(join(OUT, "results.json"), JSON.stringify(rows, null, 2));
@@ -44,7 +50,10 @@ const flush = () => {
   if (artifacts.size) writeFileSync(join(OUT, "served-artifacts.json"), JSON.stringify([...artifacts.values()], null, 2));
 };
 const finishBrowser = async (code) => {
+  shuttingDown = true;
   clearInterval(progressTimer);
+  clearTimeout(profileStopper);
+  workerProfiler?.close();
   const forceExit = setTimeout(() => {
     void browserServer?.kill().catch(() => {});
     setTimeout(() => process.exit(code), 1000);
@@ -65,7 +74,11 @@ const until = async (read, done, ms = 20000, step = 150) => {
   const end = Date.now() + Math.min(ms, Math.max(0, left() - 2000));
   let value;
   for (;;) {
-    try { value = await read(); } catch (e) { value = undefined; }
+    if (page?.isClosed() || browser?.isConnected() === false) throw new Error("browser disconnected during probe");
+    try { value = await read(); } catch (error) {
+      if (page?.isClosed() || browser?.isConnected() === false) throw error;
+      value = undefined;
+    }
     if (value !== undefined && done(value)) return { value, reached: true };
     if (Date.now() >= end) return { value, reached: false };
     await sleep(step);
@@ -230,8 +243,24 @@ const row = async (id, fn) => {
 };
 //#endregion
 
-browserServer = await chromium.launchServer({ host: "127.0.0.1", port: 0, headless: process.env.SEMIO_PROBE_HEADED !== "1", args: ["--js-flags=--max-old-space-size=1024", "--renderer-process-limit=1", "--enable-unsafe-webgpu", "--ignore-gpu-blocklist", ...(process.platform === "darwin" ? ["--use-angle=metal"] : [])] });
+const profilerPort = Number(process.env.SEMIO_PROBE_CPU_PORT ?? 0);
+const profileDuration = Number(process.env.SEMIO_PROBE_CPU_DURATION_MS ?? 25000);
+const captureTick = process.env.SEMIO_PROBE_CAPTURE_TICK === "1";
+let tickCaptureOrdinal = 0;
+const profilerArguments = profilerPort ? [`--remote-debugging-port=${profilerPort}`, "--remote-debugging-address=127.0.0.1"] : [];
+browserServer = await chromium.launchServer({ host: "127.0.0.1", port: 0, headless: process.env.SEMIO_PROBE_HEADED !== "1", args: ["--js-flags=--max-old-space-size=1024", "--renderer-process-limit=1", "--enable-unsafe-webgpu", "--ignore-gpu-blocklist", ...(process.platform === "darwin" ? ["--use-angle=metal"] : []), ...profilerArguments] });
+browserServer.on("close", (code, signal) => {
+  if (shuttingDown) return;
+  lines.push(`${Date.now() - T0} pagecrash Chromium exited (${code ?? "no code"}, ${signal ?? "no signal"})`);
+  flush();
+});
 browser = await chromium.connect(browserServer.wsEndpoint());
+browser.on("disconnected", () => {
+  if (shuttingDown) return;
+  clearInterval(progressTimer);
+  lines.push(`${Date.now() - T0} pagecrash Chromium browser disconnected`);
+  flush();
+});
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true });
 const extensionModules = [
   ["🧮️flow-extension-math", "math", process.env.SEMIO_PROBE_MATH_DIR],
@@ -243,6 +272,7 @@ const componentFiles = new Map(extensionModules.flatMap(([extension, component, 
     return [`/🧩️extension-modules/${extension}/${name}`, join(directory, name)];
   })));
 const probeOrigin = new URL(URL_).origin;
+if (profilerPort) workerProfiler = await connectWorkerProfiler(profilerPort, OUT, probeOrigin, log);
 const componentFile = (url) => url.origin === probeOrigin ? componentFiles.get(decodeURIComponent(url.pathname)) : undefined;
 context.on("requestfinished", (request) => {
   const url = new URL(request.url());
@@ -257,14 +287,14 @@ if (componentFiles.size) await context.route((url) => componentFile(url) !== und
   await route.fulfill({ body, contentType: file.endsWith(".wasm") ? "application/wasm" : "text/javascript" });
   artifacts.set(url, { url, bytes: body.length, sha256: createHash("sha256").update(body).digest("hex") });
 });
+const observe = (suffix, rewrite) => context.route((url) => url.origin === probeOrigin && decodeURIComponent(url.pathname).endsWith(suffix), async (route) => {
+  const response = await route.fetch();
+  const before = await response.text();
+  const body = rewrite(before);
+  log("browser observation", { suffix, matched: body !== before });
+  await route.fulfill({ response, body });
+});
 if (process.env.SEMIO_PROBE_PICKER_TRACE === "1") {
-  const observe = (suffix, rewrite) => context.route((url) => url.origin === probeOrigin && decodeURIComponent(url.pathname).endsWith(suffix), async (route) => {
-    const response = await route.fetch();
-    const before = await response.text();
-    const body = rewrite(before);
-    log("picker instrumentation", { suffix, matched: body !== before });
-    await route.fulfill({ response, body });
-  });
   await observe("/🧭️input-funnel/🟦️.ts", (source) => source.replace(/const outcome = directOutcome \?\? await dispatchProgramAction\([^\n]*\);/, `
     if (action.action === "setActiveExample") console.info("[DEBUG] PICK_INPUT " + JSON.stringify({ inputSeq: entry.provenance.inputSeq, causedBy: entry.provenance.causedBy, target: targetSession.instanceId, args: action.args }));
     $&
@@ -276,10 +306,93 @@ if (process.env.SEMIO_PROBE_PICKER_TRACE === "1") {
     .replace("const payload = effect.loadDocument;", `$& console.info("[DEBUG] PICK_LOAD " + JSON.stringify({ inputSeq: effectOwner.inputSeq, instance: baseSession.instanceId, keys: Object.keys(payload) }));`)
     .replace(/const loaded = await loadDocumentPair\([^\n]*\);/, `$& console.info("[DEBUG] PICK_LOADED " + JSON.stringify({ inputSeq: effectOwner.inputSeq, loaded }));`));
 }
+if (process.env.SEMIO_PROBE_HISTORY_TRACE === "1") {
+  await observe("/🧭️input-funnel/🟦️.ts", (source) => source
+    .replace("const command = action.commandAddress ?", `
+      if (${process.env.SEMIO_PROBE_WORKER_TRACE === "1"} && action.action === "interactionSelect") console.info("[DEBUG] WORKER_SELECTION_INGRESS " + JSON.stringify({ action: action.action, windowId: dispatchWindowId, undeclared: undeclared?.message, args: action.args }, (_, value) => typeof value === "bigint" ? String(value) : value));
+      $&`)
+    .replace("const undoOutcome = action.commandAddress ?", `
+      if (["patchFlowWidgets", "undo", "redo"].includes(action.action)) console.info("[DEBUG] HISTORY_INPUT " + JSON.stringify({ action: action.action, inputSeq: entry.provenance.inputSeq, target: targetSession.instanceId, canUndo: historyCanUndo, direct: directBrowserActor !== null, args: action.args }));
+      $&`)
+    .replace("if (undoOutcome !== undefined) return undoOutcome;", `if (undoOutcome !== undefined) {
+      if (action.action === "undo") console.info("[DEBUG] HISTORY_ROUTE " + JSON.stringify({ kind: undoOutcome.kind, reason: undoOutcome.reason, message: undoOutcome.message }));
+      return undoOutcome;
+    }`)
+    .replace(/const outcome = directOutcome \?\? await dispatchProgramAction\([^\n]*\);/, `$&
+      if (["patchFlowWidgets", "undo", "redo"].includes(action.action) || (${process.env.SEMIO_PROBE_WORKER_TRACE === "1"} && action.action === "interactionSelect")) console.info("[DEBUG] HISTORY_OUTCOME " + JSON.stringify({ action: action.action, kind: outcome.kind, reason: outcome.reason, message: outcome.message }));`));
+  await observe("/📥️invocation-frames/🟦️.ts", (source) => source.replace("return response;", `
+    if (["patchFlowWidgets", "undo", "redo"].includes(actionId)) console.info("[DEBUG] HISTORY_INVOCATION " + JSON.stringify({ actionId, frames: frames.map((frame) => frame.tag ?? frame.kind ?? Object.keys(frame)[0]), effects: (response.requestedEffects ?? []).map((effect) => typeof effect === "string" ? effect : effect.dispatchAction?.action ?? Object.keys(effect)[0]), history: response.historyPatch !== undefined }));
+    return response;`));
+  await observe("/🚀️effect-dispatch/🟦️.ts", (source) => source
+    .replace("if (!isCurrent()) return;", `
+      if (${process.env.SEMIO_PROBE_WORKER_TRACE === "1"} && action === "flowEvalTick") console.info("[DEBUG] WORKER_TICK_INGRESS " + JSON.stringify({ action, args, current: isCurrent() }, (_, value) => typeof value === "bigint" ? String(value) : value));
+      $&`)
+    .replace("const isAppCommand = (baseSession.app.commands ?? []).some((command) => command.id === action);", `
+      $&
+      if (${captureTick} && action === "flowEvalTick" && args?.windowId === "procedural-preview") console.info("[DEBUG] WORKER_TICK_VIEW " + JSON.stringify({ args, viewState, sessionWindowId: baseSession.viewState.windowId, isAppCommand }, (_, value) => typeof value === "bigint" ? String(value) : value));
+      if (action !== "flowEvalTick" || ${process.env.SEMIO_PROBE_WORKER_TRACE === "1"}) console.info("[DEBUG] HISTORY_FOLLOW " + JSON.stringify({ action, isAppCommand, causedBy: provenance?.causedBy, args, window: viewState.windowId, roster: action === "flowEvalTick" ? viewState.windowInstances : undefined }, (_, value) => typeof value === "bigint" ? String(value) : value));`)
+    .replace("if (isCurrent()) await applyResponse(response, targetSession);", `
+      if (action !== "flowEvalTick" || ${process.env.SEMIO_PROBE_WORKER_TRACE === "1"}) console.info("[DEBUG] HISTORY_FOLLOW_RESULT " + JSON.stringify({ action, window: args?.windowId, history: response.historyPatch !== undefined, uiScope: response.uiScope, current: isCurrent(), effects: (response.requestedEffects ?? []).map((effect) => typeof effect === "string" ? effect : effect.dispatchAction?.action ?? Object.keys(effect)[0]) }));
+      $&`));
+}
+if (process.env.SEMIO_PROBE_EXTENSION_TRACE === "1") {
+  await observe("/🔌️extension-runtime/🟦️.ts", (source) => source
+    .replace(/raw = await invoke\.call\([^\n]*\);/, `
+      console.info("[DEBUG] EXT_INVOKE " + JSON.stringify({ extensionId, capability, req: String(req) }));
+      $&
+      console.info("[DEBUG] EXT_ANSWER " + JSON.stringify({ extensionId, capability, req: String(req), bytes: raw.length }));`)
+    .replace("outcome = { fault: encodePackValue(fault) };", `
+      console.info("[DEBUG] EXT_FAULT " + JSON.stringify({ extensionId, capability, req: String(req), code: fault.code }));
+      $&`)
+    .replace("const response = await completion.complete(outcome);", `
+      $&
+      console.info("[DEBUG] EXT_DELIVERED " + JSON.stringify({ extensionId, capability, req: String(req), effects: response.requestedEffects?.length ?? 0 }));`));
+}
+if (process.env.SEMIO_PROBE_WORKER_TRACE === "1") {
+  await observe("/🚚️handle-turn-drive/🟦️.ts", (source) => source
+    .replace("const crossingStartedMs = performance.now();", `
+      if (${captureTick} && inspected.actionId === "flowEvalTick") console.info("[DEBUG] WORKER_TICK_PACK " + JSON.stringify({ actorId, instanceId, inspected, commandIndex, events, pages }, (_, value) => typeof value === "bigint" ? String(value) : ArrayBuffer.isView(value) ? Array.from(value) : value));
+      $&`)
+    .replace("const previousIngress = terminal;", `
+    if (["setContributions", "flowEvalTick", "noteShellCommand", "interactionSelect"].includes(inspected.actionId) && (continuations < 8 || continuations % 16 === 0)) {
+      console.info("[DEBUG] WORKER_CONTINUATION " + JSON.stringify({ actorId, action: inspected.actionId, continuation: continuations + 1, status: wireTurnStatusTag(continued.status), effects: continued.effects.length, patches: continued.uiPatches.length }));
+    }
+    $&`));
+}
+if (captureTick) {
+  await observe("/🧵️turn-dispatch/🟦️.ts", (source) => source.replace("raw = await owner.open(work.input, budget);", `
+    if (owner.activation.actorId.startsWith("procedural#")) console.info("[DEBUG] WORKER_TICK_OPEN " + JSON.stringify({ actorId: owner.activation.actorId, input: work.input, budget }, (_, value) => typeof value === "bigint" ? String(value) : value));
+    $&`));
+  await observe("/🖼️surface-refresh/🟦️.ts", (source) => source.replace("const viewState = windowViewContext(request.viewState, binding.windowKey);", `
+    $&
+    if (viewState && String(binding.windowKey).includes("procedural-preview") && !globalThis.__g3dPreviewViewCaptured) {
+      globalThis.__g3dPreviewViewCaptured = true;
+      console.info("[DEBUG] WORKER_TICK_SURFACE " + JSON.stringify({ instanceId, binding, viewState, pack: Array.from(encodePackValue(viewContextWireValue(viewState))) }, (_, value) => typeof value === "bigint" ? String(value) : value));
+    }`));
+}
 page = await context.newPage();
 page.on("console", (m) => {
-  lines.push(`${Date.now() - T0} ${m.type()} ${m.text().slice(0, 1200)}`);
-  if (m.text().startsWith("[DEBUG] PICK_")) log(Date.now() - T0, m.text());
+  const message = m.text();
+  for (const kind of ["OPEN", "SURFACE", "VIEW", "PACK"]) {
+    const prefix = `[DEBUG] WORKER_TICK_${kind} `;
+    if (!captureTick || !message.startsWith(prefix)) continue;
+    const value = JSON.parse(message.slice(prefix.length));
+    if (kind === "VIEW") writeFileSync(join(OUT, `edit-tick-view-${tickCaptureOrdinal + 1}.json`), JSON.stringify(value, null, 2) + "\n");
+    else if (kind === "PACK") {
+      tickCaptureOrdinal += 1;
+      writeFileSync(join(OUT, `tick-ingress-${tickCaptureOrdinal}.json`), JSON.stringify(value, null, 2) + "\n");
+      writeFileSync(join(OUT, `tick-command-${tickCaptureOrdinal}.pack`), Uint8Array.from(value.events[value.commandIndex]));
+    } else writeFileSync(join(OUT, `tick-${kind.toLowerCase()}.json`), JSON.stringify(value, null, 2) + "\n");
+    log("exact tick capture", { kind, tickCaptureOrdinal });
+    return;
+  }
+  lines.push(`${Date.now() - T0} ${m.type()} ${message.slice(0, 1200)}`);
+  if (/^\[DEBUG\] (?:PICK|HISTORY|EXT|WORKER)_/.test(message)) log(Date.now() - T0, message);
+  if (workerProfiler && message.startsWith("[DEBUG] WORKER_CONTINUATION ") && message.includes('"action":"setContributions"')) workerProfiler.start();
+  if (workerProfiler && !profileStopper && message.startsWith("[DEBUG] WORKER_TICK_INGRESS ") && message.includes('"windowId":"procedural-preview"')) {
+    workerProfiler.start();
+    profileStopper = setTimeout(() => void workerProfiler.stop().catch((error) => log("worker profiler failed", String(error))), profileDuration);
+  }
 });
 page.on("pageerror", (e) => lines.push(`${Date.now() - T0} pageerror ${String(e).slice(0, 1200)}`));
 page.on("crash", () => lines.push(`${Date.now() - T0} pagecrash Chromium renderer stopped`));
@@ -310,9 +423,18 @@ await page.addInitScript(() => {
   new MutationObserver(scan).observe(document, { childList: true, subtree: true, characterData: true });
   addEventListener("pointermove", (e) => { window.__journeyInput.push(performance.now() - e.timeStamp); }, true);
 });
-const pageErrors = () => lines.filter((l) => /\bpage(?:error|crash)\b|OwnershipLimit|actor fault|no actor for instance|panicked/i.test(l));
+const pageErrors = () => lines.filter((l) => /\bpage(?:error|crash)\b|OwnershipLimit|actor fault|no actor for instance|original-turn\.native-return-refused|panicked/i.test(l));
 
-await page.goto(URL_, { waitUntil: "domcontentloaded" }).catch((e) => lines.push(`goto ${e}`));
+try {
+  const response = await page.goto(URL_, { waitUntil: "domcontentloaded" });
+  if (!response?.ok()) throw new Error(`Editor returned HTTP ${response?.status() ?? "no response"}`);
+} catch (error) {
+  const detail = String(error);
+  lines.push(`goto ${detail}`);
+  rows.push({ id: "editor-navigation", ok: false, status: "fail", ms: Date.now() - T0, detail, screenshot: null });
+  flush();
+  await finishBrowser(1);
+}
 
 //#region 1 boot
 await row("1-boot", async () => {
@@ -358,10 +480,10 @@ await row("2-examples", async () => {
     const s = c.value; const p = host(s, PREVIEW); const main = host(s, MAIN);
     const oracle = oracleForLabel(text);
     const stats = oracle ? await page.evaluate(meshStatsScript, oracle.previewMeshId) : null;
-    const grade = oracle && stats ? gradeMeshes(oracle, stats[s.hosts.indexOf(p)] ?? null) : null;
+    const grade = gradeMeshes(oracle, stats?.find((mesh) => mesh.surfaceId === PREVIEW) ?? null);
     const bad = Object.entries(main?.nodeStatuses ?? {}).filter(([, st]) => st !== "ok");
     const changed = Boolean(p?.digest) && p.digest !== prevDigest;
-    results.push({ example: text, ok: c.reached && changed && bad.length === 0 && (grade ? grade.ok : true), oracle: Boolean(oracle), converged: c.reached, changed, badNodes: bad, meshes: p?.meshCount, mesh: grade ? { ok: grade.ok, reasons: grade.reasons } : "no committed oracle", status: s.pane?.text ?? p?.phase });
+    results.push({ example: text, ok: c.reached && changed && bad.length === 0 && grade.ok, oracle: Boolean(oracle), converged: c.reached, changed, badNodes: bad, meshes: p?.meshCount, mesh: grade, status: s?.pane?.text ?? p?.phase });
     if (p?.digest) prevDigest = p.digest;
     examplesSeen.push(text);
   }
@@ -440,28 +562,41 @@ await row("3-hover-select-camera", async () => {
 //#region 4 edit a value, undo, redo
 await row("4-edit-undo-redo", async () => {
   const widget = "height";
-  const baselineDeadline = Date.now() + Number(process.env.SEMIO_PROBE_BASELINE_MS ?? 210000);
-  const mounted = await until(snap, (s) => Boolean(s.example && host(s, MAIN)?.nodeIds?.length), 45000, 500);
+  const rectangle = process.env.SEMIO_PROBE_GEOMETRY_EXAMPLE === "rectangle";
+  const example = rectangle ? "Rectangle Wire Preview" : "Hexagonal Mushroom Column";
+  const exampleNode = rectangle ? "rect" : "column-preview";
+  const heightLabel = rectangle ? /^Height\b/ : /^Column Height\b/;
+  const mounted = await until(snap, (s) => Boolean(s.example && host(s, MAIN)?.nodeIds?.length), Number(process.env.SEMIO_PROBE_MOUNT_MS ?? 120000), 500);
   if (!mounted.reached) return { ok: false, detail: { reason: "Flow editor did not mount" } };
-  if (mounted.value.example !== "Hexagonal Mushroom Column") await pickExample("Hexagonal Mushroom Column");
-  const loaded = await until(fixture, (f) => typeof f?.values[widget] === "number", 30000);
-  if (!loaded.reached) return { ok: false, detail: { reason: "height input never reached the graph" } };
+  if (mounted.value.example !== example) await pickExample(example);
+  const loaded = await until(fixture, (f) => f?.ids.includes(exampleNode) && typeof f.values[widget] === "number", Number(process.env.SEMIO_PROBE_EXAMPLE_READY_MS ?? 90000));
+  if (!loaded.reached) return { ok: false, detail: { reason: "height input never reached the graph", example, actualWidgetIds: loaded.value?.ids, actualHeight: loaded.value?.values?.[widget] } };
+  const baselineDeadline = Date.now() + Number(process.env.SEMIO_PROBE_BASELINE_MS ?? 210000);
+  const waitForBaseline = () => until(snap, (s) => geometryDrawn(host(s, PREVIEW)), Math.max(0, baselineDeadline - Date.now()), 500);
+  const earlyBaseline = process.env.SEMIO_PROBE_BASELINE_FIRST === "1" ? await waitForBaseline() : null;
+  if (earlyBaseline && !earlyBaseline.reached) return { ok: false, detail: { reason: "preview never rendered baseline geometry", example, baseline: host(earlyBaseline.value ?? await snap(), PREVIEW) } };
   const artifact = await openPanel("framework.panel.artifact", "procedural-play-graph");
-  await page.locator('[data-slot="panel"] [role="treeitem"]').filter({ hasText: /^Column Height\b/ }).first().click({ timeout: 8000 });
+  await page.locator('[data-slot="panel"] [role="treeitem"]').filter({ hasText: heightLabel }).first().click({ timeout: 8000 });
   const inspection = await openPanel("framework.panel.inspection", "procedural-play-inspector");
-  const present = (await until(async () => (await sliderReadout().count()) > 0, Boolean, 120000)).reached;
+  const present = (await until(async () => (await sliderReadout().count()) > 0, Boolean, Number(process.env.SEMIO_PROBE_INSPECTOR_MS ?? 120000))).reached;
   if (!present) return { ok: false, detail: { artifact, inspection, selection: host(await snap(), MAIN)?.selection, reason: "inspector slider never mounted" } };
   const preview = `[data-surface-id="${PREVIEW}"]`;
   const pixels = () => regionOf(preview);
-  const base = await until(snap, (s) => geometryDrawn(host(s, PREVIEW)), Math.max(0, baselineDeadline - Date.now()), 500);
+  const base = earlyBaseline ?? await waitForBaseline();
   const baseline = host(base.value ?? await snap(), PREVIEW);
   log("edit baseline", { drawn: base.reached, meshes: baseline?.meshCount, vertices: baseline?.drawnVertices, phase: baseline?.phase, units: [baseline?.unitsDone, baseline?.unitsTotal], fault: baseline?.fault });
+  const oracle = oracleForLabel(example);
+  const gradeCurrentGeometry = async (expected) => {
+    const meshStats = expected ? await page.evaluate(meshStatsScript, expected.previewMeshId) : [];
+    return gradeMeshes(expected, meshStats.find((mesh) => mesh.surfaceId === PREVIEW) ?? null);
+  };
+  const geometryGrade = base.reached ? await gradeCurrentGeometry(oracle) : null;
   if (!(await sliderReadout().isVisible())) await openPanel("framework.panel.inspection", "procedural-play-inspector");
   const baseDigest = baseline?.digest; const baseValue = await sliderValue(); const baseFx = (await fixture())?.values;
   const basePixels = base.reached ? await pixels() : null;
-  const edited = String(Number(baseValue) + 2);
+  const edited = String(Number(baseValue) + (rectangle ? 1 : 2));
   await editSliderValue(edited);
-  const editValue = await until(fixture, (f) => String(f?.values[widget]) === edited, 150000, 250);
+  const editValue = await until(fixture, (f) => String(f?.values[widget]) === edited, Number(process.env.SEMIO_PROBE_EDIT_WAIT_MS ?? 150000), 250);
   log("document value after edit", { widget, expected: edited, actual: editValue.value?.values[widget], committed: editValue.reached });
   const focusHistory = () => page.locator(`[data-surface-id="${MAIN}"] [tabindex="0"]`).first().focus({ timeout: 800 }).catch(focusMain);
   if (!base.reached) {
@@ -469,30 +604,39 @@ await row("4-edit-undo-redo", async () => {
     if (!editValue.reached) return { ok: false, detail };
     await focusHistory();
     await chord("mod+z");
-    const undoDocument = await until(fixture, (f) => String(f?.values[widget]) === baseValue, 45000, 250);
+    const undoDocument = await until(fixture, (f) => String(f?.values[widget]) === baseValue, Number(process.env.SEMIO_PROBE_UNDO_WAIT_MS ?? 45000), 250);
     log("document value after undo", { widget, expected: baseValue, actual: undoDocument.value?.values[widget], committed: undoDocument.reached });
+    if (!undoDocument.reached) return { ok: false, detail: { ...detail, valueAfterUndo: undoDocument.value?.values[widget], documentUndo: false, documentRedo: null } };
     await chord("mod+shift+z");
     const redoDocument = await until(fixture, (f) => String(f?.values[widget]) === edited, 45000, 250);
     log("document value after redo", { widget, expected: edited, actual: redoDocument.value?.values[widget], committed: redoDocument.reached });
     return { ok: false, detail: { ...detail, valueAfterUndo: undoDocument.value?.values[widget], valueAfterRedo: redoDocument.value?.values[widget], documentUndo: undoDocument.reached, documentRedo: redoDocument.reached } };
   }
-  const after = await until(snap, (s) => host(s, PREVIEW)?.digest !== baseDigest && geometryDrawn(host(s, PREVIEW)), 70000, 250);
+  const geometryWaitMs = Number(process.env.SEMIO_PROBE_GEOMETRY_WAIT_MS ?? 70000);
+  const editedOracle = oracleAtHeight(oracle, Number(edited));
+  const after = await until(snap, (s) => host(s, PREVIEW)?.digest !== baseDigest && geometryDrawn(host(s, PREVIEW)), geometryWaitMs, 250);
+  const editGrade = after.reached ? await gradeCurrentGeometry(editedOracle) : null;
   const editPixels = after.reached ? await pixels() : null;
   const editedDigest = host(after.value, PREVIEW)?.digest; const editedFx = (await fixture())?.values;
   await focusHistory();
   await chord("mod+z");
-  const undo = await until(snap, (s) => host(s, PREVIEW)?.digest === baseDigest && geometryDrawn(host(s, PREVIEW)), 70000, 250);
+  const undo = await until(snap, (s) => host(s, PREVIEW)?.digest === baseDigest && geometryDrawn(host(s, PREVIEW)), geometryWaitMs, 250);
+  const undoGrade = undo.reached ? await gradeCurrentGeometry(oracle) : null;
   const undoPixels = undo.reached ? await pixels() : null;
   const undoFx = (await fixture())?.values;
-  await chord("mod+shift+z");
-  const redo = await until(snap, (s) => host(s, PREVIEW)?.digest === editedDigest && geometryDrawn(host(s, PREVIEW)), 70000, 250);
+  let redo = { reached: false };
+  if (after.reached && undo.reached) {
+    await chord("mod+shift+z");
+    redo = await until(snap, (s) => host(s, PREVIEW)?.digest === editedDigest && geometryDrawn(host(s, PREVIEW)), geometryWaitMs, 250);
+  }
+  const redoGrade = redo.reached ? await gradeCurrentGeometry(editedOracle) : null;
   const redoPixels = redo.reached ? await pixels() : null;
   const redoFx = (await fixture())?.values;
   const frames = [basePixels, editPixels, undoPixels, redoPixels];
   const pixelDifferences = frames.slice(1).map((pixels, index) => pixels && frames[index] ? gridDiff(frames[index].grid, pixels.grid) : null);
-  const detail = { widget, baseValue, edited, recomputed: after.reached, undid: undo.reached, redid: redo.reached, pixelDifferences, valueAfterEdit: editedFx?.[widget], valueAfterUndo: undoFx?.[widget], valueAfterRedo: redoFx?.[widget], canUndo: undo.value?.history?.canUndo, canRedo: undo.value?.history?.canRedo };
+  const detail = { example, widget, baseValue, edited, geometryGrade, editGrade, undoGrade, redoGrade, recomputed: after.reached, undid: undo.reached, redid: redo.reached, pixelDifferences, valueAfterEdit: editedFx?.[widget], valueAfterUndo: undoFx?.[widget], valueAfterRedo: redoFx?.[widget], canUndo: undo.value?.history?.canUndo, canRedo: undo.value?.history?.canRedo };
   detail.valuesOk = String(detail.valueAfterUndo) === String(baseFx?.[widget]) && String(detail.valueAfterRedo) === String(editedFx?.[widget]) && String(editedFx?.[widget]) !== String(baseFx?.[widget]);
-  return { ok: after.reached && undo.reached && redo.reached && pixelDifferences.every((value) => (value ?? 0) > 0.05) && detail.valuesOk, detail };
+  return { ok: Boolean([geometryGrade, editGrade, undoGrade, redoGrade].every((grade) => grade?.ok) && pixelDifferences.every((value) => (value ?? 0) > 0.05) && detail.valuesOk), detail };
 });
 //#endregion
 
@@ -695,7 +839,7 @@ await row("16-fit-camera", async () => {
 //#endregion
 
 await row("17-example-picker-document", async () => {
-  const populated = await until(fixture, (document) => (document?.ids.length ?? 0) > 0, 60000, 500);
+  const populated = await until(fixture, (document) => (document?.ids.length ?? 0) > 0, Number(process.env.SEMIO_PROBE_PICKER_MOUNT_MS ?? 60000), 500);
   if (!populated.reached) return { ok: false, detail: { reason: "example document did not mount" } };
   const label = (await snap()).example;
   const options = await comboOptions();
@@ -711,6 +855,84 @@ await row("17-example-picker-document", async () => {
     }, MAIN),
   }), (state) => state.label === target && state.ids?.length > 0 && JSON.stringify(state.ids) !== JSON.stringify(populated.value.ids), Number(process.env.SEMIO_PROBE_PICKER_MS ?? 65000), 300);
   return { ok: switched.reached, detail: { options, label, target, idsBefore: populated.value.ids, selected: switched.value?.label, idsAfter: switched.value?.ids, domIds: switched.value?.domIds } };
+});
+
+await row("18-rectangle-history-viewer", async () => {
+  const rectangle = await until(fixture, (document) => document?.ids.includes("rect") && typeof document.values.height === "number", 30000, 300);
+  if (!rectangle.reached) return { ok: false, detail: { reason: "rectangle document did not mount" } };
+  const value = () => fixture().then((document) => document?.values.height);
+  const original = rectangle.value.values.height;
+  const edited = original + 1;
+  await openPanel("framework.panel.artifact", "procedural-play-graph");
+  await page.getByRole("treeitem", { name: /^Height\b/ }).first().click({ timeout: 10000 });
+  await openPanel("framework.panel.inspection", "procedural-play-inspector");
+  await sliderReadout().waitFor({ state: "visible", timeout: 40000 });
+  await editSliderValue(edited);
+  const change = await until(value, (current) => current === edited, 100000, 350);
+  log("rectangle edit", { original, expected: edited, actual: change.value, committed: change.reached });
+  let undo;
+  let redo;
+  if (change.reached) {
+    await page.locator(`[data-surface-id="${MAIN}"][role="application"]`).first().focus({ timeout: 5000 });
+    await chord("mod+z");
+    undo = await until(value, (current) => current === original, 60000, 350);
+    log("rectangle undo", { expected: original, actual: undo.value, committed: undo.reached });
+    if (undo.reached) {
+      await chord("mod+shift+z");
+      redo = await until(value, (current) => current === edited, 60000, 350);
+      log("rectangle redo", { expected: edited, actual: redo.value, committed: redo.reached });
+    }
+  }
+  await page.locator('[id="playground.navbar.roles.viewer"]').click({ timeout: 8000 });
+  const viewer = await until(snap, (state) => state.roles.viewer === "true" && state.windows.includes(VIEW_PREVIEW.slice("window:".length)), 35000, 350);
+  log("rectangle viewer", { mounted: viewer.reached, roles: viewer.value?.roles, windows: viewer.value?.windows });
+  await page.locator('[id="playground.navbar.roles.editor"]').click({ timeout: 8000 });
+  const editor = await until(snap, (state) => state.roles.editor === "true" && state.windows.includes(MAIN.slice("window:".length)), 35000, 350);
+  const restoredValue = await value();
+  return { ok: Boolean(change.reached && undo?.reached && redo?.reached && viewer.reached && editor.reached && restoredValue === edited), detail: { original, edited, change, undo, redo, viewer: { mounted: viewer.reached, roles: viewer.value?.roles, windows: viewer.value?.windows }, editor: { mounted: editor.reached, roles: editor.value?.roles, windows: editor.value?.windows, value: restoredValue } } };
+});
+
+await row("19-camera-inspector", async () => {
+  const ready = await until(snap, (state) => Boolean(host(state, MAIN)?.nodeIds?.includes("height") && host(state, PREVIEW)?.camera), 160000, 650);
+  if (!ready.reached) return { ok: false, detail: { reason: "Edit graph and camera did not mount" } };
+  const camera0 = host(ready.value, PREVIEW).camera;
+  const graphViewport = () => page.evaluate((id) => window.__semioFlowGraphProbe?.[id]?.viewport?.() ?? null, MAIN);
+  const graph0 = await graphViewport();
+  const target = await rectOf(`[data-surface-id="${PREVIEW}"] canvas`);
+  if (!target) return { ok: false, detail: { reason: "Edit preview canvas did not mount" } };
+  const x = target.x + target.width / 2;
+  const y = target.y + target.height / 2;
+  await page.keyboard.down("Alt");
+  try {
+    await page.mouse.move(x, y);
+    await page.mouse.down({ button: "right" });
+    await page.mouse.move(x + target.width * 0.2, y + target.height * 0.075, { steps: 12 });
+    await page.mouse.up({ button: "right" });
+  } finally {
+    await page.keyboard.up("Alt");
+  }
+  const orbit = await until(snap, (state) => Boolean(host(state, PREVIEW)?.camera && JSON.stringify(host(state, PREVIEW).camera.position) !== JSON.stringify(camera0.position)), 12000, 200);
+  const camera1 = host(orbit.value, PREVIEW)?.camera;
+  const distance = (camera) => camera ? Math.hypot(...camera.position.map((axis, index) => axis - camera.target[index])) : null;
+  await page.mouse.move(x, y);
+  await page.mouse.wheel(0, -420);
+  const zoom = await until(snap, (state) => {
+    const current = distance(host(state, PREVIEW)?.camera);
+    return current !== null && camera1 && Math.abs(current - distance(camera1)) > 0.02;
+  }, 12000, 200);
+  const camera2 = host(zoom.value, PREVIEW)?.camera;
+  const graph1 = await graphViewport();
+  const camera = { orbit: orbit.reached, zoom: zoom.reached, before: camera0, afterOrbit: camera1, afterZoom: camera2, graphViewportUnchanged: graph0 !== null && JSON.stringify(graph0) === JSON.stringify(graph1) };
+  log("camera witness", camera);
+  await openPanel("framework.panel.artifact", "procedural-play-graph");
+  await page.locator('[data-slot="panel"] [role="treeitem"]').filter({ hasText: /^Column Height\b/ }).first().click({ timeout: 10000 });
+  await openPanel("framework.panel.inspection", "procedural-play-inspector");
+  const selection = await until(snap, (state) => host(state, MAIN)?.selection?.selectedIds?.includes("height"), 30000, 300);
+  const control = await until(async () => sliderReadout().isVisible(), Boolean, 30000, 300);
+  const ariaValue = control.reached ? await sliderValue() : null;
+  const selected = { graph: host(selection.value, MAIN)?.selection?.selectedIds, inspectorValue: ariaValue, documentValue: (await fixture())?.values.height };
+  log("selection witness", selected);
+  return { ok: camera.orbit && camera.zoom && camera.graphViewportUnchanged && selection.reached && control.reached && ariaValue === String(selected.documentValue), detail: { camera, selected } };
 });
 
 //#region 9 export / import, reload persistence (before locale row, which changes labels)
@@ -806,4 +1028,4 @@ const errors = pageErrors();
 rows.push({ id: "page-errors", ok: errors.length === 0, status: errors.length === 0 ? "pass" : "fail", ms: Date.now() - T0, detail: errors.slice(0, 10), screenshot: null });
 flush();
 console.log(JSON.stringify(rows.map(({ id, ok, status, ms }) => ({ id, ok, status, ms }))));
-await finishBrowser(rows.every((r) => r.ok || r.status === "missing") ? 0 : 1);
+await finishBrowser(rows.every((r) => r.ok) ? 0 : 1);

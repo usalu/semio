@@ -192,11 +192,11 @@ impl ArtifactEditor for DwgAc1018Editor {
     }
 
     fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
-        semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::export::encode_dwg(snapshot).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+        semio_s_artifact_stdio_dwg_write::standards::v_ac1024::subsets::any::io::export::encode_dwg(snapshot).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
-        semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::import::decode_dwg(bytes).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error))
+        semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg(bytes).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error))
     }
 
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {

@@ -2,6 +2,8 @@ use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::InferenceError;
+use semio_framework_job::{Generation, OperationId, OriginalJobFixtureCaller};
+use semio_framework_value::RetainedCloneGrant;
 use semio_plugin::ArtifactInstanceOperationOwnerHandle;
 use std::borrow::Cow;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{ModelInferenceSession, UpdateReport};
@@ -18,8 +20,8 @@ use protocol::{InferenceWorkFailure, Mutation, MutationDiff};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::lend_handle;
-use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::{with_inference, report, record_mutations, DOCUMENT, begin, step, finish, Analysis, probe, probe_rooms, PROBE, shown};
-use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::{with_inference, report, record_mutations, DOCUMENT, begin, Analysis, probe, probe_rooms, PROBE, shown};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::parse_dsl;
 use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::SpaceStatus;
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Phase, Point2, SpaceBoundary};
@@ -27,15 +29,58 @@ use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::sn
 use protocol::Inference;
 
 fn demo() -> ModelSnapshot {
-    parse_dsl(BIM_EXAMPLE_TEXT).expect("the committed demo parses")
+    parse_dsl(semio_framework_test_fixtures::fixture_text!("../../../../../🖼️assets/🎬️demo/🗣️.dsl.semio")).expect("the committed demo parses")
 }
 
 fn fresh(snapshot: &ModelSnapshot) -> ModelInference {
     ModelInference::infer(snapshot).expect("fresh inference")
 }
 
-fn mounted() -> ArtifactInstanceOperationOwnerHandle {
-    ArtifactInstanceOperationOwnerHandle::detached()
+const OWNER_STOCK: RetainedCloneGrant = RetainedCloneGrant {
+    maximum_items: 1 << 20,
+    maximum_copy_bytes: 1 << 26,
+    maximum_capacity_bytes: 1 << 26,
+    maximum_release_bytes: 1 << 26,
+    maximum_depth: 128,
+};
+
+struct MountedFixture(ArtifactInstanceOperationOwnerHandle);
+
+impl std::ops::Deref for MountedFixture {
+    type Target = ArtifactInstanceOperationOwnerHandle;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl MountedFixture {
+    fn close_with(&self, caller: &mut OriginalJobFixtureCaller) {
+        let loan = RetainedCloneGrant { maximum_copy_bytes: 1 << 16, ..OWNER_STOCK };
+        for _ in 0..(1 << 18) {
+            if self.close_terminal_is_empty().expect("mounted owner observable") {
+                return;
+            }
+            caller.retirement_turn(loan, |cx| Ok(self.close_inference_step(cx, loan)))
+                .expect("funded close turn")
+                .expect("mounted inference retires");
+        }
+        panic!("mounted inference did not close: demand {:?}, available {:?}, fuel {}", self.inference_retirement_demands(loan.maximum_copy_bytes), caller.remaining_grant(), caller.fuel_remaining());
+    }
+}
+
+impl Drop for MountedFixture {
+    fn drop(&mut self) {
+        if !std::thread::panicking() && !self.inference_is_empty() {
+            let mut caller = OriginalJobFixtureCaller::admit(OperationId(2), Generation(1), OWNER_STOCK, || Some(1), 1000, 1 << 24);
+            self.close_with(&mut caller);
+            caller.retire(OWNER_STOCK);
+        }
+    }
+}
+
+fn mounted() -> MountedFixture {
+    MountedFixture(ArtifactInstanceOperationOwnerHandle::new(Box::new(semio_plugin::plugin_app_close_prelude::EmptyArtifactInstanceOperationOwner)))
 }
 
 fn taller() -> ModelMutation {
@@ -123,9 +168,14 @@ fn a_recorded_sequence_is_summed_and_a_recorded_diff_that_misses_the_snapshot_is
 fn the_instance_owns_its_sessions_and_the_close_ladder_drops_them() {
     let (snapshot, first, second) = (demo(), mounted(), mounted());
     with_inference(Some(&first), &snapshot, |inference| assert!(!inference.storey_levels.is_empty()));
-    assert!(first.has_inference(DOCUMENT) && !second.has_inference(DOCUMENT), "a session belongs to the instance that read through it");
+
     assert_eq!(report(Some(&second)), UpdateReport::default());
     assert!(report(Some(&first)).nodes > 0);
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(3), Generation(1), OWNER_STOCK, || Some(1), 1000, 1 << 24);
+    first.close_with(&mut caller);
+    caller.retire(OWNER_STOCK);
+    assert!(first.inference_is_empty());
+    assert_eq!(report(Some(&first)), UpdateReport::default());
 }
 
 #[test]
@@ -150,14 +200,14 @@ fn a_job_steps_the_session_with_monotonic_progress_and_settles_it() {
     let mut run = begin(Some(&instance), &snapshot);
     let mut fractions = vec![run.progress().fraction];
     loop {
-        let progress = step(Some(&instance), &mut run, &snapshot, 3).expect("the step runs");
+        let progress = lend_handle(&instance, DOCUMENT, |session| session.step_cold(&mut run, &snapshot, 3)).expect("the step runs");
         fractions.push(progress.fraction);
         if progress.done {
             break;
         }
     }
     assert!(fractions.len() > 3 && fractions.windows(2).all(|pair| pair[0] <= pair[1]), "{fractions:?}");
-    finish(Some(&instance), run, &snapshot).expect("a finished run settles the session");
+    lend_handle(&instance, DOCUMENT, |session| session.finish_cold(run, &snapshot).map(|_| ())).expect("a finished run settles the session");
     with_inference(Some(&instance), &snapshot, |_| ());
     assert!(report(Some(&instance)).gated, "the settled session answers from memory");
     assert_eq!(with_inference(Some(&instance), &snapshot, Clone::clone), fresh(&snapshot));
@@ -167,11 +217,11 @@ fn a_job_steps_the_session_with_monotonic_progress_and_settles_it() {
 fn a_cancelled_job_publishes_nothing_and_the_next_read_reuses_what_it_finished() {
     let (snapshot, instance) = (demo(), mounted());
     let mut run = begin(Some(&instance), &snapshot);
-    step(Some(&instance), &mut run, &snapshot, 3).expect("the step runs");
+    lend_handle(&instance, DOCUMENT, |session| session.step_cold(&mut run, &snapshot, 3)).expect("the step runs");
     let finished = run.finished();
     assert!(finished > 0);
     run.cancel();
-    assert_eq!(finish(Some(&instance), run, &snapshot), Err(InferenceError::Cancelled));
+    assert_eq!(lend_handle(&instance, DOCUMENT, |session| session.finish_cold(run, &snapshot).map(|_| ())), Err(InferenceError::Cancelled));
     assert!(report(Some(&instance)).cancelled);
     assert_eq!(with_inference(Some(&instance), &snapshot, Clone::clone), fresh(&snapshot));
     assert_eq!(report(Some(&instance)).reused, finished, "the finished nodes were not computed again");
@@ -180,13 +230,13 @@ fn a_cancelled_job_publishes_nothing_and_the_next_read_reuses_what_it_finished()
 #[test]
 fn an_analysis_settles_the_session_in_bounded_steps_and_a_cancelled_one_keeps_its_nodes() {
     let (snapshot, instance) = (demo(), mounted());
-    let mut cancelled = Analysis::new(Some(&instance), 3);
-    let first = cancelled.advance(&snapshot).expect("a step");
+    let mut cancelled = Analysis::new(Some(&instance));
+    let first = cancelled.advance_cold(&snapshot, 3).expect("a step");
     assert!(!first.done && cancelled.fraction() > 0.0);
-    cancelled.cancel(&snapshot);
+    cancelled.cancel_cold(&snapshot);
     assert!(report(Some(&instance)).cancelled);
-    let mut analysis = Analysis::new(Some(&instance), 3);
-    while !analysis.advance(&snapshot).expect("a step").done {}
+    let mut analysis = Analysis::new(Some(&instance));
+    while !analysis.advance_cold(&snapshot, 3).expect("a step").done {}
     assert!(analysis.is_done() && analysis.fraction() == 1.0);
     assert!(report(Some(&instance)).reused > 0, "the nodes the cancelled analysis finished were not computed again");
     with_inference(Some(&instance), &snapshot, |_| ());
@@ -196,12 +246,87 @@ fn an_analysis_settles_the_session_in_bounded_steps_and_a_cancelled_one_keeps_it
 #[test]
 fn an_analysis_without_an_instance_runs_on_a_session_of_its_own_to_the_end() {
     let snapshot = demo();
-    let mut analysis = Analysis::new(None, 5);
+    let mut analysis = Analysis::new(None);
     let mut steps = 0;
-    while !analysis.advance(&snapshot).expect("a step").done {
+    while !analysis.advance_cold(&snapshot, 5).expect("a step").done {
         steps += 1;
     }
     assert!(steps > 1 && analysis.is_done());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_original_analysis_borrows_only_the_rendered_revision() {
+    use semio_framework_job::RevisionId;
+    use semio_plugin::{ArtifactView, ChildContentView, HistoryView, MountedOwnerPolicyV1};
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_view_inference;
+
+    let (snapshot, instance) = (demo(), mounted());
+    let revision = [7; 32];
+    let history = HistoryView::empty();
+    let render = semio_plugin::AppRenderOperationContext {
+        app_instance_id: 1,
+        base_revision: RevisionId(1),
+        canonical_base_revision: revision,
+        generation: Generation(1),
+        mounted_policy: MountedOwnerPolicyV1::INTERACTIVE_COMPONENT,
+    };
+    let grant = OWNER_STOCK;
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(1), Generation(1), grant, || Some(1), 1000, 1 << 24);
+    let preview_snapshot = ModelSnapshot::default();
+    let preview = ArtifactView::with_render_context(&preview_snapshot, &history, ChildContentView::EMPTY, render, "bim-test", None).await;
+    assert!(with_view_inference(Some(&instance), &preview, |projection| projection.storey_levels.is_empty()));
+    let mut preview_access = Default::default();
+    let preview_refused = (0..64).any(|_| {
+        let read = caller.turn(grant, |cx| Ok(Analysis::read_rendered(&instance, &mut preview_access, revision, cx, |_, _| ())))
+            .expect("funded preview loan turn");
+        match read {
+            Err(_) => true,
+            Ok(None) => false,
+            Ok(Some(())) => panic!("preview was offered to the export reader"),
+        }
+    });
+    assert!(preview_refused);
+
+    let doc = ArtifactView::with_render_context(&snapshot, &history, ChildContentView::EMPTY, render, "bim-test", None).await
+        .with_committed_render_snapshot(true);
+    let expected = fresh(&snapshot);
+    assert_eq!(with_view_inference(Some(&instance), &doc, Clone::clone), expected);
+    assert!(with_view_inference(Some(&instance), &preview, |projection| projection.storey_levels.is_empty()));
+    let mut export_access = Default::default();
+    let count = (0..64).find_map(|_| {
+        caller.turn(grant, |cx| Ok(Analysis::read_rendered(&instance, &mut export_access, revision, cx, |projection, _| projection.storey_levels.len())))
+            .expect("funded committed loan turn")
+            .expect("preview leaves the committed loan available")
+    });
+    assert_eq!(count, Some(expected.storey_levels.len()));
+
+    let mut completed = false;
+    let mut analysis = Analysis::for_rendered_revision(&instance, revision);
+    for _ in 0..64 {
+        let turn = caller.turn(grant, |cx| Ok(analysis.advance(&snapshot, cx))).expect("funded analysis turn");
+        if turn.expect("the rendered revision is eligible").done {
+            completed = true;
+            break;
+        }
+    }
+    let mut other = Analysis::for_rendered_revision(&instance, [8; 32]);
+    let mut refused = false;
+    for _ in 0..64 {
+        match caller.turn(grant, |cx| Ok(other.advance(&snapshot, cx))).expect("funded analysis turn") {
+            Err(_) => {
+                refused = true;
+                break;
+            }
+            Ok(progress) if progress.done => break,
+            Ok(_) => {}
+        }
+    }
+    instance.close_with(&mut caller);
+    caller.retire(grant);
+    assert!(completed, "the supplied view's projection settles through the original caller");
+    assert_eq!(analysis.fraction(), 1.0);
+    assert!(refused, "another revision must not borrow the rendered projection");
+    assert!(instance.inference_is_empty(), "the mounted projection retires through the original caller");
 }
 
 #[test]
@@ -214,7 +339,9 @@ fn a_probe_infers_a_room_the_document_does_not_have_and_leaves_the_session_alone
     assert_eq!(rooms.get("probe").map(|room| room.status), Some(SpaceStatus::Inferred));
     assert!((30.0..48.0).contains(&rooms["probe"].area), "the room is the enclosure: {}", rooms["probe"].area);
     assert!(with_inference(Some(&instance), &snapshot, |inference| inference.spaces.is_empty()), "the document has no space");
-    assert!(instance.has_inference(PROBE) && instance.has_inference(DOCUMENT));
+    for name in [PROBE, DOCUMENT] {
+        instance.with_inference_session_cold(name, || panic!("expected retained inference session {name}"), |_: &mut ModelInferenceSession| Ok(())).expect("the mounted owner keeps both named sessions");
+    }
 }
 
 #[test]

@@ -1,0 +1,10 @@
+[
+ {"scale": "50", "bone": "hoof-hn", "paint": "hoof-h-n", "swell": {"near-hind-claw-1": -0.0005, "near-hind-claw-2": -0.0005}},
+ {"scale": "50", "bone": "hoof-fn", "paint": "hoof-f-n", "swell": {"near-fore-claw-1": -0.00045, "near-fore-claw-2": -0.00045}},
+ {"scale": "50", "bone": "hoof-hf", "paint": "hoof-h-f", "swell": {"far-hind-claw-1": -0.0005, "far-hind-claw-2": -0.0005}},
+ {"scale": "50", "bone": "hoof-ff", "paint": "hoof-f-f", "swell": {"far-fore-claw-1": -0.00045, "far-fore-claw-2": -0.00045}},
+ {"scale": "50", "bone": "pastern-hn", "paint": "hoof-h-n", "replace": ["hoof-h-n"]},
+ {"scale": "50", "bone": "pastern-fn", "paint": "hoof-f-n", "replace": ["hoof-f-n"]},
+ {"scale": "50", "bone": "pastern-hf", "paint": "hoof-h-f", "replace": ["hoof-h-f"]},
+ {"scale": "50", "bone": "pastern-ff", "paint": "hoof-f-f", "replace": ["hoof-f-f"]}
+]

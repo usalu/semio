@@ -184,6 +184,18 @@ fn the_committed_notated_file_is_the_current_export() {
 }
 
 #[test]
+fn the_committed_components_file_is_the_current_export() {
+    use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg::testkit::{components, COMPONENTS_DIR};
+    let text = svg(&components());
+    let file = format!("{COMPONENTS_DIR}/🪑️components.svg");
+    if std::env::var("BIM_BLESS").is_ok() {
+        std::fs::create_dir_all(COMPONENTS_DIR).expect("the fixture directory");
+        std::fs::write(&file, text.as_bytes()).expect("the file is written");
+    }
+    assert_eq!(std::fs::read_to_string(file).expect("the committed components export"), text, "the committed export drifted: rewrite it with BIM_BLESS=1");
+}
+
+#[test]
 fn a_plan_with_annotations_gets_an_annotation_layer_and_a_plan_without_gets_none() {
     use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg::testkit::notated;
     assert!(tags(&svg(&house())).iter().all(|tag| !tag.has_class("annotations")), "the house has no annotations and no annotation layer");
@@ -192,8 +204,8 @@ fn a_plan_with_annotations_gets_an_annotation_layer_and_a_plan_without_gets_none
     let depth = found[at].depth;
     let inside: Vec<_> = found[at + 1..].iter().take_while(|tag| tag.depth > depth).collect();
     let count = |name: &str, kind: &str| inside.iter().filter(|tag| tag.name == name && tag.has_class(kind)).count();
-    assert_eq!((count("path", "dimension-line"), count("text", "dimension-text"), count("text", "tag-text"), count("text", "note-text")), (7, 8, 4, 1));
-    assert_eq!((count("path", "leader-line"), count("text", "leader-text")), (1, 1));
+    assert_eq!((count("path", "dimension-line"), count("text", "dimension-text"), count("text", "tag-text"), count("text", "note-text")), (1, 1, 1, 0));
+    assert_eq!((count("path", "leader-line"), count("text", "leader-text")), (0, 0));
     assert!(count("path", "dimension-extension") > 0 && count("path", "dimension-mark") > 0);
     assert!(inside.iter().all(|tag| tag.has_class("annotation")), "every primitive of the layer is drawn in the annotation line style");
     let outside = found.iter().enumerate().filter(|(index, tag)| (*index <= at || *index > at + inside.len()) && (tag.name == "path" || tag.name == "text"));

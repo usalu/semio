@@ -185,7 +185,7 @@ export const SlideInteractionReset: FC<{
         <button
           type="button"
           {...SHARED_BORDER_CELL}
-          className="presentation-interaction-slide-reset"
+          className="presentation-interaction-slide-reset ui-glass"
           title="Reset slide"
           onClick={(event) => {
             event.preventDefault();

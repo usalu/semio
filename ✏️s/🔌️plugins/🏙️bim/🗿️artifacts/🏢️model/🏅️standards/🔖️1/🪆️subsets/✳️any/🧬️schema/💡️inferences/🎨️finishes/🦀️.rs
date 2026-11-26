@@ -21,6 +21,7 @@ use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::sn
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Slope, Vertex};
 use semio_framework_2d::booleans::{BooleanOperation, BooleanProgress};
 use semio_framework_2d::regions::{region_boolean, Region};
+use semio_framework_2d::retirement::BlockingTurns;
 use semio_framework_2d::Vec2;
 use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;
@@ -124,9 +125,9 @@ pub fn covered_area(snapshot: &ModelSnapshot, space: &Space, room: &SpaceRoom, c
     let Some((outer, islands)) = rings.split_first() else { return 0.0 };
     let control = &mut |_: &BooleanProgress| true;
     let (floor, hung) = (Region::new(outer, islands), Region::new(&flat_ring(&ceiling.boundary), &ceiling.holes.iter().map(|hole| flat_ring(hole)).collect::<Vec<_>>()));
-    let covered = region_boolean(BooleanOperation::Intersection, &[floor], &[hung], control).unwrap_or_default();
+    let covered = region_boolean(BooleanOperation::Intersection, &[floor], &[hung], control, &mut BlockingTurns::new(1 << 20)).unwrap_or_default();
     let columns = semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::column_regions(snapshot, &space.storey);
-    let net = if columns.is_empty() { covered } else { region_boolean(BooleanOperation::Difference, &covered, &columns, control).unwrap_or_default() };
+    let net = if columns.is_empty() { covered } else { region_boolean(BooleanOperation::Difference, &covered, &columns, control, &mut BlockingTurns::new(1 << 20)).unwrap_or_default() };
     net.iter().map(Region::area).sum()
 }
 

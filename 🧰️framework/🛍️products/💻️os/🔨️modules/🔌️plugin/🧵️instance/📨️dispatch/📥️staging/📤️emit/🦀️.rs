@@ -291,7 +291,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
             .await;
         }
         if aborting {
-            self.as_render().revalidate_interaction_on_document_change(meta, identity).await?;
+            self.as_render().revalidate_interaction_on_document_change(identity).await?;
             self.as_render().apply_interaction_writes(&interaction_writes, meta, identity).await?;
             self.history.retire_displaced_document_rows();
             return Ok(ToolOperations::<A>::empty_result(verb, meta, effects, events, ui_scope).await);
@@ -312,7 +312,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
                 self.tools.record_command(&mut *self.history, verb, kind, log_label, Some(edit_id), Vec::new(), None);
             }
         }
-        self.as_render().revalidate_interaction_on_document_change(meta, identity).await?;
+        self.as_render().revalidate_interaction_on_document_change(identity).await?;
         self.as_render().apply_interaction_writes(&interaction_writes, meta, identity).await?;
         let tail_offset = if amended_same_edit { (before_forwards_len, before_backwards_len) } else { (0, 0) };
         Ok(self.stores.result_from_last_edit(verb, meta, effects, events, ui_scope, tail_offset).await)

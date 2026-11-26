@@ -1,6 +1,7 @@
+import { Surface } from "@semio-tech/ui-react";
 /** 🪟️ InkCanvasHost overlays: the selection chrome with its resize handles, the viewport grid and the text and table cell editor overlays. */
 import { useEffect, useRef } from "../../⚛️react-port/🟦️.ts";
-import { cn, glassClass, Input, SharedBorderRow, useLabel } from "@semio-tech/ui-react";
+import { Input, SharedBorderRow, useLabel } from "@semio-tech/ui-react";
 import type { InkBounds, InkTableItem, InkTextItem, InkTextParagraph } from "../🧾️ink-model/🟦️.ts";
 import { inkHtmlToParagraphs, inkParagraphsToHtml } from "../🌳️ink-document-ops/🟦️.ts";
 
@@ -33,7 +34,7 @@ export function InkTextEditorOverlay({ block, screenBounds, onCommit, onCancel }
     return () => editor.removeEventListener("keydown", onKeyDown);
   }, [onCancel]);
   return (
-    <SharedBorderRow data-ink-editor-overlay="" orientation="vertical" data-level="pane" data-glass-chip="" className={cn("absolute z-30", glassClass)} style={{ left: screenBounds.x, top: screenBounds.y, width: screenBounds.width, height: screenBounds.height }}>
+    <SharedBorderRow data-ink-editor-overlay="" orientation="vertical" overlay="chip" className="absolute z-30" style={{ left: screenBounds.x, top: screenBounds.y, width: screenBounds.width, height: screenBounds.height }}>
       <SharedBorderRow className="shrink-0">
         <button
           type="button"
@@ -81,7 +82,7 @@ export function InkTextEditorOverlay({ block, screenBounds, onCommit, onCancel }
         ref={editorRef}
         contentEditable
         suppressContentEditableWarning
-        data-shared-border-cell="" className="text-foreground bg-background min-h-0 w-full flex-1 overflow-auto p-2 outline-none"
+        data-shared-border-cell="" className="text-foreground bg-transparent min-h-0 w-full flex-1 overflow-auto p-2 outline-none"
         style={{ fontSize: block.fontSize, fontWeight: block.fontWeight, textAlign: block.align }}
         dangerouslySetInnerHTML={{ __html: inkParagraphsToHtml(block.paragraphs) }}
         onBlur={() => {
@@ -114,7 +115,7 @@ export function InkTableCellEditorOverlay({
     inputRef.current?.select();
   }, []);
   return (
-    <div data-ink-editor-overlay="" className="absolute z-30 flex" style={{ left: screenBounds.x, top: screenBounds.y, width: screenBounds.width, height: screenBounds.height }}>
+    <Surface level="chip" data-ink-editor-overlay="" className="absolute z-30 flex" style={{ left: screenBounds.x, top: screenBounds.y, width: screenBounds.width, height: screenBounds.height }}>
       <Input
         id="ink-table-cell-editor"
         ref={inputRef}
@@ -132,7 +133,7 @@ export function InkTableCellEditorOverlay({
         }}
         onBlur={(event) => onCommit(event.currentTarget.value)}
       />
-    </div>
+    </Surface>
   );
 }
 //#endregion Overlays

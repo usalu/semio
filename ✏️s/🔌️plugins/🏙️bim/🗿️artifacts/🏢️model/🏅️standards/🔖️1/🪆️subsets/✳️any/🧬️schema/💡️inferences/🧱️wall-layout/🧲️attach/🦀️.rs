@@ -51,7 +51,7 @@ pub struct AttachState {
 }
 
 /// ▭️ One planar piece of an attach surface: a plan polygon with holes and the plane of the underside above it.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq)]
 pub struct Piece {
     pub outline: Vec<Point>,
     pub holes: Vec<Vec<Point>>,
@@ -60,7 +60,7 @@ pub struct Piece {
 
 /// 🧱️ The resolved surface of a roof, slab or ceiling (the `Surface` node of the model graph): the planar pieces of its underside, its vertical thickness (the top surface lies `thickness` above the underside) and `reference`,
 /// the underside height used where the surface covers no point of the wall.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq)]
 pub struct AttachSurface {
     pub found: bool,
     pub pieces: Vec<Piece>,

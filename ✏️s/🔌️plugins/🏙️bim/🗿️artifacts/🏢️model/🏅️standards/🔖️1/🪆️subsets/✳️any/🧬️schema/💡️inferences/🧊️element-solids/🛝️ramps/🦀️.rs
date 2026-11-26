@@ -84,7 +84,7 @@ pub fn sweep_rings(rings: &[Ring]) -> TriMesh {
     for pair in rings.windows(2) {
         let (a, b) = (&pair[0], &pair[1]);
         mesh.push_quad(a.right_top, b.right_top, b.left_top, a.left_top);
-        mesh.push_quad(a.left_bottom, b.left_bottom, b.right_bottom, a.right_bottom);
+        mesh.push_quad(a.right_bottom, a.left_bottom, b.left_bottom, b.right_bottom);
         mesh.push_quad(a.left_bottom, a.left_top, b.left_top, b.left_bottom);
         mesh.push_quad(a.right_bottom, b.right_bottom, b.right_top, a.right_top);
     }

@@ -2,11 +2,12 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
+import { Surface, useSurface } from "../../../🌈️Surface/🟦️.tsx";
 import { OverviewCard, OverviewCardAction, OverviewCardOpenChip } from "../../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🃏️OverviewCardAnatomy
-/** 🃏️ The card's DOM contract: a dialog-level, never-active window chrome whose stack stays transparent, the title in the
+/** 🃏️ The card's DOM contract: an owner-level, never-active window chrome whose stack stays transparent, the title in the
  * cap chip, the body in `<slot>-content`, and — by shape — either a named region with real footer buttons or one button. */
 describe("OverviewCard", () => {
   it("makes a flush card's content a vertical shared-border group without body padding", () => {
@@ -34,7 +35,7 @@ describe("OverviewCard", () => {
     expect(content.hasAttribute("data-orientation")).toBe(false);
   });
 
-  it("renders a section named by its heading, with the chrome at dialog level and real footer buttons", () => {
+  it("renders a section named by its heading, with the chrome at the page level and real footer buttons", () => {
     const onStart = vi.fn();
     const onLast = vi.fn();
     render(
@@ -68,7 +69,7 @@ describe("OverviewCard", () => {
     const stack = region.querySelector('[data-slot="quiz-card-stack"]');
     expect(stack?.hasAttribute("data-overview-card-stack")).toBe(true);
     expect(stack?.hasAttribute("data-shared-border-hover")).toBe(true);
-    expect(stack?.getAttribute("data-level")).toBe("dialog");
+    expect(stack?.getAttribute("data-level")).toBe("base");
     expect(stack?.hasAttribute("data-active")).toBe(false);
     expect(region.querySelector('[data-slot="quiz-card-content"]')?.textContent).toContain("passive-house roof");
     const buttons = within(region).getAllByRole("button");
@@ -91,6 +92,23 @@ describe("OverviewCard", () => {
     fireEvent.click(buttons[0]!);
     expect(onStart).toHaveBeenCalledTimes(1);
     expect(onLast).toHaveBeenCalledTimes(1);
+  });
+
+  it("inherits the painted window for in-flow cards and raises only its edge chips", () => {
+    function Probe() {
+      const surface = useSurface();
+      return <output>{surface?.level}/{surface?.fill}</output>;
+    }
+    const { container } = render(
+      <Surface level="window" fill="glass">
+        <OverviewCard as="section" slot="unit" headingId="task" icon={null} title="Task">
+          <Probe />
+        </OverviewCard>
+      </Surface>,
+    );
+    expect(container.querySelector("output")?.textContent).toBe("window/glass");
+    expect(container.querySelector('[data-slot="window-chrome-body-surface"]')).toBeNull();
+    expect(container.querySelector("[data-window-frame-chip]")?.getAttribute("data-level")).toBe("pane");
   });
 
   it("defaults the section heading to level two", () => {

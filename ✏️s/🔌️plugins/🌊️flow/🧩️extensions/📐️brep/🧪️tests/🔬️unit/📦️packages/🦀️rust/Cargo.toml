@@ -30,7 +30,9 @@ semio-framework-3d-brep-boolean = { path = "../../../../../../../../../🧰️fr
 semio-framework-3d-brep-representation = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-semio-brep-export = { workspace = true }
 semio-s-artifact-stdio-semio-brep-import = { workspace = true }
-flow_extension_sdk = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", package = "semio-os-flow" }
+flow_extension_sdk = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/📦️packages/🦀️rust", package = "semio-os-flow-extensions" }
+semio-os-flow-mesh = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎒️mesh/📦️packages/🦀️rust" }
+semio-os-flow-geometry = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/📦️packages/🦀️rust" }
 neural_engine = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-os-kernel-neural-engine" }
 pack = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 semio-plugin = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }

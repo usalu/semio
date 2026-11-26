@@ -10,8 +10,10 @@
 use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility;
 use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
-use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::{model_graph::{instance, kinds}, ModelInference};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::frame::{self, StoreyLevel};
+pub use frame::can_emit_cold_column;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
 use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
@@ -75,11 +77,11 @@ pub const STAGES: &[Stage] = &[
     ("systems", semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::mep::emit_systems),
     ("spaces", semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::ifc::spaces::emit),
     ("zones", semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::zoning::emit),
-    ("options", options::emit),
     ("grids", grids::emit),
     ("annotations", semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::annotations::emit),
     ("energy", energy::emit),
     ("structure", semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::structure::emit),
+    ("options", options::emit),
     ("links", semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::emit_links),
     ("connections", semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::walls::connect),
 ];
@@ -100,9 +102,15 @@ pub fn finish(mut export: Export<'_>, model: &ModelSnapshot) -> (Part21Document,
     (export.ifc.finish(head), notes)
 }
 
-/// 🏗️ The Part-21 document of `model` in `schema` plus a note per item that could not be written: the inference comes from the shared session, so an export after an edit recomputes only what the edit touched.
+/// 🧮️ Inferred fields read by the IFC export stages, including their transitive graph dependencies.
+const IFC_FIELDS: u64 = kinds::LEVELS | kinds::LAYOUTS | kinds::CURTAINS | kinds::FRAMES
+    | kinds::RUNS | kinds::RAMP_RUNS | kinds::SOLIDS | kinds::ROOMS | kinds::PLANS
+    | kinds::QUANTITIES | kinds::ANNOTATIONS | kinds::ZONES | kinds::COMPONENTS
+    | kinds::MEPS | kinds::ENERGY | kinds::STRUCTURE;
+
+/// 🏗️ Writes the Part-21 document using the inference fields required by its export stages.
 pub fn model_to_part21(schema: Schema, model: &ModelSnapshot) -> Result<(Part21Document, Vec<String>), String> {
-    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| inferred_to_part21(schema, model, inferred)).map_err(|error| error.to_string())
+    instance::probe::<IFC_FIELDS, _>(None, model, |inferred| inferred_to_part21(schema, model, inferred)).map_err(|error| error.to_string())
 }
 
 /// 📤️ The IFC 2x3 file bytes of `model` plus a note per item that could not be written.
@@ -126,15 +134,17 @@ pub fn encode(schema: Schema, document: Part21Document) -> Result<Vec<u8>, Strin
 }
 
 /// 🧵️ An export that runs one [`STAGES`] entry per step, so a job can report how far it is and stop between two stages; it owns no borrow of the inference.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct StagedExport {
     staged: Option<Staged>,
     next: usize,
+    next_column: usize,
 }
 
 impl StagedExport {
     /// 🌱️ An export of `model` in `schema` that has not run a stage yet.
     pub fn new(schema: Schema, model: &ModelSnapshot) -> Self {
-        Self { staged: Some(Staged::new(schema, model)), next: 0 }
+        Self { staged: Some(Staged::new(schema, model)), next: 0, next_column: 0 }
     }
 
     /// 📈️ How far the stages are, from zero to one.
@@ -149,9 +159,42 @@ impl StagedExport {
 
     /// ⏩️ Runs the next stage; the document and its notes once the last has run, `None` before.
     pub fn step(&mut self, model: &ModelSnapshot, inferred: &ModelInference) -> Option<(Part21Document, Vec<String>)> {
+        self.step_with_levels(model, inferred, None)
+    }
+
+    /// 🏛️ Runs one stage or one rectangular column using the original storey levels.
+    pub fn step_from_levels(
+        &mut self,
+        model: &ModelSnapshot,
+        level_of: impl Fn(&str) -> Option<StoreyLevel>,
+    ) -> Option<(Part21Document, Vec<String>)> {
+        self.step_with_levels(model, &ModelInference::default(), Some(&level_of))
+    }
+
+    fn step_with_levels(
+        &mut self,
+        model: &ModelSnapshot,
+        inferred: &ModelInference,
+        levels: Option<&dyn Fn(&str) -> Option<StoreyLevel>>,
+    ) -> Option<(Part21Document, Vec<String>)> {
         let mut export = Export::resume(model, inferred, self.staged.take()?);
-        if let Some((_, stage)) = STAGES.get(self.next) {
-            stage(&mut export);
+        if let Some((name, stage)) = STAGES.get(self.next) {
+            match (*name, levels) {
+                ("spatial", Some(levels)) => {
+                    semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::spatial::emit_with_levels(
+                        &mut export, |id| levels(id).map(|level| (level.elevation, level.absolute_elevation)),
+                    );
+                }
+                ("frames", Some(levels)) => {
+                    if let Some((id, column)) = model.columns.get_index(self.next_column) {
+                        frame::emit_cold_column(&mut export, id, column, levels);
+                        self.next_column += 1;
+                        self.staged = Some(export.suspend());
+                        return None;
+                    }
+                }
+                _ => stage(&mut export),
+            }
             self.next += 1;
         }
         if self.next < STAGES.len() {

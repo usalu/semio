@@ -146,3 +146,7 @@ pub use task_resumes_and_wire_effects::*;
 
 #[path = "🏁️close-step/🦀️.rs"]
 pub mod turn_close_step;
+
+#[cfg(test)]
+#[path="🧪️tests/🔄️occupied-slot/🦀️.rs"]
+mod occupied_slot_laws;

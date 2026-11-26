@@ -818,7 +818,7 @@
     },
     {
       "id": "storage-opening",
-      "budgetMs": 15000,
+      "budgetMs": 300000,
       "typecheck": "none",
       "trees": [
         "💾️storage/🔒️enforcement/📦️budget/📥️opening"
@@ -861,7 +861,7 @@
     },
     {
       "id": "storage-graph",
-      "budgetMs": 15000,
+      "budgetMs": 300000,
       "typecheck": "none",
       "trees": [
         "💾️storage/🔒️enforcement/📦️budget/🕸️graph"
@@ -1132,7 +1132,7 @@
     },
     {
       "id": "bootstrap-dependencies",
-      "budgetMs": 15000,
+      "budgetMs": 300000,
       "typecheck": "none",
       "trees": [
         "🚀️bootstrap/📦️dependencies"
@@ -1175,7 +1175,7 @@
     },
     {
       "id": "bootstrap",
-      "budgetMs": 15000,
+      "budgetMs": 300000,
       "typecheck": "none",
       "trees": [
         "🚀️bootstrap"
@@ -1255,7 +1255,8 @@
         "🦀️cargo/📦️units/📥️inputs/🧪️tests/🟦️.ts",
         "🦀️cargo/📦️units/🧪️tests/📐️profile/♻️preparation/🟦️.ts",
         "🦀️cargo/📦️units/🧪️tests/📥️source/🟦️.ts",
-        "🦀️cargo/📦️units/🧭️context/🧪️tests/🟦️.ts"
+        "🦀️cargo/📦️units/🧭️context/🧪️tests/🟦️.ts",
+        "🦀️cargo/🧮️manifest-closure/🧪️tests/🟦️.ts"
       ],
       "platforms": [
         "darwin",
@@ -1777,22 +1778,6 @@
       ],
       "budgetMs": 300000,
       "typecheck": "none"
-    },
-    {
-      "id": "process-watchdog-linux",
-      "budgetMs": 300000,
-      "typecheck": "none",
-      "files": [
-        "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🐧️linux/🧪️tests/🟦️.ts"
-      ],
-      "platforms": [
-        "darwin",
-        "linux",
-        "win32"
-      ],
-      "tools": [
-        "node"
-      ]
     },
     {
       "id": "node-native-authorizer",

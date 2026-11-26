@@ -6,7 +6,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { Navbar, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsContent, TabsList, TabsTrigger, UI_MOBILE_MEDIA_QUERY, navbarFillItem, useMediaQuery } from "@semio-tech/ui-react";
+import { Navbar, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Surface, Tabs, TabsContent, TabsList, TabsTrigger, UI_MOBILE_MEDIA_QUERY, navbarFillItem, useMediaQuery } from "@semio-tech/ui-react";
 import { ADMIN_LOCALES, useAdminLocale, useAdminT, type AdminI18nKey, type AdminLocale } from "../📚️I18n/🟦️.tsx";
 import { AdminAccessGate, useAdminSession } from "../🔑️AdminSession/🟦️.tsx";
 import { OverviewPage } from "../🏠️OverviewPage/🟦️.tsx";
@@ -55,19 +55,19 @@ export function AdminApp(): React.ReactElement {
 
   if (status !== "authorized") {
     return (
-      <div className="relative flex h-full w-full flex-col" style={BAND_CLEARANCE}>
+      <Surface level="base" className="relative flex h-full w-full flex-col" style={BAND_CLEARANCE}>
         <div className="absolute inset-x-0 top-0 z-40">
           <Navbar label={t("admin.session.title")} showFullscreenToggle={false} items={[navbarFillItem(), { key: "locale", content: <LocaleSwitch /> }]} />
         </div>
         <div className="flex min-h-0 flex-1 flex-col pt-[var(--admin-clear-top)]">
           <AdminAccessGate />
         </div>
-      </div>
+      </Surface>
     );
   }
 
   return (
-    <div className="relative flex h-full w-full flex-col" style={BAND_CLEARANCE}>
+    <Surface level="base" className="relative flex h-full w-full flex-col" style={BAND_CLEARANCE}>
       <Tabs value={tab} onValueChange={(next) => setTab(next as AdminTab)} className="flex h-full w-full flex-col">
         <div className="absolute inset-x-0 top-0 z-40">
           <Navbar
@@ -134,6 +134,6 @@ export function AdminApp(): React.ReactElement {
           </TabsContent>
         </div>
       </Tabs>
-    </div>
+    </Surface>
   );
 }

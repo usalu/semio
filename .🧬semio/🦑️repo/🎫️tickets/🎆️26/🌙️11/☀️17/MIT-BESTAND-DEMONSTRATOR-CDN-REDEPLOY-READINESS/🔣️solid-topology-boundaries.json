@@ -1,0 +1,22 @@
+[
+  {
+    "module": "sector_boundary",
+    "path": "🍩️sector-boundary",
+    "sha256": "e7a233ff53ccbf02ba082ff85fcd24ca06cf8c66c8da7db2187bf818af70c1aa"
+  },
+  {
+    "module": "spherical_cap_boundary",
+    "path": "🌗️spherical-cap-boundary",
+    "sha256": "694fc70fc0514b12cb4f3cfb3af6e9d2a02d6abff16fa9866a68c709bb47a130"
+  },
+  {
+    "module": "rounded_box_boundary",
+    "path": "🟠️rounded-box-boundary",
+    "sha256": "24f6c1172cd8bf2a9a4452a26aac93cd04ffb207ecb7e260601b900b9a8346cd"
+  },
+  {
+    "module": "clip_boundary",
+    "path": "✂️clip-boundary",
+    "sha256": "c1d5642107d8b0dbccc5468a1edcd8d8be67e8b621ec40cb1a9ed78d6f7430fa"
+  }
+]

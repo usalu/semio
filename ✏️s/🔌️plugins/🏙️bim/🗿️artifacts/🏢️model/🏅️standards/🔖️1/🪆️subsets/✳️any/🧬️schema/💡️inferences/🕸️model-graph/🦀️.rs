@@ -52,6 +52,8 @@ pub mod projection;
 pub mod instance;
 #[path = "📡️session/🦀️.rs"]
 pub mod session;
+#[path = "🎟️original-storeys/🦀️.rs"]
+pub mod original_storeys;
 #[path = "🧰️standalone/🦀️.rs"]
 pub mod standalone;
 
@@ -211,7 +213,7 @@ impl NodeKind {
             Self::DiagnosticIndex => &[Diagnostics],
             Schedule => &[Quantity, Properties],
             Zone | Scheme => &[Quantity],
-            View => &[Storey, WallLayout, CurtainLayout, OpeningFrame, StairRun, RampRun, Room, Solid, Component, Mep],
+            View => &[Plan, Solid],
             Sheet => &[View],
             Probe => &[Solid],
             ClashSet => &[Probe],
@@ -397,46 +399,80 @@ impl ModelNode {
 //#endregion 🔖️Keys
 
 //#region 🔖️Values
-/// 📦️ What a node holds. Everything bigger than a `Copy` struct is an `Arc`, so the engine's per-parent clone and a cache hit are pointer copies.
-#[derive(Clone, Debug, PartialEq)]
-#[derive(semio_framework_value::RetireOwned)]
-pub enum Data {
-    Structure(Arc<semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::analytical_members::StructuralAnalysis>),
-    OptionScope(Arc<semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::option_scope::OptionScope>),
-    Level(StoreyLevel),
-    Band(Option<Band>),
-    Cut(CutRect),
-    Layout(Arc<WallLayout>),
-    Curtain(Arc<CurtainLayout>),
-    Host(Option<Arc<HostExtent>>),
-    Frame(Arc<OpeningFrame>),
-    Run(Arc<StairRun>),
-    RampRun(Arc<RampRun>),
-    Solid(Arc<SolidEntry>),
-    Rooms(Arc<StoreyRooms>),
-    Plan(Arc<PlanLinework>),
-    Quantity(Option<Arc<ElementQuantity>>),
-    Totals(Arc<QuantityTotals>),
-    Findings(Arc<Vec<Diagnostic>>),
-    Index(Arc<DiagnosticIndex>),
-    Annotations(Arc<StoreyAnnotations>),
-    Schedule(Arc<ScheduleTable>),
-    Zone(Arc<ZoneTotals>),
-    Scheme(Arc<SchemeTotals>),
-    View(Arc<ViewLinework>),
-    Sheet(Arc<SheetLayout>),
-    Phases(Arc<PhaseVisibility>),
-    Surface(Arc<AttachSurface>),
-    Properties(Arc<EffectiveProperties>),
-    Family(Arc<FamilyValue>),
-    Probe(Arc<SolidProbe>),
-    Clashes(Arc<ClashSetResult>),
-    Rule(Arc<RuleResult>),
-    Envelope(Arc<EnvelopeSpace>),
-    EnergyTotals(Arc<EnergyTotals>),
-    Component(Arc<ComponentEntry>),
-    Mep(Arc<MepValue>),
-    MepClashes(Arc<MepClashes>),
+use semio_framework_value::retirement::{arc_custody::ArcLease, RetireOwned};
+
+macro_rules! graph_values {
+    ($($name:ident($payload:ty)),+ $(,)?) => {
+        /// 📦️ Immutable node output, shared by cache hits and dependent nodes.
+        #[derive(Clone, Debug, PartialEq)]
+        pub enum Data {
+            $($name(Arc<$payload>),)+
+            Level(StoreyLevel), Band(Option<Band>), Cut(CutRect),
+            Host(Option<Arc<HostExtent>>), Quantity(Option<Arc<ElementQuantity>>),
+        }
+
+        #[doc(hidden)]
+        #[derive(semio_framework_value::RetireOwned)]
+        pub enum GraphValueRetirement {
+            $($name(ArcLease<$payload>),)+
+            Level(StoreyLevel), Band(Option<Band>), Cut(CutRect),
+            Host(Option<ArcLease<HostExtent>>), Quantity(Option<ArcLease<ElementQuantity>>),
+        }
+
+        impl RetireOwned for Data {
+            type RetirementCursor = <GraphValueRetirement as RetireOwned>::RetirementCursor;
+            fn retirement_seed(self) -> Self::RetirementCursor {
+                match self {
+                    $(Self::$name(value) => GraphValueRetirement::$name(ArcLease::new(value)),)+
+                    Self::Level(level) => GraphValueRetirement::Level(level),
+                    Self::Band(band) => GraphValueRetirement::Band(band),
+                    Self::Cut(cut) => GraphValueRetirement::Cut(cut),
+                    Self::Host(host) => GraphValueRetirement::Host(host.map(ArcLease::new)),
+                    Self::Quantity(quantity) => GraphValueRetirement::Quantity(quantity.map(ArcLease::new)),
+                }.retirement_seed()
+            }
+            fn controlled_retirement_supported() -> bool {
+                GraphValueRetirement::controlled_retirement_supported()
+            }
+            fn retirement_element_copy_bytes() -> usize {
+                GraphValueRetirement::retirement_element_copy_bytes()
+            }
+        }
+    };
+}
+
+graph_values! {
+    Structure(semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::analytical_members::StructuralAnalysis),
+    OptionScope(semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::option_scope::OptionScope),
+    Layout(WallLayout),
+    Curtain(CurtainLayout),
+    Frame(OpeningFrame),
+    Run(StairRun),
+    RampRun(RampRun),
+    Solid(SolidEntry),
+    Rooms(StoreyRooms),
+    Plan(PlanLinework),
+    Totals(QuantityTotals),
+    Findings(Vec<Diagnostic>),
+    Index(DiagnosticIndex),
+    Annotations(StoreyAnnotations),
+    Schedule(ScheduleTable),
+    Zone(ZoneTotals),
+    Scheme(SchemeTotals),
+    View(ViewLinework),
+    Sheet(SheetLayout),
+    Phases(PhaseVisibility),
+    Surface(AttachSurface),
+    Properties(EffectiveProperties),
+    Family(FamilyValue),
+    Probe(SolidProbe),
+    Clashes(ClashSetResult),
+    Rule(RuleResult),
+    Envelope(EnvelopeSpace),
+    EnergyTotals(EnergyTotals),
+    Component(ComponentEntry),
+    Mep(MepValue),
+    MepClashes(MepClashes),
 }
 
 /// 📦️ A node value: the key it was computed for and its data. The key travels with the value so a parent is found by key, never by position.

@@ -121,7 +121,7 @@ impl PluginArtifactChannel {
         self.load_archive_carrier(instance, store::DocumentArchivePack { parent_pack: pack.to_vec(), parent_spr: spr.to_vec(), members: Vec::new() }, scope)
     }
 
-    fn load_archive_carrier(&mut self, instance: u32, carrier: store::DocumentArchivePack, scope: &ActivationScope) -> Result<(), Fault> {
+    pub(crate) fn load_archive_carrier(&mut self, instance: u32, carrier: store::DocumentArchivePack, scope: &ActivationScope) -> Result<(), Fault> {
         let mut load = store::DocumentArchiveLoadHost::new(carrier);
         let deadline = std::time::Instant::now() + DOCUMENT_LOAD_WALL_BUDGET;
         let mut stopped: Option<Fault> = None;

@@ -21,6 +21,11 @@ pub mod standards {
                         pub mod snapshot;
                     }
                     #[path = "."]
+                    pub mod sqlite {
+                        #[path = "../../../../🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"]
+                        pub mod snapshot;
+                    }
+                    #[path = "."]
                     pub mod text {
                         #[path = "../../../../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
                         pub mod snapshot;

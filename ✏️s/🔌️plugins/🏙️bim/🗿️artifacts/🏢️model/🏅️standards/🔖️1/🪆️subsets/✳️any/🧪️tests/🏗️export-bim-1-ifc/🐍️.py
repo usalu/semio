@@ -213,8 +213,9 @@ def audit(model, snapshot, table, committed=None):
     if table["counts"]["IfcWindow"] + table["counts"]["IfcDoor"] != len(openings):
         problems.append("fillings: %d in the file, %d in the snapshot" % (table["counts"]["IfcWindow"] + table["counts"]["IfcDoor"], len(openings)))
     for storey, tags in table["containment"].items():
+        annotations = {row.get("name") or key for kind in ("dimensions", "tags", "text_notes", "leaders") for key, row in snapshot.get(kind, {}).items()}
         for tag in tags:
-            if tag not in {**snapshot["walls"], **snapshot["columns"], **snapshot["beams"], **snapshot["slabs"], **snapshot.get("ceilings", {}), **snapshot["roofs"], **snapshot["stairs"], **snapshot["railings"], **snapshot.get("ramps", {}), **snapshot["curtain_walls"], **snapshot["openings"], **snapshot["wall_sweeps"], **snapshot["components"], **snapshot["mep_elements"]}:
+            if tag not in annotations and tag not in {**snapshot["walls"], **snapshot["columns"], **snapshot["beams"], **snapshot["slabs"], **snapshot.get("ceilings", {}), **snapshot["roofs"], **snapshot["stairs"], **snapshot["railings"], **snapshot.get("ramps", {}), **snapshot["curtain_walls"], **snapshot["openings"], **snapshot["wall_sweeps"], **snapshot["components"], **snapshot["mep_elements"]}:
                 problems.append("%s contains the unknown element %s" % (storey, tag))
     by_tag = {element.Tag: element for name in MEASURED for element in model.by_type(name, include_subtypes=False)}
     for tag, volume in table["volumes"].items():

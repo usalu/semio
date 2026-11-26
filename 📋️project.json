@@ -2197,9 +2197,13 @@
               "describe": [
                 "job:describe-tool"
               ],
-              "browser": [
-                "job:support",
+              "transpile": [
                 "job:native-transpile"
+              ],
+              "browser": [
+                "job:font-assets",
+                "job:fonts",
+                "job:support"
               ]
             },
             "jobs": [
@@ -2226,7 +2230,9 @@
                 "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🦀️native-transpile",
                 "command": [
                   "repo",
-                  "./📜️stage.ts"
+                  "./📜️script.ts",
+                  "build",
+                  "--host-platform={hostPlatform}"
                 ],
                 "after": [],
                 "profile": "release",

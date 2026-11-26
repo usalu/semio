@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 128 144.5" width="128mm" height="144.5mm" xmlns="http://www.w3.org/2000/svg" class="sheet"
+<svg viewBox="0 0 128 172.03" width="128mm" height="172.03mm" xmlns="http://www.w3.org/2000/svg" class="sheet"
     version="1.1" data-unit="mm"><title>Model</title><desc>Views of Model, one group per view (plan, ceiling plan, section, elevation) at the scale of the view, paper millimetres.</desc><style>
-      .plan{font-family:sans-serif}
+      .plan{font-family:sans-serif;font-size:3.2px}
       path{stroke:#000;stroke-linecap:round;stroke-linejoin:round;fill:none}
       .cut{stroke-width:0.5}
       .projection{stroke-width:0.25}
@@ -11,7 +11,7 @@
       path.region{fill-rule:evenodd}
       path.region.cut{fill:#1a1a1a}
       path.region.projection{fill:#e6e6e6}
-      text{fill:#000;stroke:none;font-size:3.2px}
+      text{fill:#000;stroke:none}
       text.title{font-size:5px;font-weight:bold}
       text.space-tag{text-anchor:middle}
       text.grid-label{font-size:3.5px;text-anchor:middle;dominant-baseline:central}
@@ -48,4 +48,80 @@
                 d="M 100 77.5 A 3 3 0 0 0 94 77.5 A 3 3 0 0 0 100 77.5 Z" class="line annotation grid-bubble"
                 data-element="g-1" data-id="g-1/GridBubble/1"/></g><g class="layer texts"><text x="11" y="77.5"
                 class="annotation grid-label" data-element="g-1" data-id="g-1/GridLabel/0">1</text><text x="97" y="77.5"
-                class="annotation grid-label" data-element="g-1" data-id="g-1/GridLabel/1">1</text></g></g></svg>
+                class="annotation grid-label" data-element="g-1" data-id="g-1/GridLabel/1">1</text></g><g
+            class="layer annotations"><path d="M 14 97.5 L 94 97.5" class="line annotation dimension-line"
+                data-element="dim-chain" data-id="dim-chain/DimensionLine/0"/><path d="M 14 78.5 L 14 99.5"
+                class="line annotation dimension-extension" data-element="dim-chain"
+                data-id="dim-chain/DimensionExtension/0"/><path d="M 34 78.5 L 34 99.5"
+                class="line annotation dimension-extension" data-element="dim-chain"
+                data-id="dim-chain/DimensionExtension/1"/><path d="M 94 78.5 L 94 99.5"
+                class="line annotation dimension-extension" data-element="dim-chain"
+                data-id="dim-chain/DimensionExtension/2"/><path d="M 13.47 98.03 L 14.53 96.97"
+                class="line annotation dimension-mark" data-element="dim-chain" data-id="dim-chain/DimensionMark/0"/><path
+                d="M 33.47 98.03 L 34.53 96.97" class="line annotation dimension-mark" data-element="dim-chain"
+                data-id="dim-chain/DimensionMark/1"/><path d="M 93.47 98.03 L 94.53 96.97"
+                class="line annotation dimension-mark" data-element="dim-chain" data-id="dim-chain/DimensionMark/2"/><path
+                d="M 44 76 L 44 19" class="line annotation dimension-line" data-element="dim-clear"
+                data-id="dim-clear/DimensionLine/0"/><path d="M 44.53 76.53 L 43.47 75.47"
+                class="line annotation dimension-mark" data-element="dim-clear" data-id="dim-clear/DimensionMark/0"/><path
+                d="M 44.53 19.53 L 43.47 18.47" class="line annotation dimension-mark" data-element="dim-clear"
+                data-id="dim-clear/DimensionMark/1"/><path d="M 64 77.5 L 64 47.5"
+                class="line annotation dimension-line" data-element="dim-column" data-id="dim-column/DimensionLine/0"/><path
+                d="M 55 47.5 L 66 47.5" class="line annotation dimension-extension" data-element="dim-column"
+                data-id="dim-column/DimensionExtension/0"/><path d="M 64.53 48.03 L 63.47 46.97"
+                class="line annotation dimension-mark" data-element="dim-column" data-id="dim-column/DimensionMark/0"/><path
+                d="M 64.53 78.03 L 63.47 76.97" class="line annotation dimension-mark" data-element="dim-column"
+                data-id="dim-column/DimensionMark/1"/><path d="M 14 107.5 L 44 107.5"
+                class="line annotation dimension-line" data-element="dim-lock-broken"
+                data-id="dim-lock-broken/DimensionLine/0"/><path d="M 13.47 108.03 L 14.53 106.97"
+                class="line annotation dimension-mark" data-element="dim-lock-broken"
+                data-id="dim-lock-broken/DimensionMark/0"/><path d="M 43.47 108.03 L 44.53 106.97"
+                class="line annotation dimension-mark" data-element="dim-lock-broken"
+                data-id="dim-lock-broken/DimensionMark/1"/><path d="M 14 97.5 L 44 97.5"
+                class="line annotation dimension-line" data-element="dim-locked" data-id="dim-locked/DimensionLine/0"/><path
+                d="M 13.47 98.03 L 14.53 96.97" class="line annotation dimension-mark" data-element="dim-locked"
+                data-id="dim-locked/DimensionMark/0"/><path d="M 43.47 98.03 L 44.53 96.97"
+                class="line annotation dimension-mark" data-element="dim-locked" data-id="dim-locked/DimensionMark/1"/><path
+                d="M 14 87.5 L 94 87.5" class="line annotation dimension-line" data-element="dim-south"
+                data-id="dim-south/DimensionLine/0"/><path d="M 14 78.5 L 14 89.5"
+                class="line annotation dimension-extension" data-element="dim-south"
+                data-id="dim-south/DimensionExtension/0"/><path d="M 94 78.5 L 94 89.5"
+                class="line annotation dimension-extension" data-element="dim-south"
+                data-id="dim-south/DimensionExtension/1"/><path d="M 13.47 88.03 L 14.53 86.97"
+                class="line annotation dimension-mark" data-element="dim-south" data-id="dim-south/DimensionMark/0"/><path
+                d="M 93.47 88.03 L 94.53 86.97" class="line annotation dimension-mark" data-element="dim-south"
+                data-id="dim-south/DimensionMark/1"/><path d="M 92.5 37.5 L 95.5 37.5"
+                class="line annotation dimension-line" data-element="dim-thickness"
+                data-id="dim-thickness/DimensionLine/0"/><path d="M 91.97 38.03 L 93.03 36.97"
+                class="line annotation dimension-mark" data-element="dim-thickness"
+                data-id="dim-thickness/DimensionMark/0"/><path d="M 94.97 38.03 L 96.03 36.97"
+                class="line annotation dimension-mark" data-element="dim-thickness"
+                data-id="dim-thickness/DimensionMark/1"/><path d="M 54 79 L 64 89" class="line annotation leader-line"
+                data-element="lead-1" data-id="lead-1/LeaderLine/0"/><path d="M 53.25 79 L 54.75 79"
+                class="line annotation leader-mark" data-element="lead-1" data-id="lead-1/LeaderMark/0"/><text x="24"
+                y="96" class="annotation dimension-text" data-element="dim-chain" data-id="dim-chain/DimensionText/0"
+                text-anchor="middle" font-size="2.5">2.00</text><text x="64" y="96" class="annotation dimension-text"
+                data-element="dim-chain" data-id="dim-chain/DimensionText/1" text-anchor="middle"
+                font-size="2.5">6.00</text><text x="42.5" y="47.5" class="annotation dimension-text"
+                transform="rotate(-90,42.5,47.5)" data-element="dim-clear" data-id="dim-clear/DimensionText/0"
+                text-anchor="middle" font-size="2.5">5.70</text><text x="62.5" y="62.5"
+                class="annotation dimension-text" transform="rotate(-90,62.5,62.5)" data-element="dim-column"
+                data-id="dim-column/DimensionText/0" text-anchor="middle" font-size="2.5">3.00</text><text x="29"
+                y="106" class="annotation dimension-text" data-element="dim-lock-broken"
+                data-id="dim-lock-broken/DimensionText/0" text-anchor="middle" font-size="2.5">3.00</text><text x="29"
+                y="96" class="annotation dimension-text" data-element="dim-locked" data-id="dim-locked/DimensionText/0"
+                text-anchor="middle" font-size="2.5">3.00</text><text x="54" y="86" class="annotation dimension-text"
+                data-element="dim-south" data-id="dim-south/DimensionText/0" text-anchor="middle"
+                font-size="2.5">8.00</text><text x="94" y="36" class="annotation dimension-text"
+                data-element="dim-thickness" data-id="dim-thickness/DimensionText/0" text-anchor="middle"
+                font-size="2.5">0.30</text><text x="59" y="42.5" class="annotation tag-text" data-element="tag-column"
+                data-id="tag-column/TagText/0" text-anchor="middle" font-size="2.5">0.30 × 0.30</text><text x="54"
+                y="82.5" class="annotation tag-text" data-element="tag-name" data-id="tag-name/TagText/0"
+                text-anchor="middle" font-size="2.5">South</text><text x="34" y="69.5" class="annotation tag-text"
+                data-element="tag-size" data-id="tag-size/TagText/0" text-anchor="middle"
+                font-size="2.5">1.20 × 1.20</text><text x="54" y="87.5" class="annotation tag-text"
+                data-element="tag-type" data-id="tag-type/TagText/0" text-anchor="middle"
+                font-size="2.5">Brick 300</text><text x="34" y="57.5" class="annotation note-text" data-element="note-1"
+                data-id="note-1/NoteText/0" text-anchor="middle" font-size="2.5">Verify on site</text><text x="64"
+                y="89" class="annotation leader-text" data-element="lead-1" data-id="lead-1/LeaderText/0"
+                text-anchor="middle" font-size="2.5">Brick 300</text></g></g></svg>

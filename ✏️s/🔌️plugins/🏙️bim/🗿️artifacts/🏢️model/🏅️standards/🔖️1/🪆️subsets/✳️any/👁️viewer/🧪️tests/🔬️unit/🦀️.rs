@@ -58,12 +58,20 @@ fn text(value: &str) -> DslValue {
     DslValue::String(value.to_string())
 }
 
+fn orbit_pose() -> DslValue {
+    object(&[("position", [8.0, -8.0, 6.0_f64].to_value()), ("target", [1.0, 1.0, 0.0_f64].to_value()), ("zoom", DslValue::float(1.0))])
+}
+
+fn viewport_pose() -> DslValue {
+    object(&[("x", DslValue::float(4.0)), ("y", DslValue::float(-2.0)), ("zoom", DslValue::float(30.0))])
+}
+
 fn orbit_json() -> String {
-    semio_framework_pack_json::to_json_string(&object(&[("position", [8.0, -8.0, 6.0_f64].to_value()), ("target", [1.0, 1.0, 0.0_f64].to_value()), ("zoom", DslValue::float(1.0))]))
+    semio_framework_pack_json::to_json_string(&orbit_pose())
 }
 
 fn viewport_json() -> String {
-    semio_framework_pack_json::to_json_string(&object(&[("x", DslValue::float(4.0)), ("y", DslValue::float(-2.0)), ("zoom", DslValue::float(30.0))]))
+    semio_framework_pack_json::to_json_string(&viewport_pose())
 }
 
 #[semio_framework_async_macros::async_test]
@@ -239,8 +247,18 @@ fn manifest() -> App {
     App { definition: create_bim_viewer(), examples: Vec::new() }
 }
 
-#[semio_framework_async_macros::async_test]
-async fn window_commands_persist_per_window_and_never_touch_the_document() {
+#[test]
+fn window_commands_persist_per_window_and_never_touch_the_document() {
+    std::thread::Builder::new()
+        .name("bim-viewer-window-isolation".into())
+        .stack_size(16 * 1024 * 1024)
+        .spawn(|| semio_framework_async::block_on(exercise_viewer_window_commands()))
+        .expect("viewer fixture thread starts")
+        .join()
+        .unwrap_or_else(|failure| std::panic::resume_unwind(failure));
+}
+
+async fn exercise_viewer_window_commands() {
     let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<BimModelViewer>>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
     app.bind_instance_id(91).await;
@@ -250,15 +268,15 @@ async fn window_commands_persist_per_window_and_never_touch_the_document() {
     let outcome: Result<(), String> = async {
         let before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
         let steps = [
-            ("left", BimViewCommand::SetCamera { camera: orbit_json() }),
-            ("left", BimViewCommand::SetStoreyVisible { storey: "st-first".into(), visible: false }),
-            ("plan", BimViewCommand::SetCamera { camera: viewport_json() }),
-            ("plan", BimViewCommand::SetPlanStorey { storey: "st-first".into() }),
+            ("left", SET_CAMERA, object(&[("camera", orbit_pose())])),
+            ("left", SET_STOREY_VISIBLE, object(&[("storey", text("st-first")), ("visible", DslValue::Bool(false))])),
+            ("plan", SET_CAMERA, object(&[("camera", viewport_pose())])),
+            ("plan", SET_PLAN_STOREY, object(&[("storey", text("st-first"))])),
         ];
-        for (window, command) in steps {
-            let meta = ActionMeta { instance_id: 91, view_state: Some(addressed(&view, window)), ..artifact_app_laws::meta(semio_os_kernel::LOCAL_ACTOR_ID) };
-            let label = format!("{window} {command:?}");
-            semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("dispatch {label}: {error:?}"))?;
+        for (window, action, arguments) in steps {
+            let meta = ActionMeta { instance_id: 91, view_state: Some(addressed(&view, window).into()), ..artifact_app_laws::meta(semio_os_kernel::LOCAL_ACTOR_ID) };
+            let label = format!("{window} {action}");
+            artifact_app_laws::dispatch_fixture_action(&mut *app, action, Some(arguments), &meta, &mut artifact_app_laws::fixture_identity(), scope.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).await.map_err(|error| format!("dispatch {label}: {error:?}"))?;
             let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, 91, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("settle {label}: {error:?}"))?;
             if !receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::WindowConfig) {
                 return Err(format!("the viewer command published no window configuration: {:?}", receipt.lanes));
@@ -272,7 +290,7 @@ async fn window_commands_persist_per_window_and_never_touch_the_document() {
             return Err("viewer navigation changed artifact bytes".into());
         }
         for pack in app.window_config_packs().await.map_err(|error| format!("{error:?}"))? {
-            reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?;
+            semio_plugin::restore_fixture_window_config(&mut *reopened, pack, scope.cx()).await.map_err(|error| format!("{error:?}"))?;
         }
         for target in [&mut app, &mut reopened] {
             let left = render_world(target, &addressed(&view, "left"), scope.cx()).await?;

@@ -83,7 +83,7 @@ impl Affine3 {
 }
 
 /// 📐️ Plane `z = a x + b y + c` (height field), used for sloped slabs and roof faces.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq)]
 pub struct ZPlane {
     pub a: f64,
     pub b: f64,

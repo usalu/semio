@@ -22,13 +22,13 @@ fn evaluate_fixture() -> serde_json::Value {
 
 fn run_funded_preview(
     session: &Session,
-    identity: flow_extension_sdk::geometry::GeometryWorkIdentity,
+    identity: semio_os_flow_geometry::GeometryWorkIdentity,
     handle: &str,
     caller: &mut OriginalJobFixtureCaller,
     born: &mut usize,
     free: &mut usize,
 ) -> semio_framework::MeshData {
-    use flow_extension_sdk::geometry::GeometryStep;
+    use semio_os_flow_geometry::GeometryStep;
     let tolerance = 0.025;
     for _ in 0..20000 {
         let demand = session.tessellation_demands(identity, handle, tolerance, 128).unwrap();

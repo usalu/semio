@@ -58,10 +58,15 @@ pub fn io() -> semio_plugin::app::declarations::IoDeclaration {
 pub fn animate_presentation_document_json_to_svg(value: &semio_framework_pack_json::Value) -> Result<(String, u32, u32), String> {
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text_checked;
     use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
+    use semio_ui_styling::{color::linear_to_rgba8, CHROME_DARK};
     let title = value.get("title").and_then(|entry| entry.as_str()).or_else(|| value.get("id").and_then(|entry| entry.as_str())).unwrap_or("Animate Presentation");
     let attributes = |values: &[(&str, &str)]| values.iter().map(|(name, value)| XmlAttr { name: (*name).into(), value: (*value).into() }).collect();
-    let background = XmlNode::Element { name: "rect".into(), attrs: attributes(&[("width", "100%"), ("height", "100%"), ("fill", "white")]), children: Vec::new() };
-    let title = XmlNode::Element { name: "text".into(), attrs: attributes(&[("x", "32"), ("y", "64"), ("font-size", "32"), ("fill", "#111827")]), children: vec![XmlNode::Text { text: title.into() }] };
+    let hex = |[r, g, b, a]: [f32; 4]| {
+        let [red, green, blue, _] = linear_to_rgba8(r, g, b, a);
+        format!("#{red:02x}{green:02x}{blue:02x}")
+    };
+    let background = XmlNode::Element { name: "rect".into(), attrs: attributes(&[("width", "100%"), ("height", "100%"), ("fill", &hex(CHROME_DARK.level_window))]), children: Vec::new() };
+    let title = XmlNode::Element { name: "text".into(), attrs: attributes(&[("x", "32"), ("y", "64"), ("font-size", "32"), ("fill", &hex(CHROME_DARK.foreground))]), children: vec![XmlNode::Text { text: title.into() }] };
     let root = XmlNode::Element { name: "svg".into(), attrs: attributes(&[("xmlns", "http://www.w3.org/2000/svg"), ("viewBox", "0 0 1280 720"), ("width", "1280"), ("height", "720")]), children: vec![background, title] };
     Ok((xml_document_to_text_checked(&XmlDocument { root: Some(root), ..Default::default() })?, 1280, 720))
 }

@@ -1,6 +1,7 @@
 //! 🧩️ Job struct and preview: the WFC job, its construction from a model or a checkpoint, the preview, the commit and the single step advance. See [`super`].
 
 use super::*;
+use semio_framework_value::retirement::RetireOwned;
 
 //#region 🧩️Job
 pub struct WfcJob<T> {
@@ -21,6 +22,53 @@ pub struct WfcJob<T> {
     pub(super) publish_intermediate: bool,
     pub(super) closing: bool,
     pub(super) visible: Vec<VisibleCell>,
+}
+
+#[doc(hidden)]
+#[derive(semio_framework_value::RetireOwned)]
+pub struct WfcJobStorage<T: RetireOwned> {
+    model: CompiledModel,
+    topology: T,
+    initial_domains: Option<Vec<PatternSet>>,
+    fixed: Vec<(NodeId, PatternId)>,
+    state: WfcState,
+    checkpoint_build: Option<CheckpointBuild>,
+    final_checkpoint: Option<Vec<u8>>,
+    commit_build: Option<CommitBuild>,
+    completed_commit: Option<WfcCommit>,
+    visible: Vec<VisibleCell>,
+}
+
+impl<T: RetireOwned> RetireOwned for WfcJob<T> {
+    type RetirementCursor=<WfcJobStorage<T> as RetireOwned>::RetirementCursor;
+
+    fn retirement_ready(&self)->bool {
+        self.publication.is_none()
+    }
+
+    fn retirement_seed(self)->Self::RetirementCursor {
+        assert!(self.retirement_ready());
+        WfcJobStorage {
+            model:self.model,
+            topology:self.topology,
+            initial_domains:self.initial_domains,
+            fixed:self.fixed,
+            state:self.state,
+            checkpoint_build:self.checkpoint_build,
+            final_checkpoint:self.final_checkpoint,
+            commit_build:self.commit_build,
+            completed_commit:self.completed_commit,
+            visible:self.visible,
+        }.retirement_seed()
+    }
+
+    fn controlled_retirement_supported()->bool {
+        semio_framework_value::retirement::support::controlled_retirement_supported::<Self>()
+    }
+
+    fn controlled_retirement_supported_in(path:&semio_framework_value::retirement::RetirementSupport<'_>)->bool {
+        path.supports::<WfcJobStorage<T>>()
+    }
 }
 
 impl<T: Topology + Clone> WfcJob<T> {

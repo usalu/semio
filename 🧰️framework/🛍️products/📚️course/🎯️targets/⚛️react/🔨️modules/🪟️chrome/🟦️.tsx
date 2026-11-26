@@ -1,5 +1,5 @@
 /** 🪟️ The quiz's pieces of the semio card language: every screen is made of overview cards (the design system's window
- * chrome at dialog level) with the title in the cap chip and the actions as real buttons in the footer chips, plus the
+ * chrome inheriting the screen's level) with the title in the cap chip and the actions as real buttons in the footer chips, plus the
  * small parts the cards share — course icons, emoji glyphs in the monochrome emoji face, fact lists, segmented choices,
  * the quiet button of card bodies, the modal dialog every question and notice opens in, the note of a failure and the
  * polite live region that announces what an action changed.
@@ -11,7 +11,7 @@
 
 import { forwardRef, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type HTMLAttributes, type ReactElement, type ReactNode, type Ref } from "react";
 import { createPortal } from "react-dom";
-import { CardStack, Icon, OverviewCard, SharedBorderRow, SharedBorderRowCell, OverviewCardAction, cn, overviewCardChipClass, useSharedBorderFrameRef, type IconName, type OverviewCardActionProps, sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
+import { CardStack, Icon, OverviewCard, SharedBorderRow, SharedBorderRowCell, Surface, OverviewCardAction, cn, overviewCardChipClass, useSharedBorderFrameRef, type IconName, type OverviewCardActionProps, sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
 import { ScrollThumb } from "../🧷️scroll-thumb/🟦️.tsx";
 import type { Icon as QuizIcon, Motion, TaskKind } from "@semio-tech/course";
 import type { CourseText } from "../🌐️i18n/🟦️.ts";
@@ -211,7 +211,7 @@ export interface PaneView {
  * this page). */
 export function PageFrame(props: { readonly page: string; readonly overlay?: ReactNode; readonly children: ReactNode }): ReactElement {
   return (
-    <div data-page={props.page} className="course-page-frame ui-scrollbar-hidden relative h-full min-h-0 w-full overflow-auto bg-background text-foreground">
+    <div data-page={props.page} className="course-page-frame ui-scrollbar-hidden relative h-full min-h-0 w-full overflow-auto text-foreground">
       <ScrollThumb />
       <CardStack>
         {props.children}
@@ -706,13 +706,13 @@ export function Dialog(props: {
       {host === null
         ? null
         : createPortal(
-            <div ref={backdrop} data-course-dialog="" data-observed-dialog={props.observed ? "" : undefined} className={cn("course-backdrop fixed inset-0 z-50 overflow-y-auto", props.observed && "pointer-events-none")} onClick={(event) => event.stopPropagation()}>
+            <div ref={backdrop} data-course-dialog="" data-level="dialog" data-observed-dialog={props.observed ? "" : undefined} className={cn("course-backdrop ui-veil fixed inset-0 z-50 overflow-y-auto", props.observed && "pointer-events-none")} onClick={(event) => event.stopPropagation()}>
               <div className="flex min-h-full items-center">
-                <div ref={dialog} role={props.role} lang={props.locale ?? origin?.closest<HTMLElement>("[lang]")?.lang} aria-modal={props.observed ? undefined : true} aria-labelledby={props.id} aria-describedby={props.describedBy} className={cn("w-full", props.observed && "pointer-events-auto")}>
+                <Surface level="dialog" fill="glass" ref={dialog} role={props.role} lang={props.locale ?? origin?.closest<HTMLElement>("[lang]")?.lang} aria-modal={props.observed ? undefined : true} aria-labelledby={props.id} aria-describedby={props.describedBy} className={cn("w-full", props.observed && "pointer-events-auto")}>
                   <CourseCard flush={props.flush} id={props.id} card="dialog" icon={props.icon} title={props.title} footerLeft={props.footerLeft} footerRight={props.footerRight}>
                     {props.flush ? props.children : <div className={cn("mx-auto w-full", props.wide ? "max-w-2xl" : "max-w-md")}>{props.children}</div>}
                   </CourseCard>
-                </div>
+                </Surface>
               </div>
             </div>,
             host,

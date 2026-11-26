@@ -15,6 +15,17 @@ pub const NOTATED: &str = include_str!("../../../../../🧪️tests/🧫️fixtu
 /// 📁️ The directory of the committed SVG export of the annotated room and the table the lxml + shapely oracle measured from it.
 pub const NOTATED_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧪️tests/🧫️fixtures/🚪️svg/🪧️notated");
 
+/// 🪑️ The committed components and routed services model.
+pub const COMPONENTS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🪑️components/📸️snapshot/🔣️.json");
+
+/// 📁️ The directory of the components SVG export and oracle measurement.
+pub const COMPONENTS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧪️tests/🧫️fixtures/🚪️svg/🪑️components");
+
+/// 🪑️ The decoded components model.
+pub fn components() -> ModelSnapshot {
+    from_json_str(COMPONENTS, JsonMemberPolicy::Reject).expect("the committed components model decodes")
+}
+
 /// 🪧️ The decoded annotated room.
 pub fn notated() -> ModelSnapshot {
     from_json_str(NOTATED, JsonMemberPolicy::Reject).expect("the committed room decodes")

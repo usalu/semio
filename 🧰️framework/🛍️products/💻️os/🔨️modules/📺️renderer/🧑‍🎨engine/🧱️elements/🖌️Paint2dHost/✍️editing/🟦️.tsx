@@ -3,7 +3,7 @@ import { parsePixelLayerSelectionV1 } from "@semio-tech/framework/pixels/selecti
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type WheelEvent, type RefObject } from "../../⚛️react-port/🟦️.ts";
 import { GestureRecognizer,type Paint2dEditingOptions } from "@semio-tech/framework";
 import { canvasPinchCamera, type CanvasCamera } from "../../📐️Canvas2dHost/📷️camera-math/🟦️.ts";
-import { cn, glassClass, SharedBorderRow, SharedBorderRowCell, SharedBorderRowField, useTranslation, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
+import { SharedBorderRow, SharedBorderRowCell, SharedBorderRowField, useTranslation, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 import { validateExtent, type PixelImage, type PixelPoint, type SelectionMerge } from "@semio-tech/framework/pixels/editing";
 import { STROKE_POINT_CAP, cursorAnnouncement, keyboardCameraStep, keyboardMarquee, keyboardStampPath, rolloverStroke, stepKeyboardCursor, strokeLimitState, type PixelCursor } from "./⌨️keyboard/🟦️.ts";
 import { layerPoint, pixelLayers, maskLayers, pixelGestureRevision, selectionBounds, restoreSelection, type PixelLayer } from "./🟦️.ts";
@@ -399,7 +399,7 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
         if(target==="pixels"&&(event.key==="Delete"||event.key==="Backspace")){event.preventDefault();event.stopPropagation();filterImage("clear");}
       }}/>
     <p role="status" aria-live="polite" className="sr-only">{announcement}</p>
-    <SharedBorderRow as="section" orientation="vertical" aria-label={text.painting} data-level="pane" data-glass-chip="" className={cn("absolute left-0 top-0 z-40 max-h-full max-w-full text-xs text-foreground",glassClass)} style={{width:collapsed?"auto":"18rem"}}>
+    <SharedBorderRow as="section" orientation="vertical" aria-label={text.painting} overlay="chip" className="absolute left-0 top-0 z-40 max-h-full max-w-full text-xs text-foreground" style={{width:collapsed?"auto":"18rem"}}>
       <button type="button" data-shared-border-cell="" className={cell+" text-left"} aria-expanded={!collapsed} onClick={()=>setCollapsed(!collapsed)}>{text.painting} {collapsed?"+":"−"}</button>
       {!collapsed && <SharedBorderRow orientation="vertical" className="min-h-0 flex-1 overflow-auto [&>*]:shrink-0">
         <SharedBorderRowField label={<>{text.target}</>}><select value={target} onChange={event=>{cancel();setTarget(event.target.value as "pixels"|"mask");if(["bucket","wand","eyedropper"].includes(tool))setTool("brush");}}><option value="pixels">{text.pixelTarget}</option><option value="mask">{text.maskTarget}</option></select></SharedBorderRowField>

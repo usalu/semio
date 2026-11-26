@@ -9,7 +9,10 @@ use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export
 use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, V};
 use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::columns::footprint;
-use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Profile, Vertex};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Profile, TopConstraint, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Column, ModelSnapshot};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::vertical_of;
+pub use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 
 /// 🏷️ The `Semio_Authoring` row that holds the authored column record of a tilted column.
 pub const COLUMN_ROW: &str = "Column";
@@ -36,13 +39,18 @@ fn associate(x: &mut Export<'_>, material: &str, element: u64) {
     }
 }
 
-fn column(x: &mut Export<'_>, id: &str, row: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Column) {
+fn column(x: &mut Export<'_>, id: &str, row: &Column) {
+    let vertical = x.solid(id).map(|solid| (solid.bounds.min.z, solid.bounds.max.z));
+    let quantities = x.measure(id).map(|row| [row.length, row.gross_area, row.gross_volume, row.net_volume]);
+    column_with_geometry(x, id, row, vertical, quantities);
+}
+
+fn column_with_geometry(x: &mut Export<'_>, id: &str, row: &Column, vertical: Option<(f64, f64)>, quantities: Option<[f64; 4]>) {
     let model = x.model;
-    let (Some(storey), Some(kind), Some(bounds)) = (x.storeys.get(&row.storey).copied(), model.column_types.get(&row.column_type), x.solid(id).map(|solid| solid.bounds)) else {
+    let (Some(storey), Some(kind), Some((base, top))) = (x.storeys.get(&row.storey).copied(), model.column_types.get(&row.column_type), vertical) else {
         x.skip("column", id, "its storey, type or inferred solid is missing");
         return;
     };
-    let (base, top) = (bounds.min.z, bounds.max.z);
     let height = top - base;
     let leaning = row.tilt.filter(|tilt| tilt.angle.abs() > 1e-12 && tilt.angle.abs() < std::f64::consts::FRAC_PI_2);
     let family = matches!(kind.profile, Profile::Family { .. });
@@ -87,7 +95,38 @@ fn column(x: &mut Export<'_>, id: &str, row: &semio_s_artifact_bim_model_snapsho
         x.links.typed.entry(object).or_default().push(element);
     }
     associate(x, &kind.material, element);
-    x.quantify(element, "Qto_ColumnBaseQuantities", id, |row| vec![Quantity::Length("Length", row.length), Quantity::Area("CrossSectionArea", row.gross_area), Quantity::Volume("GrossVolume", row.gross_volume), Quantity::Volume("NetVolume", row.net_volume)]);
+    if let Some([length, area, gross, net]) = quantities {
+        x.links.quantities.push((element, "Qto_ColumnBaseQuantities", vec![Quantity::Length("Length", length), Quantity::Area("CrossSectionArea", area), Quantity::Volume("GrossVolume", gross), Quantity::Volume("NetVolume", net)]));
+    }
+}
+
+/// 🏛️ Whether one authored column has a fixed rectangular section and plumb axis.
+pub fn can_emit_cold_column(snapshot: &ModelSnapshot, row: &Column) -> bool {
+    row.tilt.is_none() && snapshot.column_types.get(&row.column_type).is_some_and(|kind| {
+        matches!(kind.profile, Profile::Rectangle { width, depth } if width.is_finite() && width > 0.0 && depth.is_finite() && depth > 0.0)
+    })
+}
+
+/// 🎟️ Emits one admitted rectangular column from the original storey-level loan.
+pub fn emit_cold_column(x: &mut Export<'_>, id: &str, row: &Column, level: &dyn Fn(&str) -> Option<StoreyLevel>) {
+    let Some(Profile::Rectangle { width, depth }) = x.model.column_types.get(&row.column_type).map(|kind| &kind.profile) else {
+        return;
+    };
+    let own = level(&row.storey);
+    let target = match &row.top {
+        TopConstraint::Storey { storey, .. } if *storey != row.storey => level(storey),
+        _ => None,
+    };
+    let vertical = own.map(|own| vertical_of(row.base_offset, &row.top, &own, target.as_ref()));
+    let quantities = vertical.map(|(base, top)| {
+        use semio_framework_geometry::loops::{area, Vertex};
+        let (x, y) = (width / 2.0, depth / 2.0);
+        let area = area(&[Vertex::corner(-x, -y), Vertex::corner(x, -y), Vertex::corner(x, y), Vertex::corner(-x, y)]);
+        let length = (top - base).max(0.0);
+        let volume = area * length;
+        [length, area, volume, volume]
+    });
+    column_with_geometry(x, id, row, vertical, quantities);
 }
 
 fn beam(x: &mut Export<'_>, id: &str, row: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Beam) {

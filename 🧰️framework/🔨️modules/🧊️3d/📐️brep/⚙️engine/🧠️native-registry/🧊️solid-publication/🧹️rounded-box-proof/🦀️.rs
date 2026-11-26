@@ -5,7 +5,7 @@ use semio_framework_3d_brep_representation::{
     contract::{RoundedBox, box_finish_layout::{EDGES, FACES, TOPOLOGY, VERTICES}},
     topology::Shell,
 };
-use semio_framework_3d_brep_solid_transaction::rounded_box_boundary::{surface, trim};
+use semio_framework_3d_brep_solid_topology::rounded_box_boundary::{surface, trim};
 
 pub(super) fn certify(body: &Body, shell: &Shell) -> Option<RoundedBox> {
     if shell.faces.len() != FACES { return None; }

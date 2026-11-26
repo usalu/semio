@@ -32,3 +32,13 @@ Feature: One three-dimensional chain feeds every view
   Scenario: Scrubbing equals playing
     Given a clip evaluated forwards on one copy of the asset and backwards on another
     Then both give the same state at every time
+
+  Scenario: The right of the asset is nearer in the elevation when its root sits beside the symmetry plane
+    Given the person with the umbrella, whose arms hang on abducted and twisted clavicles
+    When the clavicles, the bones whose own z lies in the sagittal frame, are moved by 0.23 m to the left and the right
+    Then the elevation depth of the right sleeve is more than 0.4 m nearer than that of the left
+
+  Scenario: A lateral rest z on the roots of the limbs changes no extent in the side elevation
+    Given the person on crutches, whose limbs hang on clavicles and iliums
+    When the clavicles and iliums are moved by 0.2 m to the left and the right and the revolved axes are compensated
+    Then the side elevation, the height of the front and the ahead extent of the plan are unchanged in every pose and the lateral extents move

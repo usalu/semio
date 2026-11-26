@@ -1,7 +1,6 @@
 """🧪️ Exercise the CDN archive integrity checks on GNU-style manifests."""
 import hashlib
 import io
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -11,6 +10,14 @@ import tempfile
 
 ticket = Path(__file__).resolve().parent
 verify = runpy.run_path(str(ticket / "verify-release-archive.py"))["verify"]
+check_pages_bytes = runpy.run_path(str(ticket / "package-site.py"))["check_pages_bytes"]
+check_pages_bytes(1_000_000_000)
+try:
+    check_pages_bytes(1_000_000_001)
+except ValueError:
+    pass
+else:
+    raise AssertionError("over-limit published site was accepted")
 page = b"<title>Demonstrator</title>"
 digest = hashlib.sha256(page).hexdigest()
 with tempfile.TemporaryDirectory(dir=ticket / "🗑️generated") as temp:
@@ -60,15 +67,19 @@ with tempfile.TemporaryDirectory(dir=ticket / "🗑️generated") as temp:
         (source / name).write_bytes(body)
     destination = Path(temp) / "packages"
     accepted.write_bytes(b"".join(f"{hashlib.sha256(files[name]).hexdigest()}  {name}\n".encode() for name in sorted(files) if name != "SHA256SUMS"))
-    command = ["bash", str(ticket / "package-site.sh"), str(source), str(destination), str(accepted)]
-    environment = {**os.environ, "PACKAGE_PYTHON": sys.executable}
-    assert subprocess.run(command[:-1], env=environment, capture_output=True).returncode != 0, "unaccepted site must not be packaged"
-    subprocess.run(command, env=environment, check=True, capture_output=True)
+    command = [sys.executable, str(ticket / "package-site.py"), str(source), str(destination), str(accepted)]
+    assert subprocess.run(command[:-1], capture_output=True).returncode != 0, "unaccepted site must not be packaged"
+    inside_site = source / "packages"
+    assert subprocess.run([*command[:3], str(inside_site), str(accepted)], capture_output=True).returncode != 0
+    assert not inside_site.exists(), "packaging wrote inside the accepted site"
+    subprocess.run(command, check=True, capture_output=True)
     packaged, = destination.glob("site-*.tar.gz")
     assert verify(packaged, accepted) == (3, sum(map(len, (page, b"example.test"))))
+    entries = subprocess.check_output(["repo", "tools", "exec", "--light", "tar", "--", "-tzf", str(packaged)], encoding="utf-8")
+    assert set(entries.splitlines()) == {"./index.html", "./CNAME", "./.nojekyll", "./SHA256SUMS"}
     assert {p.name: p.read_bytes() for p in source.iterdir()} == files, "packaging changed its captured input"
     accepted.write_bytes(b"wrong acceptance")
-    assert subprocess.run(command, env=environment, capture_output=True).returncode != 0
+    assert subprocess.run(command, capture_output=True).returncode != 0
     assert list(destination.iterdir()) == [packaged]
     assert {p.name: p.read_bytes() for p in source.iterdir()} == files
 print("release archive fixture passed")

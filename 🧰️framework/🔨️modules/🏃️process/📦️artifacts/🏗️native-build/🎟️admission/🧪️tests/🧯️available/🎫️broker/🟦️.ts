@@ -1,27 +1,107 @@
 /** 🎫️ Contract: the broker starts a unit only when the measured available memory admits it. A unit that does not fit stays queued and starts when availability rises; a warden at guard holds every start whatever the wait; a crate the warden cancelled needs its cancelled megabytes times the factor and twice the wait; while it holds a unit back the broker says so in English and German. Every port is a fake and the clock is fake. */
 import {createConnection,type Socket} from "node:net";
+import {mkdtempSync,rmSync,writeFileSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
 import {expect,test} from "bun:test";
-import {ADMISSION_POLICY_V1,startAdmissionBrokerV1,unitKeyV1,type AdmitRequestV1,type UnitObservationV1} from "../../../🟦️.ts";
+import {brokerWouldWaitV1,recallProvenanceV1,replayCachedUnitV1} from "../../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🛰️broker/🟦️.ts";
+import {ADMISSION_POLICY_V1,sourceKlocV1,startAdmissionBrokerV1,unitKeyV1,type AdmitRequestV1,type RecallRequestV1,type UnitObservationV1,type UnitRecordV1} from "../../../🟦️.ts";
 import requests from "../../🧫️fixtures/🔣️.json" with {type:"json"};
+import corpus from "./🔣️.json" with {type:"json"};
 
 const MiB=1048576,GiB=1024*MiB,base=requests.requests.valid[0]! as unknown as AdmitRequestV1,pass={id:"wasm-release-00",profile:"release",target:"wasm32-wasip2"};
 const unit=(crate:string):AdmitRequestV1=>({...base,crate,package:crate.replaceAll("_","-"),crateTypes:["lib"],target:"host",externs:[],pid:1});
 const historyOf=(crates:readonly string[],peakBytes:number)=>new Map<string,readonly UnitObservationV1[]>(crates.map(crate=>[unitKeyV1(unit(crate),pass.profile),[{v:1,key:unitKeyV1(unit(crate),pass.profile),peakRssBytes:peakBytes,outputBytes:0,wallMs:1000,cpuMs:1000,remainingMs:0,atMs:1,lines:0}]]));
 const margin=Math.floor(16*GiB*ADMISSION_POLICY_V1.available.marginBasisPoints/10000);
 
-type Client={rows:Record<string,unknown>[];verdict:(count:number)=>Promise<boolean>;close:()=>void};
-const connect=(endpoint:string,request:AdmitRequestV1):Promise<Client>=>new Promise((done,fail)=>{
+type Client={rows:Record<string,unknown>[];verdict:(count:number)=>Promise<boolean>;send:(row:object)=>void;close:()=>void};
+const connect=(endpoint:string,request:AdmitRequestV1|RecallRequestV1):Promise<Client>=>new Promise((done,fail)=>{
  const rows:Record<string,unknown>[]=[],socket:Socket=createConnection(endpoint);let text="";
  const waiters:(()=>void)[]=[];
  socket.on("error",fail);
  socket.on("data",chunk=>{text+=chunk;for(let at=text.indexOf("\n");at>=0;at=text.indexOf("\n")){rows.push(JSON.parse(text.slice(0,at)));text=text.slice(at+1);}for(const wake of waiters.splice(0))wake();});
- socket.on("connect",()=>{socket.write(JSON.stringify(request)+"\n");done({rows,close:()=>socket.destroy(),verdict:count=>new Promise<boolean>((accept,reject)=>{
+ socket.on("connect",()=>{socket.write(JSON.stringify(request)+"\n");done({rows,send:row=>{socket.write(JSON.stringify(row)+"\n");},close:()=>socket.destroy(),verdict:count=>new Promise<boolean>((accept,reject)=>{
   const timer=setTimeout(()=>reject(Error("no verdict "+count)),5000),check=()=>{if(rows.length>=count){clearTimeout(timer);accept(rows[count-1]!.admitted as boolean);}else waiters.push(check);};check();
  })});});
 });
 const settle=()=>new Promise<void>(accept=>setTimeout(accept,150));
 const open=(ports:Partial<Parameters<typeof startAdmissionBrokerV1>[0]>,crates:readonly string[],peakBytes=2*GiB)=>startAdmissionBrokerV1({physicalBytes:15*GiB,totalBytes:16*GiB,history:historyOf(crates,peakBytes),...ports}).then(broker=>{broker.registerPass(pass);return broker;});
 const resample=(broker:Awaited<ReturnType<typeof open>>)=>broker.observe({nonRustcBytes:0,swapOutBytesPerSecond:null});
+
+test("the broker learns only after confirming the exact local compiler input", async () => {
+ const localInputKey="a".repeat(64),verified:UnitRecordV1[]=[],request={...unit("forecast_checked"),localInputKey};
+ const broker=await open({available:()=>16*GiB,warden:()=>"calm",cancels:()=>[],onVerifiedLocal:record=>verified.push(record)},[request.crate]);
+ try{
+  const client=await connect(broker.endpoint,request);
+  expect(await client.verdict(1)).toBe(true);
+  client.send({v:1,op:"done",exit:0,peakRssBytes:256*MiB,userMs:12,sysMs:3,startMs:1,endMs:16,rmetaMs:null});
+  await settle();
+  client.close();
+  const recall=async(key?:string)=>{
+   const query=await connect(broker.endpoint,{v:1,op:"recall",pass:request.pass,crate:request.crate,outDir:request.outDir,extraFilename:request.extraFilename,...key?{localInputKey:key}:{}});
+   await query.verdict(1);
+   expect(query.rows[0]?.record).toBeDefined();
+   query.close();
+  };
+  await recall("b".repeat(64));
+  await recall();
+  expect(verified).toEqual([]);
+  const ordinaryCargo = {
+   [ADMISSION_POLICY_V1.brokerEnvironment]:broker.endpoint,
+   [ADMISSION_POLICY_V1.passEnvironment]:request.pass,
+  };
+  const {v:_version,op:_operation,pass:_pass,pid:_pid,localInputKey:_inputKey,...facts}=request;
+  expect(await recallProvenanceV1(ordinaryCargo,facts)).toBeUndefined();
+  expect(await replayCachedUnitV1(ordinaryCargo,facts,"cache-key",null)).toBe(false);
+  expect(await brokerWouldWaitV1(ordinaryCargo,facts)).toBeUndefined();
+  expect(await brokerWouldWaitV1(ordinaryCargo,facts,localInputKey)).toBe(false);
+  expect(await recallProvenanceV1(ordinaryCargo,facts,localInputKey)).toMatchObject({peakRssBytes:256*MiB});
+  await recall(localInputKey);
+  expect(await replayCachedUnitV1({...ordinaryCargo,SEMIO_UNIT_CACHE_BROKER_REPLAY:"on"},facts,"c".repeat(64),null)).toBe(true);
+  expect(verified.map(row=>[row.key,row.peakRssBytes])).toEqual([[unitKeyV1(request,pass.profile),256*MiB]]);
+ }finally{await broker.close();}
+});
+
+test("compiler reports remember different peaks for same-named build scripts by package and version",async()=>{
+ const scripts=corpus.scripts.map(row=>({...unit("build_script_build"),package:row.package,version:row.version,crateTypes:["bin"],outDir:"/out/"+row.package+"-"+row.version}));
+ const history=new Map<string,readonly UnitObservationV1[]>();
+ for(const [index,request] of scripts.entries()){
+  const key=unitKeyV1(request,pass.profile),peakRssBytes=corpus.scripts[index]!.peakMiB*MiB;
+  history.set(key,[{v:1,key,peakRssBytes,outputBytes:0,wallMs:1000,cpuMs:1000,remainingMs:0,atMs:1,lines:0}]);
+ }
+ expect(history.size).toBe(scripts.length);
+ for(const [index,request] of scripts.entries()){
+  const broker=await open({history,available:()=>16*GiB,warden:()=>"calm",cancels:()=>scripts.filter(other=>other!==request).map(other=>({command:"rustc --crate-name build_script_build --edition=2021",buildScriptOutput:other.outDir,megabytes:3000}))},[]);
+  try{
+   const client=await connect(broker.endpoint,request);
+   expect(await client.verdict(1)).toBe(true);
+   expect(broker.stats().predictedRunningBytes).toBe(Math.ceil(corpus.scripts[index]!.peakMiB*MiB*ADMISSION_POLICY_V1.headroom));
+   client.close();
+  }finally{await broker.close();}
+ }
+});
+
+test("an exact cancellation record still raises the forecast of the same build script",async()=>{
+ const request={...unit("build_script_build"),package:"beta",version:"2.0.0",outDir:"/out/beta-2.0.0"};
+ const broker=await open({available:()=>16*GiB,warden:()=>"calm",cancels:()=>[{command:"rustc --crate-name build_script_build --edition=2021",buildScriptOutput:request.outDir,megabytes:3000}]},[]);
+ try{
+  const client=await connect(broker.endpoint,request);
+  expect(await client.verdict(1)).toBe(true);
+  expect(broker.stats().predictedRunningBytes).toBe(3750*MiB);
+  client.close();
+ }finally{await broker.close();}
+});
+
+test("a build script sizes its Rust mounts and retains the directory estimate if its sources are uncertain",async()=>{
+ const root=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"script-"));
+ try{
+  for(const [name,source] of Object.entries(corpus.source.files))writeFileSync(join(root,name),source);
+  const entry=join(root,"build.rs");
+  expect(await sourceKlocV1(entry,root)*1000).toBe(corpus.source.mountedLines);
+  writeFileSync(entry,"#[cfg(unconfirmed)]\nfn main() {}\n");
+  expect(await sourceKlocV1(entry,root)*1000).toBe(corpus.source.fallbackLines);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
 
 test("a unit that does not fit is not started, and starts when the availability rises",async()=>{
  let available=3*GiB;const broker=await open({now:()=>1_000_000,available:()=>available,warden:()=>"calm",cancels:()=>[]},["semio_a"]);

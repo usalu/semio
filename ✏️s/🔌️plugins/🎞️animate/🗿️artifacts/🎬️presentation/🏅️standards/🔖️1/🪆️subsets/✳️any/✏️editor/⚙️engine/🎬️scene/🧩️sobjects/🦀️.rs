@@ -4,9 +4,13 @@ use crate::editor::animate::engine::rate::updater::Updater;
 use crate::editor::animate::engine::text::color::Color;
 use geometry::{append_shape_to_path, bounding_box, polygon_centroid, Affine, BezPath, PathEl, Point, Vec2};
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
+use std::sync::atomic::{AtomicU64, Ordering};
 
-fn next_id() -> u64 {
-    u64::from_str_radix(&framework_hash::hash_bytes(concat!(file!(), line!()).as_bytes())[..8], 16).unwrap_or(1)
+static NEXT_RUNTIME_ID: AtomicU64 = AtomicU64::new(1);
+
+/// 🔢️ Allocates process-local identities for new scene objects and updaters.
+pub(crate) fn next_runtime_id() -> u64 {
+    NEXT_RUNTIME_ID.fetch_add(1, Ordering::Relaxed)
 }
 
 /// 🎨️ Stroke and fill style for vector Sobjects.
@@ -147,7 +151,7 @@ pub struct VSobjectSnapshot {
 
 impl VSobject {
     pub fn new() -> Self {
-        Self { id: next_id(), name: String::new(), paths: Vec::new(), style: Style::default(), opacity: 1.0, parent_opacity: 1.0, transform: Affine::IDENTITY, point_ratio: 1.0, z_order: 0, saved: None, target: None, updaters: Vec::new() }
+        Self { id: next_runtime_id(), name: String::new(), paths: Vec::new(), style: Style::default(), opacity: 1.0, parent_opacity: 1.0, transform: Affine::IDENTITY, point_ratio: 1.0, z_order: 0, saved: None, target: None, updaters: Vec::new() }
     }
 
     pub fn from_path(path: BezPath) -> Self {
@@ -463,7 +467,7 @@ pub struct GroupSnapshot {
 
 impl Group {
     pub fn new(children: Vec<Sobjects>) -> Self {
-        Self { id: next_id(), name: String::new(), children, style: Style::default(), opacity: 1.0, parent_opacity: 1.0, transform: Affine::IDENTITY, z_order: 0, saved: None, target: None, updaters: Vec::new() }
+        Self { id: next_runtime_id(), name: String::new(), children, style: Style::default(), opacity: 1.0, parent_opacity: 1.0, transform: Affine::IDENTITY, z_order: 0, saved: None, target: None, updaters: Vec::new() }
     }
 
     pub fn empty() -> Self {
@@ -589,7 +593,7 @@ impl Sobject for Group {
     }
     fn clone_box(&self) -> Sobjects {
         Group {
-            id: next_id(),
+            id: self.id,
             name: self.name.clone(),
             children: self.children.iter().map(|c| c.clone_box()).collect(),
             style: self.style.clone(),

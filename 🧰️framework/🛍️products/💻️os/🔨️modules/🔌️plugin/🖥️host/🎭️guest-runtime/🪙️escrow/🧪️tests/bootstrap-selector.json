@@ -1,0 +1,10 @@
+[
+  {"name":"boot SAB1","exportName":"admitActorContext","length":304,"prefix":[83,65,66,49,1,0,48,1],"outcome":"bootstrap"},
+  {"name":"close SAB1","exportName":"closeActorContext","length":304,"prefix":[83,65,66,49,1,0,48,1],"outcome":"bootstrap"},
+  {"name":"boot source-ready transition","exportName":"admitActorContext","length":200,"prefix":[83,66,84,49,1,0,200,0],"outcome":"escrow"},
+  {"name":"cold StartJob","exportName":"startJob","length":184,"prefix":[83,74,72,50,1,0,0,0],"outcome":"escrow"},
+  {"name":"cold StepJob","exportName":"stepJob","length":184,"prefix":[83,74,72,50,3,0,0,0],"outcome":"escrow"},
+  {"name":"failure service SAF1","exportName":"publishActorFailure","length":184,"prefix":[83,65,70,49,1,0,0,0],"outcome":"escrow"},
+  {"name":"304-byte job spoof","exportName":"startJob","length":304,"prefix":[83,65,66,49,1,0,48,1],"outcome":"refused"},
+  {"name":"incorrect bootstrap namespace","exportName":"admitActorContext","length":304,"prefix":[83,65,67,51,1,0,48,1],"outcome":"refused"}
+]

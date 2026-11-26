@@ -294,9 +294,9 @@ export function writeIdentitiesV1(input:Readonly<{outputs:readonly string[];dige
 }
 
 /** 🧛️ Settles the sidecars of a unit that was just produced or restored (`entry` is what the cache recorded for it): the local identity sidecars, with the identity of a producer computed from the interface digest of the files the entry recorded. The wrapper supplies how a digest becomes an identity (`identityOf`, the portable key of the unit), how a recorded path is named (`neutralName`) and read (`readFile`). */
-export function settleUnitInterfaceV1(input:Readonly<{outputs:readonly string[];entry:Readonly<{dependencies:readonly Readonly<{path:string;sha256:string|null}>[];environment:readonly Readonly<{name:string;value:string|null}>[]}>;producer:boolean;identityOf:(interfaceDigest:string)=>string;neutralName:(path:string)=>string;readFile:(path:string)=>Buffer|null;digest:(path:string)=>string|null;inner:readonly string[];environment:Readonly<Record<string,string|undefined>>}>):void{
+export function settleUnitInterfaceV1(input:Readonly<{outputs:readonly string[];entry:Readonly<{dependencies:readonly Readonly<{path:string;sha256:string|null}>[];environment:readonly Readonly<{name:string;value:string|null}>[]}>;producer:boolean;identityScope?:readonly string[];identityOf:(interfaceDigest:string)=>string;neutralName:(path:string)=>string;readFile:(path:string)=>Buffer|null;digest:(path:string)=>string|null;inner:readonly string[];environment:Readonly<Record<string,string|undefined>>}>):void{
  const rmetas=input.outputs.filter(path=>path.endsWith(".rmeta"));if(rmetas.length===0)return;
- const basis=sha(JSON.stringify([input.entry.dependencies.map(row=>[row.path,row.sha256]),input.entry.environment.map(row=>[row.name,row.value])]));
+ const basis=sha(JSON.stringify([input.entry.dependencies.map(row=>[row.path,row.sha256]),input.entry.environment.map(row=>[row.name,row.value]),...input.identityScope===undefined?[]:[input.identityScope]]));
  writeIdentitiesV1({outputs:rmetas,digest:input.digest,basis,inner:input.inner,environment:input.environment,identity:input.producer?()=>input.identityOf(interfaceDigestV1(input.entry.dependencies.map(row=>({name:input.neutralName(row.path),bytes:row.sha256===null?null:input.readFile(row.path)}))).digest):undefined});
 }
 

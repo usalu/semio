@@ -2,13 +2,10 @@
 //!
 //! 🎬️ Built-in scenes resolved by content hash for presentation/video export.
 
-use crate::editor::animate::engine::camera::camera::Camera;
 use crate::editor::animate::engine::config::config::AnimateConfig;
 use crate::editor::animate::engine::scene::scene::{BasicStage, Scene};
+use crate::editor::animate::engine::scene::sobject::VSobject;
 use crate::editor::animate::engine::scene::section::Section;
-use crate::editor::animate::engine::scene::section::SectionList;
-use crate::editor::animate::engine::scene::sobject::{Sobjects, VSobject};
-use std::collections::HashMap;
 
 /// 🧩️ Demo scene used when no bespoke scene is registered for a hash.
 pub struct HashDemoScene {
@@ -29,35 +26,12 @@ impl Scene for HashDemoScene {
         self.sections_mut().push(Section::new(label, 0.0, 0.2));
         self.wait(0.2);
     }
-    fn config(&self) -> &AnimateConfig {
-        self.base.config()
+    fn stage(&self) -> &BasicStage {
+        &self.base
     }
-    fn config_mut(&mut self) -> &mut AnimateConfig {
-        self.base.config_mut()
-    }
-    fn camera(&self) -> &Camera {
-        self.base.camera()
-    }
-    fn camera_mut(&mut self) -> &mut Camera {
-        self.base.camera_mut()
-    }
-    fn mobjects(&self) -> &HashMap<u64, Sobjects> {
-        self.base.mobjects()
-    }
-    fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
-        self.base.mobjects_mut()
-    }
-    fn sections(&self) -> &SectionList {
-        self.base.sections()
-    }
-    fn sections_mut(&mut self) -> &mut SectionList {
-        self.base.sections_mut()
-    }
-    fn scene_time(&self) -> f64 {
-        self.base.scene_time()
-    }
-    fn set_scene_time(&mut self, time: f64) {
-        self.base.set_scene_time(time);
+
+    fn stage_mut(&mut self) -> &mut BasicStage {
+        &mut self.base
     }
 }
 

@@ -10,6 +10,7 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import admissionFixture from "../../../🎟️admission/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import { lawSourceBoundaryV1, lawStoragePolicyV1, withLawStorageV1, type LawStorageV1 } from "../../../🧪️tests/🦀️cargo/🟦️.ts";
 import { NATIVE_BUILD_DRIVER_POLICY_V1, runNativeBuildDriverV1, type NativeBuildOutcomeV1 } from "../../🟦️.ts";
 import { type NativeBuildJobV1, type NativeBuildPassV1, type NativeBuildPlanV1 } from "../../📋️contract/🟦️.ts";
@@ -24,6 +25,7 @@ export const header = Buffer.from(NATIVE_BUILD_DRIVER_POLICY_V1.componentHeader)
 export function stubCargo(root: string): { readonly command: string; readonly args: readonly string[]; readonly calls: string } {
   const calls = join(root, "calls.jsonl"), stub = join(root, "📜️script.ts");
   writeFileSync(stub, `import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createConnection } from "node:net";
 import { spawnSync } from "node:child_process";
 import { basename, join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -45,6 +47,19 @@ if (args.includes("--unit-graph")) {
   process.stdout.write(JSON.stringify({ version: 1, units, roots: units.map((_,index)=>index) })); process.exit(0);
 }
 appendFileSync(${JSON.stringify(calls)}, JSON.stringify({ at: Date.now(), pid: process.pid, profile, manifest, jobserver: process.env.CARGO_MAKEFLAGS ?? null, jobs: process.env.CARGO_BUILD_JOBS ?? null, light: process.env.SEMIO_UNIT_CACHE_LIGHT_SLOTS ?? null, wrapper: process.env.RUSTC_WRAPPER ?? null, unification: process.env.CARGO_RESOLVER_FEATURE_UNIFICATION ?? null }) + "\\n");
+if (process.env.STUB_MODE === "fleet-fallback") {
+  const request = { ...${JSON.stringify(admissionFixture.requests.valid[0])}, pass: process.env.SEMIO_BUILD_PASS, pid: process.pid };
+  const reply = await new Promise((accept, reject) => {
+    const socket = createConnection(process.env.SEMIO_BUILD_BROKER);
+    let data = "";
+    socket.on("connect", () => socket.write(JSON.stringify(request) + "\\n"));
+    socket.on("data", chunk => { data += chunk; if (data.includes("\\n")) { socket.destroy(); accept(JSON.parse(data.split("\\n")[0])); } });
+    socket.on("error", reject);
+    socket.setTimeout(2000, () => socket.destroy(Error("no broker reply")));
+  });
+  appendFileSync(${JSON.stringify(calls)}, JSON.stringify({ reply }) + "\\n");
+  process.exit(101);
+}
 if (process.env.STUB_MODE === "hang") await new Promise(() => setInterval(() => {}, 1000));
 const failing = ["error-last", "error-touch"].includes(process.env.STUB_MODE) || process.env.STUB_MODE === "reclaim-error" && basename(root) === "hub";
 const linked = process.env.STUB_MODE === "omit-last" || failing ? packages.slice(0, -1) : packages;
@@ -102,7 +117,7 @@ export function stubWorkspace(root: string, name: string, packages: readonly str
 /** 🚀️ Runs the driver against a stub Cargo inside one original compiler reservation bound to its control (cache, target and build stores live in that
  * reservation); `inspect` reads the run's generation, whether it succeeded or failed, before the reservation retires. */
 export async function runStub(root: string, plan: NativeBuildPlanV1, cargo: ReturnType<typeof stubCargo>, overrides: Partial<Parameters<typeof runNativeBuildDriverV1>[0]> & { cancel?: Readonly<{ signal: AbortSignal; milliseconds: number }>; verifyStageWriters?:boolean; storageBytes?:number } = {}, mode = "ok", inspect?: (run: Readonly<{ outcome?: NativeBuildOutcomeV1; held: LawStorageV1 }>) => void | Promise<void>): Promise<NativeBuildOutcomeV1> {
-  const { cancel, verifyStageWriters, storageBytes, ...driver } = overrides;
+  const { cancel, verifyStageWriters, storageBytes, environment, ...driver } = overrides;
   const settled = await withBuildTestInvocationV1(async (original): Promise<Readonly<{ failed: boolean; failure?: unknown; outcome?: NativeBuildOutcomeV1 }>> => {
     const control = driver.control ?? scriptCompilerAdmissionControlV1(original, "test:component-pass", cancel?.milliseconds ?? 120000, cancel?.signal);
     try {
@@ -125,7 +140,7 @@ export async function runStub(root: string, plan: NativeBuildPlanV1, cargo: Retu
           expect(leaseLedgerSnapshotV1().holds.some(lease=>lease.resource==="semio.compiler.host-capacity/v1")).toBe(true);
           return withCompilerWorkspaceStageWriteV1(held.storage,artifacts,phase,write);
         };
-        const run=()=>runNativeBuildDriverV1({ plan, storage: held.storage, sourceBoundary: lawSourceBoundaryV1, cwd: root, cacheRoot: join(held.root, "cache"), shared: { target: join(held.root, "target"), build: join(held.root, "build") }, generation: "warm", leaseDirectory: artifacts, environment: { ...process.env, ...held.environment, CARGO_TARGET_DIR: join(held.root, "target"), STUB_MODE: mode }, control, tokens: fixture.stub.tokens, withCapacity, ...(verifyStageWriters?{withStageWriter}:{}), physicalBytes: fixture.stub.physicalGiB * 1024 ** 3, storageReserveBytes: lawStoragePolicyV1.reserveBytes, scheduler: process.execPath, cargo, log: () => undefined, localJobs: { maximum: 1 }, ...driver });
+        const run=()=>runNativeBuildDriverV1({ plan, storage: held.storage, sourceBoundary: lawSourceBoundaryV1, cwd: root, cacheRoot: join(held.root, "cache"), shared: { target: join(held.root, "target"), build: join(held.root, "build") }, generation: "warm", leaseDirectory: artifacts, environment: { ...process.env, ...held.environment, CARGO_TARGET_DIR: join(held.root, "target"), RUSTC: "rustc", RUSTC_WRAPPER: "", RUSTC_WORKSPACE_WRAPPER: "", STUB_MODE: mode, ...environment }, control, tokens: fixture.stub.tokens, withCapacity, ...(verifyStageWriters?{withStageWriter}:{}), physicalBytes: fixture.stub.physicalGiB * 1024 ** 3, storageReserveBytes: lawStoragePolicyV1.reserveBytes, scheduler: process.execPath, cargo, log: () => undefined, localJobs: { maximum: 1 }, ...driver });
         try { outcome = await (verifyStageWriters?withCompilerWorkspaceLifetimeV1(held.storage,control,run):run()); return outcome; }
         finally { await inspect?.({ outcome, held }); }
       }, original) };

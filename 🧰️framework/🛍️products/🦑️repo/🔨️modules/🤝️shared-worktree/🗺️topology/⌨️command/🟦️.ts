@@ -12,18 +12,20 @@ import {crlfScriptsV1,gitGuardsV1,resolveGitV1,type GitGuardsV1} from "../../�
 import {pathBudgetV1} from "../../🚧️boundary/🟦️.ts";
 import {accessDirectoryV1,accessReceiptsLackingV1} from "../../../📚️library/🏗️build/🏡️resident/🔐️consent/🟨️.mjs";
 import {serviceBootstrapScriptV1} from "../🛠️service/🟦️.ts";
-import {applyFleetAddressEnvironmentV1,factsV1,groupV1,mountPartsV1,mountPlanV1,platformV1,readTopologyV1,serverPartsV1,serverPlanV1,workerPartsV1,workerServiceV1,worktreePathV1,type FleetGroupV1,type FleetPlatformV1,type FleetTopologyV1} from "../🟦️.ts";
+import {applyFleetHostnameV1} from "../🧭️addresses/🟦️.ts";
+import {applyFleetAddressEnvironmentV1,bindFleetHostsV1,factsV1,groupV1,mountPartsV1,mountPlanV1,platformV1,readTopologyV1,serverPartsV1,serverPlanV1,workerPartsV1,workerServiceV1,worktreePathV1,type FleetGroupV1,type FleetPlatformV1,type FleetResolvedHostsV1,type FleetTopologyV1} from "../🟦️.ts";
 
-type Operation="mount-plan"|"server-plan"|"worker-service"|"service-bootstrap"|"facts"|"validate"|"preflight";
+type Operation="hostname"|"mount-plan"|"server-plan"|"worker-service"|"service-bootstrap"|"facts"|"validate"|"preflight";
 
 const OPTIONS:Readonly<Record<Operation,Readonly<{valued:readonly string[];plain:readonly string[]}>>>={
- "mount-plan":{valued:["--group","--platform","--part"],plain:[]},
- "server-plan":{valued:["--group","--part"],plain:[]},
- "worker-service":{valued:["--group","--platform","--part","--role"],plain:[]},
+ hostname:{valued:["--root","--lang"],plain:[]},
+ "mount-plan":{valued:["--group","--platform","--part","--addresses"],plain:[]},
+ "server-plan":{valued:["--group","--part","--addresses"],plain:[]},
+ "worker-service":{valued:["--group","--platform","--part","--role","--addresses"],plain:[]},
  "service-bootstrap":{valued:["--group","--user","--role"],plain:[]},
- facts:{valued:["--group","--platform","--shell","--home"],plain:[]},
- validate:{valued:["--file","--timeout"],plain:["--reachable"]},
- preflight:{valued:["--group","--worktree","--store","--timeout","--lang","--home"],plain:[]}
+ facts:{valued:["--group","--platform","--shell","--home","--addresses"],plain:[]},
+ validate:{valued:["--file","--timeout","--addresses"],plain:["--reachable"]},
+ preflight:{valued:["--group","--worktree","--store","--timeout","--lang","--home","--addresses"],plain:[]}
 };
 const PLATFORMS:readonly FleetPlatformV1[]=["linux","macos","windows"],SHELLS=["sh","powershell"] as const,ROLES=["worker","server"] as const;
 
@@ -73,18 +75,36 @@ const part=(parts:Readonly<Record<string,string>>,name:string):string=>{
  return body;
 };
 
-const topologyOf=(value:unknown,environment:Readonly<Record<string,string|undefined>>|undefined):FleetTopologyV1=>applyFleetAddressEnvironmentV1(readTopologyV1(value),environment??process.env);
+const ORIGIN_PATTERN=/^[a-z][a-z0-9-]{0,63}$/u;
+
+/** 📍️ Reads `--addresses <origin>=<address>[,<origin>=<address>...]`: the resolved address of each named origin, for one rendering; anything else is refused. */
+export function parseFleetAddressesV1(text:string|undefined):FleetResolvedHostsV1{
+ if(text===undefined)return {};
+ const found:Record<string,string>={};
+ for(const item of text.split(",").filter(part=>part!=="")){
+  const at=item.indexOf("="),origin=at<0?"":item.slice(0,at),address=at<0?"":item.slice(at+1);
+  if(!ORIGIN_PATTERN.test(origin)||!/^[A-Za-z0-9:.%-]{2,64}$/u.test(address))throw Error(`--addresses needs <origin>=<address> pairs: ${item}`);
+  found[origin]=address;
+ }
+ return found;
+}
+
+const topologyOf=(value:unknown,environment:Readonly<Record<string,string|undefined>>|undefined,hosts:FleetResolvedHostsV1={}):FleetTopologyV1=>{
+ const applied=applyFleetAddressEnvironmentV1(readTopologyV1(value),environment??process.env);
+ return Object.keys(hosts).length===0?applied:bindFleetHostsV1(applied,hosts);
+};
 
 /** 🚀️ Runs one operation and returns the text to print: `mount-plan`, `server-plan`, `worker-service`, `facts` (the values for the provisioning scripts) or `validate`; `--platform` and `--shell` default from `context.platform` (this process), `--part` picks one piece of a plan, `--role server` (worker-service) renders the group server's variant with `compact --collect-blobs`, `--file` validates another topology file. `SEMIO_FLEET_GROUP`, `SEMIO_FLEET_NFS_HOST` and `SEMIO_FLEET_NETWORK` (optional `SEMIO_FLEET_CACHE_ENDPOINT`) replace that group's address for this run; the topology file is not written. */
-export function runTopologyCommandV1(args:readonly string[],context:Readonly<{platform?:string;topology?:unknown;environment?:Readonly<Record<string,string|undefined>>;home?:string}>={}):string{
+export function runTopologyCommandV1(args:readonly string[],context:Readonly<{platform?:string;topology?:unknown;environment?:Readonly<Record<string,string|undefined>>;home?:string;hosts?:FleetResolvedHostsV1}>={}):string{
  const {operation,values,flags}=parseTopologyArgumentsV1(args);
  if(operation==="preflight")throw Error("preflight needs the asynchronous runTopologyCommandAsyncV1");
+ if(operation==="hostname")throw Error("hostname needs the asynchronous runTopologyCommandAsyncV1");
  if(operation==="validate"){
   if(flags.has("--reachable")||values["--timeout"]!==undefined)throw Error("--reachable and --timeout need the asynchronous runTopologyCommandAsyncV1");
-  const topology=topologyOf(values["--file"]===undefined?context.topology:JSON.parse(readFileSync(values["--file"],"utf8")),context.environment);
+  const topology=topologyOf(values["--file"]===undefined?context.topology:JSON.parse(readFileSync(values["--file"],"utf8")),context.environment,{...context.hosts,...parseFleetAddressesV1(values["--addresses"])});
   return `valid fleet topology: ${topology.groups.length} groups (${topology.groups.map(group=>group.id).join(", ")})`;
  }
- const topology=topologyOf(context.topology,context.environment),group=need(values,"--group"),current=platformV1(context.platform),
+ const topology=topologyOf(context.topology,context.environment,{...context.hosts,...parseFleetAddressesV1(values["--addresses"])}),group=need(values,"--group"),current=platformV1(context.platform),
   shell=choose(values,"--shell",SHELLS,current==="windows"?"powershell":"sh"),platform=choose(values,"--platform",PLATFORMS,current),selected=values["--part"],role=choose(values,"--role",ROLES,"worker");
  if(operation==="service-bootstrap")return serviceBootstrapScriptV1(topology,group,{user:need(values,"--user"),server:role==="server"});
  if(operation==="facts")return renderFactsV1(factsV1(topology,group,platform,values["--home"]??context.home??homedir()),shell);
@@ -123,10 +143,12 @@ const within=<T>(promise:Promise<T>,timeoutMilliseconds:number,signal:AbortSigna
 /** 🛰️ Resolves the store host and the cache host of every group and opens a TCP connection to the store port (2049 for NFS, 445 for SMB) and to the cache port, each probe limited to `timeoutMilliseconds`. All probes run at once; every finished probe is reported through `progress`, and an aborted `signal` stops them and marks the report as cancelled. The report names every group with its result and lists the groups that failed; the topology itself is not changed. */
 export async function checkReachabilityV1(topology:FleetTopologyV1,options:Readonly<{timeoutMilliseconds:number;signal:AbortSignal;progress:(line:string)=>void;ports?:Partial<ReachabilityPortsV1>}>):Promise<ReachabilityReportV1>{
  const {timeoutMilliseconds,signal,progress}=options,ports:ReachabilityPortsV1={...systemPorts,...options.ports},done:ReachabilityCheckV1[]=[];
- const probe=async(group:FleetGroupV1,check:"store"|"cache",host:string,port:number):Promise<void>=>{
+ const probe=async(group:FleetGroupV1,check:"store"|"cache",resolved:string|undefined,port:number):Promise<void>=>{
   let ok=false,detail:string;
+  const host=resolved??group.roles[check];
   try{
    signal.throwIfAborted();
+   if(resolved===undefined)throw Error(`the address of ${group.roles[check]} is not resolved (no published address, no discovery answer)`);
    const addresses=await within(ports.resolve(host),timeoutMilliseconds,signal,`resolving ${host}`);
    if(addresses.length===0)throw Error(`${host} resolves to no address`);
    await within(ports.connect(addresses[0]!,port,timeoutMilliseconds,signal),timeoutMilliseconds,signal,`connecting to ${addresses[0]}:${port}`);
@@ -135,7 +157,7 @@ export async function checkReachabilityV1(topology:FleetTopologyV1,options:Reado
   done.push({group:group.id,check,host,port,ok,detail});
   progress(`${group.id} ${check} ${host}:${port} ${ok?"ok":"FAILED"} ${detail}`);
  };
- await Promise.all(topology.groups.flatMap(group=>[probe(group,"store",group.nfs.host,group.server.protocol==="smb"?445:2049),probe(group,"cache",new URL(group.cache.endpoint).hostname,Number(new URL(group.cache.endpoint).port||(group.cache.endpoint.startsWith("https")?"443":"80")))]));
+ await Promise.all(topology.groups.flatMap(group=>[probe(group,"store",group.nfs.host,group.server.protocol==="smb"?445:2049),probe(group,"cache",group.cache.endpoint===undefined?undefined:new URL(group.cache.endpoint).hostname.replace(/^\[|\]$/gu,""),Number(group.ports?.cache??6094))]));
  const checks=topology.groups.flatMap(group=>(["store","cache"] as const).map(check=>done.find(entry=>entry.group===group.id&&entry.check===check)!)),cancelled=signal.aborted,failed=topology.groups.filter(group=>checks.some(entry=>entry.group===group.id&&!entry.ok)).map(group=>group.id);
  const lines=checks.map(entry=>`${entry.group} ${entry.check} ${entry.host}:${entry.port} ${entry.ok?"ok":"FAILED"} ${entry.detail}`);
  lines.push(cancelled?"reachability cancelled":failed.length===0?`all ${topology.groups.length} groups reachable`:`unreachable groups: ${failed.join(", ")}`);
@@ -143,19 +165,35 @@ export async function checkReachabilityV1(topology:FleetTopologyV1,options:Reado
 }
 
 /** 🚀️ Runs one operation like `runTopologyCommandV1` and, for `validate --reachable [--timeout <ms>]` (default 3000 ms), also checks the reachability of the hosts after the offline validation; plain `validate` stays offline. `preflight [--group <id>] [--worktree <path>] [--store <path>] [--timeout <ms>] [--lang en|de]` (default 5000 ms per check) runs `preflightV1` on this machine, reports every finished check as progress and prints the report in the chosen languages. Returns the text and the exit code (1 when a host is unreachable, a check failed or the run was cancelled). */
-export async function runTopologyCommandAsyncV1(args:readonly string[],context:Readonly<{platform?:string;topology?:unknown;signal:AbortSignal;progress:(line:string)=>void;ports?:Partial<ReachabilityPortsV1>;environment?:Readonly<Record<string,string|undefined>>;probes?:Partial<PreflightProbesV1>}>):Promise<Readonly<{text:string;exitCode:number}>>{
- const {operation,values,flags}=parseTopologyArgumentsV1(args);
+export async function runTopologyCommandAsyncV1(args:readonly string[],context:Readonly<{platform?:string;topology?:unknown;signal:AbortSignal;progress:(line:string)=>void;ports?:Partial<ReachabilityPortsV1>;environment?:Readonly<Record<string,string|undefined>>;probes?:Partial<PreflightProbesV1>;hosts?:FleetResolvedHostsV1;confirm?:(question:string)=>Promise<boolean>;run?:(command:string,args:readonly string[])=>Promise<number>;resolveHosts?:(requests:readonly Readonly<{origin:string;port:number}>[])=>Promise<FleetResolvedHostsV1>}>):Promise<Readonly<{text:string;exitCode:number}>>{
+ const {operation,values,flags}=parseTopologyArgumentsV1(args),given={...context.hosts,...parseFleetAddressesV1(values["--addresses"])};
+ const wanted=async():Promise<FleetResolvedHostsV1>=>{
+  if(context.resolveHosts===undefined||Object.keys(given).length>0)return given;
+  const base=applyFleetAddressEnvironmentV1(readTopologyV1(context.topology),context.environment??process.env);
+  if((context.environment??process.env).SEMIO_FLEET_STORE_ADDRESS!==undefined&&(context.environment??process.env).SEMIO_FLEET_STORE_ADDRESS!=="")return given;
+  const named=values["--group"],groups=named===undefined?base.groups:base.groups.filter(group=>group.id===named||Object.hasOwn(base.groups.find(row=>row.id===named)?.peers??{},group.id));
+  const requests=new Map<string,number>();
+  for(const group of groups){if(!requests.has(group.roles.store))requests.set(group.roles.store,group.server.protocol==="smb"?445:2049);if(!requests.has(group.roles.cache))requests.set(group.roles.cache,group.ports?.cache??6094);}
+  return {...await context.resolveHosts([...requests].map(([origin,port])=>({origin,port}))),...given};
+ };
+ if(operation==="hostname"){
+  const lines:string[]=[],language=values["--lang"]==="de"?"de":values["--lang"]==="en"?"en":(context.environment??process.env).SEMIO_LANGUAGE==="de"?"de":"en",workspace=values["--root"]??(context.environment??process.env).SEMIO_WORKSPACE_ROOT;
+  if(workspace===undefined||workspace==="")throw Error(language==="de"?"--root oder SEMIO_WORKSPACE_ROOT erforderlich":"--root or SEMIO_WORKSPACE_ROOT required");
+  if(context.confirm===undefined||context.run===undefined)throw Error("hostname needs the interactive confirmation of repo fleet hostname");
+  await applyFleetHostnameV1({root:workspace,language,report:line=>lines.push(line),confirm:async question=>{for(const line of lines.splice(0))context.progress(line);return context.confirm!(question);},run:context.run,...context.platform===undefined?{}:{platform:context.platform as NodeJS.Platform}});
+  return {text:lines.join("\n"),exitCode:0};
+ }
  if(operation==="preflight"){
   const timeout=values["--timeout"]??"5000",timeoutMilliseconds=Number(timeout);
   if(!/^[0-9]+$/u.test(timeout)||timeoutMilliseconds<100||timeoutMilliseconds>60000)throw Error("--timeout must be a whole number of milliseconds from 100 to 60000");
-  const report=await preflightV1(topologyOf(context.topology,context.environment),{platform:platformV1(context.platform),group:values["--group"],worktree:values["--worktree"],home:values["--home"]??context.home,store:values["--store"],timeoutMilliseconds,languages:preflightLanguagesV1(values["--lang"],context.environment??process.env),signal:context.signal,progress:context.progress,probes:context.probes});
+  const report=await preflightV1(topologyOf(context.topology,context.environment,await wanted()),{platform:platformV1(context.platform),group:values["--group"],worktree:values["--worktree"],home:values["--home"]??context.home,store:values["--store"],timeoutMilliseconds,languages:preflightLanguagesV1(values["--lang"],context.environment??process.env),signal:context.signal,progress:context.progress,probes:context.probes});
   return {text:report.text,exitCode:report.ok?0:1};
  }
- if(operation!=="validate"||(!flags.has("--reachable")&&values["--timeout"]===undefined))return {text:runTopologyCommandV1(args,{platform:context.platform,topology:context.topology,environment:context.environment}),exitCode:0};
+ if(operation!=="validate"||(!flags.has("--reachable")&&values["--timeout"]===undefined))return {text:runTopologyCommandV1(args,{platform:context.platform,topology:context.topology,environment:context.environment,hosts:operation==="validate"?given:await wanted()}),exitCode:0};
  if(!flags.has("--reachable"))throw Error("--timeout needs --reachable");
  const timeout=values["--timeout"]??"3000",timeoutMilliseconds=Number(timeout);
  if(!/^[0-9]+$/u.test(timeout)||timeoutMilliseconds<100||timeoutMilliseconds>60000)throw Error("--timeout must be a whole number of milliseconds from 100 to 60000");
- const offline=runTopologyCommandV1(["validate",...values["--file"]===undefined?[]:["--file",values["--file"]]],{platform:context.platform,topology:context.topology,environment:context.environment}),topology=topologyOf(values["--file"]===undefined?context.topology:JSON.parse(readFileSync(values["--file"],"utf8")),context.environment);
+ const offline=runTopologyCommandV1(["validate",...values["--file"]===undefined?[]:["--file",values["--file"]]],{platform:context.platform,topology:context.topology,environment:context.environment}),topology=topologyOf(values["--file"]===undefined?context.topology:JSON.parse(readFileSync(values["--file"],"utf8")),context.environment,await wanted());
  const report=await checkReachabilityV1(topology,{timeoutMilliseconds,signal:context.signal,progress:context.progress,ports:context.ports});
  return {text:`${offline}\n${report.text}`,exitCode:report.ok?0:1};
 }
@@ -321,7 +359,7 @@ export async function preflightV1(topology:FleetTopologyV1,options:Readonly<{pla
   return mountedWindows(nfs.stdout,storeRoot.slice(0,2))??mountedWindows(smb.stdout,storeRoot.slice(0,2));
  });
  const status=memo(()=>probes.status(worktree,storeRoot,signal));
- const health=memo(async()=>{const before=probes.now(),response=await probes.http(`${group.cache.endpoint}/healthz`,timeoutMilliseconds,signal);return {response,before,after:probes.now()};});
+ const health=memo(async()=>{const before=probes.now(),response=await probes.http(`${group.cache.endpoint??(()=>{throw Error(`the address of ${group.roles.cache} is not resolved`);})()}/healthz`,timeoutMilliseconds,signal);return {response,before,after:probes.now()};});
  const nonEmpty=(text:string):boolean=>text.trim().length>0;
  const unit=(part:string,wildcard:boolean):string=>{
   const name=part.split("/").at(-1)!;
@@ -372,15 +410,15 @@ export async function preflightV1(topology:FleetTopologyV1,options:Readonly<{pla
  add("cache",timeoutMilliseconds,async()=>{
   try{
    const {response,after,before}=await health();
-   return response.status===200&&/"status"\s*:\s*"ok"/u.test(response.body)?ok("cache.ok",{endpoint:group.cache.endpoint,milliseconds:after-before}):fail("cache.bad",{endpoint:group.cache.endpoint,status:response.status});
-  }catch(error){return fail("cache.unreachable",{endpoint:group.cache.endpoint,error:shorten(error)});}
+   return response.status===200&&/"status"\s*:\s*"ok"/u.test(response.body)?ok("cache.ok",{endpoint:group.cache.endpoint??"",milliseconds:after-before}):fail("cache.bad",{endpoint:group.cache.endpoint??"",status:response.status});
+  }catch(error){return fail("cache.unreachable",{endpoint:group.cache.endpoint??"",error:shorten(error)});}
  });
  add("clock",timeoutMilliseconds,async()=>{
   if(server)return skip("clock.reference");
   let measured:Awaited<ReturnType<typeof health>>;
-  try{measured=await health();}catch{return skip("clock.unreachable",{endpoint:group.cache.endpoint});}
+  try{measured=await health();}catch{return skip("clock.unreachable",{endpoint:group.cache.endpoint??""});}
   const sent=measured.response.date===null?Number.NaN:Date.parse(measured.response.date);
-  if(Number.isNaN(sent))return skip("clock.nodate",{endpoint:group.cache.endpoint});
+  if(Number.isNaN(sent))return skip("clock.nodate",{endpoint:group.cache.endpoint??""});
   const skew=(measured.before+measured.after)/2-(sent+500),size=Math.abs(skew),variables={seconds:seconds(skew),server:`${groupId}-server`};
   return size>=limits.skewFailMilliseconds?fail("clock.fail",variables):size>limits.skewWarnMilliseconds?warn("clock.warn",variables):ok("clock.ok",variables);
  });

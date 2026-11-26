@@ -82,3 +82,31 @@ fn every_wfc_inference_route_names_its_own_artifact_kind() {
         assert_eq!(metadata.artifact_kind, dialect_kind, "{} must address its own dialect kind", metadata.inference_schema);
     }
 }
+
+#[test]
+fn wfc_inference_publication_and_guest_tool_factories_share_the_same_roster() {
+    let plugin = super::plugin().expect("WFC composition");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../📦️inference-wiring/🔣️.json")).expect("neutral WFC route roster");
+    let bytes = plugin.wire_list_artifact_inference_services();
+    let roster: serde_json::Value = serde_json::from_slice(&bytes).expect("serialized live roster");
+    let routes = roster.as_array().expect("live routes");
+    let expected = fixture["routes"].as_array().expect("expected routes");
+    assert_eq!(routes.len(), expected.len());
+    let controller = fixture["controller"].as_str().unwrap();
+    let bus = semio_framework::ActionBus::production();
+    for row in expected {
+        let kind = row["kind"].as_str().unwrap();
+        let service = row["service"].as_str().unwrap();
+        let live = routes.iter().find(|route| route["inferenceSchema"] == service).expect("published service");
+        assert_eq!(live["owner"], fixture["owner"]);
+        assert_eq!(live["artifactKind"], kind);
+        assert_eq!(live["payload"]["payloadSchemaId"], row["payload"]);
+        let key = semio_framework::ToolFactoryKey::new(controller, service);
+        assert_eq!(bus.payload_schema_id(&key).as_deref(), row["payload"].as_str());
+        if kind == fixture["retainedColdKind"].as_str().unwrap() {
+            let executable = semio_plugin::artifact_inference_service(kind, service).expect("live inference registry").expect("declared bitmap executable");
+            assert_eq!(executable.metadata().payload.unwrap().payload_schema_id, row["payload"].as_str().unwrap());
+            assert!(executable.retained_factory().is_some());
+        }
+    }
+}

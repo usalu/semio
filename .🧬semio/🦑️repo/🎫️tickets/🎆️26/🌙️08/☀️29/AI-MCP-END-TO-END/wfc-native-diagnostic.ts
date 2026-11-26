@@ -22,16 +22,22 @@ const manifest = "🌎️hub/Cargo.toml";
 const target = "wasm32-wasip2";
 const generated = resolve(import.meta.dirname, "🗑️generated");
 const directory = join(generated, "wfc");
-const diskReserve = 7 * 1024 ** 3;
-const [operation, emitter] = process.argv.slice(2);
+const diskReserveGiB = 5;
+const diskReserve = diskReserveGiB * 1024 ** 3;
+const [operation, emitter, linkedComponent] = process.argv.slice(2);
 type Owner = "wfc" | "note";
 if (operation === "emit" || operation === "emit-note") {
   if (!emitter) throw Error("Repository descriptor emitter required");
-  await emitModel(operation === "emit-note" ? "note" : "wfc", resolve(emitter));
+  await emitModel(operation === "emit-note" ? "note" : "wfc", resolve(emitter), linkedComponent && resolve(linkedComponent));
   process.exit(0);
 }
-if (!["plan", "plan-note", "plan-all", "build", "build-note", "build-all"].includes(operation)) {
-  throw Error("Use plan, plan-note, plan-all, build, build-note, build-all, emit, or emit-note");
+if (operation === "compare-lock") {
+  if (!emitter) throw Error("An earlier Hub lock is required");
+  compareLocks(await readFile(emitter), await readFile("🌎️hub/Cargo.lock"));
+  process.exit(0);
+}
+if (!["plan", "plan-note", "plan-all", "inventory", "resolve-lock", "build", "build-note", "build-all"].includes(operation)) {
+  throw Error("Use plan, plan-note, plan-all, inventory, compare-lock, resolve-lock, build, build-note, build-all, emit, or emit-note");
 }
 const toolchain = readFileSync("rust-toolchain.toml", "utf8").match(/^channel\s*=\s*"([^"]+)"/m)?.[1];
 const registry = Bun.spawnSync(["repo", "tools", "list", "--json"], { stderr: "inherit" });
@@ -76,7 +82,18 @@ function unitGraph(owners: readonly Owner[]): { units: Unit[]; roots: number[] }
   if (graph.exitCode) process.exit(graph.exitCode);
   return JSON.parse(graph.stdout.toString());
 }
-if (operation === "plan") {
+if (operation === "resolve-lock") {
+  const lock = "🌎️hub/Cargo.lock";
+  const starting = await readFile(lock);
+  const backup = join(mkdtempSync(join(generated, "wfc-lock-")), "Cargo.lock");
+  await Bun.write(backup, starting);
+  const result = Bun.spawnSync(cargo(["-Zunstable-options", ...args(["wfc"]).filter(value => value !== "--locked"), "--unit-graph"]), {
+    env: environment, stdout: "ignore", stderr: "inherit",
+  });
+  if (result.exitCode) process.exit(result.exitCode);
+  compareLocks(starting, await readFile(lock));
+  unitGraph(["wfc"]);
+} else if (operation === "plan") {
   const { units, roots } = unitGraph(["wfc"]);
   const modes = Object.fromEntries(
     Object.entries(Object.groupBy(units, unit => unit.mode)).map(([mode, group]) => [mode, group?.length]),
@@ -98,17 +115,22 @@ if (operation === "plan") {
     const same = included !== undefined && combined[included] === unitDigests(single.units)[one];
     console.log(`[DEBUG] ${owner} combined unit closure ${same ? "matches" : "differs from"} its standalone plan`);
   }
+} else if (operation === "inventory") {
+  const graph = unitGraph(["wfc", "note"]);
+  const path = join(generated, "wfc-unit-graph.json");
+  await Bun.write(path, JSON.stringify(graph));
+  console.log(`[DEBUG] Wrote ${graph.units.length} combined Cargo units to ${path}`);
 } else {
   const owners: readonly Owner[] = operation === "build-all" ? ["wfc", "note"] : [operation === "build-note" ? "note" : "wfc"];
   const label = owners.join(" and ");
   const disk = statfsSync(directory);
-  if (disk.bavail * disk.bsize < diskReserve) throw Error(`Less than 7 GiB free for isolated ${label} build`);
+  if (disk.bavail * disk.bsize < diskReserve) throw Error(`Less than ${diskReserveGiB} GiB free for isolated ${label} build`);
   const child = Bun.spawn(cargo(args(owners)), { env: environment, stdout: "inherit", stderr: "inherit" });
   for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, () => child.kill(signal));
   const diskMonitor = setInterval(() => {
     const disk = statfsSync(directory);
     if (disk.bavail * disk.bsize < diskReserve) {
-      console.error(`[DEBUG] Stopping isolated ${label} build at 7 GiB shared-volume reserve`);
+      console.error(`[DEBUG] Stopping isolated ${label} build at ${diskReserveGiB} GiB shared-volume reserve`);
       child.kill("SIGINT");
     }
   }, 5000);
@@ -132,12 +154,12 @@ function unitDigests(units: Unit[]): string[] {
 }
 
 /** 🀄️ Retains the genuine emitter output for an isolated SDK probe. */
-async function emitModel(owner: Owner, emitter: string) {
+async function emitModel(owner: Owner, emitter: string, linkedComponent?: string) {
   const folder = owner === "wfc" ? "🀄️wfc" : "🗒️note";
   const crate = `🌎️hub/🧩️compositions/${folder}/🧩️component/📦️packages/🦀️rust`;
   const root = mkdtempSync(join(generated, `${owner}-model-`));
   const model = join(root, "browser", "prototype", "components", componentModelDirectoryKeyV1(crate));
-  const linked = join(directory, target, "prototype", `semio_hub_${owner}_component.wasm`);
+  const linked = linkedComponent ?? join(directory, target, "prototype", `semio_hub_${owner}_component.wasm`);
   const component = join(model, "📦️component.wasm");
   mkdirSync(model, { recursive: true });
   await copyFile(linked, component, constants.COPYFILE_FICLONE | constants.COPYFILE_EXCL);
@@ -172,4 +194,24 @@ async function sha256(path: string) {
   const hash = new Bun.CryptoHasher("sha256");
   for await (const bytes of Bun.file(path).stream()) hash.update(bytes);
   return hash.digest("hex");
+}
+
+/** 🔏 Compares all external package versions, sources, and checksums across a live lock update. */
+function compareLocks(starting: Buffer, proposed: Buffer) {
+  type Package = { name: string; version: string; source?: string; checksum?: string; dependencies?: string[] };
+  const packages = (bytes: Buffer) => (Bun.TOML.parse(bytes.toString()) as { package: Package[] }).package;
+  const oldPackages = packages(starting), newPackages = packages(proposed);
+  const pinned = (rows: Package[]) => rows.filter(row => row.source).map(({ name, version, source, checksum }) =>
+    JSON.stringify([name, version, source, checksum])).sort();
+  if (JSON.stringify(pinned(oldPackages)) !== JSON.stringify(pinned(newPackages))) throw Error("External package pins changed");
+  const dependencies = (rows: Package[]) => new Map(rows.map(row => [JSON.stringify([row.name, row.version, row.source]), row]));
+  const before = dependencies(oldPackages), after = dependencies(newPackages);
+  for (const [key, row] of after) {
+    const previous = before.get(key);
+    if (!previous || JSON.stringify(previous.dependencies) !== JSON.stringify(row.dependencies)) {
+      console.log(`[DEBUG] ${previous ? "Changed" : "Added"} ${row.name} ${row.version}`);
+    }
+  }
+  for (const [key, row] of before) if (!after.has(key)) console.log(`[DEBUG] Removed ${row.name} ${row.version}`);
+  console.log(`[DEBUG] Hub lock ${oldPackages.length} -> ${newPackages.length}; external package pins verified`);
 }

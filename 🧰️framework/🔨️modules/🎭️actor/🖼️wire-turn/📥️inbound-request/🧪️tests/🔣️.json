@@ -1,0 +1,5 @@
+[
+  {"cancelAfterTurns":0,"expectedTurns":0},
+  {"cancelAfterTurns":1,"expectedTurns":1},
+  {"cancelAfterTurns":3,"expectedTurns":3}
+]

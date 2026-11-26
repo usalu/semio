@@ -78,3 +78,33 @@ fn hexagonal_mushroom_column_preview_payload_matches_the_scene_bridge_fixture() 
     assert_eq!(camera, expected.camera_json, "preview camera measure drifted from the committed scene-bridge fixture");
 }
 //#endregion 🌉️SceneBridgeProvenance
+
+#[test]
+fn mesh_workbench_delivers_the_authored_face_extrusion() {
+    let _guard = exclusive();
+    operators_installed();
+    let fixture: ExampleGeometryFixture = serde_json::from_str(include_str!("../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🥽️mesh-workbench/🧪️tests/🧫️fixtures/🧩️example/🔣️.json")).unwrap();
+    let Generation3dSnapshot { host_snapshot: graph, generation } = parse_dsl(include_str!("../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🥽️mesh-workbench/🖼️assets/🥽️mesh-workbench/🗣️.dsl.semio")).unwrap();
+    generation.retire_cold();
+    let mut host = FlowHost::from_host_snapshot(graph).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY).with_geometry_port(geometry_session().port());
+    host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
+    let evaluated = host.evaluate().expect("mesh operators evaluate");
+    let payload = semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_payload(&evaluated, &host.host_snapshot, &Default::default(), None, &Default::default());
+    retire_host(host);
+    let meshes: Vec<SceneBridgeMesh> = serde_json::from_str(&payload.meshes_json).unwrap();
+    let instances: Vec<SceneBridgeInstance> = serde_json::from_str(&payload.instances_json).unwrap();
+    assert_eq!(meshes.len(), fixture.delivery.meshes);
+    assert_eq!(instances.len(), meshes.len());
+    assert!(instances.iter().all(|instance| meshes.iter().any(|mesh| mesh.id == instance.mesh_id)));
+    let expected = &fixture.expect;
+    let volume = expected.volume.unwrap();
+    let matching = meshes.iter().any(|mesh| {
+        let data = &mesh.data;
+        if data.indices.len() / 3 < expected.min_triangles {return false}
+        let (mass, low, high) = parry_oracle(&data.positions, &data.indices);
+        (mass-volume).abs() <= expected.volume_tolerance && (0..3).all(|axis|
+            (low[axis]-fixture.delivery.bounding_box_min[axis]).abs() <= fixture.delivery.bounding_box_tolerance &&
+            (high[axis]-fixture.delivery.bounding_box_max[axis]).abs() <= fixture.delivery.bounding_box_tolerance)
+    });
+    assert!(matching, "published workbench geometry must include the authored extrusion volume and bounds");
+}

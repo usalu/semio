@@ -8,7 +8,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Config
 /// 🧊️ Orbit pose, projection preset bank and hidden storey ids of one world window. `framed` turns true with the first camera gesture and
 /// from then on suppresses the one-shot fit to the model.
-#[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, Clone, Debug, PartialEq, ToValue, FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]

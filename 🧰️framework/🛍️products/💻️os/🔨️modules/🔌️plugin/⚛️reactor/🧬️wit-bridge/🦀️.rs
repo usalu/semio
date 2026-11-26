@@ -2,6 +2,10 @@
 
 extern crate semio_os_kernel as store;
 
+#[cfg(any(test, all(target_arch = "wasm32", target_env = "p2")))]
+#[path = "📥️pending-events/🦀️.rs"]
+mod pending_events;
+
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 #[path = "🪢️bridge/🦀️.rs"]
 pub mod wit_bridge;

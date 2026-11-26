@@ -134,7 +134,7 @@ test("progress counters are the shared graph phases and a cancelled load leaves 
  const dir=scratch();
  try{
   await seed(dir,ringFiles(4));const mock=createMockHost(dir);(await loadGenerationGraphV1(mock.host)).graph;
-  expect(mock.published.every(resource=>/^build:graph-phase:(facts|fragments|assembly):\d+:\d+$/u.test(resource))).toBe(true);
+  expect(mock.published.every(resource=>/^build:graph-phase:(facts|fragments|assembly|patching|packing|publishing):\d+:\d+(?::.*)?$/u.test(resource))).toBe(true);
   expect(mock.published).toContain("build:graph-phase:fragments:4:4");
   expect(mock.published.some(resource=>resource.startsWith("build:graph-phase:assembly:"))).toBe(true);
   await applyOps(dir,[{op:"write",path:"pkg/p1/src/index.ts",content:"export const v=5;\n"}]);

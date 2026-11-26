@@ -59,8 +59,29 @@ fn painting_an_unfocused_input_emits_no_caret_or_selection() {
 
     paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
+    assert!(!has_solid_instance_colored(&draw, theme.background), "an idle input inherits the enclosing surface");
     assert!(!has_solid_instance_colored(&draw, theme.accent), "an unfocused Input must not paint a caret even if a stale EditState lingers on it");
     assert!(!has_solid_instance_colored(&draw, theme.accent.with_alpha(0.3)), "an unfocused Input must not paint a selection highlight");
+}
+
+/// 📎️ React's file button and field share their background and keep both captions visible.
+#[test]
+fn file_input_caption_and_filename_share_the_owner_surface() {
+    let mut file = input("upload", "");
+    let UiNode::Input(node) = &mut file else { unreachable!() };
+    node.input_kind = "file".into();
+    let (mut tree, root, theme, mut atlas) = setup(&file);
+    tree.node_mut(root).unwrap().state.file_chrome = Some(("Choose file", "No file chosen"));
+    let mut draw = paint_retained_node_for_test(&tree, root, &theme, &mut atlas);
+    settle_borders(&mut draw);
+    let instances = draw.layers.iter().flat_map(|layer| &layer.ui_instances).collect::<Vec<_>>();
+    let rgb = |tint: Rgba| [tint.r, tint.g, tint.b, tint.a];
+    let solids = instances.iter().filter(|instance| instance.params[2] == KIND_SOLID);
+    assert!(solids.clone().count() >= 4, "the field retains its outer border");
+    assert!(solids.clone().all(|instance| instance.rect[2].min(instance.rect[3]) <= theme.stroke_hairline * 2.0), "the input emits strokes without repainting its field or caption");
+    assert!(!has_solid_instance_colored(&draw, theme.panel));
+    assert!(instances.iter().any(|instance| instance.params[2] == KIND_GLYPH && instance.color == rgb(theme.text)));
+    assert!(instances.iter().any(|instance| instance.params[2] == KIND_GLYPH && instance.color == rgb(theme.text_muted)));
 }
 
 #[test]

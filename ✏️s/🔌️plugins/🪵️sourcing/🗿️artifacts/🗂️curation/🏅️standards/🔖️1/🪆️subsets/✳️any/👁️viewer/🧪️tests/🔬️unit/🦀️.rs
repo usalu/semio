@@ -26,3 +26,8 @@ async fn create_sourcing_viewer_builds_a_definition_for_the_viewer_role() {
 async fn viewer_dialect_matches_the_artifact_coordinate() {
     assert_eq!(<SourcingViewer as ArtifactViewer>::DIALECT, SOURCING_DIALECT);
 }
+
+#[semio_framework_async_macros::async_test]
+async fn viewer_quotes_the_cold_replay_owner_catalog_so_history_bearing_documents_load() {
+    assert!(<SourcingViewer as ArtifactViewer>::document_store_owners_source_demands().is_ok(), "the viewer quotes no cold replay owner catalog");
+}

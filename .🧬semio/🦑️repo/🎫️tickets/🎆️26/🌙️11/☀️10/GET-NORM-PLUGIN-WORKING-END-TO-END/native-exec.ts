@@ -1,5 +1,5 @@
 #!/usr/bin/env repo
-import { basename, dirname, resolve } from "node:path";
+import { resolve } from "node:path";
 import { spawn } from "node:child_process";
 import { terminateOwnedChildTreeGracefullyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts";
 import { newHostCapacityIdV1, readLiveHostCapacityReservationV1, withHostCapacityV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts";
@@ -25,9 +25,6 @@ const browserBudget = browser && policy.envelopes.find(row => row.name === "end-
 if (browser && !browserBudget) throw Error("Repository end-to-end capacity envelope is missing");
 const memory = browserBudget ? browserBudget.megabytes : command.fixedMegabytes;
 const cpu = browserBudget ? browserBudget.cpu : command.cpuPerJob;
-const nativeController = program === resolve(import.meta.dir, "build-play-components.ts") && argv[1] === "build" ||
-  program === resolve(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts") && argv[1] === "component" ||
-  basename(program) === "📜️script.ts" && basename(dirname(program)) === "🦀️rust" && basename(dirname(dirname(program))) === "📦️packages";
 const controller = new AbortController();
 const signal = controller.signal;
 const handlers = (["SIGINT", "SIGTERM"] as const).map(name => [name, () => controller.abort(name)] as const);
@@ -46,7 +43,7 @@ function requireReservation(env: NodeJS.ProcessEnv): void {
 }
 
 /** 🪂️ Launches a target with its original script envelope after validating the task grant. Native compiler controllers keep their own compiler admission and count under the task grant. */
-async function launch(env: NodeJS.ProcessEnv, acquired: boolean): Promise<number> {
+async function launch(env: NodeJS.ProcessEnv): Promise<number> {
   requireReservation(env);
   signal.throwIfAborted();
   const { createScriptProcessEnvelope, readScriptPolicy, scriptProcessEnvironment } = await import(resolve(root, "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"));
@@ -55,7 +52,6 @@ async function launch(env: NodeJS.ProcessEnv, acquired: boolean): Promise<number
   issueRepositoryScriptProvidersV1(env);
   const envelope = createScriptProcessEnvelope(readScriptPolicy({ version: 1, owner: "native-exec", maximumElapsedMilliseconds: 0 }), await createBuildBootstrapCapabilitiesV1(root, ["run", target], env), Date.now());
   requireReservation(env);
-  if (acquired && nativeController) delete env.SEMIO_HOST_CAPACITY_PLAN;
   signal.throwIfAborted();
   const child = spawn("repo", argv, { cwd: directory, stdio: "inherit", windowsHide: true, env: scriptProcessEnvironment(envelope, env) as NodeJS.ProcessEnv });
   let cleanup: Promise<void> | undefined;
@@ -79,7 +75,7 @@ async function launch(env: NodeJS.ProcessEnv, acquired: boolean): Promise<number
 for (const [name, handler] of handlers) process.on(name, handler);
 try {
   if (environment.SEMIO_HOST_CAPACITY_GRANT !== undefined || environment.SEMIO_HOST_CAPACITY_PLAN !== undefined) {
-    process.exitCode = await launch(environment, false);
+    process.exitCode = await launch(environment);
   } else {
     const request = { ...command, fixedMegabytes: memory, minimumMegabytes: memory, cpuPerJob: cpu, label: "native-exec" };
     const session = currentAgentSessionV1({ environment });
@@ -88,7 +84,7 @@ try {
     process.exitCode = await withHostCapacityV1({
       request, policy, environment, control, directory: capacityDirectory, warden: () => readHostWardenStateV1(capacityDirectory),
       session: { address: agentSessionAddressV1(session), weight: session.budget.weight },
-    }, handle => launch({ ...environment, ...handle.environment }, !handle.inherited && !handle.adopted));
+    }, handle => launch({ ...environment, ...handle.environment }));
   }
 } catch (error) {
   if (!signal.aborted) throw error;

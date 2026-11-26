@@ -549,6 +549,7 @@ fn budget_exceeded_fault_maps_to_budget_exceeded_code() {
 
 #[test]
 fn every_fault_code_maps_to_the_right_gateway_error_code() {
+    use semio_os_mcp_port::channel_port::{first_artifact_reply, AppFrame};
     let cases = [
         ("viewer.read-only", GatewayErrorCode::PermissionDenied),
         ("capability-denied", GatewayErrorCode::PermissionDenied),
@@ -556,6 +557,8 @@ fn every_fault_code_maps_to_the_right_gateway_error_code() {
         ("transaction.generation-mismatch", GatewayErrorCode::RevisionConflict),
         ("transaction.instance-busy", GatewayErrorCode::PreconditionFailed),
         ("budget.exceeded", GatewayErrorCode::BudgetExceeded),
+        ("job.cancelled", GatewayErrorCode::Cancelled),
+        ("plugin.unavailable", GatewayErrorCode::PluginUnavailable),
         ("transaction.member-rejected", GatewayErrorCode::PreconditionFailed),
         ("interactive-job.not-ui-safe", GatewayErrorCode::PluginUnavailable),
         ("interactive-job.preview-output", GatewayErrorCode::InputInvalid),
@@ -565,6 +568,17 @@ fn every_fault_code_maps_to_the_right_gateway_error_code() {
     for (code, expected) in cases {
         let mapped = map_fault(&Fault { code: code.to_string(), message: "x".into() });
         assert_eq!(mapped.code, expected, "fault code {code} mapped to {:?}, expected {:?}", mapped.code, expected);
+    }
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("artifact-reply.json")).unwrap();
+    for row in fixture.as_array().unwrap() {
+        for framed in [false, true] {
+            let fault = Fault { code: row["fault"].as_str().unwrap().into(), message: "original diagnosis".into() };
+            let reply = if framed { Ok(vec![AppFrame::Error(fault)]) } else { Err(fault) };
+            let error = first_artifact_reply(reply).unwrap_err();
+            assert_eq!(serde_json::to_value(error.code).unwrap(),row["code"]);
+            assert_eq!(Some(error.retryable),row["retryable"].as_bool());
+            assert_eq!(error.message,"original diagnosis");
+        }
     }
     assert!(!map_fault(&Fault { code: "interactive-job.not-ui-safe".into(), message: "x".into() }).retryable, "a verb kept out of the agent lane does not come back by retrying");
 }

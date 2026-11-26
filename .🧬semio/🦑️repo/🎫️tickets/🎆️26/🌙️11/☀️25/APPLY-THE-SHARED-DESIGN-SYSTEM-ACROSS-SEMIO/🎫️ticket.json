@@ -3,10 +3,11 @@
   "emoji": "🎨",
   "status": "closed",
   "description": "Complete and verify the consolidated design system across maintained web, native, animation, print, and clip surfaces.",
-  "summary": "Aligned maintained Semio web, native chrome, HTML animation, Python clips, and LaTeX print. Recorded rendering and focused test evidence, plus the full Rust package scheduling limits, in summary.md. Restored the MCP build catalogue.",
+  "summary": "Applied the six shared surface levels across websites and quizzes, native UI, print, presentations, clips and animation. Verified rendering and interactions in both appearances, decoded native media, and documented aggregate linker limits in summary.md.",
   "goal": "RUNNING-FRAMEWORK/RUNNING-PRODUCTS",
   "sessions": [
-    "ce9d5c3e-9e44-4d1e-a887-0fe3ff217658"
+    "ce9d5c3e-9e44-4d1e-a887-0fe3ff217658",
+    "23169585-40b8-477c-864e-7be013862a0a"
   ],
   "interactions": [
     {
@@ -291,6 +292,1017 @@
         },
         {
           "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/world-overlay-vitest.config.mjs"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-25 22:03:21",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "9b948fc54a42d9dcefcdb5dd5e7b2c8e60a63eb3",
+      "prompt": "Enforce owner surface inheritance across quiz web print animation and presentation, with explicit page margins",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-26 01:21:28",
+      "author": "ueli",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "9b948fc54a42d9dcefcdb5dd5e7b2c8e60a63eb3",
+      "summary": "Applied the six shared surface levels across websites and quizzes, native UI, print, presentations, clips and animation. Verified rendering and interactions in both appearances, decoded native media, and documented aggregate linker limits in summary.md.",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/animate-mutation-laws.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/animate-native-encoder.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/animate-native-encoder.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/animate-native-encoder.rs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/animation-and-clips.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/animation-browser.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/animation-html-probe.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/animation-manim.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/animation-video-oracle.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/check-animate-levels.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/check-diagram-levels.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/check-native-levels.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/check-ui-levels.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/check-wgpu-engine-levels.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/cross-media-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/diagram-levels.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/excel-b15.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/fetch-article-tex-ranges.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/focused-animate-editor.rs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/focused-animate-handlers.rs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/graph-levels.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/independent-level-review.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/landing-levels.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/motion-levels.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/os-levels.config.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/print-chips.tex"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/print-deck.html"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/print-levels.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/print-render.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/print.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/react-native-browser.config.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/react-native-browser.setup.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/react-probe.html"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/react-probe.tsx"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/remaining-chip-levels.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/replay-animate-mutations.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/shared-levels.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/summary.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/verify-deck-print.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/verify-print-levels.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/verify-react-browser.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/verify-wgpu-row.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/web-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/web-check.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/web-levels-check.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/web-levels-serve.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/web-levels.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/wgpu-engine-levels.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/world-overlay-vitest.config.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️25/APPLY-THE-SHARED-DESIGN-SYSTEM-ACROSS-SEMIO/world-overlay.md"
+        },
+        {
+          "path": "♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx"
+        },
+        {
+          "path": "♻️mit-bestand/🧺️demonstrator/🟦️.tsx"
+        },
+        {
+          "path": "♻️mit-bestand/🧺️demonstrator/🧪️tests/🎭️acceptance/🟦️.ts"
+        },
+        {
+          "path": "♻️mit-bestand/🧺️demonstrator/🧪️tests/🏛️shell-brand/🟦️.ts"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/⏱️rate/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/⏱️rate/🧪️tests/🔬️updater-unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/✒️partial-movie-writer/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🎨️vello-renderer/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🎪️built-in-scenes/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🏭️render-pipeline/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/💾️partial-movie-cache/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🔧️video-render-program/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🧪️tests/🔬️cache-unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🧪️tests/🔬️preview-unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🧪️tests/🔬️render-unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🧪️tests/🔬️renderer-unit/surface-cache.feature"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🧪️tests/🔬️renderer-unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🧪️tests/🔬️writer-unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎨️presentation.css"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🎭️scene-timeline/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🧩️sobjects/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🧪️tests/🔬️scene-unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🧪️tests/🔬️sobject-unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧪️tests/🔬️compiler-unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🀄️add-tile/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🀄️add-tile/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️export-video-from-deck/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️engagement-submit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️engagement-submit/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️support/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧫️fixtures/🔣️title-cards.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️resize-tile-crop/🧪️tests/🧪️rejects/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-tile/🧪️tests/🧪️no/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-tile/🧪️tests/🧪️rejects/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-tiles/🧪️tests/🧪️no/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲resize-source-frame/🧪️tests/🧪️no/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️replace-source/🧪️tests/🧪️no/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🧪️tests/🧪️rejects/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-tiles/🧪️tests/🧪️rejects/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust/📋️project.json"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🧹️fixture-sweep/Cargo.lock"
+        },
+        {
+          "path": "🌎️hub/Cargo.lock"
+        },
+        {
+          "path": "🌎️hub/🔨️modules/🛡️admin/🧪️tests/🛡️admin/🟦️.tsx"
+        },
+        {
+          "path": "🌎️hub/🔨️modules/🛡️admin/🧱️elements/🔑️AdminSession/🟦️.tsx"
+        },
+        {
+          "path": "🌎️hub/🔨️modules/🛡️admin/🧱️elements/🛡️AdminApp/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🎨️semio-style/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🎨️semio-style/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧪️tests/seam.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧪️tests/seam.mjs"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🎨️surface/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/📐️geometry/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/📉️extrema/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/📐️drafting/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🧾️panels/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/👁️representations/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🔌️exchange/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🔗️consistency/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧩️models/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📊️excel/🎬️clip/⚡️energy/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📊️excel/🎬️clip/⚡️energy/🧪️tests/📐️result/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📊️excel/🎬️clip/⚡️energy/🧪️tests/📐️result/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📊️excel/🎬️clip/⚡️energy/🧪️tests/📐️result/🔣️.schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📊️excel/🎬️clip/📍️references/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/🎨️visuals/🦗️canvas/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/💊️capsule/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/💊️capsule/🧪️tests/📐️layout/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/🧪️tests/🎭️presentation/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/📦️packages/🟦️typescript/📚️app/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/⏯️transport/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/⚖️compare/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🎛️viewer/🌬️air/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🎛️viewer/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🎛️viewer/🧾️reading/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🔬️detail/🎞️clips/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🔬️detail/📤️export-panel/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🔬️detail/🧱️tables/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🔭️viewpoints/🪟️sheet/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🗃️browse/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🥞️levels/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🧪️playground/🎛️asset/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🧪️playground/🎞️timeline/🖼️panel/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🧪️playground/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🪟️chrome/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/⚙️settings-focus/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/⚙️settings-focus/🥒️.feature"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🔭️viewpoints/🟦️.tsx"
+        },
+        {
+          "path": "🏢️semio-tech/🎡️play/🏠️play-landing.tsx"
+        },
+        {
+          "path": "🏢️semio-tech/🎡️play/🧪️tests/🎭️acceptance/🟦️.ts"
+        },
+        {
+          "path": "👴️leutwiler/💤️realparts-of-powers-z-n/🏆️proof/📐️.tex"
+        },
+        {
+          "path": "👴️leutwiler/💤️realparts-of-powers-z-n/📋️project.json"
+        },
+        {
+          "path": "👴️leutwiler/💤️realparts-of-powers-z-n/📯️notes/📐️.tex"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🖌️paint-and-gutters/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🎨️theme/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔲️cell/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🖥️chrome/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🎨️tui-widget-paint-and-window-frame-laws/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/📐️geometry/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎥️tutorial-ui/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📥️source/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔌️host-ports/shot-frame.feature"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔌️host-ports/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🚦️status-surface/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🎞️frame-step/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🖥️frame-into-step-and-frame/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🪟️surfaces/🚶️retained-paint-walk-and-hits/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/✍️retained-edit-text-steps/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🎨️node-painting-with-driver/🎛️control-nodes/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🎨️node-painting-with-driver/🖼️media-and-slot-nodes/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/📶️progress-celebrate-and-widget-painters/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🔬️reference/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🖼️ui-image-sources-skeleton-and-overlays/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖥️chrome/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🎨️chrome-class-names/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-engine-unit/⚙️settings-close-and-accessibility-commit-laws/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-engine-unit/🎭️scene-host-overlay-body-and-frame-laws/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-paint-unit/✍️input-caret-and-focus-ring-paint-laws/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-paint-unit/📶️progress-and-image-paint-laws/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-paint-unit/🔽️select-popup-drop-and-drag-paint-laws/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🖼️icon-render-camera/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🏷️level-context/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/📐️shell-components-4/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/➖️Divider/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️OverviewCard/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️OverviewCard/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌈️Surface/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/⚓️dock/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧪️tests/shared-border-dock.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧭️mode-layout-state-and-sync/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️Dialog/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📃️List/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Table/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️Tabs/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️Tabs/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️Tabs/🧪️tests/🧩️component/boundary.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📜️Scrollable/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📶️Progress/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔀️Toggle/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔚️Footer/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔝️Navbar/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔤️Textarea/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🎯️targets/🧊️wgpu/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🧪️tests/🧩️component/boundary.feature"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/🧪️tests/🧩️component/🧲️force-tests/🔸️cursorizes-live-controlled-20/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🔘️trigger/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/frame-structure.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/surface-levels.feature"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧵️pane/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🦴️Skeletons/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🦴️Skeletons/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧙️Wizard/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪙️Chip/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪢️SharedBorderRow/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Log/🎯️targets/⌨️tui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🎨️styles/🌱️intro-arrangement-and-reveal-chrome/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🎨️styles/🎥️media-teaser-and-figure-scroll/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🎨️styles/👻️morph-keyframes-ghosts-and-pdf/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🎨️styles/🔲️interaction-handles-and-controls/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🎨️styles/🖱️interaction-selection-and-enlarge/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🎨️styles/🧱️arrangement-canvas-and-embodiments/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🔨️modules/🎚️deck-chrome/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🔨️modules/🎞️deck/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🔨️modules/🎭️morph-views/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🔨️modules/🔗️shared-border-chips/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🔨️modules/🖼️figure-scroll/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🔨️modules/🫳️interaction/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🔨️modules/🫳️interaction/🧲️interactive-disposition/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🧪️tests/📄️pdf-and-figure-interaction/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🧪️tests/🖱️interaction-dom/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📖️stories/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📖️stories/🏟️sandbox/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📖️stories/🐾️species-gallery/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📖️stories/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🐾️pets/🧪️tests/🎨️stories-surface/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🐾️pets/🧪️tests/🎨️stories-surface/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖋️ink-canvas-editing/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🎯️marquee-and-bridges/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/📏️modelling/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/📏️modelling/shared-rail.feature"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/📏️modelling/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📝️staging/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗂️local-catalog/📂️files/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🚪️close-guard/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧱️notice-bands/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📌️ChromePanels/🎨️settings-theme/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🔷️diagram-node/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🖼️dag-overlays/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧭️wasm-graph-surface/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🪄️catalogue-spotlight/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/🧱️ink-block-views/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/🪟️ink-overlays/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧱️node-tree/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/⏪️time-travel/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧩️BlockListHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧭️TiledMapHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧵️TaskManager/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/README.md"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/⚡️quick-pipeline-verification/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/📦️artifacts/📥️material/🧪️tests/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/📦️artifacts/📥️material/🧪️tests/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/📦️artifacts/📥️material/🧬️schema/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🧪️tests/📋️.feature"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🧪️tests/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🧪️tests/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/🔒️dependencies.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-assignment.sty"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-components.sty"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-core.sty"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-page.sty"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-table.sty"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-thesis.sty"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🖋️latex/semio-window.sty"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🎓️thesis/📤️publication/🎨️paint/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🎓️thesis/📤️publication/🎨️paint/🧪️tests/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🎓️thesis/📤️publication/🎨️paint/🧪️tests/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🎓️thesis/📤️publication/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🎓️thesis/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🎓️thesis/🖨️rendering/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🏷️page-chrome/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🏷️page-chrome/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🏷️page-chrome/🥒️.feature"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧩️frame-junctions/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🎨️paint/🧪️tests/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/🏁️results-and-preferences/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/🏠️chrome-and-home/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/🖥️mockups/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/🗃️record-tables/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/↕️sorting/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🃏️matching/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🎬️clips/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/👥️presence/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/📚️app/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/📝️assignments/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🔓️access/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🖥️mockup/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🗂️classification/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🧩️task/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🧷️scroll-thumb/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🪟️chrome/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🖥️mockups/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🧫️fixtures/🌈️surface/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🪜️challenge-views/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧬️schema/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🧪️tests/package-metadata-edits.test.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🖼️assets/🏗️build-surface.json"
         }
       ]
     }

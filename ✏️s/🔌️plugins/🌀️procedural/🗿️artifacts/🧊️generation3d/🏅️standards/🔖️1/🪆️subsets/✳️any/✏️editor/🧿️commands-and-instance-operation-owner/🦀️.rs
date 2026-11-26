@@ -166,7 +166,7 @@ impl semio_plugin::ArtifactInstanceOperationOwner for Generation3dInstanceOperat
         if !self.closing{return self.operator_catalogue.step_demands(body)}
         if !self.operator_catalogue.terminal_is_empty(){return self.operator_catalogue.close_demands(body)}
         if !self.gumball.terminal_is_empty(){return self.gumball.retirement_demands(body)}
-        let Some(session) = self.eval_session.as_ref() else { return Ok(semio_framework_value::RetirementDemand { depth: usize::from(!self.geometry.terminal_is_empty()), ..Default::default() }) };
+        let Some(session) = self.eval_session.as_ref() else { return self.geometry.retirement_demands(body) };
         if session.terminal_is_empty() {
             return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
         }
@@ -194,7 +194,8 @@ impl semio_plugin::ArtifactInstanceOperationOwner for Generation3dInstanceOperat
             if self.geometry.terminal_is_empty() {
                 return Ok(PluginLifecycleStep::Complete(Default::default()));
             }
-            return Ok(PluginLifecycleStep::Blocked { reason: "Generation3d geometry engine requires its retained close producer" });
+            let loan = semio_plugin::app::original_lifecycle_grant(cx, grant);
+            return cx.with_retained_loan(loan, |cx| cx.with_original_retirement(|cx| self.geometry.close_original_step(cx).map_err(Into::into))).map_err(Into::into);
         };
         let (progress, finished) = if session.terminal_is_empty() {
             (RetainedCloneProgress { copied_items: 1, ..Default::default() }, true)

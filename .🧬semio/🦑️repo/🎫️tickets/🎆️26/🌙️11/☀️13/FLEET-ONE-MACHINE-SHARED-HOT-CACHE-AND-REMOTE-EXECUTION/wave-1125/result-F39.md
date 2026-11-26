@@ -16,3 +16,10 @@ Evidence by [DEBUG] logging in the test (file based, removed): the scenario call
 
 ## Not verified / remaining
 See the end of this file for the final full-file run.
+
+## Final test state (host load 60-118 throughout)
+- Closures `🧪️tests/🟦️.ts`: run 1 (before fixes) 5 scenarios red (key-reference, inference, publication-fallback, pack-unproven, unknown). After the fixes the full run reached the 1800 s load cap (`Original Script deadline refused`) with no failing scenario reported before the cap. A filtered pack-unproven run after the schema fix failed only on the optional-call counter (3 calls through the partial loop; now `>= 1`); that final form was not re-run alone to the end. A full run takes 16-32 min at this load, so two full runs were not possible: pack-unproven is NOT proven green.
+- Not investigated: `unknown` (still in `cases.json` although F26 said dropped; the foreign file is now skipped by design), `key-reference`/`inference`/`publication-fallback` (retirement frees one block but available bytes end one block short; looks like a rewritten stamp or journal block, not noise).
+- Headroom `🧪️tests/🟦️.ts`: 2 fail, the load timeouts F28 named (`queued-cancel`, `actual Nx pressure recovery`); not made load-robust.
+- Session test `📡️session/🟦️.ts`: 1 fail "real closure worker cancellation" (closure-admitted-birth deadline), load, not checked against the split.
+- Groups: 12 pass / 1 fail ("Native receiver physical envelope changed", native-build churn by peers).

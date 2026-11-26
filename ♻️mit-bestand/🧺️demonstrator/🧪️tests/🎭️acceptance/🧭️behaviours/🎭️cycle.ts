@@ -5,6 +5,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { gisInspectorCount, panelControl } from "../🧬️edits/🟦️.ts";
 import { readFileSync } from "node:fs";
 
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -60,10 +61,9 @@ async function graphFingerprint(graph: Locator): Promise<string> {
 
 /** 🎬️ Stages and executes one window action through the window's action pane, as a user does. */
 async function runWindowAction(page: Page, paneId: string, windowId: string, actionId: string, args: Readonly<Record<string, string>>): Promise<void> {
-  const window = paneWindow(page, paneId, windowId);
   const toggle = page.locator(paneElementSelector(paneId, `${windowElementId(windowId)}.engagement.toggle`));
   await toggle.click();
-  const actions = window.locator('[data-slot="window-action-pane"]');
+  const actions = page.locator(`[data-shell-id="${paneId}"] [data-slot="window-action-pane"]`);
   await actions.locator(`[id="action.${actionId}"] [data-slot="tree-label"]`).click();
   for (const [name, value] of Object.entries(args)) await actions.locator(`[id="action.${actionId}.arg.${name}"] input`).fill(value);
   await page.locator(paneElementSelector(paneId, `${windowElementId(windowId)}.action.${actionId}.execute`)).click();
@@ -78,9 +78,9 @@ test("generator cycle", tags("generator"), async ({ page }) => {
   await waitWorldSettled(preview);
   await expect.poll(async () => (JSON.parse((await graph.locator(".semio-node-graph-host").first().getAttribute("data-host-snapshot-json")) ?? "{}") as { widgets?: { id: string }[] }).widgets?.map((widget) => widget.id).sort(), { timeout: SURFACE_CONTENT_TIMEOUT_MS }).toEqual([...edits.generator.widgetIds].sort());
   await openDocumentTab(page, "generator", "artifact");
-  await page.locator(paneElementSelector("generator", edits.generator.heightId)).locator('[data-slot="tree-label"]').click();
+  await page.locator(paneElementSelector("generator", `panel:framework.panel.artifact/procedural-play-graph.nodes␟n:${edits.generator.heightId}`)).locator('[data-slot="tree-label"]').click();
   await openDocumentTab(page, "generator", "inspection");
-  const input = page.locator(paneElementSelector("generator", "procedural-play-inspector.value.input"));
+  const input = panelControl(page, "generator", "framework.panel.inspection", "procedural-play-inspector.value.input");
   await expect(input).toHaveValue(String(edits.generator.initial));
   await actUndoRedo(
     async () => JSON.stringify([await graphFingerprint(graph), await documentWorldProjection(preview)]),
@@ -100,12 +100,12 @@ test("koordinator cycle", tags("koordinator"), async ({ page }) => {
   const windows = edits.koordinator.windowIds.map((id) => paneWindow(page, "koordinator", id));
   for (const window of windows) await waitWorldSettled(window);
   const idle = await Promise.all(windows.slice(1).map(documentWorldProjection));
-  await windows[0]!.locator("canvas").first().click({ position: { x: 8, y: 8 } });
+  await windows[0]!.click();
   await openDocumentTab(page, "koordinator", "catalogue");
   await actUndoRedo(
     async () => documentWorldProjection(windows[0]!),
     async () => {
-      await page.locator(paneElementSelector("koordinator", edits.koordinator.catalogueId)).locator('[data-slot="tree-label"]').click();
+      await page.locator(paneElementSelector("koordinator", `panel:framework.panel.catalogue/${edits.koordinator.catalogueId}`)).locator('[data-slot="tree-label"]').click();
       await openDocumentTab(page, "koordinator", "artifact");
       await expect(page.locator(`[data-shell-id="koordinator"] [data-slot="tree-label"]`).filter({ hasText: new RegExp(wording(edits.koordinator.rowText)) }).first()).toBeVisible({ timeout: SURFACE_CONTENT_TIMEOUT_MS });
     },
@@ -127,7 +127,7 @@ test("aggregator cycle", tags("aggregator"), async ({ page }) => {
   await actUndoRedo(
     async () => JSON.stringify(await Promise.all(windows.map(worldInstanceIds))),
     async () => {
-      await catalogueTab.locator(`[id="${edits.aggregator.kindId}"] [data-slot="tree-label"]`).click();
+      await catalogueTab.getByRole("treeitem", { name: edits.aggregator.kindId }).locator('[data-slot="tree-label"]').click();
     },
     (direction) => historyGesture(page, windows[0]!, direction),
   );
@@ -187,8 +187,8 @@ test("bearbeiten cycle", tags("bearbeiten"), async ({ page }) => {
   const workpiece = paneWindow(page, "bearbeiten", "process-workpiece");
   await waitWorldSettled(workpiece);
   await openDocumentTab(page, "bearbeiten", "artifact");
-  for (const id of edits.bearbeiten.stepIds) await expect(page.locator(paneElementSelector("bearbeiten", id))).toHaveCount(1);
-  const row = page.locator(paneElementSelector("bearbeiten", edits.bearbeiten.stepId));
+  for (const id of edits.bearbeiten.stepIds) await expect(page.locator(paneElementSelector("bearbeiten", `panel:framework.panel.artifact/${id}`))).toHaveCount(1);
+  const row = page.locator(paneElementSelector("bearbeiten", `panel:framework.panel.artifact/${edits.bearbeiten.stepId}`));
   await actUndoRedo(
     async () => documentWorldProjection(workpiece),
     async () => {
@@ -209,14 +209,12 @@ test("verfolgen cycle", tags("verfolgen"), async ({ page }) => {
   const map = paneWindow(page, "verfolgen", "gis2d-main");
   await expect(map.locator(".semio-tiled-map-host canvas")).toBeVisible({ timeout: SURFACE_CONTENT_TIMEOUT_MS });
   await openDocumentTab(page, "verfolgen", "inspection");
-  const summary = (kind: string): Locator => page.locator(paneElementSelector("verfolgen", `gis2d-play-inspector.${kind}-count`)).locator('[data-slot="tree-description"]');
-  expect(Number.isSafeInteger(Number(await summary("positions").innerText())), "the authored positions are counted").toBe(true);
-  const untouched = JSON.stringify([await summary("routes").innerText(), await summary("regions").innerText()]);
+  const untouched = JSON.stringify([await gisInspectorCount(page, "routes"), await gisInspectorCount(page, "regions")]);
   await actUndoRedo(
-    async () => summary("positions").innerText(),
+    async () => String(await gisInspectorCount(page, "positions")),
     async () => {
       await page.locator(paneElementSelector("verfolgen", "framework.window.gis2dMain.engagement.toggle")).click();
-      const actions = map.locator('[data-slot="window-action-pane"]');
+      const actions = page.locator('[data-shell-id="verfolgen"] [data-slot="window-action-pane"]');
       await actions.locator('[id="action.addFeature"] [data-slot="tree-label"]').click();
       await actions.locator('[id="action.addFeature.arg.label"] input').fill(edits.verfolgen.label);
       await expect(actions.locator('[id="action.addFeature.arg.lon"] input')).toHaveValue(String(edits.verfolgen.longitude));
@@ -225,7 +223,7 @@ test("verfolgen cycle", tags("verfolgen"), async ({ page }) => {
     },
     (direction) => historyGesture(page, map, direction),
   );
-  expect(JSON.stringify([await summary("routes").innerText(), await summary("regions").innerText()]), "routes and regions stay unchanged").toBe(untouched);
+  expect(JSON.stringify([await gisInspectorCount(page, "routes"), await gisInspectorCount(page, "regions")]), "routes and regions stay unchanged").toBe(untouched);
   await capturePaneArtifact(page, "verfolgen");
 });
 
@@ -244,7 +242,7 @@ test("statik cycle", tags("statik"), async ({ page }) => {
   const tab = shell.locator(`[data-tab-id="${scenario.panelTabId}"]:visible`).first();
   if (!(await tab.isVisible())) await shell.locator(`[data-tab-id="${scenario.panelCategoryId}"]:visible`).first().click();
   if ((await tab.getAttribute("aria-pressed")) !== "true") await tab.click();
-  const scale = page.locator(paneElementSelector(scenario.paneId, "fem3d-play-results.deformation-scale.control"));
+  const scale = panelControl(page, scenario.paneId, scenario.panelTabId, "fem3d-play-results.deformation-scale.control");
   await expect(scale).toHaveValue(String(scenario.initialScale));
   await actUndoRedo(
     async () => JSON.stringify([await scale.inputValue(), await documentWorldProjection(results)]),

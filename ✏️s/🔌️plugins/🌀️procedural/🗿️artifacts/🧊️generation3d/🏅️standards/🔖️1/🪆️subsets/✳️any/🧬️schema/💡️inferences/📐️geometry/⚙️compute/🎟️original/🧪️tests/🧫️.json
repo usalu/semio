@@ -226,5 +226,49 @@
       ]
     },
     "metadataPreserved": true
-  }
+  },
+  "solids": [
+    {
+      "kind": "brep.primitive.box",
+      "inputs": {
+        "width": 2,
+        "depth": 3,
+        "height": 4
+      },
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          3,
+          4
+        ]
+      ],
+      "faces": 6,
+      "volume": 24
+    },
+    {
+      "kind": "brep.primitive.sphere",
+      "inputs": {
+        "radius": 2
+      },
+      "bounds": [
+        [
+          -2,
+          -2,
+          -2
+        ],
+        [
+          2,
+          2,
+          2
+        ]
+      ],
+      "faces": 1,
+      "volume": 33.510321638291124
+    }
+  ]
 }

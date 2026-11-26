@@ -1,0 +1,97 @@
+{
+ "version": 1,
+ "languages": [
+  "en",
+  "de"
+ ],
+ "messages": {
+  "addresses.published": {
+   "en": "Published {count} address(es) of {origin} (generation {generation}).",
+   "de": "{count} Adresse(n) von {origin} veröffentlicht (Generation {generation})."
+  },
+  "addresses.none": {
+   "en": "{origin} has no reachable address yet; its {service} advertisement stays the only way in.",
+   "de": "{origin} hat noch keine erreichbare Adresse; seine {service}-Ankündigung bleibt der einzige Zugang."
+  },
+  "addresses.stale": {
+   "en": "The addresses of {origin} are older than {seconds} s; trying service discovery first.",
+   "de": "Die Adressen von {origin} sind älter als {seconds} s; zuerst wird die Dienstsuche versucht."
+  },
+  "addresses.failover": {
+   "en": "{failed} did not answer within {milliseconds} ms; trying the next endpoint.",
+   "de": "{failed} hat nicht innerhalb von {milliseconds} ms geantwortet; der nächste Endpunkt wird versucht."
+  },
+  "addresses.unreachable": {
+   "en": "None of the {count} endpoints of {origin} answered.",
+   "de": "Keiner der {count} Endpunkte von {origin} hat geantwortet."
+  },
+  "addresses.changed": {
+   "en": "The interfaces of this machine changed; the published addresses were refreshed.",
+   "de": "Die Schnittstellen dieser Maschine haben sich geändert; die veröffentlichten Adressen wurden aktualisiert."
+  },
+  "addresses.resolved": {
+   "en": "{origin} reached at {endpoint} via {via}.",
+   "de": "{origin} unter {endpoint} erreicht über {via}."
+  },
+  "mdns.advertising": {
+   "en": "Advertising {instance} as a {type} service on port {port} through {tool}.",
+   "de": "{instance} wird als {type}-Dienst auf Port {port} über {tool} angekündigt."
+  },
+  "mdns.unavailable": {
+   "en": "{tool} is not available; this machine cannot be found by name and relies on the addresses published in the shared store.",
+   "de": "{tool} ist nicht verfügbar; diese Maschine ist nicht per Name auffindbar und verlässt sich auf die im gemeinsamen Speicher veröffentlichten Adressen."
+  },
+  "mdns.ended": {
+   "en": "{tool} ended with status {code}; advertising again in {seconds} s.",
+   "de": "{tool} wurde mit Status {code} beendet; Ankündigung in {seconds} s erneut."
+  },
+  "mdns.silent": {
+   "en": "The host name {label} of this machine is also used by {duplicates}; {origin} does not advertise {type}. Run `repo fleet hostname apply` on this machine to give it its unique name semio-{origin}; the addresses published in the shared store keep working meanwhile.",
+   "de": "Der Rechnername {label} dieser Maschine wird auch von {duplicates} verwendet; {origin} kündigt {type} nicht an. `repo fleet hostname apply` auf dieser Maschine vergibt den eindeutigen Namen semio-{origin}; die im gemeinsamen Speicher veröffentlichten Adressen funktionieren in der Zwischenzeit weiter."
+  },
+  "mdns.stopped": {
+   "en": "Stopped advertising {instance}.",
+   "de": "Ankündigung von {instance} beendet."
+  },
+  "mdns.misnamed": {
+   "en": "The host name {label} of {origin} is the semantic name of {named}: it must be semio-{origin}. Run `repo fleet hostname apply` on this machine; until then it does not advertise itself.",
+   "de": "Der Rechnername {label} von {origin} ist der semantische Name von {named}: er muss semio-{origin} lauten. `repo fleet hostname apply` auf dieser Maschine ausführen; bis dahin kündigt sie sich nicht an."
+  },
+  "hostname.missing": {
+   "en": "{path} is missing: this machine has no origin id yet, so it has no name to apply. Provision it first.",
+   "de": "{path} fehlt: diese Maschine hat noch keine Origin-ID, also gibt es keinen Namen zu vergeben. Zuerst provisionieren."
+  },
+  "hostname.already": {
+   "en": "The host name of this machine is already {name} (origin {origin}); nothing to do.",
+   "de": "Der Rechnername dieser Maschine ist bereits {name} (Origin {origin}); nichts zu tun."
+  },
+  "hostname.plan": {
+   "en": "This machine is {origin}. Its host name will become {name} with: {command}",
+   "de": "Diese Maschine ist {origin}. Ihr Rechnername wird {name} mit: {command}"
+  },
+  "hostname.confirm": {
+   "en": "Rename this machine to {name}? [y/N] ",
+   "de": "Diese Maschine in {name} umbenennen? [j/N] "
+  },
+  "hostname.tty": {
+   "en": "Renaming needs a terminal: the confirmation is read from the TTY and `--yes` does not exist. Run `repo fleet hostname apply` in an interactive terminal.",
+   "de": "Das Umbenennen braucht ein Terminal: die Bestätigung wird vom TTY gelesen und `--yes` gibt es nicht. `repo fleet hostname apply` in einem interaktiven Terminal ausführen."
+  },
+  "hostname.declined": {
+   "en": "Nothing was changed.",
+   "de": "Es wurde nichts geändert."
+  },
+  "hostname.done": {
+   "en": "The host name is now {name}.",
+   "de": "Der Rechnername ist jetzt {name}."
+  },
+  "hostname.failed": {
+   "en": "{command} ended with status {code}; the host name was not changed.",
+   "de": "{command} wurde mit Status {code} beendet; der Rechnername wurde nicht geändert."
+  },
+  "hostname.unsupported": {
+   "en": "Renaming is not automated on {platform}: set the host name of this machine to {name} in the system settings.",
+   "de": "Das Umbenennen ist auf {platform} nicht automatisiert: den Rechnernamen dieser Maschine in den Systemeinstellungen auf {name} setzen."
+  }
+ }
+}

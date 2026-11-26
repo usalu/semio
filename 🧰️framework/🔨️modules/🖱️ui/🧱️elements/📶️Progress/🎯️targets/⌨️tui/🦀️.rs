@@ -5,7 +5,7 @@
 use semio_ui_tui_core::cell::{Cell, CellBuffer};
 use semio_ui_tui_core::geometry::{Pos, Rect};
 use semio_ui_tui_core::text::{display_width, elide, Elision};
-use semio_ui_tui_core::theme::{Glyph, GlyphSet, Role, Surface, Theme};
+use semio_ui_tui_core::theme::{Glyph, GlyphSet, Role, Theme};
 
 const FRAME_MS: u64 = 90;
 const EIGHTHS: [&str; 8] = [" ", "\u{258f}", "\u{258e}", "\u{258d}", "\u{258c}", "\u{258b}", "\u{258a}", "\u{2589}"];
@@ -58,7 +58,7 @@ pub fn paint_progress(p: &ProgressState, theme: &Theme, rect: Rect, buf: &mut Ce
     if rect.width == 0 || rect.height == 0 {
         return;
     }
-    let bg = theme.surface(Surface::Window);
+    let bg = buf.owner_background();
     let line = Rect::new(rect.x, rect.y, rect.width, 1);
     buf.fill_rect(line, Cell::blank(theme.role(Role::Foreground), bg));
     let suffix = p.value.map_or_else(String::new, |fraction| format!(" {:>3}%", percent(fraction)));

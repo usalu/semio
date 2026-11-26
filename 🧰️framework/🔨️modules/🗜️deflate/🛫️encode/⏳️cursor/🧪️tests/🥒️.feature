@@ -6,6 +6,12 @@ Feature: Retained Canonical Fixed Huffman Production
     And system zlib decompresses the stream to the original vector
     And each physical allocation is at most 4096 bytes
 
+  Scenario: Work per input byte is bounded by the matching limits
+    Given the chain, nice-length and insert limits of the canonical compressor
+    When repetitive, periodic, random and record-like inputs are compressed under exact grants
+    Then the quoted copy bytes plus one bookkeeping byte per step stay below the bound the limits derive
+    And the stream equals the ordinary producer and inflates to the input through the miniz oxide reader
+
   Scenario: Refused exact grants preserve every ownership frontier
     Given the next quoted capacity, copy and depth demands
     When any demand is one byte or one level short

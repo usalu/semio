@@ -8,7 +8,7 @@ use semio_ui_tui_core::event::{mods, Key, KeyEvent, MouseEvent};
 use semio_ui_tui_core::geometry::{Pos, Rect};
 use semio_ui_tui_core::rows::{navigate_to, paint_scroll_bar, row_style, FilterIndex, Pointer, Rows};
 use semio_ui_tui_core::text::{display_width, elide, Elision};
-use semio_ui_tui_core::theme::{Glyph, Role, Surface, Theme};
+use semio_ui_tui_core::theme::{Glyph, Role, Theme};
 use semio_ui_tui_core::signal::{CursorShape, CursorSpec, WidgetSignal};
 
 const NONE: u32 = u32::MAX;
@@ -359,7 +359,7 @@ pub fn paint_tree(t: &TreeState, theme: &Theme, rect: Rect, buf: &mut CellBuffer
     if rect.width == 0 || rect.height == 0 {
         return;
     }
-    let bg = theme.surface(Surface::Window);
+    let bg = buf.owner_background();
     let muted = theme.role(Role::MutedForeground);
     let ellipsis = theme.glyphs.ellipsis();
     buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), bg));

@@ -1,3 +1,4 @@
+import {ownProcessIdentityV1,processRecordAliveV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs"
 import{randomBytes}from"node:crypto";
 import{lstat,mkdir,open,readdir,readFile,rename,rm}from"node:fs/promises";
 import{dirname,join}from"node:path";
@@ -39,17 +40,17 @@ export const defaultSleep=(milliseconds,signal)=>new Promise((resolve,reject)=>{
 
 /** 🔒️ A reference exclusive lease over lock files for tests and non repository runtimes: acquisition is `open(wx)`, a dead owner's lock is replaced, waiting polls with backoff and honours the abort signal. */
 export function createFileLeasePortV1(directory,{staleMilliseconds=P.leaseStaleMilliseconds,now=()=>Date.now(),sleep=defaultSleep,onHold}={}){
- const alive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error?.code==="EPERM";}};
+ const alive=(pid,startMs)=>processRecordAliveV1(pid,startMs);
  return Object.freeze({
   async exclusive(resource,body,{signal,timeoutMs}={}){
    const path=join(directory,sha256(resource)+".lock"),token=randomBytes(12).toString("hex"),started=now();let delay=2;
    await mkdir(directory,{recursive:true});
    for(;;){
     aborted(signal);
-    try{const file=await open(path,"wx");try{await file.writeFile(JSON.stringify({pid:process.pid,token,since:now()}));}finally{await file.close();}break;}
+    try{const file=await open(path,"wx");try{await file.writeFile(JSON.stringify({pid:process.pid,startMs:ownProcessIdentityV1().startMs,token,since:now()}));}finally{await file.close();}break;}
     catch(error){
      if(error?.code!=="EEXIST")throw error;
-     try{const held=JSON.parse(await readFile(path,"utf8"));if(!alive(held.pid)||now()-held.since>staleMilliseconds){const again=JSON.parse(await readFile(path,"utf8"));if(again.token===held.token)await rm(path,{force:true});continue;}}catch{}
+     try{const held=JSON.parse(await readFile(path,"utf8"));if(!alive(held.pid,held.startMs)||now()-held.since>staleMilliseconds){const again=JSON.parse(await readFile(path,"utf8"));if(again.token===held.token)await rm(path,{force:true});continue;}}catch{}
      if(timeoutMs!==undefined&&now()-started>timeoutMs)throw fail("Resource lease timed out: "+resource,"LEASE_TIMEOUT");
      await sleep(delay,signal);delay=Math.min(delay*2,P.pollMaximumMilliseconds);
     }

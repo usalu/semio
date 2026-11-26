@@ -1,0 +1,8 @@
+[
+  {"start":0,"slots":[],"selected":null},
+  {"start":1,"slots":[false,false,false],"selected":null},
+  {"start":1,"slots":[true,false,true,true],"selected":2},
+  {"start":3,"slots":[false,true,false,false],"selected":1},
+  {"start":2,"slots":[false,false,true,true],"selected":2},
+  {"start":0,"slots":[true],"selected":0}
+]

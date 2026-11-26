@@ -67,7 +67,7 @@ pub(crate) fn render_body(instance: semio_s_artifact_bim_model_inferences::stand
     let labels = bim_labels(view_state);
     let utility = semio_s_artifact_bim_model_kit::editor::bim::utilities::active(view_state);
     let windows = || TreeWindows::for_body(view_state, body_key);
-    let node = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(instance, snapshot, |inference| match body_key {
+    let node = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_view_inference(instance, doc, |inference| match body_key {
         semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::BODY_KEY => {
             let config = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::config::current(cfg);
             let revision = semio_s_artifact_bim_model_plan_linework::render::plan::framing_revision(&semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::active_view(snapshot, &config).unwrap_or_default());
@@ -177,8 +177,12 @@ impl ArtifactEditor for BimModelApp {
             return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Bim command does not match its exact registered tool").into());
         }
         let tool_id = original.command.command_id();
+        if matches!(&*original.command, BimCommand::ExportScheduleCsv(_)) {
+            return semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, BimCommand::command_id, BIM_BOUNDED_RAW_BYTES, BIM_BOUNDED_WORK_ITEMS, false, |request| {
+                export_schedule_csv::ScheduleCsvWork::new(tool_id, request.instance_operation_owner.clone())
+            });
+        }
         semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, BimCommand::command_id, BIM_BOUNDED_RAW_BYTES, BIM_BOUNDED_WORK_ITEMS, false, |request| -> Box<dyn ArtifactCommandWork<EditorApp<Self>>> { match &*request.command {
-            BimCommand::ExportScheduleCsv(_) => Box::new(export_schedule_csv::ScheduleCsvWork::new(tool_id, request.instance_operation_owner.clone())),
             BimCommand::AnalyseModel(_) => Box::new(analyse_model::AnalyseWork::new(tool_id, request.instance_operation_owner.clone())),
             BimCommand::ExportModel(_) => Box::new(export_model::ModelExportWork::new(tool_id, request.instance_operation_owner.clone())),
             BimCommand::ExportSheets(_) => Box::new(export_sheets::SheetsExportWork::new(tool_id, request.instance_operation_owner.clone())),

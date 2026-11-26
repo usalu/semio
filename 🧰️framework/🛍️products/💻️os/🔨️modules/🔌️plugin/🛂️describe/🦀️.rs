@@ -207,6 +207,23 @@ async fn plugin_descriptor<PA: semio_plugin_reactor_app::PluginApp>(runtime: &se
     }
 }
 
+/// 🛂️ Why a committed descriptor is not the assembled one, `None` only when both decode and re-encode to the same canonical bytes; an undecodable side is a fault, never a skipped comparison.
+pub fn descriptor_freshness_fault(assembled: &[u8], committed: &[u8]) -> Option<String> {
+    let canonical = |bytes: &[u8]| -> Option<Vec<u8>> {
+        let descriptor: PackageDescriptor = semio_framework_value::FromValue::from_value(store::pack_rt::decode_wire_value(bytes).ok()?).ok()?;
+        Some(encode_package_descriptor(&descriptor))
+    };
+    match (canonical(assembled), canonical(committed)) {
+        (None, _) => Some("the assembled descriptor does not decode".into()),
+        (_, None) => Some("the committed descriptor does not decode as the current descriptor shape, so it is stale".into()),
+        (Some(assembled), Some(committed)) => (assembled != committed).then(|| "the committed descriptor differs from the assembled one, so it is stale".into()),
+    }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🧭️freshness/🦀️.rs"]
+mod freshness_tests;
+
 /// 📤️ Writes the semantic pair (`🔣️.json` and `🛂️.descriptor.semio`) of an assembled descriptor under `directory`, the native counterpart of the component emitter's pair, so a descriptor can be settled without building the component for wasm.
 /// @see ../🖨️describe/🛂️descriptor-emission/🦀️.rs
 pub fn emit_semantic_descriptor_pair(directory: &std::path::Path, bytes: &[u8]) -> Result<(), String> {

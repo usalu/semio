@@ -27,6 +27,7 @@ use std::collections::BTreeMap;
 /// 🏠️ The shareable cell a contextual inference service receives: the engine behind interior mutability, because the service gets a shared reference to its context.
 pub struct GeometryHost {
     engine: RefCell<GeometryEngine>,
+    checkpoint_published: std::cell::Cell<bool>,
     admission:RefCell<std::mem::ManuallyDrop<Option<EngineAdmission>>>,
 }
 
@@ -40,7 +41,7 @@ impl Default for GeometryHost {
 
 impl GeometryHost {
     pub fn new(budget_bytes: usize) -> Self {
-        Self { engine: RefCell::new(GeometryEngine::new(Arc::clone(catalogue()), semio_s_artifact_procedural_3d_io_geometry::context(), budget_bytes)),admission:RefCell::new(std::mem::ManuallyDrop::new(None)) }
+        Self { checkpoint_published: std::cell::Cell::new(false), engine: RefCell::new(GeometryEngine::new(Arc::clone(catalogue()), semio_s_artifact_procedural_3d_io_geometry::context(), budget_bytes)),admission:RefCell::new(std::mem::ManuallyDrop::new(None)) }
     }
 
     /// 🔓️ Runs `body` with the engine; a re-entrant call is [`EngineError::Busy`], never a panic.
@@ -49,14 +50,46 @@ impl GeometryHost {
         Ok(body(&mut engine))
     }
 
-    /// 🧹️ Closes every owner the engine holds; a re-entrant call is [`EngineError::Busy`] and leaves it open.
-    pub fn retire_cold(&self) -> Result<(), EngineError> {
-        self.with(GeometryEngine::retire_cold)
-    }
-
     /// 🧾️ Whether the engine holds nothing left to close; a busy engine is not terminal.
     pub fn terminal_is_empty(&self) -> bool {
-        self.with(|engine|engine.terminal_is_empty()).unwrap_or(false)&&self.admission.try_borrow().is_ok_and(|admission|admission.is_none())
+        self.with(|engine|engine.terminal_is_empty() && engine.cache_terminal_is_empty()).unwrap_or(false)&&self.admission.try_borrow().is_ok_and(|admission|admission.is_none())
+    }
+
+    /// 📏️ Quotes the request donor or engine operation selected for instance closure.
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        let engine = self.engine.try_borrow().map_err(|_| geometry_busy())?;
+        if engine.has_failure() { return engine.original_run_close_demands(body); }
+        let admission = self.admission.try_borrow().map_err(|_| geometry_busy())?;
+        if let Some(owner) = admission.as_ref() { return owner.retirement_demands(body); }
+        if !engine.terminal_is_empty() { return engine.original_run_close_demands(body); }
+        engine.cache_retirement_demands(body)
+    }
+
+    /// ♻️ Retires one instance operation under its original caller.
+    pub fn close_original_step(&self, cx: &mut semio_plugin::ArtifactInferenceStepContext<'_>) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
+        use semio_plugin::PluginLifecycleStep;
+        let before = cx.retained_progress();
+        let mut engine = self.engine.try_borrow_mut().map_err(|_| geometry_busy())?;
+        if let Some(failure) = engine.admit_failure(cx)? { return Err(failure.into()); }
+        let mut admission = self.admission.try_borrow_mut().map_err(|_| geometry_busy())?;
+        let closed = if engine.has_failure() { false }
+        else if let Some(owner) = admission.as_mut() {
+            match owner.close_step(cx) {
+                Ok(true) => { admission.take(); }
+                Ok(false) => {}
+                Err(original) => engine.hold_failure(original),
+            }
+            false
+        } else {
+            let closing_cache = engine.terminal_is_empty();
+            let step = if closing_cache { engine.close_cache_step(cx) } else { engine.close_original_step(cx) };
+            match step {
+                Ok(closed) => closed && engine.cache_terminal_is_empty(),
+                Err(original) => { engine.hold_failure(original); false }
+            }
+        };
+        let progress = receipt_since(before, cx.retained_progress());
+        Ok(if closed { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) })
     }
 
     /// 🛑️ Cancels the run in flight.
@@ -138,6 +171,10 @@ fn geometry_inference_demands(_request: &ArtifactInferenceExecutionRequest<'_>, 
     Ok(RetirementDemand::default())
 }
 
+fn geometry_busy() -> ValueError {
+    ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "geometry host is servicing another call")
+}
+
 fn invalid(message: impl Into<String>) -> ArtifactInferenceExecutionError {
     ArtifactInferenceExecutionError::new("generation3d.geometry.invalid-request", message)
 }
@@ -157,13 +194,14 @@ fn weakest(qualities: impl Iterator<Item = Quality>) -> Quality {
 }
 
 fn result_of(engine: &GeometryEngine, step: &EngineStep, digest: &str) -> GeometryResult {
-    let widgets: Vec<GeometryWidgetResult> = engine
+    let mut widgets: Vec<GeometryWidgetResult> = engine
         .evaluations()
         .map(|(id, evaluation)| {
             let record = Generation3dWidgetRecord::of(evaluation);
             GeometryWidgetResult { id: id.clone(), dep: engine.dependency_hash(id).unwrap_or_default(), quality: record.quality, fault: record.fault, outputs: record.outputs }
         })
         .collect();
+    widgets.sort_unstable_by(|left, right| left.id.cmp(&right.id));
     GeometryResult {
         complete: step.done,
         progress: GeometryProgress { completed: step.completed as u32, total: step.total as u32, fraction: f64::from(step.fraction) },
@@ -195,10 +233,10 @@ fn receipt_since(before:RetainedCloneProgress,after:RetainedCloneProgress)->Reta
 
 fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn std::any::Any, cx:&mut semio_plugin::ArtifactInferenceStepContext<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     let host = context.downcast_ref::<GeometryHost>().ok_or_else(|| ArtifactInferenceExecutionError::new("generation3d.geometry.context", "geometry inference requires its instance's geometry host"))?;
+    let before=cx.retained_progress();
     let admitted=host.with(|engine|engine.admit_failure(cx)).map_err(engine_failure)?.map_err(|original|ArtifactInferenceExecutionError::original(original,false))?;
     if let Some(original)=admitted{return Err(ArtifactInferenceExecutionError::original(original,false))}
-    if host.with(|engine|engine.has_failure()).map_err(engine_failure)?{return Ok(ArtifactInferenceExecutionStep{execution:None,retained_progress:Default::default(),terminal:false})}
-    let before=cx.retained_progress();
+    if host.with(|engine|engine.has_failure()).map_err(engine_failure)?{return Ok(ArtifactInferenceExecutionStep{execution:None,retained_progress:receipt_since(before,cx.retained_progress()),terminal:false})}
     if request.cancelled {
         host.cancel().map_err(engine_failure)?;
         let mut admission=host.admission.try_borrow_mut().map_err(|_|engine_failure(EngineError::Busy))?;
@@ -214,31 +252,41 @@ fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn
     }
     let digest = digest_of(request.canonical_payload);
     let mode = cache_mode(&request.requested_cache_mode);
-    let _checkpoint = match request.previous_state {
-        Some(bytes) => {
-            let text = std::str::from_utf8(bytes).map_err(|error| invalid(error.to_string()))?;
-            let previous: GeometryResult = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| invalid(error.to_string()))?;
-            previous.cursor
+    if let Some(bytes) = request.previous_state {
+        let text = std::str::from_utf8(bytes).map_err(|error| invalid(error.to_string()))?;
+        let previous: GeometryResult = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| invalid(error.to_string()))?;
+        if previous.cursor.as_ref().is_some_and(|cursor| cursor.digest != digest || cursor.next != previous.progress.completed) {
+            return Err(invalid("geometry checkpoint does not match its document and progress"));
         }
-        None => None,
-    };
+    }
     let outcome = host
         .with(|engine| -> Result<Option<(EngineStep, GeometryResult)>, ArtifactInferenceExecutionError> {
-            let resumes=engine.holds(&digest);
+            let resumes = engine.holds(&digest) && (request.previous_state.is_some() || !host.checkpoint_published.get());
+            if resumes && engine.run_cancelled() {
+                return Err(ArtifactInferenceExecutionError::new("generation3d.geometry.cancelled", "The geometry run was cancelled."));
+            }
             if !resumes {
                 let mut admission=host.admission.try_borrow_mut().map_err(|_|engine_failure(EngineError::Busy))?;
                 if admission.is_none()&&!engine.terminal_is_empty(){match engine.close_original_step(cx){Ok(true)=>{},Ok(false)=>return Ok(None),Err(original)=>{engine.hold_failure(original);return Ok(None)}}}
                 if admission.is_none(){
+                    let source_work = cx.original_source_parent().and_then(|parent| parent.loan_admission_work_demand())
+                        .map_err(|error| ArtifactInferenceExecutionError::original(error.into(), true))?;
+                    if request.budgets.work_units < source_work {
+                        return Err(invalid("geometry work budget cannot admit the initiating source"));
+                    }
                     let text=std::str::from_utf8(request.canonical_payload).map_err(|error|invalid(error.to_string()))?;
                     let parsed:GeometryRequest=semio_framework_pack_json::from_json_str(text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|invalid(error.to_string()))?;
                     let snapshot=parsed.into_snapshot().map_err(invalid)?;
+                    host.checkpoint_published.set(false);
                     **admission=Some(EngineAdmission::new(digest.clone(),snapshot,mode,request.cancellation_id.to_string()));
                 }
                 if admission.as_ref().is_some_and(|owner|owner.digest()!=Some(digest.as_str())){return Err(invalid("geometry request changed while its original admission remains open"))}
                 match engine.start_original_step(&mut admission,cx){Ok(true)=>{},Ok(false)=>return Ok(None),Err(original)=>{engine.hold_failure(original);return Ok(None)}}
             }
             let step=match engine.step(cx){Ok(step)=>step,Err(original)=>{engine.hold_failure(original);return Ok(None)}};
+            if !step.done && step.computed == 0 && step.hits == 0 { return Ok(None); }
             let result = result_of(engine, &step, &digest);
+            host.checkpoint_published.set(true);
             Ok(Some((step, result)))
         })
         .map_err(engine_failure)??;
@@ -260,13 +308,13 @@ fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn
         .collect();
     let quality = quality_name(weakest(result.widgets.iter().map(|widget| widget.quality)));
     Ok(ArtifactInferenceExecution {
-        retirement_progress: RetainedCloneProgress { copied_items: 1, ..Default::default() },
+        retirement_progress: receipt_since(before, cx.retained_progress()),
         canonical_payload: Some(semio_framework_pack_json::to_json_string(&result).into_bytes()),
         validity: if diagnostics.is_empty() { "valid" } else { "invalid" }.to_string(),
         diagnostics,
         quality,
         complete: step.done,
-        actual_cache_mode: WireArtifactInferenceCacheMode::Bypass,
+        actual_cache_mode: if host.with(|engine| engine.cache_enabled()).map_err(engine_failure)? { request.requested_cache_mode.clone() } else { WireArtifactInferenceCacheMode::Bypass },
     }.into_step(true))
 }
 //#endregion 🔖️Service

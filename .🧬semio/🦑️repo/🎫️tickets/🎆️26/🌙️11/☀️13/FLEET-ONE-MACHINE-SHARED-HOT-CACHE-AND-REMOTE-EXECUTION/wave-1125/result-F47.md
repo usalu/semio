@@ -1,0 +1,39 @@
+# Result F47: one resolver, roles by origin id, DNS-SD with a conflict gate (22:45)
+
+## 1. Design (binding corrections folded in)
+- Identity is the origin id. Facts carry no address: `S/fleet/cache.json` now has `publisher {origin, directory, port}`, `cache {instance, ...}`, `execution {origin, port, protocolVersion}` (verified live, generation 13, no IP). Addresses come from `S/v1/origins/<origin>/addresses.json` (all interfaces, `name semio-<origin>`, `hostLabel`, `advertise`).
+- One resolver `resolveFleetEndpointV1` (🧭️addresses): last good (only while it still matches the published port and set) -> published addresses (same subnet first) -> local copy of the published set (`.cache/f/addresses/<origin>.json`, serves while the store is unmounted/stalled) -> DNS-SD lookup by instance name = origin id. A stale set puts DNS-SD first. Each attempt has its own time limit; `via` (`last-good|published|mirror|dns-sd`) is returned and logged en/de when it is not the steady state. `SEMIO_FLEET_DISCOVERY=off` and `NODE_ENV=test` switch real discovery off.
+- DNS-SD is bootstrap only: service `_semio-fleet._tcp`, instance = origin id, TXT `origin`, `name`, `group`, `roles`, `<role>=<port>` (`dns-sd -R` on macOS/Windows, `avahi-publish -s` on Linux; no sudo, never a host argument, never `scutil`/`dns-sd -P`).
+- Conflict gate (`fleetAdvertiseGateV1`): a machine advertises only when its host name label is usable, no other origin published the same label (or the label with macOS's `-N` conflict suffix), the label is not `semio-<another origin>` (`namedAs`), and no live origin (ready.json < 10 min) is still without a published set (`unverified`). Otherwise it stays silent and logs a bilingual warning naming the duplicates. The agent starts advertising only 30 s after start. Live right now nobody advertises (m04/m05/m09 unverified, m08/m13 duplicates): no `dns-sd`/`avahi` process runs.
+- Topology: groups carry `roles {store, cache, scheduler, relay}` = origin ids of their own group; `nfs.host`, `nfs.candidates`, `cache.endpoint`, `server.advertise` are gone from schema, JSON, code, Python oracle and fixtures. A rendering binds resolved addresses (`bindFleetHostsV1`, `--addresses <origin>=<address>`, or `resolveRoleHostsV1` through the resolver in `📜️script.ts`); an unbound own store is refused with the way out, an unbound peer renders as its store origin id (the provisioning drops unresolvable peers with a warning).
+- NFS remount: `facts`/`mount-plan` print the source from the resolved store-role address; the provisioning scripts take it from `SEMIO_FLEET_GROUP` + `SEMIO_FLEET_STORE_ADDRESS` (read once, never stored) or discover it (avahi-browse on Linux, `dns-sd -L/-G` on macOS, `dns-sd.exe` on Windows) and print the exact failure otherwise. Avahi is installed by the Linux provisioning (root path, `avahi-daemon avahi-utils`, `systemctl enable --now`).
+- Hostname rename without copy-paste: `repo fleet hostname apply` (topology op `hostname`): reads `originId` from `.cache/f/machine.json` (refuses when missing), derives `semio-<origin>`, is idempotent (compares the current LocalHostName), prints the plan, asks, and only then runs `sudo scutil --set LocalHostName ...` (macOS) / `sudo hostnamectl set-hostname ...` (Linux); Windows prints the name only. Tests stub confirm and run.
+
+## 2. Clients switched to the resolver
+`refreshFleetCacheFactsV1` (unit cache, Nx front, fleet fetch, exchange client, status all read its local copy: `selectedEndpoint`, `candidates`, `selectedExecution`), the scheduler address/agent registration (`readFleetExecutionV1` = resolved endpoint; agent refresh passes report/language), peers (`fleetPeerEndpointsV1` from the peer store's facts + addresses; `directPeerTransportV1` uses `connectFleetEndpointV1`, the read is the probe), store reachability guard (`ensureMountedStoreReachable` resolves the store role by TCP 2049 through mirror/DNS-SD, no `SEMIO_FLEET_NFS_HOST`), topology reachability/preflight probes (unresolved role reported, no name used). Removed: `select`/`answers` failover, `probeTcpHost`, `fleetCacheEndpointsV1`, the `SEMIO_FLEET_NFS_HOST`/`CACHE_ENDPOINT` environment, `fleetMdnsNameV1`. Relay and replica move files through the stores (no addresses).
+
+## 3. Item 3: sidecar tests and launchd tests
+- The cache tests failed with "partition products is not attached": cause is the macOS guard of `cacheAreaHomeV1` in the ledger (a scratch worktree has no attached image), NOT F44 and not the resolver. Fix: the test attaches a 96 MB APFS image per scratch worktree with `hdiutil` (no sudo), detaches in `afterEach`. Sidecar file now 6/1.
+- Remaining sidecar failure: after a scheduler restart the agent's worker must register again within 60 s; under load 60-70 it does not (the same test failed earlier at "agent must join" before the attach). Not proven to be a defect or a flake; no A/B possible under load.
+- The 2 real-launchd service tests (13/2) time out at 90 s on load 60; they touch launchd and the helper only, not addresses or topology. Classified load/real-launchd, not A/B'd.
+
+## 4. Tests that never touch real discovery
+Advertiser/lookup are ports (`run`, `enabled`, `wait`); `runTool`/`collectTool` refuse to spawn under `NODE_ENV=test` or `SEMIO_FLEET_DISCOVERY=off`; sidecar tests set it. Law tests: no test file spawns `dns-sd`/`avahi-*`; no `*.local`/`ueli-*` literal in topology, config, service definitions or fleet code; committed topology has only roles by origin id.
+
+## 5. NOT done / NOT verified
+- `repo fleet status` does not yet show the host-name conflict (closed schema + 9000-line fixtures); the gate state is published in `addresses.json` (`advertise.duplicates`, `namedAs`) and logged en/de by the agent. Follow-up: a `host-name` finding + reader.
+- Linux avahi path, Windows `dns-sd.exe` path, the `.ps1` and the sh discovery are syntax-checked/parsed only (bash -n; no pwsh, no Linux here); `dns-sd` output parsers are tested on fixtures, not against a real mDNS.
+- Real network change (second subnet) and a real mDNS-less machine were not exercised; the mirror/last-good fallback is tested.
+- signed-fleet cluster test, sealed `group.ts` users and the evidence test were updated but not run; `🚢️fleet-status` tests not run after the `hostname` delegation.
+- Peers' IPv6/Windows, `--addresses` for relay peers, and `SEMIO_FLEET_MACHINES` unchanged.
+- Python oracle `🐍️.py` of topology: the region of helper functions (xml_escape.. filter_exports) was restored from git HEAD after an accidental cut; its tests pass (topology 74/0).
+
+## USER (one command, no per-machine literals)
+Every Mac that must carry its semantic name (the coordinator named itself `semio-g1-m08` by copy-paste: run it there too, it corrects to `semio-g1-server`):
+```
+cd ~/Documents/semio && repo fleet hostname apply
+```
+It reads the origin from `.cache/f/machine.json`, prints the name, asks for y, runs the sudo step, is idempotent. Needed on every Mac whose published label is a duplicate: published now `uelis-mac-mini` on g1-m08 and g1-m13; g1-m10 and g1-m14 (and g1-m12) had not republished their label yet (their agents restart with the new code; check `S/origins/*/addresses.json` `hostLabel` / `advertise`). The fleet works without it (store-published addresses); DNS-SD bootstrap needs unique names.
+Linux workers: avahi is installed by re-running the provisioning script (needs sudo). Windows workers: Bonjour (`dns-sd.exe`) must be installed once (Bonjour Print Services / iTunes), else the published addresses serve.
+Router: allow multicast (UDP 5353) between ports and Wi-Fi, otherwise only the published addresses are used.
+First provisioning of a new machine: the script needs the store address once (`SEMIO_FLEET_GROUP=g1 SEMIO_FLEET_STORE_ADDRESS=<address from S/origins/g1-server/addresses.json>`) unless DNS-SD answers; `wave-1125/prompt-g1-m09.md` is rewritten accordingly (no host name, rename step 5b).

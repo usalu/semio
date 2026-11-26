@@ -10,7 +10,7 @@ const resolveFile = (url) => {
   const candidates = module ? [join(modules, module[2], module[3]), join(site, path)] : [join(site, path)];
   if (module && module[2] === probeModule && transpiled) {
     const guest = /(?:\.wasm$|^semio_hub_.*_component\.js$|^🌉️bridge\.js$|^🟨️\.js$)/u.test(module[3]);
-    if (guest) candidates.splice(0, candidates.length, join(transpiled, module[3]));
+    if (guest || process.env.SEMIO_OVERLAY_EXACT_MODULE === "1") candidates.splice(0, candidates.length, join(transpiled, module[3]));
     else candidates.unshift(join(transpiled, module[3]));
   }
   for (const candidate of candidates) { try { const stat = statSync(candidate); if (stat.isFile()) return candidate; if (stat.isDirectory()) { const index = join(candidate, "index.html"); statSync(index); return index; } } catch {} }

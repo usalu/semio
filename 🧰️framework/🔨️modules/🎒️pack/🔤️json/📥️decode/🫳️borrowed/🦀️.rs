@@ -55,9 +55,17 @@ pub(super) fn starts_with<S:JsonReadSource+?Sized>(source:&S,position:usize,text
 }
 pub(super) fn character<S:JsonReadSource+?Sized>(source:&S,position:usize)->Result<char,JsonError>{
     let first=source.byte_at(position).ok_or(JsonError::UnexpectedEof)?;
-    let length=match first{0..=0x7f=>1,0xc2..=0xdf=>2,0xe0..=0xef=>3,0xf0..=0xf4=>4,_=>return Err(JsonError::InvalidUtf8)};
-    let mut bytes=[0;4];
-    for(index,byte)in bytes[..length].iter_mut().enumerate(){*byte=position.checked_add(index).and_then(|offset|source.byte_at(offset)).ok_or(JsonError::InvalidUtf8)?;}
+    let length = match first {
+        0..=0x7f => return Ok(char::from(first)),
+        0xc2..=0xdf => 2,
+        0xe0..=0xef => 3,
+        0xf0..=0xf4 => 4,
+        _ => return Err(JsonError::InvalidUtf8),
+    };
+    let mut bytes = [first, 0, 0, 0];
+    for (offset, byte) in bytes[1..length].iter_mut().enumerate() {
+        *byte = position.checked_add(offset + 1).and_then(|index| source.byte_at(index)).ok_or(JsonError::InvalidUtf8)?;
+    }
     std::str::from_utf8(&bytes[..length]).map_err(|_|JsonError::InvalidUtf8)?.chars().next().ok_or(JsonError::InvalidUtf8)
 }
 fn hex4<S:JsonReadSource+?Sized>(source:&S,position:&mut usize,start:usize)->Result<u32,JsonError>{
@@ -146,3 +154,7 @@ pub struct JsonReadLimits{
     pub maximum_depth:usize,
     pub maximum_items:u64,
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod character_tests;

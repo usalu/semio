@@ -1,5 +1,5 @@
-semio s.stdio.semio.image.dsl v1
-schema=732e737464696f2e73656d696f2e696d616765
+semio stdio.semio.image.dsl v1
+schema=737464696f2e73656d696f2e696d616765
 width=194
 height=84
 colorspace=i

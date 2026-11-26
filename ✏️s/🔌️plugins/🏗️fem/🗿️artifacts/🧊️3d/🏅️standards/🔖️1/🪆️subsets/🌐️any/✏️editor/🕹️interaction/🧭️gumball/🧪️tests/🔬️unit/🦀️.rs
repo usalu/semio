@@ -252,7 +252,7 @@ fn a_sixty_pixel_ring_drag_turns_the_slab_into_a_valid_solid() {
     let target = targets(&[("solid", "sol1")]);
     let area = |solid: &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid| solid.outline.iter().zip(solid.outline.iter().cycle().skip(1)).map(|(a, b)| a[0] * b[1] - b[0] * a[1]).sum::<f64>() / 2.0;
     let base = doc.solids.iter().find(|solid| solid.id == "sol1").expect("sol1").clone();
-    let steps = [0.12, 0.12, 0.11, 0.1, 0.1, -0.05, -0.04, 0.12, 0.13, 0.12, 0.1, 0.09];
+    let steps: [f64; 12] = [0.12, 0.12, 0.11, 0.1, 0.1, -0.05, -0.04, 0.12, 0.13, 0.12, 0.1, 0.09];
     let mut net: Option<MoveSelection> = None;
     let mut sum = 0.0;
     for (index, step) in steps.iter().enumerate() {

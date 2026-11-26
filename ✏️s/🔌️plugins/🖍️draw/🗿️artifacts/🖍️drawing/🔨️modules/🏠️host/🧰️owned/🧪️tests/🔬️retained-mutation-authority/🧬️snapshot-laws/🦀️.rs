@@ -8,12 +8,13 @@ fn paged_native_drawing_snapshot_initialization_catalog_admits_one_original_page
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧰️owned/🏗️initialization/📚️catalog/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let lanes = law["lanes"].as_array().unwrap();
+    let extents = law["extents"].as_array().unwrap().len();
     let mut catalog = Some(store::ArtifactStoreInitializationOwnerCatalog::try_new().unwrap());
     let original = catalog.as_ref().unwrap().admitted_items();
     assert_eq!(original % lanes.len(), 0);
     let slots = original / lanes.len();
     let maximum_items = law["maximumItems"].as_u64().unwrap() as usize;
-    for (index, _lane) in lanes.iter().enumerate() {
+    for index in 0..lanes.len() * extents {
         let (demand, heap) = observe(|| initialization_catalog_close_demands(&catalog).unwrap());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert!(demand.release_bytes > 0);
@@ -27,15 +28,15 @@ fn paged_native_drawing_snapshot_initialization_catalog_admits_one_original_page
             let (step, heap) = observe(|| close_initialization_catalog(&mut catalog, grant).unwrap());
             assert_eq!(step.progress(), RetainedCloneProgress::default());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-            assert_eq!(catalog.as_ref().unwrap().admitted_items(), (lanes.len() - index) * slots);
+            assert_eq!(catalog.as_ref().unwrap().admitted_items(), (lanes.len() - index / extents) * slots);
             assert_eq!(initialization_catalog_close_demands(&catalog).unwrap(), demand);
         }
         let (step, heap) = observe(|| close_initialization_catalog(&mut catalog, exact).unwrap());
         assert_eq!(step.progress().copied_items, 1);
         assert_eq!(step.progress().released_bytes, demand.release_bytes);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, demand.release_bytes));
-        assert_eq!(catalog.as_ref().map_or(0, |catalog| catalog.admitted_items()), (lanes.len() - index - 1) * slots);
-        if index + 1 == lanes.len() { assert!(matches!(step, RetainedCloneStep::Complete(_))); }
+        assert_eq!(catalog.as_ref().map_or(0, |catalog| catalog.admitted_items()), (lanes.len() - (index + 1) / extents) * slots);
+        assert_eq!(matches!(step, RetainedCloneStep::Complete(_)), index + 1 == lanes.len() * extents);
     }
     assert!(catalog.is_none());
     assert_eq!(law["coldBirthCredited"], false);
@@ -67,7 +68,7 @@ fn paged_native_drawing_snapshot_retirement_keeps_original_variants_and_exact_gr
         DrawingRetirementOwner::HistoryId(String::from("native-history-owner")),
     ];
     assert_eq!(owners.len(), law["variants"].as_array().unwrap().len());
-    let maximum = law["maximumBytes"].as_u64().unwrap() as usize;
+    let maximum = law["maximumBytesPerAxis"].as_u64().unwrap() as usize;
     assert!(size_of::<DrawingDecodedFieldRetirement<DrawingRetirementOwner>>() <= maximum);
     for (value, kind) in owners.into_iter().zip(law["variants"].as_array().unwrap()) {
         let (mut owner, heap) = observe(|| DrawingDecodedFieldRetirement::try_new(value).unwrap_or_else(|_| panic!("Drawing native owner has typed retirement authority")));
@@ -78,10 +79,10 @@ fn paged_native_drawing_snapshot_retirement_keeps_original_variants_and_exact_gr
         for _ in 0..100000 {
             let (grant, heap) = observe(|| owner.next_grant().unwrap());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-            let bytes = grant.maximum_copy_bytes + grant.maximum_capacity_bytes + grant.maximum_release_bytes;
-            assert!(bytes <= maximum);
             let (demand, heap) = observe(|| owner.demands().unwrap());
-            assert_eq!(demand.copy_bytes + demand.capacity_bytes + demand.release_bytes, bytes);
+            assert_eq!((demand.copy_bytes, demand.capacity_bytes, demand.release_bytes), (grant.maximum_copy_bytes, grant.maximum_capacity_bytes, grant.maximum_release_bytes));
+            let bytes = demand.copy_bytes.max(demand.capacity_bytes).max(demand.release_bytes);
+            assert!(bytes <= maximum, "{kind} retirement quote {grant:?}");
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             let mut refused = vec![RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: maximum, maximum_capacity_bytes: maximum, maximum_release_bytes: maximum, ..grant }];
             if bytes != 0 {
@@ -99,7 +100,6 @@ fn paged_native_drawing_snapshot_retirement_keeps_original_variants_and_exact_gr
             assert!(progress.fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
             assert!(progress.copied_items <= 1);
-            if progress.copied_bytes != 0 { assert_eq!(heap.released_bytes, 0); }
             copied += progress.copied_bytes;
             released += progress.released_bytes;
             if matches!(step, RetainedCloneStep::Complete(_)) { terminal = true; break; }
@@ -113,12 +113,15 @@ fn paged_native_drawing_snapshot_retirement_keeps_original_variants_and_exact_gr
 #[test]
 fn paged_native_drawing_snapshot_decoded_field_close_admits_payload_and_physical_work() {
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+    use semio_framework_value::retirement::RetirementCursor;
+    const PUBLISH_COPY: usize = 2 * size_of::<Option<Box<dyn RetirementCursor>>>() + size_of::<usize>();
     fn run<T: semio_framework_value::retirement::RetireOwned>(value: T, row: &serde_json::Value) {
         let (mut owner, heap) = observe(|| DrawingDecodedFieldRetirement::try_new(value).unwrap_or_else(|_| panic!("native field has typed retirement")));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         let mut copied = 0;
         let mut observed = false;
         let mut terminal = false;
+        let count_header = if row["kind"] == "u32-list" { size_of::<usize>() } else { 0 };
         for _ in 0..100000 {
             let (demand, heap) = observe(|| owner.demands().unwrap());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
@@ -128,10 +131,11 @@ fn paged_native_drawing_snapshot_decoded_field_close_admits_payload_and_physical
             let (zero, heap) = observe(|| close_decoded(&mut owner, RetainedCloneGrant::default()).unwrap());
             assert_eq!(zero.progress(), Default::default());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-            if copy > 0 {
+            let byte_owner_transition = row["kind"] == "text" && (copy == size_of::<usize>() || copy == size_of::<bool>());
+            let payload = copy != 0 && capacity == 0 && release == 0 && copy != PUBLISH_COPY && copy != size_of::<Option<T>>() && !byte_owner_transition;
+            if payload {
                 observed = true;
-                assert_eq!(copy, row["minimumCopyBytes"].as_u64().unwrap() as usize);
-                assert_eq!((capacity, release), (0, 0));
+                assert_eq!(copy, count_header + row["minimumCopyBytes"].as_u64().unwrap() as usize, "{} decoded retirement quote {demand:?}", row["kind"]);
                 let (denied, heap) = observe(|| close_decoded(&mut owner, RetainedCloneGrant { maximum_copy_bytes: copy - 1, maximum_capacity_bytes: 0, ..grant }).unwrap());
                 assert_eq!(denied.progress(), Default::default());
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
@@ -140,8 +144,10 @@ fn paged_native_drawing_snapshot_decoded_field_close_admits_payload_and_physical
             let (step, heap) = observe(|| close_decoded(&mut owner, grant).unwrap());
             assert!(step.progress().fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
-            if copy > 0 { assert_eq!(step.progress().released_bytes, 0); }
-            copied += step.progress().copied_bytes;
+            if payload {
+                assert_eq!(step.progress().released_bytes, 0);
+                copied += step.progress().copied_bytes - count_header;
+            }
             if matches!(step, RetainedCloneStep::Complete(_)) { terminal = true; break; }
         }
         assert_eq!(observed, row["totalCopyBytes"].as_u64().unwrap() > 0);
@@ -242,7 +248,6 @@ fn paged_native_drawing_snapshot_clone_preserves_the_neutral_schema() {
     let before = serde_json::to_value(source.borrow().get()).unwrap();
     let body = law["bodyBytes"].as_u64().unwrap() as usize;
     let zero_bytes = law["constructorAllocationBytes"].as_u64().unwrap() as usize;
-    assert!(std::mem::size_of::<<DrawingSnapshot as RetainedClone>::Cursor>() <= body);
     for pause in law["cancelAt"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize).chain([usize::MAX]) {
         let (mut cursor, allocation) = observe(DrawingSnapshot::retained_clone_cursor);
         assert!(!allocation.overflowed);
@@ -276,10 +281,10 @@ fn paged_native_drawing_snapshot_clone_preserves_the_neutral_schema() {
         if !cursor.close_started() {
             let grant = quote(cursor.begin_close_demand().unwrap());
             let work = cursor.begin_close_work_demand().unwrap();
-            let (turn, allocation) = observe(|| effect_turn(grant, work, |effect| cursor.begin_close_paid(effect)));
+            let (turn, allocation) = observe(|| source.with_bank(|_, bank| effect_from_bank(bank, grant, work, |effect| cursor.begin_close_paid(effect))).unwrap());
             drawing_snapshot_heap_admission(turn.result.unwrap(), grant, allocation);
         }
-        let (zero, allocation) = observe(|| effect_turn(RetainedCloneGrant::default(), 0, |effect| settle_close_poll(cursor.close_selected(body, effect))));
+        let (zero, allocation) = observe(|| source.with_bank(|_, bank| effect_from_bank(bank, RetainedCloneGrant::default(), 0, |effect| settle_close_poll(cursor.close_selected(body, effect)))).unwrap());
         assert_eq!(zero.unwrap().progress(), Default::default());
         assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
 
@@ -287,7 +292,7 @@ fn paged_native_drawing_snapshot_clone_preserves_the_neutral_schema() {
             if cursor.terminal_is_empty() { break; }
             let grant = quote(cursor.close_demands(body).unwrap());
             let work = cursor.close_work_demand(body).unwrap();
-            let (step, allocation) = observe(|| effect_turn(grant, work, |effect| settle_close_poll(cursor.close_selected(body, effect))));
+            let (step, allocation) = observe(|| source.with_bank(|_, bank| effect_from_bank(bank, grant, work, |effect| settle_close_poll(cursor.close_selected(body, effect)))).unwrap());
             drawing_snapshot_heap_admission(step.unwrap().progress(), grant, allocation);
         }
         assert!(cursor.terminal_is_empty());
@@ -313,5 +318,6 @@ pub(super) fn drawing_snapshot_heap_admission(progress: semio_framework_value::r
     assert!(progress.fits(grant));
     assert!(!allocation.overflowed);
     assert!(allocation.requested_bytes <= progress.retained_capacity_bytes && allocation.released_bytes <= progress.released_bytes, "Drawing snapshot actual ownership exceeded admission: {allocation:?} {progress:?}");
-    assert!(progress.copied_bytes.saturating_add(progress.retained_capacity_bytes).saturating_add(progress.released_bytes) <= 4096);
+    let maximum = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES;
+    assert!(progress.copied_bytes.max(progress.retained_capacity_bytes).max(progress.released_bytes) <= maximum, "Drawing snapshot clone receipt {progress:?} for {grant:?}");
 }

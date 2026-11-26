@@ -1,6 +1,5 @@
 //! 🧮️ Original BIM admission and relational ownership laws.
-#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
+use semio_framework_test_original_snapshot_owners as original_owners;
 
 #[test]
 fn sqlite_snapshot_bim_original_reader_tracks_current_shared_ownership(){
@@ -15,13 +14,15 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 use store::sqlite_snapshot::{SqliteDatabaseLimits,SnapshotEncoding};
-fn fixture()->ModelSnapshot{let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();semio_framework_pack_json::from_json_str(&corpus["cases"][0]["snapshot"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
+fn fixture()->ModelSnapshot{let corpus:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::text_in(env!("CARGO_MANIFEST_DIR"), "../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();semio_framework_pack_json::from_json_str(&corpus["cases"][0]["snapshot"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn database(snapshot:&ModelSnapshot)->SqliteDatabase{original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|snapshot.to_sqlite_database(sqlite_control)).unwrap()}
 fn bytes(database:&SqliteDatabase)->usize{database.tables.iter().flat_map(|table|&table.rows).flat_map(|row|&row.values).map(|value|match value{SqliteValue::Null=>0,SqliteValue::Integer(_)|SqliteValue::Real(_)=>8,SqliteValue::Text(value)=>value.len(),SqliteValue::Blob(value)=>value.len()}).sum()}
 #[test]
 fn sqlite_snapshot_bim_original_census_precedes_typed_birth(){
  let snapshot=fixture();let database=database(&snapshot);let record=snapshot.__dsl_to_record();let exact=bytes(&database);
- for(rows,values,expected)in[(4036,exact,true),(4035,exact,false),(4036,exact-1,false)]{let limits=SqliteDatabaseLimits{max_rows:rows,max_value_bytes:values,..SqliteDatabaseLimits::default()};let mut callback=|_|true;let mut control=NativeDecodeControl::new(0,&mut callback);let result=semantic_cells::admit_record(&record,limits,&mut control);assert_eq!(result.is_ok(),expected,"rows={rows} values={values}");assert_eq!(control.owned_bytes(),0,"borrowed census created typed ownership");}
+ let tables=database.tables.len();
+ let columns=database.tables.iter().flat_map(|table|&table.rows).map(|row|row.values.len()).max().unwrap();
+ for(rows,values,table_limit,column_limit,expected)in[(4036,exact,tables,columns,true),(4035,exact,tables,columns,false),(4036,exact-1,tables,columns,false),(4036,exact,tables-1,columns,false),(4036,exact,tables,columns-1,false)]{let limits=SqliteDatabaseLimits{max_rows:rows,max_value_bytes:values,max_tables:table_limit,max_columns:column_limit,..SqliteDatabaseLimits::default()};let mut callback=|_|true;let mut control=NativeDecodeControl::new(0,&mut callback);let result=semantic_cells::admit_record(&record,limits,&mut control);assert_eq!(result.is_ok(),expected,"rows={rows} values={values} tables={table_limit} columns={column_limit}: {result:?}");assert_eq!(control.owned_bytes(),0,"borrowed census created typed ownership");}
  let mut reached=false;let mut callback=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|if event.completed>=256{reached=true;false}else{true};let mut control=NativeDecodeControl::new(0,&mut callback);assert!(semantic_cells::admit_record(&record,SqliteDatabaseLimits::default(),&mut control).is_err());assert_eq!(control.owned_bytes(),0);drop(control);assert!(reached);
 }
 #[test]
@@ -44,7 +45,7 @@ fn sqlite_snapshot_bim_original_reader_rejects_unowned_and_inactive_roles(){
 
 #[test]
 fn sqlite_snapshot_bim_complete_semantics_preserve_original_named_maps(){
- let input:ModelSnapshot=semio_framework_pack_json::from_json_str(include_str!("./🧫️fixtures/🧩️complete/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+ let input:ModelSnapshot=semio_framework_pack_json::from_json_str(semio_framework_test_fixtures::text_in(env!("CARGO_MANIFEST_DIR"), "../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧩️complete/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
  let projected=database(&input);assert_eq!(projected.tables.len(),128);assert_eq!(projected.tables.iter().map(|t|t.rows.len()).sum::<usize>(),4036);
  let restored=original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|control|ModelSnapshot::from_sqlite_database(&projected,control)).unwrap();assert_eq!(restored,input);
  assert_eq!(restored.supports.len(),3);assert_eq!(restored.load_cases.len(),2);assert_eq!(restored.loads.len(),3);assert_eq!(restored.option_groups.len(),1);assert_eq!(restored.design_options.len(),2);assert_eq!(restored.worksets.len(),2);assert_eq!(restored.element_options.len(),1);assert_eq!(restored.element_worksets.len(),1);assert_eq!(restored.space_conditions.len(),2);assert_eq!(restored.clash_sets.len(),1);assert_eq!(restored.rules.len(),1);assert_eq!(restored.issues.len(),2);assert_eq!(restored.issue_comments.len(),1);assert_eq!(restored.components.len(),2);assert_eq!(restored.component_overrides.len(),1);assert_eq!(restored.mep_elements.len(),3);

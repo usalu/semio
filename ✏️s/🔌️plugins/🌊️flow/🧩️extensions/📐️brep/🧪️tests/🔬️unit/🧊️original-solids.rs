@@ -17,7 +17,7 @@ fn original_box_fillet_cancels_or_publishes_analytic_surfaces_and_closed_preview
     for (index,row) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let session=Session::new();
         let registry=neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-        let identity=flow_extension_sdk::geometry::GeometryWorkIdentity { operation: 98750+index as u64, generation: 17 };
+        let identity=semio_os_flow_geometry::GeometryWorkIdentity { operation: 98750+index as u64, generation: 17 };
         let mut caller=OriginalJobFixtureCaller::admit(OperationId(identity.operation),Generation(17),stock(),||Some(1000),1500,131072);
         let (mut born,mut free)=(0,0);
         let dimensions=["width","depth","height"].into_iter().zip(fixture_xyz(&row["size"]))
@@ -116,7 +116,7 @@ fn original_box_fillet_cancels_or_publishes_analytic_surfaces_and_closed_preview
 
 #[test]
 fn circle_live_registry_extrusion_covers_axis_reversal_preview_and_cancellation() {
-    use flow_extension_sdk::geometry::{GeometryStep, GeometryWorkIdentity};
+    use semio_os_flow_geometry::{GeometryStep, GeometryWorkIdentity};
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🏗️brep-solid/🔣️.json")).unwrap();
     for (name, cancelled, via_face) in [
@@ -283,7 +283,7 @@ fn original_curved_primitives_publish_their_exact_surface_topology() {
         assert!((measured / expected_volume - 1.0).abs() < 1e-12);
         close_live_job(&mut volume, &mut caller, &mut born, &mut free);
 
-        use flow_extension_sdk::geometry::{GeometryStep, GeometryWorkIdentity};
+        use semio_os_flow_geometry::{GeometryStep, GeometryWorkIdentity};
         let identity = GeometryWorkIdentity { operation: 97150 + index as u64, generation: 17 };
         let tolerance = 0.025;
         let mut preview = None;
@@ -543,7 +543,7 @@ fn original_box_cylinder_cut_publishes_an_exact_through_bore() {
     let volume = retained_boolean_result(&registry, "brep.measure.volume", input, &mut caller, &mut born, &mut free);
     let measured = semio_s_spatial_kernel_semio_session::read_channel_number(&volume, "volume").unwrap();
     assert!((measured - fixture["volume"].as_f64().unwrap()).abs() < 1e-12);
-    let identity=flow_extension_sdk::geometry::GeometryWorkIdentity{operation:97165,generation:17};
+    let identity=semio_os_flow_geometry::GeometryWorkIdentity{operation:97165,generation:17};
     let mesh=run_funded_preview(&session,identity,handle.as_str(),&mut caller,&mut born,&mut free);
     mesh.validate_component_references().unwrap();
     for (domain,count) in [("face",7),("edge",15),("vertex",10)] {
@@ -694,7 +694,7 @@ fn original_thicken_respects_the_signed_outward_normal_of_planar_faces() {
 
 #[test]
 fn original_solid_offset_preserves_sharp_box_topology_and_world_placement() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_s_spatial_kernel_semio_session::{read_channel_number, read_geometry, vector_dictionary};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️original-solid-offset.json")).unwrap();
     let session = Session::new();
@@ -750,7 +750,7 @@ fn original_solid_offset_preserves_sharp_box_topology_and_world_placement() {
 
 #[test]
 fn original_box_shell_keeps_picked_openings_and_oriented_cavity_topology() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_representation::topology::{EntityRef, history::PersistentLabel};
     use semio_s_spatial_kernel_semio_session::{geometry_dict, read_channel_number, read_geometry, vector_dictionary};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️original-box-shell.json")).unwrap();
@@ -867,7 +867,7 @@ fn original_box_shell_keeps_picked_openings_and_oriented_cavity_topology() {
 
 #[test]
 fn original_point_hull_merges_coplanar_facets_and_publishes_only_a_closed_solid() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_s_spatial_kernel_semio_session::{point_dictionary, read_channel_number, read_geometry};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️original-convex-hull.json")).unwrap();
@@ -952,7 +952,7 @@ fn original_point_hull_merges_coplanar_facets_and_publishes_only_a_closed_solid(
 
 #[test]
 fn original_two_profile_loft_proves_coaxial_or_translated_boundary_correspondence() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_s_spatial_kernel_semio_session::{point_dictionary, read_channel_number, read_geometry, vector_dictionary};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️original-two-profile-loft.json")).unwrap();
@@ -1054,7 +1054,7 @@ fn original_two_profile_loft_proves_coaxial_or_translated_boundary_correspondenc
 
 #[test]
 fn original_transforms_reissue_placed_solids_and_preserve_preview_certificates() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_s_spatial_kernel_semio_session::{point_dictionary, read_channel_number, read_geometry, read_xyz, vector_dictionary};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️original-placed-solid-transforms.json")).unwrap();
     let session = Session::new();
@@ -1116,7 +1116,7 @@ fn original_transforms_reissue_placed_solids_and_preserve_preview_certificates()
 
 #[test]
 fn original_box_section_publishes_one_oriented_face_in_the_registered_list() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_engine::GeometryHandle;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_s_spatial_kernel_semio_session::{point_dictionary, read_channel_number, vector_dictionary};
@@ -1273,7 +1273,7 @@ fn original_cone_split_commits_a_cone_and_frustum_around_one_exact_rim() {
 }
 
 fn check_original_plane_split(fixture: &str, operation: u64) {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_curve::Curve3;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_framework_3d_brep_surface::Surface;
@@ -1572,7 +1572,7 @@ fn original_compound_cut_publishes_one_exact_boundary_and_rolls_it_back_on_cance
 
 #[test]
 fn original_orthogonal_results_can_be_used_as_either_boolean_operand() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_s_spatial_kernel_semio_session::{read_channel_number, read_geometry, vector_dictionary};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️original-orthogonal-chain.json")).unwrap();
@@ -1663,7 +1663,7 @@ fn original_orthogonal_results_can_be_used_as_either_boolean_operand() {
 
 #[test]
 fn original_closed_helical_sweep_constructs_one_exact_torus_and_retires_a_draft() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_surface::Surface;
     use semio_framework_3d_brep_vector::Vec3;
     use semio_s_spatial_kernel_semio_session::{point_dictionary,read_channel_number,read_geometry,vector_dictionary};
@@ -1761,7 +1761,7 @@ fn original_closed_helical_sweep_constructs_one_exact_torus_and_retires_a_draft(
 
 #[test]
 fn original_smooth_offset_keeps_the_analytic_frame_and_retires_the_draft() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_surface::Surface;
     use semio_s_spatial_kernel_semio_session::{read_channel_number,read_geometry,vector_dictionary};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🛠️brep-feature/🔣️.json")).unwrap();
@@ -1856,7 +1856,7 @@ fn original_smooth_offset_keeps_the_analytic_frame_and_retires_the_draft() {
 
 #[test]
 fn original_loft_publishes_the_exact_two_circle_frustum_and_cancels_its_draft() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_curve::Curve3;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_framework_3d_brep_surface::Surface;
@@ -1958,7 +1958,7 @@ fn original_loft_publishes_the_exact_two_circle_frustum_and_cancels_its_draft() 
 
 #[test]
 fn original_partial_revolve_publishes_capped_native_torus_and_cancels_draft() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_curve::Curve3;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_framework_3d_brep_surface::Surface;
@@ -2074,7 +2074,7 @@ fn original_partial_revolve_publishes_capped_native_torus_and_cancels_draft() {
 
 #[test]
 fn original_revolve_preserves_full_and_partial_annular_boundaries_and_cancels() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_curve::Curve3;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_framework_3d_brep_surface::Surface;
@@ -2197,7 +2197,7 @@ fn original_revolve_preserves_full_and_partial_annular_boundaries_and_cancels() 
 
 #[test]
 fn original_closed_spherical_shell_keeps_inward_void_and_paid_preview() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_surface::Surface;
     use semio_framework_3d_brep_vector::Pnt3;
     use semio_s_spatial_kernel_semio_session::{read_channel_number,read_geometry,vector_dictionary};

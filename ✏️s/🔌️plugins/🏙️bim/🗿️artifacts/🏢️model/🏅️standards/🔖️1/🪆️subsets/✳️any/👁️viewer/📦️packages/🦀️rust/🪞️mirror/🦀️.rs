@@ -18,12 +18,6 @@ pub mod standards {
                     pub mod export {
                         #[path = "."]
                         pub mod ifc {
-                            #[cfg(test)]
-                            #[path = "../../../../🚪️io/📤️export/🏗️ifc/🧪️tests/🔬️unit/🦀️.rs"]
-                            pub mod tests;
-                            #[cfg(test)]
-                            #[path = "../../../../🚪️io/📤️export/🏗️ifc/🧪️tests/🔭️schema4/🦀️.rs"]
-                            pub mod schema4_tests;
                             #[path = "."]
                             pub mod energy {
                                 #[cfg(test)]

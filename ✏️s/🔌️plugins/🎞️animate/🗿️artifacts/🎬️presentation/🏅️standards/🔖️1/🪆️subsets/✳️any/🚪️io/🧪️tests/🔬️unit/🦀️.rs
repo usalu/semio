@@ -17,6 +17,9 @@ fn title_cards_match_the_neutral_xml_oracle() {
         assert_eq!(u64::from(height), vectors["height"].as_u64().expect("height"));
         let title = root.descendants().find(|node| node.has_tag_name("text")).expect("title");
         assert_eq!(title.text(), row["title"].as_str());
+        let window = root.descendants().find(|node| node.has_tag_name("rect")).expect("window");
+        assert_eq!(window.attribute("fill"), vectors["window"].as_str());
+        assert_eq!(title.attribute("fill"), vectors["foreground"].as_str());
     }
 }
 

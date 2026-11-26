@@ -88,7 +88,7 @@ fn renderer_canvas_reopen_waits_for_the_exact_old_window_close() {
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
     let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: semio_renderer_wgpu_scene_state::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
-    assert!(!caller.turn_funded(TEST_TURN_WORK, |cx|render_ui_document_step(&mut cursor, &successor, body, &mut ctx, surface, controller, semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx)));
+    assert!(!caller.turn_funded(TEST_TURN_WORK, |cx|render_ui_document_step(&mut cursor, &successor, body, semio_ui_theme::Level::Window, &mut ctx, surface, controller, semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx)));
     assert_eq!(cursor.phase_name(), "ingress", "the successor cannot enter the old retained generation while its close is pending");
 
     for _ in 0..262_144 {

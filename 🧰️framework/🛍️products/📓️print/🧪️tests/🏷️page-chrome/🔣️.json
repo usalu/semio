@@ -92,10 +92,11 @@
     }
   ],
   "surface": {
-    "level": "window",
-    "frameLevel": "pane",
+    "marginLevel": "base",
+    "contentLevel": "window",
+    "chipLevel": "pane",
     "veil": "semio-chrome-foreground",
-    "flatten": "semio-chrome-canvas",
+    "flatten": "semio-chrome-interior",
     "label": "semio-chrome-foreground",
     "switch": "semio@chip@glass"
   },

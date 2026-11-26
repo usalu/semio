@@ -1,0 +1,24 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-bim-model-sqlite-schema"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Relational schema and borrowed census of the BIM model snapshot"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-io-sqlite-model = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🏛️model/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-io-sqlite-snapshot = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-schema = { path = "../../../../../../🧬️schema/📦️packages/🦀️rust" }

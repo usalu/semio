@@ -6,8 +6,11 @@ extern crate semio_s_spatial_kernel_semio_session as _;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 mod browser {
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
+    use semio_framework_value::{AuthoringWallet, ValueError, ValueRefusalKind};
     use semio_s_spatial_kernel_semio_session::{Session, SessionCapture};
     use wasm_bindgen::prelude::*;
+
+    const CLOSE_STEP_WORK: u64 = 1024;
     #[wasm_bindgen]
     pub struct BrowserSession {session:SessionCapture}
     #[wasm_bindgen]
@@ -25,7 +28,14 @@ mod browser {
         pub fn next_close_release_byte_demand(&self)->Result<usize,JsValue> {self.session.next_close_release_byte_demand().map_err(|error|JsValue::from_str(&error.to_string()))}
         pub fn next_close_depth_demand(&self)->Result<usize,JsValue> {self.session.next_close_depth_demand().map_err(|error|JsValue::from_str(&error.to_string()))}
         pub fn close_step(&mut self,maximum_items:usize,maximum_copy_bytes:usize,maximum_capacity_bytes:usize,maximum_release_bytes:usize,maximum_depth:usize)->String {
-            match self.session.close_step(RetainedCloneGrant {maximum_items,maximum_copy_bytes,maximum_capacity_bytes,maximum_release_bytes,maximum_depth}) {
+            let grant = RetainedCloneGrant { maximum_items, maximum_copy_bytes, maximum_capacity_bytes, maximum_release_bytes, maximum_depth };
+            let mut wallet = AuthoringWallet::new(grant, u128::from(CLOSE_STEP_WORK));
+            let step = wallet.run_invoked(grant, CLOSE_STEP_WORK, |effect| {
+                self.session.close_step(&mut effect.nested_within(grant, CLOSE_STEP_WORK))
+            }).and_then(|authored| {
+                authored.ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "geometry close work was not admitted"))?.output
+            });
+            match step {
                 Ok(step)=>{let progress=step.progress();let phase=if matches!(step,RetainedCloneStep::Complete(_)) {"complete"}else {"pending"};format!("{{\"phase\":\"{phase}\",\"items\":{},\"copyBytes\":{},\"capacityBytes\":{},\"releaseBytes\":{}}}",progress.copied_items,progress.copied_bytes,progress.retained_capacity_bytes,progress.released_bytes)},
                 Err(error)=>semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("error".into(),semio_framework_pack_json::Value::String(error.to_string()))])),
             }

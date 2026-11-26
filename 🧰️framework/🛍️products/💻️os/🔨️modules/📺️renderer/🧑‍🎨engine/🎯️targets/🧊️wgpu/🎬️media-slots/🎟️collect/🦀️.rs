@@ -64,6 +64,7 @@ fn contract(value:&DslValue,owner:&PresentedMediaOwner)->bool{
  let Some(capability)=value.get("capability").filter(|capability|closed(capability,&["status","reason"]))else{return false};let Some(status @("ready"|"loading"|"unsupported"))=capability.get("status").and_then(DslValue::as_str)else{return false};let reason=capability.get("reason").is_some_and(|value|value.is_null()||text(Some(value),0,512));reason&&value.get("hostContentHeight").and_then(DslValue::as_f64).is_some_and(|value|value.is_finite()&&(0.0..=4096.0).contains(&value))&&(status!="ready"||resource.as_object().is_some())
 }
 impl OriginalPresentedRoster{
+ pub fn output_donated(&self)->bool{self.phase>=15}
  fn check(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if self.identity.is_some_and(|identity|identity!=(cx.operation(),cx.generation(),cx.clock_source()as usize)){return Err(invalid("presented roster initiating caller changed"))}Ok(())}
  pub fn advance(&mut self,source:&PresentedRosterSource<'_>,engine:&mut Ui,output:&mut Vec<PresentedMediaSlot>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.initial_failure.is_some()||self.compound.is_some(){return self.close_failed_step(engine,cx)}

@@ -50,12 +50,12 @@ impl RetainedExtensionInvocation{
 
 /// 🔌️ How many extension invocations still own their caller fields or output: a settled reactor holds none, and a thread must not end while one still owns a controlled retirement.
 pub fn retained_extension_invocation_occupancy()->usize{
-    RETAINED_EXTENSION_INVOCATIONS.with(|owners|owners.borrow().iter().filter(|owner|owner.is_some()).count())
+    RETAINED_EXTENSION_INVOCATIONS.with(|owners|owners.borrow().resident_slots().iter().filter(|owner|owner.is_some()).count())
 }
 
 pub(super) async fn advance_retained_extension_invocation(cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Effect>,semio_framework_job::OriginalTurnFailure>{
     let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
-    let start=RETAINED_EXTENSION_CURSOR.get();let selected=RETAINED_EXTENSION_INVOCATIONS.with(|owners|{let mut owners=owners.borrow_mut();(0..requests::REQUEST_SLOTS).map(|offset|(start+offset)%requests::REQUEST_SLOTS).find_map(|index|owners[index].take().map(|owner|(index,owner)))});
+    let start=RETAINED_EXTENSION_CURSOR.get();let selected=RETAINED_EXTENSION_INVOCATIONS.with(|owners|owners.borrow_mut().take_next_occupied_slot(start));
     let Some((index,mut owner))=selected else{return Ok(None)};let result=owner.step(cx).await;RETAINED_EXTENSION_CURSOR.set((index+1)%requests::REQUEST_SLOTS);
     receive_retained_extension_invocation(index,owner,result)
 }

@@ -1,3 +1,4 @@
+import { Surface } from "@semio-tech/ui-react";
 import { WasmCanvas } from "@semio-tech/framework/canvas/react-renderer";
 import { ContextMenuController } from "@semio-tech/ui-react";
 import { type ComponentSceneHostProps } from "@semio-tech/framework";
@@ -13,10 +14,9 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
   const { onContextMenu } = useContextMenu({ sessionRef, requestContextMenu, node, windowInstanceId, mapContextMenu, shellContextMenuFallback, setContextMenu, containerRef, setViewportSize });
   if (!scene) return <div className="semio-canvas-2d-empty">{emptySceneLabel}</div>;
   return (
-    <div
+    <Surface
       ref={containerRef}
-      className="semio-canvas-2d-host relative h-full min-h-[24rem] w-full ui-surface"
-      data-level="base"
+      className="semio-canvas-2d-host relative h-full min-h-[24rem] w-full"
       data-controller-id={node.controllerId}
       data-surface-id={node.surfaceId}
       onDragOver={handleDragOver}
@@ -54,6 +54,6 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
           if (!open) setContextMenu(null);
         }}
       />
-    </div>
+    </Surface>
   );
 }

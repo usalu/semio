@@ -150,7 +150,7 @@ fn paint_retained_map_document(document: &ui_contract::UiDocumentLease, surface_
     let complete = (0..(1 << 20)).any(|_| {
         let mut ctx = semio_renderer_wgpu_scene_canvas2d::ui_image_loading::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, bounds.h);
         let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: semio_renderer_wgpu_scene_state::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface_id };
-        let done = caller.turn_funded(1<<20,|cx|semio_renderer_wgpu_ui_engine::retained_document_consumer::render_ui_document_step(&mut cursor, document, bounds, &mut ctx, surface_id, "map.lifecycle.fixture", semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
+        let done = caller.turn_funded(1<<20,|cx|semio_renderer_wgpu_ui_engine::retained_document_consumer::render_ui_document_step(&mut cursor, document, bounds, semio_ui_theme::Level::Window, &mut ctx, surface_id, "map.lifecycle.fixture", semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
         semio_renderer_wgpu_host_winit::os_host::finish_cpu_only_fixture_component_close(|owner| drop_engine_surface(&owner.host_id));
         assert!(done || !cursor.terminal_is_fault(), "Map lifecycle document faulted in phase {}", cursor.phase_name());
         done

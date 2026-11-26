@@ -1,0 +1,3 @@
+# Hidden-Line Silhouette Oracle
+
+The `🐍️projected-faces.py` oracle beside the view-linework fixtures independently computes triangle unions with Shapely 2.1.2 / GEOS and compares the proposed simple boundary candidate with the union. The existing near-column and far-wall witnesses have areas 4 and 6, with overlap area 2. Additional overlapping fronts have union area 14; coincident fronts area 4; disjoint fronts area 1 in two components; and the annulus area 12. The simple candidate accepts the two rectangles and falls back on the overlap, coincident, disjoint and hole witnesses. A fixture-driven Rust test checks the same areas, topology and 280 point-coverage probes; its native execution remains pending.

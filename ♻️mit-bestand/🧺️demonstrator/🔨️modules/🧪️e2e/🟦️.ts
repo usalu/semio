@@ -1,5 +1,7 @@
 import { demonstratorE2eOutputDirectory } from "./📁️artifacts/🟦️.ts";
 import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { createRequire } from "node:module";
+import { runtimeCommandNameV1 } from "../../../../🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 import { join, resolve } from "node:path";
 import { parseServiceReadinessBudgetV1, readServiceSession, serviceReadyProgressLanguage, serviceReadyProgressLine, waitForServiceReady } from "@semio-tech/repo-lib/dev";
 import readinessBudget from "../🧩️runtime/🧪️e2e/🔣️.json" with { type: "json" };
@@ -20,7 +22,8 @@ export async function runTestScript(context: Readonly<{ root: string; repoRoot: 
     const baseURL = await waitForServiceReady(sessionRoot, session, signal, budget.readyTimeoutMs, { intervalMs: budget.progressIntervalMs, report: progress => console.log(serviceReadyProgressLine(DEMONSTRATOR_E2E_OWNER, progress, language)) });
     const output = demonstratorE2eOutputDirectory(root, process.env.SEMIO_TICKET_DIR, session.id);
     console.log(`Testing Demonstrator at ${baseURL}`);
-    const child = startToolV1("playwright", ["test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output], { signal, cwd: context.repoRoot, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoPlaywrightBrowsersPath(context.repoRoot) }, stdio: ["ignore", "inherit", "inherit"] });
+    const cli = resolve(createRequire(join(root, "package.json")).resolve("@playwright/test/package.json"), "../cli.js");
+    const child = startToolV1(runtimeCommandNameV1(), [cli, "test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output], { signal, cwd: root, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoPlaywrightBrowsersPath(context.repoRoot) }, stdio: ["ignore", "inherit", "inherit"] });
     const status = await toolExitV1(child);
     if (status !== 0 && !signal.aborted) throw new Error(`Demonstrator acceptance tests failed (${status})`);
   } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }

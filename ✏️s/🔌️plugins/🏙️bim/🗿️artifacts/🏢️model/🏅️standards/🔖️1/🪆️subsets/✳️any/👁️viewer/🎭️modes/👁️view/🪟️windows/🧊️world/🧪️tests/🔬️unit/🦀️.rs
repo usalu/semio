@@ -38,9 +38,9 @@ fn the_window_is_a_world3d_surface_with_stable_ids() {
 #[test]
 fn an_empty_and_a_demo_model_render() {
     let empty = ModelSnapshot::default();
-    assert!(render(&empty, &inferred(&empty), &config::BimViewerWorldWindowConfig::default(), &Marks::default()).is_ok());
+    assert!(render(&empty, &inferred(&empty), &config::BimViewerWorldWindowConfig::default(), &Marks::default(), Locale::En).is_ok());
     let model = demo();
-    assert!(render(&model, &inferred(&model), &config::BimViewerWorldWindowConfig::default(), &Marks::default()).is_ok());
+    assert!(render(&model, &inferred(&model), &config::BimViewerWorldWindowConfig::default(), &Marks::default(), Locale::En).is_ok());
 }
 
 #[test]

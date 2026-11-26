@@ -448,6 +448,21 @@
       "debug": 0
     },
     {
+      "name": "prototype-bim-wasm-component",
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "target": "wasm32-wasip2",
+        "producer": "wasm-component",
+        "operation": "build",
+        "compositions": ["semio-hub-bim-component"]
+      },
+      "role": "component",
+      "optLevel": "s",
+      "debug": 0,
+      "lto": "off"
+    },
+    {
       "name": "prototype-browser-canvas",
       "request": {
         "version": 1,

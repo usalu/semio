@@ -41,7 +41,7 @@ from semio_repo_test import Adapter, Context, Outcome, digest
 
 
 # region 🔖️Carrier
-DSL_PREAMBLE = "semio s.stdio.semio.text.dsl v1"
+DSL_PREAMBLE = "semio stdio.semio.text.dsl v1"
 DOCUMENT_SCHEMA = "stdio.semio.text"
 
 MARK_LETTER = {"bold": "b", "italic": "i", "code": "c", "link": "l"}

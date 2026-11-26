@@ -58,8 +58,9 @@
     "StalePublicationCase": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["staleAt", "committed", "faultCode", "nextGeneration"],
+      "required": ["root", "staleAt", "committed", "faultCode", "nextGeneration"],
       "properties": {
+        "root": { "enum": ["document", "window-config"] },
         "staleAt": { "const": "preflight" },
         "committed": { "const": false },
         "faultCode": { "const": "interactive-job.stale" },

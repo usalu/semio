@@ -1,5 +1,11 @@
 //! 📨️ The declared Drawing operation wire receives one original native mutation before entering the shared semantic producer.
-use super::super::{DrawingSnapshot as P,DrawingMutation as M};
+
+#![allow(clippy::result_large_err)]
+
+extern crate semio_os_kernel as store;
+
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot as P;
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation as M;
 use store::os_store::one_item_publication::{ArtifactStoreOneItemPreparation,ArtifactStoreOneItemPreparationFactory,ArtifactStoreOneItemPreparationRequest,ArtifactStoreOneItemPrepared,ArtifactStoreOneItemLiveAuthority,MemberStoreOneItemWire as Wire,MemberStoreOneItemWirePreparationFactory};
 use store::os_store::one_item::{ArtifactStoreOneItemGrant as Grant,ArtifactStoreOneItemFootprint,ArtifactStoreOneItemPreparationStep as Step,ArtifactStoreOneItemCheckpoint};
 use store::os_store::store_schema::HistoryLane;
@@ -24,7 +30,12 @@ type Admission=RetainedCloneSourceAdmission<Vec<u8>,Vec<u8>>;
 /// 🏷️ The mutation aggregate's declared schema accompanies its canonical op envelope.
 pub const DRAWING_MEMBER_OPERATION_SCHEMA:&str="drawing.drawing";
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub struct DrawingMemberWirePreparationFactory{#[factory_child]pub(super) typed:Arc<dyn ArtifactStoreOneItemPreparationFactory<P,M>>}
+pub struct DrawingMemberWirePreparationFactory{#[factory_child]typed:Arc<dyn ArtifactStoreOneItemPreparationFactory<P,M>>}
+
+impl DrawingMemberWirePreparationFactory {
+    /// 🔗️ Binds the member wire ingress to the shared typed store preparation issuer.
+    pub fn new(typed: TypedFactory) -> Self { Self { typed } }
+}
 fn invalid(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}
 fn frame<T>()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<T>(),depth:1,..Default::default()}}
 fn nested(mut d:RetirementDemand)->Result<RetirementDemand,ValueError>{d.depth=d.depth.checked_add(1).ok_or_else(||invalid("drawing wire depth overflow"))?;Ok(d)}

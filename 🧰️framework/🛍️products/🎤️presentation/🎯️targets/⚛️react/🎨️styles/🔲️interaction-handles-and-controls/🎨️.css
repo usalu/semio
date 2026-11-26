@@ -106,7 +106,6 @@
 	height: 1.5rem;
 	padding: 0;
 	border-radius: 0;
-	background: var(--panel);
 	color: var(--foreground);
 	font-size: 0.75rem;
 	line-height: 1;
@@ -119,7 +118,7 @@
 
 .reveal .presentation-interaction-enlarge:hover,
 .reveal .presentation-interaction-reset:hover {
-	background: var(--hover-panel);
+	background-color: color-mix(in srgb, var(--surface-hover) calc(var(--surface-alpha) * 100%), transparent);
 	color: var(--foreground);
 }
 
@@ -154,7 +153,6 @@
 	height: 2rem;
 	padding: 0;
 	border-radius: 0;
-	background: color-mix(in oklab, var(--panel) 92%, transparent);
 	color: var(--foreground);
 	font-size: 1.125rem;
 	line-height: 1;
@@ -167,7 +165,7 @@
 }
 
 .reveal .presentation-pdf-page-nav__button:hover:not(:disabled) {
-	background: var(--hover-panel);
+	background-color: color-mix(in srgb, var(--surface-hover) calc(var(--surface-alpha) * 100%), transparent);
 	color: var(--foreground);
 }
 
@@ -204,7 +202,6 @@
 	padding: 0;
 	border: 0;
 	border-radius: 0;
-	background: var(--panel);
 	color: var(--foreground);
 	font-size: 0.75rem;
 	line-height: 1;
@@ -258,7 +255,7 @@
 .reveal
 	.presentation-interaction-slide-reset-host:focus-within
 	.presentation-interaction-slide-reset:hover {
-	background: var(--hover-panel);
+	background-color: color-mix(in srgb, var(--surface-hover) calc(var(--surface-alpha) * 100%), transparent);
 	color: var(--foreground);
 }
 

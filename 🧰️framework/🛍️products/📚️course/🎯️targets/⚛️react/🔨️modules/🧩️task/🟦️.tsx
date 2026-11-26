@@ -51,7 +51,7 @@ export const DROP_ZONE_CLASS = "flex min-w-0 flex-col";
 
 /** 🔽️ A select of a task: at least 24 px tall, on the page colour, and the trailing cell of its row (`.course-cell`): its
  * edges are the row's, and its one outline is the divider to its left. */
-export const SELECT_CLASS = "course-target course-cell bg-background px-single text-sm text-foreground";
+export const SELECT_CLASS = "course-target course-cell bg-transparent px-single text-sm text-foreground";
 
 /** 🔘️ A small square action of a task row (move, unassign). */
 export const ICON_BUTTON_CLASS =

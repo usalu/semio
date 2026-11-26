@@ -1,3 +1,4 @@
+import {processPidExistsV1} from "../../🔖️identity/🟦️.ts"
 import type{ChildProcess}from"node:child_process";
 import schema from"./🧬️schema/🔣️.json" with{type:"json"};
 import{firstFailureLanguagesV1}from"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
@@ -22,7 +23,7 @@ export function ownedChildLostErrorV1(program:string,pid:number|undefined):Error
 export function isOwnedChildLostErrorV1(error:unknown):boolean{const cause:unknown=error instanceof Error?error.cause:undefined;return typeof cause==="object"&&cause!==null&&(cause as{version?:unknown}).version===1&&(cause as{kind?:unknown}).kind===lost.kind;}
 /** 🧲️ How the child was settled and its native terminal values. */
 export type OwnedChildSettlementV1=Readonly<{code:number|null;signal:NodeJS.Signals|null;kind:"closed"|"force"|"lost"}>;
-const present=(pid:number|undefined):boolean=>{if(pid===undefined)return false;try{process.kill(pid,0);return true;}catch(error){return(error as NodeJS.ErrnoException).code==="EPERM";}};
+const present=(pid:number|undefined):boolean=>pid!==undefined&&processPidExistsV1(pid);
 /** 🌐️ Renders the one-line notice in every selected language. */
 export function ownedChildNoticeV1(values:Readonly<{pid:number|undefined;label:string;milliseconds:number;kind:string}>,environment:Readonly<Record<string,string|undefined>>):string{
  return firstFailureLanguagesV1(environment).map(language=>notice[language].replace("{pid}",String(values.pid??"-")).replace("{label}",values.label).replace("{milliseconds}",String(values.milliseconds)).replace("{kind}",values.kind)).join("\n")+"\n";

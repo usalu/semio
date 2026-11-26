@@ -1,6 +1,6 @@
 //! 🏷️ Canonical spatial-holder property commands exercise their real diff and semantic inverse through shared neutral inputs.
 use crate::standards::v1::subsets::any::schema::mutations::{ModelMutation, apply_model_mutation};
-use protocol::Mutation;
+use protocol::ColdMutation;
 use protocol::os_spr::protocol_laws::assert_diff_algebra_inverse_law;
 use semio_framework_pack_json::{JsonMemberPolicy, from_json_str};
 use semio_framework_test_fixtures::fixture_text;
@@ -18,7 +18,7 @@ fn base() -> ModelSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn occurrence_neutral_commands_apply_and_both_inverse_routes_restore_each_spatial_holder() {
-    let commands: Vec<ModelMutation> = from_json_str(fixture_text!("occurrence.json"), JsonMemberPolicy::Reject).expect("closed neutral commands");
+    let commands: Vec<ModelMutation> = from_json_str(fixture_text!("../../../../🧬️mutations/🧪️tests/occurrence.json"), JsonMemberPolicy::Reject).expect("closed neutral commands");
     assert_eq!(commands.len(), 12);
     for command in commands {
         let base = base();
@@ -26,7 +26,7 @@ async fn occurrence_neutral_commands_apply_and_both_inverse_routes_restore_each_
         let (diff, messages) = command.diff(&base).into_parts();
         assert!(messages.is_empty(), "{messages:?}");
         let next = apply_model_mutation(&base, &command).expect("canonical mutation");
-        assert_eq!(protocol::apply_diff(&diff, &base).expect("canonical diff"), next);
+        assert_eq!(protocol::apply_diff_cold(&diff, &base).expect("canonical diff"), next);
         assert_eq!(next.properties[&payload.id][&payload.pset][&payload.property], payload.value);
         if let PropertyValue::Real { value } = &next.properties[&payload.id][&payload.pset][&payload.property] {
             assert_eq!(value.to_bits(), (-0.0f64).to_bits());

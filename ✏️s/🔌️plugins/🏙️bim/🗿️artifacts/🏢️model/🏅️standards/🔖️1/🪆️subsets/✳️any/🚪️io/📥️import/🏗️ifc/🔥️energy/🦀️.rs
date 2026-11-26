@@ -78,7 +78,7 @@ fn standard(common: &BTreeMap<String, Part21Value>, glazing: &BTreeMap<String, P
 pub fn type_thermal(doc: &semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::Doc<'_>, type_args: &[Part21Value], window: bool) -> Thermal {
     let rows = type_authoring(doc, type_args);
     let exact = Thermal { u_value: number(&rows, "UValue"), g_value: number(&rows, "GValue"), frame_fraction: number(&rows, "FrameFraction") };
-    if exact != Thermal::default() {
+    if !rows.is_empty() {
         return exact;
     }
     let common = type_set(doc, type_args, if window { "Pset_WindowCommon" } else { "Pset_DoorCommon" });

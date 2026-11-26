@@ -542,3 +542,12 @@ async fn mounted_camera_and_interaction_presence_reach_peers_without_document_ed
     close_registered_fixture_app(&mut *source, policy, scope.cx()).expect("retire source");
     close_registered_fixture_app(&mut *peer, policy, scope.cx()).expect("retire peer");
 }
+
+/// 🪟️ LAW (2D): Set Result Display is claimed by the Results window kind alone, so the Actions palette of the Model window never lists it and the Results window does.
+#[test]
+fn set_result_display_is_offered_only_by_the_results_window_2d() {
+    let definition = create_fem2d_app();
+    let offers = |kind: &str| definition.window_kinds.iter().find(|window| window.id == kind).map(|window| semio_framework::window_kind_actions(&definition, window).iter().any(|action| action.id == "setResultDisplay")).expect("declared window kind");
+    assert!(offers(results_window::WINDOW_KIND_ID), "the Results window offers Set Result Display");
+    assert!(!offers(model_window::WINDOW_KIND_ID), "the Model window never lists it");
+}

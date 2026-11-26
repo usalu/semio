@@ -135,12 +135,15 @@ export function readOffloadLinkerV1(root:string):string|undefined{
  try{const identity=(JSON.parse(readFileSync(join(root,"offload-linker.json"),"utf8")) as {identity?:unknown}).identity;return typeof identity==="string"&&/^[0-9a-f]{16}$/u.test(identity)?identity:undefined;}catch{return undefined;}
 }
 
-/** 🛰️ How many action slots can take a linked unit placed with `peakMegabytes` right now: what the scheduler's idle counting says at that peak, never more than the free slots of the workers that advertise this machine's linker (`semio-linker`), so a worker that cannot link what this compiler wrote is no capacity. Without a known linker or a worker list the scheduler's count stands; `null` as `fleetIdleSlotsV1`. Never throws. */
-export async function fleetLinkedSlotsV1(environment:Readonly<Record<string,string|undefined>>,ports:OffloadAdmissionPortsV1={}):Promise<number|null>{
+/** 🛰️ Bounds the scheduler's sized slot count by the known linker's worker slots. An explicit link target requires an eligible worker for that target and linker before returning a count, including zero for a busy compatible fleet. A missing or incompatible explicit fleet returns null. */
+export async function fleetLinkedSlotsV1(environment:Readonly<Record<string,string|undefined>>,ports:OffloadAdmissionPortsV1={},link?:Readonly<{target:string;linker:string}>):Promise<number|null>{
  const idle=await fleetIdleSlotsV1(environment,ports),root=environment.SEMIO_UNIT_CACHE_ROOT;
- if(idle===null||idle===0||root===undefined||root==="")return idle;
- const linker=readOffloadLinkerV1(root),fleet=linker===undefined?undefined:await fleetWorkersV1(environment,root,ports);
- return fleet===undefined?idle:Math.min(idle,eligibleFleetWorkersV1(fleet,[{name:"semio-linker",value:linker!}]).slots);
+ if(idle===null||idle===0&&link===undefined)return idle;
+ if(!root)return link===undefined?idle:null;
+ const linker=link?.linker??readOffloadLinkerV1(root),fleet=linker===undefined?undefined:await fleetWorkersV1(environment,root,ports);
+ if(fleet===undefined)return link===undefined?idle:null;
+ const property=OFFLOAD_POLICY_V1.property,fit=eligibleFleetWorkersV1(fleet,[{name:property.linker,value:linker!},...link===undefined?[]:[{name:property.targetPrefix+link.target,value:"1"}]]);
+ return link!==undefined&&fit.eligible===0?null:Math.min(idle,fit.slots);
 }
 
 /** 🌊️ Returns the fleet fanout ceiling when offloading can relieve this machine: a scheduler is published, at least one other machine has headroom (`fleetHeadroomV1`), and either the door refused the whole build (`doorRefused`, the one verdict the build then hands to every compiler call through `SEMIO_OFFLOAD_PRESSURE`) or a local unit would queue. `undefined` keeps the caller waiting as before: no scheduler, nobody with headroom, or a calm machine. Under `pin` every unit goes to the named machine, so the ceiling is granted without pressure. */
@@ -256,13 +259,14 @@ export async function awaitFleetFitV1(environment:Readonly<Record<string,string|
 }
 
 /** 🧭️ The signals one unit's offload decision reads, each asked only when the cheaper ones before it did not decide: an expensive unit (`expensive`, see `offloadExpenseV1`) asks only for a worker with room (`workerFits`, which waits at most the given milliseconds), a free compile slot of this machine taken at once (`localSlot(0)`, the caller keeps it and compiles in it), the round trip test (`worth`: a unit cheaper than the overhead of a round trip stays; a unit without a recorded cost waits up to `unmeasuredWaitMilliseconds` for a slot here, so it is measured, and goes away only when none became free), the door's verdict on the whole build (`SEMIO_OFFLOAD_PRESSURE=door`), the unit-cache slot queue, the host-capacity verdict and the build's own admission broker (`wait` when the unit would queue behind the memory budget or a frozen broker, `unknown` when no broker answers). */
-export type OffloadGateInputV1=Readonly<{mode:"distribute"|"pin"|"never";door:boolean;expensive:()=>boolean;workerFits:(waitMilliseconds:number)=>Promise<boolean>;localSlot:(waitMilliseconds:number)=>Promise<boolean>;worth:()=>OffloadWorthV1;beyondHost?:()=>boolean;slotQueueMilliseconds:()=>number;host:()=>Promise<"admit"|"wait">;broker:()=>Promise<"admit"|"wait"|"unknown">}>;
+export type OffloadGateInputV1=Readonly<{mode:"distribute"|"pin"|"never";door:boolean;fleetRequired?:boolean;expensive:()=>boolean;workerFits:(waitMilliseconds:number)=>Promise<boolean>;localSlot:(waitMilliseconds:number)=>Promise<boolean>;worth:()=>OffloadWorthV1;beyondHost?:()=>boolean;slotQueueMilliseconds:()=>number;host:()=>Promise<"admit"|"wait">;broker:()=>Promise<"admit"|"wait"|"unknown">}>;
 /** 🧭️ Why a unit is offered to the fleet or stays: the first signal that decides (`final`: an expensive unit and a worker has room for it, whatever this machine's slots are; `final-wait`: an expensive unit but no worker had room in time, it compiles here; `final-beyond-host`: an expensive unit that no worker had room for in time and that is known to need more than this machine can carry (`beyondHost`), it queues on the fleet for a bigger machine instead of compiling here; `local-slot`: a compile slot here was free, local first; `unmeasured`: its cost is unknown and a slot came free soon; `headroom`: every slot here is busy, the unit goes where another machine has room). */
-export type OffloadGateReasonV1="never"|"pin"|"final"|"final-wait"|"final-beyond-host"|"local-slot"|"cheap"|"unmeasured"|"door"|"slot-queue"|"host-wait"|"broker-wait"|"headroom";
+export type OffloadGateReasonV1="never"|"pin"|"fleet-required"|"final"|"final-wait"|"final-beyond-host"|"local-slot"|"cheap"|"unmeasured"|"door"|"slot-queue"|"host-wait"|"broker-wait"|"headroom";
 /** 🚪️ Whether a unit is offered to the fleet, and whether it queues there. Local first, except for expensive units: an expensive unit (a linked component final: 10 to 60 minutes, up to 6.5 GB) goes to a worker that has the room for it even while a slot here is free (it frees this machine for the next unit and runs with the worker's own cores), queued there for a short while if another unit took the room first, and compiles here when no worker has room within `finals.waitMilliseconds`; a cheaper unit that finds a free compile slot compiles here at once, the fleet only takes units that would wait for one. `pin` offers every unit and queues it on the named machine. `distribute` offers a unit that would wait here and is worth a round trip: where this machine is saturated (the door refused the build, a slot queue, the host or the build's memory budget would make the unit wait) the unit queues on the fleet because waiting here would be no better; where the wait is short, the fleet takes it only if another machine has headroom now, else it compiles here. Unknown signals count as calm. */
 export async function offloadGateV1(input:OffloadGateInputV1):Promise<Readonly<{offload:boolean;queue:boolean;reason:OffloadGateReasonV1}>>{
  if(input.mode==="never")return{offload:false,queue:false,reason:"never"};
  if(input.mode==="pin")return{offload:true,queue:true,reason:"pin"};
+ if(input.fleetRequired)return{offload:true,queue:true,reason:"fleet-required"};
  if(input.expensive()){
   if(await input.workerFits(OFFLOAD_POLICY_V1.finals.waitMilliseconds))return{offload:true,queue:true,reason:"final"};
   return input.beyondHost?.()===true?{offload:true,queue:true,reason:"final-beyond-host"}:{offload:false,queue:false,reason:"final-wait"};

@@ -2,18 +2,54 @@
   "name": "@semio-tech/bim-plugin",
   "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🌎️hub/🧩️compositions/🏙️bim/**/*.rs", "{projectRoot}/**/*"]
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🏙️bim/**/*.rs",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🏙️bim/🧪️tests/**/*.json",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🏙️bim/🧪️tests/**/*.ts",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🏙️bim/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🏙️bim/🧩️component/🔣️.json",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🏙️bim/🧩️component/🛂️.descriptor.semio",
+      "{workspaceRoot}/🌎️hub/Cargo.toml",
+      "{workspaceRoot}/🌎️hub/Cargo.lock",
+      "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🧫️fixtures/host-driver-policy.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json"
+    ]
   },
   "targets": {
     "test": {
       "executor": "repo:script",
+      "dependsOn": [
+        { "projects": ["semio-hub-bim-component"], "target": "component" }
+      ],
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "outputs": [],
-      "cache": true
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        { "dependentTasksOutputFiles": "**/*" },
+        { "runtime": "repo tools exec --light bun -- \"🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust/🪪️guest-digest.ts\"" },
+        { "env": "SEMIO_BIM_GUEST_COMPONENT" }
+      ]
+    },
+    "guest-instance-check": {
+      "executor": "repo:script",
+      "dependsOn": [
+        { "projects": ["@semio-tech/framework-os-dev"], "target": "prepare-bim-react-prototype" }
+      ],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "repo ./📜️script.ts guest-instance-check"
+      },
+      "metadata": { "workspaceCommand": ["check", "bim-guest-instance"] },
+      "outputs": [],
+      "cache": false
     }
   }
 }

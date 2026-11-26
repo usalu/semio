@@ -1,0 +1,9 @@
+# EN 1990 Concrete Inverse Carve
+
+The reported EN 1990 mutation library reached 1,719 MiB against the 1,536 MiB worker library budget. The EN 1995 comparison identified a source boundary worth trying. Compiling a mutation aggregate specializes its generic leaf inverse calls for the aggregate operation type. Extracting concrete lookup and payload construction lets the leaf owner compile that work once.
+
+EN 1990 has 134 flat mutation variants in 28 leaf owners. All 134 inverses convert one concrete payload at most, contain no explicit error branch, and select an inverse payload in the same owner. Before this change, 103 already split out a concrete computation and 31 still ran it in the generic inverse. The remaining work belonged to design cases (7), design basis (6), reliability (5), members (4), actions (4), accidental (4), and structure kind (1).
+
+The 31 helpers now follow the existing EN 1990 structure. Their concrete `previous` functions do the source reads, branch decisions, clamping, and restoration payload construction. The generic adapter wraps one payload in the existing vector contract or returns an empty vector. The generated Rust wrappers, owner registrations, Cargo graph, flat mutation wire shape, edit rules, and aggregate cold dispatch retain their existing contracts.
+
+The ticket differential oracle captured normalized computation digests before the edit. The admitted Python check matched all 31 after extraction, verified that each adapter maps the concrete value into the operation vector, and passed independent round trips for the existing middle-row removal and clamped insertion fixtures. All four Norm schema-sync tests passed, including strict byte-for-byte generator equality. The official compilation and RSS comparison belong to the admitted verification process.

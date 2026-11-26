@@ -1,3 +1,4 @@
+import { Surface } from "@semio-tech/ui-react";
 import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/InkCanvasHost/component.tsx
@@ -9,7 +10,7 @@ import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContex
 
 // #region 🔌️Adapters
 import { type ComponentSceneHostProps } from "@semio-tech/framework";
-import { cn, ContextMenuController, marqueeCoverageFromGesture, screenRectFromPoints, SelectionMarquee, surfaceClass } from "@semio-tech/ui-react";
+import { ContextMenuController, marqueeCoverageFromGesture, screenRectFromPoints, SelectionMarquee } from "@semio-tech/ui-react";
 import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
 import { useEffect } from "../⚛️react-port/🟦️.ts";
 import { CanvasPresenceOverlayV1 } from "../👕️canvas-presence/🟦️.tsx";
@@ -54,12 +55,11 @@ export function InkCanvasHost(props: ComponentSceneHostProps) {
   const editingTableBlock = tableEdit ? (findInkItem(doc, tableEdit.blockId) as InkTableItem | null) : null;
 
   return (
-    <div
+    <Surface
       ref={rootRef}
       tabIndex={0}
       data-surface-id={node.surfaceId}
-      data-level="base"
-      className={cn(INK_CANVAS_HOST_CLASS, surfaceClass)}
+      className={INK_CANVAS_HOST_CLASS}
       onPointerDownCapture={handlePointerDownCapture}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -151,7 +151,7 @@ export function InkCanvasHost(props: ComponentSceneHostProps) {
           if (!open) setContextMenu(null);
         }}
       />
-    </div>
+    </Surface>
   );
 }
 //#endregion InkCanvasHost

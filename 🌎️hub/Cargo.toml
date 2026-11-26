@@ -73,16 +73,28 @@ members = [
     "🧩️compositions/🎥️shooting/📦️packages/🦀️rust",
     "🧩️compositions/🎥️shooting/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust",
+    "🧩️compositions/🎪️demonstrator/🗃️apps/✏️playground-editor/📦️packages/🦀️rust",
+    "🧩️compositions/🎪️demonstrator/🗃️apps/✏️process-editor/📦️packages/🦀️rust",
+    "🧩️compositions/🎪️demonstrator/🗃️apps/✏️sourcing-editor/📦️packages/🦀️rust",
+    "🧩️compositions/🎪️demonstrator/🗃️apps/👁️playground-viewer/📦️packages/🦀️rust",
+    "🧩️compositions/🎪️demonstrator/🗃️apps/👁️process-viewer/📦️packages/🦀️rust",
+    "🧩️compositions/🎪️demonstrator/🗃️apps/👁️sourcing-viewer/📦️packages/🦀️rust",
     "🧩️compositions/🎪️demonstrator/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🎬️sequence/📦️packages/🦀️rust",
     "🧩️compositions/🎬️sequence/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🏗️fem/📦️packages/🦀️rust",
+    "🧩️compositions/🏗️fem/🗃️apps/◻️2d/✏️editor/📦️packages/🦀️rust",
+    "🧩️compositions/🏗️fem/🗃️apps/◻️2d/👁️viewer/📦️packages/🦀️rust",
+    "🧩️compositions/🏗️fem/🗃️apps/🧊️3d/✏️editor/📦️packages/🦀️rust",
+    "🧩️compositions/🏗️fem/🗃️apps/🧊️3d/👁️viewer/📦️packages/🦀️rust",
     "🧩️compositions/🏗️fem/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🏙️bim/📦️packages/🦀️rust",
     "🧩️compositions/🏙️bim/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🏛️architect/📦️packages/🦀️rust",
     "🧩️compositions/🏛️architect/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🏭️process/📦️packages/🦀️rust",
+    "🧩️compositions/🏭️process/🗃️apps/✏️process-editor/📦️packages/🦀️rust",
+    "🧩️compositions/🏭️process/🗃️apps/👁️process-viewer/📦️packages/🦀️rust",
     "🧩️compositions/🏭️process/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/💠️lowpoly/📦️packages/🦀️rust",
     "🧩️compositions/💠️lowpoly/🧩️component/📦️packages/🦀️rust",
@@ -124,6 +136,7 @@ members = [
     "🧩️compositions/🕸️dag/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🖍️draw/📦️packages/🦀️rust",
     "🧩️compositions/🖍️draw/🧩️component/📦️packages/🦀️rust",
+    "🧩️compositions/🖍️draw/🧪️tests/🌐️guest/📦️packages/🦀️rust",
     "🧩️compositions/🖨️raster/📦️packages/🦀️rust",
     "🧩️compositions/🖨️raster/🗃️apps/✏️raster-editor/📦️packages/🦀️rust",
     "🧩️compositions/🖨️raster/🗃️apps/👁️raster-viewer/📦️packages/🦀️rust",
@@ -205,6 +218,18 @@ edition = "2021"
 rust-version = "1.95"
 
 [workspace.dependencies]
+semio-hub-fem-2d-editor-app = { path = "🧩️compositions/🏗️fem/🗃️apps/◻️2d/✏️editor/📦️packages/🦀️rust" }
+semio-hub-fem-2d-viewer-app = { path = "🧩️compositions/🏗️fem/🗃️apps/◻️2d/👁️viewer/📦️packages/🦀️rust" }
+semio-hub-fem-3d-editor-app = { path = "🧩️compositions/🏗️fem/🗃️apps/🧊️3d/✏️editor/📦️packages/🦀️rust" }
+semio-hub-fem-3d-viewer-app = { path = "🧩️compositions/🏗️fem/🗃️apps/🧊️3d/👁️viewer/📦️packages/🦀️rust" }
+semio-hub-demonstrator-playground-editor-app = { path = "🧩️compositions/🎪️demonstrator/🗃️apps/✏️playground-editor/📦️packages/🦀️rust" }
+semio-hub-demonstrator-playground-viewer-app = { path = "🧩️compositions/🎪️demonstrator/🗃️apps/👁️playground-viewer/📦️packages/🦀️rust" }
+semio-hub-demonstrator-sourcing-editor-app = { path = "🧩️compositions/🎪️demonstrator/🗃️apps/✏️sourcing-editor/📦️packages/🦀️rust" }
+semio-hub-demonstrator-sourcing-viewer-app = { path = "🧩️compositions/🎪️demonstrator/🗃️apps/👁️sourcing-viewer/📦️packages/🦀️rust" }
+semio-hub-demonstrator-process-editor-app = { path = "🧩️compositions/🎪️demonstrator/🗃️apps/✏️process-editor/📦️packages/🦀️rust" }
+semio-hub-demonstrator-process-viewer-app = { path = "🧩️compositions/🎪️demonstrator/🗃️apps/👁️process-viewer/📦️packages/🦀️rust" }
+semio-hub-process-editor-app = { path = "🧩️compositions/🏭️process/🗃️apps/✏️process-editor/📦️packages/🦀️rust" }
+semio-hub-process-viewer-app = { path = "🧩️compositions/🏭️process/🗃️apps/👁️process-viewer/📦️packages/🦀️rust" }
 semio-plugin-instance-construction = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧱️construction/📦️packages/🦀️rust" }
 semio-hub-raster-editor-app = { path = "🧩️compositions/🖨️raster/🗃️apps/✏️raster-editor/📦️packages/🦀️rust" }
 semio-hub-raster-viewer-app = { path = "🧩️compositions/🖨️raster/🗃️apps/👁️raster-viewer/📦️packages/🦀️rust" }

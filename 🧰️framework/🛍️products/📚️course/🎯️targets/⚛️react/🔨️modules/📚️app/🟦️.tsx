@@ -9,6 +9,7 @@ import {
   DEFAULT_UI_DRIVER,
   Navbar,
   ResponsiveLabel,
+  Surface,
   UI_AVAILABLE_HEIGHT,
   UI_MOBILE_MEDIA_QUERY,
   UI_TABLET_MEDIA_QUERY,
@@ -456,7 +457,7 @@ function Client(props: ClientProps): ReactElement {
   ];
   return (
     <PresenceProvider view={view} showCursors={preferences.showCursors} setTask={setTask}>
-      <div ref={publishBandHeights} className="course-app relative flex min-h-0 flex-col overflow-x-hidden overflow-y-auto bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }} lang={locale} data-icon-motion={icons ? "on" : "off"} onPointerDownCapture={(event) => {
+      <Surface level="base" ref={publishBandHeights} className="course-app relative flex min-h-0 flex-col overflow-x-hidden overflow-y-auto text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }} lang={locale} data-icon-motion={icons ? "on" : "off"} onPointerDownCapture={(event) => {
         if (remote !== undefined && event.target instanceof Element && event.target.closest("[data-presence-footer]") === null) { event.preventDefault(); event.stopPropagation(); follow.stop("interaction"); return; }
         playTappedIcons(event.target, event.pointerType);
       }} onKeyDownCapture={(event) => {
@@ -520,7 +521,7 @@ function Client(props: ClientProps): ReactElement {
         </LegalFooter>
         <PresenceOverlay view={view} show={remote === undefined ? preferences.showCursors : remotePreferences.showCursors} itemLabel={itemLabel} />
         <CoursePets />
-      </div>
+      </Surface>
     </PresenceProvider>
   );
 }
@@ -634,12 +635,12 @@ export function CourseApp(options: CourseOptions): ReactElement {
       </CoursePetsProvider>
     );
   return (
-    <div className="course-app relative flex min-h-0 flex-col overflow-x-hidden overflow-y-auto bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }}>
+    <Surface level="base" className="course-app relative flex min-h-0 flex-col overflow-x-hidden overflow-y-auto text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }}>
       <main id="course-main" className="relative flex min-h-0 flex-1 flex-col overflow-auto">
         <LanguageChoice onChoose={(chosen) => change({ ...preferences, locale: chosen })} />
       </main>
       <LegalFooter legal={options.legal} locale={undefined} text={undefined} />
-    </div>
+    </Surface>
   );
 }
 

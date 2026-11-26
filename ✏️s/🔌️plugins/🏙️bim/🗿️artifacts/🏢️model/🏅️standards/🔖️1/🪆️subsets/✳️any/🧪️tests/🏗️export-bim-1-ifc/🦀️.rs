@@ -74,20 +74,19 @@ mod subject {
         Ok(Outcome::with_raw(table.into_bytes(), parsed))
     }
 
-    /// ⏳️ The house report of the file the stepped export job writes: a first job is cancelled half-way, a second one runs to its end on the same session and its file is read back.
+    /// ⏳️ The house report after cancelling partial inference and resuming the export with the same session.
     pub fn export_ifc_stepped(ctx: &Context) -> Result<Outcome, String> {
         use semio_s_artifact_bim_model_bim::editor::bim::commands::export_model::{Advance, ExportJob};
         use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::projection::report;
         let uri = ctx.step_input_uris().into_iter().find(|uri| uri.contains("📸️snapshot")).ok_or_else(|| "the scenario names no snapshot".to_string())?;
         let snapshot = decode_model_snapshot_json(&String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("the committed snapshot is not UTF-8: {error}"))?)?;
-        let mut cancelled = ExportJob::with_steps("ifc2x3", Some(41), 2);
+        let mut job = ExportJob::new("ifc2x3".into(), None);
         for _ in 0..2 {
-            cancelled.advance(&snapshot).map_err(|fault| format!("{fault:?}"))?;
+            job.advance_cold(&snapshot, 2).map_err(|fault| format!("{fault:?}"))?;
         }
-        cancelled.cancel(&snapshot);
-        let mut job = ExportJob::with_steps("ifc2x3", Some(41), 64);
+        job.cancel_cold(&snapshot);
         let output = loop {
-            if let Advance::Done(output) = job.advance(&snapshot).map_err(|fault| format!("{fault:?}"))? {
+            if let Advance::Done(output) = job.advance_cold(&snapshot, 64).map_err(|fault| format!("{fault:?}"))? {
                 break output;
             }
         };

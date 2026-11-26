@@ -42,14 +42,14 @@ fn a_routed_channel_resolves_the_artifact_its_plugin_session_document_is() {
     bound
         .lock()
         .expect("binding map")
-        .insert("journey-note-typed".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string(), surface_id: None, archive: None, document: Some(Arc::new(SessionDocumentPair { pack: vec![1], spr: vec![2] })), backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)), relay: Arc::default(), used: 0 });
+        .insert("journey-note-typed".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), artifact_kind: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string(), surface_id: None, archive: None, document: Some(Arc::new(SessionDocumentPair { pack: vec![1], spr: vec![2] })), backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)), relay: Arc::default(), used: 0 });
     assert_eq!(router.session_artifact_for(&note).as_deref(), Some("journey-note-typed"));
     assert_eq!(router.session_artifact_for(&cad), None, "a plugin with no bound artifact stays unnamed");
     assert_eq!(router.session_artifact_for(&AppRoute { plugin_id: "note".to_string(), app_id: Some("note.viewer".to_string()) }), None, "an artifact of one app is never another app's session document");
     bound
         .lock()
         .expect("binding map")
-        .insert("journey-note-second".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string(), surface_id: None, archive: None, document: Some(Arc::new(SessionDocumentPair { pack: vec![1], spr: vec![2] })), backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)), relay: Arc::default(), used: 0 });
+        .insert("journey-note-second".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), artifact_kind: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string(), surface_id: None, archive: None, document: Some(Arc::new(SessionDocumentPair { pack: vec![1], spr: vec![2] })), backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)), relay: Arc::default(), used: 0 });
     assert_eq!(router.session_artifact_for(&note), None, "two artifacts on one app: no single stamp could name either truthfully");
 }
 

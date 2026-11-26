@@ -1,3 +1,4 @@
+import { installedProceduralVite } from "./installed-procedural-vite.ts";
 import { createServer as createHttpServer } from "node:http";
 import { createRequire } from "node:module";
 import { createReadStream, existsSync, statSync } from "node:fs";
@@ -25,6 +26,6 @@ const nativeWasm = { name: "g3d-native-renderer-wasm", enforce: "pre" as const, 
 } };
 const { createServer } = createRequire(join(root, "package.json"))("vite") as typeof import("vite");
 const listener = createHttpServer();
-const server = await createServer({ ...(config as object), configFile: false, mode: "prototype", plugins: [nativeWasm, ...((config as any).plugins ?? [])], server: { ...((config as any).server ?? {}), host: "127.0.0.1", port, strictPort: true, middlewareMode: { server: listener }, hmr: false } } as any);
+const server = await createServer({ ...(config as object), configFile: false, mode: "prototype", plugins: [installedProceduralVite("wgpu"), nativeWasm, ...((config as any).plugins ?? [])], server: { ...((config as any).server ?? {}), host: "127.0.0.1", port, strictPort: true, middlewareMode: { server: listener }, hmr: false } } as any);
 listener.on("request", (request, response) => server.middlewares(request, response));
 listener.listen(port, "127.0.0.1", () => console.log("WGPU generation3d native host ready: http://127.0.0.1:" + port + "/?plugin=" + variant));

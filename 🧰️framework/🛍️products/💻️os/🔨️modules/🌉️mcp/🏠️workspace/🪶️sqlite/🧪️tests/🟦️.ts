@@ -60,9 +60,24 @@ test("Probe semantic edge policies preserve exact numeric TEXT and shuffled sour
  }finally{database.close();}
  const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8"),start=source.indexOf("fn number_value"),end=source.indexOf("impl store::os_store::serialization::ArtifactSqliteSnapshotHost",start),number=source.slice(start,end);
  expect(number).toContain("control.check_value_bytes(text.len())?");expect(number).not.toContain("semio_framework_pack_json::parse(");
- expect(source).toContain("decode_sqlite_snapshot_native");
- expect(source).toContain("encode_sqlite_snapshot_native");
- expect(source).toContain("owner.receive_nested");
+ expect(source).toContain("fn decode_sqlite_snapshot_native");
+ expect(source).toContain("fn encode_sqlite_snapshot_native");
+ expect(source).toContain("ArtifactPackReceiving>::receive_pack(text.as_bytes(),slot,owner)");
+ expect(source).toContain("write(&self.0,limit,slot,owner)");
+ const capability=new URL("../../../../🏪️store/📦️codec/🪶️snapshot-capability/",import.meta.url);
+ for(const [direction,bridge] of [
+  ["🛬️native-decoding","decode_sqlite_snapshot_raw_native"],
+  ["🛫️native-encoding","encode_sqlite_snapshot_raw_native"],
+ ]){
+  expect(source).toContain(`store::${bridge}(`);
+  const implementation=readFileSync(new URL(`${direction}/🦀️.rs`,capability),"utf8");
+  const start=implementation.indexOf(`pub fn ${bridge}`);
+  expect(start).toBeGreaterThanOrEqual(0);
+  const body=implementation.slice(start,implementation.indexOf("#[cfg(test)]",start));
+  expect(body).toContain("native_owner.scoped_native(maximum,&mut observer,|owner|owner.receive_nested");
+  expect(body).toContain("settlement.finish_body(owner.native().owned_bytes())");
+  expect(body).toContain("slot.take()");
+ }
 });
 import nativeFixture from "../🫴️native/🧪️tests/🧫️fixtures/🔣️.json";
 import {exportSqliteDatabase,importSqliteDatabase,parseSqliteDatabaseSchema,type SqliteValue} from "@semio-tech/framework-sqlite-snapshot-ts";

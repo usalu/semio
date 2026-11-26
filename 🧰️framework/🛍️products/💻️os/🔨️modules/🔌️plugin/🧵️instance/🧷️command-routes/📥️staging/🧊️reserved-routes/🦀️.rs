@@ -180,6 +180,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     }
 
     async fn run_framework_reserved_commit_unit_admitted(&mut self, commit: &mut FrameworkReservedCommit<A::Snapshot,A::Mutation>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
+        if matches!(commit.stage, FrameworkReservedCommitStage::RevalidateHistory { .. }) {
+            self.as_render().revalidate_interaction_on_document_change(identity).await?;
+            let FrameworkReservedCommitStage::RevalidateHistory { result } = std::mem::replace(&mut commit.stage, FrameworkReservedCommitStage::Validate) else { unreachable!() };
+            return Ok(Some(result))
+        }
         if commit.permit.is_cancelled().await{
             match &mut commit.stage{FrameworkReservedCommitStage::Revert{closing,..}|FrameworkReservedCommitStage::Repin{closing,..}=>*closing=true,_=>return Err(Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.cancelled"),format!("framework route '{}' was cancelled between commit units",commit.action)).into())}
         }
@@ -199,6 +204,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             };
         }
         match std::mem::replace(&mut commit.stage, FrameworkReservedCommitStage::Validate) {
+            FrameworkReservedCommitStage::RevalidateHistory { .. } => unreachable!(),
             FrameworkReservedCommitStage::Validate => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-commit-stage"), format!("framework route '{}' re-entered its validation unit", commit.action)).into()),
             FrameworkReservedCommitStage::CheckpointChildren { message, authors, keys, next, mut pins } => {
                 if let Some(key) = keys.get(next) {
@@ -216,8 +222,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             FrameworkReservedCommitStage::Route { pins } => {
                 let action = commit.action.clone();
                 if HISTORY_ACTION_IDS.contains(&action.as_str()) {
+                    let generation = self.stores.store.generation();
                     let outcome=self.commit_framework_history_route(&action,commit.args.as_ref(),commit.meta.get(),&commit.permit,!pins.is_empty(),identity).await;
                     let result=match outcome{Ok(FrameworkHistoryRouteOutcome::Complete(result))=>result,Ok(FrameworkHistoryRouteOutcome::Pins{changed})=>{commit.stage=FrameworkReservedCommitStage::Repin{pins:Some(pins),publication:None,retirement:Default::default(),resident:Default::default(),changed,closing:!changed};return Ok(None)},Err(error)=>{commit.stage=FrameworkReservedCommitStage::Repin{pins:Some(pins),publication:None,retirement:Default::default(),resident:Default::default(),changed:false,closing:true};return Err(error.into())}};
+                    if matches!(action.as_str(), "undo" | "redo") && self.stores.store.generation() != generation {
+                        commit.stage = FrameworkReservedCommitStage::RevalidateHistory { result };
+                        commit.total = commit.total.saturating_add(1);
+                        return Ok(None)
+                    }
                     if action == "checkoutCheckpoint" && result.ui_scope != UiDirtyScope::None {
                         let pins = self.child_composition.checkout_cascade_pins(&mut *self.stores)?;
                         if !pins.is_empty() {
@@ -340,7 +352,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 }
             }
         }
-        let command = history_command::<A>(action, args).await.ok_or_else(|| format!("history action {action} missing required argument"))?;
+        let current_checkpoint = self.stores.store.current_checkpoint_id().map(str::to_string);
+        let command = match (action, current_checkpoint) {
+            ("checkoutCheckpoint", Some(checkpoint_id)) if args.and_then(|value| value.get("checkpointId")).is_none() => Some(ArtifactCommand::CheckoutCheckpoint { checkpoint_id }),
+            _ => history_command::<A>(action, args).await,
+        }
+        .ok_or_else(|| format!("history action {action} missing required argument"))?;
         match self.stores.store.dispatch(command, identity).await {
             Ok(_) => {
                 if defer_receipt{return Ok(FrameworkHistoryRouteOutcome::Pins{changed:true})}

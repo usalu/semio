@@ -12,7 +12,7 @@ const bindings = { bindings: corpus.bindings as readonly LocalFolderBinding[] };
 describe("the reconnect offer of a program with a fresh identity", () => {
   for (const row of corpus.offers) {
     it(row.name, () => {
-      const program = "program" in row ? row.program : corpus.program;
+      const program = row.program ?? corpus.program;
       const offer = localFolderReconnectOfferV1(bindings, { documentId: row.identity, ...program }, new Set(row.attached));
       expect(offer?.documentId ?? null).toBe(row.offer);
     });

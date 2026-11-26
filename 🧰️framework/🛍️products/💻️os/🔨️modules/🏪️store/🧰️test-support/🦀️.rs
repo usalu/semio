@@ -167,21 +167,60 @@ where
     assert_eq!(&restored, pre, "operation inverse did not restore pre-state");
 }
 
-/// 🧪️ Dispatches one command under a fixture caller-owned identity authority and returns its original cumulative receipt to the caller.
+/// 🎟️ Lends one original caller's Work to every native hop of an authoring identity, as the production reserved-commit route does.
+struct CallerIdentityWork<'w>(&'w mut semio_framework_job::NativeEncoderWork);
+impl semio_os_vcs::io::binary::entity_identity::control::IdentityWorkLender for CallerIdentityWork<'_> {
+    fn lend(&mut self, control: &mut semio_framework_value::NativeEncodeControl<'_>, operation: &mut dyn FnMut(&mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), semio_framework_value::ValueError>) -> Result<(), semio_framework_value::ValueError> {
+        self.0.lend(control, |control| operation(control))
+    }
+}
+
+fn original_caller_clock() -> Option<u64> { Some(0) }
+
+/// 🧪️ Dispatches one command inside a funded original turn of an original job fixture caller, whose lent Work authorizes every authored identity hop exactly like production, then settles the caller turn by turn and returns the original cumulative receipt.
 pub async fn dispatch_test_command<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, command: ArtifactCommand<Mutation>) -> Result<CommandReceipt, VcsError>
 where
         P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
         Mutation: semio_os_spr::StoreMutationFor<P>,
 {
     const CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
-        assert!(progress.owned_bytes <= CEILING);
-        true
-    };
-    let mut identity: EntityIdentityAuthority<'_> = EntityIdentityAuthority::new(CEILING, &mut observer as &mut semio_os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("declared fixture identity authority");
-    let result = store.dispatch(command, &mut identity).await;
-    drop(identity.pause().expect("original cumulative fixture identity receipt"));
-    result
+    const DEADLINE_US: u64 = 1 << 40;
+    const FUEL: u64 = 1 << 40;
+    let stock = RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 32, maximum_release_bytes: 1 << 32, maximum_depth: 256 };
+    let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), stock, original_caller_clock, DEADLINE_US, FUEL);
+    let mut command = Some(command);
+    let mut dispatched = None;
+    let turn = caller.turn(stock, |cx| {
+        let (fuel, deadline) = (cx.fuel_remaining().min(FUEL), cx.original_absolute_deadline_us());
+        cx.with_original_work_loan(fuel, deadline, |loaned| {
+            let mut work = loaned.native_encoder_work();
+            let mut observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+                assert!(progress.owned_bytes <= CEILING);
+                true
+            };
+            let observer: &mut semio_os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer;
+            let mut identity: EntityIdentityAuthority<'_> = EntityIdentityAuthority::new(CEILING, observer).expect("declared fixture identity authority").with_work_lender(Box::new(CallerIdentityWork(&mut work)));
+            let command = command.take().expect("one command per original turn");
+            dispatched = Some(block_on_original_turn(store.dispatch(command, &mut identity)));
+            drop(identity.pause().expect("original cumulative fixture identity receipt"));
+            loaned.consume_fuel(work.performed());
+            Ok(())
+        })
+    });
+    turn.expect("the command runs inside its funded original turn");
+    caller.retire(stock);
+    dispatched.expect("the dispatch ran inside its original caller loan")
+}
+
+fn block_on_original_turn<F: std::future::Future>(future: F) -> F::Output {
+    let mut future = Box::pin(future);
+    let mut context = std::task::Context::from_waker(std::task::Waker::noop());
+    loop {
+        match future.as_mut().poll(&mut context) {
+            std::task::Poll::Ready(output) => return output,
+            std::task::Poll::Pending => std::thread::yield_now(),
+        }
+    }
 }
 
 /// 🗄️ Asserts a full store round trip: Apply→Undo restores `initial`, Redo restores the

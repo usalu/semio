@@ -44,6 +44,33 @@ fn a_progress_bar_paints_its_track_and_fill_from_theme_tokens() {
     assert_eq!(colors(&progress(0.0, Some(100.0))), vec![token(theme.muted)]);
     assert_ne!(token(theme.muted), token(theme.separator), "React's track is `bg-muted`, a distinct token from the separator stroke it stood in for until packet W2k");
 }
+/// 🎬️ Transport buttons and alerts share the media owner. Only keyboard focus adds a shared outline.
+#[test]
+fn media_transport_states_inherit_the_owner_and_keep_a_focus_outline() {
+    let theme = Theme::default();
+    let paint = |shape, enabled, focused| {
+        let row = MediaOverlayRow { shape, rect: [3.0, 4.0, 140.0, 24.0], text: String::new(), fraction: None, enabled, focused };
+        let mut draw = DrawList::default();
+        paint_media_overlay_row(&mut draw, &row, &theme);
+        settle_borders(&mut draw);
+        draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| (instance.rect, instance.color)).collect::<Vec<_>>()
+    };
+    for (shape, enabled, focused) in [
+        (MediaOverlayShape::Button, true, false),
+        (MediaOverlayShape::Button, false, false),
+        (MediaOverlayShape::Button, false, true),
+        (MediaOverlayShape::Alert, true, false),
+    ] {
+        assert!(paint(shape, enabled, focused).is_empty());
+    }
+    let mut expected = DrawList::default();
+    expected.push_shared_border(Rect::new(3.0, 4.0, 140.0, 24.0), theme.stroke_hairline, theme.selected, semio_ui_draw_contract::SharedBorderState::Focus);
+    settle_borders(&mut expected);
+    let expected = expected.layers.iter().flat_map(|layer| &layer.ui_instances).map(|instance| (instance.rect, instance.color)).collect::<Vec<_>>();
+    assert!(!expected.is_empty(), "the focused transport control has a visible outline");
+    assert_eq!(paint(MediaOverlayShape::Button, true, true), expected);
+}
+
 //#endregion 📶️ProgressPaint
 
 //#region 🖼️UiImagePaint

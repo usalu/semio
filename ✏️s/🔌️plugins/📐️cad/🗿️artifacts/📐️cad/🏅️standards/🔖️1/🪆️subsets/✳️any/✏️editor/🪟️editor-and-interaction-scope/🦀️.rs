@@ -187,6 +187,9 @@ impl ArtifactEditor for CadPlayApp {
             return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "CAD command does not match its exact retained tool registration").into());
         }
         let tool_id = original.command.command_id();
+        if tool_id == "addObject" {
+            return semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, CadCommand::command_id, cad_retained_raw_bytes(tool_id), CAD_RETAINED_WORK_ITEMS, false, |_| CadAddObjectWork::new());
+        }
         semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, CadCommand::command_id, cad_retained_raw_bytes(tool_id), CAD_RETAINED_WORK_ITEMS, false, |request| CadRetainedCommandWork { tool_id, consumed: false })
     }
 

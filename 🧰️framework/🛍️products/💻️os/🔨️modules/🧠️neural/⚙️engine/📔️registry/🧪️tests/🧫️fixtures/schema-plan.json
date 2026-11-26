@@ -1,0 +1,124 @@
+[
+  {
+    "name": "construct",
+    "input": {
+      "z": {
+        "$schema": "number",
+        "value": 6
+      }
+    },
+    "expected": {
+      "vectorOut": {
+        "$schema": "vector",
+        "x": 0,
+        "y": 0,
+        "z": 6
+      },
+      "xOut": {
+        "$schema": "number",
+        "value": 0
+      },
+      "yOut": {
+        "$schema": "number",
+        "value": 0
+      },
+      "zOut": {
+        "$schema": "number",
+        "value": 6
+      },
+      "errors": {
+        "$schema": "list"
+      }
+    }
+  },
+  {
+    "name": "deconstruct",
+    "input": {
+      "vector": {
+        "$schema": "vector",
+        "x": 1,
+        "y": 2,
+        "z": 3
+      }
+    },
+    "expected": {
+      "vectorOut": {
+        "$schema": "vector",
+        "x": 1,
+        "y": 2,
+        "z": 3
+      },
+      "xOut": {
+        "$schema": "number",
+        "value": 1
+      },
+      "yOut": {
+        "$schema": "number",
+        "value": 2
+      },
+      "zOut": {
+        "$schema": "number",
+        "value": 3
+      },
+      "errors": {
+        "$schema": "list"
+      }
+    }
+  },
+  {
+    "name": "modify",
+    "input": {
+      "vector": {
+        "$schema": "vector",
+        "x": 1,
+        "y": 2,
+        "z": 3
+      },
+      "x": {
+        "$schema": "number",
+        "value": -2
+      },
+      "y": null
+    },
+    "expected": {
+      "vectorOut": {
+        "$schema": "vector",
+        "x": -2,
+        "y": 2,
+        "z": 3
+      },
+      "xOut": {
+        "$schema": "number",
+        "value": -2
+      },
+      "yOut": {
+        "$schema": "number",
+        "value": 2
+      },
+      "zOut": {
+        "$schema": "number",
+        "value": 3
+      },
+      "errors": {
+        "$schema": "list"
+      }
+    }
+  },
+  {
+    "name": "missing",
+    "input": {},
+    "expected": {
+      "vectorOut": null,
+      "xOut": null,
+      "yOut": null,
+      "zOut": null,
+      "errors": {
+        "$schema": "list",
+        "0": {
+          "$schema": "text",
+          "value": "no instance or field inputs provided"
+        }
+      }
+    }
+  }
+]

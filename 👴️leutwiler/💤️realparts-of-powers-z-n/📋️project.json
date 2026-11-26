@@ -4,6 +4,11 @@
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*"
+    ],
+    "printSurfaces": [
+      "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🖋️latex/semio-page.sty",
+      "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🖋️latex/semio-tokens.sty",
+      "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/🔒️dependencies.json"
     ]
   },
   "targets": {
@@ -51,7 +56,8 @@
       "inputs": [
         "{projectRoot}/📜️script.ts",
         "{projectRoot}/🟦️.ts",
-        "{projectRoot}/📯️notes/**/*"
+        "{projectRoot}/📯️notes/**/*",
+        "printSurfaces"
       ],
       "outputs": [
         "{projectRoot}/dist/📯️notes"
@@ -70,7 +76,8 @@
       "inputs": [
         "{projectRoot}/📜️script.ts",
         "{projectRoot}/🟦️.ts",
-        "{projectRoot}/🏆️proof/**/*"
+        "{projectRoot}/🏆️proof/**/*",
+        "printSurfaces"
       ],
       "outputs": [
         "{projectRoot}/dist/🏆️proof"

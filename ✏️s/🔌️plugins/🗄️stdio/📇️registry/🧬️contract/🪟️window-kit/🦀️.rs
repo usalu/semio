@@ -381,6 +381,11 @@ pub fn stable_addressed_table_window_kind() -> semio_plugin::WindowKindDefinitio
         ActionArgDef::number("column", LocalizedLabel::native("Column", "Spalte")).required(),
         ActionArgDef::target_revision("revision", LocalizedLabel::native("Cell revision", "Zellrevision")),
         ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).min_length(0).required(),
+        {
+            let mut locale = ActionArgDef::text("locale", LocalizedLabel::native("Input language", "Eingabesprache")).min_length(0);
+            locale.presentation = Some(semio_plugin::ArgPresentation::Hidden);
+            locale
+        },
     ];
     definition
 }
@@ -393,6 +398,7 @@ pub struct WindowKitStableCellEdit {
     pub column: u32,
     pub revision: String,
     pub value: String,
+    pub locale: String,
 }
 
 /// 🎯️ Parses a spreadsheet cell edit without ordinal aliases or destructive defaults.
@@ -403,6 +409,7 @@ pub fn window_kit_stable_cell_edit(args: Option<&semio_framework_value::DslValue
         column: window_kit_required_index_argument(args, "column")?,
         revision: window_kit_required_text_argument(args, "revision")?,
         value: window_kit_required_text_argument(args, "value")?,
+        locale: window_kit_text_argument(args, &["locale"], ""),
     })
 }
 

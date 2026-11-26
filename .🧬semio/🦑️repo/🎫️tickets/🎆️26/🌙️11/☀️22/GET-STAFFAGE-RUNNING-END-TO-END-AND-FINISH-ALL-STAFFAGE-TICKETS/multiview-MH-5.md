@@ -1,4 +1,4 @@
-IN WORK
+FINAL
 
 # 🧍️ Multiview Fixer MH-5: Twelve People
 
@@ -26,7 +26,7 @@ Fifth fixer (Fable 5.2, takeover 2026-11-25 18:59): no process of the batch was 
 | `schoolchild-with-backpack` | 2 | clean (14:03) | 0 fail (168 group-drift, 84 ok; 14:15) | `✓` | 6/6 (21:05 to 21:12) | clean, all proofs; written 14:03 (11 ops) |
 | `surveyor-with-total-station` | 2 (18 before the batch) | clean (17:49) | 0 fail (189 group-drift, 63 range-end; 17:53; before the loft of the helmet 28 fail) | `✓` | 6/6 (21:05 to 21:12) | clean, all proofs; written 17:48 (26 ops and 1 loft entry) |
 | `seated-office-worker` | 25 | clean (17:55) | 0 fail (224 group-drift, 28 ok; 17:57; before the lofts 112 fail) | `✓` | 6/6 (21:05 to 21:12) | clean, all proofs; written 17:54 (39 ops and lofts of the left hand, head and backrest pad) |
-| `sleeping-person` | 58 | clean (19:02) | asset process 252 cells `ok`, 0 fail (19:07 to 19:51, 2648 s, peak 362 MB), but the generator counts the asset `missing`: the catalog file was changed under the run at 19:09 (see below); rerun queued 19:53 | `✓` 19:03 | 6/6 (21:05 to 21:12) | written 19:02 (45 ops and 20 loft entries: hands, feet, toes, heads, necks, hair); matrix rerun pending |
+| `sleeping-person` | 58 | clean (19:02) | 0 fail (252 ok; 21:03 to 21:27, 1431 s, peak 344 MB; before the lofts 161 fail). A first run (19:07 to 19:51) also gave 252 `ok` cells but was counted `missing`, because the catalog file changed under it at 19:09 | `✓` 19:03 | 6/6 (21:05 to 21:12) | clean, all proofs; written 19:02 (45 ops and 20 loft entries: hands, feet, toes, heads, necks, hair) |
 | `runner-with-blade-prosthesis` | 165 | clean (19:53) | 0 fail (154 group-drift, 98 ok; 19:54 to 20:20, 1572 s, peak 244 MB; before the loft of the right hand 28 fail) | `✓` 19:54 | 6/6 (21:05 to 21:12) | clean, all proofs; written 19:53 (19 ops and the loft of the right hand with thumb and fingers at 1:50) |
 | `skateboarder` | 227 | clean (20:21) | 0 fail (196 group-drift, 56 ok; 20:22 to 20:33; before the lofts 70 fail) | `✓` 20:22 | 6/6 (21:05 to 21:12) | clean, all proofs; written 20:21 (13 ops with the split of the two wheel contacts, D45, and lofts of hood, hood collar, hoodie, trouser seat and right shoe) |
 
@@ -42,13 +42,13 @@ Where no prism, plate or body of revolution agreed in all poses, the part is dra
 | `seated-office-worker` | left hand with thumb and middle finger at 1:50 and 1:100, head with hair and nose at 1:100, head at 1:500 | 112 → 0 |
 | `runner-with-blade-prosthesis` | right hand (palm, thumb, fingers) at 1:50, replacing sixteen traced plates | 28 → 0 |
 | `skateboarder` | hood and hood collar at 1:50 and 1:100, hoodie and trouser seat at all four scales, right shoe with sole at 1:50 | 70 → 0 |
-| `sleeping-person` | hands, feet and toes at 1:50, feet and toes at 1:100, feet at 1:200, head, hair and neck in elevation and plan at 1:50 and 1:100, head at 1:200 and 1:500; the quilt baffles are `add` ops of `ops/sleeping-person.json` | 161 → @@SLEEP@@ |
+| `sleeping-person` | hands, feet and toes at 1:50, feet and toes at 1:100, feet at 1:200, head, hair and neck in elevation and plan at 1:50 and 1:100, head at 1:200 and 1:500; the quilt baffles are `add` ops of `ops/sleeping-person.json` | 161 → 0 |
 
 Sheets opened by the fifth fixer (1:50): `skateboarder` cruising (landed copy and trial), `sleeping-person` curled, `runner-with-blade-prosthesis` blade-push-off: hands, shoes and heads read in all three views, nothing is uglier than before. A whole-limb loft variant of `skateboarder` at 1:50 (`lofts/skate.f.json` of the fourth fixer: model gate 0, guard OK, real gate not run) was not landed; the landed variant is the one whose real gate ran to 0.
 
 ## 3. Open
 
-@@OPEN@@
+Nothing. All twelve assets are clean with every proof of the brief: final scan of the twelve catalog files in one run (`T/🔎️scan.ts --language en`, 21:27 to 21:30): 12 clean, 0 hard findings; every matrix 252 cells with 0 fail; check CLI `✓` (it includes that every authored scale prints); silhouette guard, `validateAsset` and three-views sweep unchanged or better on every landed copy; the six tests pass. At 21:30 eleven catalog files were byte-identical to the copies landed here; `presenter-at-flipchart` differs in one German tag title that the tags worker changed at 20:35 (`Markierung` → `Filzstift`), nothing else.
 
 Not repeated, by the rule of the second takeover: the matrices and tests of the five assets finished before 2026-11-25 10:14 ran on earlier engines; the full matrix on the frozen catalog decides. `⚡️asset-power` has no test that matches a person of this batch (24 skipped, as before the batch).
 

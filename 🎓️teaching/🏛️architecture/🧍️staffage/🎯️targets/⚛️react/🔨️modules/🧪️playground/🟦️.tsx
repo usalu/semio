@@ -235,7 +235,7 @@ export function PlaygroundPage(props: { readonly view: PaneView }): ReactElement
         </Notice>
       ) : null}
       {interactive ? (
-        <Column className="bg-panel">
+        <Column>
           <Bar below="tablet" as="nav" aria-label={t("playground.tabs")}>
             {PLAYGROUND_TABS.map((next) => (
               <ButtonLink key={next} grouped href={tabLink(next)} icon={TAB_ICONS[next]} variant={tab === next ? "primary" : "default"} aria-current={tab === next ? "page" : undefined} data-tab={next}>{t(`playground.tab.${next}`)}</ButtonLink>
@@ -286,7 +286,7 @@ export function PlaygroundPage(props: { readonly view: PaneView }): ReactElement
             <>
               <Note>{t(tab === "plan" ? "playground.keysPlan" : tab === "model" ? "playground.keys3d" : "playground.keys")}</Note>
               {tab === "model" ? (
-                <Column as="section" aria-label={t("playground.placements")} className="bg-panel" data-placement-list="">
+                <Column as="section" aria-label={t("playground.placements")} data-placement-list="">
                   <Cell><h2 className="m-0 text-sm font-semibold">{t("playground.placements")}</h2></Cell>
                   {pg.placements.length === 0 ? <Cell className="py-single"><span className="text-xs text-muted-foreground">{t("playground.timeline.empty")}</span></Cell> : (
                     <Bar className="flex-wrap">
@@ -301,7 +301,7 @@ export function PlaygroundPage(props: { readonly view: PaneView }): ReactElement
               ) : null}
               <TimelinePanel placements={pg.placements} assets={assets} titleOf={titleOf} timelineS={timelineS} chosenS={pg.timelineS} clock={clock} selected={selected} onSelect={setSelected} onChange={change} onTimeline={(next) => config({ timelineS: next })} />
               {selectedPlacement !== null ? <AssetPanel placement={selectedPlacement} asset={assets.get(selectedPlacement.asset)} title={titleOf(selectedPlacement.asset)} clock={clock} timelineS={timelineS} mirrorAllowed={mirrorAllowed} change={(patch, text) => change(selectedPlacement.id, patch, text)} duplicate={() => duplicate(selectedPlacement.id)} remove={() => remove(selectedPlacement.id)} /> : null}
-              <Column as="section" aria-label={t("playground.share")} className="bg-panel">
+              <Column as="section" aria-label={t("playground.share")}>
                 <Bar below="tablet">
                   <Button grouped className="flex-1" icon="link" onClick={() => void copyLink()}>{t("playground.copyLink")}</Button>
                   <Button grouped className="flex-1" icon="file-image" variant="primary" disabled={tab === "model" || pg.placements.length === 0 || job !== null} onClick={() => void runExport()}>{t("playground.exportSvg")}</Button>
@@ -320,7 +320,7 @@ export function PlaygroundPage(props: { readonly view: PaneView }): ReactElement
           ) : null}
         </Column>
         {interactive ? (
-          <Column as="aside" aria-label={t("playground.palette")} className="w-full bg-panel lg:w-80 lg:shrink-0">
+          <Column as="aside" aria-label={t("playground.palette")} className="w-full lg:w-80 lg:shrink-0">
             <Cell><h2 className="m-0 text-sm font-semibold">{t("playground.palette")}</h2></Cell>
             <Bar><TextField type="search" label={t("playground.paletteSearch")} value={search} onChange={setSearch} /></Bar>
             {everything.busy ? <ProgressNotice label={t("state.loadingAssets")} done={everything.done} total={everything.total} cancelLabel={t("action.cancel")} onCancel={everything.cancel} /> : null}
@@ -329,7 +329,7 @@ export function PlaygroundPage(props: { readonly view: PaneView }): ReactElement
                 {Array.from({ length: Math.ceil(palette.length / 2) }, (_, at) => palette.slice(at * 2, at * 2 + 2)).map((pair) => (
                   <Bar key={pair[0]!.entry.id}>
                     {pair.map((row) => (
-                      <button key={row.entry.id} type="button" data-shared-border-cell="" onClick={() => add(row)} aria-label={t("playground.add", { title: row.entry.title[language] })} className="flex min-h-24 min-w-0 flex-1 flex-col gap-single border-0 bg-background p-single text-left text-xs hover:bg-hover-panel">
+                      <button key={row.entry.id} type="button" data-shared-border-cell="" onClick={() => add(row)} aria-label={t("playground.add", { title: row.entry.title[language] })} className="flex min-h-24 min-w-0 flex-1 flex-col gap-single border-0 bg-transparent p-single text-left text-xs hover:bg-hover-interactive-fill">
                         <span className="h-16 w-full"><RowPreview row={row} viewpoint={viewpoint} compact /></span>
                         <span className="font-medium">{row.entry.title[language]}</span>
                         <span className="font-mono text-[0.65rem] text-muted-foreground">{formatNumber(row.entry.heightM, 2, language)} m</span>

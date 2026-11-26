@@ -238,6 +238,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "sourceOwner",
         "sourceOrdinalRows",
         "borrowedSourceKeys",
         "completedPayloadCloned",
@@ -246,6 +247,7 @@
         "requestDonorHeldOnAdmissionRefusal"
       ],
       "properties": {
+        "sourceOwner": { "const": "retainedSnapshot" },
         "sourceOrdinalRows": {
           "const": true
         },

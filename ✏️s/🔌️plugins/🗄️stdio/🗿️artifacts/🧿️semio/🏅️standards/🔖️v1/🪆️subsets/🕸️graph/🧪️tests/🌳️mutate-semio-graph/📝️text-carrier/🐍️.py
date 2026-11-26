@@ -8,7 +8,7 @@ import struct
 
 
 # region 🔖️Carrier
-DSL_PREAMBLE = "semio s.stdio.semio.graph.dsl v1"
+DSL_PREAMBLE = "semio stdio.semio.graph.dsl v1"
 DOCUMENT_SCHEMA = "stdio.semio.graph"
 
 PORT_LETTER = {"in": "i", "out": "o", "inOut": "x"}

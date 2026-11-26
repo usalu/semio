@@ -7,10 +7,15 @@ type Environment=Readonly<Record<string,string|undefined>>;
 export type UnitProvenanceV1=Readonly<{peakRssBytes:number;userMs:number;sysMs:number;wallMs:number;rmetaOffsetMs:number|null}>;
 type Endpoint=Readonly<{endpoint:string;pass:string}>;
 
+/** 🎟️ The broker appointed by the current compiler launcher. */
+export function compilerBrokerOfV1(environment:Environment):Endpoint|undefined{
+ const endpoint=environment[policy.environment],pass=environment[policy.pass];
+ return endpoint&&pass?{endpoint,pass}:undefined;
+}
+
 /** 🎚️ The broker the build driver started for this compiler call, when replay is switched on. */
 export function brokerOfV1(environment:Environment):Endpoint|undefined{
- const endpoint=environment[policy.environment],pass=environment[policy.pass];
- return environment.SEMIO_UNIT_CACHE_BROKER_REPLAY==="on"&&endpoint&&pass?{endpoint,pass}:undefined;
+ return environment.SEMIO_UNIT_CACHE_BROKER_REPLAY==="on"?compilerBrokerOfV1(environment):undefined;
 }
 
 function exchange(endpoint:string,message:object,reply:"verdict"|"unit"|"headroom"):Promise<Record<string,unknown>|undefined>{
@@ -25,10 +30,10 @@ function exchange(endpoint:string,message:object,reply:"verdict"|"unit"|"headroo
 }
 
 /** 🔭️ Asks the broker for the measurements of a unit its scheduler just finished (the scheduler reports after the compiler exits, so the answer is awaited briefly). */
-export async function recallProvenanceV1(environment:Environment,facts:AdmitFactsV1):Promise<UnitProvenanceV1|undefined>{
- const broker=brokerOfV1(environment);if(!broker)return undefined;
+export async function recallProvenanceV1(environment:Environment,facts:AdmitFactsV1,localInputKey?:string):Promise<UnitProvenanceV1|undefined>{
+ const broker=localInputKey?compilerBrokerOfV1(environment):brokerOfV1(environment);if(!broker)return undefined;
  for(let attempt=0;attempt<policy.recallAttempts;attempt++){
-  const row=await exchange(broker.endpoint,{v:1,op:"recall",pass:broker.pass,crate:facts.crate,outDir:facts.outDir,extraFilename:facts.extraFilename},"unit");
+  const row=await exchange(broker.endpoint,{v:1,op:"recall",pass:broker.pass,crate:facts.crate,outDir:facts.outDir,extraFilename:facts.extraFilename,...localInputKey?{localInputKey}:{}},"unit");
   const record=row?.record as {startMs:number;endMs:number;rmetaMs:number|null;peakRssBytes:number;userMs:number;sysMs:number}|null|undefined;
   if(record)return{peakRssBytes:record.peakRssBytes,userMs:record.userMs,sysMs:record.sysMs,wallMs:Math.max(0,record.endMs-record.startMs),rmetaOffsetMs:record.rmetaMs===null?null:Math.max(0,record.rmetaMs-record.startMs)};
   if(row===undefined)return undefined;
@@ -45,8 +50,8 @@ export async function replayCachedUnitV1(environment:Environment,facts:AdmitFact
 }
 
 /** 🔭️ Asks the build's admission broker whether a unit with these facts would queue behind its memory budget right now, without joining the queue: `true` for wait, `false` for admit, `undefined` when no broker answers in time. */
-export async function brokerWouldWaitV1(environment:Environment,facts:AdmitFactsV1):Promise<boolean|undefined>{
- const broker=brokerOfV1(environment);if(!broker)return undefined;
- const row=await exchange(broker.endpoint,{v:1,op:"probe",pass:broker.pass,pid:process.pid,...facts},"headroom");
+export async function brokerWouldWaitV1(environment:Environment,facts:AdmitFactsV1,localInputKey?:string):Promise<boolean|undefined>{
+ const broker=localInputKey?compilerBrokerOfV1(environment):brokerOfV1(environment);if(!broker)return undefined;
+ const row=await exchange(broker.endpoint,{v:1,op:"probe",pass:broker.pass,pid:process.pid,...facts,...localInputKey?{localInputKey}:{}},"headroom");
  return typeof row?.wait==="boolean"?row.wait:undefined;
 }

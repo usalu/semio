@@ -23,6 +23,7 @@
 
 import Ajv from "ajv";
 import { JSDOM } from "jsdom";
+import surface from "../🧫️fixtures/🌈️surface/🔣️.json";
 import feedbackIdentity from "../🧫️fixtures/🏷️feedback-identity/🔣️.json";
 import feedbackIdentitySchema from "../🧫️fixtures/🏷️feedback-identity/🧬️schema/🔣️.json";
 import { useState, type ReactElement } from "react";
@@ -49,6 +50,13 @@ describe("🪜️ every task kind at every challenge", () => {
       const shown = challenge === "easy" || challenge === "medium";
       for (const task of sheetAt(challenge).tasks) {
         const { unmount } = render(<TaskView task={task} answer={undefined} onAnswer={() => undefined} text={en} locale="en" />);
+        const targets = surface[task.kind];
+        for (const selector of [...targets.ordinary, ...targets.fields]) {
+          for (const element of document.querySelectorAll(selector)) {
+            expect(element.closest("[data-level]"), selector).toBeNull();
+            expect(element.classList.contains("bg-background"), selector).toBe(false);
+          }
+        }
         if (task.kind === "sorting") {
           expect(task.keys !== undefined, task.id).toBe(shown);
           expect([...document.querySelectorAll(".course-sort-key")].map((key) => key.textContent)).toEqual(shown ? task.keys!.map((key) => formatQuantity(key, task.quantity, "en")) : []);

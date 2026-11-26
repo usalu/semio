@@ -1,10 +1,11 @@
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {cacheAreaHomeV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
 import {existsSync} from "node:fs";
-import {availableParallelism,homedir} from "node:os";
+import {availableParallelism,homedir,hostname,networkInterfaces} from "node:os";
 import {delimiter,join} from "node:path";
 import {refreshFleetCacheFactsV1,remoteCacheFetchV1} from "../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
-import {syncFleetIdentityV1} from "../../../🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
+import {readFleetMachineV1,syncFleetIdentityV1} from "../../../🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
+import {advertiseFleetServiceV1,fleetServiceRecordV1,readFleetAddressSetV1,watchFleetAddressSetV1} from "../../../../../🤝️shared-worktree/🗺️topology/🧭️addresses/🟦️.ts";
 import {fleetGroupViewV1} from "../../../🌐️remote-cache/🛰️fleet/📣️publication/🟦️.ts";
 import {graphChildEnvironmentV1} from "../../../🧠️memory/🐏️child-environment/🟨️.mjs";
 import {runRemoteExecutionAgentV1} from "../../🛰️agent/🟦️.ts";
@@ -51,11 +52,14 @@ export async function runAgent(context:RemoteExecutionSidecarContextV1):Promise<
  const graph=superviseGraphChildV1(context,join(import.meta.dir,"..","🟦️.ts")),pool=superviseGraphChildV1(context,join(import.meta.dir,"..","🟦️.ts"),"pool"),spool=superviseGraphChildV1(context,join(import.meta.dir,"..","🟦️.ts"),"spool");
  const ready=context.environment.SEMIO_FLEET_ORIGIN!==undefined&&context.environment.SEMIO_FLEET_ORIGIN===`${context.environment.SEMIO_FLEET_GROUP}-server`?undefined:superviseGraphChildV1(context,join(import.meta.dir,"..","🟦️.ts"),"ready");
  await syncFleetIdentityV1({root:context.root}).then(result=>{if(result.error!==undefined)say(`fleet identity: ${result.error}`);},()=>undefined);
+ const own=readFleetMachineV1(context.root),addressStop=new AbortController(),addressWatch=own?.storeRoot===undefined?Promise.resolve():watchFleetAddressSetV1({storeRoot:own.storeRoot,origin:own.originId,hostname:hostname(),interfaces:networkInterfaces,signal:AbortSignal.any([context.signal,addressStop.signal]),language:context.environment.SEMIO_LANGUAGE==="de"?"de":"en",report:say});
+ const language=context.environment.SEMIO_LANGUAGE==="de"?"de" as const:"en" as const;
+ const startedAt=Date.now(),advertised=own?.storeRoot===undefined?Promise.resolve():(async():Promise<void>=>{const ports=(await fleetGroupViewV1(context.root,context.environment))?.ports,store=own.storeRoot!;return advertiseFleetServiceV1({record:fleetServiceRecordV1({origin:own.originId,group:own.group,roles:own.originId===`${own.group}-server`&&ports!==undefined?{cache:ports.cache,relay:0,scheduler:ports.scheduler,store:2049}:{member:0}}),signal:AbortSignal.any([context.signal,addressStop.signal]),language,report:say,enabled:async()=>{const published=await readFleetAddressSetV1(store,own.originId);return Date.now()-startedAt>30_000&&published!==undefined&&published.set.advertise.enabled;}});})();
  while(!context.signal.aborted){
   let endpoint=resolveRemoteExecutionEndpointV1(context)?.endpoint;
   while(endpoint===undefined&&!context.signal.aborted){
    say("waiting for the fleet facts to name a scheduler");
-   await refreshFleetCacheFactsV1({root:context.root,force:true}).catch(()=>undefined);
+   await refreshFleetCacheFactsV1({root:context.root,force:true,report:say,language}).catch(()=>undefined);
    endpoint=resolveRemoteExecutionEndpointV1(context)?.endpoint;
    if(endpoint===undefined)await sleep(15_000,context.signal);
   }
@@ -67,7 +71,7 @@ export async function runAgent(context:RemoteExecutionSidecarContextV1):Promise<
   mirror();
   const watch=setInterval(()=>{
    mirror();
-   void refreshFleetCacheFactsV1({root:context.root}).catch(()=>undefined).then(()=>{
+   void refreshFleetCacheFactsV1({root:context.root,report:say,language}).catch(()=>undefined).then(()=>{
     const next=resolveRemoteExecutionEndpointV1(context)?.endpoint;
     if(next!==undefined&&next!==endpoint){say("the scheduler moved, joining the new one");controller.abort();}
    });
@@ -88,5 +92,6 @@ export async function runAgent(context:RemoteExecutionSidecarContextV1):Promise<
   }finally{clearInterval(watch);if(recheck!==undefined)clearTimeout(recheck);context.signal.removeEventListener("abort",stop);}
   if(context.drain?.aborted)break;
  }
- await Promise.all([graph.stop(),pool.stop(),ready?.stop(),spool.stop()]);
+ addressStop.abort();
+ await Promise.all([graph.stop(),pool.stop(),ready?.stop(),spool.stop(),addressWatch,advertised]);
 }

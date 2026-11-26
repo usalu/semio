@@ -9,9 +9,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   //#region 🧪️DemonstratorPaneBootTests
   describe("demonstratorPaneBootVariants", () => {
-    it("keeps Generator's branded app id while loading the standalone procedural module", () => {
+    it("preserves branded app ids when panes load standalone modules", () => {
       expect(demonstratorPaneBootVariants("generator")).toEqual({ runtime: "generation3d", manifest: "generator" });
-      expect(demonstratorPaneBootVariants("koordinator")).toEqual({ runtime: "koordinator", manifest: "koordinator" });
+      expect(demonstratorPaneBootVariants("koordinator")).toEqual({ runtime: "cad", manifest: "koordinator" });
     });
   });
   //#endregion 🧪️DemonstratorPaneBootTests

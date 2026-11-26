@@ -17,6 +17,15 @@ pub(super) fn reserve_native_layer_slots(value: &mut DrawingNativeLayers, minimu
     while value.capacity() < minimum { value.reserve_one_cold(usize::MAX).unwrap_or_else(|_| panic!("cold native Drawing fixture page allocation admits")); }
 }
 
+pub(super) fn exact_single_layer(layer: DrawingLayerNode) -> DrawingNativeLayers {
+    let mut layers = DrawingNativeLayers::default();
+    while !layers.has_reserved_slot() {
+        layers.reserve_exact_capacity_one_cold(1, usize::MAX).expect("one exact native layer slot");
+    }
+    assert!(layers.push_reserved(layer).is_ok());
+    layers
+}
+
 pub(super) fn native_layer_backing(value: &DrawingNativeLayers) -> usize { value.first().map_or(0, |layer| layer as *const _ as usize) }
 
 pub(super) fn native_text_backing(value: &semio_framework_value::paged::PagedUtf8<{usize::MAX}>) -> usize { value.retained_chunks().first().map_or(0, |chunk| chunk.as_ptr() as usize) }
@@ -149,9 +158,9 @@ pub(super) fn close_candidate(authority: &mut DrawingMutationCandidateAuthority,
 
 /// 🧮️ Borrows a candidate from the shared process pool the way the production initializer does: a
 /// transiently contended pool (another law holds it for one bounded borrow) is borrowed again.
-pub(super) fn borrowed_candidate(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<DrawingMutationCandidateAuthority, &'static str> {
+pub(super) fn borrowed_candidate(replacement: Option<semio_framework_job::ReplacementIdentity>) -> Result<DrawingMutationCandidateAuthority, &'static str> {
     for _ in 0..1_000_000 {
-        match DrawingMutationCandidateAuthority::try_new(None) {
+        match DrawingMutationCandidateAuthority::try_new(replacement) {
             Err(DrawingMutationArenaBorrowError::Contended) => std::thread::yield_now(),
             other => return other.map_err(DrawingMutationArenaBorrowError::as_str),
         }
@@ -174,6 +183,10 @@ impl HeldMutation {
     pub(super) fn step(&self, authority: &mut DrawingMutationCandidateAuthority, source: &mut DrawingSnapshot, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         authority.step_with_custody(source, self.base.as_ref().map(|base| base.borrow()), self.mutation.borrow(), cx)
     }
+
+    pub(super) fn step_replacement(&self, authority: &mut DrawingMutationCandidateAuthority, source: &mut DrawingSnapshot, current: semio_framework_job::ReplacementIdentity, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+        cx.with_replacement_current(current, |cx| self.step(authority, source, cx))
+    }
 }
 
 pub(super) fn apply(mut source: DrawingSnapshot, mutation: &DrawingMutation) -> Result<DrawingSnapshot, (DrawingSnapshot, &'static str)> {
@@ -181,12 +194,12 @@ pub(super) fn apply(mut source: DrawingSnapshot, mutation: &DrawingMutation) -> 
     let operation = semio_framework_job::OperationId(8_001);
     let generation = semio_framework_job::Generation(81);
     let held = HeldMutation::new(mutation, &source);
-    let mut authority = borrowed_candidate(operation, generation).expect("Drawing candidate fixed owner arenas admit");
+    let mut authority = borrowed_candidate(None).expect("Drawing candidate fixed owner arenas admit");
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
     for _ in 0..200_000 {
         let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
+        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(MUTATION_STEP_FUEL, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
         match held.step(&mut authority, &mut source, &mut context) {
             Ok(true) => {
                 authority.take().expect("Drawing mutation overlay exact terminal commit witness");
@@ -202,10 +215,11 @@ pub(super) fn apply(mut source: DrawingSnapshot, mutation: &DrawingMutation) -> 
             }
         }
     }
+    let phase = authority.phase;
     close_candidate(&mut authority, Some(&mut source));
     drop(authority);
     drain_snapshot(source);
-    panic!("Drawing mutation candidate did not terminate")
+    panic!("Drawing mutation candidate did not terminate from {phase:?}")
 }
 
 pub(super) fn live_workset(source: &mut DrawingSnapshot, mutation: &DrawingMutation) -> Result<DrawingMutationWorksetPlan, &'static str> {
@@ -215,10 +229,10 @@ pub(super) fn live_workset(source: &mut DrawingSnapshot, mutation: &DrawingMutat
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
     let held = HeldMutation::new(mutation, source);
-    let mut authority = borrowed_candidate(operation, generation)?;
+    let mut authority = borrowed_candidate(None)?;
     for _ in 0..100_000 {
         let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
+        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(MUTATION_STEP_FUEL, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
         held.step(&mut authority, source, &mut context)?;
         if let Some(workset) = authority.workset {
             close_candidate(&mut authority, Some(source));
@@ -238,15 +252,15 @@ pub(super) fn planned_clone_workset(source: &mut DrawingSnapshot, mutation: &Dra
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
     let held = HeldMutation::new(mutation, source);
-    let mut authority = borrowed_candidate(operation, generation)?;
+    let mut authority = borrowed_candidate(None)?;
     for _ in 0..100_000 {
         let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
+        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(MUTATION_STEP_FUEL, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
         held.step(&mut authority, source, &mut context)?;
         if authority.phase == DrawingMutationCandidatePhase::BindOverlay {
             let workset = authority.workset.ok_or("drawing-store.test-clone-workset-missing")?;
             let totals = authority.clone_work.as_ref().and_then(DrawingLayerCloneWorkAuthority::totals).ok_or("drawing-store.test-clone-work-false-terminal")?;
-            if authority.overlay.is_some() {
+            if authority.has_bound_overlay() {
                 return Err("drawing-store.test-clone-bound-overlay-too-early");
             }
             close_candidate(&mut authority, Some(source));

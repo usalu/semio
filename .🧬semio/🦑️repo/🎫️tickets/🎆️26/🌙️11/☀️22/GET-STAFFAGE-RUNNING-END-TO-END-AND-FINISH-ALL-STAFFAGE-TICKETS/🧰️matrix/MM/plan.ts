@@ -17,18 +17,14 @@ const out = resolve(flag("out")!);
 const minutes = Number(flag("minutes") ?? 30);
 const only = flag("assets")?.split(",");
 
-/** 📏️ The classes of the final run, heaviest first: which assets they take, the resident memory of one asset process (measured, see the report), processes at a time, the limit of one asset in seconds, and the estimated seconds per megabyte of document on the loaded host (people and trees measured since the landing of 17:48). */
-type Class = { readonly name: string; readonly takes: (head: Sized) => boolean; readonly memory: number; readonly jobs: number; readonly limitS: number; readonly secondsPerMb: number };
-const BIG_TREE = (head: Sized): boolean => head.category === "vegetation" && head.bytes >= 6e6;
-const MID_TREE = (head: Sized): boolean => head.category === "vegetation" && head.bytes >= 1.5e6 && head.bytes < 6e6;
-const SMALL_TREE = (head: Sized): boolean => head.category === "vegetation" && head.bytes < 1.5e6;
+/** 📏️ The classes of the final run, heaviest first: which assets they take, the resident memory of one asset process (measured, see the report), processes at a time, the limit of one asset in seconds, and the estimated seconds per asset and per megabyte of document on the loaded host (trees take 4 to 46 minutes whatever their document size, so they count per asset; people and rigid assets per megabyte). */
+type Class = { readonly name: string; readonly takes: (head: Sized) => boolean; readonly memory: number; readonly jobs: number; readonly limitS: number; readonly secondsEach: number; readonly secondsPerMb: number };
+const TREE = (head: Sized): boolean => head.category === "vegetation";
 const LIVING = (head: Sized): boolean => head.category === "humans" || head.category === "animals";
 const CLASSES: readonly Class[] = [
-  { name: "big-tree", takes: BIG_TREE, memory: 2500, jobs: 1, limitS: 21600, secondsPerMb: 60 },
-  { name: "mid-tree", takes: MID_TREE, memory: 1600, jobs: 2, limitS: 14400, secondsPerMb: 120 },
-  { name: "small-tree", takes: SMALL_TREE, memory: 1000, jobs: 3, limitS: 43200, secondsPerMb: 300 },
-  { name: "living", takes: LIVING, memory: 600, jobs: 3, limitS: 43200, secondsPerMb: 170 },
-  { name: "rigid", takes: (head) => !LIVING(head) && head.category !== "vegetation", memory: 350, jobs: 4, limitS: 7200, secondsPerMb: 70 },
+  { name: "tree", takes: TREE, memory: 1300, jobs: 2, limitS: 21600, secondsEach: 600, secondsPerMb: 0 },
+  { name: "living", takes: LIVING, memory: 600, jobs: 3, limitS: 43200, secondsEach: 0, secondsPerMb: 170 },
+  { name: "rigid", takes: (head) => !LIVING(head) && !TREE(head), memory: 350, jobs: 4, limitS: 7200, secondsEach: 0, secondsPerMb: 70 },
 ];
 
 type Sized = AssetHead & { readonly bytes: number };
@@ -45,13 +41,8 @@ for (const found of CLASSES) {
     seconds = 0;
   };
   for (const head of mine) {
-    const cost = ((head.bytes / 1e6) * found.secondsPerMb) / found.jobs;
+    const cost = (found.secondsEach + (head.bytes / 1e6) * found.secondsPerMb) / found.jobs;
     if (request.length >= found.jobs && seconds + cost > minutes * 60) print();
-    request.push(head);
-    seconds += cost;
-  }
-  print();
-}
     request.push(head);
     seconds += cost;
   }

@@ -792,7 +792,7 @@ class Beat1_LocalGlobalExtrema(_visuals.ClipScene):
             card_rows.add(_mn.VGroup(self._t(name, size=21, color=color, width=2.0, edge="left"), self._t(text, size=21, color=INK, width=5.6, edge="left")).arrange(_mn.RIGHT, buff=.35, aligned_edge=_mn.UP))
         card_rows.add(self._l("Zurich-like climate · simplified annual teaching model", "Klima wie Zürich · vereinfachtes Jahresmodell", size=17, color=MUTED, width=7, edge="left"))
         card_rows.arrange(_mn.DOWN, aligned_edge=_mn.LEFT, buff=.3)
-        frame = _art.window_frame(card_rows.width + .7, card_rows.height + .5, color=GOOD, fill_opacity=.88).move_to(card_rows)
+        frame = _art.window_frame(card_rows.width + .7, card_rows.height + .5, color=GOOD).move_to(card_rows)
         card = _mn.VGroup(frame, card_rows).move_to((.6, 1.45, 0))
         plan = self.plan(self.dials, (-5.0, .1, 0), .26, ring_radius=6.0, sector=(study["reference"], lo, WARN), site=(180, 0))
         shown = [({}, self.tr("window share 60 %", "Fensteranteil 60 %"), INK), ({"wwr": .3}, self.tr("window share 30 %", "Fensteranteil 30 %"), MUTED), ({"overhang": .6}, self.tr("overhang 0.6 m", "Vordach 0,6 m"), DESIGN)]

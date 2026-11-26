@@ -331,8 +331,7 @@ pub struct Fault {
 }
 
 /// 💡️ What [`ActionAdapter::run_inference`] hands back — the guest's own result payload and its
-/// `complete` flag, plus the `inferenceSchema` the guest echoed (asserted equal to the requested one
-/// by the real router before it ever reaches here).
+/// `complete` flag, plus the exact requested `inferenceSchema` echoed by the guest.
 #[derive(Clone, Debug, PartialEq)]
 pub struct InferenceOutcome {
     pub inference_schema: String,
@@ -362,6 +361,14 @@ pub trait ArtifactChannel: Send {
 /// functions, so the exchange future is driven here and nowhere inside a channel.
 pub fn exchange_blocking<C: ArtifactChannel>(channel: &mut C, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
     semio_framework_async::block_on(channel.exchange(instance, commands))
+}
+
+/// 📩️ Receives a single artifact response and preserves both channel and command refusal semantics.
+pub fn first_artifact_reply(reply: Result<Vec<AppFrame>, Fault>) -> Result<Option<AppFrame>, GatewayError> {
+    match reply.map_err(|fault| map_fault(&fault))?.into_iter().next() {
+        Some(AppFrame::Error(fault)) => Err(map_fault(&fault)),
+        frame => Ok(frame),
+    }
 }
 
 /// ↩️ Private durable-history port; only a Hub-bound workspace implements the remote member.

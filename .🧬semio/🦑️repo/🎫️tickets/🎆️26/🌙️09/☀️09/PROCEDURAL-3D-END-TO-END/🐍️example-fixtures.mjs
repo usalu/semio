@@ -8,12 +8,13 @@
  */
 import { readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
-const REPO_ROOT = resolve(import.meta.dir, "..", "..", "..", "..", "..", "..", "..");
+const REPO_ROOT = resolve(import.meta.dirname ?? import.meta.dir, "..", "..", "..", "..", "..", "..", "..");
 const EXAMPLES_SEGMENTS = ["✏️s", "🔌️plugins", "🌀️procedural", "🗿️artifacts", "🧊️generation3d", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "📚️examples"];
 
 export const EXAMPLES_DIR = join(REPO_ROOT, ...EXAMPLES_SEGMENTS);
-const { EXAMPLE_FIXTURE_PATH } = await import(join(EXAMPLES_DIR, "🧪️tests", "🧩️geometry", "🟦️.ts"));
+const { EXAMPLE_FIXTURE_PATH } = await import(pathToFileURL(join(EXAMPLES_DIR, "🧪️tests", "🧩️geometry", "🟦️.ts")).href);
 
 /** 📥️ The parsed fixture of one example directory entry, or `null` when it carries none. */
 export const readExampleFixture = (entry, dir = EXAMPLES_DIR) => {

@@ -18,9 +18,16 @@ role = "hub"
 # over THEIR artifact kinds (`🪪️manifest/🎪️demonstrator/🦀️.rs`'s `.depends_on(…)` rows must match).
 
 [lib]
+name = "semio_hub_demonstrator_router"
 path = "🦀️.rs"
 
 [dependencies]
+semio-hub-demonstrator-playground-editor-app = { workspace = true }
+semio-hub-demonstrator-playground-viewer-app = { workspace = true }
+semio-hub-demonstrator-sourcing-editor-app = { workspace = true }
+semio-hub-demonstrator-sourcing-viewer-app = { workspace = true }
+semio-hub-demonstrator-process-editor-app = { workspace = true }
+semio-hub-demonstrator-process-viewer-app = { workspace = true }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-s-artifact-demonstrator-playground = { workspace = true }
@@ -52,6 +59,7 @@ semio-s-artifact-process-process3d-viewer = { workspace = true }
 # 🪞️ The two standalone hosts the bundle is compared with by `🧪️tests/🔬️standalone-parity` — each is the plugin the bundled apps are constructed like.
 semio-hub-process = { path = "../../../🏭️process/📦️packages/🦀️rust" }
 semio-hub-sourcing = { path = "../../../🪵️sourcing/📦️packages/🦀️rust" }
+semio-plugin-instance-construction = { workspace = true }
 semio-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 serde.workspace = true
 serde_json.workspace = true

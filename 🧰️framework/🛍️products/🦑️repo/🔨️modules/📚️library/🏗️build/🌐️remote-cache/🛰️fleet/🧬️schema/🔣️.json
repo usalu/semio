@@ -34,29 +34,21 @@
         "generation": { "type": "integer", "minimum": 1 },
         "publishedAtMs": { "$ref": "#/definitions/Milliseconds" },
         "publisher": {
-          "description": "The identity of the cache server that published these facts: its data directory, its listening port and its host name. A publisher with another identity never replaces recent facts and never lowers the generation, so a scratch or test server is detectable and harmless.",
+          "description": "The identity of the cache server that published these facts: its origin id (the machine is reached by this id, never by an address or an operating system host name: its addresses are in <store>/v1/origins/<origin>/addresses.json and it advertises itself as a DNS-SD service of that name), its data directory and its listening port, which is the cache port. A publisher with another identity never replaces recent facts and never lowers the generation, so a scratch or test server is detectable and harmless.",
           "type": "object",
           "additionalProperties": false,
-          "required": ["directory", "port", "host"],
+          "required": ["origin", "directory", "port"],
           "properties": {
+            "origin": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
             "directory": { "type": "string", "minLength": 1 },
-            "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
-            "host": { "type": "string", "minLength": 1, "maxLength": 253 }
+            "port": { "type": "integer", "minimum": 1, "maximum": 65535 }
           }
         },
         "cache": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["endpoints", "instance", "access", "protocols", "protocolVersion"],
+          "required": ["instance", "access", "protocols", "protocolVersion"],
           "properties": {
-            "endpoints": {
-              "description": "Origins that reach the cache server from the workers, most preferred first; a client uses the first one that answers GET /healthz.",
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 8,
-              "uniqueItems": true,
-              "items": { "$ref": "#/definitions/Endpoint" }
-            },
             "instance": { "$ref": "#/definitions/Instance" },
             "access": { "const": "read-write" },
             "protocols": { "const": ["bazel-http", "nx-self-hosted"] },
@@ -75,12 +67,13 @@
           }
         },
         "execution": {
-          "description": "The remote execution scheduler of the group (reserved; absent until published).",
+          "description": "The remote execution scheduler of the group (absent until published): the origin that runs it and the port of its Remote Execution API; the addresses are those of the origin.",
           "type": "object",
           "additionalProperties": false,
-          "required": ["endpoint", "protocolVersion"],
+          "required": ["origin", "port", "protocolVersion"],
           "properties": {
-            "endpoint": { "$ref": "#/definitions/Endpoint" },
+            "origin": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+            "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
             "protocolVersion": { "type": "integer", "minimum": 1 }
           }
         }
@@ -90,12 +83,14 @@
       "description": "The machine's last known copy of the facts (<worktree>/.cache/f/cache-facts.json, mode 0600, never replicated): when it was fetched and which endpoint answered.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "fetchedAtMs", "checkedAtMs", "selectedEndpoint", "facts"],
+      "required": ["version", "fetchedAtMs", "checkedAtMs", "selectedEndpoint", "candidates", "selectedExecution", "facts"],
       "properties": {
         "version": { "const": 1 },
         "fetchedAtMs": { "$ref": "#/definitions/Milliseconds" },
         "checkedAtMs": { "$ref": "#/definitions/Milliseconds" },
         "selectedEndpoint": { "oneOf": [{ "const": null }, { "$ref": "#/definitions/Endpoint" }] },
+        "candidates": { "description": "The endpoints of the cache server that its published addresses give at the last refresh; derived on this machine, never published.", "type": "array", "maxItems": 40, "items": { "$ref": "#/definitions/Endpoint" } },
+        "selectedExecution": { "oneOf": [{ "const": null }, { "$ref": "#/definitions/Endpoint" }] },
         "facts": { "$ref": "#/definitions/Facts" }
       }
     }

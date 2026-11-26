@@ -68,6 +68,9 @@ pub trait InferredField<P>: Send + Sync + 'static {
     }
 
     }
+/// 🔐️ A dependency producer's pending, published or unsupported state.
+pub enum OriginalDependencyStep { Pending, Ready(DepHash), Uncacheable }
+
 /// 🎟️ Native field work borrows its defining retained source through every original driver phase.
 pub trait OriginalInferredField<P>:InferredField<P>{
  type Source:?Sized;
@@ -77,6 +80,10 @@ pub trait OriginalInferredField<P>:InferredField<P>{
  fn plan_source_node<'view>(_snapshot:&'view P,_source:&'view Self::Source,_ordinal:usize)->Option<&'view str>{None}
  fn plan_source_key<'view>(_snapshot:&'view P,_source:&'view Self::Source,_ordinal:usize)->Option<&'view Self::Key>{None}
  fn plan_source_link<'view>(_snapshot:&'view P,_source:&'view Self::Source,_ordinal:usize)->Option<(&'view str,&'view str)>{None}
+ /// 🧾️ Funds a semantic digest of this node's own inputs, including authored link roles, before the driver adds parent digests.
+ fn original_dependency_step(_snapshot:&P,_source:&Self::Source,_ordinal:usize,_pending:&mut Option<Box<dyn InferencePending>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<OriginalDependencyStep,InferenceWorkFailure>{Ok(OriginalDependencyStep::Uncacheable)}
+ /// ⚖️ Quotes a bounded estimate of one cache value or excludes a value without a bounded quote.
+ fn original_cache_weight(_value:&Self::Value)->Option<usize>{None}
  fn clone_original_parent(_original:&Self::Value,_output:&mut Option<Self::Value>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,InferenceWorkFailure>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"inferred parent value has no original copy producer").into())
     }

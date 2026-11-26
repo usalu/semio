@@ -18,8 +18,9 @@ test("evaluation progress obeys the retained-work and elapsed-time bounds indepe
   const db = new Database(":memory:");
   try {
     const query = db.query<{ due: number }, [string, number, number | null, number]>(`
-      SELECT SUM(json_extract(value, '$[0]')) OVER (ORDER BY CAST(key AS INTEGER)) >= ?2
-        OR COALESCE(json_extract(value, '$[1]') - ?3 >= ?4, 0) AS due
+      SELECT CASE WHEN json_extract(value, '$[3]') THEN 0 ELSE
+        SUM(json_extract(value, '$[0]')) OVER (ORDER BY CAST(key AS INTEGER)) >= ?2
+        OR COALESCE(json_extract(value, '$[1]') - ?3 >= ?4, 0) END AS due
       FROM json_each(?1)
       ORDER BY CAST(key AS INTEGER)
     `);

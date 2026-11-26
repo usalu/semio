@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "projects": [
+    {
+      "path": "📋️project.json",
+      "target": "release",
+      "cargoPrerequisites": []
+    },
+    {
+      "path": "🏢️semio-tech/🎡️play/📋️project.json",
+      "target": "build",
+      "cargoPrerequisites": [
+        "stdio-catalog-definition",
+        "canvas-runtime-assets",
+        "flow-wasm",
+        "surface-wasm",
+        "editor-wasm",
+        "graph-wasm",
+        "puzzle-wasm",
+        "map-tiles",
+        "bundle"
+      ]
+    }
+  ],
+  "browserDependencyOrder": [
+    "font-assets",
+    "fonts",
+    "support"
+  ]
+}

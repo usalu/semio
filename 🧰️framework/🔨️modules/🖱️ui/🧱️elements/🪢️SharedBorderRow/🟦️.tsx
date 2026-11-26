@@ -1,4 +1,5 @@
 import * as React from "react";
+import { SurfaceScope, surfaceFillClass, surfaceLevelAbove, useLevel, type Level } from "../🌈️Surface/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { sharedBorderlessBoxProps, useSharedBorderBox, useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 
@@ -12,10 +13,11 @@ export type SharedBorderRowEdge = "top" | "right" | "bottom" | "left";
 export type SharedBorderRowTone = "default" | "destructive";
 
 /** 🪢️ Native element a row or cell renders as: lists use `ul`/`ol` with `li` items. */
-export type SharedBorderRowElement = "div" | "ul" | "ol" | "li" | "section" | "nav" | "form" | "fieldset" | "dl" | "header" | "aside" | "footer";
+export type SharedBorderRowElement = "div" | "span" | "ul" | "ol" | "li" | "section" | "nav" | "form" | "fieldset" | "dl" | "header" | "aside" | "footer";
 
 /** 🪢️ Props of {@link SharedBorderRow}. `framed={false}` makes the row a group only: an enclosing owner (a card, a window) paints the outer edges. `as` picks the element (`ul` for lists); `ref` is forwarded to it. */
 export interface SharedBorderRowProps extends Omit<React.ComponentProps<"div">, "ref"> {
+  readonly overlay?: "chip" | "dialog" | "menu";
   readonly wrap?: boolean;
   readonly as?: SharedBorderRowElement;
   readonly ref?: React.Ref<HTMLElement>;
@@ -95,7 +97,21 @@ export function useSharedBorderWrap(row: React.RefObject<HTMLElement | null>, en
  * @see ../🗂️WindowChrome/shared-border.ts `isSharedBorderCell`
  * @see ../../🎨️styling/🖌️ui/🎨️.css `data-shared-border-cells`
  */
-export function SharedBorderRow({ as: TagName = "div", orientation = "horizontal", framed = true, edges = allEdges, tone = "default", wrap = false, className, ref, children, ...props }: SharedBorderRowProps) {
+export function SharedBorderRow({ overlay, ...props }: SharedBorderRowProps) {
+  return overlay ? <GlassRow {...props} overlay={overlay} /> : <RowCells {...props} />;
+}
+
+function GlassRow({ overlay, className, children, ...props }: SharedBorderRowProps & { readonly overlay: "chip" | "dialog" | "menu" }) {
+  const ambient = useLevel();
+  const level: Level = overlay === "chip" ? surfaceLevelAbove(ambient) : overlay;
+  return (
+    <RowCells {...props} className={cn(surfaceFillClass("glass"), className)} data-level={level} data-glass-chip="">
+      <SurfaceScope level={level} fill="glass">{children}</SurfaceScope>
+    </RowCells>
+  );
+}
+
+function RowCells({ as: TagName = "div", orientation = "horizontal", framed = true, edges = allEdges, tone = "default", wrap = false, className, ref, children, ...props }: SharedBorderRowProps) {
   const frameRef = useSharedBorderFrameRef<HTMLElement>(ref);
   const rowRef = React.useRef<HTMLElement | null>(null);
   useSharedBorderWrap(rowRef, wrap);

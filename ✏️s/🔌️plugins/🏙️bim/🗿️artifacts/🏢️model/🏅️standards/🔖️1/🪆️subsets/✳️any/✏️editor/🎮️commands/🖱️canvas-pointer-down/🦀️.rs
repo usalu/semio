@@ -35,8 +35,8 @@ macro_rules! canvas_pointer {
         }
 
         impl $name {
-            pub fn raw(&self) -> $crate::editor::bim::gestures::Raw {
-                $crate::editor::bim::gestures::Raw { x: self.x, y: self.y, width: self.width, height: self.height, modifiers: $crate::editor::bim::gestures::session::Modifiers { shift: self.shift, ctrl: self.ctrl, meta: self.meta }, ground: None }
+            pub fn raw(&self) -> semio_s_artifact_bim_model_gestures::editor::bim::gestures::Raw {
+                semio_s_artifact_bim_model_gestures::editor::bim::gestures::Raw { x: self.x, y: self.y, width: self.width, height: self.height, modifiers: semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Modifiers { shift: self.shift, ctrl: self.ctrl, meta: self.meta }, ground: None }
             }
         }
     };

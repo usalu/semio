@@ -1,4 +1,5 @@
 import {spawn,spawnSync} from "node:child_process";
+import {processPidExistsV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import {statSync} from "node:fs";
 import {nativeImageVolumeUsedBytesSyncV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/⚖️availability/🟦️.ts";
 import {chmod,lstat,mkdir,readdir,readFile,realpath,rename,rmdir,stat,unlink,utimes,writeFile} from "node:fs/promises";
@@ -32,7 +33,7 @@ export type CacheRunnerPortsV1=Readonly<{
 
 /** 🧟️ Asks the operating system whether a process still exists; a process we may not signal still exists. */
 export function cachePidAliveV1(pid:number):boolean{
- try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}
+ return processPidExistsV1(pid);
 }
 
 /** 🥀️ Asks git for the ignored directories of the checkout and keeps those that carry a cache root name below a member directory (never the root itself, never inside an ignored segment or an excluded directory, never a link); git absent, too slow or cancelled means none were found. */

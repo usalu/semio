@@ -6,7 +6,7 @@ import "./🔐️custody/🟦️.ts";
 import {between} from "../../../🧪️tests/🧫️fixtures/🟦️.ts";
 const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
 test("🔐️ shared factory metadata never enlarges a narrow payload copy grant",()=>{
-  expect(law.ownershipMoves).toEqual({items:1,copyBytes:0});
+  expect(law.ownershipMoves).toEqual({items:1});
   for(const text of law.texts)for(const aliases of law.aliases)for(const copy of law.copyBytes)for(const cancel of law.cancelAt){
     const baseline={snapshot:text,aliases,factory:"original",copy,cancel},pending=structuredClone(baseline);expect(pending).toEqual(baseline);
     for(let index=0;index<aliases;index++)applyPatch(pending,[{op:"replace",path:"/aliases",value:aliases-index-1}],true);

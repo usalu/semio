@@ -87,7 +87,7 @@ KIND_OF_BLOCK_TAG = dict(zip(BLOCK_TAGS, BLOCK_KINDS))
 TAG_OF_BLOCK_KIND = dict(zip(BLOCK_KINDS, BLOCK_TAGS))
 
 DOCUMENT_SCHEMA = "stdio.semio.document"
-DSL_PREAMBLE = "semio s.stdio.semio.document.dsl v1"
+DSL_PREAMBLE = "semio stdio.semio.document.dsl v1"
 
 MEMO_DSL = "asset://🗒️memo/🗣️.dsl.semio"
 MEMO_PACK = "asset://🗒️memo/🎒️.pack.semio"

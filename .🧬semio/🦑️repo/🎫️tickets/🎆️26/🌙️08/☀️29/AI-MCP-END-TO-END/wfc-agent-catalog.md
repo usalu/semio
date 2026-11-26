@@ -1,0 +1,3 @@
+# WFC agent catalog
+
+The native catalog compiler projected both the authored and emitted WFC descriptors in English and German. All 140 agent entries were identical in each language, including inference services. The English digest was `71fdbf6b7d78018d37584856d904dfe7bdbdca525f53584c61d1c0783e130198` and the German digest was `bc2da75e15cbe5bc84969b02b0b9a93a5ce5b805611538294e66c57dc4f04acf`. Each all-audience projection contained 199 entries. The 10 changed definitions were cancelTypedOperation on WFC apps. These values cover the WFC plugin projection using Native terminology. They do not establish an executed inference. The ticket's compare-agent-catalog.py program reproduces the comparison.

@@ -22,8 +22,8 @@ pub const FEM3D_BODY_MODEL: &str = "fem3d.play.model";
 
 /// 🎬️ The bound world scene: camera, meshes, instances, the selection record (with the gumball when
 /// the transform utility is armed) and the interaction domain the host dispatches picks into.
-pub fn model_scene(doc: &Fem3dSnapshot, window: &Fem3dModelWindowConfig, interaction: &Fem3dInteractionSnapshot, transform_armed: bool) -> semio_plugin::UiAssemblyResult<semio_plugin::World3dScene> {
-    let (meshes_json, instances_json) = fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None).map_err(|_| semio_plugin::PluginAssemblyError::new("fem3d.scene-identity", "FEM3d scene target identity refused"))?;
+pub fn model_scene(doc: &Fem3dSnapshot, window: &Fem3dModelWindowConfig, interaction: &Fem3dInteractionSnapshot, transform_armed: bool, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::World3dScene> {
+    let (meshes_json, instances_json) = fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None, locale).map_err(|_| semio_plugin::PluginAssemblyError::new("fem3d.scene-identity", "FEM3d scene target identity refused"))?;
     let mut scene = semio_plugin::world3d_scene(semio_s_artifact_fem_3d_scene::viewport::scene_camera_json(&window.camera), meshes_json, instances_json, fem3d_selection_json(doc, interaction, transform_armed, &window.gumball), &semio_plugin::WorldSunConfig::default());
     scene.domain_id = Some(FEM3D_INTERACTION_DOMAIN.into());
     scene.domain_granularity_id = Some(FEM3D_GRANULARITY_NODE.into());
@@ -34,7 +34,7 @@ pub fn model_scene(doc: &Fem3dSnapshot, window: &Fem3dModelWindowConfig, interac
 #[cfg(any(test, feature = "testkit"))]
 pub fn render(doc: &Fem3dSnapshot, camera: &semio_os_kernel::Viewport3dOrbit, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let window = Fem3dModelWindowConfig { camera: *camera, ..Fem3dModelWindowConfig::default() };
-    semio_s_fem_app_surface::world_3d_surface(FEM3D_BODY_MODEL, &model_scene(doc, &window, &Fem3dInteractionSnapshot::default(), false)?, semio_plugin::surface_name(locale, "Model view", "Modellansicht"))
+    semio_s_fem_app_surface::world_3d_surface(FEM3D_BODY_MODEL, &model_scene(doc, &window, &Fem3dInteractionSnapshot::default(), false, locale)?, semio_plugin::surface_name(locale, "Model view", "Modellansicht"))
 }
 
 /// 👁️ Renders the undeformed structure (the same node/member/solid instances `render` draws, no
@@ -42,7 +42,7 @@ pub fn render(doc: &Fem3dSnapshot, camera: &semio_os_kernel::Viewport3dOrbit, lo
 /// `scene.snapshot` for a host that pages it — a host that only draws `meshes_json`/`instances_json`
 /// (the React world today) still shows the model as it is edited.
 pub fn render_with_progress(doc: &Fem3dSnapshot, window: &Fem3dModelWindowConfig, interaction: &Fem3dInteractionSnapshot, transform_armed: bool, visual: Option<&semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dPageVisualLease>, locale: semio_plugin::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    let mut scene = model_scene(doc, window, interaction, transform_armed)?;
+    let mut scene = model_scene(doc, window, interaction, transform_armed, locale)?;
     scene.snapshot = visual.map(semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dPageVisualLease::snapshot);
     semio_s_fem_app_surface::world_3d_surface(FEM3D_BODY_MODEL, &scene, semio_plugin::surface_name(locale, "Model view", "Modellansicht"))
 }

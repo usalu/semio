@@ -20,11 +20,10 @@ semio-framework-pack = { path = "../../../../../../../../../../../../../🧰️f
 semio-framework-artifact-reference = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-plugin = { workspace = true }
-semio-s-artifact-stdio-docx-base-model = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-document = { workspace = true }
 # 🧩️ Capability Dependencies
-semio-s-artifact-stdio-docx = { workspace = true }
+semio-s-artifact-stdio-docx-base-model = { workspace = true }
 semio-s-artifact-stdio-md = { workspace = true }
 semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }

@@ -44,9 +44,12 @@ export async function browserSessionLaws(): Promise<void> {
     native.begin_close();
     let closed = false;
     for (let turn = 0; turn < retirementFixture.maximumSteps; turn += 1) {
-      const receipt = JSON.parse(native.close_step(1,native.next_close_copy_byte_demand(),native.next_close_capacity_byte_demand(native.next_close_copy_byte_demand()),native.next_close_release_byte_demand(),native.next_close_depth_demand()));
+      const copy = native.next_close_copy_byte_demand();
+      const capacity = native.next_close_capacity_byte_demand(copy);
+      const release = native.next_close_release_byte_demand();
+      const receipt = JSON.parse(native.close_step(1,copy,capacity,release,native.next_close_depth_demand()));
       assert(validate(receipt),JSON.stringify(validate.errors));
-      assert(receipt.items<=1 && receipt.copyBytes>=0 && receipt.capacityBytes>=0 && receipt.releaseBytes>=0);
+      assert(receipt.items<=1 && receipt.copyBytes<=copy && receipt.capacityBytes<=capacity && receipt.releaseBytes<=release);
       if (receipt.phase === "complete") { closed = true; break; }
     }
     assert(closed && native.terminal_is_empty()); native.free();

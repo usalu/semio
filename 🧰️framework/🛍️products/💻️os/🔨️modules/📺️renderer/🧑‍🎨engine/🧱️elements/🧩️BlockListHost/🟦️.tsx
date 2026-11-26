@@ -82,7 +82,7 @@ function BlockCard({ block, stepId, controllerId, onAction, selection }: { reado
   return (
     <SortableRow id={block.id} cell>
       {({ attributes, listeners }) => (
-        <SharedBorderRow framed={false} className={cn("semio-block-card bg-background", selection.selectedId === block.id && "bg-accent/10", surfaceDrag && "cursor-grab active:cursor-grabbing")} data-block-id={block.id}>
+        <SharedBorderRow framed={false} className={cn("semio-block-card bg-transparent", selection.selectedId === block.id && "bg-accent/10", surfaceDrag && "cursor-grab active:cursor-grabbing")} data-block-id={block.id}>
           <SharedBorderRowCell className="min-w-0 flex-1 gap-2 p-single">
             {!surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(event) => event.stopPropagation()} /> : <Icon icon="grip-vertical" size="small" />}
             <SelectionLabel id={block.id} target={block.target} selection={selection} controllerId={controllerId} onAction={onAction}>
@@ -118,7 +118,7 @@ function StepCard({ step, palette, controllerId, onAction, selection }: { readon
         <SharedBorderRow
           orientation="vertical"
           framed={false}
-          className={cn("semio-step-card bg-background", selection.selectedId === step.id && "bg-accent/10", surfaceDrag && "cursor-grab active:cursor-grabbing")}
+          className={cn("semio-step-card bg-transparent", selection.selectedId === step.id && "bg-accent/10", surfaceDrag && "cursor-grab active:cursor-grabbing")}
           data-step-id={step.id}
           onDragOver={(event) => {
             event.preventDefault();

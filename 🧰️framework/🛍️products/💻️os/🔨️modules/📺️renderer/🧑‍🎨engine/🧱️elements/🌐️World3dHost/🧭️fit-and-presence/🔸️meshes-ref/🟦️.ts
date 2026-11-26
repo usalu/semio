@@ -119,18 +119,23 @@ export function useMeshesRefState({ instancesRef, instances, meshes, vortices, r
 
   const cameraSync = useContext(World3dCameraSyncContext);
   const cameraDispatchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sendWorldCameraRef = useRef<(state: WorldCameraState) => unknown>(() => undefined);
+  sendWorldCameraRef.current = (state) => {
+    lastDispatchedWorldCameraRef.current = state;
+    retainViewport({ lastDispatchedCamera: state });
+    return dispatchSettled("setCamera", worldCameraSetCameraDispatchArgs(windowInstanceId ?? node.surfaceId, state));
+  };
+  const singleFlightWorldCamera = useMemo(() => createCoalescingActionDispatcher<WorldCameraState>((state) => sendWorldCameraRef.current(state)), []);
   const dispatchWorldCameraDebounced = useCallback(
     (state: WorldCameraState) => {
       if (!cameraSync) return;
       if (cameraDispatchTimeoutRef.current) clearTimeout(cameraDispatchTimeoutRef.current);
       cameraDispatchTimeoutRef.current = setTimeout(() => {
         cameraDispatchTimeoutRef.current = null;
-        lastDispatchedWorldCameraRef.current = state;
-        retainViewport({ lastDispatchedCamera: state });
-        dispatch("setCamera", worldCameraSetCameraDispatchArgs(windowInstanceId ?? node.surfaceId, state));
+        singleFlightWorldCamera(state);
       }, CAMERA_SYNC_DEBOUNCE_MS);
     },
-    [cameraSync, dispatch, node.surfaceId, retainViewport, windowInstanceId],
+    [cameraSync, singleFlightWorldCamera],
   );
   useEffect(
     () => () => {

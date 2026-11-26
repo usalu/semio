@@ -25,9 +25,10 @@
         "statusHeartbeatMilliseconds": 30000,
         "silentBeatsMaximum": 3,
         "silenceRestartCooldownMilliseconds": 300000,
+        "silenceChildGraceMilliseconds": 180000,
         "offlineMilliseconds": 600000,
         "beatByState": {"running": 30000, "backoff": 30000, "waiting": 120000, "observing": 60000, "server": 120000, "ready": 120000},
-        "heartbeatNames": ["pool.json", "attest.json"],
+        "heartbeatNames": ["pool.json", "attest.json", "head.json"],
         "leaseRenewMilliseconds": 10000,
         "leaseStaleMilliseconds": 60000, "refreshMaximumAgeMilliseconds": 86400000, "refreshKeepingFailureCodes": ["stage-timeout", "stage-stall-exhausted", "store-full", "source-transient", "interrupted", "spawn-failed", "loop-failed"],
         "humanFreshMilliseconds": 90000,
@@ -89,7 +90,7 @@
           "workspace": {"megabytes": 4096, "inodes": 100000}
         },
         "storeFullPattern": "No space left \\((EDQUOT|ENOSPC)\\) in (.+?): the disk",
-        "sourceTransientPatterns": ["ENOENT: no such file or directory, \\w+ '{root}[^']*'", "Private Nx engine import missing: ", "(?:refused|invalid|missing) process\\.source\\.", "(?:Cannot find module|Could not resolve)[: ]+[\"']?(?:\\.|{root})", "(?:SyntaxError|Unexpected|Expected|Unterminated|Invalid)\\b[^\\n]*{root}", "plan cannot continue[^\\n]*same text: [^\\n]*{root}", "^error: failed to write [`']{root}[^`']*[`']\\s*$"],
+        "sourceTransientPatterns": ["ENOENT: no such file or directory, \\w+ '{root}[^']*'", "Private Nx engine import missing: ", "(?:refused|invalid|missing) process\\.source\\.", "BUILD_SOURCE_CONFLICT\\]: Conflicting inference observations", "(?:Cannot find module|Could not resolve)[: ]+[\"']?(?:\\.|{root})", "(?:SyntaxError|Unexpected|Expected|Unterminated|Invalid)\\b[^\\n]*{root}", "plan cannot continue[^\\n]*same text: [^\\n]*{root}", "^error: failed to write [`']{root}[^`']*[`']\\s*$"],
         "sourceTransientDebounceMilliseconds": 15000,
         "sourceTransientPollMilliseconds": 5000,
         "treeStampDirectory": "heads",
@@ -110,6 +111,7 @@
         }
       }
     },
+    "SilenceTexts": {"const": {"en": {"childRestart": "the readiness supervisor wrote nothing for {seconds} s ({beats} missed beats) while its machine lives: the launcher ends it and starts it again"}, "de": {"childRestart": "der Bereitschafts-Supervisor schrieb seit {seconds} s nichts ({beats} verpasste Schläge), obwohl seine Maschine lebt: der Starter beendet ihn und startet ihn neu"}}},
     "Inflight": {"type": "object", "additionalProperties": false, "required": ["stage", "pid", "startedMs", "exitFile", "log"], "if":{"required":["toolsGraceDenial"]},"then":{"required":["launch","stop","deadline"],"properties":{"stage":{"const":"tools"},"stop":{"const":"timeout"},"deadline":{"const":"hard-cap"}}},"properties": {"stage": {"type": "string"}, "pid": {"type": "integer", "minimum": 1}, "startedMs": {"type": "integer", "minimum": 1}, "exitFile": {"type": "string"}, "log": {"type": "string"}, "supervisor": {"type": "integer", "minimum": 1}, "watchdog": {"$ref": "#/definitions/Watchdog"}, "launch": {"$ref": "#/definitions/StageLaunch"}, "stop": {"$ref": "#/definitions/StageStop"}, "toolsGraceDenial":{"$ref":"#/definitions/ToolsGraceDenial"},"deadline": {"$ref": "#/definitions/DeadlineStop"}, "stepOverdue": {"$ref": "#/definitions/StepOverdueEvidence"}}},
     "StageStop": {"enum": ["timeout", "cancel", "stall", "overdue", "restart"]},
     "StageLaunch": {

@@ -3,10 +3,11 @@
   "$id": "https://json.schemas.assets.semio-tech.com/app/bim/model/presence/schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["engagementInput", "storey", "camera"],
+  "required": ["engagementInput", "storey", "camera", "ownedWorksets"],
   "properties": {
     "engagementInput": { "type": "string" },
     "storey": { "type": "string" },
+    "ownedWorksets": { "type": "array", "items": { "type": "string" } },
     "camera": {
       "$ref": "https://json.schemas.assets.semio-tech.com/framework/ui/viewport/2d"
     }

@@ -140,6 +140,8 @@ struct NaturalPdfDecoder {
     live_bytes: usize,
     next_release: usize,
     blocked: Option<(PdfByteGraphEvent, usize)>,
+    peak: (usize, usize),
+    demanded: usize,
     stall: u8,
     stall_at: Option<String>,
     stash: Stash,
@@ -151,7 +153,7 @@ impl NaturalPdfDecoder {
         Self {
             phase: Phase::AllocateFile, source: PdfNaturalSource::Contiguous(Vec::new()), preparing: None, file: None, lifting: None,
             snapshot: None, partial_page: None, snapshot_retirement: None, trailer_retirement: None,
-            graph_retirement: Default::default(), contract, progress: Default::default(), live_bytes: 0, next_release: 0, blocked: None, stall: 0, stall_at: None,
+            graph_retirement: Default::default(), contract, progress: Default::default(), live_bytes: 0, next_release: 0, blocked: None, peak: (0, 0), demanded: 0, stall: 0, stall_at: None,
             stash: Stash::default(), digest: GraphDigest::default(),
         }
     }
@@ -280,11 +282,6 @@ impl NaturalPdfDecoder {
         if matches!(self.phase, Phase::Lift) { ControlledDocumentLiftCursor::RUN_UNIT_MAXIMUM } else { 1 }
     }
 
-    /// 📏️ The units one bulk call may run when each copies `unit_copy` bytes: the step's remaining units and fuel at [`BODY_BYTES_PER_UNIT`] each, and at most half the copy grant so the rest stays open for a page or history reservation.
-    fn body_bytes(&self, remaining_work: u64, fuel: u64, copy: usize, unit_copy: usize) -> usize {
-        let units = usize::try_from(remaining_work.min(fuel)).unwrap_or(usize::MAX);
-        units.saturating_mul(BODY_BYTES_PER_UNIT).min(copy / (2 * unit_copy)).max(1)
-    }
 
     /// ✍️ Bytes the next preparation unit writes when it fills one index slot or queue entry, which it is charged instead of a token unit.
     fn writing_bytes(&self) -> Option<usize> {
@@ -389,9 +386,6 @@ impl NaturalFileDecodeCursor<PdfSnapshot> for NaturalPdfDecoder {
         use PdfByteGraphEvent as Event;
         let start = self.progress.completed_work_units;
         let max_work = self.contract.max_work_units_per_step;
-        static TURNS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-        let turn = TURNS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        if turn % 16 == 0 { eprintln!("[DEBUG] turn={turn} units={start} max_work={max_work} fuel={} phase={} trace={} grant_copy={}", context.fuel_remaining(), phase_name(self.phase), self.preparing.as_ref().map(|cursor| cursor.trace()).unwrap_or_default(), context.retained_grant().maximum_copy_bytes); }
         let mut admitted = false;
         while !context.is_cancelled() && self.progress.completed_work_units - start < max_work {
             if admitted && context.should_yield() { break; }
@@ -405,10 +399,12 @@ impl NaturalFileDecodeCursor<PdfSnapshot> for NaturalPdfDecoder {
             let empty_output = self.reserves_empty_output();
             let remaining = max_work - (self.progress.completed_work_units - start);
             let running = body || written.is_some() && self.blocked.is_none();
-            let work = if running { self.body_bytes(remaining, context.fuel_remaining(), grant.maximum_copy_bytes, copy_body) } else { 1 };
+            let demanded = take(&mut self.demanded);
+            let work = if running { run_work(remaining, context.fuel_remaining(), grant.maximum_copy_bytes, demanded, copy_body) } else { 1 };
             if work < self.body_floor() && body { break; }
             let allocation_boundary = if empty_output { grant.maximum_release_bytes } else { grant.maximum_copy_bytes - copy_body * work };
             let grant = CosGrant { work, allocation_bytes: grant.maximum_capacity_bytes.min(allocation_boundary), release_bytes: grant.maximum_release_bytes };
+            self.peak = (self.peak.0.max(grant.allocation_bytes), self.peak.1.max(grant.release_bytes));
             let phase = self.phase;
             let step = self.next(grant, body)?;
             let idle = step.work == 0 && matches!(step.event, Ok(Event::More)) && std::mem::discriminant(&self.phase) == std::mem::discriminant(&phase);
@@ -426,9 +422,7 @@ impl NaturalFileDecodeCursor<PdfSnapshot> for NaturalPdfDecoder {
             }
             self.stall = 0;
             self.stall_at = None;
-            let before_units = self.progress.completed_work_units;
             self.record(&step, copy_body, if running { BODY_BYTES_PER_UNIT } else { 1 }, inline_body != 0, empty_output, context)?;
-            if before_units / 5000 != self.progress.completed_work_units / 5000 { eprintln!("[DEBUG] units={} phase={} trace={} work={} running={running}", self.progress.completed_work_units, phase_name(self.phase), self.preparing.as_ref().map(|cursor| cursor.trace()).unwrap_or_default(), step.work); }
             if step.work != 0 { self.blocked = None; }
             match step.event {
                 Ok(Event::Object) => self.progress.decoded_items += 1,
@@ -438,9 +432,10 @@ impl NaturalFileDecodeCursor<PdfSnapshot> for NaturalPdfDecoder {
                     return Ok(NaturalFileDecodeStep::Complete { snapshot: self.publish_snapshot()?, progress: self.progress });
                 }
                 Ok(event @ (Event::NeedsAllocation { bytes } | Event::NeedsRelease { bytes })) => {
+                    if let Event::NeedsAllocation { bytes } = event { self.demanded = bytes; }
                     if self.progress.completed_work_units == start {
-                        let available = if matches!(event, Event::NeedsAllocation { .. }) { grant.allocation_bytes } else { grant.release_bytes };
-                        if self.blocked.replace((event, available)) == Some((event, available)) {
+                        let (available, peak) = if matches!(event, Event::NeedsAllocation { .. }) { (grant.allocation_bytes, self.peak.0) } else { (grant.release_bytes, self.peak.1) };
+                        if refused_for_good(&mut self.blocked, event, available, peak) {
                             let stage = self.lifting.as_ref().map_or_else(String::new, |owner| format!(" {} after {} pages", owner.stage_name(), owner.pages_lifted()));
                             return Err(failure(&format!("PDF decoder needs a {bytes}-byte backing grant during {}{stage}", phase_name(self.phase))));
                         }
@@ -577,4 +572,48 @@ fn xref_message(error: XrefStreamError) -> String {
     match error { XrefStreamError::Structure(reason) => reason.into(), XrefStreamError::Decode(error) => error.into_message() }
 }
 
-fn failure(reason: &str) -> MediaError { eprintln!("[DEBUG] pdf decoder failure: {reason}"); MediaError::Payload(NATURAL_FILE_PORT.into(), reason.into()) }
+/// 📏️ The units one bulk call may run when each copies `unit_copy` bytes: the step's remaining units and fuel at [`BODY_BYTES_PER_UNIT`] each, and at most half of the copy grant left after the allocation the previous call demanded, so that allocation still fits what the run leaves of the grant.
+fn run_work(remaining_work: u64, fuel: u64, maximum_copy: usize, demanded: usize, unit_copy: usize) -> usize {
+    let units = usize::try_from(remaining_work.min(fuel)).unwrap_or(usize::MAX);
+    units.saturating_mul(BODY_BYTES_PER_UNIT).min(maximum_copy.saturating_sub(demanded) / (2 * unit_copy)).max(1)
+}
+
+/// 🧱️ Whether a demand no grant can meet: the same demand met the same `available` backing twice in a row, and that backing was the largest any call of this decoder was offered (`peak`), so a fresh turn would offer no more; a turn whose grant earlier calls already spent offers less than the peak and only yields.
+fn refused_for_good(blocked: &mut Option<(PdfByteGraphEvent, usize)>, event: PdfByteGraphEvent, available: usize, peak: usize) -> bool {
+    blocked.replace((event, available)) == Some((event, available)) && available >= peak
+}
+
+fn failure(reason: &str) -> MediaError { MediaError::Payload(NATURAL_FILE_PORT.into(), reason.into()) }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 🧱️ LAW: a demand is refused for good only when the same demand failed twice against the largest backing ever offered; the institution diagram's lift asked for 65,536 released bytes after one turn had spent its release grant (0 offered, 1,048,576 at most), which used to fail the import and now yields to the next turn.
+    #[test]
+    fn a_demand_blocked_by_a_spent_turn_grant_yields_and_only_a_full_grant_refuses() {
+        let release = PdfByteGraphEvent::NeedsRelease { bytes: 65_536 };
+        let mut blocked = None;
+        assert!(!refused_for_good(&mut blocked, release, 65_326, 1_048_576), "first block yields");
+        assert!(!refused_for_good(&mut blocked, release, 0, 1_048_576), "a spent grant yields");
+        assert!(!refused_for_good(&mut blocked, release, 0, 1_048_576), "the same spent grant again still yields in the same turn");
+        assert!(!refused_for_good(&mut blocked, release, 1_048_576, 1_048_576), "a changed backing yields");
+        assert!(refused_for_good(&mut blocked, release, 1_048_576, 1_048_576), "the same demand against the full grant twice is refused");
+        let allocation = PdfByteGraphEvent::NeedsAllocation { bytes: 2 << 20 };
+        let mut blocked = None;
+        assert!(!refused_for_good(&mut blocked, allocation, 1 << 20, 1 << 20));
+        assert!(refused_for_good(&mut blocked, allocation, 1 << 20, 1 << 20));
+    }
+
+    /// 📏️ LAW: a bulk run leaves the allocation the previous call demanded fundable, so a large dictionary vector (the institution diagram's 278,528 bytes against a 524,175-byte grant) never stalls at one unit per turn.
+    #[test]
+    fn a_bulk_run_leaves_the_demanded_allocation_fundable() {
+        let maximum = 524_175;
+        for demanded in [0, 1, 4096, 278_528, 400_000, maximum - 4] {
+            let work = run_work(u64::MAX, u64::MAX, maximum, demanded, BODY_COPY_PER_BYTE);
+            assert!(work >= 1);
+            assert!(maximum - work * BODY_COPY_PER_BYTE >= demanded.min(maximum - BODY_COPY_PER_BYTE), "demanded {demanded}: a run of {work} units leaves {}", maximum - work * BODY_COPY_PER_BYTE);
+        }
+        assert!(run_work(u64::MAX, u64::MAX, maximum, 278_528, BODY_COPY_PER_BYTE) < run_work(u64::MAX, u64::MAX, maximum, 0, BODY_COPY_PER_BYTE));
+    }
+}

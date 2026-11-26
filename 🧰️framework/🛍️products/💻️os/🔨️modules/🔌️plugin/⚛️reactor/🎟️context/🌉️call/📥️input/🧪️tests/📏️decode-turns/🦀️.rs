@@ -94,6 +94,51 @@ fn canonical_empty_poll_keeps_its_typed_owner_and_paid_close() {
 }
 
 #[test]
+fn ordinary_open_owns_exact_event_and_retires_its_capacity() {
+    std::thread::Builder::new().stack_size(64*1024*1024).spawn(|| {
+        let cases: serde_json::Value = serde_json::from_str(include_str!("../ordinary-open.json")).unwrap();
+        let profile: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+        let grant = grant_of(&profile["grants"][0]);
+        for row in cases.as_array().unwrap().iter().filter(|row| row["canonical"]==true) {
+            let wire = row["wire"].as_str().unwrap();
+            let (direct, _, event, closed) = measure(wire.as_bytes(), grant);
+            let (generic, _, expected, _) = measure(format!(" {wire}").as_bytes(), grant);
+            assert_eq!(event, expected);
+            assert_eq!(direct.work, direct.fuel);
+            assert!(direct.work < generic.work);
+            let total = direct.receipt.checked_add(closed).unwrap();
+            assert_eq!(total.retained_capacity_bytes, total.released_bytes);
+            eprintln!("[DEBUG] {} opening used {} vs {} work units, {} vs {} capacity bytes", row["name"], direct.work, generic.work, direct.receipt.retained_capacity_bytes, generic.receipt.retained_capacity_bytes);
+        }
+    }).unwrap().join().unwrap();
+}
+
+#[test]
+fn canonical_lifecycle_ack_keeps_its_owned_event_and_paid_close() {
+    std::thread::Builder::new().stack_size(64 * 1024 * 1024).spawn(|| {
+        let rows: serde_json::Value = serde_json::from_str(include_str!("../🧫️lifecycle-ack.json")).unwrap();
+        let profile: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+        let grant = grant_of(&profile["grants"][0]);
+        for row in rows.as_array().unwrap().iter().filter(|row| row["canonical"] == true) {
+            let wire = row["wire"].as_str().unwrap();
+            let generic_wire = format!(" {wire}");
+            let (fast, _, typed, close) = measure(wire.as_bytes(), grant);
+            let (generic, _, reference, generic_close) = measure(generic_wire.as_bytes(), grant);
+            assert_eq!(typed, reference);
+            assert_eq!(fast.work, fast.fuel);
+            assert!(fast.work >= wire.len() as u64);
+            assert!(fast.work < generic.work && fast.steps < generic.steps);
+            assert!(fast.receipt.retained_capacity_bytes < generic.receipt.retained_capacity_bytes);
+            for cumulative in [fast.receipt.checked_add(close).unwrap(), generic.receipt.checked_add(generic_close).unwrap()] {
+                assert_eq!(cumulative.retained_capacity_bytes, cumulative.released_bytes);
+            }
+            eprintln!("[DEBUG] {}: work {} vs {}, capacity {} vs {}, steps {} vs {}",
+                row["name"], fast.work, generic.work, fast.receipt.retained_capacity_bytes, generic.receipt.retained_capacity_bytes, fast.steps, generic.steps);
+        }
+    }).unwrap().join().unwrap();
+}
+
+#[test]
 fn first_note_input_keeps_its_work_and_receipts_while_control_turns_stay_under_their_ceiling(){
     let checked=std::thread::Builder::new().stack_size(64*1024*1024).spawn(||{
         let corpus:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();

@@ -41,7 +41,7 @@
         let admitted = semio_plugin_reactor_app::admit_addressed_action_view(&view, &invocation.address).expect("reserved undo is admitted without window ownership");
         assert!(std::ptr::eq(admitted,&view),"reserved admission borrows the actual fixture view");
         let meta = ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(view, semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..meta() };
-        let mut args=Some(DslValue::Object(invocation.arguments.into_iter().collect()));let mut fault=None;let admitted=artifact_app_laws::dispatch_addressed_fixture_on_original(&mut app.0,&invocation.address,&mut args,&mut fault,Some("edit"),&meta,&mut identity,cx).await.expect("actor reserved undo");
+        let mut args=Some(DslValue::Object(invocation.arguments.into_iter().collect()));let mut fault=None;let admitted=semio_plugin_testing_instance_laws::dispatch_addressed_fixture_on_original(&mut app.0,&invocation.address,&mut args,&mut fault,Some("edit"),&meta,&mut identity,cx).await.expect("actor reserved undo");
         assert!(admitted.mutations.is_empty());
         assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, .. } if kind == semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND)), "first turn must admit spawn-job");
         assert_eq!(app.stores.test_snapshot().await.count, 1, "first turn must not commit history");

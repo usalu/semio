@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
+identity-testing = ["semio-os-vcs-entity-identity/testkit"]
 testkit = ["dep:serde"]
 
 [dependencies]

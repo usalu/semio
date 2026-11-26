@@ -1,9 +1,10 @@
 //! 🧰️ Scene kit: the entity builder, the utilisation bindings from the report, layers, legends and the entity-kind registry of the DIN 4108 scene.
 
 use super::scene::*;
-pub(crate) use super::scene::projection_kit::{self, base_id, loc, v3, add, mul, unit, along, member_frame, entity_ref, clause_of, tone_of, utilisation_words, polyline};
+pub(crate) use super::scene::projection_kit::{self, base_id, loc, v3, add, mul, unit, along, member_frame, entity_ref, tone_of, utilisation_words, polyline};
 use super::scene::projection::{Fragment, Part};
 use super::{model, norm};
+use std::collections::{BTreeMap, BTreeSet};
 
 pub(crate) const LAYER_ELEMENTS: &str = "elements";
 pub(crate) const LAYER_ZONES: &str = "zones";
@@ -106,8 +107,43 @@ pub fn focus_of_outcome(document: &model::Din4108Snapshot, report: &norm::CheckR
 
 /// 📶️ The governing binding among the checks owned by any of the rows `ids`.
 pub fn binding(document: &model::Din4108Snapshot, report: &norm::CheckReport, ids: &[&str]) -> Option<UtilisationBinding> {
-    projection_kit::governing_where(report, |check| owner_entity(document, check).is_some_and(|owner| ids.contains(&owner.as_str())))
+    projection_kit::governing_where(report, |check| {
+        ids.contains(&base_id(&check.subject.entity_id)) && owner_entity(document, check).is_some()
+    })
         .map(projection_kit::binding_of_check)
+}
+
+/// 📇️ The governing check per document row and the first check for each clause lookup.
+pub(crate) struct CheckBindings<'a> {
+    governing: BTreeMap<&'a str, &'a norm::CheckResult>,
+    by_id: BTreeMap<&'a str, &'a norm::CheckResult>,
+}
+
+impl<'a> CheckBindings<'a> {
+    pub(crate) fn new(document: &model::Din4108Snapshot, report: &'a norm::CheckReport) -> Self {
+        let owners: BTreeSet<_> = rows_of(document).into_iter().flat_map(|(_, ids)| ids).collect();
+        let governing = projection_kit::worst_by_owner_with(report, |subject| {
+            let owner = base_id(subject);
+            owners.contains(owner).then_some(owner)
+        });
+        let mut by_id = BTreeMap::new();
+        for check in &report.checks {
+            by_id.entry(check.id.as_str()).or_insert(check);
+        }
+        Self { governing, by_id }
+    }
+
+    pub(crate) fn binding(&self, id: &str) -> Option<UtilisationBinding> {
+        self.governing.get(id).map(|check| projection_kit::binding_of_check(check))
+    }
+
+    pub(crate) fn clause(&self, check_id: &str) -> Option<ClauseId> {
+        self.by_id.get(check_id).map(|check| ClauseId {
+            family: check.clause.family.clone(),
+            part: check.clause.part.clone(),
+            section: check.clause.section.clone(),
+        })
+    }
 }
 
 /// 🧱️ Everything one scene entity needs before sealing.

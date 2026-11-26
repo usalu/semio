@@ -21,6 +21,22 @@ use semio_s_artifact_draw_drawing_scene_mounted as geometry_session;
     /// 📐️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
     pub struct DrawingAppFixture(pub DrawingApp, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
+    impl DrawingAppFixture {
+        /// 🎨️ Polls the mounted drawing under its original caller until preparation yields the pending effects.
+        pub async fn prepared_effects(&mut self, view: Option<&ViewModel>) -> Vec<semio_framework::kernel::Effect> {
+            use semio_plugin::artifact_app_laws::{OriginalFixtureCaller, fixture_renew_turn};
+            let grant = self.1.cx().original_turn_ceiling().0;
+            for _ in 0..OriginalFixtureCaller::maximum_turns() {
+                let cx = self.1.cx();
+                fixture_renew_turn(cx, OriginalFixtureCaller::turn_fuel(), grant).expect("drawing preparation turn");
+                if let Some(effects) = self.0.pending_effects(view, cx).await.expect("drawing pending effects") {
+                    return effects;
+                }
+            }
+            panic!("drawing preparation exceeded its caller's turn bound")
+        }
+    }
+
     impl std::ops::Deref for DrawingAppFixture {
         type Target = DrawingApp;
 
@@ -51,6 +67,8 @@ use semio_s_artifact_draw_drawing_scene_mounted as geometry_session;
 
     /// 🧪️ Draw fixtures carry the production manifest and its exact registered factories.
     pub async fn drawing_app() -> DrawingAppFixture {
+        static IO: std::sync::Once = std::sync::Once::new();
+        IO.call_once(|| semio_os_kernel::io::io_mechanism::io_register(semio_s_artifact_draw_drawing::io().entries).expect("register the Drawing serializers"));
         let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
         let mut app = new_app_with_registry::<EditorApp<DrawingPlayApp>>(|| App { definition: create_drawing_app(), examples: Vec::new() }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;

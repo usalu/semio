@@ -8,7 +8,7 @@ import type { KeyboardEvent, ReactElement } from "react";
 import { formatNumber } from "@teaching/staffage";
 import { useClock, type StaffageClock } from "../⏱️clock/🟦️.ts";
 import { useArchive } from "../🧭️context/🟦️.tsx";
-import { Bar, Button, ButtonGroup, CheckField, Cell, Column, SelectField, SharedBorderRowCell, cn } from "../🪟️chrome/🟦️.tsx";
+import { Bar, Button, ButtonGroup, CheckField, Cell, Column, SelectField, SharedBorderRowCell } from "../🪟️chrome/🟦️.tsx";
 
 /** 🐢️ The offered playback rates. */
 export const RATES = [0.1, 0.25, 0.5, 1, 2] as const;
@@ -40,7 +40,7 @@ export function Transport(props: { readonly clock: StaffageClock; readonly label
   const time = `${formatNumber(state.timeS, 2, language)} s`;
   const text = t("transport.time", { time, frame: state.frame });
   return (
-    <Column role="group" aria-label={label} onKeyDown={onKey} className={cn("bg-panel", className)}>
+    <Column role="group" aria-label={label} onKeyDown={onKey} className={className}>
       <Bar>
         <ButtonGroup below="never">
           <Button grouped variant="primary" icon={state.playing ? "pause" : "play"} onClick={() => clock.toggle()}>

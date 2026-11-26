@@ -1,6 +1,8 @@
 
-import { randomUUID } from "node:crypto";
-import { existsSync, lstatSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
+import {ownProcessIdentityV1,processRecordAliveV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
+import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import cachingPolicy from "../../../⚡️caching/🔣️policy.json" with { type: "json" };
 import ownershipPolicy from "../../../🗂️workspaces/🔣️policy.json" with { type: "json" };
@@ -114,9 +116,9 @@ export function findOwnerFindings(registry: BuildOwnerRegistryV1, tree: OwnerTre
   return out;
 }
 
-/** 📚️ Brings the rows below `scope` in line with the tree: rows of vanished modules are dropped only when no manifest exists and git tracks no file at the missing path (a tracked path that is merely absent is a concurrent move in progress), the Cargo packages under their native roots become rows of their own, rows whose module moved follow it, rows take the name and package list their manifest declares, Cargo rows beside a project manifest hand over to it, and every unregistered module gets a row at its byte-order position. */
-export function syncOwnerRegistry(registry: BuildOwnerRegistryV1, tree: OwnerTree, policy: OwnerTreePolicy, scope?: OwnerScope): OwnerSync {
-  const findings = findOwnerFindings(registry, tree, policy, scope);
+/** 📚️ Brings the rows below `scope` in line with the tree (with `additionsOnly` it only adds the rows that are missing and touches no other row): rows of vanished modules are dropped only when no manifest exists and git tracks no file at the missing path (a tracked path that is merely absent is a concurrent move in progress), the Cargo packages under their native roots become rows of their own, rows whose module moved follow it, rows take the name and package list their manifest declares, Cargo rows beside a project manifest hand over to it, and every unregistered module gets a row at its byte-order position. */
+export function syncOwnerRegistry(registry: BuildOwnerRegistryV1, tree: OwnerTree, policy: OwnerTreePolicy, scope?: OwnerScope, additionsOnly = false): OwnerSync {
+  const findings = findOwnerFindings(registry, tree, policy, scope).filter((finding) => !additionsOnly || finding.kind === "project-without-row" || finding.kind === "cargo-without-row");
   const owners = structuredClone(registry.owners);
   const missing = findings.filter((finding) => finding.kind === "missing-root" || finding.kind === "missing-manifest");
   const gone = new Set(missing.map((finding) => finding.owner));
@@ -149,7 +151,7 @@ export function syncOwnerRegistry(registry: BuildOwnerRegistryV1, tree: OwnerTre
     if (owner.nativeRoots) owner.nativeRoots = owner.nativeRoots.map((native) => (native === from ? target.root : native.startsWith(`${from}/`) ? at(target.root, native.slice(from.length + 1)) : native));
     relocated.push({ name: owner.name, from, to: target.root });
   }
-  for (const owner of [...owners].filter((row) => within(row.root, scope) && tree.exists(row.manifest))) {
+  for (const owner of [...owners].filter((row) => !additionsOnly && within(row.root, scope) && tree.exists(row.manifest))) {
     const sibling = owner.manifest.endsWith(CARGO) ? at(owner.root, PROJECT) : undefined;
     const handover = sibling !== undefined ? ownerManifestName(tree, sibling) : undefined;
     if (sibling !== undefined && handover !== undefined && !taken(handover, owner)) owner.manifest = sibling;
@@ -201,7 +203,9 @@ function listManifests(root: string, policy: OwnerTreePolicy, scope?: OwnerScope
   if (listed.status === 0) return listed.stdout.toString("utf8").split("\0").filter((path) => names.includes(basename(path)) && !excludedFromOwners(path, policy) && existsSync(join(root, path))).sort(compareBytes);
   const found: string[] = [];
   const walk = (directory: string): void => {
-    for (const entry of readdirSync(join(root, directory), { withFileTypes: true })) {
+    let entries: import("node:fs").Dirent[] = [];
+    try { entries = readdirSync(join(root, directory), { withFileTypes: true }); } catch (error) { if (!["ENOENT", "ENOTDIR"].includes((error as NodeJS.ErrnoException).code ?? "")) throw error; }
+    for (const entry of entries) {
       const path = at(directory, entry.name);
       if (entry.isDirectory()) { if (!policy.generated.includes(entry.name) && !excludedFromOwners(`${path}/`, policy)) walk(path); } else if (names.includes(entry.name) && !excludedFromOwners(path, policy)) found.push(path);
     }
@@ -248,24 +252,86 @@ export function moveOwnerScopes(moves: readonly Readonly<{ sourcePath: string; d
   return outermost.length > limit ? ["."] : outermost;
 }
 
-/** 🔄️ Re-reads the registry file at call time because peers edit it concurrently, syncs the rows below `scope`, replaces the file atomically when anything changed, and lists the findings that remain (catalog providers are authored, not synced; native roots follow their row). */
-export function reconcileBuildOwnerRegistry(repoRoot: string, options: { scope?: OwnerScope; write: boolean }, policy: OwnerTreePolicy = OWNER_TREE_POLICY): OwnerSync & { changed: boolean; findings: OwnerFinding[] } {
-  const file = join(repoRoot, BUILD_OWNER_REGISTRY_FILE);
-  const source = readFileSync(file, "utf8");
-  const registry = readBuildOwnerRegistryV1(JSON.parse(source));
-  const tree = readOwnerTree(repoRoot, policy, options.scope);
-  const result = syncOwnerRegistry(registry, tree, policy, options.scope);
-  const text = `${JSON.stringify(result.registry, null, 2)}\n`;
-  const changed = JSON.stringify(result.registry) !== JSON.stringify(registry);
-  if (changed && options.write) {
-    const pending = `${file}.${randomUUID()}.tmp`;
-    try {
-      writeFileSync(pending, text, { flag: "wx" });
-      if (readFileSync(file, "utf8") !== source) throw Error("Build owner registry changed during reconciliation");
-      renameSync(pending, file);
-    } finally {
-      rmSync(pending, { force: true });
+class OwnerRegistryRaceV1 extends Error {}
+
+const ownerRegistryLockPathV1 = (file: string): string => join(tmpdir(), `semio-build-owners-${createHash("sha256").update(file).digest("hex").slice(0, 16)}.lock`);
+
+const ownerRegistryLockHolderAliveV1 = (pid: number, startMs?: number): boolean => processRecordAliveV1(pid, startMs);
+
+/** 🔒️ Runs `run` as the only writer of the registry file on this machine: an atomic lock directory in the temporary directory (never inside the replicated work tree) names its holder, a lock whose holder ended or that is older than `staleMilliseconds` is taken over by an atomic rename, and a writer that waits longer than `waitMilliseconds` refuses instead of hanging. */
+export function withOwnerRegistryLockV1<T>(file: string, run: () => T, options: { staleMilliseconds?: number; waitMilliseconds?: number } = {}): T {
+  const lock = ownerRegistryLockPathV1(file), stale = options.staleMilliseconds ?? 60_000, wait = options.waitMilliseconds ?? 30_000, began = Date.now();
+  for (;;) {
+    try { mkdirSync(lock); writeFileSync(join(lock, "owner"), `${process.pid} ${Date.now()} ${ownProcessIdentityV1().startMs}\n`); break; } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") { rmSync(lock, { recursive: true, force: true }); throw error; }
     }
+    const facts = statSync(lock, { throwIfNoEntry: false });
+    if (facts !== undefined) {
+      let pid = Number.NaN, startMs: number | undefined;
+      try { const parts = readFileSync(join(lock, "owner"), "utf8").trim().split(" "); pid = Number(parts[0]); startMs = parts[2] === undefined ? undefined : Number(parts[2]); } catch {}
+      if (Date.now() - facts.mtimeMs > stale || (Number.isInteger(pid) && !ownerRegistryLockHolderAliveV1(pid, startMs))) {
+        try { renameSync(lock, `${lock}.${randomUUID()}.stale`); } catch {}
+        for (const name of readdirSync(tmpdir()).filter((entry) => entry.startsWith(`${basename(lock)}.`) && entry.endsWith(".stale"))) rmSync(join(tmpdir(), name), { recursive: true, force: true });
+        continue;
+      }
+    }
+    if (Date.now() - began > wait) throw new Error(`Build owner registry is locked by another writer: ${lock}`);
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25);
   }
-  return { ...result, changed, findings: findOwnerFindings(result.registry, tree, policy, options.scope) };
+  try { return run(); } finally { rmSync(lock, { recursive: true, force: true }); }
+}
+
+/** 🔄️ Re-reads the registry file at call time because peers edit it concurrently, syncs the rows below `scope` (with `additionsOnly` only adds missing rows), replaces the file atomically when anything changed and lists the findings that remain (catalog providers are authored, not synced; native roots follow their row). A write runs under the registry lock of this machine; a hand edit that still lands between its read and its rename is detected and the reconciliation runs again on the new file, so a peer's write is never lost and never fails the caller. */
+export function reconcileBuildOwnerRegistry(repoRoot: string, options: { scope?: OwnerScope; write: boolean; additionsOnly?: boolean }, policy: OwnerTreePolicy = OWNER_TREE_POLICY): OwnerSync & { changed: boolean; findings: OwnerFinding[] } {
+  const file = join(repoRoot, BUILD_OWNER_REGISTRY_FILE);
+  const once = (): OwnerSync & { changed: boolean; findings: OwnerFinding[] } => {
+    const source = readFileSync(file, "utf8");
+    const registry = readBuildOwnerRegistryV1(JSON.parse(source));
+    const tree = readOwnerTree(repoRoot, policy, options.scope);
+    const result = syncOwnerRegistry(registry, tree, policy, options.scope, options.additionsOnly === true);
+    const text = `${JSON.stringify(result.registry, null, 2)}\n`;
+    const changed = JSON.stringify(result.registry) !== JSON.stringify(registry);
+    if (changed && options.write) {
+      const pending = `${file}.${randomUUID()}.tmp`;
+      try {
+        writeFileSync(pending, text, { flag: "wx" });
+        if (readFileSync(file, "utf8") !== source) throw new OwnerRegistryRaceV1("Build owner registry changed during reconciliation");
+        renameSync(pending, file);
+      } finally {
+        rmSync(pending, { force: true });
+      }
+    }
+    return { ...result, changed, findings: findOwnerFindings(result.registry, tree, policy, options.scope) };
+  };
+  if (!options.write) return once();
+  return withOwnerRegistryLockV1(file, () => {
+    for (let attempt = 0; ; attempt++) {
+      try { return once(); } catch (error) { if (!(error instanceof OwnerRegistryRaceV1) || attempt >= 3) throw error; }
+    }
+  });
+}
+
+/** 🔎️ Why the registry cannot give the native root `path` a row of its own, in one line for the refusal of a read: the manifest is absent, virtual, in an excluded tree, its package name belongs to another row, the root is only the native root of another row, or nothing stands in the way. */
+export function explainOwnerlessRoot(repoRoot: string, path: string, policy: OwnerTreePolicy = OWNER_TREE_POLICY): string {
+  const manifest = at(path, CARGO), tree = readOwnerTree(repoRoot, policy, path);
+  if (!tree.exists(manifest)) return `${manifest} is absent`;
+  const name = ownerManifestName(tree, manifest);
+  if (name === undefined) return `${manifest} declares no [package] name (virtual, unreadable or half written)`;
+  if (excludedFromOwners(manifest, policy)) return `${manifest} lies in a tree the owner discovery excludes`;
+  const registry = readBuildOwnerRegistryV1(JSON.parse(readFileSync(join(repoRoot, BUILD_OWNER_REGISTRY_FILE), "utf8")));
+  const same = registry.owners.find((owner) => owner.name === name && owner.root !== path);
+  if (same) return `the package name ${name} already belongs to the row at ${same.root}`;
+  const host = registry.owners.find((owner) => owner.nativeRoots?.includes(path));
+  if (host) return `${path} is only the native root of ${host.name} and has no row of its own`;
+  if (registry.owners.some((owner) => owner.root === path)) return `the row of ${name} exists; the read that failed did not see it`;
+  return `nothing stands in the way of a row for ${name}`;
+}
+
+/** 🧱️ The crate manifests without any owner row, as the consistency law sees them: one manifest listing and no per-row check, the cheap check for every tool that writes crate manifests. */
+export function ownerlessCrateManifests(repoRoot: string, scope?: OwnerScope, policy: OwnerTreePolicy = OWNER_TREE_POLICY): string[] {
+  const registry = readBuildOwnerRegistryV1(JSON.parse(readFileSync(join(repoRoot, BUILD_OWNER_REGISTRY_FILE), "utf8")));
+  const tree = readOwnerTree(repoRoot, policy, scope);
+  const rows = new Set(registry.owners.flatMap((owner) => [owner.root, ...(owner.nativeRoots ?? [])]));
+  const projects = new Set(tree.manifests.filter((path) => basename(path) === PROJECT).map(dirname));
+  return tree.manifests.filter((path) => basename(path) === CARGO && within(path, scope) && !excludedFromOwners(path, policy) && !projects.has(dirname(path)) && !rows.has(dirname(path)) && ownerManifestName(tree, path) !== undefined);
 }

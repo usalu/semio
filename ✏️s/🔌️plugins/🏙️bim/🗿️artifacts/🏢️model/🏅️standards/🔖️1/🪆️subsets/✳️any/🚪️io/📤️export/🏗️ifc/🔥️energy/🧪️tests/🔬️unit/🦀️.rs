@@ -39,6 +39,26 @@ fn set_count(schema: Schema, model: &ModelSnapshot, name: &str) -> usize {
 }
 
 #[test]
+fn derived_rows_are_unique_and_cover_all_thermal_sets() {
+    for schema in [Schema::Ifc2x3, Schema::Ifc4] {
+        let document = document_in(schema, &energy());
+        let mut combined = false;
+        for (_, set) in rows(&document, "IFCPROPERTYSET").into_iter().filter(|(_, set)| string(set, 2).as_deref() == Some("Semio_Authoring")) {
+            let mut names = std::collections::BTreeSet::new();
+            for property in set[4].as_list().unwrap().iter().filter_map(|reference| document.resolve(reference)).filter_map(|row| row.entity("IFCPROPERTYSINGLEVALUE")) {
+                let name = string(property, 0).unwrap();
+                assert!(names.insert(name.clone()), "duplicate {name}");
+                if name == "DerivedRows" {
+                    let value = property[2].as_typed().and_then(|(_, values)| values.first()).and_then(Part21Value::as_str).unwrap();
+                    combined |= value.contains("Pset_WindowCommon.") && value.contains("Pset_DoorWindowGlazingType.");
+                }
+            }
+        }
+        assert!(combined, "a window derives rows in both sets");
+    }
+}
+
+#[test]
 fn kelvin_is_celsius_plus_273_15() {
     assert_eq!(KELVIN, 273.15);
 }
@@ -103,7 +123,8 @@ fn an_authored_thermal_transmittance_wins_and_is_not_listed_as_derived() {
 fn windows_and_doors_carry_the_values_of_their_type_and_the_type_its_exact_rows() {
     let model = energy();
     let text = report(Schema::Ifc4, &model);
-    assert!(text.contains("\"Pset_DoorCommon\":{\"ThermalTransmittance\":[\"IFCTHERMALTRANSMITTANCEMEASURE\",1.3]"), "{text}");
+    let value: serde_json::Value = serde_json::from_str(&text).expect("the report parses");
+    assert_eq!(value["elements"]["o-g-entry"]["Pset_DoorCommon"]["ThermalTransmittance"], serde_json::json!(["IFCTHERMALTRANSMITTANCEMEASURE", 1.3]));
     assert!(text.contains("\"GlazingAreaFraction\":[\"IFCPOSITIVERATIOMEASURE\",0.7]") || text.contains("\"GlazingAreaFraction\":[\"IFCPOSITIVERATIOMEASURE\",0.75]"), "{text}");
     assert!(text.contains("\"SolarHeatGainTransmittance\":[\"IFCNORMALISEDRATIOMEASURE\""), "IFC4 types the glazing value as a normalised ratio");
     assert!(report(Schema::Ifc2x3, &model).contains("\"SolarHeatGainTransmittance\":[\"IFCPOSITIVERATIOMEASURE\""), "IFC 2x3 as a positive ratio");
@@ -112,10 +133,26 @@ fn windows_and_doors_carry_the_values_of_their_type_and_the_type_its_exact_rows(
 }
 
 #[test]
-fn only_ifc4_has_a_thermal_transmittance_in_the_roof_set() {
-    let model = energy();
-    assert!(!report(Schema::Ifc2x3, &model).contains("Pset_RoofCommon"));
-    assert!(report(Schema::Ifc4, &model).contains("\"Pset_RoofCommon\":{\"ThermalTransmittance\""));
+fn roof_transmittance_is_preserved_when_authored_and_derived_only_in_ifc4() {
+    let mut model = energy();
+    let roof = |schema, model: &ModelSnapshot| {
+        let value: serde_json::Value = serde_json::from_str(&report(schema, model)).expect("the report parses");
+        (value["elements"]["rf-main"]["Pset_RoofCommon"]["ThermalTransmittance"].clone(), value["derived"]["rf-main"].as_str().unwrap_or_default().to_owned())
+    };
+    let authored = serde_json::json!(["IFCREAL", 0.12]);
+    for schema in [Schema::Ifc2x3, Schema::Ifc4] {
+        let (property, derived) = roof(schema, &model);
+        assert_eq!(property, authored);
+        assert!(!derived.contains("Pset_RoofCommon.ThermalTransmittance"));
+    }
+    model.properties.get_mut("rf-main").unwrap().get_mut("Pset_RoofCommon").unwrap().remove("ThermalTransmittance");
+    let (property, derived) = roof(Schema::Ifc2x3, &model);
+    assert!(property.is_null());
+    assert!(!derived.contains("Pset_RoofCommon.ThermalTransmittance"));
+    let (property, derived) = roof(Schema::Ifc4, &model);
+    assert_eq!(property[0], "IFCTHERMALTRANSMITTANCEMEASURE");
+    assert!(property[1].as_f64().is_some_and(|u| u > 0.0));
+    assert!(derived.contains("Pset_RoofCommon.ThermalTransmittance"));
 }
 
 #[test]

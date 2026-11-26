@@ -69,6 +69,7 @@ impl Frame {
     /// 🪟️ The frame of a polygon, `None` for a degenerate one.
     pub fn of(polygon: &[P3]) -> Option<Self> {
         let normal = unit(area_vector(polygon))?;
+        let normal = if normal[0].hypot(normal[1]) < 1e-8 { [0.0, 0.0, normal[2].signum()] } else { normal };
         let vertical = [0.0, 0.0, 1.0];
         let up = unit(sub(vertical, scaled(normal, dot(vertical, normal)))).or_else(|| unit(sub([0.0, 1.0, 0.0], scaled(normal, normal[1]))))?;
         Some(Self { right: cross(up, normal), up, normal })

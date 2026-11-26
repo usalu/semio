@@ -33,18 +33,9 @@ export function monolithicComponentTable(descriptor: { readonly components?: rea
  * the SAME re-instantiation this bridge used to do blindly, now a supervised decision instead of a
  * local guess with no visibility into checkpoint state.
  *
- * 🚧 UNVERIFIED against a real compiled artifact of the PRODUCTION `world actor` component (the
- * wasm32-wasip2 fleet does not currently compile — a large in-flight conversion tracked elsewhere on
- * this ticket): the exact jco-generated export shape for a world that exports several *interfaces*
- * (rather than bare functions) is assumed here to be one JS binding per interface, named for the
- * interface (\`reactor\`/\`jobs\`/\`checkpoint\`/\`describe\`), field names camelCased from the WIT's
- * kebab-case. **This IS confirmed for a single-export-interface world against a real transpiled
- * component** (📓️terra-jco-spike-report.md's jcoprobe fixture: \`export * as probe from
- * './interfaces/...'\`, camelCased function names) — the multi-interface-export case (4 interfaces,
- * matching \`world actor\`) is extrapolated from that single-interface evidence plus jco's documented
- * per-interface naming convention, not independently re-confirmed here. If jco nests these
- * differently, only the four destructured names below need to change — every other line here is
- * interface-shape-agnostic.
+ * Browser publication instantiates the compiled guest and checks every interface and method
+ * declared by the actor WIT before reading its descriptor. See
+ * `PLUGIN_DESCRIPTOR_PROBE_SOURCE` in `../../🛂️descriptor/🟦️.ts`.
  *
  * 🧪️ terra-web-bridges: every destructured method now returns a Promise (every WIT function in the
  * target world is `async func`) — made EXPLICITLY `async` here rather than relying on bare pass-

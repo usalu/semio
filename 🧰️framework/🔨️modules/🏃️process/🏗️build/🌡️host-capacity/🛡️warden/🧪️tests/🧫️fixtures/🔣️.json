@@ -4851,6 +4851,84 @@
    }
   },
   {
+   "name": "macOS swap volume at its disk reserve has only the existing swap available",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1500,
+    "swapUsedMegabytes": 3000,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": 1500,
+    "swapVolumeFreeMegabytes": 4096
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "capMegabytes": 10240
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "test",
+     "rank": 50,
+     "elapsedSeconds": 300,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "capMegabytes": 8192
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "browser",
+     "rank": 45,
+     "elapsedSeconds": 100,
+     "megabytes": 2200,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "capMegabytes": 4096
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "trigger": "swap-share",
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": 1500,
+    "headroomMegabytes": 3000,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p103",
+      "reason": "danger"
+     }
+    ]
+   }
+  },
+  {
    "name": "fixed swap (Linux): 66 percent of it in use is danger depth: critical at 1500 MB, trigger swap-share",
    "host": {
     "totalMegabytes": 16384,
@@ -13614,6 +13692,7 @@
        "finalBackend": "serial"
       }
      },
+     "families": [],
      "carving": [
       {
        "crate": "semio_plain",

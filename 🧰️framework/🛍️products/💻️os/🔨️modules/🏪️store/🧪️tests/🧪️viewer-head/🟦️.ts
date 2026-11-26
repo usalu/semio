@@ -193,7 +193,7 @@ function receive(at: Replica, events: LogEvent[]): void {
 }
 
 const projection = (shown: Fold): Projection => ({ state: shown.state, applied: shown.applied.length, supersessions: shown.supersessions.size });
-const listed = (shown: Fold) => shown.lines.map((line) => (line.name === TRUNK ? "" : line.name));
+const listed = (shown: Fold) => ["", ...shown.lines.filter((line) => line.name !== TRUNK).map((line) => line.name)];
 
 /** 🪟️ What `at` shows. */
 function view(initial: Snapshot, at: Replica): View {

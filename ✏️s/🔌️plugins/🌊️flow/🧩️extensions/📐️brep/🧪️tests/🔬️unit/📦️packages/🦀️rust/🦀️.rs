@@ -2,7 +2,7 @@
 
 pub use semio_s_plugin_flow_brep::{extension_guest, extension_manifest_json, geometry_inference, module_registry, operation_quality, register, NODE_KERNEL_METHOD};
 use semio_s_spatial_kernel_semio_session::*;
-use flow_extension_sdk::mesh::*;
+use semio_os_flow_mesh::*;
 use flow_extension_sdk::build_manifest_json;
 use neural_engine::{channel_output, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
 use semio_framework_3d_brep_boolean::BooleanOp;

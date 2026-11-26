@@ -75,10 +75,10 @@
     "threads=0"
    ],
    "tokens": null,
-   "note": "without a grant nothing changes",
+   "note": "without a positive admission the compiler uses one front-end thread",
    "expected": [
     "-Z",
-    "threads=0"
+    "threads=1"
    ]
   },
   {
@@ -88,10 +88,10 @@
     "threads=0"
    ],
    "tokens": 0,
-   "note": "a grant of 0 is no grant",
+   "note": "without a positive admission the compiler uses one front-end thread",
    "expected": [
     "-Z",
-    "threads=0"
+    "threads=1"
    ]
   },
   {
@@ -226,12 +226,14 @@
     "threads=0"
    ],
    "tokens": null,
-   "note": "without a grant nothing changes, a cdylib final included",
+   "note": "without a positive admission the compiler uses one front-end thread",
    "expected": [
     "--crate-type",
     "cdylib",
     "-Z",
-    "threads=0"
+    "threads=1",
+    "-Z",
+    "no-parallel-backend"
    ]
   },
   {
@@ -270,6 +272,21 @@
     "a.rs",
     "-Z",
     "no-parallel-backend"
+   ]
+  },
+  {
+   "id": "stable-cdylib-no-grant",
+   "args": [
+    "--crate-type",
+    "cdylib",
+    "lib.rs"
+   ],
+   "tokens": null,
+   "note": "a stable compiler receives no nightly flags",
+   "expected": [
+    "--crate-type",
+    "cdylib",
+    "lib.rs"
    ]
   }
  ]

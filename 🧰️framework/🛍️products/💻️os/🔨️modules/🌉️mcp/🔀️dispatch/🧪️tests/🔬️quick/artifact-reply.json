@@ -1,0 +1,7 @@
+[
+  {"fault":"budget.exceeded","code":"BUDGET_EXCEEDED","retryable":true},
+  {"fault":"job.cancelled","code":"CANCELLED","retryable":false},
+  {"fault":"plugin.unavailable","code":"PLUGIN_UNAVAILABLE","retryable":true},
+  {"fault":"app.command.rejected","code":"SIDE_EFFECT_REJECTED","retryable":false},
+  {"fault":"input.invalid","code":"INPUT_INVALID","retryable":false}
+]

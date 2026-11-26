@@ -46,7 +46,22 @@
     ],
     "rawArrayBytes": 12,
     "rawElementBytes": 4,
-    "selectedSpillCopyBytes": 0,
+    "bodyZeroLeadingFrames": [
+      {
+        "copyBytes": 424,
+        "capacityBytes": 392
+      },
+      {
+        "copyBytes": 48,
+        "capacityBytes": 128
+      },
+      {
+        "copyBytes": 5968,
+        "capacityBytes": 3200
+      }
+    ],
+    "capacityFramesCarryCopy": true,
+    "isolatedAtomQuotes": false,
     "closeBodies": [
       0,
       1,

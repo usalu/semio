@@ -19,6 +19,7 @@ HOME_ROOT=r"~(/[A-Za-z0-9][A-Za-z0-9._-]{0,31}){1,4}"
 SHARE=r"/[A-Za-z0-9._-]+"
 DRIVE=r"[A-Za-z]:\\"
 ENDPOINT=r"https?://"+HOST+r"(:[0-9]{1,5})?"
+ORIGIN=r"[a-z][a-z0-9-]{0,63}"
 INSTANCE=r"[A-Za-z0-9._-]{1,64}"
 PLATFORMS=("linux","macos","windows")
 
@@ -121,27 +122,26 @@ def problems(topology):
             for key in optional_keys:
                 if key in group: extras.setdefault(index,{})[key]=group[key]
             group={k:v for k,v in group.items() if k not in optional_keys}
-        if not exact(group,["id","nfs","server","cache","peers"],where,out): continue
+        if not exact(group,["id","roles","nfs","server","cache","peers"],where,out): continue
         optional_problems(extras.get(index,{}),group,where,out)
         if not whole(GROUP,group["id"]): out.append(where+" id invalid")
         else: ids.append(group["id"])
-        if exact(group["nfs"],["host","export"],where+" nfs",out):
-            if not whole(HOST,group["nfs"]["host"]): out.append(where+" nfs.host invalid")
+        if exact(group["roles"],["store","cache","scheduler","relay"],where+" roles",out):
+            for role,origin in group["roles"].items():
+                if not whole(ORIGIN,origin): out.append(where+" roles."+role+" invalid")
+                elif not origin.startswith(str(group["id"])+"-"): out.append(where+" roles."+role+" names an origin of another group")
+        if exact(group["nfs"],["export"],where+" nfs",out):
             if not whole(UNIX,group["nfs"]["export"]): out.append(where+" nfs.export invalid")
         server=group["server"]
         if isinstance(server,dict) and "directory" in server:
             if not whole(WINDOWS,server["directory"]): out.append(where+" server.directory invalid")
             server={k:v for k,v in server.items() if k!="directory"}
-        if isinstance(server,dict) and "advertise" in server:
-            advertise=server["advertise"]
-            if not isinstance(advertise,list) or len(advertise)>4 or len(set(advertise))!=len(advertise) or not all(whole(HOST,h) for h in advertise): out.append(where+" server.advertise invalid")
-            server={k:v for k,v in server.items() if k!="advertise"}
-        if exact(server,["platform","protocol","network"],where+" server",out):
+        network_given=isinstance(server,dict) and "network" in server
+        if exact(server,["platform","protocol"]+(["network"] if network_given else []),where+" server",out):
             if server["platform"] not in PLATFORMS: out.append(where+" server.platform invalid")
             if server["protocol"] not in ("nfs","smb"): out.append(where+" server.protocol invalid")
-            if not cidr(server["network"]): out.append(where+" server.network invalid")
-        if exact(group["cache"],["endpoint","instance"],where+" cache",out):
-            if not whole(ENDPOINT,group["cache"]["endpoint"]): out.append(where+" cache.endpoint invalid")
+            if network_given and not cidr(server["network"]): out.append(where+" server.network invalid")
+        if exact(group["cache"],["instance"],where+" cache",out):
             if not whole(INSTANCE,group["cache"]["instance"]): out.append(where+" cache.instance invalid")
         peers=group["peers"]
         if not isinstance(peers,dict): out.append(where+" peers is not an object")
@@ -187,16 +187,15 @@ def check():
     for group in committed["groups"]:
         n=group["id"]
         if group.get("ports")!={"cache":6094,"scheduler":8980,"worker":8981}: failures.append("committed: ports of "+n)
-        if group["cache"]["endpoint"].rsplit(":",1)[-1]!=str(group["ports"]["cache"]): failures.append("committed: cache endpoint port of "+n)
+        if group["roles"]!={role:n+"-server" for role in ("store","cache","scheduler","relay")}: failures.append("committed: roles of "+n)
         if group.get("access")!={"enforceNetwork":False,"transport":{"crossGroup":"sealed","inGroup":"trusted-lan"}}: failures.append("committed: access of "+n)
         if n=="g1":
-            if group["nfs"]!={"host":"nfs.g1.semio.internal","export":"/Users/Shared/semio-store"}: failures.append("committed: nfs of g1")
-            if group["server"]!={"platform":"macos","protocol":"nfs","network":"10.0.1.0/24"}: failures.append("committed: server of g1")
-            if group["cache"]!={"endpoint":"http://cache.g1.semio.internal:6094","instance":"main"}: failures.append("committed: cache of g1")
+            if group["nfs"]!={"export":"/Users/Shared/semio-store"}: failures.append("committed: nfs of g1")
+            if group["server"]!={"platform":"macos","protocol":"nfs"}: failures.append("committed: server of g1")
         else:
-            if group["nfs"]!={"host":"nfs.%s.semio.internal"%n,"export":"/srv/semio-store"}: failures.append("committed: nfs of "+n)
-            if group["server"]!={"platform":"linux","protocol":"nfs","network":"10.0.%s.0/24"%n[1:]}: failures.append("committed: server of "+n)
-            if group["cache"]!={"endpoint":"http://cache.%s.semio.internal:6094"%n,"instance":"main"}: failures.append("committed: cache of "+n)
+            if group["nfs"]!={"export":"/srv/semio-store"}: failures.append("committed: nfs of "+n)
+            if group["server"]!={"platform":"linux","protocol":"nfs"}: failures.append("committed: server of "+n)
+        if group["cache"]!={"instance":"main"}: failures.append("committed: cache of "+n)
         if group["peers"]!={m["id"]:"/mnt/semio-peers/"+m["id"] for m in committed["groups"] if m["id"]!=n}: failures.append("committed: peers of "+n)
     if len(committed["worktree"]["windows"])>15: failures.append("committed: windows worktree root is not short")
     if committed["worktree"]!={"linux":"~/semio","macos":"~/Documents/semio","windows":"C:\\semio"}: failures.append("committed: worktree")
@@ -213,26 +212,23 @@ def apply_address(topology, environment):
     def present(name):
         value=environment.get(name)
         return value if isinstance(value,str) and value!="" else None
-    group_id,host,network,endpoint=present("SEMIO_FLEET_GROUP"),present("SEMIO_FLEET_NFS_HOST"),present("SEMIO_FLEET_NETWORK"),present("SEMIO_FLEET_CACHE_ENDPOINT")
-    if group_id is None and host is None and network is None and endpoint is None: return topology
-    if group_id is None or host is None or network is None: raise ValueError("SEMIO_FLEET_GROUP, SEMIO_FLEET_NFS_HOST and SEMIO_FLEET_NETWORK are set together")
-    if not any(isinstance(group,dict) and group.get("id")==group_id for group in topology["groups"]): return topology
-    def rewritten(current):
-        match=re.fullmatch(r"(https?://)"+HOST+r"(:[0-9]{1,5})?", current)
-        if match is None: raise ValueError("cache endpoint invalid")
-        return match.group(1)+host+(match.group(2) or "")
+    group_id,address,network=present("SEMIO_FLEET_GROUP"),present("SEMIO_FLEET_STORE_ADDRESS"),present("SEMIO_FLEET_NETWORK")
+    if group_id is None and address is None and network is None: return topology
+    if group_id is None or not any(isinstance(group,dict) and group.get("id")==group_id for group in topology["groups"]): return topology
     groups=[]
     for group in topology["groups"]:
         if group.get("id")!=group_id:
             groups.append(group); continue
         copied=copy.deepcopy(group)
-        copied["nfs"]["host"]=host
-        copied["server"]["network"]=network
-        copied["cache"]["endpoint"]=endpoint or rewritten(group["cache"]["endpoint"])
+        if network is not None: copied["server"]["network"]=network
+        if address is not None:
+            copied["nfs"]["host"]=address
+            copied["cache"]["endpoint"]="http://"+(("["+address+"]") if ":" in address else address)+":"+str(group["ports"]["cache"])
         groups.append(copied)
     copied=copy.deepcopy(topology)
     copied["groups"]=groups
     return copied
+
 
 def xml_escape(value):
     return value.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace('"',"&quot;")
@@ -316,7 +312,7 @@ if __name__=="__main__":
             print(error, file=sys.stderr); sys.exit(1)
         group_id=os.environ.get("SEMIO_FLEET_GROUP","")
         found=[group for group in applied["groups"] if group["id"]==group_id]
-        print(json.dumps({} if not found else {"endpoint":found[0]["cache"]["endpoint"],"host":found[0]["nfs"]["host"],"network":found[0]["server"]["network"]},sort_keys=True))
+        print(json.dumps({} if not found else {k:v for k,v in {"endpoint":found[0]["cache"].get("endpoint"),"host":found[0]["nfs"].get("host"),"network":found[0]["server"].get("network")}.items() if v is not None},sort_keys=True))
         sys.exit(0)
     if len(sys.argv)==6 and sys.argv[1]=="plist":
         print(plist_environment(Path(sys.argv[2]).read_text(), Path(sys.argv[3]).read_text(), sys.argv[4], sys.argv[5]), end="")

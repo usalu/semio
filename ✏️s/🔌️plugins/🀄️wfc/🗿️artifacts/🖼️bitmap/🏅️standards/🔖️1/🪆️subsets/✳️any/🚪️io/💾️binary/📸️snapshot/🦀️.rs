@@ -64,6 +64,18 @@ impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Bitma
 
 }
 
+impl store::os_store::codec_registry::native_snapshot::OriginalArtifactPackReceiving for BitmapSnapshotDsl {
+    type Receiving = store::os_store::codec_registry::native_snapshot::OriginalSnapshotRecordReceiving<Self>;
+
+    fn original_pack_birth_demand() -> semio_framework_value::RetirementDemand {
+        semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self::Receiving>(), depth: 1, ..Default::default() }
+    }
+
+    fn admit_original_pack(source: &[u8], limits: protocol::PackLimits, native: &semio_framework_value::NativeDecodeControl<'_>, grant: semio_framework_value::RetainedCloneGrant) -> Result<Option<(Self::Receiving, semio_framework_value::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        Self::Receiving::admit(source, <Self as pack::snapshot::ArtifactDsl>::envelope_id(), limits, native, grant)
+    }
+}
+
 impl pack::snapshot::ArtifactPack for BitmapSnapshot {
     
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {

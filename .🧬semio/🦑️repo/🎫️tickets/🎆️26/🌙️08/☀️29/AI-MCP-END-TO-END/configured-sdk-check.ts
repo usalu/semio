@@ -5,7 +5,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 
 const { command, args } = JSON.parse(readFileSync(".mcp.json", "utf8")).mcpServers.semio;
 const env = { ...process.env };
-delete env.SEMIO_OS_MCP_BIN;
+if (!process.argv.includes("--explicit-native-binary")) delete env.SEMIO_OS_MCP_BIN;
 const transport = new StdioClientTransport({ command, args, env, stderr: "inherit" });
 const client = new Client({ name: "semio-configured-client-check", version: "1" });
 const errors: Error[] = [];

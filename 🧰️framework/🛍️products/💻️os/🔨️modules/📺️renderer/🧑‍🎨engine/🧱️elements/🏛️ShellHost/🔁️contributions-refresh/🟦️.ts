@@ -133,6 +133,7 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
         return scopedContributionsJson;
       },
       install: async (session, json, environment) => {
+        let deliveryFailure: Error | undefined;
         for (const pluginEntry of environment.loadedPlugins) {
           if (!pluginEntry.manifest.apps?.length) continue;
           if (!pluginShouldReceiveContributions(pluginEntry.handle.pluginId, session.pluginId, environment.hostMode)) continue;
@@ -152,10 +153,14 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
                 environment.dispatchDeferredEffects(isActive ? environment.session : { pluginId: pluginEntry.handle.pluginId, instanceId, app: targetApp, viewState: environment.session.viewState }, contributionResponse.requestedEffects);
               }
             } catch (error) {
-              if (!isPluginInstanceRetiredV1(error)) console.error("setContributions command failed", pluginEntry.handle.pluginId, error instanceof Error ? error.message : String(error));
+              if (isPluginInstanceRetiredV1(error)) continue;
+              const fault = error instanceof Error ? error : new Error(String(error));
+              console.error("setContributions command failed", pluginEntry.handle.pluginId, fault.message);
+              deliveryFailure ??= fault;
             }
           }
         }
+        if (deliveryFailure !== undefined) throw deliveryFailure;
       },
     });
   }

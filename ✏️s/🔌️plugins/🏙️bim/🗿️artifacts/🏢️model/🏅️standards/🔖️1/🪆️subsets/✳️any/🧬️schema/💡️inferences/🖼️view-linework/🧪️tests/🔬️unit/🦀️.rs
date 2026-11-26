@@ -71,7 +71,7 @@ async fn a_frame_measures_along_and_behind_the_plane() {
     assert_eq!(frame.draw([1.0, 3.0, 2.5]), [3.0, 2.5, 5.0], "u along the line, z up, w behind the plane toward +y");
     assert!(Frame::of(&plane((1.0, 1.0), (1.0, 1.0))).is_none());
     let reversed = Frame::of(&plane((8.0, -2.0), (-2.0, -2.0))).expect("a frame");
-    assert!(close(reversed.w([0.0, -3.0, 0.0]), -1.0), "the viewer of the reversed line looks toward -y");
+    assert!(close(reversed.w([0.0, -3.0, 0.0]), 1.0), "the viewer of the reversed line looks toward -y");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -185,10 +185,46 @@ async fn a_nearer_element_hides_the_edges_behind_it() {
     let visible: f64 = all.iter().filter(|piece| piece.visible).map(|piece| (piece.b[0] - piece.a[0]).hypot(piece.b[1] - piece.a[1])).sum();
     let hidden: f64 = all.iter().filter(|piece| !piece.visible).map(|piece| (piece.b[0] - piece.a[0]).hypot(piece.b[1] - piece.a[1])).sum();
     assert!(close(visible, 8.0 + 10.0), "the column's 2 x 2 outline plus the wall's outline without the 2 m behind the column on both long edges: {visible}");
-    assert!(close(hidden, 2.0 * 2.0 + 0.0), "the wall's two long edges are hidden for 2 m each behind the column: {hidden}");
+    assert!(close(hidden, 2.0), "the hidden top edge spans 2 m; the coincident bottom edge is already stroked visibly: {hidden}");
     assert!(faces(&seen[0]).len() == 1 && faces(&seen[1]).len() == 1, "each prism projects to one face");
     let area = |body: &semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::view_linework::hidden_lines::Body| faces(body).iter().map(|cut| Region::new(&cut.outer, &cut.holes).area()).sum::<f64>();
     assert!(close(area(&seen[0]), 4.0) && close(area(&seen[1]), 6.0), "the faces are the exact rectangles");
+}
+
+#[test]
+fn projected_faces_match_independent_union_and_coverage() {
+    use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::view_linework::hidden_lines::{Body, Facing, Tri};
+    fn inside(ring: &[[f64; 2]], point: [f64; 2]) -> bool {
+        let mut result = false;
+        for index in 0..ring.len() {
+            let (a, b) = (ring[index], ring[(index + 1) % ring.len()]);
+            if (a[1] > point[1]) != (b[1] > point[1]) && point[0] < (b[0] - a[0]) * (point[1] - a[1]) / (b[1] - a[1]) + a[0] { result = !result; }
+        }
+        result
+    }
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔺️projected-faces.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let tris = case["triangles"].as_array().unwrap().iter().map(|triangle| {
+            let vertices = triangle.as_array().unwrap();
+            let world: [[f64; 3]; 3] = std::array::from_fn(|i| std::array::from_fn(|j| vertices[i][j].as_f64().unwrap()));
+            let u = std::array::from_fn::<_, 3, _>(|i| world[1][i] - world[0][i]);
+            let v = std::array::from_fn::<_, 3, _>(|i| world[2][i] - world[0][i]);
+            let n = [u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0]];
+            let length = (n[0]*n[0]+n[1]*n[1]+n[2]*n[2]).sqrt();
+            Tri { world, drawn: world, normal: n.map(|value| value / length), facing: Facing::Front }
+        }).collect();
+        let body = Body { element: case["name"].as_str().unwrap().into(), family: SolidFamily::Wall, tris };
+        let result = faces(&body);
+        let area: f64 = result.iter().map(|cut| Region::new(&cut.outer, &cut.holes).area()).sum();
+        assert!(close(area, case["area"].as_f64().unwrap()), "{}: {area}", body.element);
+        assert_eq!(result.len(), case["components"].as_u64().unwrap() as usize, "{}", body.element);
+        assert_eq!(result.iter().map(|cut| cut.holes.len()).sum::<usize>(), case["holes"].as_u64().unwrap() as usize, "{}", body.element);
+        for probe in case["probes"].as_array().unwrap() {
+            let point = [probe[0].as_f64().unwrap(), probe[1].as_f64().unwrap()];
+            let covered = result.iter().any(|cut| inside(&cut.outer, point) && !cut.holes.iter().any(|hole| inside(hole, point)));
+            assert_eq!(covered, probe[2].as_bool().unwrap(), "{}: {point:?}", body.element);
+        }
+    }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -235,4 +271,25 @@ async fn the_inference_default_and_determinism_laws_hold_for_views() {
     assert_eq!(ModelInference::infer(&ModelSnapshot::default()).expect("infers").view_linework, std::collections::BTreeMap::new());
     let snapshot = with(with(room(), "v-south", south()), "v-plan", View::of_storey("b", "Ground plan", ViewKind::Plan, "g"));
     assert_eq!(ModelInference::infer(&snapshot).expect("infers"), ModelInference::infer(&snapshot).expect("infers"));
+}
+
+
+#[test]
+fn projected_edges_match_geos_visibility_and_coincident_stroke_lengths() {
+    let cases: Vec<serde_json::Value> = serde_json::from_str(include_str!("../🧫️fixtures/📏️projected-edges.json")).unwrap();
+    let frame = Frame::of(&plane((-10.0, -10.0), (20.0, -10.0))).unwrap();
+    for case in cases {
+        let rectangles: Vec<[f64; 4]> = serde_json::from_value(case["rectangles"].clone()).unwrap();
+        let models: Vec<_> = rectangles.iter().enumerate().map(|(depth, &[x0, z0, x1, z1])| {
+            let y = depth as f64 * 2.0;
+            (depth.to_string(), cuboid(SolidFamily::Wall, [x0, y, z0], [x1, y + 1.0, z1]))
+        }).collect();
+        let drawn = bodies(&frame, 100.0, models.iter().map(|(id, solid)| (id.as_str(), solid)));
+        let edges = drawn.iter().flat_map(|body| feature_edges(body, &frame, 100.0)).collect::<Vec<_>>();
+        let strokes = pieces(&edges, &drawn, &[]);
+        for (visible, field) in [(true, "visible"), (false, "hidden")] {
+            let length: f64 = strokes.iter().filter(|s| s.visible == visible).map(|s| (s.b[0]-s.a[0]).hypot(s.b[1]-s.a[1])).sum();
+            assert!(close(length, case[field].as_f64().unwrap()), "{} {field}: {length}", case["name"]);
+        }
+    }
 }

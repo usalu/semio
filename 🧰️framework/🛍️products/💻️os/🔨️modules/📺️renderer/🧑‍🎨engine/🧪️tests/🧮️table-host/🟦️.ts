@@ -5,7 +5,7 @@ import { DEFAULT_UI_DRIVER, UiDriverProvider } from "@semio-tech/ui-react";
 import { tableStepperKeyboardFixture } from "@semio-tech/ui/testing/fixtures";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { TableHost, tableRowHoverArgs, tableStepperClampedDelta, tableStepperKeyDelta, tableStepperTypedValue } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
+import { TableHost, tableStepperClampedDelta, tableStepperKeyDelta, tableStepperTypedValue } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { noopAction } from "../🧰️engine-contract-helpers/🟦️.ts";
 
 describe("framework renderer hosts", () => {
@@ -227,11 +227,6 @@ describe("framework renderer hosts", () => {
     fireEvent.change(readout, { target: { value: "3" } });
     fireEvent.blur(readout);
     expect(onAction).toHaveBeenCalledWith(expect.objectContaining({ args: { objectId: "beam-glulam-gl24h", value: 3 } }));
-  });
-
-  it("addresses a row hover to its one target on the pointer channel and clears it with none", () => {
-    expect(tableRowHoverArgs("rows", "object", "beam-kvh-c24")).toEqual({ domainId: "rows", channel: "pointer", targets: JSON.stringify([{ granularity: "object", id: "beam-kvh-c24" }]) });
-    expect(tableRowHoverArgs("rows", "object", undefined)).toEqual({ domainId: "rows", channel: "pointer", targets: "[]" });
   });
 
   it("matches the shared Table stepper keyboard fixture through the actual React spinbutton", () => {

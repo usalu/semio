@@ -57,7 +57,7 @@ round=0
 before=-1
 while :; do
   round=$((round + 1))
-  repo capacity run --memory=800 -- timeout 900 "$BUN" "$M/plan.ts" --out "$out" --plan "$out/plan.txt" --minutes "$minutes" $retry ${assets:+--assets "$assets"} || { echo "full: the plan failed" >&2; exit 1; }
+  repo capacity run --memory=1000 -- timeout 900 "$BUN" "$M/plan.ts" --out "$out" --plan "$out/plan.txt" --minutes "$minutes" $retry ${assets:+--assets "$assets"} || { echo "full: the plan failed" >&2; exit 1; }
   left=$(awk '{ n += split($4, ids, ",") } END { print n + 0 }' "$out/plan.txt")
   [ "$left" -eq 0 ] && break
   [ "$left" -eq "$before" ] && { echo "full: the last round finished no asset, $left left" >&2; break; }

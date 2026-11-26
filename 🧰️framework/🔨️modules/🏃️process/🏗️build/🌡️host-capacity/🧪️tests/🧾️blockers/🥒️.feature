@@ -6,6 +6,11 @@ Feature: A Waiting Run Says What It Stands Behind
     Then its progress line names both runs by the target they build, whether they run, their jobs and their megabytes, largest first
     And the line is in the agent's language, English or German
 
+  Scenario: The Memory Deadline Names Its Holder
+    Given a live repository grant while a larger request waits for memory
+    When the larger request exhausts its wait
+    Then the error names the live holder and its committed memory
+
   Scenario: A Growing Run Names What It Waits For
     Given a run whose quiet reservation has to grow while another run holds the memory
     When it waits to grow

@@ -8,9 +8,8 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
 import { WindowChrome, windowChromeTitleChipClass } from "../🗂️WindowChrome/🟦️.tsx";
-import { LevelProvider, SurfaceScope, useSurface } from "../🌈️Surface/🟦️.tsx";
+import { Surface, SurfaceScope } from "../🌈️Surface/🟦️.tsx";
 import { SceneSkeleton } from "../🎬️Scene/🟦️.tsx";
 import { SharedBorderRow, SharedBorderRowCell } from "../🪢️SharedBorderRow/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -158,21 +157,17 @@ const CanvasSkeletonWindow: React.FC<{ active?: boolean }> = ({ active = false }
 
 /** 🚀️ Full canvas placeholder while the primary plugin session boots — two even mode-dock windows, each one rectangle with its title chip glass-overlaid on the top row above the placeholder. */
 export const CanvasSkeleton: React.FC<{ className?: string; label?: string }> = ({ className = "", label }) => {
-  const parent = useSurface();
-  const floorClass = shellFloorFillClass(parent);
   return (
-    <LevelProvider level="base">
-      <div className={cn("box-border flex h-full min-h-0 w-full flex-col overflow-hidden", floorClass, className)} role="status" aria-busy="true" aria-label={label}>
-        <div className="flex h-full min-h-0 w-full flex-row">
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-            <CanvasSkeletonWindow active />
-          </div>
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-            <CanvasSkeletonWindow />
-          </div>
+    <Surface className={cn("box-border flex h-full min-h-0 w-full flex-col overflow-hidden", className)} role="status" aria-busy="true" aria-label={label}>
+      <div className="flex h-full min-h-0 w-full flex-row">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <CanvasSkeletonWindow active />
+        </div>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <CanvasSkeletonWindow />
         </div>
       </div>
-    </LevelProvider>
+    </Surface>
   );
 };
 

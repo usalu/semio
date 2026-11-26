@@ -19,9 +19,10 @@ export function verifyNoteJourney(executable: string, journey: NoteJourney): voi
     assert(pair && isStandardBase64(pair.packBase64) && isStandardBase64(pair.sprBase64), "Expected the exact MCP snapshot pair at " + stage);
     return pair.packBase64 + "\t" + pair.sprBase64 + "\n";
   }).join("");
-  const process = Bun.spawnSync([resolve(executable)], { stdin: Buffer.from(input), stderr: "inherit" });
-  assert.equal(process.exitCode, 0, "Canonical Note snapshot replay failed");
-  const rows = process.stdout.toString().trimEnd().split("\n");
+  const command = executable.endsWith(".js") ? [process.execPath, resolve(executable)] : [resolve(executable)];
+  const replay = Bun.spawnSync(command, { stdin: Buffer.from(input), stderr: "inherit" });
+  assert.equal(replay.exitCode, 0, "Canonical Note snapshot replay failed");
+  const rows = replay.stdout.toString().trimEnd().split("\n");
   assert.equal(rows.length, stages.length, "Expected one replay result per observation");
   const [baseline, invoked, undone, redone, rolledBack] = rows.map(row => JSON.parse(row) as Snapshot);
   for (const snapshot of [baseline, invoked, undone, redone, rolledBack]) {

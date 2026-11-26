@@ -1,371 +1,232 @@
 //! ➕️ Flow math module: schema-dispatched arithmetic operators.
 
-use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, VariadicSpec};
+#[path = "⏱️retained/🦀️.rs"]
+mod retained;
+use retained::{MathAction, MathOutput, math_operator};
+
+use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, VariadicSpec};
 
 // #region 🔖️Add
 /// ➕️ Adds numbers, points, or vectors.
 pub struct Add;
 
-impl Operator for Add {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        if let Some(items) = input.get("items").and_then(|v| v.as_dictionary()) {
-            return add_items(items);
-        }
-        let a = read_dict(input, "a")?;
-        let b = read_dict(input, "b")?;
-        match a.schema() {
-            Some("point") => Ok(channel_output("sum", xyz_dictionary("point", read_xyz(a)? + read_xyz(b)?))),
-            Some("vector") => Ok(channel_output("sum", xyz_dictionary("vector", read_xyz(a)? + read_xyz(b)?))),
-            _ => Ok(channel_output("sum", number_dictionary(read_value_number(a)? + read_value_number(b)?))),
-        }
-    }
-}
+math_operator!(Add);
 // #endregion 🔖️Add
 
 // #region 🔖️Subtract
 /// ➖️ Subtracts numbers, points, or vectors.
 pub struct Subtract;
 
-impl Operator for Subtract {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let a = read_dict(input, "a")?;
-        let b = read_dict(input, "b")?;
-        match a.schema() {
-            Some("point") => Ok(channel_output("difference", xyz_dictionary("point", read_xyz(a)? - read_xyz(b)?))),
-            Some("vector") => Ok(channel_output("difference", xyz_dictionary("vector", read_xyz(a)? - read_xyz(b)?))),
-            _ => Ok(channel_output("difference", number_dictionary(read_value_number(a)? - read_value_number(b)?))),
-        }
-    }
-}
+math_operator!(Subtract);
 // #endregion 🔖️Subtract
 
 // #region 🔖️Move
 /// 🚚️ Moves a point or vector by a vector.
 pub struct Move;
 
-impl Operator for Move {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let subject = read_dict(input, "subject")?;
-        let offset = read_dict(input, "offset")?;
-        let schema = subject.schema().unwrap_or("vector");
-        let result = xyz_dictionary(schema, read_xyz(subject)? + read_xyz(offset)?);
-        if schema == "point" {
-            Ok(Dictionary::new().insert("point", Value::Dictionary(result)).insert("vector", Value::null()))
-        } else {
-            Ok(Dictionary::new().insert("vector", Value::Dictionary(result)).insert("point", Value::null()))
-        }
-    }
-}
+math_operator!(Move);
 // #endregion 🔖️Move
 
 // #region 🔖️Scalar
 /// ✖️ Multiplies two numbers.
 pub struct Multiply;
 
-impl Operator for Multiply {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("product", number_dictionary(read_channel_number(input, "a")? * read_channel_number(input, "b")?)))
-    }
-}
+math_operator!(Multiply);
 
 /// ➗️ Divides a by b.
 pub struct Divide;
 
-impl Operator for Divide {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let b = read_channel_number(input, "b")?;
-        if b.abs() < f64::EPSILON {
-            return Err(EvalError::InvalidInput("divide by zero".into()));
-        }
-        Ok(channel_output("quotient", number_dictionary(read_channel_number(input, "a")? / b)))
-    }
-}
+math_operator!(Divide);
 
 /// ⚡️ Raises a to the power of b.
 pub struct Power;
 
-impl Operator for Power {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("power", number_dictionary(read_channel_number(input, "a")?.powf(read_channel_number(input, "b")?))))
-    }
-}
+math_operator!(Power);
 
 /// 🧮️ Remainder of a divided by b.
 pub struct Modulo;
 
-impl Operator for Modulo {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let b = read_channel_number(input, "b")?;
-        if b.abs() < f64::EPSILON {
-            return Err(EvalError::InvalidInput("modulo by zero".into()));
-        }
-        Ok(channel_output("modulo", number_dictionary(read_channel_number(input, "a")? % b)))
-    }
-}
+math_operator!(Modulo);
 
 /// ↔ Negates a number.
 pub struct Negate;
 
-impl Operator for Negate {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("negated", number_dictionary(-read_channel_number(input, "number")?)))
-    }
-}
+math_operator!(Negate);
 
 /// 📏️ Absolute value.
 pub struct Abs;
 
-impl Operator for Abs {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("absolute", number_dictionary(read_channel_number(input, "number")?.abs())))
-    }
-}
+math_operator!(Abs);
 
 /// √ Square root.
 pub struct Sqrt;
 
-impl Operator for Sqrt {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("root", number_dictionary(read_channel_number(input, "number")?.sqrt())))
-    }
-}
+math_operator!(Sqrt);
 
 /// ⬇️ Minimum of two numbers.
 pub struct Min;
 
-impl Operator for Min {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("minimum", number_dictionary(read_channel_number(input, "a")?.min(read_channel_number(input, "b")?))))
-    }
-}
+math_operator!(Min);
 
 /// ⬆️ Maximum of two numbers.
 pub struct Max;
 
-impl Operator for Max {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("maximum", number_dictionary(read_channel_number(input, "a")?.max(read_channel_number(input, "b")?))))
-    }
-}
+math_operator!(Max);
 
 /// ⬇️ Floor of a number.
 pub struct Floor;
 
-impl Operator for Floor {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("floor", number_dictionary(read_channel_number(input, "number")?.floor())))
-    }
-}
+math_operator!(Floor);
 
 /// ⬆️ Ceiling of a number.
 pub struct Ceil;
 
-impl Operator for Ceil {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("ceiling", number_dictionary(read_channel_number(input, "number")?.ceil())))
-    }
-}
+math_operator!(Ceil);
 
 /// ⭕️ Rounds a number.
 pub struct Round;
 
-impl Operator for Round {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("rounded", number_dictionary(read_channel_number(input, "number")?.round())))
-    }
-}
+math_operator!(Round);
 
 /// 〰 Sine in radians.
 pub struct Sin;
 
-impl Operator for Sin {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("sine", number_dictionary(read_channel_number(input, "number")?.sin())))
-    }
-}
+math_operator!(Sin);
 
 /// 〰 Cosine in radians.
 pub struct Cos;
 
-impl Operator for Cos {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("cosine", number_dictionary(read_channel_number(input, "number")?.cos())))
-    }
-}
+math_operator!(Cos);
 
 /// 〰 Tangent in radians.
 pub struct Tan;
 
-impl Operator for Tan {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("tangent", number_dictionary(read_channel_number(input, "number")?.tan())))
-    }
-}
+math_operator!(Tan);
 
 /// 🗺️ Remaps a value from one range to another.
 pub struct Remap;
 
-impl Operator for Remap {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let value = read_channel_number(input, "value")?;
-        let from_min = read_channel_number(input, "fromMin")?;
-        let from_max = read_channel_number(input, "fromMax")?;
-        let to_min = read_channel_number(input, "toMin")?;
-        let to_max = read_channel_number(input, "toMax")?;
-        let span = from_max - from_min;
-        if span.abs() < f64::EPSILON {
-            return Err(EvalError::InvalidInput("remap span is zero".into()));
-        }
-        Ok(channel_output("remapped", number_dictionary(to_min + ((value - from_min) / span) * (to_max - to_min))))
-    }
-}
+math_operator!(Remap);
 
 /// 🎲️ Seeded or entropy-backed random number in [min, max].
 pub struct Random;
 
-impl Operator for Random {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let min = read_channel_number(input, "min")?;
-        let max = read_channel_number(input, "max")?;
-        let seed = read_channel_number(input, "seed").ok().map(f64::to_bits);
-        Ok(channel_output("random", number_dictionary(min + (max - min) * next_random_unit(seed))))
-    }
-}
+math_operator!(Random);
 
 /// ➡️ Forwards the number input unchanged.
 pub struct PassThrough;
 
-impl Operator for PassThrough {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Ok(channel_output("numberOut", number_dictionary(read_channel_number(input, "number")?)))
-    }
-}
+math_operator!(PassThrough);
 
 /// ∑ Sums all numbers in a list dictionary.
 pub struct Sum;
 
-impl Operator for Sum {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        let list = read_dict(input, "list")?;
-        let mut total = 0.0;
-        for index in list_indices(list) {
-            let value = list.get(&index.to_string()).and_then(|v| v.as_dictionary()).map(read_value_number).transpose()?.ok_or_else(|| EvalError::MissingInput(index.to_string()))?;
-            total += value;
+math_operator!(Sum);
+// #endregion 🔖️Scalar
+
+fn compute(action: MathAction, input: &Dictionary) -> Result<MathOutput, EvalError> {
+    match action {
+        MathAction::Add => {
+            let a = read_dict(input, "a")?;
+            let b = read_dict(input, "b")?;
+            match a.schema() {
+                Some("point") => Ok(MathOutput::Coordinates("sum", "point", read_xyz(a)? + read_xyz(b)?)),
+                Some("vector") => Ok(MathOutput::Coordinates("sum", "vector", read_xyz(a)? + read_xyz(b)?)),
+                _ => Ok(MathOutput::Number("sum", read_value_number(a)? + read_value_number(b)?)),
         }
-        Ok(channel_output("sum", number_dictionary(total)))
+        }
+        MathAction::Subtract => {
+            let a = read_dict(input, "a")?;
+            let b = read_dict(input, "b")?;
+            match a.schema() {
+                Some("point") => Ok(MathOutput::Coordinates("difference", "point", read_xyz(a)? - read_xyz(b)?)),
+                Some("vector") => Ok(MathOutput::Coordinates("difference", "vector", read_xyz(a)? - read_xyz(b)?)),
+                _ => Ok(MathOutput::Number("difference", read_value_number(a)? - read_value_number(b)?)),
+        }
+        }
+        MathAction::Move => {
+            let subject = read_dict(input, "subject")?;
+            let offset = read_dict(input, "offset")?;
+            Ok(MathOutput::Moved(read_xyz(subject)? + read_xyz(offset)?))
+        }
+        MathAction::Multiply => {
+            Ok(MathOutput::Number("product", read_channel_number(input, "a")? * read_channel_number(input, "b")?))
+        }
+        MathAction::Divide => {
+            let b = read_channel_number(input, "b")?;
+            if b.abs() < f64::EPSILON {
+                return Err(EvalError::InvalidInput("divide by zero".into()));
+        }
+        Ok(MathOutput::Number("quotient", read_channel_number(input, "a")? / b))
+        }
+        MathAction::Power => {
+            Ok(MathOutput::Number("power", read_channel_number(input, "a")?.powf(read_channel_number(input, "b")?)))
+        }
+        MathAction::Modulo => {
+            let b = read_channel_number(input, "b")?;
+            if b.abs() < f64::EPSILON {
+                return Err(EvalError::InvalidInput("modulo by zero".into()));
+        }
+        Ok(MathOutput::Number("modulo", read_channel_number(input, "a")? % b))
+        }
+        MathAction::Negate => {
+            Ok(MathOutput::Number("negated", -read_channel_number(input, "number")?))
+        }
+        MathAction::Abs => {
+            Ok(MathOutput::Number("absolute", read_channel_number(input, "number")?.abs()))
+        }
+        MathAction::Sqrt => {
+            Ok(MathOutput::Number("root", read_channel_number(input, "number")?.sqrt()))
+        }
+        MathAction::Min => {
+            Ok(MathOutput::Number("minimum", read_channel_number(input, "a")?.min(read_channel_number(input, "b")?)))
+        }
+        MathAction::Max => {
+            Ok(MathOutput::Number("maximum", read_channel_number(input, "a")?.max(read_channel_number(input, "b")?)))
+        }
+        MathAction::Floor => {
+            Ok(MathOutput::Number("floor", read_channel_number(input, "number")?.floor()))
+        }
+        MathAction::Ceil => {
+            Ok(MathOutput::Number("ceiling", read_channel_number(input, "number")?.ceil()))
+        }
+        MathAction::Round => {
+            Ok(MathOutput::Number("rounded", read_channel_number(input, "number")?.round()))
+        }
+        MathAction::Sin => {
+            Ok(MathOutput::Number("sine", read_channel_number(input, "number")?.sin()))
+        }
+        MathAction::Cos => {
+            Ok(MathOutput::Number("cosine", read_channel_number(input, "number")?.cos()))
+        }
+        MathAction::Tan => {
+            Ok(MathOutput::Number("tangent", read_channel_number(input, "number")?.tan()))
+        }
+        MathAction::Remap => {
+            let value = read_channel_number(input, "value")?;
+            let from_min = read_channel_number(input, "fromMin")?;
+            let from_max = read_channel_number(input, "fromMax")?;
+            let to_min = read_channel_number(input, "toMin")?;
+            let to_max = read_channel_number(input, "toMax")?;
+            let span = from_max - from_min;
+            if span.abs() < f64::EPSILON {
+                return Err(EvalError::InvalidInput("remap span is zero".into()));
+        }
+        Ok(MathOutput::Number("remapped", to_min + ((value - from_min) / span) * (to_max - to_min)))
+        }
+        MathAction::Random => {
+            let min = read_channel_number(input, "min")?;
+            let max = read_channel_number(input, "max")?;
+            let seed = input.get("seed").and_then(Value::as_dictionary).and_then(optional_value_number).map(f64::to_bits);
+            Ok(MathOutput::Number("random", min + (max - min) * next_random_unit(seed)))
+        }
+        MathAction::PassThrough => {
+            Ok(MathOutput::Number("numberOut", read_channel_number(input, "number")?))
+        }
+        MathAction::Sum => unreachable!("list sum is evaluated by the fold"),
     }
 }
-// #endregion 🔖️Scalar
+
 
 // #region 🔖️Helpers
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -405,29 +266,6 @@ fn xyz_dictionary(schema: &str, value: Vec3) -> Dictionary {
     Dictionary::with_schema(schema).insert("x", Value::Atom(Atom::Decimal(value.x))).insert("y", Value::Atom(Atom::Decimal(value.y))).insert("z", Value::Atom(Atom::Decimal(value.z)))
 }
 
-fn add_items(items: &Dictionary) -> Result<Dictionary, EvalError> {
-    let mut indices: Vec<usize> = items.keys().filter_map(|key| key.parse::<usize>().ok()).collect();
-    indices.sort_unstable();
-    let first = indices.first().ok_or_else(|| EvalError::MissingInput("items".into()))?;
-    let first_dict = read_dict(items, &first.to_string())?;
-    match first_dict.schema() {
-        Some("point") | Some("vector") => {
-            let mut total = Vec3::new(0.0, 0.0, 0.0);
-            for index in indices {
-                total = total + read_xyz(read_dict(items, &index.to_string())?)?;
-            }
-            Ok(channel_output("sum", xyz_dictionary(first_dict.schema().unwrap_or("vector"), total)))
-        }
-        _ => {
-            let mut total = 0.0;
-            for index in indices {
-                total += read_value_number(read_dict(items, &index.to_string())?)?;
-            }
-            Ok(channel_output("sum", number_dictionary(total)))
-        }
-    }
-}
-
 fn read_dict<'a>(input: &'a Dictionary, key: &str) -> Result<&'a Dictionary, EvalError> {
     input.get(key).and_then(|v| v.as_dictionary()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
@@ -436,8 +274,12 @@ fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> 
     read_value_number(read_dict(input, key)?)
 }
 
+fn optional_value_number(input: &Dictionary) -> Option<f64> {
+    input.get("value").and_then(Value::as_atom).and_then(Atom::as_f64)
+}
+
 fn read_value_number(input: &Dictionary) -> Result<f64, EvalError> {
-    input.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("value".into()))
+    optional_value_number(input).ok_or_else(|| EvalError::MissingInput("value".into()))
 }
 
 fn read_xyz(input: &Dictionary) -> Result<Vec3, EvalError> {
@@ -446,12 +288,6 @@ fn read_xyz(input: &Dictionary) -> Result<Vec3, EvalError> {
 
 fn read_field_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
     input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput(key.into()))
-}
-
-fn list_indices(list: &Dictionary) -> Vec<usize> {
-    let mut indices: Vec<usize> = list.keys().filter_map(|key| key.parse::<usize>().ok()).collect();
-    indices.sort_unstable();
-    indices
 }
 
 fn splitmix64(seed: u64) -> u64 {
@@ -610,9 +446,9 @@ pub fn register(registry: &mut Registry) {
     registry.register_operator(
         OperatorInfo { variadic_input: Some(VariadicSpec { slot_key: "items".into(), min: 2, max: None }), ..operator_info("math.addVariadic", "Add Variadic", "Add", "Adds any number of numbers, points, or vectors", vec![], sum_output.clone()) },
         vec![
-            OperatorImpl { schemas: vec!["number".into(), "number".into()], operator: Box::new(Add) },
-            OperatorImpl { schemas: vec!["point".into(), "point".into()], operator: Box::new(Add) },
-            OperatorImpl { schemas: vec!["vector".into(), "vector".into()], operator: Box::new(Add) },
+            OperatorImpl { schemas: vec!["number".into()], operator: Box::new(Add) },
+            OperatorImpl { schemas: vec!["point".into()], operator: Box::new(Add) },
+            OperatorImpl { schemas: vec!["vector".into()], operator: Box::new(Add) },
         ],
         &["number", "point", "vector"],
     );
@@ -716,8 +552,7 @@ mod tests;
 /// 🧩️ Runtime-installable flow extension bundle for `math`.
 pub mod extension_guest {
     use super::{extension_manifest_json, module_registry};
-    use flow_extension_sdk::{flow_extension_topic_contribution};
-    use semio_framework::{Fault, FaultCode, FaultOrigin};
+    use flow_extension_sdk::flow_extension_topic_contribution;
     use semio_plugin::{ExecutionMode, ExtensionBundle};
 
     const FLOW_APP_ID: &str = "flow-play";

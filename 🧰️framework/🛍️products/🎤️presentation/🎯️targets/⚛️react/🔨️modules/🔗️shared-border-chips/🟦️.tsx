@@ -7,7 +7,7 @@ import { type FC, type ReactNode } from "@semio-tech/ui-react";
 import { useSharedBorderFrameRef } from "@semio-tech/ui-react/chrome";
 
 /** 🧩️ Spread onto every chip inside a {@link SharedBorderChipGroup}. */
-export const SHARED_BORDER_CELL = { "data-shared-border-cell": "" } as const;
+export const SHARED_BORDER_CELL = { "data-shared-border-cell": "", "data-level": "pane", "data-glass-chip": "" } as const;
 
 /** 🔗️ Horizontal frame whose direct children are shared-border cells; never combine with a flex gap. */
 export const SharedBorderChipGroup: FC<{ readonly className: string; readonly role?: string; readonly "aria-label"?: string; readonly children: ReactNode }> = ({ className, children, ...rest }) => {

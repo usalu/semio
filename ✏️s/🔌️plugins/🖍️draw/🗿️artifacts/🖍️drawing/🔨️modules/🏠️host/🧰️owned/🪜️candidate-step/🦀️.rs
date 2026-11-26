@@ -347,7 +347,7 @@ impl DrawingMutationCandidateAuthority {
             DrawingMutation::ImportImageAsset(_)=>{
                 let key=self.text_clone.as_mut().ok_or("drawing-store.asset-key-clone")?.take().ok_or("drawing-store.asset-key-incomplete")?;
                 let asset=self.asset_clone.as_mut().ok_or("drawing-store.asset-clone")?.take().ok_or("drawing-store.asset-incomplete")?;
-                source.assets.insert(key,asset);drop(self.text_clone.take());
+                source.assets.insert(key,asset);drop(self.text_clone.take());drop(self.asset_clone.take());
                 self.overlay.as_mut().ok_or("drawing-store.mutation-overlay-missing")?.commit(source)?;self.phase=DrawingMutationCandidatePhase::Complete;cx.consume_fuel(1);return Ok(false);
             }
             DrawingMutation::RemoveImageAsset(value)=>{

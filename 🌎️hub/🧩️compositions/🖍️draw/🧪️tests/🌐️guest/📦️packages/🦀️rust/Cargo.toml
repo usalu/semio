@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-hub-draw-guest-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "Native Draw editor and viewer lifecycle checks against the compiled guest component"
+
+[package.metadata.semio]
+role = "hub"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+semio-framework.workspace = true
+semio-framework-actor.workspace = true
+semio-framework-async-macros.workspace = true
+semio-framework-hash.workspace = true
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-value.workspace = true
+semio-os-vcs-entity-identity = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/📦️packages/🦀️rust", features = ["testkit"] }
+semio-plugin-guest-contract.workspace = true
+semio-plugin-host.workspace = true
+serde.workspace = true
+serde_json.workspace = true

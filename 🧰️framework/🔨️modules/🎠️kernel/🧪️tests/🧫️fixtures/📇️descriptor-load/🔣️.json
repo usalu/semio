@@ -63,6 +63,20 @@
       "contentType": "application/json",
       "body": "{\"manifest\":{\"pluginId\":\"fixture\"}}",
       "fault": "plugin.descriptor-invalid"
+    },
+    {
+      "name": "missing app identity",
+      "status": 200,
+      "contentType": "application/json",
+      "body": "{\"manifest\":{\"pluginId\":\"fixture\",\"apps\":[{}]}}",
+      "fault": "plugin.descriptor-invalid"
+    },
+    {
+      "name": "non-string app identity",
+      "status": 200,
+      "contentType": "application/json",
+      "body": "{\"manifest\":{\"pluginId\":\"fixture\",\"apps\":[{\"id\":7}]}}",
+      "fault": "plugin.descriptor-invalid"
     }
   ]
 }

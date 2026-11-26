@@ -111,6 +111,14 @@
       "committed": true
     },
     {
+      "root": "document",
+      "staleAt": "preflight",
+      "committed": false,
+      "faultCode": "interactive-job.stale",
+      "nextGeneration": 1
+    },
+    {
+      "root": "window-config",
       "staleAt": "preflight",
       "committed": false,
       "faultCode": "interactive-job.stale",

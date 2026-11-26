@@ -306,7 +306,6 @@
         "test-package-manager-seam",
         "test-patch-loader-processes",
         "test-playground-preparation-source",
-        "test-process-watchdog-linux",
         "test-pruning",
         "test-pruning-laws",
         "test-pruning-laws-processes",
@@ -6152,41 +6151,6 @@
               "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/📊️cpu/🧬️schema/🔣️.json",
               "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/📊️cpu/🟨️.d.mts"
             ]
-          }
-        }
-      }
-    },
-    "test-process-watchdog-linux": {
-      "executor": "repo:script",
-      "cache": false,
-      "dependsOn": [],
-      "outputs": [],
-      "inputs": [
-        "default",
-        "^default",
-        "testEnv",
-        "reads",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/**/*"
-      ],
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
-        "command": "repo ./📜️script.ts test process-watchdog-linux",
-        "forwardAllArgs": false
-      },
-      "metadata": {
-        "semio": {
-          "execution": {
-            "version": 1,
-            "kind": "source"
-          },
-          "runtimeSourceEntries": [
-            "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🐧️linux/🧪️tests/🟦️.ts"
-          ],
-          "sourceInputObservation": "freshness",
-          "cache": {
-            "version": 1,
-            "class": "live",
-            "reason": "exercises-host-resources"
           }
         }
       }

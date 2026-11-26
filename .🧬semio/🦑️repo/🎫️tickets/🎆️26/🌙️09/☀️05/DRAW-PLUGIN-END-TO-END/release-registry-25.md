@@ -21,3 +21,33 @@ After the fix, the direct live Specific CheckScript body progressed past authori
 The canonical prototype driver later completed 676 units and staged one component, zero failures. Model and browser module receipts bind component SHA-256 `fcc8e11c2267be890c236bf25f06d9e378b87b4becc78bebb74d95a6bcfb10e2` and semantic descriptor SHA-256 `d1547e6294d0ff47d507cee7c0143001b3fe75e8ce9cd2d0fede5ccf07ea3884`. Independent native emission passed strict pair validation and guest scenarios. `sync-fresh-descriptor-25.ts` rehashed the retained component, checked the browser receipt and its descriptor pack against that semantic hash, then used `settleComponentDescriptorV1` in write mode and verified both owner files on readback. The Specific catalog generator owner completed exit 0: 74 plugins, 158 playgrounds, zero framework packages.
 
 The Specific strict catalog verifier then progressed past authority and generated-byte comparison but exited 1 at playground validation: `stdio-idml` and `stdio-semio-brep` both claim react port 6276 and wgpu port 6376. Later global taxonomy, discovery and descriptor gates did not run. An independent Draw-only invocation of `validateDescriptors` against the actual generated Draw row exited 0 with no errors and verified the owner pair; it warned that the shipped release component and receipt under `dist/components/release` do not exist. Prototype browser materialization is not a release artifact. Neither the global duplicate-port error nor the missing release artifact has been resolved by this verification.
+
+The declared `stdio-idml` playground owns 6276/6376; the adjacent Semio group starts at 6278/6378. Repository declarations had no 6277/6377 use, so `stdio-semio-brep` now owns that free pair in its component Cargo.toml. The Specific owner regenerated successfully. A fresh strict verify passed catalog byte and playground checks, then failed on 58 global taxonomy violations, principally stdio IFC and IDML and five block mode children. It did not reach the later global descriptor gate. No broad taxonomy paths were moved.
+
+## Files Worked On
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🧪️tests/🎯️generator-scope/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🧪️tests/🎯️generator-scope/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-mutation-authority/🧰️kit/🦀️.rs`
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/🧩️component/📦️packages/🦀️rust/Cargo.toml`
+- `🌎️hub/🧩️compositions/🖍️draw/🧩️component/🔣️.json`
+- `🌎️hub/🧩️compositions/🖍️draw/🧩️component/🛂️.descriptor.semio`
+- `✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/📣️publication.json`
+- `✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🦀️catalog.json`
+- `✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🔌️plugins.json`
+- `✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🗂️sources.json`
+- `✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🩺️diagnostics.json`
+- `✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts`
+- `✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🎠️playgrounds.json`
+- `✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🚀️playgrounds.json`
+- `✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🎮️playgrounds/🟦️.ts`
+- `✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧰️framework.json`
+- `✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🏗️framework/🟦️.ts`
+- `✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🖥️hosts/🦀️.rs`
+- `✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🗿️artifacts/🦀️.rs`
+- `✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/trusted-stdio-catalog.json`
+- Ticket files: `registry-25.md`, `viewer-25.md`, `probe-viewer-25.mjs`, `release-registry-25.md`, `check-live-catalog-25.ts`, `generator-scope.test.ts`, `custody-review-25.md`, `host-fixture-25.md`, `fresh-browser-25.md`, `prepare-fresh-browser-25.ts`, `fresh-draw-proxy-25.mjs`, `trace-draw-assets-25.mjs`, `sync-fresh-descriptor-25.ts`, `verify-draw-registry-25.ts`, `probe-existing-reload-25.mjs`, `probe-bound-reconnect-25.mjs`, `bound-reconnect-25.md`.
+
+The generator rewrites its whole declared output set; this list records files worked on, not a claim that every file's content changed. Output set inventory was read after generation.

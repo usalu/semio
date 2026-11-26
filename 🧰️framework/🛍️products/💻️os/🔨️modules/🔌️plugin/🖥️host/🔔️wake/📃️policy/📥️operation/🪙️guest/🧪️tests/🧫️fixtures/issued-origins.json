@@ -1,0 +1,89 @@
+{
+  "count": 2913,
+  "first": 11,
+  "stride": 17,
+  "lookupMaximum": 12,
+  "cases": [
+    {
+      "name": "first settled claim",
+      "epoch": 11,
+      "origin": 0,
+      "purpose": "claim"
+    },
+    {
+      "name": "middle receipt",
+      "epoch": 24763,
+      "origin": 1456,
+      "purpose": "receipt"
+    },
+    {
+      "name": "latest current claim",
+      "epoch": 49515,
+      "origin": 2912,
+      "purpose": "current"
+    },
+    {
+      "name": "earlier unsettled claim",
+      "epoch": 49515,
+      "origin": null,
+      "purpose": "claim"
+    },
+    {
+      "name": "wrong producer",
+      "epoch": 24763,
+      "origin": null,
+      "purpose": "foreign"
+    },
+    {
+      "name": "forged descriptor",
+      "epoch": 24763,
+      "origin": null,
+      "purpose": "forged"
+    },
+    {
+      "name": "gap before first",
+      "epoch": 10,
+      "origin": null,
+      "purpose": "claim"
+    },
+    {
+      "name": "gap inside history",
+      "epoch": 24764,
+      "origin": null,
+      "purpose": "claim"
+    },
+    {
+      "name": "gap after last",
+      "epoch": 49516,
+      "origin": null,
+      "purpose": "claim"
+    }
+  ],
+  "issue": [
+    {
+      "previous": null,
+      "epoch": 11,
+      "accepted": true
+    },
+    {
+      "previous": null,
+      "epoch": 0,
+      "accepted": false
+    },
+    {
+      "previous": 11,
+      "epoch": 28,
+      "accepted": true
+    },
+    {
+      "previous": 28,
+      "epoch": 28,
+      "accepted": false
+    },
+    {
+      "previous": 28,
+      "epoch": 11,
+      "accepted": false
+    }
+  ]
+}

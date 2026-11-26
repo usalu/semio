@@ -75,10 +75,10 @@ pub(super) fn input_refusal_row(node: &Node, theme: &Theme) -> f32 {
     }
 }
 
-/// 📎️ A `file` input's Choose button: the leading box React's native file input draws (`file:inline-flex`, no border) sized to its caption, and the room left for the picked name.
+/// 📎️ A `file` input's transparent Choose button sized to its caption, and the room left for the picked name.
 pub(super) fn file_button_chrome(frame: Rect, label: &str, theme: &Theme) -> (Rect, Rgba, Rect) {
     let width = (label.chars().count() as f32 * theme.font_size_small * 0.55 + theme.padding_standard * 2.0).min(frame.w);
-    (Rect::new(frame.x + 1.0, frame.y + 1.0, width, (frame.h - 2.0).max(0.0)), theme.panel, Rect::new(frame.x + width, frame.y, (frame.w - width).max(0.0), frame.h))
+    (Rect::new(frame.x + 1.0, frame.y + 1.0, width, (frame.h - 2.0).max(0.0)), Rgba::TRANSPARENT, Rect::new(frame.x + width, frame.y, (frame.w - width).max(0.0), frame.h))
 }
 
 /// 🧱️ The box of an input without its refusal row, its colour swatch and the text geometry inside it.

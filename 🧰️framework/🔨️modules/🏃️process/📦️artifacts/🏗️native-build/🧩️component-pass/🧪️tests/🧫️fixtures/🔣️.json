@@ -1,4 +1,12 @@
 {
+  "stageJobOverlap": {
+    "waitMilliseconds": 12000,
+    "cases": [
+      {"name": "independent Cargo reaches its linked stage while the tool is running", "tokens": 2, "waitForGuest": true, "exit": 0, "events": ["tool-start", "guest-linked", "tool-end", "describe", "discard"]},
+      {"name": "failed stage tools deny description and retire linked work", "tokens": 2, "waitForGuest": true, "exit": 3, "events": ["tool-start", "guest-linked", "tool-end", "guest-settled", "discard"]},
+      {"name": "one token releases the tool before the guest and description", "tokens": 1, "waitForGuest": false, "exit": 0, "events": ["tool-start", "tool-end", "guest-linked", "describe", "discard"]}
+    ]
+  },
   "componentCompileCapacity": {
     "hostDecision": {"preferred": 5, "minimum": 3, "reason": "memory", "budgetMegabytes": 5120},
     "request": {"kind": "available", "maximumParallelism": 5, "minimumParallelism": 1},

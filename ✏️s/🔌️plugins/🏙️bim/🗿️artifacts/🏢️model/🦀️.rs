@@ -9,3 +9,7 @@ pub use semio_s_artifact_bim_model_v1::{BimApplication, artifact, definition};
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;

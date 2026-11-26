@@ -1,13 +1,18 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-element-option/schema.json",
   "title": "SetElementOption",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "option"
   ],
   "properties": {
+    "mutation": {
+      "const": "setElementOption"
+    },
     "id": {
       "type": "string"
     },

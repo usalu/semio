@@ -36,7 +36,8 @@ pub enum RuntimeCleanupFault {
 }
 /// 🩺️ Wire projection of one {@link RuntimeCleanupFault}: the fixture key, the emitted
 /// `Fault::code`, and the human sentence spliced into `Fault::message`.
-struct RuntimeCleanupFaultVector {
+#[doc(hidden)]
+pub struct RuntimeCleanupFaultVector {
     pub slug: &'static str,
     pub code: &'static str,
     pub detail: &'static str,

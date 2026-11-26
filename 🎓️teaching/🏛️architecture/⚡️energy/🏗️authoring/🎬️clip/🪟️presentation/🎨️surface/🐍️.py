@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 import math
 import re
+from functools import lru_cache
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent
@@ -115,6 +116,12 @@ def chip_paint(content_level: str, parent=None, *, appearance: str = "dark") -> 
             "alpha": alpha, "blur_px": glass["blur_px"], "saturate": glass["saturate"], "veil": veil,
             "parent_rgb": glass["parent_rgb"], "backdrop_rgb": glass["backdrop_rgb"],
             "composite_rgb": [math.floor(channel + 0.5) for channel in composite], "composite": _hex(composite)}
+
+
+@lru_cache(maxsize=None)
+def surface_fill(level: str = "window", appearance: str = "dark") -> str:
+    """🖌️ Resolve the opaque content paint from the same ramp as the chip glass."""
+    return surface_paint(level, appearance=appearance)["fill"]
 
 
 def source_files() -> tuple[Path, ...]:

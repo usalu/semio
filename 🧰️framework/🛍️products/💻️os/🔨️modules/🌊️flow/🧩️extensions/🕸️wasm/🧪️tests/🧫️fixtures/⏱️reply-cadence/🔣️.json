@@ -32,6 +32,12 @@
       "requestedUnits": 4096,
       "startedUs": 50,
       "polls": [[1, 2000049, false], [1, 2000050, true]]
+    },
+    {
+      "name": "a parked terminal result keeps its own invocation during identity retirement",
+      "requestedUnits": 2,
+      "startedUs": 50,
+      "polls": [[1, 51, false], [1, 52, false, true], [8, 2000051, false, true]]
     }
   ]
 }

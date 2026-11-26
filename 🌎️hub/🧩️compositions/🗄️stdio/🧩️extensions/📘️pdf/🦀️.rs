@@ -161,9 +161,6 @@ pub fn plugin() -> Result<Plugin<StdioPdfApps>, PluginAssemblyError> {
     builder = builder.viewer::<semio_s_artifact_stdio_pdf::viewer::pdf17ua::Pdf17UaViewer>(semio_s_artifact_stdio_pdf::viewer::pdf17ua::create_pdf17_ua_viewer());
     builder = builder.viewer::<semio_s_artifact_stdio_pdf::viewer::pdf17vt::Pdf17VtViewer>(semio_s_artifact_stdio_pdf::viewer::pdf17vt::create_pdf17_vt_viewer());
     builder = builder.viewer::<semio_s_artifact_stdio_pdf::viewer::pdf17x::Pdf17XViewer>(semio_s_artifact_stdio_pdf::viewer::pdf17x::create_pdf17_x_viewer());
-    builder = builder.action_set("pdf", |_| true);
-    builder = builder.action_set("pdf-editor", |app| app.role == semio_framework::AppRole::Editor);
-    builder = builder.action_set("pdf17-editor", |app| app.role == semio_framework::AppRole::Editor && app.dialect.standard == "1.7");
     builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_pdf::artifact_kind().id });
     builder = builder.execution(ExecutionMode::Isolated).requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist contributed editor operations to the open document".into(), optional: false });
     builder.try_build()

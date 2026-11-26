@@ -1,12 +1,20 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-workset/schema.json",
   "title": "DeleteWorkset",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id"
   ],
+  "x-semio-inverse-rows": {
+    "bounded": 8191
+  },
   "properties": {
+    "mutation": {
+      "const": "deleteWorkset"
+    },
     "id": {
       "type": "string"
     }

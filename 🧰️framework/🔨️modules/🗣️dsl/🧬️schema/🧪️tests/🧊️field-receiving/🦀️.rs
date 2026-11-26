@@ -140,6 +140,12 @@ enum StatementNode {
     },
 }
 
+#[derive(serde::Serialize, semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslOwnedReceiving)]
+struct OptionalStatementRecord {
+    #[dsl(statements, block)]
+    fill: Option<StatementNode>,
+}
+
 #[test]
 fn nested_statement_blocks_match_serde_and_close_cancelled_receiving() {
     use semio_framework_dsl_record::DslVariants;
@@ -156,6 +162,46 @@ fn nested_statement_blocks_match_serde_and_close_cancelled_receiving() {
                 &mut bank,
                 cut,
                 |node| assert_eq!(serde_json::to_value(node).unwrap(), case["expected"]),
+            );
+            if cut.is_none() {
+                assert!(complete);
+            }
+        }
+    }
+}
+
+#[test]
+fn optional_statements_match_json_and_release_each_cancelled_input() {
+    use semio_framework_dsl_record::DslVariants;
+
+    let law = law();
+    for case in cases(&law, "optional-statement") {
+        let source: Option<StatementNode> = serde_json::from_value(case["source"].clone()).unwrap();
+        for cut in cuts(&law) {
+            let statements = || {
+                let mut entries = Vec::with_capacity(1);
+                entries.extend(source.iter().map(DslVariants::to_named_record));
+                FieldValue::Statements(entries)
+            };
+            let complete = receive(
+                <Option<StatementNode> as DslOwnedReceivingField>::receiving_cursor(),
+                statements(),
+                &mut bank(&law),
+                cut,
+                |node| assert_eq!(serde_json::to_value(node).unwrap(), case["expected"]),
+            );
+            if cut.is_none() {
+                assert!(complete);
+            }
+            let record = RecordValue {
+                fields: [(0, FieldValue::Block(Box::new(statements())))].into_iter().collect(),
+            };
+            let complete = receive(
+                OptionalStatementRecord::receiving_cursor(),
+                FieldValue::Record(record),
+                &mut bank(&law),
+                cut,
+                |node| assert_eq!(serde_json::to_value(node).unwrap()["fill"], case["expected"]),
             );
             if cut.is_none() {
                 assert!(complete);

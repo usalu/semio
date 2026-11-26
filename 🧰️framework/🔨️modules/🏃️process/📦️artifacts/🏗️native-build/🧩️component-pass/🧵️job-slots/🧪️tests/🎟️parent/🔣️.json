@@ -1,0 +1,18 @@
+[
+  {"name":"first local at the boundary","grant":400,"peak":360,"localFootprint":40,"jobs":2,"result":{"routes":["local"]}},
+  {"name":"first local above the boundary","grant":399,"peak":360,"localFootprint":40,"jobs":2,"result":{"routes":[],"required":400}},
+  {"name":"driver footprint is charged once in the same grant","grant":410,"baseline":11,"peak":360,"localFootprint":40,"jobs":2,"result":{"routes":[],"required":411}},
+  {"name":"sequential above the boundary","grant":399,"peak":360,"localFootprint":40,"jobs":1,"result":{"routes":[],"required":400}},
+  {"name":"oversized local uses a real fleet slot with one job","grant":64,"peak":360,"jobs":1,"fleet":{"slots":1,"footprint":64},"result":{"routes":["fleet"]}},
+  {"name":"fleet wrapper also requires its own grant","grant":63,"peak":360,"jobs":2,"fleet":{"slots":1,"footprint":64},"result":{"routes":[],"required":360}},
+  {"name":"no worker settles immediately","grant":100,"peak":360,"jobs":3,"fleet":{"slots":0,"footprint":64},"result":{"routes":[],"required":360}},
+  {"name":"an already busy compatible worker can become available","grant":100,"peak":360,"jobs":3,"fleet":{"slots":0,"laterSlots":1,"waitForCompatibleSlot":true,"footprint":64},"result":{"routes":["fleet"]}},
+  {"name":"a busy compatible worker gives a bounded wait","grant":100,"peak":360,"jobs":3,"fleet":{"slots":0,"waitForCompatibleSlot":true,"footprint":64},"result":{"routes":[],"required":360}},
+  {"name":"a busy worker never permits an unfunded fleet footprint","grant":63,"peak":360,"jobs":3,"fleet":{"slots":0,"laterSlots":1,"waitForCompatibleSlot":true,"footprint":64},"result":{"routes":[],"required":360}},
+  {"name":"unreachable fleet settles immediately","grant":100,"peak":360,"jobs":3,"fleet":{"slots":null,"footprint":64},"result":{"routes":[],"required":360}},
+  {"name":"critical machine cannot place a fleet wrapper","grant":100,"peak":360,"jobs":2,"critical":true,"fleet":{"slots":1,"footprint":64},"result":{"routes":[],"required":360}},
+  {"name":"foreign native target cannot move to the fleet","grant":100,"peak":360,"jobs":2,"native":true,"fleet":{"slots":2,"footprint":64},"result":{"routes":[],"required":360}},
+  {"name":"failed fleet placement cannot fall back above the grant","grant":100,"peak":360,"jobs":2,"fleet":{"slots":1,"footprint":64,"fails":true},"result":{"routes":["fleet"],"required":360}},
+  {"name":"zero verified allowance never starts a compiler","grant":0,"peak":360,"jobs":2,"result":{"routes":[],"required":360}},
+  {"name":"first unreserved pass preserves host protection","grant":null,"peak":360,"jobs":1,"critical":true,"result":{"routes":["local"]}}
+]

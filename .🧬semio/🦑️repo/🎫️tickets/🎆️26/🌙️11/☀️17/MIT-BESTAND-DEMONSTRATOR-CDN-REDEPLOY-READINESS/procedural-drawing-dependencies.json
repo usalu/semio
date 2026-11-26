@@ -1,0 +1,5 @@
+{
+  "root": "semio-s-artifact-stdio-semio-drawing-export",
+  "required": ["semio-s-artifact-stdio-pdf-lower", "semio-s-artifact-stdio-pdf-conformance-support"],
+  "excluded": ["semio-s-artifact-stdio-pdf", "semio-s-artifact-stdio-pdf-mut-family-8"]
+}

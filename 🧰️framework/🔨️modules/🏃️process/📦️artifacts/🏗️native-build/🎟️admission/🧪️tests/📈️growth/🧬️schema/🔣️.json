@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.build/GrantGrowthCorpusV1",
+  "title": "Grant growth corpus: the machines and the cases of the grant growth law",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "description", "cases"],
+  "properties": {
+    "version": {"const": 1},
+    "description": {"type": "string"},
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "need", "grant", "local", "fleet", "expected"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "need": {"type": "integer", "minimum": 1},
+          "grant": {"type": "integer", "minimum": 0},
+          "local": {"$ref": "#/definitions/Host"},
+          "fleet": {"anyOf": [{"type": "null"}, {"type": "array", "items": {"$ref": "#/definitions/Host"}}]},
+          "expected": {"type": "object", "required": ["kind"], "properties": {"kind": {"enum": ["fits", "grow", "wait", "beyond-host", "refused"]}}}
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "totalMegabytes", "floorMegabytes", "interactiveReserveMegabytes", "budgetBasisPoints"],
+      "properties": {
+        "origin": {"type": "string"},
+        "totalMegabytes": {"type": "integer", "minimum": 1},
+        "floorMegabytes": {"type": "integer", "minimum": 0},
+        "interactiveReserveMegabytes": {"type": "integer", "minimum": 0},
+        "budgetBasisPoints": {"type": "integer", "minimum": 1, "maximum": 10000},
+        "availableMegabytes": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

@@ -3,6 +3,22 @@ import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import corpus from "./escrow-capture.json";
 
+test("one source turn advances completed ordinary stages up to the issuer boundary", () => {
+  const db = new Database(":memory:");
+  try {
+    for (const row of corpus.localPasses) {
+      const phases = [...corpus.cases[0].steps.slice(0,4),
+        ...Array.from({length:row.rows},()=>corpus.cases[1].steps.slice(4,10)).flat(),
+        ...corpus.cases[0].steps.slice(4)];
+      const stop = db.query<{calls:number},[string,number,number|null]>(
+        "select min(32,?2,coalesce(?3,32),min(key)) as calls from json_each(?1) where value='Bootstrap'"
+      ).get(JSON.stringify(phases),row.funded,row.park)!.calls;
+      expect(stop).toBe(row.calls);
+      expect(phases[stop-Number(row.park===stop)]).toBe(row.expected);
+    }
+  } finally { db.close(); }
+});
+
 test("every claim is committed before ledger and journal settlement", () => {
   const db = new Database(":memory:");
   try {
@@ -25,6 +41,23 @@ test("every claim is committed before ledger and journal settlement", () => {
     `);
     for (const row of corpus.cases) {
       expect(order.all(row.rows).map((step) => (step as { name: string }).name)).toEqual(row.steps);
+    }
+  } finally {
+    db.close();
+  }
+});
+
+test("frozen claim batches yield at the first actual boundary", () => {
+  const db = new Database(":memory:");
+  try {
+    const attempts = db.query<{ n: number }, [string, number, number | null, number | null, number | null, number | null]>(`
+      SELECT min(
+        CASE WHEN ?1 IN ('ClaimSlot','VerifyClaim','ClaimDelta','CommitClaim','Coverage','OriginDelta','Purpose','Scope')
+             THEN 32 ELSE 1 END,
+        ?2, coalesce(?3,32), coalesce(?4,32), coalesce(?5,32), coalesce(?6,32)
+      ) AS n`);
+    for (const row of corpus.batches) {
+      expect(attempts.get(row.stage,row.funded,row.ready,row.park,row.deadline,row.cancel)?.n).toBe(row.attempts);
     }
   } finally {
     db.close();

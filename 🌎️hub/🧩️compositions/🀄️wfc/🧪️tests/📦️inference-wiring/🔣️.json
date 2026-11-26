@@ -1,0 +1,12 @@
+{
+  "owner": "wfc",
+  "controller": "semio.infer",
+  "retainedColdKind": "s.wfc.bitmap",
+  "routes": [
+    {"kind":"s.wfc.bitmap", "service":"s.wfc.bitmap.solve", "payload":"s.wfc.bitmap.inference.request.v1"},
+    {"kind":"s.wfc.grid2d", "service":"s.wfc.grid2d.solve", "payload":"s.wfc.grid2d.inference.request.v1"},
+    {"kind":"s.wfc.grid3d", "service":"s.wfc.grid3d.solve", "payload":"s.wfc.grid3d.inference.request.v1"},
+    {"kind":"s.wfc.wfc2d", "service":"s.wfc.wfc2d.solve", "payload":"s.wfc.wfc2d.inference.request.v1"},
+    {"kind":"s.wfc.wfc3d", "service":"s.wfc.wfc3d.solve", "payload":"s.wfc.wfc3d.inference.request.v1"}
+  ]
+}

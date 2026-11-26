@@ -253,7 +253,7 @@ pub enum RelationshipKind {
     SharedResource,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]

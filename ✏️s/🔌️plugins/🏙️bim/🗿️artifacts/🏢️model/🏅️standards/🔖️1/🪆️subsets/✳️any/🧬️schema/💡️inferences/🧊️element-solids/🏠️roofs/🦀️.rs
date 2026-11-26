@@ -30,7 +30,7 @@ use std::f64::consts::FRAC_PI_2;
 
 //#region 🔖️Values
 /// 🧭️ Why a roof is not built as its shape asks: flat although the shape asks for more, or a hip roof where a gable roof was asked.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RoofFallback {
     CurvedFootprint,
     SkeletonFailed,

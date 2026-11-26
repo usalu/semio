@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import {processPidExistsV1} from "../../../🔖️identity/🟦️.ts";
 import { appendFileSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -61,7 +62,7 @@ export function readSandboxOwnerV1(root: string): SandboxOwnerV1 | undefined {
 
 /** ❤️ Tells whether the owner still runs: the pid exists and, when a start time was recorded, the process has that start time. */
 export function sandboxOwnerAliveV1(owner: SandboxOwnerV1, start: (pid: number) => string | null = processStartV1): boolean {
-  try { process.kill(owner.pid, 0); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "EPERM") return false; }
+  if (!processPidExistsV1(owner.pid)) return false;
   return owner.start === null || start(owner.pid) === owner.start;
 }
 

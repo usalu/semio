@@ -1,0 +1,7 @@
+# F54: ui-contract refused by the 1536 MiB parent grant
+
+- Source of numbers: the 1536 MiB is the parent cargo grant (operation `cargo`, default 3584 MiB, shrunk by the learned ratio of the pooled `cargo:check` class); the broker refuses any unit whose prediction exceeds it (`parent-memory`, by design: parent test vectors). The 1630 MiB is the COLD size model (644 MiB + 42 MiB/kloc x 25.4 kloc) used because the exact key `...|host|<profile>|lib` had no measurement. The ledger measured ui-contract at 285-500 MiB (profile prototype, 25371 lines) and ~700 MiB release. So the estimate was inflated, not the ceiling (option b, estimation key). Not a carving case (d).
+- Fix: `admissionSiblingHistoryV1` (admission `🟦️.ts`): without exact history, evidence of the same unit under another profile/inputs at comparable size replaces the cold model. A sibling above the grant is still refused. Strict grant untouched; exact-key local-history isolation untouched.
+- Tests: new `🧪️tests/🧬️sibling` 2/0, parent 4/0, main admission file 17/2 (cargo exit 101 in tiny-workspace helper, unrelated, not investigated).
+- Proof of `check --lib` for `dwg-editor-ac1018`: started in the background after landing (`wave-1125/🗑️generated/F54/check.txt`); result not yet verified when this was written.
+- Not addressed: grants can still be below a genuinely measured large unit (e.g. dwg-snapshot-objects 4.9 GB); that needs grant growth by memory, a separate design.

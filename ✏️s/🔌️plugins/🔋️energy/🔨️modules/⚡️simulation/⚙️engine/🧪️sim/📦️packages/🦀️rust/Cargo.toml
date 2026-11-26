@@ -15,6 +15,10 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[test]]
+name = "numerical-admission-handoff"
+path = "../../🎟️admission/🧪️tests/🤝️handoff/🦀️.rs"
+
 [features]
 testkit = []
 testing = ["semio-framework-job/testkit"]

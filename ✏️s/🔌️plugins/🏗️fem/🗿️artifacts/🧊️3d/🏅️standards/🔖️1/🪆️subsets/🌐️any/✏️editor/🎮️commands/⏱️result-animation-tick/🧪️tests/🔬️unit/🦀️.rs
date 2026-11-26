@@ -172,7 +172,7 @@ async fn transport_wire(app: &mut Fem3dApp, args: serde_json::Value) {
     use semio_plugin::PluginApp as _;
     let aborting = args.get("abort").is_some();
     let mut meta = semio_plugin::artifact_app_laws::meta("local");
-    meta.view_state = Some(std::sync::Arc::new(results_view()));
+    meta.view_state = Some(semio_plugin::artifact_app_laws::receive_view_fixture(results_view(), semio_plugin::artifact_app_laws::OriginalWorkFixture::stock()));
     let args = semio_plugin::DslValue::from(&args);
     semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setResultAnimation", Some(args.clone()), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("setResultAnimation: {fault:?}"));
     if !aborting {
@@ -240,3 +240,54 @@ async fn result_animation_frames_never_touch_the_window_config_ledger() {
     close(&mut app);
 }
 
+
+/// 🚀️ Opens one command at the results window WITHOUT settling it — the host's interleaving, where a
+/// press lands while the previous frame's retained operation is still in flight.
+async fn open(app: &mut Fem3dApp, command: Fem3dCommand) {
+    let mut meta = semio_plugin::artifact_app_laws::meta("local");
+    meta.view_state = Some(semio_plugin::artifact_app_laws::receive_view_fixture(results_view(), semio_plugin::artifact_app_laws::OriginalWorkFixture::stock()));
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("open the command");
+}
+
+/// ⏸️ LAW (F9): a Pause that lands while a frame's tick is still in flight retires every shared alias — nothing
+/// panics, the transport rests paused, Step +/- still moves the resting phase, and the runtime closes cleanly.
+#[semio_framework_async_macros::async_test]
+async fn pause_over_an_inflight_tick_retires_every_alias_and_steps_still_work() {
+    let mut app = fem3d_app();
+    play(&mut app, SetResultAnimation { phase: Some(0.0), playing: Some(true), speed: Some(1.0), ..tagged() }).await;
+    assert_eq!(tick(&mut app).await, 1);
+    open(&mut app, Fem3dCommand::ResultAnimationTick(ResultAnimationTick { window_id: WINDOW.into() })).await;
+    open(&mut app, Fem3dCommand::SetResultAnimation(SetResultAnimation { playing: Some(false), ..tagged() })).await;
+    settle(&mut app).await;
+    settle(&mut app).await;
+    assert!(!published(&mut app).await.playing, "the press paused the transport");
+    assert_eq!(tick(&mut app).await, 0, "a straggling tick parks nothing and re-arms nothing");
+    let rested = published(&mut app).await.phase;
+    play(&mut app, SetResultAnimation { field: Some("phaseStep".into()), value: Some("0.1".into()), ..tagged() }).await;
+    assert!((published(&mut app).await.phase - (rested + 0.1).rem_euclid(1.0)).abs() < 1e-9, "Step + moves the resting phase");
+    play(&mut app, SetResultAnimation { field: Some("phaseStep".into()), value: Some("-0.1".into()), ..tagged() }).await;
+    assert!((published(&mut app).await.phase - rested).abs() < 1e-9, "Step - returns to it");
+    close(&mut app);
+}
+
+/// 🔌️ LAW (F9, wire route): the panel's own wire gestures — Play, a tick in flight, Pause, Step +, Step - — all as the host
+/// sends them (`field`/`value`/`windowId` args), leave no shared alias unretired and close the runtime cleanly.
+#[semio_framework_async_macros::async_test]
+async fn panel_wire_play_pause_and_step_leave_no_alias_behind() {
+    let mut app = fem3d_app();
+    transport_wire(&mut app, serde_json::json!({ "field": "playing", "value": "true", "windowId": WINDOW })).await;
+    assert!(published(&mut app).await.playing, "Play pressed the transport");
+    for _ in 0..3 {
+        assert_eq!(tick(&mut app).await, 1);
+    }
+    open(&mut app, Fem3dCommand::ResultAnimationTick(ResultAnimationTick { window_id: WINDOW.into() })).await;
+    transport_wire(&mut app, serde_json::json!({ "field": "playing", "value": "false", "windowId": WINDOW })).await;
+    settle(&mut app).await;
+    let paused = published(&mut app).await;
+    assert!(!paused.playing, "Pause rested the transport");
+    transport_wire(&mut app, serde_json::json!({ "field": "phaseStep", "value": "0.05", "windowId": WINDOW })).await;
+    assert!((published(&mut app).await.phase - (paused.phase + 0.05).rem_euclid(1.0)).abs() < 1e-9, "Step + moved the resting phase");
+    transport_wire(&mut app, serde_json::json!({ "field": "phaseStep", "value": "-0.05", "windowId": WINDOW })).await;
+    assert!((published(&mut app).await.phase - paused.phase).abs() < 1e-9, "Step - moved it back");
+    close(&mut app);
+}

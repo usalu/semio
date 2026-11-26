@@ -80,10 +80,10 @@ it("uses the actual read-only automatic finalization policy in the browser workf
   walk(statement!);
   expect(assertions).toEqual(expect.arrayContaining([
     { target: "completedStatus", matcher: "toHaveText", argument: "new RegExp(projectLanguage().texts.finalized)" },
-    { target: `page.locator(paneElementSelector(scenario.paneId, \`\${completedGroup}.steps\`))`, matcher: "toContainText", argument: "new RegExp(projectLanguage().texts.finalStep)" },
+    { target: "completedSteps", matcher: "toContainText", argument: "new RegExp(projectLanguage().texts.finalStep)" },
     { target: "simulation", matcher: "toContainText", argument: "projectLanguage().texts.acceptedResult" },
     { target: 'completed.getByRole("progressbar")', matcher: "toBeVisible", argument: "" },
-    { target: `page.locator(paneElementSelector(scenario.paneId, \`\${abortedGroup}.status\`))`, matcher: "toHaveText", argument: "new RegExp(projectLanguage().texts.aborted)" },
+    { target: "abortedStatus", matcher: "toHaveText", argument: "new RegExp(projectLanguage().texts.aborted)" },
     { target: "simulation", matcher: "toContainText", argument: "projectLanguage().texts.noResult" },
   ]));
   expect(properties).not.toContain("complete");

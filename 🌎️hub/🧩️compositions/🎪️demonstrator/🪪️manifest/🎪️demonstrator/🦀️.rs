@@ -22,16 +22,50 @@ const PLUGIN_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 //#region 🔌️Plugin
 semio_framework_dispatch_macros::dyn_enum_close! {
-    /// 🗃️ Closed runtime app fleet for the demonstrator's owned and bundled surfaces — every variant
-    /// spelled through `EditorSurfaceApp`/`ViewerSurfaceApp`, so each bundled app brings its OWN member
-    /// roster (`ArtifactEditor::Members`) instead of this bundle guessing one.
+    /// 🗃️ Routes the six independently compiled mounted surfaces into one component.
     pub enum DemonstratorApps: PluginApp {
-        PlaygroundEditor(EditorSurfaceApp<crate::editor::playground::PlaygroundEditor>),
-        PlaygroundViewer(ViewerSurfaceApp<crate::viewer::playground::PlaygroundViewer>),
-        SourcingEditor(EditorSurfaceApp<SourcingCurationApp>),
-        SourcingViewer(ViewerSurfaceApp<SourcingViewer>),
-        ProcessEditor(EditorSurfaceApp<Process3dPlayApp>),
-        ProcessViewer(ViewerSurfaceApp<Process3dViewer>),
+        PlaygroundEditor(semio_hub_demonstrator_playground_editor_app::PlaygroundEditorApps),
+        PlaygroundViewer(semio_hub_demonstrator_playground_viewer_app::PlaygroundViewerApps),
+        SourcingEditor(semio_hub_demonstrator_sourcing_editor_app::SourcingEditorApps),
+        SourcingViewer(semio_hub_demonstrator_sourcing_viewer_app::SourcingViewerApps),
+        ProcessEditor(semio_hub_demonstrator_process_editor_app::ProcessEditorApps),
+        ProcessViewer(semio_hub_demonstrator_process_viewer_app::ProcessViewerApps),
+    }
+}
+
+impl From<EditorSurfaceApp<crate::editor::playground::PlaygroundEditor>> for DemonstratorApps {
+    fn from(app: EditorSurfaceApp<crate::editor::playground::PlaygroundEditor>) -> Self {
+        Self::PlaygroundEditor(app.into())
+    }
+}
+
+impl From<ViewerSurfaceApp<crate::viewer::playground::PlaygroundViewer>> for DemonstratorApps {
+    fn from(app: ViewerSurfaceApp<crate::viewer::playground::PlaygroundViewer>) -> Self {
+        Self::PlaygroundViewer(app.into())
+    }
+}
+
+impl From<EditorSurfaceApp<SourcingCurationApp>> for DemonstratorApps {
+    fn from(app: EditorSurfaceApp<SourcingCurationApp>) -> Self {
+        Self::SourcingEditor(app.into())
+    }
+}
+
+impl From<ViewerSurfaceApp<SourcingViewer>> for DemonstratorApps {
+    fn from(app: ViewerSurfaceApp<SourcingViewer>) -> Self {
+        Self::SourcingViewer(app.into())
+    }
+}
+
+impl From<EditorSurfaceApp<Process3dPlayApp>> for DemonstratorApps {
+    fn from(app: EditorSurfaceApp<Process3dPlayApp>) -> Self {
+        Self::ProcessEditor(app.into())
+    }
+}
+
+impl From<ViewerSurfaceApp<Process3dViewer>> for DemonstratorApps {
+    fn from(app: ViewerSurfaceApp<Process3dViewer>) -> Self {
+        Self::ProcessViewer(app.into())
     }
 }
 

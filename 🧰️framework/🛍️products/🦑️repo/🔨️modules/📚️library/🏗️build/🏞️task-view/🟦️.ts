@@ -1,4 +1,5 @@
 import {createHash,randomBytes} from "node:crypto";
+import {processPidExistsV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import {constants} from "node:fs";
 import {copyFile,link,lstat,mkdir,readdir,readFile,readlink,realpath,rename,rm,symlink,utimes,writeFile} from "node:fs/promises";
 import {dirname,join} from "node:path";
@@ -254,7 +255,7 @@ export function selectTaskViewsToCollectV1(rows:readonly TaskViewRowV1[],now:num
  return removable.filter(row=>gone.has(row.hash)).map(row=>row.hash);
 }
 
-const aliveByDefault=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return code(error)==="EPERM";}};
+const aliveByDefault=(pid:number):boolean=>processPidExistsV1(pid);
 export type TaskViewCollectionV1=Readonly<{removed:readonly string[];kept:readonly string[];freedBytes:number;temporaries:number}>;
 
 /** 🧹️ Collects the views of a directory: reads leases (a lease of a dead process or older than its lifetime is dropped), judges the views with `selectTaskViewsToCollectV1`, moves each chosen view away by one rename, looks at the leases once more and puts the view back when a task took it in the meantime, then deletes. Only direct children named like a task hash are touched, never through a link; temporary directories of a crashed materialisation go after an hour. This is the collector of the `task-views` writer of the disk recovery registry.

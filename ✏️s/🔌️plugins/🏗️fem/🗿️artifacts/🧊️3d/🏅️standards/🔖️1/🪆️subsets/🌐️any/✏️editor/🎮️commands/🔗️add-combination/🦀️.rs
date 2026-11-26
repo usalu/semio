@@ -47,7 +47,8 @@ fn natural_pair(segment: &str) -> Option<(String, f64)> {
         Some((left, right)) => (left.trim(), right.trim()),
         None => {
             let (first, rest) = segment.split_once(char::is_whitespace)?;
-            if number(first).is_some() { (first, rest.trim()) } else { let (rest, last) = segment.rsplit_once(char::is_whitespace)?; (rest.trim(), last) }
+            fn single(name: &str) -> Option<&str> { (!name.contains(char::is_whitespace)).then_some(name) }
+            if number(first).is_some() { (first, single(rest.trim())?) } else { let (rest, last) = segment.rsplit_once(char::is_whitespace)?; (single(rest.trim())?, last) }
         }
     };
     match (number(left), number(right)) {

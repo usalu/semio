@@ -1,6 +1,10 @@
+import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 
-const P=schema.definitions.Policy.const;
+const P=schema.definitions.Policy.const,T=schema.definitions.SilenceTexts.const;
+
+/** 📐️ The closed policy of the readiness record (beats, silence limits, heartbeat files), the one source of the launcher watchdog and the fleet readers. */
+export const readySilencePolicyV1=P;
 
 /** 💔️ What `ready.json` says about the sidecar: `fresh` (written within the missed-beat limit), `silent` (a sidecar at work that missed `silentBeatsMaximum` beats of `statusHeartbeatMilliseconds`), `idle` (ready or in a state that writes no beat), `absent` (no readable record). */
 export type ReadySilenceV1=Readonly<{state:"fresh"|"silent"|"idle"|"absent";missedBeats:number;ageMs:number}>;
@@ -26,6 +30,25 @@ export function readySilenceWatchV1(policy:typeof P=P):Readonly<{observe(status:
   if(readySidecarSilenceV1({status,nowMs,policy}).state!=="silent"||nowMs-restartedAt<policy.silenceRestartCooldownMilliseconds)return"wait";
   restartedAt=nowMs;return"restart";
  }});
+}
+
+/** 🔪️ The watchdog of the launcher that owns the readiness child: like {@link readySilenceWatchV1}, but a child younger than `silenceChildGraceMilliseconds` is never judged (the record it finds is the one of the child before it) and the cooldown holds across the children of one launcher, so a wedged child is ended once and a healthy machine never loops. A pure function of the records seen so far.
+ * @see ./🧪️tests/🟦️.ts */
+export function readySilenceChildWatchV1(policy:typeof P=P):Readonly<{observe(status:unknown,nowMs:number,childStartedMs:number):"wait"|"restart"}>{
+ const watch=readySilenceWatchV1(policy);
+ return Object.freeze({observe(status,nowMs,childStartedMs){return nowMs-childStartedMs<policy.silenceChildGraceMilliseconds?"wait":watch.observe(status,nowMs);}});
+}
+
+/** 🔪️ The bilingual line the launcher says when it ends a silent readiness child (see `SilenceTexts` of the readiness schema). */
+export function readySilenceChildNoticeV1(silence:Readonly<{missedBeats:number;ageMs:number}>):string{
+ const fill=(language:"en"|"de"):string=>T[language].childRestart.replace(/\{(\w+)\}/gu,(_all,name:string)=>String(name==="seconds"?Math.round(silence.ageMs/1000):silence.missedBeats));
+ return `${fill("en")} / ${fill("de")}`;
+}
+
+/** 🗂️ The `ready.json` of the machine a launcher runs on (`<store>/v1/origins/<origin>/ready.json`) from its environment (`SEMIO_FLEET_STORE_ROOT`, `SEMIO_FLEET_ORIGIN`), `undefined` without a fleet store or with an origin that is not a plain name. */
+export function readySilenceStatusFileV1(environment:Readonly<Record<string,string|undefined>>):string|undefined{
+ const store=environment.SEMIO_FLEET_STORE_ROOT,origin=environment.SEMIO_FLEET_ORIGIN;
+ return store===undefined||store===""||origin===undefined||!/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u.test(origin)?undefined:join(store,"v1","origins",origin,P.statusName);
 }
 
 /** 💔️ The bilingual line a restart says: how long the sidecar was silent. */

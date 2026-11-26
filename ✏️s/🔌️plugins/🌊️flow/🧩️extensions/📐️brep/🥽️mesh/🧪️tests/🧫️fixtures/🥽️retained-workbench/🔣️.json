@@ -1,9 +1,20 @@
 {
-  "description": "A retained flow box, top-face inset and extrusion settle through area, volume and faceted B-Rep outputs.",
+  "description": "A centered unit mesh box with its first face inset and extruded along the outward normal.",
+  "box": {
+    "dimensions": [1, 1, 1],
+    "center": [0, 0, 0],
+    "selectedFaceNormal": [0, 0, -1],
+    "units": "world"
+  },
   "amount": 0.1,
   "distance": 0.5,
   "area": 7.6,
   "volume": 1.32,
+  "mesh": {
+    "triangles": 28,
+    "boundingBoxMin": [-0.5, -0.5, -1],
+    "boundingBoxMax": [0.5, 0.5, 0.5]
+  },
   "maximumTurns": 16384,
   "binaryInterchange": {
     "formats": [

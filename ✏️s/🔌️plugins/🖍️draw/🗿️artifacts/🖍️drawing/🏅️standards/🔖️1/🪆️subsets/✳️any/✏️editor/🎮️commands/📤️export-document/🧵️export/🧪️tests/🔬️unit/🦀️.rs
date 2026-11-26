@@ -70,7 +70,7 @@ async fn original_export_read_returns_under_exact_physical_grants() {
         DRAWING_DOCUMENT_SCHEMA, id, document, None, &store::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
     );
     let mut issuer = Store::new::<store::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
-    issuer.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners().unwrap());
+    issuer.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners().unwrap()).expect("install funded document store owners");
     let registry_owners = issuer.owners.snapshot_read_leases.strong_count();
     let read = issuer.snapshot_read().unwrap();
     let original = read.get() as *const DrawingSnapshot;

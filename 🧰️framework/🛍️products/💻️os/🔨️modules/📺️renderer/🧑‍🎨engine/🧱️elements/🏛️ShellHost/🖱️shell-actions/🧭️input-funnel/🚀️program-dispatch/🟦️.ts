@@ -1,6 +1,7 @@
 /** 🚀️ The browser actor route and the plugin route that run a dispatched action and settle its ledger entry.
  *
  * 🧱️ Child module of {@link ../../🟦️.ts | useShellActions}: each function is one stage of the shell input funnel (`onAction`), moved verbatim. */
+import { subscribeWorkspaceClipboardWrites } from "../../../../🔌️PluginRuntime/🧵️turn-dispatch/workspace-clipboard.ts";
 import { type ShellDialogOriginV1 } from "../../../🗨️dialog-origin/🟦️.ts";
 import { type ActionDispatchLifecycleV1, SemioFaultError, SURFACE_FAULT_CODES, resolveUiDirtyScope, hostArmedViewContext } from "@semio-tech/framework";
 import { programHistoryKeyV1, programHistoryProjectionV1 } from "../../../🪟️spawned-program/🟦️.ts";
@@ -97,6 +98,12 @@ export async function dispatchProgramAction({ sessionWorkRef, isCurrentEffectOwn
 }) {
   const releaseActionWork = sessionWorkRef.current.begin(targetSession.pluginId, targetSession.instanceId, "typed-operation");
   const releaseSourceWork = holdSourceRevision(core, targetSession, plugin);
+  const releaseClipboard = action.commandAddress === undefined && (action.action === "copy" || action.action === "cut")
+    ? subscribeWorkspaceClipboardWrites(`${targetSession.pluginId}#${targetSession.instanceId}`, fragment => {
+      if (!isCurrentEffectOwner(actionOwner)) return false;
+      core.clipboardFragmentRef.current = fragment;
+      return true;
+    }) : undefined;
   try {
     const response = await invokeProgramInputV1(plugin, targetSession.instanceId, action, () => encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision), dispatchViewState, { order: causalOrderKeyV1(entry.provenance) });
     const startedOperation = startedTypedOperationV1(response.output);
@@ -156,6 +163,7 @@ export async function dispatchProgramAction({ sessionWorkRef, isCurrentEffectOwn
     if (propagateFailure) throw actionError;
     return outcome;
   } finally {
+    releaseClipboard?.();
     releaseSourceWork?.finish();
     releaseActionWork();
     if (releaseSourceWork === null && OBSERVED_INTERACTION_ACTION_IDS.has(action.action)) observeLocalInteraction({ plugin, instanceId: targetSession.instanceId });

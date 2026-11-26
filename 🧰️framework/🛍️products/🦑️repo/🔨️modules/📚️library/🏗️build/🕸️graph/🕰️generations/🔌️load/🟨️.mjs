@@ -1,4 +1,5 @@
 import{createBoundedCacheV1}from"../../../🧊️bounded/🟨️.mjs";
+import{buildRepairCommandV1}from"../../../⚙️operations/🔤️options/🟦️.ts";
 import{createHash}from"node:crypto";
 import{join}from"node:path";
 import{graphQueueRequestedAtV1,graphQueueYieldsV1,yieldGraphQueueV1}from"../🛌️yield/🟨️.mjs";
@@ -39,7 +40,7 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   cutoff:"graph: {questions} derived results asked again after {rows} stale facts: {held} unchanged, {changed} changed",
   reasonMembership:"the workspace file {path} was {change}",
   reasonMore:"graph: {count} more stale inputs are not listed",
-  pendingCrate:"graph: the crate manifest {path} has no build project owner yet; it stays out of the graph and does not make the workspace stale until its owner row is registered (repo verify syncs build-owners)",
+  pendingCrate:"graph: the crate manifest {path} has no build project owner yet; it stays out of the graph and does not make the workspace stale until its owner row is registered (run {command})",
   withheldDependency:"graph: {project} is withheld: {source} depends on projects that this graph snapshot does not contain ({target}), created or removed while the graph was built; run the command again to include them, or remove them from the native sources of {project}",
   withheldSource:"graph: {project} is withheld: {source} does not parse (sha256 {sha}); fix that file and run the command again",
   changeAdded:"added",
@@ -89,7 +90,7 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   cutoff:"Graph: {questions} abgeleitete Ergebnisse nach {rows} veralteten Fakten erneut abgefragt: {held} unverändert, {changed} verändert",
   reasonMembership:"die Arbeitsbereichsdatei {path} wurde {change}",
   reasonMore:"Graph: {count} weitere veraltete Eingaben werden nicht aufgelistet",
-  pendingCrate:"Graph: das Crate-Manifest {path} hat noch keinen Build-Projekt-Eigner; es bleibt außerhalb des Graphen und macht den Arbeitsbereich nicht veraltet, bis seine Eigner-Zeile eingetragen ist (repo verify gleicht build-owners ab)",
+  pendingCrate:"Graph: das Crate-Manifest {path} hat noch keinen Build-Projekt-Eigner; es bleibt außerhalb des Graphen und macht den Arbeitsbereich nicht veraltet, bis seine Eigner-Zeile eingetragen ist ({command} ausführen)",
   withheldDependency:"Graph: {project} wird zurückgehalten: {source} hängt von Projekten ab, die dieser Graph-Schnappschuss nicht enthält ({target}); sie wurden während des Graph-Aufbaus angelegt oder entfernt; den Befehl erneut ausführen, um sie aufzunehmen, oder sie aus den nativen Quellen von {project} entfernen",
   withheldSource:"Graph: {project} wird zurückgehalten: {source} lässt sich nicht lesen (sha256 {sha}); die Datei korrigieren und den Befehl erneut ausführen",
   changeAdded:"hinzugefügt",
@@ -675,7 +676,7 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,sealedO
   else if(result.served==="pinned")host.say("pinned",{generation,count:result.names?result.names.size:Object.keys(result.current.manifest.owners).length});
   else if(result.served==="built"&&result.published){host.say(result.merged===undefined?"published":"merged",{generation,computed:result.computed,carried:result.carried??0,seconds:Math.round((Date.now()-started)/1000),theirs:result.merged??0});if(result.index)host.say("indexed",{generation,rows:result.index.rows,owners:result.index.owners,expanded:(result.index.expandedBytes/1048576).toFixed(1),percent:(100*result.index.expandedBytes/GENERATION_POLICY_V1.maximumIndexBytes).toFixed(1),limit:GENERATION_POLICY_V1.maximumIndexBytes/1048576,packed:(result.index.packedBytes/1048576).toFixed(1)});}
   else if(host.verbose||lean)host.say(roots?"closure":"verified",roots?{count:result.names.size}:{generation,checked:result.plan?.checked??0});
-  for(const path of result.plan?.pending??[])if(!pendingCratesReportedV1.has(path)){pendingCratesReportedV1.set(path,true);host.say("pendingCrate",{path});}
+  for(const path of result.plan?.pending??[])if(!pendingCratesReportedV1.has(path)){pendingCratesReportedV1.set(path,true);host.say("pendingCrate",{path,command:buildRepairCommandV1("build-owners-sync")});}
   if(result.plan?.cutoff?.questions)host.say("cutoff",{questions:result.plan.cutoff.questions,rows:result.plan.stale??0,held:result.plan.cutoff.held,changed:result.plan.cutoff.changed});
   if(lean){const listing=await engine.catalog(result.current,{signal:host.signal});return{graph:host.readLean({version:1,lean:true,projects:Object.fromEntries(listing.projects.map(row=>[row.name,{name:row.name,root:row.root,targets:Object.fromEntries(row.targets.map(target=>[target,{}]))}])),dependencies:[],...(listing.unavailable.length?{unavailable:listing.unavailable}:{})}),result};}
   const stream=engine.assembleStream(result.current,{names:result.names&&[...result.names],externalInputs,compare:(a,b)=>a.localeCompare(b),signal:host.signal,progress});

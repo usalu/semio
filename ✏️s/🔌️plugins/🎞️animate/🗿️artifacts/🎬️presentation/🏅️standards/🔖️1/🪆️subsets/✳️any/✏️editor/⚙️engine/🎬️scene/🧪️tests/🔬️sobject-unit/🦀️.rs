@@ -3,6 +3,18 @@ mod tests {
     use geometry::Circle;
 
     #[test]
+    fn new_objects_have_distinct_ids_and_clones_keep_them() {
+        let first = VSobject::new();
+        let second = VSobject::new();
+        let group = Group::new(vec![first.clone_box()]);
+        let other_group = Group::empty();
+        assert_eq!(std::collections::HashSet::from([first.id(), second.id(), group.id(), other_group.id()]).len(), 4);
+        assert_eq!(first.clone_box().id(), first.id());
+        assert_eq!(group.clone_box().id(), group.id());
+        assert_eq!(group.children[0].id(), first.id());
+    }
+
+    #[test]
     fn vobject_has_finite_bounds() {
         let dot = VSobject::from_shape(&Circle::new(Point::new(0.0, 0.0), 1.0));
         let b = dot.bounds();

@@ -1,0 +1,18 @@
+[workspace]
+
+[package]
+name = "wfc-pinned-pair"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "wfc-pinned-pair"
+path = "../wfc-pinned-pair.rs"
+
+[dependencies]
+semio-s-artifact-wfc-bitmap-snapshot = { path = "../../../../../../../../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-os-store-text-io = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { path = "../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/📦️packages/🦀️rust" }
+semio-s-artifact-wfc-bitmap-inferences = { path = "../../../../../../../../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust", features = ["testkit"] }

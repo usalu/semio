@@ -1,4 +1,3 @@
-import "../⚓️envelope/🧪️tests/🟦️.ts";
 import {expect,test} from "bun:test";
 import {loadProductFunctionsV1} from "../../../../../🧪️testing/🧩️extracted-function/🟦️.ts";
 import {testPythonV1} from "../../../../../🧪️testing/🧰️toolchain/🟦️.ts";

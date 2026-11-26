@@ -9,7 +9,7 @@
     {
       "role": "body",
       "text": "muted-foreground",
-      "surface": "canvas"
+      "surface": "window"
     },
     {
       "role": "cover",
@@ -19,12 +19,12 @@
     {
       "role": "link",
       "text": "foreground",
-      "surface": "canvas"
+      "surface": "window"
     },
     {
       "role": "outline",
       "text": "foreground",
-      "surface": "canvas"
+      "surface": "window"
     },
     {
       "role": "filled-primary",
@@ -48,10 +48,8 @@
     }
   ],
   "chips": [
-    { "theme": "light", "level": "window", "glass": "#e9e6d7", "canvasComposite": "#d3d2c5" },
-    { "theme": "light", "level": "pane", "glass": "#dad9cc", "canvasComposite": "#cacbbf" },
-    { "theme": "dark", "level": "window", "glass": "#061a1f", "canvasComposite": "#1d2f32" },
-    { "theme": "dark", "level": "pane", "glass": "#112328", "canvasComposite": "#243437" }
+    { "theme": "light", "level": "pane", "glass": "#dad9cc", "margin": "#f7f3e3", "interior": "#e9e6d7", "interiorComposite": "#c7c8bc" },
+    { "theme": "dark", "level": "pane", "glass": "#112328", "margin": "#001117", "interior": "#061a1f", "interiorComposite": "#263639" }
   ],
   "regressions": [
     {

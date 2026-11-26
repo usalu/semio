@@ -17,6 +17,7 @@ const definition = (text: string, name: string): string => {
 export function verifyPageChromeBorders(): void {
   verifyPageChromeHeader();
   verifyChipFrameModel();
+  verifyPageSurface();
   const text = readFileSync(new URL("../../🖋️latex/semio-window.sty", import.meta.url), "utf8");
   const projectStart = text.indexOf("\\cs_new_protected:Npn \\semio_chrome_navbar_project_chip:");
   const projectEnd = text.indexOf("\\cs_new_protected:Npn \\semio_chrome_navbar_center_chip:", projectStart);
@@ -75,10 +76,9 @@ export function verifyChipFrameModel(): void {
   assert.ok(fill.includes("\\semio@chip@layer{\\semio@chip@alpha}{#1}"));
   assert.ok(fill.includes("\\semio@chip@layer{\\semio@chip@tint}{" + fixture.surface.veil + "}"));
   assert.ok(fill.includes("#1!\\semio@chip@alpha@pct!" + fixture.surface.flatten + "!\\semio@chip@tint@rest@pct!" + fixture.surface.veil));
-  assert.ok(text.includes("\\newcommand{\\semio@chip@level}{" + fixture.surface.level + "}"));
+  assert.ok(text.includes("\\newcommand{\\semio@chip@level}{" + fixture.surface.chipLevel + "}"));
   assert.ok(text.includes("\\newcommand{\\semio@chip@surface}{semio-chrome-\\semio@chip@level}"));
   const pane = definition(text, "semio@chip@pane");
-  assert.ok(pane.includes("\\renewcommand{\\semio@chip@level}{" + fixture.surface.frameLevel + "}"));
   assert.ok(pane.includes("\\color{" + fixture.surface.label + "}"));
   const core = readFileSync(new URL("../../🖋️latex/semio-core.sty", import.meta.url), "utf8");
   assert.ok(core.includes("\\semio@tocline@link {#1} { \\textcolor { " + fixture.surface.label + " } {#1} }"));
@@ -173,9 +173,32 @@ export function verifyChipGlassTokens(): void {
   });
   assert.ok(Math.abs(macro("semio@chip@tint") - Number(evaluate("t / 100", { t: chipTintPercent }))) < 1e-9);
   assert.ok(Math.abs(macro("semio@chip@tint@pct") + macro("semio@chip@tint@rest@pct") - 100) < 1e-9);
-  for (const [level, above] of [[fixture.surface.level, 1], [fixture.surface.frameLevel, 2]] as const) {
-    assert.equal(names.indexOf(level), above);
-    const seen = Number(evaluate("(1 - a) * (1 - t)", { a: 1 - above * glassAlphaStep, t: chipTintPercent / 100 }));
-    assert.ok(seen > 0.05 && seen < 0.5, level + " chips let 5 to 50 percent of the content beneath through");
+  const above = names.indexOf(fixture.surface.chipLevel);
+  assert.equal(above, names.indexOf(fixture.surface.contentLevel) + 1);
+  const seen = Number(evaluate("(1 - a) * (1 - t)", { a: 1 - above * glassAlphaStep, t: chipTintPercent / 100 }));
+  assert.ok(seen > 0.05 && seen < 0.5, "pane chips let 5 to 50 percent of the content beneath through");
+}
+
+/** 📰 Checks the physical sheet and interior roles against the shared appearance levels. */
+function verifyPageSurface(): void {
+  const latex = new URL("../../🖋️latex/", import.meta.url);
+  const read = (name: string) => readFileSync(new URL("semio-" + name + ".sty", latex), "utf8");
+  const page = read("page"), tokens = read("tokens"), window = read("window");
+  assert.ok(page.includes("\\colorlet{semio-chrome-sheet}{semio-chrome-#1-" + fixture.surface.marginLevel + "}"));
+  assert.ok(page.includes("\\colorlet{" + fixture.surface.flatten + "}{semio-chrome-#1-" + fixture.surface.contentLevel + "}"));
+  for (const theme of ["light", "dark"]) {
+    const rgb = (role: string) => tokens.match(new RegExp("semio-chrome-" + theme + "-" + role + "\\}\\{HTML\\}\\{([\\da-f]{6})\\}"))?.[1];
+    assert.match(rgb(fixture.surface.marginLevel) ?? "", /^[\da-f]{6}$/);
+    assert.match(rgb(fixture.surface.contentLevel) ?? "", /^[\da-f]{6}$/);
+    assert.notEqual(rgb(fixture.surface.marginLevel), rgb(fixture.surface.contentLevel));
   }
+  assert.ok(page.includes("\\pagecolor{semio-chrome-sheet}"));
+  assert.match(window, /\\AddToHook\{shipout\/background\}\{%\s*\\ifsemio@page@bands\s*\\semio@page@surface/);
+  assert.ok(read("components").includes("\\AddToHookNext{shipout/background}{\\semio@page@surface{0pt}{0pt}}"));
+  assert.ok(definition(page, "semio@page@surface").includes("\\textcolor{" + fixture.surface.flatten + "}"));
+  assert.ok(window.includes("colback=" + fixture.surface.flatten));
+  assert.ok(read("table").includes("\\cellcolor{" + fixture.surface.flatten + "}"));
+  const article = definition(page, "SemioArticleSurfaces");
+  assert.match(article, /\\semio@page@theme\{#1\}/);
+  assert.match(article, /\\semio@page@surface\{\\dimexpr\\headheight\+\\headsep\\relax\}\{\\dimexpr\\footskip\+\\dp\\strutbox\\relax\}/);
 }

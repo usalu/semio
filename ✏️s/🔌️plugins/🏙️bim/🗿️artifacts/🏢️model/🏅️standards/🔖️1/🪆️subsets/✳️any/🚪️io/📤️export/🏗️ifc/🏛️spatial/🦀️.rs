@@ -15,6 +15,12 @@ pub fn compound_angle(degrees: f64) -> V {
 
 /// 🏛️ Writes project, sites, buildings and storeys.
 pub fn emit(x: &mut Export<'_>) {
+    let inferred = x.inferred;
+    emit_with_levels(x, |id| inferred.storey_levels.get(id).map(|level| (level.elevation, level.absolute_elevation)));
+}
+
+/// 🎟️ Writes spatial placement from an exact, borrowed storey-level projection.
+pub fn emit_with_levels(x: &mut Export<'_>, level_of: impl Fn(&str) -> Option<(f64, f64)>) {
     let model = x.model;
     let units = x.ifc.units();
     let phases = model.project.phase_names.join(";");
@@ -47,7 +53,7 @@ pub fn emit(x: &mut Export<'_>) {
         let direction = (building.rotation.abs() > 1e-12).then(|| [building.rotation.cos(), building.rotation.sin(), 0.0]);
         let axis = x.ifc.axis3([building.origin.x, building.origin.y, building.elevation], None, direction);
         let placement = x.ifc.place(Some(site_placement), axis);
-        let datum = model.storeys.iter().filter(|(_, storey)| storey.building == *id).find_map(|(storey, _)| x.inferred.storey_levels.get(storey)).map(|level| level.absolute_elevation - level.elevation);
+        let datum = model.storeys.iter().filter(|(_, storey)| storey.building == *id).find_map(|(storey, _)| level_of(storey)).map(|(elevation, absolute)| absolute - elevation);
         let absolute = datum.unwrap_or(building.elevation + model.sites.get(&building.site).map_or(0.0, |site| site.elevation));
         let entity = x.ifc.rooted("IFCBUILDING", id, &building.name, "", vec![opt_text(id), rf(placement), unset(), unset(), en("ELEMENT"), real(absolute), unset(), unset()]);
         x.buildings.insert(id.clone(), BuildingRef { ifc: entity, placement });
@@ -55,14 +61,14 @@ pub fn emit(x: &mut Export<'_>) {
         x.links.aggregated.entry(site_entities[&building.site]).or_default().push(entity);
     }
     for (id, storey) in &model.storeys {
-        let (Some(building), Some(level)) = (x.buildings.get(&storey.building).copied(), x.inferred.storey_levels.get(id).copied()) else {
+        let (Some(building), Some((elevation, _))) = (x.buildings.get(&storey.building).copied(), level_of(id)) else {
             x.skip("storey", id, "its building is missing");
             continue;
         };
-        let axis = x.ifc.axis3([0.0, 0.0, level.elevation], None, None);
+        let axis = x.ifc.axis3([0.0, 0.0, elevation], None, None);
         let placement = x.ifc.place(Some(building.placement), axis);
-        let entity = x.ifc.rooted("IFCBUILDINGSTOREY", id, &storey.name, "", vec![opt_text(id), rf(placement), unset(), unset(), en("ELEMENT"), real(level.elevation)]);
-        x.storeys.insert(id.clone(), StoreyRef { ifc: entity, placement, elevation: level.elevation });
+        let entity = x.ifc.rooted("IFCBUILDINGSTOREY", id, &storey.name, "", vec![opt_text(id), rf(placement), unset(), unset(), en("ELEMENT"), real(elevation)]);
+        x.storeys.insert(id.clone(), StoreyRef { ifc: entity, placement, elevation });
         x.links.aggregated.entry(building.ifc).or_default().push(entity);
         x.links.elements.insert(id.clone(), entity);
         x.links.quantities.push((entity, "Qto_BuildingStoreyBaseQuantities", vec![Quantity::Length("GrossHeight", storey.height), Quantity::Length("NetHeight", storey.height)]));

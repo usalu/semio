@@ -35,6 +35,39 @@ fn numbers_have_at_most_six_decimals_and_no_trailing_zeros() {
 }
 
 #[test]
+fn borrowed_schedule_stream_matches_the_rfc4180_oracle_at_every_byte_boundary() {
+    use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::export::csv::ScheduleCsvCursor;
+    use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::ScheduleRow;
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ScheduleColumn, ScheduleField, ScheduleKey};
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let mut schedule = preset("wall", "Oracle").unwrap();
+    schedule.columns = vec![
+        ScheduleColumn { key: ScheduleKey::field(ScheduleField::Name), heading: Some(law["columns"][0].as_str().unwrap().into()), total: false },
+        ScheduleColumn { key: ScheduleKey::property("set", "Property"), heading: None, total: false },
+        ScheduleColumn { key: ScheduleKey::field(ScheduleField::Length), heading: Some(law["columns"][2].as_str().unwrap().into()), total: true },
+    ];
+    let table = ScheduleTable { rows: vec![
+        ScheduleRow { cells: vec![ScheduleCell::text(law["rows"][0][0].as_str().unwrap()), ScheduleCell::Empty, ScheduleCell::number(-0.0000001)], ..Default::default() },
+        ScheduleRow { kind: RowKind::Group, cells: vec![ScheduleCell::Empty, ScheduleCell::text(law["rows"][1][1].as_str().unwrap()), ScheduleCell::number(1.0 / 3.0)], ..Default::default() },
+        ScheduleRow { kind: RowKind::Total, cells: vec![ScheduleCell::Empty, ScheduleCell::Empty, ScheduleCell::number(8.0)], ..Default::default() },
+    ], ..Default::default() };
+    let expected = law["csv"].as_str().unwrap().as_bytes();
+    for size in [1, 2, 7, 64] {
+        let mut cursor = ScheduleCsvCursor::default();
+        let mut bytes = [0; 64];
+        let mut actual = Vec::new();
+        for _ in 0..expected.len() * 4 {
+            if cursor.is_complete() { break; }
+            let (count, work) = cursor.write(&schedule, Some(&table), &mut bytes[..size], size);
+            assert!((1..=size).contains(&work));
+            actual.extend_from_slice(&bytes[..count]);
+        }
+        assert!(cursor.is_complete());
+        assert_eq!(actual, expected);
+    }
+}
+
+#[test]
 fn a_schedule_table_is_a_header_and_a_record_per_row_with_a_total_label() {
     let (snapshot, inferred) = demo();
     let text = schedule_csv(&snapshot, &inferred, "sch-walls").expect("the schedule");

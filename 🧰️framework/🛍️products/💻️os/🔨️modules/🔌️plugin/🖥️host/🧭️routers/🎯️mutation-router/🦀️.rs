@@ -208,12 +208,19 @@ impl ArtifactMutationRouter {
     /// `Result` already use elsewhere in this region — the `semio.mutation-plan` job receives
     /// them straight through, no re-encoding).
     pub async fn plan(&self, request_bytes: &[u8], drivers: PluginCallDrivers<'_>) -> Result<Vec<u8>, PluginHostError> {
+        self.plan_with(request_bytes, |registration, kind, bytes| async move {
+            call_plugin(&registration, kind, bytes, drivers().map_err(PluginHostError::NativeIo)?).await
+        }).await
+    }
+
+    pub(super) async fn plan_with<'a,F>(&self, request_bytes: &'a [u8], dispatch: impl FnOnce(PluginRegistration, &'static str, &'a [u8]) -> F) -> Result<Vec<u8>, PluginHostError>
+    where F: std::future::Future<Output=Result<Vec<u8>,PluginHostError>> {
         let request: HostArtifactMutationPlanRequest = decode_wire_dsl(request_bytes).await?;
         let plugin_id = match self.resolve(&request.artifact_kind, &request.mutation_id).await? {
             MutationOwnership::Contributed { plugin_id } | MutationOwnership::Owner { plugin_id } => plugin_id,
         };
         let registration = self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router runtimes"))?.get(&plugin_id).cloned().ok_or_else(|| PluginHostError::Plugin(format!("mutation plan owner `{plugin_id}` is not loaded")))?;
-        call_plugin(&registration, JOB_KIND_MUTATION_PLAN, request_bytes, drivers().map_err(|error|PluginHostError::NativeIo(error))?).await
+        dispatch(registration, JOB_KIND_MUTATION_PLAN, request_bytes).await
     }
 
     /// ✂️ Drops every route reported by `plugin_id` (owner rows keyed under its own id, contributed

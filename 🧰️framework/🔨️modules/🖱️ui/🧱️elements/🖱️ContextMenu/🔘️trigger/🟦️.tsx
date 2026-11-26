@@ -2,6 +2,7 @@
 import * as React from "react";
 import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
+import { useLevel, surfaceLevelAbove } from "../../🌈️Surface/🟦️.tsx";
 import { useLabel } from "../../🏷️Label/🟦️.tsx";
 import { sharedBorderlessBoxProps } from "../../🗂️WindowChrome/shared-border.ts";
 
@@ -25,6 +26,7 @@ export interface ContextMenuTriggerButtonProps {
 
 /** 🔘️ The visible "More" button (`ui.contextMenu.more`, English and German) that opens a right-click-only menu. */
 export const ContextMenuTriggerButton: React.FC<ContextMenuTriggerButtonProps> = ({ resolveTarget, className, ...data }) => {
+  const ambient = useLevel();
   const label = useLabel("ui.contextMenu.more");
   return (
     <button
@@ -33,6 +35,7 @@ export const ContextMenuTriggerButton: React.FC<ContextMenuTriggerButtonProps> =
       title={label}
       aria-haspopup="menu"
       {...sharedBorderlessBoxProps}
+      data-level={data["data-glass-chip"] !== undefined ? surfaceLevelAbove(ambient) : undefined}
       {...data}
       data-context-menu-trigger=""
       className={cn("inline-flex size-6 shrink-0 items-center justify-center text-muted-foreground hover:bg-accent [@media(pointer:coarse)]:size-10", className)}

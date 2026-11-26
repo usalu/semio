@@ -6,7 +6,7 @@ const { drawingSvg } = await import(`${process.cwd()}/r3-2d.ts`);
 const [file, scale, pose, viewpoint, out, height, ...part] = process.argv.slice(2);
 const asset = JSON.parse(readFileSync(file!, "utf8")).asset;
 const svg: string = drawingSvg(asset, Number(scale), { kind: "pose", pose }, "light-line", viewpoint!);
-let image = sharp(Buffer.from(svg), { density: 1200, limitInputPixels: false }).flatten({ background: "#ffffff" }).resize({ height: Number(height ?? 1500) });
+let image = sharp(Buffer.from(svg), { density: Number(process.env.DENSITY ?? 1200), limitInputPixels: false }).flatten({ background: "#ffffff" }).resize({ height: Number(height ?? 1500) });
 if (part.length === 4) {
   const { data, info } = await image.png().toBuffer({ resolveWithObject: true });
   const [l, t, w, h] = part.map(Number) as [number, number, number, number];

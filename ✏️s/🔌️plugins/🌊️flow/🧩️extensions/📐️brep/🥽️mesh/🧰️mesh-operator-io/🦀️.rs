@@ -1,7 +1,7 @@
 //! 🧰️ Mesh widget argument readers, mesh text codec, job drivers and grants shared by the operators.
 
 use semio_s_spatial_kernel_semio_session::*;
-use flow_extension_sdk::mesh::*;
+use semio_os_flow_mesh::*;
 use neural_engine::Dictionary;
 use neural_engine::EvalError;
 use neural_engine::Value;

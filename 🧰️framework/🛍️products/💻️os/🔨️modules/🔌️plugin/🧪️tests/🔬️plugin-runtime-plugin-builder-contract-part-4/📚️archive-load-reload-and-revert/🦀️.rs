@@ -186,3 +186,30 @@ async fn drive_test_archive_load(app: &mut VcsArtifactApp<TestApp, TestMembers>,
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
+
+    /// 🔖️ Checkout Checkpoint without an id returns the document to its current checkpoint: the edit made after the checkpoint is taken back.
+    #[semio_framework_async_macros::async_test]
+    async fn checkout_checkpoint_without_an_id_returns_to_the_current_checkpoint() {
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+
+        let mut app = contract_app(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta(), &mut identity,cx).await.expect("select a");
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("increment");
+        reserved_action(&mut app, "commitCheckpoint", None, &mut identity, cx).await;
+        app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("increment again");
+        assert_eq!(app.stores.test_snapshot().await.count, 2, "two increments before the checkout");
+        reserved_action(&mut app, "checkoutCheckpoint", None, &mut identity, cx).await;
+        assert_eq!(app.stores.test_snapshot().await.count, 1, "checkout without an id returns the state of the current checkpoint");
+
+        artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
+    
+        }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
+    }

@@ -1,6 +1,6 @@
 use crate::geometry::{Pos, Rect, Size};
 use crate::text::{char_cells, cluster_cells_in, clusters, scalar_cells_in, scalar_mark, WidthMode};
-use crate::theme::Rgb;
+use crate::theme::{Rgb, Surface, Theme};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock};
 
@@ -70,6 +70,8 @@ fn push_tail(id: u32, out: &mut String) {
 #[derive(Clone)]
 pub struct CellBuffer {
     pub size: Size,
+    owner: Surface,
+    owner_background: Rgb,
     cells: Vec<Cell>,
     tails: Vec<u32>,
     mode: WidthMode,
@@ -81,7 +83,21 @@ pub struct CellBuffer {
 impl CellBuffer {
     pub fn new(size: Size, fill: Cell) -> Self {
         let count = usize::from(size.width) * usize::from(size.height);
-        Self { size, cells: vec![fill; count], tails: vec![0; count], mode: WidthMode::Cluster, borders: None, border_writes: HashSet::new(), border_rect: Rect::default() }
+        Self { size, owner: Surface::Base, owner_background: fill.bg, cells: vec![fill; count], tails: vec![0; count], mode: WidthMode::Cluster, borders: None, border_writes: HashSet::new(), border_rect: Rect::default() }
+    }
+
+    /// 🧱️ Starts the next node on its enclosing surface, independent of earlier cell writes.
+    pub fn set_owner(&mut self, owner: Surface, theme: &Theme) {
+        self.owner = owner;
+        self.owner_background = theme.surface(owner);
+    }
+
+    pub fn owner_background(&self) -> Rgb {
+        self.owner_background
+    }
+
+    pub fn chip_background(&self, theme: &Theme) -> Rgb {
+        theme.surface(self.owner.above())
     }
 
     pub fn resize(&mut self, size: Size, fill: Cell) {

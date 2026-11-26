@@ -40,6 +40,7 @@ semio-framework-graph-manifest = { path = "../../../../../../../../🔨️module
 
 [dev-dependencies]
 semio-framework-value-testing-effect-bank = { path = "../../../../../../../../🔨️modules/🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../../../../../🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 semio-os-flow-host-source = { path = "../../../📥️evaluation-source/📦️packages/🦀️rust", features = ["testkit"] }
 semio-os-flow-host-read = { path = "../../../📥️evaluation-source/🔎️read/📦️packages/🦀️rust", features = ["testkit"] }
 semio-os-flow-host-session = { path = "../../../🎞️session/📦️packages/🦀️rust", features = ["testkit"] }

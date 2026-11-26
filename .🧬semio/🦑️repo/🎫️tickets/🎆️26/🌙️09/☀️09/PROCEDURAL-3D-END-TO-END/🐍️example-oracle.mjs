@@ -60,6 +60,7 @@ export const loadExampleOracles = (dir = EXAMPLES_DIR) => {
       previewMeshId: `eval-${fixture.preview.node}@${fixture.preview.channel}#0`,
       previewKind: fixture.preview.kind,
       meshes: fixture.delivery.meshes,
+      meshRoles: fixture.delivery.meshRoles,
       minTriangles: fixture.delivery.minTriangles,
       minEdgeSegments: fixture.delivery.minEdgeSegments,
       boundingBoxMin: fixture.expect.boundingBoxMin,
@@ -108,6 +109,18 @@ export const ORACLES = loadExampleOracles();
 export const ORACLES_BY_LABEL = Object.fromEntries(Object.values(ORACLES).map((oracle) => [oracle.label, oracle]));
 export const oracleForLabel = (label) => (label ? (ORACLES_BY_LABEL[label] ?? ORACLES[slugOfLabel(label)] ?? null) : null);
 
+/** 📏 The authored height drives Rectangle's Y edge and the Mushroom's Z extrusion. */
+export const oracleAtHeight = (oracle, height) => {
+  const axis = { "rectangle-wire-preview": 1, "hexagonal-mushroom-column": 2 }[oracle?.slug];
+  if (axis === undefined || !Number.isFinite(height) || height <= 0) return null;
+  const replaceHeight = (bounds) => bounds.map((value, index) => index === axis ? height : value);
+  return {
+    ...oracle,
+    boundingBoxMax: replaceHeight(oracle.boundingBoxMax),
+    deliveryBoundingBoxMax: replaceHeight(oracle.deliveryBoundingBoxMax),
+  };
+};
+
 /** 🧮 The page-side reader: per preview host, the delivered mesh numbers this oracle is stated in.
  * Runs inside `page.evaluate` — it must stay self-contained and must never ship the position buffers
  * themselves across the bridge (`sphere-cut-with-torus` alone delivers > 1100 triangles). */
@@ -128,6 +141,7 @@ export const meshStatsScriptSource = `(previewMeshId) => {
     const edgePositions = data.edgePositions ?? [];
     return {
       id: mesh?.id ?? null,
+      role: mesh?.role ?? "(unstamped)",
       triangles: (data.indices ?? []).length / 3,
       vertices: positions.length / 3,
       edgeSegments: edgePositions.length / 6,
@@ -140,6 +154,8 @@ export const meshStatsScriptSource = `(previewMeshId) => {
     let instances = [];
     try { const parsed = JSON.parse(el.getAttribute("data-instances-json") ?? "[]"); instances = Array.isArray(parsed) ? parsed : []; } catch {}
     const per = meshes.map(statsOf);
+    const meshRoles = Object.create(null);
+    for (const mesh of per) meshRoles[mesh.role] = (meshRoles[mesh.role] ?? 0) + 1;
     const preview = per.find((entry) => entry.id === previewMeshId) ?? null;
     const framed = per.filter((entry) => entry.bounds);
     const all = framed.length === 0 ? null : {
@@ -150,6 +166,7 @@ export const meshStatsScriptSource = `(previewMeshId) => {
       allBounds: all,
       surfaceId: el.getAttribute("data-surface-id"),
       meshCount: meshes.length,
+      meshRoles,
       instanceCount: instances.length,
       meshIds: per.map((entry) => entry.id),
       instanceIds: instances.map((instance) => instance.id),
@@ -164,6 +181,21 @@ export const meshStatsScriptSource = `(previewMeshId) => {
  * bare source string, Playwright evaluates it as an EXPRESSION and hands back nothing. */
 export const meshStatsScript = new Function(`return ${meshStatsScriptSource}`)();
 
+/** 🎭️ Compares the complete published role census with the example's expected buffers. */
+export const gradeMeshRoles = (expected, observed = {}) => [...new Set([...Object.keys(expected), ...Object.keys(observed)])]
+  .filter((role) => (expected[role] ?? 0) !== (observed[role] ?? 0))
+  .map((role) => `role ${role}: published ${observed[role] ?? 0}, expected ${expected[role] ?? 0}`);
+
+/** 📦️ Compares delivered scene bounds against the fixture at the preview's actual LOD. */
+export const gradeDeliveryBounds = (bounds, minimum, maximum, tolerance) => {
+  if (!bounds) return ["missing delivered geometry bounds"];
+  return [0, 1, 2].flatMap((axis) => [
+    [bounds.min[axis], minimum[axis], "min"],
+    [bounds.max[axis], maximum[axis], "max"],
+  ].filter(([value, expected]) => !Number.isFinite(value) || Math.abs(value - expected) > tolerance)
+    .map(([value, expected, side]) => `delivery bbox ${side} axis ${axis}: ${value} vs ${expected} (tolerance ${tolerance})`));
+};
+
 /** ⚖️ The verdict a runtime mesh payload gets against its committed fixture — the reasons are the
  * report's own wording, so a red row never has to be re-derived by hand. */
 export const gradeMeshes = (oracle, host) => {
@@ -172,6 +204,8 @@ export const gradeMeshes = (oracle, host) => {
   if (!host) return { ok: false, reasons: ["no preview host published"] };
   if (host.meshCount !== oracle.meshes) reasons.push(`meshes ${host.meshCount} vs oracle ${oracle.meshes}`);
   if (host.instanceCount !== oracle.meshes) reasons.push(`instances ${host.instanceCount} vs oracle ${oracle.meshes}`);
+  reasons.push(...gradeMeshRoles(oracle.meshRoles, host.meshRoles));
+  reasons.push(...gradeDeliveryBounds(host.allBounds, oracle.deliveryBoundingBoxMin, oracle.deliveryBoundingBoxMax, oracle.deliveryBoundingBoxTolerance));
   const preview = host.preview;
   if (!preview) reasons.push(`preview mesh ${oracle.previewMeshId} absent from ${JSON.stringify(host.meshIds)}`);
   else {

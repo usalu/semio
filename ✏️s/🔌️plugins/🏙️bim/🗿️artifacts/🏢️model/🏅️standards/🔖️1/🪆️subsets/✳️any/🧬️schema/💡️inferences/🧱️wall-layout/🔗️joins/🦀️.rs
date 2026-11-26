@@ -70,6 +70,13 @@ pub struct Band {
     pub start_join: Option<EndJoin>,
     pub end_join: Option<EndJoin>,
 }
+impl semio_framework_value::retirement::RetireOwned for Band {
+    type RetirementCursor = semio_framework_value::retirement::Leaf<Self>;
+    fn retirement_seed(self) -> Self::RetirementCursor { semio_framework_value::retirement::leaf(self) }
+    fn controlled_retirement_supported() -> bool { true }
+    fn retirement_element_copy_bytes() -> usize { std::mem::size_of::<Self>() }
+}
+
 
 /// ✂️ Where the left and right face of a band end after the joins at one of its tips. `cut` is the face of the wall it butts against: the end edge of the footprint follows it (an arc when that face is curved), otherwise the end edge is straight.
 #[derive(Clone, Copy, Debug, PartialEq)]

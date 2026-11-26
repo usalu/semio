@@ -64,7 +64,7 @@ fn ephemeral_custody(closing:fn(RetirementDemand)->RetainedCloneGrant){
   }
   for turn in 0..100000{
    if owner.empty(){break;}assert!(turn<99999,"original ephemeral prefix failed to close");let d=owner.close_demand(4096).unwrap();let g=closing(d);
-   let controlled=owner.requires_original_control();let(step,heap)=close_turn(&mut caller,&mut decoder,&mut owner,g,controlled);let step=step.unwrap();if step.progress()==Default::default()&&!matches!(step,RetainedCloneStep::Complete(_)){eprintln!("[DEBUG] stall d={d:?} requote={:?} g={g:?} phase={} step={step:?} active={} native={}",owner.close_demand(g.maximum_copy_bytes),owner.phase,owner.active.is_some(),owner.native.is_some());if turn>0{panic!("[DEBUG] stalled")}}assert!(step.progress().fits(g));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));
+   let controlled=owner.requires_original_control();let(step,heap)=close_turn(&mut caller,&mut decoder,&mut owner,g,controlled);let step=step.unwrap();assert!(step.progress().fits(g));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));
   }
   assert_eq!(owner.empty(),law["terminal"].as_bool().unwrap());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   while !decoder.terminal_is_empty(){caller.turn(stock,|cx|{decoder.close_on_source(cx)?;Ok(())}).unwrap();}

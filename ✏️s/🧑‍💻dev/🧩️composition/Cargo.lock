@@ -2654,6 +2654,7 @@ dependencies = [
  "semio-framework-3d-brep-construction",
  "semio-framework-3d-brep-curve",
  "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-solid-topology",
  "semio-framework-3d-brep-spline-construction",
  "semio-framework-3d-brep-surface",
  "semio-framework-3d-brep-tolerance",
@@ -3311,6 +3312,7 @@ dependencies = [
  "semio-framework-geometry-skeleton",
  "semio-framework-geometry-solids",
  "semio-framework-geometry-vector",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -3324,6 +3326,9 @@ dependencies = [
 [[package]]
 name = "semio-framework-geometry-primitives"
 version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
 
 [[package]]
 name = "semio-framework-geometry-skeleton"
@@ -3340,6 +3345,7 @@ dependencies = [
  "semio-framework-geometry-bulge",
  "semio-framework-geometry-primitives",
  "semio-framework-geometry-vector",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -16020,68 +16026,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-stdio-jpg-inferences"
-version = "0.1.0"
-dependencies = [
- "semio-framework",
- "semio-framework-2d",
- "semio-framework-action-bus",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-hash",
- "semio-framework-job",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-framework-value-native-owned",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-jpg-operations",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-jpg-operations"
-version = "0.1.0"
-dependencies = [
- "semio-framework",
- "semio-framework-2d",
- "semio-framework-action-bus",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-hash",
- "semio-framework-job",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
 name = "semio-s-artifact-stdio-json"
 version = "0.1.0"
 dependencies = [
@@ -16894,88 +16838,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-stdio-pdf"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value-derive",
- "semio-os-command",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-diff",
- "semio-s-artifact-stdio-pdf-diff-surfaces",
- "semio-s-artifact-stdio-pdf-fonts",
- "semio-s-artifact-stdio-pdf-glyph-list",
- "semio-s-artifact-stdio-pdf-graph-projection",
- "semio-s-artifact-stdio-pdf-inferences",
- "semio-s-artifact-stdio-pdf-lift",
- "semio-s-artifact-stdio-pdf-lower",
- "semio-s-artifact-stdio-pdf-model",
- "semio-s-artifact-stdio-pdf-model-profiles",
- "semio-s-artifact-stdio-pdf-mut-base",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-base-3",
- "semio-s-artifact-stdio-pdf-mut-base-4",
- "semio-s-artifact-stdio-pdf-mut-base-6",
- "semio-s-artifact-stdio-pdf-mut-base-7",
- "semio-s-artifact-stdio-pdf-mut-base-8",
- "semio-s-artifact-stdio-pdf-mut-base-9",
- "semio-s-artifact-stdio-pdf-mut-family",
- "semio-s-artifact-stdio-pdf-mut-family-10",
- "semio-s-artifact-stdio-pdf-mut-family-11",
- "semio-s-artifact-stdio-pdf-mut-family-12",
- "semio-s-artifact-stdio-pdf-mut-family-13",
- "semio-s-artifact-stdio-pdf-mut-family-14",
- "semio-s-artifact-stdio-pdf-mut-family-15",
- "semio-s-artifact-stdio-pdf-mut-family-2",
- "semio-s-artifact-stdio-pdf-mut-family-3",
- "semio-s-artifact-stdio-pdf-mut-family-4",
- "semio-s-artifact-stdio-pdf-mut-family-5",
- "semio-s-artifact-stdio-pdf-mut-family-6",
- "semio-s-artifact-stdio-pdf-mut-family-7",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-mut-family-9",
- "semio-s-artifact-stdio-pdf-mut-vt",
- "semio-s-artifact-stdio-pdf-mut-x",
- "semio-s-artifact-stdio-pdf-mut-x-2",
- "semio-s-artifact-stdio-pdf-mutations",
- "semio-s-artifact-stdio-pdf-mutations-2",
- "semio-s-artifact-stdio-pdf-pdf-snapshot-value-tests",
- "semio-s-artifact-stdio-pdf-schema",
- "semio-s-artifact-stdio-pdf-schema-2",
- "semio-s-artifact-stdio-pdf-schema-3",
- "semio-s-artifact-stdio-pdf-schema-4",
- "semio-s-artifact-stdio-pdf-schema-5",
- "semio-s-artifact-stdio-pdf-snapshot",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-snapshot-surfaces",
- "semio-s-artifact-stdio-pdf-tables",
- "semio-s-artifact-stdio-pdf-tests",
- "semio-s-artifact-stdio-pdf-tests-2",
- "semio-s-artifact-stdio-pdf-viewer",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
 name = "semio-s-artifact-stdio-pdf-base14-mono"
 version = "0.1.0"
 
@@ -16997,10 +16859,6 @@ version = "0.1.0"
 
 [[package]]
 name = "semio-s-artifact-stdio-pdf-base14-symbol"
-version = "0.1.0"
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-cmyk-image-clut"
 version = "0.1.0"
 
 [[package]]
@@ -17074,34 +16932,6 @@ dependencies = [
  "semio-ui-locale",
  "serde_json",
 ]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-diff-surfaces"
-version = "0.1.0"
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-editor-document"
-version = "0.1.0"
-dependencies = [
- "semio-framework-artifact-reference",
- "semio-framework-hash",
- "semio-framework-pixels",
- "semio-framework-value",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-jpg-inferences",
- "semio-s-artifact-stdio-pdf-image-route",
- "semio-s-artifact-stdio-pdf-inferences",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-page-editor-view",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-ui-locale",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-editor-kit"
-version = "0.1.0"
 
 [[package]]
 name = "semio-s-artifact-stdio-pdf-filters"
@@ -17195,14 +17025,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-stdio-pdf-image-route"
-version = "0.1.0"
-dependencies = [
- "semio-plugin",
- "semio-s-artifact-stdio-pdf-inferences",
-]
-
-[[package]]
 name = "semio-s-artifact-stdio-pdf-inferences"
 version = "0.1.0"
 dependencies = [
@@ -17236,53 +17058,6 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-schema-2",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-s-artifact-stdio-pdf-tests",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-io-export"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-test-fixtures",
- "semio-framework-value",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-diff",
- "semio-s-artifact-stdio-pdf-fonts",
- "semio-s-artifact-stdio-pdf-graph-projection",
- "semio-s-artifact-stdio-pdf-inferences",
- "semio-s-artifact-stdio-pdf-lift",
- "semio-s-artifact-stdio-pdf-lower",
- "semio-s-artifact-stdio-pdf-model",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-base-3",
- "semio-s-artifact-stdio-pdf-mut-base-4",
- "semio-s-artifact-stdio-pdf-mut-family-10",
- "semio-s-artifact-stdio-pdf-mut-family-11",
- "semio-s-artifact-stdio-pdf-mut-family-5",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-mut-family-9",
- "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
@@ -17341,6 +17116,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-pdf-lifter"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-value",
  "semio-s-artifact-stdio-pdf-conformance-support",
  "semio-s-artifact-stdio-pdf-diff",
  "semio-s-artifact-stdio-pdf-fonts",
@@ -17371,6 +17147,7 @@ dependencies = [
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
+ "semio-framework-value",
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-binary",
@@ -17416,14 +17193,74 @@ dependencies = [
  "semio-s-artifact-stdio-binary",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-deflate",
+ "semio-s-artifact-stdio-pdf-model-font",
+ "semio-s-artifact-stdio-pdf-model-graphics",
+ "semio-s-artifact-stdio-pdf-model-object",
+ "semio-s-artifact-stdio-pdf-model-page",
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
 ]
 
 [[package]]
-name = "semio-s-artifact-stdio-pdf-model-profiles"
+name = "semio-s-artifact-stdio-pdf-model-content-values"
 version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-pdf-model-object",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-model-font"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-pdf-model-graphics",
+ "semio-s-artifact-stdio-pdf-model-object",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-model-graphics"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-pdf-model-content-values",
+ "semio-s-artifact-stdio-pdf-model-object",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-model-object"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-model-page"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-pdf-model-graphics",
+ "semio-s-artifact-stdio-pdf-model-object",
+]
 
 [[package]]
 name = "semio-s-artifact-stdio-pdf-mut-base"
@@ -17571,141 +17408,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-stdio-pdf-mut-base-6"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-base-3",
- "semio-s-artifact-stdio-pdf-mut-family",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-base-7"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-mut-base-3",
- "semio-s-artifact-stdio-pdf-mut-family",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-base-8"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-base-3",
- "semio-s-artifact-stdio-pdf-mut-base-4",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-testkit",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-base-9"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-base-3",
- "semio-s-artifact-stdio-pdf-mut-family",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-testkit",
- "semio-s-artifact-stdio-pdf-tests-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
 name = "semio-s-artifact-stdio-pdf-mut-family"
 version = "0.1.0"
 dependencies = [
@@ -17731,366 +17433,6 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-family-10"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-command",
- "semio-os-kernel",
- "semio-os-store-one-item",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-family-4",
- "semio-s-artifact-stdio-pdf-mut-family-5",
- "semio-s-artifact-stdio-pdf-mut-family-6",
- "semio-s-artifact-stdio-pdf-mut-family-7",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-mut-family-9",
- "semio-s-artifact-stdio-pdf-mut-vt",
- "semio-s-artifact-stdio-pdf-mut-x",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-family-11"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-command",
- "semio-os-kernel",
- "semio-os-store-one-item",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-diff",
- "semio-s-artifact-stdio-pdf-fonts",
- "semio-s-artifact-stdio-pdf-graph-projection",
- "semio-s-artifact-stdio-pdf-inferences",
- "semio-s-artifact-stdio-pdf-lift",
- "semio-s-artifact-stdio-pdf-model",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-family",
- "semio-s-artifact-stdio-pdf-mut-family-4",
- "semio-s-artifact-stdio-pdf-mut-family-5",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-mut-family-9",
- "semio-s-artifact-stdio-pdf-mut-vt",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-family-12"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-diff",
- "semio-s-artifact-stdio-pdf-inferences",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-family",
- "semio-s-artifact-stdio-pdf-mut-family-11",
- "semio-s-artifact-stdio-pdf-mut-family-2",
- "semio-s-artifact-stdio-pdf-mut-family-3",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-mut-x",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-testkit",
- "semio-s-artifact-stdio-pdf-tests-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-family-13"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-inferences",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-family-3",
- "semio-s-artifact-stdio-pdf-mut-family-4",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-mut-family-9",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-testkit",
- "semio-s-artifact-stdio-pdf-tests-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-family-14"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-inferences",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-family",
- "semio-s-artifact-stdio-pdf-mut-family-10",
- "semio-s-artifact-stdio-pdf-mut-family-4",
- "semio-s-artifact-stdio-pdf-mut-family-5",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-mut-family-9",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-testkit",
- "semio-s-artifact-stdio-pdf-tests-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-family-15"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d-compute",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-inferences",
- "semio-s-artifact-stdio-pdf-mut-base",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-family",
- "semio-s-artifact-stdio-pdf-mut-family-10",
- "semio-s-artifact-stdio-pdf-mut-family-11",
- "semio-s-artifact-stdio-pdf-mut-family-4",
- "semio-s-artifact-stdio-pdf-mut-family-5",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-mut-family-9",
- "semio-s-artifact-stdio-pdf-mut-x",
- "semio-s-artifact-stdio-pdf-schema-2",
- "semio-s-artifact-stdio-pdf-schema-4",
- "semio-s-artifact-stdio-pdf-snapshot",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-tests",
- "semio-s-artifact-stdio-pdf-tests-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-family-2"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-base-3",
- "semio-s-artifact-stdio-pdf-mut-family",
- "semio-s-artifact-stdio-pdf-mut-family-3",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-family-3"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-family-4"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-base-4",
- "semio-s-artifact-stdio-pdf-mut-family",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-ui-contract",
  "semio-ui-locale",
@@ -18129,258 +17471,6 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-mut-base-2",
  "semio-s-artifact-stdio-pdf-mut-base-4",
  "semio-s-artifact-stdio-pdf-mut-family",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-family-6"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-mut-family",
- "semio-s-artifact-stdio-pdf-mut-family-3",
- "semio-s-artifact-stdio-pdf-mut-family-4",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-family-7"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-mut-family",
- "semio-s-artifact-stdio-pdf-mut-family-4",
- "semio-s-artifact-stdio-pdf-mut-family-5",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-family-8"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-command",
- "semio-os-kernel",
- "semio-os-store-one-item",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-fonts",
- "semio-s-artifact-stdio-pdf-inferences",
- "semio-s-artifact-stdio-pdf-model",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-base-3",
- "semio-s-artifact-stdio-pdf-mut-base-4",
- "semio-s-artifact-stdio-pdf-mut-base-6",
- "semio-s-artifact-stdio-pdf-mut-base-7",
- "semio-s-artifact-stdio-pdf-mut-family",
- "semio-s-artifact-stdio-pdf-mut-family-2",
- "semio-s-artifact-stdio-pdf-mut-family-3",
- "semio-s-artifact-stdio-pdf-mut-family-4",
- "semio-s-artifact-stdio-pdf-mut-family-5",
- "semio-s-artifact-stdio-pdf-mut-x",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-family-9"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-command",
- "semio-os-kernel",
- "semio-os-store-one-item",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-family",
- "semio-s-artifact-stdio-pdf-mut-family-2",
- "semio-s-artifact-stdio-pdf-mut-family-3",
- "semio-s-artifact-stdio-pdf-mut-family-4",
- "semio-s-artifact-stdio-pdf-mut-family-5",
- "semio-s-artifact-stdio-pdf-mut-family-6",
- "semio-s-artifact-stdio-pdf-mut-family-7",
- "semio-s-artifact-stdio-pdf-mut-vt",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-vt"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-mut-family-4",
- "semio-s-artifact-stdio-pdf-mut-family-5",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-x"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-command",
- "semio-os-kernel",
- "semio-os-store-one-item",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-family-2",
- "semio-s-artifact-stdio-pdf-mut-family-3",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-mut-x-2"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-mut-family-3",
- "semio-s-artifact-stdio-pdf-mut-x",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-ui-contract",
  "semio-ui-locale",
@@ -18458,18 +17548,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-stdio-pdf-native-save"
-version = "0.1.0"
-dependencies = [
- "semio-framework-hash",
- "semio-framework-job-publication",
- "semio-framework-value",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-pdf-schema-4",
-]
-
-[[package]]
 name = "semio-s-artifact-stdio-pdf-page-content"
 version = "0.1.0"
 dependencies = [
@@ -18481,89 +17559,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-stdio-pdf-page-coordinates"
-version = "0.1.0"
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-page-editor"
-version = "0.1.0"
-dependencies = [
- "semio-framework-artifact-reference",
- "semio-framework-io-base64",
- "semio-framework-pixels",
- "semio-framework-value",
- "semio-plugin",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-jpg-inferences",
- "semio-s-artifact-stdio-pdf-editor-document",
- "semio-s-artifact-stdio-pdf-fonts",
- "semio-s-artifact-stdio-pdf-inferences",
- "semio-s-artifact-stdio-pdf-mut-base-4",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-page-coordinates",
- "semio-s-artifact-stdio-pdf-page-editor-authoring",
- "semio-s-artifact-stdio-pdf-page-editor-base",
- "semio-s-artifact-stdio-pdf-page-editor-view",
- "semio-s-artifact-stdio-pdf-presence-lane",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-page-editor-authoring"
-version = "0.1.0"
-dependencies = [
- "semio-framework-io-base64",
- "semio-framework-value",
- "semio-plugin",
- "semio-s-artifact-stdio-pdf-editor-document",
- "semio-s-artifact-stdio-pdf-io-export",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-page-editor-base"
-version = "0.1.0"
-dependencies = [
- "semio-framework-artifact-reference",
- "semio-framework-io-base64",
- "semio-framework-pixels",
- "semio-framework-value",
- "semio-plugin",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-jpg-inferences",
- "semio-s-artifact-stdio-pdf-cmyk-image-clut",
- "semio-s-artifact-stdio-pdf-editor-document",
- "semio-s-artifact-stdio-pdf-fonts",
- "semio-s-artifact-stdio-pdf-inferences",
- "semio-s-artifact-stdio-pdf-mut-base-4",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-page-coordinates",
- "semio-s-artifact-stdio-pdf-page-editor-view",
- "semio-s-artifact-stdio-pdf-paint-codecs",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-page-editor-view"
-version = "0.1.0"
-dependencies = [
- "semio-plugin",
- "semio-s-artifact-stdio-pdf-page-coordinates",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
 name = "semio-s-artifact-stdio-pdf-page-tree"
 version = "0.1.0"
 dependencies = [
@@ -18571,103 +17566,6 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-s-artifact-stdio-pdf-xref-stream",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-paint-codecs"
-version = "0.1.0"
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-pdf-snapshot-value-tests"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d-compute",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-io-base64",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-pixels",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-diff",
- "semio-s-artifact-stdio-pdf-editor-kit",
- "semio-s-artifact-stdio-pdf-graph-projection",
- "semio-s-artifact-stdio-pdf-inferences",
- "semio-s-artifact-stdio-pdf-mut-base",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-base-3",
- "semio-s-artifact-stdio-pdf-mut-base-4",
- "semio-s-artifact-stdio-pdf-mut-family",
- "semio-s-artifact-stdio-pdf-mut-family-11",
- "semio-s-artifact-stdio-pdf-mut-family-12",
- "semio-s-artifact-stdio-pdf-mut-family-13",
- "semio-s-artifact-stdio-pdf-mut-family-14",
- "semio-s-artifact-stdio-pdf-mut-family-15",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-presence-lane",
- "semio-s-artifact-stdio-pdf-schema-2",
- "semio-s-artifact-stdio-pdf-schema-3",
- "semio-s-artifact-stdio-pdf-schema-4",
- "semio-s-artifact-stdio-pdf-schema-5",
- "semio-s-artifact-stdio-pdf-snapshot",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-testkit",
- "semio-s-artifact-stdio-pdf-tests",
- "semio-s-artifact-stdio-pdf-tests-2",
- "semio-s-artifact-stdio-pdf-view-lane",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-presence-lane"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-action-bus",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-machine",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-framework-value-snapshot-projection",
- "semio-os-command",
- "semio-os-kernel",
- "semio-os-store-one-item",
- "semio-plugin",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-pdf-page-editor-view",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
 ]
 
 [[package]]
@@ -18776,100 +17674,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-stdio-pdf-schema-4"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-diff",
- "semio-s-artifact-stdio-pdf-graph-projection",
- "semio-s-artifact-stdio-pdf-inferences",
- "semio-s-artifact-stdio-pdf-lift",
- "semio-s-artifact-stdio-pdf-lower",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-family-11",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-tests-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-schema-5"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d-compute",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-diff",
- "semio-s-artifact-stdio-pdf-editor-document",
- "semio-s-artifact-stdio-pdf-editor-kit",
- "semio-s-artifact-stdio-pdf-graph-projection",
- "semio-s-artifact-stdio-pdf-inferences",
- "semio-s-artifact-stdio-pdf-mut-base",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-family-10",
- "semio-s-artifact-stdio-pdf-mut-family-11",
- "semio-s-artifact-stdio-pdf-mut-family-12",
- "semio-s-artifact-stdio-pdf-mut-family-14",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-native-save",
- "semio-s-artifact-stdio-pdf-page-editor-authoring",
- "semio-s-artifact-stdio-pdf-presence-lane",
- "semio-s-artifact-stdio-pdf-schema-3",
- "semio-s-artifact-stdio-pdf-schema-4",
- "semio-s-artifact-stdio-pdf-snapshot",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-tests",
- "semio-s-artifact-stdio-pdf-tests-2",
- "semio-s-artifact-stdio-pdf-view-lane",
- "semio-s-artifact-stdio-pdf14-canvas",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
 name = "semio-s-artifact-stdio-pdf-snapshot"
 version = "0.1.0"
 dependencies = [
@@ -18935,10 +17739,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-stdio-pdf-snapshot-surfaces"
-version = "0.1.0"
-
-[[package]]
 name = "semio-s-artifact-stdio-pdf-tables"
 version = "0.1.0"
 dependencies = [
@@ -18962,54 +17762,6 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-pdf-model",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-testkit"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-test-fixtures",
- "semio-framework-value",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-diff",
- "semio-s-artifact-stdio-pdf-fonts",
- "semio-s-artifact-stdio-pdf-graph-projection",
- "semio-s-artifact-stdio-pdf-inferences",
- "semio-s-artifact-stdio-pdf-lift",
- "semio-s-artifact-stdio-pdf-lower",
- "semio-s-artifact-stdio-pdf-model",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-base-3",
- "semio-s-artifact-stdio-pdf-mut-base-4",
- "semio-s-artifact-stdio-pdf-mut-family-10",
- "semio-s-artifact-stdio-pdf-mut-family-11",
- "semio-s-artifact-stdio-pdf-mut-family-5",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-mut-family-9",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-tests-2",
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
@@ -19052,124 +17804,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-stdio-pdf-tests-2"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-io-base64",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-pixels",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-conformance-support",
- "semio-s-artifact-stdio-pdf-graph-projection",
- "semio-s-artifact-stdio-pdf-inferences",
- "semio-s-artifact-stdio-pdf-model",
- "semio-s-artifact-stdio-pdf-mut-base-2",
- "semio-s-artifact-stdio-pdf-mut-base-3",
- "semio-s-artifact-stdio-pdf-mut-base-4",
- "semio-s-artifact-stdio-pdf-mut-family",
- "semio-s-artifact-stdio-pdf-mut-family-10",
- "semio-s-artifact-stdio-pdf-mut-family-11",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-mut-vt",
- "semio-s-artifact-stdio-pdf-page-editor",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-view-lane"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d",
- "semio-framework-action-bus",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-machine",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-framework-value-snapshot-projection",
- "semio-os-command",
- "semio-os-kernel",
- "semio-os-store-one-item",
- "semio-plugin",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-pdf-page-editor",
- "semio-s-artifact-stdio-pdf-presence-lane",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf-viewer"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d-compute",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-deflate",
- "semio-s-artifact-stdio-pdf-graph-projection",
- "semio-s-artifact-stdio-pdf-inferences",
- "semio-s-artifact-stdio-pdf-mut-family-8",
- "semio-s-artifact-stdio-pdf-pdf-snapshot-value-tests",
- "semio-s-artifact-stdio-pdf-schema-4",
- "semio-s-artifact-stdio-pdf-schema-5",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-tests-2",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
-]
-
-[[package]]
 name = "semio-s-artifact-stdio-pdf-xref-stream"
 version = "0.1.0"
 dependencies = [
@@ -19178,27 +17812,6 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-lexer",
  "semio-s-artifact-stdio-pdf-model",
  "semio-s-artifact-stdio-pdf-snapshot-2",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-pdf14-canvas"
-version = "0.1.0"
-dependencies = [
- "semio-framework-value",
- "semio-os-kernel",
- "semio-plugin",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-pdf-graph-projection",
- "semio-s-artifact-stdio-pdf-mut-base",
- "semio-s-artifact-stdio-pdf-mut-family-11",
- "semio-s-artifact-stdio-pdf-page-editor",
- "semio-s-artifact-stdio-pdf-presence-lane",
- "semio-s-artifact-stdio-pdf-snapshot",
- "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-view-lane",
- "semio-ui-contract",
- "semio-ui-locale",
- "serde_json",
 ]
 
 [[package]]
@@ -20249,7 +18862,6 @@ dependencies = [
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-dwg-geometry",
- "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-write",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-brep",
@@ -20268,7 +18880,6 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-dwg-geometry",
- "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-read",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-brep",
@@ -21031,11 +19642,11 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-dwg-geometry",
- "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-write",
  "semio-s-artifact-stdio-dxf",
- "semio-s-artifact-stdio-pdf",
+ "semio-s-artifact-stdio-pdf-conformance-support",
+ "semio-s-artifact-stdio-pdf-lower",
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-drawing",
@@ -22428,7 +21039,6 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-dwg-geometry",
- "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-write",
  "semio-s-artifact-stdio-gltf-model",
@@ -22454,7 +21064,6 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-dwg-geometry",
- "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-read",
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-gltf-model",
@@ -25759,7 +24368,8 @@ dependencies = [
  "semio-framework-mesh-engine",
  "semio-framework-pack-json",
  "semio-framework-value",
- "semio-os-flow",
+ "semio-os-flow-extensions",
+ "semio-os-flow-mesh",
  "semio-os-kernel-neural-engine",
  "semio-plugin",
  "semio-s-artifact-stdio-semio-brep-export",
@@ -25784,7 +24394,8 @@ dependencies = [
  "semio-framework-mesh-engine",
  "semio-framework-pack-json",
  "semio-framework-value",
- "semio-os-flow",
+ "semio-os-flow-extensions",
+ "semio-os-flow-mesh",
  "semio-os-kernel-neural-engine",
  "semio-plugin",
  "semio-s-spatial-kernel-semio-session",
@@ -25813,7 +24424,8 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-native-owned",
- "semio-os-flow",
+ "semio-os-flow-extensions",
+ "semio-os-flow-geometry",
  "semio-plugin",
  "semio-s-plugin-flow-brep-mesh",
  "semio-s-spatial-kernel-semio-session",
@@ -25838,10 +24450,11 @@ name = "semio-s-plugin-flow-math"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-job",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-value",
- "semio-os-flow",
+ "semio-os-flow-extensions",
  "semio-os-kernel-neural-engine",
  "semio-plugin",
 ]
@@ -25949,7 +24562,8 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-value",
- "semio-os-flow",
+ "semio-os-flow-geometry",
+ "semio-os-flow-mesh",
  "semio-os-kernel-neural-engine",
 ]
 

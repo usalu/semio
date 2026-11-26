@@ -99,6 +99,7 @@ fn a_hub_session_edit_is_refused_before_its_guest_runs_unless_an_author_holds_a_
     use semio_os_kernel::os_directory::DirectorySpaceRole;
     let binding = |blocked: &str| PluginArtifactBinding {
         schema: "s.note.note".to_string(),
+        artifact_kind: "s.note.note".to_string(),
         plugin_id: "note".to_string(),
         app_id: "note.editor".to_string(),
         surface_id: Some("s.note.note@1/*#editor".to_string()),

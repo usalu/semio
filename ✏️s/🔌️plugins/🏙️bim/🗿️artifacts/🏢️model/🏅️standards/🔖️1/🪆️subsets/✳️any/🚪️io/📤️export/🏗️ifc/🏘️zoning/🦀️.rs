@@ -2,11 +2,13 @@
 //! authored occupancy density in `Semio_Authoring` and the derived totals as the element quantity `Semio_ZoneTotals`. An area scheme has no IFC entity of its own: it is an `IfcGroup` of `ObjectType`
 //! `AreaScheme` whose `Semio_Authoring` rows carry the measure and the counted usages and zones as JSON arrays. The finish of a space is `Pset_SpaceCoveringRequirements` (`FloorCovering`, `WallCovering`,
 //! `CeilingCovering` name the materials) plus the ids in `Semio_Authoring`, so the importer finds the material again.
+//! IFC2X3 uses an IfcProxy of kind GROUP for each unassigned zone and area rule because its IfcGroup requires a membership relation.
 //! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcproductextension/lexical/ifczone.htm
 
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph;
 use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::{define, number, property_set};
 use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
-use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{opt_text, refs, rf, text, typed, unset, V};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, opt_text, refs, rf, text, typed, unset, V};
 use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::zones::ZoneTotals;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
@@ -32,16 +34,25 @@ pub fn totals(entity: u64, totals: &ZoneTotals) -> (u64, &'static str, Vec<Quant
     (entity, "Semio_ZoneTotals", vec![Quantity::Area("GrossFloorArea", totals.area), Quantity::Area("NetFloorArea", totals.net_area), Quantity::Volume("GrossVolume", totals.volume), Quantity::Area("FloorFinishArea", totals.floor_finish_area), Quantity::Area("WallFinishArea", totals.wall_finish_area), Quantity::Area("CeilingFinishArea", totals.ceiling_finish_area)])
 }
 
+/// 🗃️ IFC2X3 represents a group without members using the GROUP kind of IfcProxy.
+pub fn group_proxy(x: &mut Export<'_>, id: &str, name: &str, kind: &str) -> u64 {
+    x.ifc.rooted("IFCPROXY", id, name, "", vec![text(kind), unset(), unset(), en("GROUP"), opt_text(id)])
+}
+
 /// 🏘️ Writes every zone with its membership, then every area scheme as a group.
 pub fn emit(x: &mut Export<'_>) {
     let model = x.model;
     for (id, zone) in &model.zones {
-        let entity = x.ifc.rooted("IFCZONE", id, &zone.name, "", x.by(vec![opt_text(&zone.category)], vec![opt_text(&zone.category), unset()]));
+        let members: Vec<u64> = model.spaces.iter().filter(|(_, space)| space.zone.as_deref() == Some(id.as_str())).filter_map(|(space, _)| x.links.elements.get(space).copied()).collect();
+        let entity = if members.is_empty() && x.by(true, false) {
+            group_proxy(x, id, &zone.name, "UnassignedZone")
+        } else {
+            x.ifc.rooted("IFCZONE", id, &zone.name, "", x.by(vec![opt_text(&zone.category)], vec![opt_text(&zone.category), unset()]))
+        };
         x.links.elements.insert(id.clone(), entity);
         x.links.authoring.push((entity, vec![("Id", label(id)), ("Category", label(&zone.category)), ("OccupancyDensity", number(zone.occupancy_density))]));
         let common = property_set(x, &format!("{id}:Pset_ZoneCommon"), "Pset_ZoneCommon", vec![("Reference", typed("IFCIDENTIFIER", text(id)))]);
         define(x, &format!("{id}:Pset_ZoneCommon"), &[entity], common);
-        let members: Vec<u64> = model.spaces.iter().filter(|(_, space)| space.zone.as_deref() == Some(id.as_str())).filter_map(|(space, _)| x.links.elements.get(space).copied()).collect();
         if !members.is_empty() {
             x.ifc.rooted("IFCRELASSIGNSTOGROUP", &format!("{id}:members"), "", "", vec![refs(&members), unset(), rf(entity)]);
         }
@@ -50,7 +61,11 @@ pub fn emit(x: &mut Export<'_>) {
         }
     }
     for (id, scheme) in &model.area_schemes {
-        let entity = x.ifc.rooted("IFCGROUP", id, &scheme.name, "", vec![text("AreaScheme")]);
+        let entity = if x.by(true, false) {
+            group_proxy(x, id, &scheme.name, "AreaScheme")
+        } else {
+            x.ifc.rooted("IFCGROUP", id, &scheme.name, "", vec![text("AreaScheme")])
+        };
         x.links.elements.insert(id.clone(), entity);
         x.links.authoring.push((entity, vec![("Id", label(id)), ("Measure", label(&format!("{:?}", scheme.measure))), ("Usages", label(&semio_framework_pack_json::to_json_string(&scheme.usages))), ("Zones", label(&semio_framework_pack_json::to_json_string(&scheme.zones)))]));
     }
@@ -90,7 +105,7 @@ fn totals_of(totals: &ZoneTotals) -> BTreeMap<String, f64> {
 
 /// 🧾️ The table the third-party IfcOpenShell oracle reads back from the exported file: every zone with its members and totals, every area scheme with its rule and the covering names of every finished space.
 pub fn report_json(model: &ModelSnapshot) -> Result<String, String> {
-    let zone_totals = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| inferred.zone_totals.clone()).map_err(|error| error.to_string())?;
+    let zone_totals = model_graph::instance::probe::<{ model_graph::kinds::ZONES }, _>(None, model, |inferred| inferred.zone_totals.clone()).map_err(|error| error.to_string())?;
     let zones = model
         .zones
         .iter()

@@ -1,0 +1,8 @@
+[
+  {"name":"complete json","requested":"test.solve","returned":"test.solve","complete":true,"wire":"{\"score\":3}","outcome":"SUCCEEDED","payload":{"score":3},"payloadBytes":11},
+  {"name":"partial json","requested":"test.solve","returned":"test.solve","complete":false,"wire":"{\"score\":3}","outcome":"FAILED","payload":{"score":3},"payloadBytes":11},
+  {"name":"partial opaque","requested":"test.solve","returned":"test.solve","complete":false,"wire":"partial","outcome":"FAILED","payload":null,"payloadBytes":7},
+  {"name":"partial absent","requested":"test.solve","returned":"test.solve","complete":false,"wire":null,"outcome":"FAILED","payload":null,"payloadBytes":0},
+  {"name":"foreign complete","requested":"test.solve","returned":"test.other","complete":true,"wire":"{\"score\":3}","outcome":"WRONG_SCHEMA","payload":null,"payloadBytes":0},
+  {"name":"foreign partial","requested":"test.solve","returned":"test.other","complete":false,"wire":null,"outcome":"WRONG_SCHEMA","payload":null,"payloadBytes":0}
+]

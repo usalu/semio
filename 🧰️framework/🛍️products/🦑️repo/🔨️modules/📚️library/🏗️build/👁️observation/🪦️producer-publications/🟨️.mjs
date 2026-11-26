@@ -1,4 +1,5 @@
 import * as fs from "node:fs";
+import {processPidExistsV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs"
 import {lstat,readdir,realpath,rm} from "node:fs/promises";
 import {join,sep} from "node:path";
 
@@ -8,7 +9,7 @@ const NAME=/^p-([1-9][0-9]{0,9})$/u,folders=new Set();
 
 /** 🧟️ Asks the operating system whether a process still exists; a process that may not be signalled still exists. */
 export function producerAliveV1(pid){
-  try{process.kill(pid,0);return true;}catch(error){return error?.code==="EPERM";}
+  return processPidExistsV1(pid);
 }
 
 /** 🏚️ Retires the calling process's own producer publication folder when the process ends: the receipt of the publisher keeps the bytes in the archive, so nobody reads the folder afterwards. A folder that is not a real directory any more is left alone, a link is never followed, a kill that skips the exit event is left to the sweep. */

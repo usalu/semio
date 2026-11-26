@@ -1359,7 +1359,7 @@ function releaseObservedRecordStoreV1(path){
  */
 export async function settleObservedComputationV1(compute,{signal,limit=OBSERVATION_LIMITS_V1.settleRounds,onRound}={}){
  const parent=scopes.getStore(),capture=sourceCaptures.getStore(),accept=(rows,captured)=>{retainObservationsV1(parent,rows);retainScopeV1(capture,captured);};
- let previousFailure;
+ let previousFailure,conflictRounds=0;
  for(let round=0;;round++){
   signal?.throwIfAborted();
   const nested=new LayeredScopeV1(),captured=new SettlementScopeV1(),started=Date.now();let value,failure,failed=false;
@@ -1368,12 +1368,17 @@ export async function settleObservedComputationV1(compute,{signal,limit=OBSERVAT
   const rows=[...nested.values()],{blocking:conflict,paths:contested}=settlementConflictsV1(rows,captured.units),consistent=conflict===undefined;
   if(consistent&&!failed){accept(rows,captured);if(contested.length)await onRound?.({round,settled:true,paths:contested});return value;}
   const signature=failed?JSON.stringify([failure?.code??null,(()=>{try{return String(failure?.message??failure);}catch{return"";}})()]):undefined;
-  if(failed&&(failure?.code==="BUILD_AUTHORITY_CHANGED"||failure?.code==="BUILD_COLLECTED_ERRORS"||signature===previousFailure)){accept(rows,captured);throw failure;}
+  const conflicting=failed&&failure?.code==="BUILD_SOURCE_CONFLICT"&&conflictRounds<OBSERVATION_LIMITS_V1.conflictRounds;
+  if(failed&&(failure?.code==="BUILD_AUTHORITY_CHANGED"||failure?.code==="BUILD_COLLECTED_ERRORS"||signature===previousFailure&&!conflicting)){accept(rows,captured);throw failure;}
   previousFailure=signature;
+  if(conflicting){
+   try{await settlementDelay(OBSERVATION_LIMITS_V1.conflictPauseMilliseconds*4**conflictRounds++,undefined,{signal});}
+   catch(error){signal?.throwIfAborted();throw error;}
+  }
   if(consistent&&await observationsHold(rows,OBSERVATION_LIMITS_V1.holdNestingLimit,new Set(),new Set(),signal)){
    signal?.throwIfAborted();
    const youngest=rows.reduce((most,{kind,fact})=>{const source=kind==="file"?fact:kind==="analysis"?fact.source:undefined;return source?Math.max(most,source.mtimeMs??0,source.ctimeMs??0):most;},0);
-   if(youngest<started-RACY_MS){accept(rows,captured);throw failure;}
+   if(youngest<started-RACY_MS&&!conflicting){accept(rows,captured);throw failure;}
    try{await settlementDelay(Math.max(0,youngest+RACY_MS-Date.now()),undefined,{signal});}
    catch(error){signal?.throwIfAborted();throw error;}
   }

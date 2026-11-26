@@ -1,0 +1,54 @@
+scan exit 0 [scan] 26 assets: 26 clean, 0 with a hard finding, 0 hard findings
+== etics-brick-wall-12 21:31 0b56beac8707d967 matrix exit 0 [matrix] 252 cells: 252 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'ok': 252}
+== etics-brick-wall-30 21:31 da0a91545e98dc44 matrix exit 0 [matrix] 252 cells: 252 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'ok': 252}
+== solid-brick-wall-1960 21:31 e98dec33025718df matrix exit 0 [matrix] 252 cells: 252 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'ok': 252}
+== spiral-stair 21:32 d0fb7b8d0250cd0f matrix exit 0 [matrix] 252 cells: 0 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'group-drift': 252}
+== stair-flight 21:33 28cfba82a92a7228 matrix exit 0 [matrix] 252 cells: 252 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'ok': 252}
+== bicycle-stand 21:33 ca6da3cec2d76c0c matrix exit 0 [matrix] 252 cells: 252 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'ok': 252}
+== heat-pump-outdoor-unit 21:33 d392cea879c2a4c3 matrix exit 0 [matrix] 252 cells: 252 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'ok': 252}
+== plate-heat-exchanger 21:33 c34554c7afa253f5 matrix exit 0 [matrix] 252 cells: 231 ok, 21 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'unavailable': 21, 'ok': 231}
+== solar-thermal-collector 21:34 db26d9b114278b6d matrix exit 0 [matrix] 252 cells: 84 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'group-drift': 168, 'ok': 84}
+== used-coffee-table 21:34 cc90174e3176b0fa matrix exit 0 [matrix] 252 cells: 252 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'ok': 252}
+== used-folding-bookcase-ladder 21:35 425d3daa218984d2 matrix exit 0 [matrix] 252 cells: 224 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'ok': 224, 'group-drift': 28}
+== used-shoe-cabinet 21:36 1d03d8b7d5ad1f08 matrix exit 0 [matrix] 252 cells: 147 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'ok': 147, 'group-drift': 105}
+== used-tv-sideboard 21:37 0a64b3ccfd094700 matrix exit 0 [matrix] 252 cells: 42 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'group-drift': 210, 'ok': 42}
+== used-wall-unit 21:39 d9d98d18172043f1 matrix exit 0 [matrix] 252 cells: 70 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'group-drift': 182, 'ok': 70}
+== tealight 21:39 927c85f8848d5e17 matrix exit 0 [matrix] 252 cells: 189 ok, 21 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'unavailable': 21, 'ok': 189, 'group-drift': 42}
+== used-bollard-light 21:40 252e3d677d96dad5 matrix exit 0 [matrix] 252 cells: 210 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'ok': 210, 'group-drift': 42}
+== pendant-lamp 21:40 09ebd0cab7ddf991 matrix exit 0 [matrix] 252 cells: 231 ok, 21 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'unavailable': 21, 'ok': 231}
+== ceiling-diffuser 21:41 3f0ca95d17a1bae7 matrix exit 0 [matrix] 252 cells: 231 ok, 21 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'unavailable': 21, 'ok': 231}
+== used-park-lantern 21:42 0cf5e48273fa7f7a matrix exit 0 [matrix] 252 cells: 252 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'ok': 252}
+== used-playground-roundabout 21:44 ab643beebfdee668 matrix exit 0 [matrix] 252 cells: 252 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'ok': 252}
+== waste-bin 21:44 b6abaea081ea7072 matrix exit 0 [matrix] 252 cells: 252 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'ok': 252}
+== electric-fan-heater 21:45 cbe66312d30ab9db matrix exit 0 [matrix] 231 cells: 210 ok, 21 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'unavailable': 21, 'ok': 210}
+== used-hinged-wardrobe 21:45 c25ecaab3de6820a matrix exit 0 [matrix] 252 cells: 252 ok, 0 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'ok': 252}
+== used-harmonium 21:46 808ac0c9bebf6c28 matrix exit 0 [matrix] 252 cells: 231 ok, 21 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'unavailable': 21, 'ok': 231}
+== used-towel-radiator 21:48 9f730d163dbc2a57 matrix exit 0 [matrix] 252 cells: 231 ok, 21 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'unavailable': 21, 'ok': 231}
+== used-wall-hung-gas-boiler 21:49 5ce3d2b79f560df3 matrix exit 0 [matrix] 252 cells: 231 ok, 21 unavailable, 0 fail; assets: 1 done, 0 failed by name, 0 missing
+status {'unavailable': 21, 'ok': 231}
+[DEBUG] measure done 21:49

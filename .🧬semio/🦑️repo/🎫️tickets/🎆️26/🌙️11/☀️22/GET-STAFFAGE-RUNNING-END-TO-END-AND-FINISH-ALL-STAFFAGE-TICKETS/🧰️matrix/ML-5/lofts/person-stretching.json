@@ -1,0 +1,465 @@
+[
+ {
+  "scale": "50",
+  "bone": "foot-r",
+  "paint": "shoe-r",
+  "replace": [
+   "shoe-r"
+  ],
+  "solids": [
+   "shoe-r"
+  ]
+ },
+ {
+  "scale": "50",
+  "bone": "foot-r",
+  "paint": "sole-r",
+  "replace": [
+   "sole-r"
+  ],
+  "solids": [
+   "sole-r"
+  ]
+ },
+ {
+  "scale": "50",
+  "bone": "neck",
+  "paint": "neck",
+  "replace": [
+   "neck"
+  ],
+  "solids": [
+   "neck"
+  ]
+ },
+ {
+  "scale": "100",
+  "bone": "foot-r",
+  "paint": "shoe-r",
+  "replace": [
+   "shoe-r"
+  ],
+  "solids": [
+   "shoe-r"
+  ]
+ },
+ {
+  "scale": "100",
+  "bone": "foot-r",
+  "paint": "sole-r",
+  "replace": [
+   "sole-r"
+  ],
+  "solids": [
+   "sole-r"
+  ]
+ },
+ {
+  "scale": "100",
+  "bone": "neck",
+  "paint": "neck",
+  "replace": [
+   "neck"
+  ],
+  "solids": [
+   "neck"
+  ]
+ },
+ {
+  "scale": "200",
+  "bone": "foot-r",
+  "paint": "shoe-r",
+  "replace": [
+   "shoe-r"
+  ],
+  "solids": [
+   "shoe-r"
+  ]
+ },
+ {
+  "scale": "200",
+  "bone": "thigh-r",
+  "solids": [
+   "thigh-r"
+  ],
+  "paint": "thigh-r"
+ },
+ {
+  "scale": "200",
+  "bone": "thigh-l",
+  "solids": [
+   "thigh-l"
+  ],
+  "paint": "thigh-l"
+ },
+ {
+  "scale": "200",
+  "bone": "arm-r",
+  "solids": [
+   "sleeve-r"
+  ],
+  "paint": "sleeve-r"
+ },
+ {
+  "scale": "200",
+  "bone": "pelvis",
+  "paint": "pant-seat",
+  "replace": [
+   "pant-seat"
+  ],
+  "fit": [
+   {
+    "id": "pant-seat",
+    "stations": 8,
+    "solids": [
+     "jeans-seat"
+    ]
+   }
+  ],
+  "solids": [
+   "jeans-seat"
+  ],
+  "views": [
+   "elevation",
+   "front"
+  ]
+ },
+ {
+  "scale": "500",
+  "bone": "thigh-l",
+  "solids": [
+   "thigh-l"
+  ],
+  "paint": "sil-thigh-l",
+  "replace": [
+   "sil-thigh-l",
+   "thigh-l"
+  ]
+ },
+ {
+  "scale": "500",
+  "bone": "thigh-r",
+  "solids": [
+   "thigh-r"
+  ],
+  "paint": "sil-thigh-r",
+  "replace": [
+   "sil-thigh-r",
+   "thigh-r"
+  ]
+ },
+ {
+  "scale": "500",
+  "bone": "arm-l",
+  "paint": "sleeve-l",
+  "replace": [
+   "sil-arm-l",
+   "sleeve-l"
+  ],
+  "fit": [
+   {
+    "id": "sil-arm-l",
+    "stations": 6,
+    "solids": [
+     "sleeve-l"
+    ]
+   }
+  ],
+  "solids": [
+   "sleeve-l"
+  ]
+ },
+ {
+  "scale": "500",
+  "bone": "neck",
+  "paint": "sil-neck",
+  "replace": [
+   "sil-neck"
+  ],
+  "fit": [
+   {
+    "id": "sil-neck",
+    "stations": 4,
+    "solids": [
+     "neck"
+    ]
+   }
+  ],
+  "solids": [
+   "neck"
+  ]
+ },
+ {
+  "scale": "500",
+  "bone": "shank-r",
+  "solids": [
+   "shank-r"
+  ],
+  "paint": "sil-shank-r",
+  "replace": [
+   "shank-r",
+   "sil-shank-r"
+  ]
+ },
+ {
+  "scale": "500",
+  "bone": "pelvis",
+  "paint": "sil-seat",
+  "replace": [
+   "sil-seat"
+  ],
+  "fit": [
+   {
+    "id": "sil-seat",
+    "stations": 4,
+    "solids": [
+     "jeans-seat"
+    ]
+   }
+  ],
+  "solids": [
+   "jeans-seat"
+  ],
+  "views": [
+   "elevation",
+   "front"
+  ]
+ },
+ {
+  "scale": "50",
+  "bone": "arm-l",
+  "solids": [
+   "sleeve-l"
+  ],
+  "paint": "sleeve-l"
+ },
+ {
+  "scale": "50",
+  "bone": "arm-r",
+  "solids": [
+   "sleeve-r"
+  ],
+  "paint": "sleeve-r",
+  "swell": {
+   "sleeve-r": 0.002
+  }
+ },
+ {
+  "scale": "50",
+  "bone": "forearm-r",
+  "solids": [
+   "forearm-r"
+  ],
+  "paint": "forearm-r"
+ },
+ {
+  "scale": "50",
+  "bone": "forearm-l",
+  "solids": [
+   "forearm-l"
+  ],
+  "paint": "forearm-l"
+ },
+ {
+  "scale": "50",
+  "bone": "forearm-r",
+  "solids": [
+   "cuff-rib-r"
+  ],
+  "paint": "cuff-rib-r"
+ },
+ {
+  "scale": "50",
+  "bone": "forearm-l",
+  "solids": [
+   "cuff-rib-l"
+  ],
+  "paint": "cuff-rib-l"
+ },
+ {
+  "scale": "100",
+  "bone": "arm-l",
+  "solids": [
+   "sleeve-l"
+  ],
+  "paint": "sleeve-l"
+ },
+ {
+  "scale": "100",
+  "bone": "arm-r",
+  "solids": [
+   "sleeve-r"
+  ],
+  "paint": "sleeve-r"
+ },
+ {
+  "scale": "100",
+  "bone": "forearm-r",
+  "solids": [
+   "forearm-r"
+  ],
+  "paint": "forearm-r"
+ },
+ {
+  "scale": "100",
+  "bone": "forearm-l",
+  "solids": [
+   "forearm-l"
+  ],
+  "paint": "forearm-l"
+ },
+ {
+  "scale": "50",
+  "bone": "pelvis",
+  "solids": [
+   "hem-rib"
+  ],
+  "paint": "hem-rib"
+ },
+ {
+  "scale": "50",
+  "bone": "head",
+  "solids": [
+   "hair"
+  ],
+  "paint": "hair",
+  "replace": [
+   "hair"
+  ]
+ },
+ {
+  "scale": "100",
+  "bone": "pelvis",
+  "solids": [
+   "hem-rib"
+  ],
+  "paint": "hem-rib"
+ },
+ {
+  "scale": "100",
+  "bone": "head",
+  "solids": [
+   "hair"
+  ],
+  "paint": "hair",
+  "replace": [
+   "hair"
+  ]
+ },
+ {
+  "scale": "200",
+  "bone": "head",
+  "solids": [
+   "head"
+  ],
+  "paint": "head",
+  "replace": [
+   "head"
+  ]
+ },
+ {
+  "scale": "200",
+  "bone": "head",
+  "solids": [
+   "hair"
+  ],
+  "paint": "hair",
+  "replace": [
+   "hair"
+  ]
+ },
+ {
+  "scale": "500",
+  "bone": "head",
+  "paint": "sil-head",
+  "replace": [
+   "sil-head"
+  ],
+  "fit": [
+   {
+    "id": "sil-head",
+    "stations": 8,
+    "solids": [
+     "head",
+     "hair"
+    ]
+   }
+  ],
+  "views": [
+   "front",
+   "plan"
+  ]
+ },
+ {
+  "scale": "500",
+  "bone": "head",
+  "solids": [
+   "head"
+  ],
+  "paint": "head",
+  "replace": [
+   "head"
+  ],
+  "views": [
+   "elevation"
+  ]
+ },
+ {
+  "scale": "500",
+  "bone": "head",
+  "solids": [
+   "hair"
+  ],
+  "paint": "hair",
+  "replace": [
+   "hair"
+  ],
+  "views": [
+   "elevation"
+  ]
+ },
+ {
+  "scale": "50",
+  "bone": "torso",
+  "solids": [
+   "hood",
+   "hood-roll-l",
+   "hood-roll-r"
+  ],
+  "paint": "hood",
+  "replace": [
+   "hood",
+   "hood-roll"
+  ]
+ },
+ {
+  "scale": "100",
+  "bone": "torso",
+  "solids": [
+   "hood",
+   "hood-roll-l",
+   "hood-roll-r"
+  ],
+  "paint": "hood",
+  "replace": [
+   "hood",
+   "hood-roll"
+  ]
+ },
+ {
+  "scale": "100",
+  "bone": "shank-l",
+  "solids": [
+   "sock-l"
+  ],
+  "paint": "shoe-l"
+ },
+ {
+  "scale": "100",
+  "bone": "shank-r",
+  "solids": [
+   "sock-r"
+  ],
+  "paint": "shoe-r"
+ }
+]

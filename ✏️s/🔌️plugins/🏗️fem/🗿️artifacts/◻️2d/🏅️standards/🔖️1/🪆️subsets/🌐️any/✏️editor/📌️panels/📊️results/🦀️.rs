@@ -122,6 +122,13 @@ fn toggle_button(id: &str, label: &str, state_unknown: &str, window_id: &str) ->
     control.try_build().map_err(|_| error("ui.button"))
 }
 
+/// ⏯️ The play control of a readable pane: a pressed-state toggle button, so assistive tech hears "Play, pressed" while the clock runs; its change carries the new state as the `value` of the `playing` field.
+fn playing_toggle(id: &str, label: &str, playing: bool, window_id: &str) -> UiAssemblyResult<BuiltNode> {
+    let control = ui::toggle(playing).icon(ui_text(if playing { "pause" } else { "play" })?).text(ui_label(label)?);
+    let control = bind(control.try_id(id).map_err(|_| error("ui.toggle.id"))?, Trigger::Change, PLAYBACK_ACTION, control_args("playing", None, window_id)?)?;
+    control.try_build().map_err(|_| error("ui.toggle"))
+}
+
 fn transport_button(id: &str, label: &str, icon: &str, field: &str, value: &str, window_id: &str) -> UiAssemblyResult<BuiltNode> {
     let control = ui::button(ui_label(label)?).icon(ui_text(icon)?);
     let control = bind(control.try_id(id).map_err(|_| error("ui.button.id"))?, Trigger::Activate, PLAYBACK_ACTION, control_args(field, Some(value), window_id)?)?;
@@ -201,14 +208,7 @@ pub fn render(doc: &Fem2dSnapshot, window: Option<&Fem2dResultsWindowConfig>, cl
         .try_children(ui_node_list([
             transport_button("fem2d-play-results.transport.back", &format!("{} \u{2212}", labels.step.as_str()), "skip-back", "phaseStep", &format!("{}", -ANIMATION_PHASE_STEP), window_id),
             if live {
-                transport_button(
-                    "fem2d-play-results.transport.play",
-                    if animation.playing { labels.pause.as_str() } else { labels.play.as_str() },
-                    if animation.playing { "pause" } else { "play" },
-                    "playing",
-                    if animation.playing { "false" } else { "true" },
-                    window_id,
-                )
+                playing_toggle("fem2d-play-results.transport.play", labels.play.as_str(), animation.playing, window_id)
             } else {
                 toggle_button("fem2d-play-results.transport.play", &format!("{} / {}", labels.play.as_str(), labels.pause.as_str()), labels.focus_results_hint.as_str(), window_id)
             },

@@ -40,7 +40,7 @@
         "maximumMetadataBytes": 65536,
         "maximumPathBytes": 256,
         "maximumBundleBytes": 33554432,
-        "maximumBundleFiles": 512,
+        "maximumBundleFiles": 640,
         "maximumBundleFileBytes": 16777216,
         "maximumFontBytes": 33554432,
         "maximumFonts": 16

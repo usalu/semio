@@ -83,15 +83,17 @@ export async function verifyThesisPublication(execution: PrintExecutionV1): Prom
           for (const key of row.citationKeys) assert.ok(!normalized.includes(key), name + " resolves citation " + key);
           const body = pdf.pages.findIndex((page, index) => normalize(pages[index]!.text).includes(normalize(row.firstBodyMarker)) && page.items.some(item => "str" in item && item.str.trim() === "1" && item.transform[5] < page.height / 4));
           assert.ok(body > 0, name + " has its first Arabic body page");
-          const theme = name.includes("-dark") ? "dark" : "light", inks = contrast.actualThemes.find(row => row.theme === theme), chip = contrast.chips.find(row => row.theme === theme && row.level === "window");
+          const theme = name.includes("-dark") ? "dark" : "light", inks = contrast.actualThemes.find(row => row.theme === theme), chip = contrast.chips.find(row => row.theme === theme);
           assert.ok(inks && chip);
           const paint = thesisPdfPaintFactsV1(pdf.pages[body]!, artifact.control), paintProof = JSON.stringify({ canonicalWorkspaceProduct: false, page: body + 1, ...paint });
           assert.ok(Buffer.byteLength(paintProof) <= fixture.publicationProof.maximumTextBytes);
           await exportFile("private-" + name.replace(/\.pdf$/, "-paint.json"), paintProof + "\n");
-          assert.ok(paint.fills.includes(chip.glass), name + " actual window glass fill");
+          for (const [fill, role] of [[chip.margin, "base margin"], [chip.interior, "window interior"], [chip.glass, "pane glass"]]) {
+            assert.ok(paint.fills.includes(fill!), name + " actual " + role + " fill");
+          }
           const headings = row.headings.map(heading => {
             const runs = thesisHeadingNumberPaintV1(paint.runs, heading, "#" + inks.heading);
-            const numerals = runs.map(run => ({ ...run, ratio: contrastRatio(run.color, chip.canvasComposite), oracleRatio: colord(run.color).contrast(chip.canvasComposite) }));
+            const numerals = runs.map(run => ({ ...run, ratio: contrastRatio(run.color, chip.interiorComposite), oracleRatio: colord(run.color).contrast(chip.interiorComposite) }));
             for (const numeral of numerals) {
               assert.ok(numeral.ratio >= contrast.minimum, name + " heading numeral contrast: " + heading.title + " / " + numeral.text);
               assert.ok(Math.abs(numeral.ratio - numeral.oracleRatio) < 0.011);

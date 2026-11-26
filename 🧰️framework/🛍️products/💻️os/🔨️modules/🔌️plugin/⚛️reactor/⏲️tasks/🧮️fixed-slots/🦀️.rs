@@ -96,8 +96,31 @@ impl<T> ReactorFixedSlots<T> {
         Some(unsafe { self.values[index].assume_init_read() })
     }
 
+    fn occupied_in(&self, start: usize, end: usize) -> impl Iterator<Item = usize> + '_ {
+        let width = u64::BITS as usize;
+        (start / width..end.div_ceil(width)).flat_map(move |word| {
+            let base = word * width;
+            let lower = u64::MAX << start.saturating_sub(base);
+            let upper = u64::MAX >> (width - (end - base).min(width));
+            let mut remaining = self.occupied[word] & lower & upper;
+            std::iter::from_fn(move || {
+                if remaining == 0 { return None; }
+                let index = base + remaining.trailing_zeros() as usize;
+                remaining &= remaining - 1;
+                Some(index)
+            })
+        })
+    }
+
+    /// 🔄️ Visits occupied slots once in round-robin order using the allocation's occupancy words.
+    pub fn iter_from(&self, start: usize) -> impl Iterator<Item = (usize, &T)> {
+        let start = start % REACTOR_TASK_SLOTS;
+        self.occupied_in(start, REACTOR_TASK_SLOTS).chain(self.occupied_in(0, start))
+            .filter_map(|index| self.get(index).map(|value| (index, value)))
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = &T> {
-        (0..REACTOR_TASK_SLOTS).filter_map(|index| self.get(index))
+        self.iter_from(0).map(|(_, value)| value)
     }
 }
 
@@ -107,3 +130,7 @@ impl<T> Drop for ReactorFixedSlots<T> {
 
 #[doc(hidden)]
 pub const PLUGIN_REACTOR_INSTANCE_SLOTS: usize = 1_024;
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod occupancy_tests;

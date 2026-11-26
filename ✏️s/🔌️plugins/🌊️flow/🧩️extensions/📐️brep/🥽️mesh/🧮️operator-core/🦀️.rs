@@ -1,7 +1,7 @@
 //! 🧮️ The mesh operator job, its retained state, retirement cursors and the operation implementations.
 
 use semio_s_spatial_kernel_semio_session::*;
-use flow_extension_sdk::mesh::*;
+use semio_os_flow_mesh::*;
 use neural_engine::channel_output;
 use neural_engine::Dictionary;
 use neural_engine::EvalError;

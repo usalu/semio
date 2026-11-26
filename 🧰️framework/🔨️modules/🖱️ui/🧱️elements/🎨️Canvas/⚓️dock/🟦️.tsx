@@ -299,27 +299,24 @@ export const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, w
   const topLeftBar = renderCornerBar("topLeft");
 
   const stackBody = (
-    <SurfaceScope level="base" fill="surface">
-      <div
-        id={modeDockPanelDomId(stackPath)}
-        role="tabpanel"
-        aria-labelledby={activeId ? modeDockTabDomId(stackPath, activeId) : undefined}
-        tabIndex={0}
-        data-level="base"
-        className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
-      >
-        {activeDescriptor
-          ? (() => {
-              const { children, engagement, ...windowProps } = activeDescriptor;
-              return (
-                <Window {...windowProps} fill={activeDescriptor.fill ?? true} engagement={engagement} active={activeWindowId === activeId} onActivate={() => dock?.activateWindow(activeId!)}>
-                  {children}
-                </Window>
-              );
-            })()
-          : null}
-      </div>
-    </SurfaceScope>
+    <div
+      id={modeDockPanelDomId(stackPath)}
+      role="tabpanel"
+      aria-labelledby={activeId ? modeDockTabDomId(stackPath, activeId) : undefined}
+      tabIndex={0}
+      className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+    >
+      {activeDescriptor
+        ? (() => {
+            const { children, engagement, ...windowProps } = activeDescriptor;
+            return (
+              <Window {...windowProps} fill={activeDescriptor.fill ?? true} engagement={engagement} active={activeWindowId === activeId} onActivate={() => dock?.activateWindow(activeId!)}>
+                {children}
+              </Window>
+            );
+          })()
+        : null}
+    </div>
   );
 
   return (

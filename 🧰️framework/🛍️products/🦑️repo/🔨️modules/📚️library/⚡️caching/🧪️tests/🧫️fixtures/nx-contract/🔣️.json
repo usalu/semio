@@ -646,6 +646,7 @@
       ],
       "jobs": [
         "describe-tool",
+        "native-transpile",
         "font-assets",
         "fonts",
         "support"
@@ -660,17 +661,20 @@
         "@semio-tech/assets:build"
       ],
       "jobs": [
+        "stdio-catalog-definition",
         "describe-tool",
+        "native-transpile",
         "font-assets",
         "fonts",
         "support",
         "canvas-runtime-assets",
         "flow-wasm",
         "surface-wasm",
+        "editor-wasm",
+        "graph-wasm",
         "puzzle-wasm",
         "map-tiles",
-        "bundle",
-        "pages"
+        "bundle"
       ]
     }
   ],

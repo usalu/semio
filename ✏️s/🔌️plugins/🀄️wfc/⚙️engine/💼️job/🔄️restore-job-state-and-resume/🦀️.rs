@@ -1,6 +1,7 @@
 //! 🔄️ Restore job state and resume: the run outcome, the restore stage, header and preview and the restore job with its resumption steps. See [`super`].
 
 use super::*;
+use semio_framework_value::retirement::RetireOwned;
 
 //#region 🧩️Job
 /// 🚦️ What one bounded run of the search loop decided before any outcome is lent.
@@ -87,6 +88,67 @@ pub struct WfcRestore<T> {
     pub(super) last_preview_ms: Option<u64>,
     pub(super) publication: Option<Box<Publication>>,
     pub(super) closing: bool,
+}
+
+#[doc(hidden)]
+#[derive(semio_framework_value::RetireOwned)]
+pub struct WfcRestoreStorage<T: RetireOwned> {
+    model: Option<CompiledModel>,
+    topology: Option<T>,
+    initial_domains: Option<Vec<PatternSet>>,
+    fixed: Vec<(NodeId, PatternId)>,
+    bytes: Vec<u8>,
+    domains: Vec<PatternSet>,
+    domain_words: Vec<u64>,
+    trail: Vec<Removal>,
+    decisions: Vec<Decision>,
+    observed: Vec<(NodeId, PatternId)>,
+    domain_counts: Vec<u32>,
+    weight_sums: Vec<f64>,
+    weighted_log_sums: Vec<f64>,
+    revisions: Vec<u64>,
+    queued_marks: Vec<u64>,
+    entropy_heap: BinaryHeap<EntropyEntry>,
+    restored: Option<WfcJob<T>>,
+}
+
+impl<T: RetireOwned> RetireOwned for WfcRestore<T> {
+    type RetirementCursor=<WfcRestoreStorage<T> as RetireOwned>::RetirementCursor;
+
+    fn retirement_ready(&self)->bool {
+        self.publication.is_none() && self.restored.as_ref().is_none_or(RetireOwned::retirement_ready)
+    }
+
+    fn retirement_seed(self)->Self::RetirementCursor {
+        assert!(self.retirement_ready());
+        WfcRestoreStorage {
+            model:self.model,
+            topology:self.topology,
+            initial_domains:self.initial_domains,
+            fixed:self.fixed,
+            bytes:self.bytes,
+            domains:self.domains,
+            domain_words:self.domain_words,
+            trail:self.trail,
+            decisions:self.decisions,
+            observed:self.observed,
+            domain_counts:self.domain_counts,
+            weight_sums:self.weight_sums,
+            weighted_log_sums:self.weighted_log_sums,
+            revisions:self.revisions,
+            queued_marks:self.queued_marks,
+            entropy_heap:self.entropy_heap,
+            restored:self.restored,
+        }.retirement_seed()
+    }
+
+    fn controlled_retirement_supported()->bool {
+        semio_framework_value::retirement::support::controlled_retirement_supported::<Self>()
+    }
+
+    fn controlled_retirement_supported_in(path:&semio_framework_value::retirement::RetirementSupport<'_>)->bool {
+        path.supports::<WfcRestoreStorage<T>>()
+    }
 }
 
 impl<T: Topology + Clone> WfcRestore<T> {

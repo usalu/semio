@@ -1,5 +1,12 @@
 {
  "host": {"totalMegabytes": 16384, "availableMegabytes": 7000, "cores": 10},
+ "fleetControlMegabytes": 1536,
+ "fleetAvailableMegabytes": 3800,
+ "fleetRefusals": [
+  {"name":"critical pressure","pressure":"critical","availableMegabytes":7000,"swapOutMegabytesPerSecond":0},
+  {"name":"active swap","pressure":"normal","availableMegabytes":7000,"swapOutMegabytesPerSecond":10000},
+  {"name":"insufficient controller memory","pressure":"normal","availableMegabytes":3300,"swapOutMegabytesPerSecond":0}
+ ],
  "learnedPlanRatioBasisPoints": 50000,
  "learnedPlanRuns": 4,
  "runs": [
@@ -8,13 +15,14 @@
  ],
  "fleetRuns": [
   {"name": "keeps local compilation planned when parallelism is omitted", "parallelismArgs": [], "localParallelism": "planned"},
-  {"name": "keeps an explicit local compilation limit", "parallelismArgs": ["--parallelism", "1"], "localParallelism": 1}
+  {"name": "keeps an explicit local compilation limit", "parallelismArgs": ["--offload=distribute", "--parallelism", "3"], "localParallelism": 3},
+  {"name": "admits a pinned fleet command with only orchestration room", "parallelismArgs": ["--offload=pin:test-worker", "--parallelism", "1"], "localParallelism": 1}
  ],
  "queuedFleetRuns": [
-  {"name": "hands a queued Cargo command to the fleet once the door refuses and the fleet has headroom", "hostAvailableMegabytes": 2400, "outcome": "fleet", "probeQueueLengths": [0], "offloadMode": "auto", "ambientOffloadMode": "never"},
-  {"name": "allows the explicit always mode to use the existing fleet handoff", "hostAvailableMegabytes": 2400, "outcome": "fleet", "probeQueueLengths": [0], "offloadMode": "always", "ambientOffloadMode": "never"},
+  {"name": "hands a queued Cargo command to the fleet once the door refuses and the fleet has headroom", "hostAvailableMegabytes": 3800, "outcome": "fleet", "probeQueueLengths": [0]},
+  {"name": "explicit distribution overrides the ambient never mode", "hostAvailableMegabytes": 3800, "outcome": "fleet", "probeQueueLengths": [0], "offloadMode": "distribute", "ambientOffloadMode": "never"},
   {"name": "retains cancellation while the fleet table is being read", "hostAvailableMegabytes": 2400, "outcome": "cancelled", "probeQueueLengths": [0]},
   {"name": "keeps an admitted local grant even when the fleet becomes eligible", "hostAvailableMegabytes": 2400, "outcome": "local", "probeQueueLengths": [0]},
-  {"name": "keeps the explicit never mode local without probing fleet eligibility", "hostAvailableMegabytes": 2400, "outcome": "local", "probeQueueLengths": [], "offloadMode": "never", "ambientOffloadMode": "auto"}
+  {"name": "keeps the explicit never mode local without probing fleet eligibility", "hostAvailableMegabytes": 2400, "outcome": "local", "probeQueueLengths": [], "offloadMode": "never", "ambientOffloadMode": "distribute"}
  ]
 }

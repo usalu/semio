@@ -237,7 +237,7 @@ impl<P, Mutation> ArtifactEnvelope<P, Mutation> {
     where
         Mutation: self::Mutation<P>,
     {
-        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, mut edit_messages, conflicts, transitions, history_shape: _, open_transaction: _ } =
+        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, mut edit_messages, conflicts, mut transitions, history_shape: _, open_transaction: _ } =
             self.into_owners();
         let ArtifactVcs { genesis, mut edits, mut changes, mut checkpoints, mut alternatives } = vcs;
         while let Some(edit) = edits.pop() {
@@ -247,6 +247,7 @@ impl<P, Mutation> ArtifactEnvelope<P, Mutation> {
         while checkpoints.pop().is_some() {}
         while alternatives.pop().is_some() {}
         while edit_messages.pop().is_some() {}
+        while transitions.pop().is_some() {}
         drop((schema, id, edits, changes, checkpoints, alternatives, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, edit_messages, conflicts, transitions));
         let (snapshot, pack) = genesis.into_owners();
         retire_shared_projection::<P, Mutation>(snapshot);

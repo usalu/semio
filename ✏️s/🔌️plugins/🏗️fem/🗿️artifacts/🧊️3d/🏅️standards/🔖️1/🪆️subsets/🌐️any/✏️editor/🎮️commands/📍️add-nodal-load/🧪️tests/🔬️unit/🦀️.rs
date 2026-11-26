@@ -107,7 +107,8 @@ async fn add_combination_parses_terms_json() {
 #[semio_framework_async_macros::async_test]
 async fn add_combination_invalid_terms_json_is_a_no_op() {
     let mut app = app_with_load_case().await;
-    dispatch(&mut app, Fem3dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: "not json".into() })).await;
+    let refusal = crate::context::dispatch_refused(&mut app, Fem3dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: "not json".into() })).await;
+    assert!(refusal.contains("fem3d.combination.terms-unreadable"), "{refusal}");
     assert!(app.snapshot().expect("snapshot").combinations.is_empty());
 }
 

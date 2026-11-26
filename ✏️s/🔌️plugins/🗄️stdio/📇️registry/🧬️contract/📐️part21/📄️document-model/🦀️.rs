@@ -100,7 +100,7 @@ impl Part21Document {
 /// 🏗️ Shared incremental-id instance allocator — every Part-21 writer (step's BrepMesh writer,
 /// ifc's future typed writers) builds its generated graph through this, so id allocation and
 /// header shape stay consistent across artifacts instead of each hand-rolling a counter.
-#[derive(Default)]
+#[derive(Default, semio_framework_value::RetireOwned)]
 pub struct Part21Builder {
     pub instances: Vec<Part21Instance>,
     next_id: u64,

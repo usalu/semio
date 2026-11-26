@@ -11,7 +11,7 @@ module Stdio_semio_image_snapshot;
 public type Envelope = unit {
     magic: bytes &size=8;                                   # 0x89 "SEM" CR LF SUB LF
     token_len: uint32 &byte-order=spicy::ByteOrder::Little;
-    token: bytes &size=self.token_len;                      # UTF-8 "s.stdio.semio.image.pack v1"
+    token: bytes &size=self.token_len;                      # UTF-8 "stdio.semio.image.pack v1"
     format: uint8;                                          # PACK_BINARY_FORMAT, currently 1
     # schema_len: LEB128 varint (real dsl walker's `varint` Prim) — Spicy has no built-in LEB128
     # unit type; described here only, not test-parsed (see module doc comment). schema_bytes

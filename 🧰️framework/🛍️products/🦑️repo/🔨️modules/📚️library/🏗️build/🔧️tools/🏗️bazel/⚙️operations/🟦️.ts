@@ -1,6 +1,7 @@
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import{sayBuildV1}from"../../../📖️texts/🟦️.ts";
 import {chmod,copyFile,lstat,mkdir,readdir,readFile,rename,rm,rmdir,stat,unlink,writeFile} from "node:fs/promises";
+import {processPidExistsV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 import type {Dirent} from "node:fs";
 import {dirname,join} from "node:path";
 import {setTimeout as sleep} from "node:timers/promises";
@@ -103,7 +104,7 @@ export async function clearBazelDiskCacheV1(directory:string,walk:Walk):Promise<
  return removed;
 }
 
-const running=(pid:number)=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
+const running=(pid:number)=>processPidExistsV1(pid);
 
 /** 🛑️ Stops the persistent servers of the given output bases the way Bazel itself notices a shutdown request: by removing their pid file. */
 async function stopBazelServers(bases:readonly string[],walk:Walk):Promise<void>{

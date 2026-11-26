@@ -11,6 +11,7 @@ import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { interactiveTabActiveClass, interactiveHoverClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { sharedBorderlessBoxProps } from "../🗂️WindowChrome/shared-border.ts";
+import { SurfaceScope, surfaceLevelAbove, useLevel } from "../🌈️Surface/🟦️.tsx";
 import { glassClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -153,6 +154,7 @@ function Tabs({ className, value, defaultValue, onValueChange, orientation = "ho
 /** 🗂️ Hosts one accessible tablist and initializes its roving focus stop. */
 function TabsList({ className, ref, children, ...props }: TabsListProps) {
   const context = useTabsContext();
+  const level = surfaceLevelAbove(useLevel());
   const localRef = React.useRef<HTMLDivElement | null>(null);
   React.useLayoutEffect(() => {
     if (context.focusValue !== undefined) return;
@@ -182,9 +184,10 @@ function TabsList({ className, ref, children, ...props }: TabsListProps) {
       data-orientation={context.orientation}
       data-tabs-chip=""
       data-glass-chip=""
+      data-level={level}
       className={cn("text-muted-foreground absolute z-[2] inline-flex items-stretch justify-center p-0", context.orientation === "horizontal" ? "start-0 top-0 h-large w-fit max-w-full" : "start-0 top-0 flex-col", glassClass, className)}
     >
-      {children}
+      <SurfaceScope level={level} fill="glass">{children}</SurfaceScope>
     </div>
   );
 }

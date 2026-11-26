@@ -134,6 +134,27 @@ describe("package assets in the browser kernel", () => {
     await expect(fetchPackageAssets(declared, BASE, async () => new Response("no", { status: 404 }), nodeDigest)).rejects.toThrow("404");
   });
 
+  it("opens an extension first with the shared font pack and reuses it for the editor", async () => {
+    const fixture = JSON.parse(readFileSync(join(here, "🔤️guest-fonts.json"), "utf8"));
+    const requested: string[] = [], posted: any[] = [];
+    const registry = new ActivationRegistry({ shardClient: capturingShardClient(posted), defaultBudget: BUDGET });
+    const original = globalThis.fetch;
+    try {
+      globalThis.fetch = async input => {
+        requested.push(String(input));
+        return new Response(new Uint8Array([31, 41]));
+      };
+      for (const [ordinal, moduleUrl] of fixture.modules.entries()) {
+        const pluginId = String(ordinal);
+        registry.registerManifest({ pluginId, moduleUrl, caps: [] });
+        await registry.activate(pluginId, "actor-" + ordinal, "manual");
+      }
+      expect(requested).toEqual([fixture.url]);
+      const opened = posted.filter(event => event.kind === "activate");
+      expect(opened.map(event => Array.from(new Uint8Array(event.assets[0][1])))).toEqual([[31, 41], [31, 41]]);
+    } finally { globalThis.fetch = original; }
+  });
+
   it("delivers a plugin's declared assets with the activation and the worker splices them, byte for byte, into the first instance-open", async () => {
     const posted: any[] = [];
     const registry = new ActivationRegistry({ shardClient: capturingShardClient(posted), defaultBudget: BUDGET, fetchAssets: async () => [], fetchPackageAssets: assets => fetchPackageAssets(assets, BASE, servedFetch(), nodeDigest) });

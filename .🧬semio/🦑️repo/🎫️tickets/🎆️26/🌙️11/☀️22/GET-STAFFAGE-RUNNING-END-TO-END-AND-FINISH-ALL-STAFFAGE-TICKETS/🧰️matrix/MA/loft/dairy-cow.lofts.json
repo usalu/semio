@@ -1,0 +1,9 @@
+[
+ {"scale": "50", "bone": "jaw", "paint": "jaw", "replace": ["jaw"], "views": ["front", "plan"]},
+ {"scale": "50", "bone": "jaw", "paint": "jaw", "replace": ["jaw"], "views": ["elevation"]},
+ {"scale": "100", "bone": "jaw", "paint": "jaw", "replace": ["jaw"], "views": ["front", "plan"]},
+ {"scale": "100", "bone": "jaw", "paint": "jaw", "replace": ["jaw"], "views": ["elevation"]},
+ {"scale": "200", "bone": "jaw", "paint": "mass-200-jaw", "replace": ["mass-200-jaw"], "views": ["front", "plan"]},
+ {"scale": "200", "bone": "jaw", "paint": "mass-200-jaw", "replace": ["mass-200-jaw"], "views": ["elevation"]},
+ {"scale": "50", "bone": "lumbar", "paint": "barrel", "solids": ["far-hook", "far-pin", "near-hook", "near-pin"]}
+]

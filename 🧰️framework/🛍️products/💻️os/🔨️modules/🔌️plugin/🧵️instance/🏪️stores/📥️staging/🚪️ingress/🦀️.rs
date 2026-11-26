@@ -45,7 +45,8 @@ impl<A: ArtifactApp> InstanceStores<A> {
         let live_revision_bytes = self.store.content_revision();
         let live_revision = semio_framework_job::RevisionId(u64::from_be_bytes(live_revision_bytes[..8].try_into().expect("revision lane width")));
         let live_generation = semio_framework_job::Generation(self.store.generation());
-        if !matches!(semio_framework_job::validate_commit(&permit.operation, live_revision, live_generation), semio_framework_job::CommitValidation::Accepted) {
+        let policy = semio_framework_job::CommitPolicy::for_verb(verb);
+        if !matches!(semio_framework_job::validate_commit_with(policy, &permit.operation, live_revision, live_generation), semio_framework_job::CommitValidation::Accepted) {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.stale"), format!("framework route '{verb}' reached commit with a stale revision or generation")));
         }
         Ok(())

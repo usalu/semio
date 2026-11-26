@@ -39,6 +39,7 @@ impl MountedPreviewTick {
     pub fn demands(&self, session: &FlowEvalSession, copy: usize) -> Result<RetirementDemand, ValueError> {
         match self.host.as_ref() {
             Some(host) if !host.baseline_publication_terminal_is_empty() => host.next_baseline_publication_demands(copy),
+            _ if !session.preview_cancellation_terminal_is_empty() => session.next_preview_cancellation_demands(copy),
             Some(host) => session.preview_tick_finish_demands(host, copy),
             None => Ok(Self::birth_demands()),
         }
@@ -67,9 +68,6 @@ impl MountedPreviewTick {
         effect: &mut RetainedAllocationEffect<'_>,
         project: impl FnOnce(&mut std::collections::HashMap<String, semio_framework_artifact_flow_flow::neural::Dictionary>),
     ) -> Result<(Option<FlowEvalTickOutcome>, RetainedCloneProgress), ValueError> {
-        if self.host.is_none() && !session.preview_cancellation_terminal_is_empty() {
-            return Ok((None, session.preview_cancellation_step(effect)?.progress()));
-        }
         let grant = effect.grant();
         let demand = self.demands(session, grant.maximum_copy_bytes)?;
         if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
@@ -77,6 +75,9 @@ impl MountedPreviewTick {
         }
         if let Some(progress) = self.advance_publication(effect) {
             return Ok((None, progress?));
+        }
+        if !session.preview_cancellation_terminal_is_empty() {
+            return Ok((None, session.preview_cancellation_step(effect)?.progress()));
         }
         if let Some(host) = self.host.as_mut() {
             let (more, progress) = session.finish_preview_tick(host, matches!(source, PreviewEvaluationSource::WithFallback), effect)?;

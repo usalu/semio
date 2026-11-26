@@ -2,6 +2,10 @@
 
 use super::*;
 
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "🧵️worker.rs"]
+mod worker;
+
 //#region 💡️InferenceJobTools
 pub(super) fn inference_submit_handler(context: &InferenceToolContext<'_>, arguments: serde_json::Value) -> CallToolResult {
     let submitted = (|| {
@@ -43,7 +47,7 @@ fn submit_guest_job(context: &InferenceToolContext<'_>, workspace: &Arc<Headless
 fn spawn_guest_job(workspace: Arc<HeadlessWorkspace>, actions: Arc<ActionAdapter>, catalog: Arc<Catalog>, service: InferenceService, document_id: String, arguments: serde_json::Value, job_id: String, cancel: InferenceCancel) -> Result<(), GatewayError> {
     let thread_job = job_id.clone();
     guest_inference_thread(&job_id)
-        .spawn(move || run_guest_job(&workspace, &actions, &catalog, &service, &document_id, &arguments, &thread_job, cancel))
+        .spawn(move || worker::run(job_registry(), &thread_job, || run_guest_job(&workspace, &actions, &catalog, &service, &document_id, &arguments, &thread_job, cancel)))
         .map(|_| ())
         .map_err(|error| {
             let error = GatewayError::new(GatewayErrorCode::Internal, format!("could not start the inference job thread: {error}"));

@@ -150,7 +150,6 @@ async fn try_open_registered_pdf_with(input: Vec<u8>, page_count: usize, scope: 
     match outcome {
         Ok(cost) => Ok((app, cost)),
         Err(reason) => {
-            eprintln!("[DEBUG] open failed: {reason}");
             let _ = laws::close_registered_fixture_app(&mut app, policy, scope.cx());
             Err(reason)
         }
@@ -2042,12 +2041,18 @@ fn reference_page_digest(bytes: &[u8]) -> Vec<(Vec<String>, usize, usize)> {
 const REAL_WORLD_TURNS_PER_MIB: usize = 512;
 /// 📏️ Host turns every real-world open may settle in regardless of its size.
 const REAL_WORLD_BASE_TURNS: usize = 512;
-/// 📏️ Bytes a real-world open may copy out of the scope's lifetime stock per byte of its file, on top of [`REAL_WORLD_BASE_COPY`].
+/// 📏️ Bytes a real-world open may copy per byte of its encoded file: the file is read once through the byte lexers.
 const REAL_WORLD_COPY_PER_BYTE: usize = 24;
-/// 📏️ Bytes every real-world open may copy regardless of its size.
-const REAL_WORLD_BASE_COPY: usize = 32 << 20;
+/// 📏️ Bytes the lift may copy per decoded stream byte: the content program lexes, types and mirrors every decoded byte (site plan: 84 measured, run model of slice 7).
+const REAL_WORLD_LIFT_PER_DECODED_BYTE: usize = 112;
+/// 📏️ Bytes preparation may copy per decoded stream byte: the retained graph holds every stream decoded and scans it in runs (site plan: 74 measured).
+const REAL_WORLD_PREPARE_PER_DECODED_BYTE: usize = 96;
+/// 📏️ Bytes the Pack export may copy per decoded stream byte: the typed snapshot is about five raw Pack bytes per decoded byte, each costing the bounded compressor under five bytes per chain probe (the retained deflate law) and a source pull (site plan: 152 measured).
+const REAL_WORLD_PACK_PER_DECODED_BYTE: usize = 192;
+/// 📏️ Bytes every real-world open may copy regardless of its size: matching-window pages, close ladders and receipts.
+const REAL_WORLD_BASE_COPY: usize = 4 << 20;
 
-/// 🌍️ Opens a real-world document through the registered browser route (paged natural source, browser fuel, interactive grants) within turns and copy proportional to its file, checks every typed lane against the cold reader and lopdf, edits the title and inserts text on page 1, saves append-only, checks the saved file with lopdf page by page, and reopens it through the same route; returns the cost of the first open. Saved files land in `SEMIO_PDF_REAL_WORLD_DIR` for the pymupdf oracle.
+/// 🌍️ Opens a real-world document through the registered browser route (paged natural source, browser fuel, interactive grants) within turns and copy proportional to its file and its decoded streams, checks every typed lane against the cold reader and lopdf, edits the title and inserts text on page 1, saves append-only, checks the saved file with lopdf page by page, and reopens it through the same route; returns the cost of the first open. Saved files land in `SEMIO_PDF_REAL_WORLD_DIR` for the pymupdf oracle.
 async fn real_world_round_trip(name: &str, input: &[u8], append_limit: usize) -> OpenCost {
     use crate::standards::v1_7::subsets::base::io::import::decode_pdf;
     use semio_plugin::artifact_app_laws as laws;
@@ -2059,11 +2064,12 @@ async fn real_world_round_trip(name: &str, input: &[u8], append_limit: usize) ->
     let pages = reference_page_count(input).unwrap();
     let cold = decode_pdf(input).unwrap();
     let turn_limit = REAL_WORLD_BASE_TURNS + REAL_WORLD_TURNS_PER_MIB * input.len().div_ceil(1 << 20);
-    let copy_limit = REAL_WORLD_BASE_COPY + REAL_WORLD_COPY_PER_BYTE * input.len();
+    let decoded: usize = semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_stream_bodies(input).unwrap().iter().map(Vec::len).sum();
+    let copy_limit = REAL_WORLD_BASE_COPY + REAL_WORLD_COPY_PER_BYTE * input.len() + (REAL_WORLD_LIFT_PER_DECODED_BYTE + REAL_WORLD_PREPARE_PER_DECODED_BYTE + REAL_WORLD_PACK_PER_DECODED_BYTE) * decoded;
     let mut scope = laws::OriginalFixtureScope::admit();
     let (mut app, cost) = try_open_registered_pdf_with(input.to_vec(), pages, &mut scope, PdfIntake::NaturalSource, BROWSER_TURN_FUEL, true, turn_limit).await.unwrap_or_else(|reason| panic!("{name}: {reason}"));
     println!("{name}: {} bytes; open {cost:?}", input.len());
-    assert!(cost.copied_bytes <= copy_limit, "{name}: the open copied {} bytes, above {copy_limit} for a {}-byte file", cost.copied_bytes, input.len());
+    assert!(cost.copied_bytes <= copy_limit, "{name}: the open copied {} bytes, above {copy_limit} for a {}-byte file with {decoded} decoded stream bytes", cost.copied_bytes, input.len());
     let mounted = app.snapshot().unwrap().clone();
     assert_eq!(mounted.pages, cold.pages, "{name}: pages");
     assert_eq!((&mounted.fonts, &mounted.images, &mounted.forms), (&cold.fonts, &cold.images, &cold.forms), "{name}: resources");
@@ -2108,13 +2114,13 @@ async fn registered_real_world_site_plan_opens_edits_saves_and_reopens_like_the_
     real_world_round_trip("site plan", fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/🌍️real-world/🗺️site.pdf"), 64 * 1024).await;
 }
 
-/// 🏰️ The institution diagram (1,345 form XObjects, 187 KB of streams) through the registered browser route, in turns and copy proportional to its file.
+/// 🏰️ The institution diagram (1,345 form XObjects, 187 KB of streams) through the registered browser route, in turns and copy proportional to its file and its decoded streams.
 #[semio_framework_async_macros::async_test]
 async fn registered_real_world_institution_diagram_opens_edits_saves_and_reopens_like_the_reference_readers() {
     real_world_round_trip("institution diagram", fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/🌍️real-world/🏰️institution.pdf"), 64 * 1024).await;
 }
 
-/// 🎓️ The 65-page pdfTeX bachelor thesis (6.3 MB: Type 3 bitmap fonts, embedded Type 1 and TrueType programs, forms, soft-masked images, outlines, 511 links, a nested page tree) through the registered browser route, in turns and copy proportional to its file.
+/// 🎓️ The 65-page pdfTeX bachelor thesis (6.3 MB: Type 3 bitmap fonts, embedded Type 1 and TrueType programs, forms, soft-masked images, outlines, 511 links, a nested page tree) through the registered browser route, in turns and copy proportional to its file and its decoded streams.
 #[semio_framework_async_macros::async_test]
 async fn registered_bachelor_thesis_opens_edits_saves_and_reopens_like_the_reference_readers() {
     real_world_round_trip("bachelor thesis", fixture_bytes!("../../../../../../🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf"), 256 * 1024).await;

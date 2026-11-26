@@ -1,0 +1,146 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/shared-worktree/topology/addresses/v1",
+ "title": "Published address set of one fleet machine: every reachable non-loopback, non-link-local address of its interfaces, identified by origin and never by address",
+ "definitions": {
+  "Address": {
+   "description": "One address of one interface. `scope` says how far it reaches: `private` (RFC 1918 or shared address space), `unique-local` (IPv6 fc00::/7) or `global`. `prefix` is the length of its network, which decides `same subnet first` for a client.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "address",
+    "family",
+    "interface",
+    "prefix",
+    "scope"
+   ],
+   "properties": {
+    "address": {
+     "type": "string",
+     "minLength": 2,
+     "maxLength": 45
+    },
+    "family": {
+     "type": "string",
+     "enum": [
+      "IPv4",
+      "IPv6"
+     ]
+    },
+    "interface": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 64
+    },
+    "prefix": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 128
+    },
+    "scope": {
+     "type": "string",
+     "enum": [
+      "private",
+      "unique-local",
+      "global"
+     ]
+    }
+   }
+  }
+ },
+ "description": "Written atomically to `<store>/v1/origins/<origin>/addresses.json` by the machine itself and rewritten whenever its interfaces change or the freshness stamp passes half of `ttlMs`. A reader treats the set as stale once `observedAtMs + ttlMs` has passed and then tries DNS-SD discovery of the instance named by the origin before the addresses.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "origin",
+  "name",
+  "hostLabel",
+  "advertise",
+  "addresses",
+  "observedAtMs",
+  "ttlMs",
+  "generation"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "origin": {
+   "type": "string",
+   "pattern": "^[a-z][a-z0-9-]{0,63}$",
+   "description": "The origin id, the one identity of the machine; it names the DNS-SD instance of type `_semio-fleet._tcp` that the machine advertises."
+  },
+  "addresses": {
+   "type": "array",
+   "maxItems": 32,
+   "items": {
+    "$ref": "#/definitions/Address"
+   }
+  },
+  "observedAtMs": {
+   "type": "integer",
+   "minimum": 0
+  },
+  "ttlMs": {
+   "type": "integer",
+   "minimum": 1000
+  },
+  "generation": {
+   "type": "integer",
+   "minimum": 1
+  },
+  "name": {
+   "description": "The fleet name `semio-<origin>`, derived from the origin id and never from the host name of the operating system.",
+   "type": "string",
+   "pattern": "^semio-[a-z][a-z0-9-]{0,63}$"
+  },
+  "hostLabel": {
+   "description": "The first label of the operating system host name, lower case, kept only so that duplicates can be noticed; never an identity and never connected to.",
+   "anyOf": [
+    {
+     "type": "null"
+    },
+    {
+     "type": "string",
+     "pattern": "^[a-z0-9][a-z0-9-]{0,62}$"
+    }
+   ]
+  },
+  "advertise": {
+   "description": "Whether the machine advertises itself through DNS-SD (type `_semio-fleet._tcp`, TXT origin and roles). It stays silent while another origin carries the same host name label (or the same label with the numeric suffix macOS appends on a conflict); `duplicates` names those origins.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "enabled",
+    "duplicates",
+    "namedAs"
+   ],
+   "properties": {
+    "enabled": {
+     "type": "boolean"
+    },
+    "duplicates": {
+     "type": "array",
+     "maxItems": 64,
+     "items": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,63}$"
+     }
+    },
+    "namedAs": {
+     "description": "The origin whose semantic host name `semio-<origin>` this machine carries although it is another origin (a copy-paste rename); null when the name is not another origin's.",
+     "anyOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "string",
+       "pattern": "^[a-z][a-z0-9-]{0,63}$"
+      }
+     ]
+    }
+   }
+  }
+ }
+}

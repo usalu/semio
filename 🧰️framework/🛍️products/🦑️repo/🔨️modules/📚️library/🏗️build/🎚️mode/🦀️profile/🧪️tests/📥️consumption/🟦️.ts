@@ -212,3 +212,14 @@ test("neutral consumed Cargo current native and cache fixture modes match actual
 test("neutral consumed Cargo existing native selector corpus matches exact writer admission",async()=>{
  const {cargoConfigurationArgumentsV1}=await import("@semio-tech/process/native-build"),value=JSON.parse(readFileSync(join(repositoryRootV1,corpus.currentModeFixtures[0]!),"utf8"));for(const row of value.compilerStorageArguments){const run=()=>cargoConfigurationArgumentsV1(row.input,row.configuration??undefined,row.buildDirectory);if(row.accept===false)expect(run).toThrow();else expect(run()).toEqual(row.expected);}
 });
+
+test("profile ingress reads the exact set of Cargo package selections",async()=>{
+ const {selectedCargoProfileCompositionsV1}=await import("../../🟦️.ts");
+ for(const row of corpus.compositionSelection){
+  expect(selectedCargoProfileCompositionsV1(row.args)??null).toEqual(row.selected);
+  if(row.selected){
+   const {values}=parseArgs({args:row.args,options:{package:{type:"string",short:"p",multiple:true}},allowPositionals:true});
+   expect([...new Set(values.package)].sort()).toEqual(row.selected);
+  }
+ }
+});

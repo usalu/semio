@@ -41,14 +41,23 @@ pub struct Resource {
         fn invoke(&mut self, _capability: &str, request: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> { echo_step(request.to_vec(), cx) }
         fn begin_close(&mut self) { self.sealed.store(true, Ordering::SeqCst); }
         fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
-            let grant=cx.retained_grant();
-            
-            if let Some(step) = self.close.begin_granted(&mut self.value, grant) .map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))? { self.born_bytes += step.progress().retained_capacity_bytes;cx.consume_retained(step.progress())?;cx.consume_fuel(1);return Ok(PluginLifecycleStep::Progress(step.progress())); }
-            let step = self.close.step_granted(grant) .map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+            let body=cx.retained_grant().maximum_copy_bytes;
+            let demand=self.retirement_demands(body).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+            let (mut settled,mut began)=(None,false);
+            semio_framework_job::close_original_effect_step(cx,demand,|effect|{
+                if !self.close.is_empty(){
+                    return self.close.step_granted(body,effect).map(|step|{settled=Some(step);step}).map_err(semio_framework_job::OriginalTurnPrimary::from)
+                }
+                began=self.value.is_some();
+                let turn=self.close.begin_granted(&mut self.value,effect);
+                semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(semio_framework_job::OriginalTurnPrimary::from).map(|step|{let step=step.unwrap_or(RetainedCloneStep::Progress(Default::default()));settled=Some(step);step}),work:turn.work})
+            })?;
+            let step=settled.unwrap_or(RetainedCloneStep::Progress(Default::default()));
             self.released_bytes += step.progress().released_bytes;
             self.born_bytes += step.progress().retained_capacity_bytes;
             if matches!(step, RetainedCloneStep::Complete(_)) { assert_eq!(self.released_bytes, self.expected_bytes + self.born_bytes); self.terminal.store(true, Ordering::SeqCst); }
-            cx.consume_retained(step.progress())?;cx.consume_fuel(1);Ok(PluginLifecycleStep::retained(step, self.close.is_empty()))
+            cx.consume_fuel(1);
+            Ok(if began { PluginLifecycleStep::Progress(step.progress()) } else { PluginLifecycleStep::retained(step, self.close.is_empty()) })
         }
         fn terminal_is_empty(&self) -> bool { self.terminal.load(Ordering::SeqCst) }
         fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {

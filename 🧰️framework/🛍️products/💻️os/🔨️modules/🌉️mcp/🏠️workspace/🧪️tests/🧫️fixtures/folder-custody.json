@@ -75,6 +75,16 @@
     {"id":"malformed","live":null,"storedAlias":"s.wfc.bitmap","ownerSchema":null,"schema":null,"error":"PLUGIN_UNAVAILABLE"},
     {"id":"missing","live":null,"storedAlias":null,"ownerSchema":null,"schema":null,"error":"PLUGIN_UNAVAILABLE"}
   ],
+  "reopenIdentity": {"schema":"note.document","artifactKind":"s.note.note","pluginId":"note","appId":"s.note.note@1/*#editor"},
+  "reopens": [
+    {"id":"first-open","observed":"one","durable":"one","archive":false,"expected":"bind"},
+    {"id":"unchanged-reopen","observed":"one","durable":"one","archive":false,"expected":"reuse"},
+    {"id":"changed-after-read","observed":"one","durable":"two","archive":false,"expected":"conflict"},
+    {"id":"externally-changed","observed":"two","durable":"two","archive":false,"expected":"replace"},
+    {"id":"updated-reopen","observed":"two","durable":"two","archive":false,"expected":"reuse"},
+    {"id":"archive-only-change","observed":"two","durable":"two","archive":true,"expected":"replace"},
+    {"id":"unchanged-archive-reopen","observed":"two","durable":"two","archive":true,"expected":"reuse"}
+  ],
   "owners": [
     {
       "id": "unique",
@@ -83,10 +93,12 @@
         [
           "schema1",
           "plugin1",
-          "app1"
+          "app1",
+          "s.example.primary"
         ]
       ],
-      "accepted": true
+      "accepted": true,
+      "artifactKind": "s.example.primary"
     },
     {
       "id": "none",
@@ -95,10 +107,12 @@
         [
           "other",
           "plugin1",
-          "app1"
+          "app1",
+          "s.example.primary"
         ]
       ],
-      "accepted": false
+      "accepted": false,
+      "artifactKind": null
     },
     {
       "id": "ambiguous",
@@ -107,15 +121,18 @@
         [
           "schema1",
           "plugin1",
-          "app1"
+          "app1",
+          "s.example.primary"
         ],
         [
           "schema1",
           "plugin2",
-          "app1"
+          "app1",
+          "s.example.secondary"
         ]
       ],
-      "accepted": false
+      "accepted": false,
+      "artifactKind": null
     },
     {
       "id": "requested-alias-actual-schema",
@@ -124,15 +141,18 @@
         [
           "friendly-alias",
           "plugin1",
-          "app1"
+          "app1",
+          "s.example.primary"
         ],
         [
           "os.agent.probe/v1",
           "plugin1",
-          "app1"
+          "app1",
+          "s.example.primary"
         ]
       ],
-      "accepted": true
+      "accepted": true,
+      "artifactKind": "s.example.primary"
     }
   ]
 }

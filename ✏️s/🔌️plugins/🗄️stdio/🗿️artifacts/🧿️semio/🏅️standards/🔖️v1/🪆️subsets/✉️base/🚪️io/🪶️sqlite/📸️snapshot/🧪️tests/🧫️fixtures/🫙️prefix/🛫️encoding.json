@@ -3,7 +3,7 @@
   "language": "de",
   "unit": "a✍\u0000",
   "repeat": 32769,
-  "preamble": "semio s.stdio.semio.text.dsl v1\n",
+  "preamble": "semio stdio.semio.text.dsl v1\n",
   "encodings": [
     "text",
     "binary"

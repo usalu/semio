@@ -12,10 +12,6 @@ extern crate semio_os_kernel as vcs;
 use semio_s_artifact_norm_en1990_diff::En1990Diff;
 use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 
-#[path = "🧭️edit-rules/🦀️.rs"]
-mod edit_rules;
-pub use crate::edit_rules::{resolve_edit, starter_row, EDIT_RULES, ID_REMOVALS};
-
 //#region 🔖️Leaves
 use semio_s_artifact_norm_en1990_mut_design_basis::change_annex;
 use semio_s_artifact_norm_en1990_mut_design_basis::change_project_id;
@@ -440,11 +436,6 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
-
-//#region 🍃️FacetLeaves
-/// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
-pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
-//#endregion 🍃️FacetLeaves
 
 /// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff and inverse through the central applier.
 pub mod mutation_bridge {

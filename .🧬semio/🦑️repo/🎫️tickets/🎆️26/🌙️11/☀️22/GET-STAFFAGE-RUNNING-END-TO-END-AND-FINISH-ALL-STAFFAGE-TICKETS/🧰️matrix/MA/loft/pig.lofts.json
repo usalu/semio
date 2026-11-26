@@ -1,0 +1,7 @@
+[
+ {"scale": "200", "bone": "ear-f", "paint": "head", "replace": ["ear-far"]},
+ {"scale": "500", "bone": "ear-n", "paint": "ear-n", "replace": ["ear-n"], "views": ["plan"]},
+ {"scale": "500", "bone": "ear-n", "paint": "ear-n", "replace": ["ear-n"], "views": ["elevation", "front"]},
+ {"scale": "500", "bone": "ear-f", "paint": "ear-f", "replace": ["ear-f"], "views": ["plan"]},
+ {"scale": "500", "bone": "ear-f", "paint": "ear-f", "replace": ["ear-f"], "views": ["elevation", "front"]}
+]

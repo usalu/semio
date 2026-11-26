@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-stdio-pdf-model-object"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "PDF COS objects, navigation and document metadata"
+
+[package.metadata.semio]
+role = "library"
+
+[package.metadata.semio.carve]
+owned = [
+  "standards::v1_7::subsets::base::schema::snapshot::model::canonical",
+  "standards::v1_7::subsets::base::schema::snapshot::model::document_metadata",
+  "standards::v1_7::subsets::base::schema::snapshot::model::navigation",
+  "standards::v1_7::subsets::base::schema::snapshot::model::object_model",
+  "standards::v1_7::subsets::base::schema::snapshot::model::octets",
+  "standards::v1_7::subsets::base::schema::snapshot::model::octets::output_tests",
+]
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { workspace = true }
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

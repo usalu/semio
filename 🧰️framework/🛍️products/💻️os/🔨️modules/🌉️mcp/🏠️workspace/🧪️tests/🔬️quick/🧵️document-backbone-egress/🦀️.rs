@@ -40,6 +40,7 @@ fn a_committed_backbone_message_with_no_document_actor_faults_with_its_reason() 
         "hub-note".to_string(),
         PluginArtifactBinding {
             schema: "s.note.note".to_string(),
+            artifact_kind: "s.note.note".to_string(),
             plugin_id: "note".to_string(),
             app_id: "note.editor".to_string(),
             surface_id: Some("s.note.note@1/*#editor".to_string()),

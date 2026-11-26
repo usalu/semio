@@ -1,6 +1,7 @@
 import {afterAll,expect,test} from "bun:test";
 import Ajv from "ajv";
 import {createHash} from "node:crypto";
+import {publishFleetAddressSetV1} from "../../../../../🤝️shared-worktree/🗺️topology/🧭️addresses/🟦️.ts";
 import {mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
@@ -150,7 +151,9 @@ test("the relayed route gives the same bytes without any route between the group
 
 test("the peer folder of the topology and the attested facts give the endpoints of a peer, and only readable cache paths ever travel",async()=>{
  const store=directory("facts");mkdirSync(join(store,"v1","fleet"),{recursive:true});
- writeFileSync(join(store,"v1","fleet","cache.json"),JSON.stringify({version:1,group:"g2",generation:1,publishedAtMs:1,publisher:{directory:"/d",port:1,host:"h"},cache:{endpoints:["http://10.0.2.1:7001"],instance:"semio",access:"read-write",protocols:["bazel-http","nx-self-hosted"],protocolVersion:1},auth:{scheme:"semio-fleet-v1",roles:["cache-read","cache-write","submit","worker","admin"]}}));
+ writeFileSync(join(store,"v1","fleet","cache.json"),JSON.stringify({version:1,group:"g2",generation:1,publishedAtMs:1,publisher:{origin:"g2-server",directory:"/d",port:7001},cache:{instance:"semio",access:"read-write",protocols:["bazel-http","nx-self-hosted"],protocolVersion:1},auth:{scheme:"semio-fleet-v1",roles:["cache-read","cache-write","submit","worker","admin"]}}));
+ expect(await fleetPeerEndpointsV1(store,["http://peer.example:7001"]),"no published addresses of the peer server yet").toEqual(["http://peer.example:7001"]);
+ await publishFleetAddressSetV1({storeRoot:store,origin:"g2-server",interfaces:{en0:[{address:"10.0.2.1",netmask:"255.255.255.0",family:"IPv4",mac:"00:00:00:00:00:00",internal:false,cidr:null}]} as never});
  expect(await fleetPeerEndpointsV1(store,["http://peer.example:7001","http://10.0.2.1:7001"])).toEqual(["http://10.0.2.1:7001","http://peer.example:7001"]);
  expect(await fleetPeerEndpointsV1(undefined,["http://peer.example:7001"])).toEqual(["http://peer.example:7001"]);
  expect(await fleetPeerEndpointsV1(directory("empty"))).toEqual([]);

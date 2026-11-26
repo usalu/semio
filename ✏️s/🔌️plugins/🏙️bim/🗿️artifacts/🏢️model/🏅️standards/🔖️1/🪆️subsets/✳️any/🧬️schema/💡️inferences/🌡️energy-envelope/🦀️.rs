@@ -4,7 +4,7 @@
 //! Definitions. Lengths in metres, areas in square metres, angles in degrees, transmittances in watts per square metre and kelvin.
 //! * the room of a space (`spaces`) gives its outline; each edge of the outline is classified by probing across it: the wall (or curtain wall) whose footprint the edge lies on, and what lies on the far side of that wall
 //!   after its thickness: another room of the storey ([`Boundary::Adjacent`], or [`Boundary::Adiabatic`] when both rooms have the same set points and no heat flows), the same room (an island, no surface) or nothing
-//!   ([`Boundary::Exterior`], or [`Boundary::Ground`] below the datum). Consecutive edge pieces of one wall with one far side and a facet angle below ten degrees are one surface. Its area is its length times the clear height of
+//!   ([`Boundary::Exterior`], or [`Boundary::Ground`] below the datum). Consecutive collinear edge pieces of one wall with one far side are one surface. Its area is its length times the clear height of
 //!   the room, minus the windows and doors of the wall that stand on it; the windows and doors are surfaces of their own.
 //! * the floor is split by the rooms below it (area of the intersection with each), the ceiling by the rooms above it; a part without a room beyond is exterior, and below the lowest storey it is ground (when the storey
 //!   stands on the datum). The construction of a floor is the slab of the storey under the part, of a ceiling the slab of the storey above or else the roof of the storey.
@@ -28,6 +28,7 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, SpaceConditions};
 use semio_framework_2d::booleans::BooleanOperation;
 use semio_framework_2d::regions::{region_boolean, Region};
+use semio_framework_2d::retirement::BlockingTurns;
 use semio_framework_2d::Vec2;
 use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;
@@ -52,7 +53,7 @@ pub const COMPASS: [&str; 8] = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 const PROBE: f64 = 0.002;
 const STEP: f64 = 0.5;
 const FLATTEN_TOLERANCE: f64 = 0.01;
-const FACET_COSINE: f64 = 0.984_807_753_012_208;
+const FACET_COSINE: f64 = 1.0 - 1e-12;
 const MIN_PART: f64 = 1e-4;
 
 //#region 🔖️Values
@@ -312,7 +313,7 @@ fn stack(snapshot: &ModelSnapshot, layers: &[Layer]) -> Result<Vec<(f64, f64)>, 
 fn construction(snapshot: &ModelSnapshot, layers: Option<&[Layer]>, flow: HeatFlow, far: FarSide, label: &str) -> Result<f64, String> {
     let Some(layers) = layers else { return Err(label.to_string()) };
     let numbers = stack(snapshot, layers)?;
-    semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal::transmittance(&numbers, flow, far).ok_or_else(|| layers.iter().zip(&numbers).find(|(_, (thickness, conductivity))| !(*thickness > 0.0 && *conductivity > 0.0)).map_or_else(|| label.to_string(), |(layer, _)| layer.material.clone()))
+    semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal::transmittance(&numbers, flow, far).ok_or_else(|| layers.iter().zip(&numbers).find(|(_, (thickness, conductivity))| !(thickness.is_finite() && *thickness > 0.0 && conductivity.is_finite() && *conductivity > 0.0)).map_or_else(|| label.to_string(), |(layer, _)| layer.material.clone()))
 }
 
 fn far_side(boundary: Boundary) -> FarSide {
@@ -482,7 +483,7 @@ impl Context<'_> {
     }
 }
 
-fn opening_surface(context: &Context<'_>, id: &str, frame: &OpeningFrame, wall: &str, parent: &str, boundary: Boundary, adjacent: &str, piece: &Piece, order: usize, issues: &mut Vec<EnergyIssue>) -> Option<EnvelopeSurface> {
+fn opening_surface(context: &Context<'_>, id: &str, frame: &OpeningFrame, wall: &str, parent: &str, boundary: Boundary, adjacent: &str, piece: &Piece, z0: f64, z1: f64, order: usize, issues: &mut Vec<EnergyIssue>) -> Option<EnvelopeSurface> {
     let opening = context.snapshot.openings.get(id)?;
     let (kind, type_id, u_value, g_value, fraction) = match &opening.kind {
         OpeningKind::Window { window_type } => {
@@ -497,9 +498,12 @@ fn opening_surface(context: &Context<'_>, id: &str, frame: &OpeningFrame, wall: 
     }
     let direction = [(piece.end[0] - piece.start[0]) / piece.length.max(1e-12), (piece.end[1] - piece.start[1]) / piece.length.max(1e-12)];
     let reach = (frame.point.x - piece.start[0]) * direction[0] + (frame.point.y - piece.start[1]) * direction[1];
-    let centre = [piece.start[0] + direction[0] * reach, piece.start[1] + direction[1] * reach];
-    let half = frame.width / 2.0;
-    let (a, b) = ([centre[0] - direction[0] * half, centre[1] - direction[1] * half], [centre[0] + direction[0] * half, centre[1] + direction[1] * half]);
+    let left = (reach - frame.width / 2.0).max(0.0);
+    let right = (reach + frame.width / 2.0).min(piece.length);
+    let bottom = frame.local.origin.z.max(z0);
+    let top = (frame.local.origin.z + frame.height).min(z1);
+    if right <= left || top <= bottom { return None; }
+    let (a, b) = ([piece.start[0] + direction[0] * left, piece.start[1] + direction[1] * left], [piece.start[0] + direction[0] * right, piece.start[1] + direction[1] * right]);
     Some(EnvelopeSurface {
         id: format!("{}/o{}", context.space, order),
         kind,
@@ -509,14 +513,14 @@ fn opening_surface(context: &Context<'_>, id: &str, frame: &OpeningFrame, wall: 
         construction: type_id.to_string(),
         boundary,
         adjacent: adjacent.to_string(),
-        area: frame.width * frame.height,
-        gross_area: frame.width * frame.height,
+        area: (right - left) * (top - bottom),
+        gross_area: (right - left) * (top - bottom),
         azimuth: context.azimuth(piece.normal),
         tilt: 90.0,
         u_value,
         g_value,
         frame_fraction: fraction,
-        polygon: quad(a, b, frame.local.origin.z, frame.local.origin.z + frame.height),
+        polygon: quad(a, b, bottom, top),
     })
 }
 
@@ -533,7 +537,7 @@ fn hosted<'a>(context: &Context<'a>, wall: &str, piece: &Piece, thickness: f64) 
             let (dx, dy) = (frame.point.x - piece.start[0], frame.point.y - piece.start[1]);
             let reach = dx * direction[0] + dy * direction[1];
             let off = (dx * direction[1] - dy * direction[0]).abs();
-            reach >= -1e-9 && reach <= piece.length + 1e-9 && off <= thickness + 0.01
+            reach + frame.width / 2.0 > 1e-9 && reach - frame.width / 2.0 < piece.length - 1e-9 && off <= thickness + 0.01
         })
         .collect()
 }
@@ -556,15 +560,15 @@ fn wall_surfaces(context: &Context<'_>, room: &SpaceRoom, rings: &[Vec<Vec2>], o
             let split = boundary == Boundary::Exterior && grade > 1e-9;
             let thickness = context.thickness(element);
             let inside_openings = if is_wall { hosted(context, element, &piece, thickness) } else { Vec::new() };
-            let cut: f64 = inside_openings.iter().map(|(_, frame)| frame.width * frame.height).sum();
+
             let curtain = context.snapshot.curtain_walls.get(element).and_then(|curtain| context.snapshot.curtain_wall_types.get(&curtain.curtain_wall_type).map(|kind| (curtain.curtain_wall_type.as_str(), kind)));
             let wall_type = context.snapshot.walls.get(element).map_or("", |wall| wall.wall_type.as_str());
-            let wall_u = |boundary: Boundary| -> Option<f64> {
+            let wall_u = |boundary: Boundary| -> Result<f64, String> {
                 if !is_wall {
-                    return curtain.and_then(|(_, kind)| kind.u_value);
+                    return curtain.and_then(|(_, kind)| kind.u_value).ok_or_else(|| curtain.map_or_else(|| "curtain wall".to_string(), |(kind, _)| kind.to_string()));
                 }
                 let layers = context.snapshot.wall_types.get(wall_type).map(|kind| kind.layers.as_slice());
-                construction(context.snapshot, layers, HeatFlow::Horizontal, far_side(boundary), element).ok()
+                construction(context.snapshot, layers, HeatFlow::Horizontal, far_side(boundary), wall_type)
             };
             let azimuth = context.azimuth(piece.normal);
             walls += 1;
@@ -576,12 +580,17 @@ fn wall_surfaces(context: &Context<'_>, room: &SpaceRoom, rings: &[Vec<Vec2>], o
             };
             for (part_boundary, part_height, z0, z1, part_id) in parts.into_iter().filter(|part| part.1 > 1e-9) {
                 let gross = piece.length * part_height;
-                let net = if part_boundary == Boundary::Ground { gross } else { (gross - cut).max(0.0) };
-                let u_value = wall_u(part_boundary);
-                if u_value.is_none() {
-                    let detail = if is_wall { wall_type.to_string() } else { curtain.map_or_else(|| "curtain wall".to_string(), |(kind, _)| kind.to_string()) };
+                let direction = [(piece.end[0] - piece.start[0]) / piece.length, (piece.end[1] - piece.start[1]) / piece.length];
+                let cut: f64 = inside_openings.iter().map(|(_, frame)| {
+                    let reach = (frame.point.x - piece.start[0]) * direction[0] + (frame.point.y - piece.start[1]) * direction[1];
+                    let width = ((reach + frame.width / 2.0).min(piece.length) - (reach - frame.width / 2.0).max(0.0)).max(0.0);
+                    let height = ((frame.local.origin.z + frame.height).min(z1) - frame.local.origin.z.max(z0)).max(0.0);
+                    width * height
+                }).sum();
+                let net = (gross - cut).max(0.0);
+                let u_value = wall_u(part_boundary).map_err(|detail| {
                     out.issues.push(EnergyIssue { code: EnergyCode::ThermalDataMissing, element: element.to_string(), detail });
-                }
+                }).ok();
                 out.surfaces.push(EnvelopeSurface {
                     id: part_id.clone(),
                     kind: if is_wall { SurfaceKind::Wall } else { SurfaceKind::CurtainWall },
@@ -603,7 +612,7 @@ fn wall_surfaces(context: &Context<'_>, room: &SpaceRoom, rings: &[Vec<Vec2>], o
                 if part_boundary == Boundary::Exterior || !split {
                     for (opening, frame) in &inside_openings {
                         openings += 1;
-                        if let Some(surface) = opening_surface(context, opening, frame, element, &part_id, part_boundary, &adjacent, &piece, openings, &mut out.issues) {
+                        if let Some(surface) = opening_surface(context, opening, frame, element, &part_id, part_boundary, &adjacent, &piece, z0, z1, openings, &mut out.issues) {
                             out.surfaces.push(surface);
                         }
                     }
@@ -611,6 +620,16 @@ fn wall_surfaces(context: &Context<'_>, room: &SpaceRoom, rings: &[Vec<Vec2>], o
             }
         }
     }
+}
+
+fn simple_outlines(region: &Region) -> Vec<Vec<Vec2>> {
+    if region.holes.is_empty() { return vec![region.outer.clone()]; }
+    let points = |ring: &[Vec2]| ring.iter().map(|point| Point::new(point[0], point[1])).collect::<Vec<_>>();
+    let triangulated = semio_framework_geometry::triangulation::triangulate(&points(&region.outer), &region.holes.iter().map(|ring| points(ring)).collect::<Vec<_>>());
+    triangulated.triangles.iter().map(|triangle| triangle.iter().map(|index| {
+        let point = triangulated.vertices[*index as usize];
+        [point.x, point.y]
+    }).collect()).collect()
 }
 
 fn horizontal_surfaces(context: &Context<'_>, room: &SpaceRoom, own: &Region, storey: &str, up: bool, out: &mut EnvelopeSpace) {
@@ -623,18 +642,31 @@ fn horizontal_surfaces(context: &Context<'_>, room: &SpaceRoom, own: &Region, st
     let control = &mut |_: &semio_framework_2d::booleans::BooleanProgress| true;
     let mut parts: Vec<(Option<&str>, f64, Vec<Vec2>, Vec2)> = Vec::new();
     for (id, region) in &others {
-        let overlap = region_boolean(BooleanOperation::Intersection, std::slice::from_ref(own), std::slice::from_ref(region), control).unwrap_or_default();
-        let area: f64 = overlap.iter().map(Region::area).sum();
-        if area > MIN_PART {
-            if let Some(largest) = overlap.iter().max_by(|a, b| a.area().total_cmp(&b.area())) {
-                let at = interior_point(largest).map_or([room.point.x, room.point.y], |point| [point.x, point.y]);
-                parts.push((Some(id), area, largest.outer.clone(), at));
+        let overlap = region_boolean(BooleanOperation::Intersection, std::slice::from_ref(own), std::slice::from_ref(region), control, &mut BlockingTurns::new(1 << 20)).unwrap_or_default();
+        for region in overlap {
+            for outline in simple_outlines(&region) {
+                let part = Region::new(&outline, &[]);
+                let area = part.area();
+                if area > MIN_PART {
+                    let at = interior_point(&part).map_or([room.point.x, room.point.y], |point| [point.x, point.y]);
+                    parts.push((Some(id), area, outline, at));
+                }
             }
         }
     }
-    let rest = own.area() - parts.iter().map(|part| part.1).sum::<f64>();
-    if rest > MIN_PART || parts.is_empty() {
-        parts.push((None, rest.max(0.0), own.outer.clone(), [room.point.x, room.point.y]));
+    let covers: Vec<Region> = others.iter().map(|(_, region)| region.clone()).collect();
+    let remainder = if covers.is_empty() { vec![own.clone()] } else {
+        region_boolean(BooleanOperation::Difference, std::slice::from_ref(own), &covers, control, &mut BlockingTurns::new(1 << 20)).unwrap_or_default()
+    };
+    for region in remainder {
+        for outline in simple_outlines(&region) {
+            let part = Region::new(&outline, &[]);
+            let area = part.area();
+            if area > MIN_PART {
+                let at = interior_point(&part).map_or([room.point.x, room.point.y], |point| [point.x, point.y]);
+                parts.push((None, area, outline, at));
+            }
+        }
     }
     let on_datum = room.floor_z <= 1e-9;
     let z = if up { room.floor_z + room.clear_height } else { room.floor_z };
@@ -647,12 +679,11 @@ fn horizontal_surfaces(context: &Context<'_>, room: &SpaceRoom, own: &Region, st
         let flow = if up { HeatFlow::Up } else { HeatFlow::Down };
         let found = if up { neighbour.as_deref().and_then(|above| slab_layers(context.snapshot, above, at)).or_else(|| roof_layers(context.snapshot, storey, at)) } else { slab_layers(context.snapshot, storey, at) };
         let label = if up { "ceiling" } else { "floor" };
-        let u_value = construction(context.snapshot, found.map(|(_, _, layers)| layers), flow, far_side(boundary), label).ok();
+        let u_value = construction(context.snapshot, found.map(|(_, _, layers)| layers), flow, far_side(boundary), label).map_err(|detail| {
+            out.issues.push(EnergyIssue { code: EnergyCode::ThermalDataMissing, element: context.space.to_string(), detail });
+        }).ok();
         let (holder, kind) = found.map_or((String::new(), String::new()), |(holder, kind, _)| (holder.to_string(), kind.to_string()));
         let element = if holder.is_empty() { format!("{storey}/{label}") } else { holder.clone() };
-        if u_value.is_none() {
-            out.issues.push(EnergyIssue { code: EnergyCode::ThermalDataMissing, element: context.space.to_string(), detail: label.to_string() });
-        }
         let mut polygon = polygon_at(&oriented(outline, true), z);
         if !up {
             polygon.reverse();

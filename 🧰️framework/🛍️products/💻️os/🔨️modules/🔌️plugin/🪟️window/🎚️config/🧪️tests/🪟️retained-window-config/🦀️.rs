@@ -23,7 +23,7 @@ async fn original_window_constructor_cancellation_preserves_carriers_and_full_ph
     let grant=RetainedCloneGrant{maximum_items:original[0].as_u64().unwrap()as usize,maximum_copy_bytes:original[1].as_u64().unwrap()as usize,maximum_capacity_bytes:original[2].as_u64().unwrap()as usize,maximum_release_bytes:original[3].as_u64().unwrap()as usize,maximum_depth:original[4].as_u64().unwrap()as usize};
     for capacity in [1usize,257,4096]{
         let mut owner=TypedWindowConfigStoreOwner::<Owner>{direct_ingress:ControlledRetirement::new(DirectIngress{mutations:Vec::new(),allocations:Vec::new(),addresses:Vec::new()}).map_err(|(error,_)|error).unwrap(),partitions:WindowRegistry::new(),partition_close_cursor:0,partition_address_retirement:None,actor:Some(protocol::ActorId(semio_framework_value::SharedUtf8::admit("window-actor".to_owned(),grant).unwrap().0)),actor_retirement:None};
-        let authority=owner.capture("original-window").await.unwrap();
+        let mut authority=owner.capture("original-window").await.unwrap();
         let mut inputs=Vec::with_capacity(1);
         let((mutation,mut actor),source_heap)=observe_heap_allocations_on_this_thread(||{
             let mut address=String::with_capacity(capacity.max("original-window".len()));address.push_str("original-window");
@@ -35,6 +35,11 @@ async fn original_window_constructor_cancellation_preserves_carriers_and_full_ph
         let input_pointer=inputs[0].window_id.as_ptr();
         let payload_pointer=inputs[0].mutation.as_any().downcast_ref::<Mutation>().unwrap()as *const Mutation;
         let actor_pointer=actor.as_ref().unwrap().original().unwrap().as_ptr();
+        let fresh=authority.revision;authority.revision[0]^=1;
+        let stale=owner.admit_begin(semio_framework_job::OperationId(17),&mut actor,&mut inputs,&authority,grant).err().expect("a begin on a superseded window root is refused");
+        assert_eq!(stale.kind,semio_framework_value::ValueRefusalKind::Canceled);assert_eq!(stale.to_string(),"original window authority is stale");
+        assert_eq!(inputs.len(),1);assert!(actor.is_some());assert_eq!(inputs[0].window_id.as_ptr(),input_pointer);assert_eq!(actor.as_ref().unwrap().original().unwrap().as_ptr(),actor_pointer);
+        authority.revision=fresh;
         let frame=std::mem::size_of::<TypedWindowConfigPublication<Owner>>();
         let copy=frame+std::mem::size_of::<WindowConfigMutation>()+std::mem::size_of::<FactoryBoxedValue<Mutation>>()+std::mem::size_of::<Mutation>();
         let birth=frame+std::mem::size_of::<Mutation>();

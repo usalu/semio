@@ -1,9 +1,9 @@
 //! 🧮️ Real EN 1990 public replay preparation pays nested owners under its original caller.
-use semio_framework_job::{Generation, OperationId, OriginalJobDecodeOwner, OriginalJobFixtureCaller};
+use semio_framework_job::{original_receiving_scope_headroom, Generation, OperationId, OriginalJobDecodeOwner, OriginalJobFixtureCaller};
 use semio_framework_os_store_one_item_batch::paged_one_item::ColdMutationApplyFactory;
 use semio_framework_value::{
     factory::ArcRootRetirement,
-    retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep},
+    retained_clone::{retained_clone_grant_admits, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep},
     retirement::{controlled::ControlledRetirement, RetireOwned},
     ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, FromValue, NativeDecodeControl, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkPoll, RetirementDemand, ValueError,
 };
@@ -12,9 +12,6 @@ use semio_os_store_replay_operation::{ArtifactMutationSource, ArtifactReplayPrep
 use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use semio_s_artifact_norm_en1990_mutations::En1990Mutation;
 use std::sync::Arc;
-
-#[global_allocator]
-static HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 const WORK: u64 = 1 << 16;
 const PAGE: usize = 4096;
@@ -58,31 +55,30 @@ impl Probe {
     fn new() -> Self {
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(199007), Generation(1), stock(), || Some(1), u64::MAX, 1 << 28);
         caller.retain_dispatch().unwrap();
-        let mut probe = Self { caller, decoder: OriginalJobDecodeOwner::empty(), turn: 0, unpaid: None };
-        for _ in 0..16 {
-            if probe.caller.turn(stock(), |cx| Ok(probe.decoder.admit_step(cx)?)).unwrap() {
-                break;
-            }
-        }
-        assert!(probe.decoder.source_loan_admitted());
+        caller.admit_return_table();
+        let decoder = caller.admitted_decoder();
+        let mut probe = Self { caller, decoder, turn: 0, unpaid: None };
         probe.run(RetainedCloneGrant::default(), |_| ((), RetainedCloneProgress::default()));
         let grant = retained(semio_framework_value::original_failure_storage_birth_demand());
         probe.run(grant, |control| {
-            let poll = control.with_retirement(grant, |receiving| Ok::<_, ValueError>(semio_framework_value::refill_original_failure_storage(receiving, grant))).unwrap();
+            let poll = control.prepare_failure_storage(grant);
             ((), settle(poll).progress())
         });
         probe
     }
 
     fn run<T>(&mut self, grant: RetainedCloneGrant, run: impl FnOnce(&mut NativeDecodeControl<'_>) -> (T, RetainedCloneProgress)) -> T {
+        let quantum = RetainedCloneGrant { maximum_items: grant.maximum_items.max(1), maximum_depth: grant.maximum_depth.max(1), ..grant };
+        let (items, copy, work) = original_receiving_scope_headroom();
+        let outer = RetainedCloneGrant { maximum_items: quantum.maximum_items + items, maximum_copy_bytes: quantum.maximum_copy_bytes + copy, ..quantum };
         let mut run = Some(run);
         let mut observed = None;
         for _ in 0..4096 {
             self.caller
-                .turn_with_decoder(stock(), &mut self.decoder, |cx| {
-                    cx.with_original_work_loan(WORK, u64::MAX, |cx| {
+                .refreshed_turn_with_decoder(outer, &mut self.decoder, |cx| {
+                    cx.with_original_work_loan(WORK + work, u64::MAX, |cx| {
                         let mut outcome = None;
-                        cx.with_native_receiving_quoted(&mut outcome, (stock(), WORK), |control, _| {
+                        cx.with_native_receiving_quoted(&mut outcome, (quantum, WORK), |control, _| {
                             observed = Some(semio_framework_trace::observe_heap_allocations_on_this_thread(|| run.take().expect("original receiving callback runs once")(control)));
                             Ok(())
                         })?;
@@ -98,7 +94,7 @@ impl Probe {
             }
         }
         self.turn += 1;
-        let ((value, progress), heap) = observed.expect("original replay receiving scope opened");
+        let ((value, progress), heap) = observed.unwrap_or_else(|| panic!("original replay receiving scope did not open on turn {} for {grant:?}", self.turn));
         assert!(progress.fits(grant), "original replay exceeded its physical grant");
         let actual = (heap.requested_bytes, heap.released_bytes);
         if actual != (progress.retained_capacity_bytes, progress.released_bytes) && self.unpaid.is_none() {
@@ -219,7 +215,8 @@ fn en1990_public_factory_pays_nested_projection_and_semantics() {
         maximum_depth: policy["depth"].as_u64().unwrap() as usize,
     };
     for index in policy["operationIndices"].as_array().unwrap() {
-        for prefix in std::iter::once(usize::MAX).chain(policy["cancelAfter"].as_array().unwrap().iter().map(|n| n.as_u64().unwrap() as usize)) {
+        let index = index.as_u64().unwrap() as u32;
+        for cancel_after in std::iter::once(None).chain(policy["cancelAfter"].as_array().unwrap().iter().map(|n| Some(n.as_u64().unwrap() as usize))) {
             let mut probe = Probe::new();
             let root = Arc::new(serde_json::from_str::<En1990Snapshot>(before).unwrap());
             let expected = serde_json::from_str::<En1990Snapshot>(after).unwrap();
@@ -243,7 +240,7 @@ fn en1990_public_factory_pays_nested_projection_and_semantics() {
             }
             let registry = SnapshotReadRegistryHandle::new();
             let lease = registry.try_issue(Arc::clone(&root)).unwrap_or_else(|_| panic!("original EN 1990 read lease"));
-            let context = ArtifactReplayPreparationContext { mode: ArtifactReplayPreparationMode::Prefix, operation_index: index.as_u64().unwrap() as u32, generation: 1, base_revision: [7; 32] };
+            let context = ArtifactReplayPreparationContext { mode: ArtifactReplayPreparationMode::Prefix, operation_index: index, generation: 1, base_revision: [7; 32] };
             let request = ArtifactReplayPreparationRequest { base: SnapshotRead::new(Arc::clone(&root), lease), input: input.take().unwrap(), context, snapshots: Arc::clone(&snapshots), mutations: Arc::clone(&mutations) };
             let factory = ColdMutationApplyFactory::<En1990Snapshot, En1990Mutation>::default();
             let birth = retained(ArtifactReplayPreparationFactory::preparation_birth_demand(&factory));
@@ -264,19 +261,32 @@ fn en1990_public_factory_pays_nested_projection_and_semantics() {
                 maximum_depth: funded.maximum_depth,
             };
             let grant = semio_os_kernel::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, ..denied };
-            for _ in 0..maximum.min(prefix) {
+            let mut last_advance = None;
+            let mut stagnant_turns = 0;
+            for turn in 0..maximum.min(cancel_after.unwrap_or(maximum)) {
                 let before = owner.advance_demands(body, WORK).unwrap();
+                assert!(retained_clone_grant_admits(funded, before), "operation {index}, cancellation {cancel_after:?}, turn {turn}: replay demand {before:?} exceeds {funded:?}; first heap mismatch {:?}", probe.unpaid);
                 let blocked = probe.run(funded, |control| {
                     let step = owner.advance(body, denied, control).unwrap();
                     (step, step.progress())
                 });
-                assert_eq!(blocked, ArtifactReplayPreparationStep::Blocked);
-                assert_eq!(owner.last_turn_work(), 0);
-                assert_eq!(owner.advance_demands(body, WORK).unwrap(), before);
-                let step = probe.run(funded, |control| {
+                assert_eq!(blocked, ArtifactReplayPreparationStep::Blocked, "denial at operation {index}, cancellation {cancel_after:?}, turn {turn}");
+                assert_eq!(owner.last_turn_work(), 0, "work on denial at operation {index}, turn {turn}");
+                assert_eq!(owner.advance_demands(body, WORK).unwrap(), before, "quote after denial at operation {index}, turn {turn}");
+                let (step, receiving) = probe.run(funded, |control| {
+                    let limits = (control.available_work_hint(), control.owned_bytes(), control.maximum_bytes(), control.has_retirement_failure_storage());
                     let step = owner.advance(body, grant, control).unwrap();
-                    (step, step.progress())
+                    ((step, limits), step.progress())
                 });
+                let work = owner.last_turn_work();
+                let after = owner.advance_demands(body, WORK).unwrap();
+                last_advance = Some((turn, before, step, work, after, receiving));
+                if step == ArtifactReplayPreparationStep::Blocked && work == 0 && after == before {
+                    stagnant_turns += 1;
+                    assert!(stagnant_turns < 32, "operation {index}, cancellation {cancel_after:?}, turn {turn}: funded replay stayed blocked at {before:?}; receiving (work, owned, maximum, failure storage) {receiving:?}; first heap mismatch {:?}", probe.unpaid);
+                } else {
+                    stagnant_turns = 0;
+                }
                 if let ArtifactReplayPreparationStep::Prepared(_) = step {
                     prepared = owner.take_prepared();
                     break;
@@ -289,7 +299,7 @@ fn en1990_public_factory_pays_nested_projection_and_semantics() {
                 probe.retire(prepared.inverse.unwrap());
                 probe.retire(prepared.messages);
             } else {
-                assert_ne!(prefix, usize::MAX, "actual EN 1990 public factory completes");
+                assert!(cancel_after.is_some(), "actual EN 1990 public factory did not complete operation {index}; last advance {last_advance:?}; first heap mismatch {:?}", probe.unpaid);
             }
             owner.cancel();
             owner.begin_close();
@@ -341,7 +351,7 @@ fn en1990_public_factory_pays_nested_projection_and_semantics() {
             probe.retire(semio_framework_value::FactoryAuthority::new(snapshots));
             probe.retire(semio_framework_value::FactoryAuthority::new(mutations));
             let unpaid = probe.finish();
-            assert_eq!(unpaid.is_none(), policy["expected"]["heapMatchesReceipts"].as_bool().unwrap(), "actual EN 1990 nested heap was not physically funded: {unpaid:?}");
+            assert_eq!(unpaid.is_none(), policy["expected"]["heapMatchesReceipts"].as_bool().unwrap(), "actual EN 1990 nested heap was not physically funded for operation {index}, cancellation {cancel_after:?}: {unpaid:?}");
         }
     }
 }

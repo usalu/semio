@@ -1,0 +1,21 @@
+{
+  "broker": [
+    {"name":"first oversized compiler", "parentMiB":2048, "availableMiB":16384, "wait":false, "peakMiB":2048, "expected":"refused"},
+    {"name":"unknown availability cannot enlarge its parent", "parentMiB":2048, "availableMiB":null, "wait":false, "peakMiB":2048, "expected":"refused"},
+    {"name":"idle timeout cannot enlarge its parent", "parentMiB":2048, "availableMiB":1, "wait":true, "peakMiB":2048, "expected":"refused"},
+    {"name":"unverified parent has no usable allowance", "parentMiB":0, "availableMiB":null, "wait":true, "peakMiB":1024, "expected":"refused"},
+    {"name":"unit within the parent with unknown availability", "parentMiB":2048, "availableMiB":null, "wait":false, "peakMiB":1024, "expected":"admitted"},
+    {"name":"unreserved broker keeps idle escape", "parentMiB":null, "availableMiB":1, "wait":true, "peakMiB":2048, "expected":"admitted"}
+  ],
+  "ledgers": [
+    {"name":"no enclosing capacity", "claim":"none", "state":"missing", "carriedMiB":null, "reservedMiB":null, "expectedMiB":null},
+    {"name":"actual live grant bounds the advertised envelope", "claim":"matching", "state":"live", "carriedMiB":8192, "reservedMiB":2048, "expectedMiB":2048},
+    {"name":"grown live grant is visible", "claim":"matching", "state":"live", "carriedMiB":2048, "reservedMiB":6144, "expectedMiB":6144},
+    {"name":"quiet grant grants no compiler start", "claim":"matching", "state":"quiet", "carriedMiB":8192, "reservedMiB":1024, "expectedMiB":0},
+    {"name":"lent grant grants no compiler start", "claim":"matching", "state":"lent", "carriedMiB":8192, "reservedMiB":6144, "expectedMiB":0},
+    {"name":"mismatched inherited grant cannot be spent", "claim":"different", "state":"live", "carriedMiB":8192, "reservedMiB":6144, "expectedMiB":0},
+    {"name":"missing ledger is not permission to allocate", "claim":"matching", "state":"missing", "carriedMiB":8192, "reservedMiB":null, "expectedMiB":0}
+  ],
+  "overhead": {"parentMiB":2400,"nonCompilerMiB":1000,"peakMiB":1536,"secondPeakMiB":1024},
+  "fleetOnly": {"parentMiB":2048,"peakMiB":1024,"reason":"fleet-placement","allowanceBytes":0}
+}

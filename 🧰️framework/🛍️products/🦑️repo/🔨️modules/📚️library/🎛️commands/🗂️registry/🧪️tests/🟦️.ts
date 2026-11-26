@@ -12,6 +12,7 @@ import { buildOwnedInvocationV1, dependencyGateV1, dependencyProvisionPortsV1, e
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import data from "../🔣️.json" with { type: "json" };
 import fixture from "./🔣️.json" with { type: "json" };
+import catalogue from "../../../🏗️build/⚙️operations/🔣️catalog.json" with { type: "json" };
 
 const root = resolve(import.meta.dir, "../../../../../../../.."), registry = rootCommandRegistryV1();
 type Patch = Readonly<{ op: "set" | "delete"; path: readonly (string | number)[]; value?: unknown }>;
@@ -264,4 +265,18 @@ test("the default provisioning ports keep stdout clean for the command that foll
   expect(written.out.join("")).toBe("");
   expect(written.err.join("")).toContain("gate-line");
   expect(written.err.join("")).toContain("[dependencies] child-line");
+});
+
+test("every repair command of the operations catalogue names a root command and a lane its module really handles", () => {
+  const repairs = (catalogue as unknown as { repairs: { id: string; command: string }[] }).repairs;
+  expect(repairs.length).toBeGreaterThan(0);
+  for (const repair of repairs) {
+    const [frontend, script, id, lane, ...rest] = repair.command.split(" ");
+    expect([frontend, script]).toEqual(["repo", "./📜️script.ts"]);
+    const command = registry.commands.find((candidate) => candidate.id === id);
+    expect(command, repair.command).toBeDefined();
+    const sources = ["🌳️root/🟦️.ts", "🧾️taxonomy-lanes/🟦️.ts", "🏁️gate-lanes/🟦️.ts", "🟦️.ts"].map((path) => join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify", path)).filter(existsSync).map((path) => readFileSync(path, "utf8")).join("\n");
+    expect(sources, repair.command).toContain(`segments[0] === "${lane}"`);
+    for (const word of rest) expect(sources, repair.command).toContain(`segments[0] === "${word}"`);
+  }
 });

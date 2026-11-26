@@ -1,0 +1,14 @@
+[
+ {
+  "scale": "500",
+  "key": "silhouette",
+  "en": "Every filled shape is the true outline of the 1:500 model per bone: head with hair, the sunglasses band, jacket, sleeves, hands as single forms, hips, thigh and shank, one boot per foot, the bag block; the cane from the fist to the ground a good step ahead. Arms, hands and the cane are solids of their side profile (sleeves and shaft revolved about their bone, the hands as prisms), so they follow the turned arm and the sweeping cane in every view. The cane is drawn as a 40 mm strip with a 0.17 mm outline (its true 12 mm would vanish, and a wider strip would close the gap between the boots), and the smallest parts (the fist, the glasses band, the fringe, shanks and boots) carry a 0.16 to 0.17 mm outline so that they stay printable down to 1:1000, the coarse end of the band.",
+  "de": "Jede gefüllte Form ist der wahre Umriss des 1:500-Modells je Knochen: Kopf mit Haar, das Brillenband, Jacke, Ärmel, Hände als Einzelformen, Hüfte, Ober- und Unterschenkel, ein Stiefel je Fuß, der Taschenblock; der Stock von der Faust zum Boden einen guten Schritt voraus. Arme, Hände und der Stock sind Körper aus ihrem Seitenprofil (Ärmel und Schaft um ihren Knochen gedreht, die Hände als Prismen) und folgen so in jeder Ansicht dem gedrehten Arm und dem pendelnden Stock. Der Stock ist als 40 mm breiter Streifen mit 0,17 mm starker Kontur gezeichnet (seine wahren 12 mm verschwänden, und ein breiterer Streifen schlösse die Lücke zwischen den Stiefeln), und die kleinsten Teile (Faust, Brillenband, Pony, Unterschenkel und Stiefel) tragen eine 0,16 bis 0,17 mm starke Kontur, damit sie bis 1:1000, dem groben Ende des Bereichs, druckbar bleiben."
+ },
+ {
+  "scale": "500",
+  "key": "thinElements",
+  "en": "The 12 mm cane is drawn as a strip of 40 mm (0.08 mm) with a 0.17 mm pen, about three times its width, kept because without the cane the asset is a generic pedestrian; the strap is a 0.1 mm stroke; the right fist has a 0.17 mm pen so that it prints.",
+  "de": "Der 12-mm-Stock ist als Streifen von 40 mm (0,08 mm) mit 0,17-mm-Stift gezeichnet, etwa dreimal so breit, beibehalten, weil das Asset ohne Stock ein beliebiger Fußgänger wäre; der Gurt ist ein 0,1-mm-Strich; die rechte Faust hat einen 0,17-mm-Stift, damit sie druckt."
+ }
+]

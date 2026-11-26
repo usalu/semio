@@ -24,7 +24,9 @@
     ],
     "nativeTestSources": [
       "default",
-      "reads"
+      "reads",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧪️tests/🧫️fixtures/folder-custody.json",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🗒️note/🧩️component/🔣️.json"
     ],
     "testEnv": [
       { "env": "SEMIO_TEST_LEVEL" },

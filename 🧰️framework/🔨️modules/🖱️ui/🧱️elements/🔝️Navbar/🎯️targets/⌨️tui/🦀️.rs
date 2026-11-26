@@ -30,7 +30,7 @@ fn paint_items(items: &[NavItem], theme: &Theme, x: u16, y: u16, bg: [u8; 3], cl
 }
 
 pub fn paint_navbar(n: &NavbarState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, emphasized: bool) {
-    let bg = theme.surface(Surface::Base);
+    let bg = theme.surface(Surface::Panel);
     let (content, hairline) = rect.split_bottom(1);
     buf.fill_rect(content, Cell::blank(theme.role(Role::Foreground), bg));
     let left_width = items_width(&n.left).min(content.width);

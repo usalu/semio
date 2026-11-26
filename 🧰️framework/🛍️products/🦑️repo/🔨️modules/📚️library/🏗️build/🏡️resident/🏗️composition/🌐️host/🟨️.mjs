@@ -1,5 +1,6 @@
 /** 🏗 Composition root of `repo service host --foreground`: binds the graph loader to the per-host service and ties its lifetime to the process signals. */
 import {spawn,spawnSync} from "node:child_process";
+import {processPidExistsV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs";
 import {createHash} from "node:crypto";
 import {basename,dirname,join} from "node:path";
 import {mkdirSync,openSync,readdirSync,rmSync} from "node:fs";
@@ -19,7 +20,7 @@ import {ensureLauncherConsentV1,launchdRouteV1,listServiceJobsV1,startViaLaunchd
 import {createResponsibilityWatchV1} from "../../🔐️consent/🧷️responsibility/🟨️.mjs";
 import {fileURLToPath} from "node:url";
 
-const processLivesV1=pid=>{try{process.kill(pid,0);return true;}catch(error){return error?.code==="EPERM";}};
+const processLivesV1=pid=>processPidExistsV1(pid);
 
 /** 🪵️ One service log line on stderr, which the detached service redirects to its log file. */
 export function writeHostServiceLogV1(event,detail){process.stderr.write(new Date().toISOString()+" "+event+(detail===undefined?"":" "+detail)+"\n");}

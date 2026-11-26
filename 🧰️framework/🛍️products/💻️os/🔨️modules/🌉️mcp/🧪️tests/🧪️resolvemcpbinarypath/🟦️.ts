@@ -40,18 +40,16 @@ export async function registerTests1(
   const { cargoDepInfoSourcesV1 } = await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts");
   const gate = JSON.parse(readFileSync(new URL("../🎚️config/🧱️binary-gate.json", source.url), "utf8")) as {
     sourcesFile: string;
+    pathCases: Array<{ name: string; platform: NodeJS.Platform; repoRoot: string; environment: NodeJS.ProcessEnv; expected: string }>;
+    builtPathCases: Array<{ platform: NodeJS.Platform; repoRoot: string; environment: NodeJS.ProcessEnv; profile: "debug" | "release"; expected: string }>;
     depInfoCases: Array<{ name: string; text: string; sources: string[] }>;
     freshnessCases: Array<{ name: string; builtAtMs: number; modified: Record<string, number | null>; fresh: boolean; changed: string | null }>;
   };
 
-  const { describe, expect, it } = vitest;
+  const { describe, expect, it, vi } = vitest;
 
   describe("resolveMcpBinaryPath", () => {
-    const fixture = JSON.parse(readFileSync(new URL("../🎚️config/🧱️binary-gate.json", source.url), "utf8")) as {
-      pathCases: Array<{ name: string; platform: NodeJS.Platform; repoRoot: string; environment: NodeJS.ProcessEnv; expected: string }>;
-    };
-
-    for (const testCase of fixture.pathCases) {
+    for (const testCase of gate.pathCases) {
       it(testCase.name, () => {
         expect(resolveMcpBinaryPath(testCase.repoRoot, testCase.environment, testCase.platform)).toBe(testCase.expected);
       });
@@ -66,10 +64,17 @@ export async function registerTests1(
     });
 
     it("keeps the staged consumer independent from mutable compiler directories", () => {
-      for (const platform of ["darwin", "linux", "win32"] as const) {
-        const root = platform === "win32" ? "C:\\repo" : "/repo";
-        expect(resolveMcpBinaryPath(root, { CARGO_TARGET_DIR: "scratch/target" }, platform)).toBe(resolveMcpBinaryPath(root, {}, platform));
-        expect(resolveBuiltMcpBinaryPath(root, { CARGO_TARGET_DIR: "scratch/target" }, platform)).not.toBe(resolveMcpBinaryPath(root, {}, platform));
+      vi.stubEnv("SEMIO_SCRIPT_PROVIDERS", JSON.stringify({ version: 1, providers: { unrelated: source.directory } }));
+      try {
+        for (const { repoRoot, environment, platform, profile, expected } of gate.builtPathCases) {
+          const staged = resolveMcpBinaryPath(repoRoot, {}, platform);
+          expect(resolveMcpBinaryPath(repoRoot, environment, platform)).toBe(staged);
+          expect(resolveBuiltMcpBinaryPath(repoRoot, environment, platform, profile)).toBe(expected);
+          expect(expected).not.toBe(staged);
+        }
+        expect(() => resolveBuiltMcpBinaryPath("/workspace/semio", {}, "linux")).toThrow("Script provider repository-tooling is not designated");
+      } finally {
+        vi.unstubAllEnvs();
       }
     });
   });

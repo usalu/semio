@@ -45,6 +45,7 @@
           "fallbackMilliseconds": 500
         },
         "key": {
+          "outputRootScanVersion": "1",
           "environmentPrefixes": [
             "CARGO_PKG_"
           ],

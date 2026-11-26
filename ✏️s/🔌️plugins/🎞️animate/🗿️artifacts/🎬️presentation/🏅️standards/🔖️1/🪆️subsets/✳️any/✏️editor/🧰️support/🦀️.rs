@@ -94,16 +94,6 @@ pub fn interaction_select_effect(ids: &[String], merge: &str) -> Effect {
 //#endregion 🔖️Interaction
 
 //#region 🔖️Helpers
-/// 🔢️ Mints a fresh, process-unique tile id — shared by `🎮️commands/🀄️add-tile::add_tile` and
-/// `🎮️commands/⌨️engagement::engagement_submit`'s `"add"` keyword.
-pub fn new_tile_id(prefix: &str) -> String {
-    let serial = {
-        let hex = framework_hash::hash_bytes(concat!(file!(), line!()).as_bytes());
-        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
-    };
-    format!("{prefix}-{serial}")
-}
-
 /// 🧱️ The concrete rows that make the tile roster `next`: one `delete-tiles` of every tile the deck holds, then one position-exact
 /// `create-tile` per new tile — never a whole-roster replace.
 pub fn tile_roster_mutations(deck: &PresentationSnapshot, next: Vec<FigureTileDraft>) -> Vec<PresentationMutation> {

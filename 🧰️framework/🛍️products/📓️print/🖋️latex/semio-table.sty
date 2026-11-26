@@ -73,9 +73,9 @@
 
 \newcommand{\SemioTableRegisterRow}[3]{%
   \SemioTableRow{%
-    \cellcolor{semio-chrome-canvas}\semio@toc@number{#1} &
-    \cellcolor{semio-chrome-canvas}{\semio@table@register@indent{#1}#2} &
-    \cellcolor{semio-chrome-canvas}\semio@table@register@page{#3}
+    \cellcolor{semio-chrome-interior}\semio@toc@number{#1} &
+    \cellcolor{semio-chrome-interior}{\semio@table@register@indent{#1}#2} &
+    \cellcolor{semio-chrome-interior}\semio@table@register@page{#3}
   }%
 }
 
@@ -105,9 +105,9 @@
 % can jump back here. Placed after \cellcolor, which colortbl requires first.
 \newcommand{\SemioTableTocRow}[3]{%
   \SemioTableRow{%
-    \cellcolor{semio-chrome-canvas}\semio@tocline@anchor{#1}\semio@toc@link{#3}{\mbox{\semio@toc@number{#1}}} &
-    \cellcolor{semio-chrome-canvas}\semio@toc@link{#3}{\textcolor{semio-chrome-text-normal}{#2}} &
-    \cellcolor{semio-chrome-canvas}\semio@toc@page@link{#3}
+    \cellcolor{semio-chrome-interior}\semio@tocline@anchor{#1}\semio@toc@link{#3}{\mbox{\semio@toc@number{#1}}} &
+    \cellcolor{semio-chrome-interior}\semio@toc@link{#3}{\textcolor{semio-chrome-text-normal}{#2}} &
+    \cellcolor{semio-chrome-interior}\semio@toc@page@link{#3}
   }%
 }
 
@@ -238,8 +238,8 @@
 % leaves a page-coloured strip between the last cell's \cellcolor and the
 % border (measured ~1.5pt = \semio@chrome@padding on every table type).
 \newcommand{\semio@table@padcp}{}
-\newcommand{\semio@table@padendL}{{\color{semio-chrome-canvas}\vrule width \semio@chrome@padding}}
-\newcommand{\semio@table@padendR}{{\color{semio-chrome-canvas}\vrule width \semio@chrome@padding}}
+\newcommand{\semio@table@padendL}{{\color{semio-chrome-interior}\vrule width \semio@chrome@padding}}
+\newcommand{\semio@table@padendR}{{\color{semio-chrome-interior}\vrule width \semio@chrome@padding}}
 % Outer table side rules as @{} inserts (not preamble | tokens). Array | rules
 % intersect \hhline and paint short horizontal ticks on every vertical at row
 % boundaries; border-colored \vrule inserts do not. Omitted when the enclosing
@@ -339,14 +339,14 @@
 % zero glue last restores the "word preceded by glue" precondition (see the
 % Hyphenation Safety note in semio-core.sty). The strut still sets the first
 % line's height either way; the glue is zero-width, so nothing shifts visually.
-\newcommand{\semio@cell@pre}{\cellcolor{semio-chrome-canvas}\raggedright\arraybackslash\semio@cell@inset\semio@cell@struttop\hspace{0pt}}
+\newcommand{\semio@cell@pre}{\cellcolor{semio-chrome-interior}\raggedright\arraybackslash\semio@cell@inset\semio@cell@struttop\hspace{0pt}}
 \newcommand{\semio@table@long@cellfill}{%
-  \cellcolor{semio-chrome-canvas}%
+  \cellcolor{semio-chrome-interior}%
   \raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\semio@cell@inset\semio@cell@struttop\hspace{0pt}%
 }
 \let\semio@table@long@cellfill@first\semio@table@long@cellfill
 \newcommand{\semio@table@long@cellfillR}{%
-  \cellcolor{semio-chrome-canvas}%
+  \cellcolor{semio-chrome-interior}%
   \raggedleft\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\semio@cell@inset\semio@cell@struttop\hspace{0pt}%
 }
 \newcolumntype{T}[1]{%
@@ -597,7 +597,7 @@
       \vss
       \hbox{%
         \hskip\arrayrulewidth
-        \textcolor{semio-chrome-canvas}{\rule{\dimexpr\linewidth-2\arrayrulewidth\relax}{\arrayrulewidth}}%
+        \textcolor{semio-chrome-interior}{\rule{\dimexpr\linewidth-2\arrayrulewidth\relax}{\arrayrulewidth}}%
       }%
     }%
   }%
@@ -794,7 +794,7 @@
   % so array's row scanner reads it as the start of a new cell and opens an
   % empty strut-height phantom row ? a cream band for a plain column, or a dark
   % notch here because the \SemioProject colspec's first column carries
-  % \cellcolor{semio-chrome-canvas} in its >{...} prefix. \noalign runs the
+  % \cellcolor{semio-chrome-interior} in its >{...} prefix. \noalign runs the
   % assignment on the row boundary without opening that row, so the column-header
   % rule sits flush on the first body row (no gap) with an unbroken fill.
   \global\long\expandafter\def\expandafter\semio@table@long@head@current\expandafter{\l_semio_table_long_head_tl\noalign{\global\semio@table@row@startedfalse}}
@@ -950,7 +950,7 @@
 \newcommand{\SemioTableBandRow}[4]{%
   % #1 image path #2 colspan #3 title #4 meta
   \multicolumn{#2}{@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\semio@table@long@inner@w}@{}}{%
-    \cellcolor{semio-chrome-canvas}%
+    \cellcolor{semio-chrome-interior}%
     \raisebox{-0.15\height}{\includegraphics[height=\dimexpr 2\semio@table@body@height\relax,keepaspectratio]{#1}}\hspace{\semio@chrome@padding}%
     \textbf{#3}\newline#4
   }%
@@ -959,15 +959,15 @@
 %endregion GenericLongTable
 
 \newcommand{\SemioGlossaryTableRow}[3]{%
-  \SemioTableRow{\cellcolor{semio-chrome-canvas}#1 & \cellcolor{semio-chrome-canvas}#2 & \cellcolor{semio-chrome-canvas}\SemioTableGlossaryPages{#3}}%
+  \SemioTableRow{\cellcolor{semio-chrome-interior}#1 & \cellcolor{semio-chrome-interior}#2 & \cellcolor{semio-chrome-interior}\SemioTableGlossaryPages{#3}}%
 }
 
 \newcommand{\SemioGlossaryTableRowText}[3]{%
-  \SemioTableRow{\cellcolor{semio-chrome-canvas}#1 & \cellcolor{semio-chrome-canvas}#2 & \cellcolor{semio-chrome-canvas}#3}%
+  \SemioTableRow{\cellcolor{semio-chrome-interior}#1 & \cellcolor{semio-chrome-interior}#2 & \cellcolor{semio-chrome-interior}#3}%
 }
 
 \newcommand{\SemioTableGlossaryRow}[3]{%
-  \SemioTableRow{\cellcolor{semio-chrome-canvas}#1 & \cellcolor{semio-chrome-canvas}#2 & \cellcolor{semio-chrome-canvas}#3}%
+  \SemioTableRow{\cellcolor{semio-chrome-interior}#1 & \cellcolor{semio-chrome-interior}#2 & \cellcolor{semio-chrome-interior}#3}%
 }
 
 \ExplSyntaxOn
@@ -1114,7 +1114,7 @@
 % Data cells are vertically centred (m) with the same symmetric strut padding as
 % every other table; the top strut rides in the cell-fill prefix, the bottom
 % strut in each column's <{} slot.
-\newcommand{\semio@project@cellfill}{\cellcolor{semio-chrome-canvas}\raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\semio@cell@inset\semio@cell@struttop\hspace{0pt}}
+\newcommand{\semio@project@cellfill}{\cellcolor{semio-chrome-interior}\raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\semio@cell@inset\semio@cell@struttop\hspace{0pt}}
 \newcommand{\semio@project@colspec}{%
 @{\semio@table@border@L}@{\semio@project@padendL}>{\semio@project@cellfill}m{\dimexpr0.15\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
 @{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.13\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
@@ -1231,7 +1231,7 @@
 % Stadt stays in the Menge column. Both cells are \vtop-wrapped.
 \newcommand{\semio@project@overview@band}[7]{%
   \multicolumn{2}{@{\semio@table@border@L}@{\semio@project@padendL}p{\semio@project@photow}@{\semio@project@padcp}}{%
-    \cellcolor{semio-chrome-canvas}%
+    \cellcolor{semio-chrome-interior}%
     % Photo inset matches cell text: \semio@table@long@cellpad on every side.
     % Left gap is already that pad — keep it. Equal top/bottom cellpads alone
     % still look uneven because row packing below the photo box is larger than
@@ -1239,7 +1239,7 @@
     % inside the band (larger top pad, smaller bottom pad, same photo height)
     % so the visible gaps match without touching the meta cell (Stadt / Menge).
     \vtop{%
-      \color{semio-chrome-canvas}%
+      \color{semio-chrome-interior}%
       \hrule height\dimexpr\semio@table@long@cellpad+\semio@project@photo@vbias\relax depth\z@ width\dimexpr\linewidth\relax
       \nointerlineskip
       \hbox{%
@@ -1258,9 +1258,9 @@
   }%
   &
   \multicolumn{6}{@{}>{\raggedright\arraybackslash}p{\semio@project@metaw}@{\semio@project@padendR}@{\semio@table@border@R}}{%
-    \cellcolor{semio-chrome-canvas}%
+    \cellcolor{semio-chrome-interior}%
     \vtop{%
-      \color{semio-chrome-canvas}%
+      \color{semio-chrome-interior}%
       \hrule height\semio@window@bodypad depth\z@ width\dimexpr\linewidth\relax
       \nointerlineskip
       \hbox{%
@@ -1276,9 +1276,9 @@
 
 \newcommand{\semio@project@overview@band@eight}[9]{%
   \multicolumn{2}{@{\semio@table@border@L}@{\semio@project@padendL}p{\semio@project@photow}@{\semio@project@padcp}}{%
-    \cellcolor{semio-chrome-canvas}%
+    \cellcolor{semio-chrome-interior}%
     \vtop{%
-      \color{semio-chrome-canvas}%
+      \color{semio-chrome-interior}%
       \hrule height\dimexpr\semio@table@long@cellpad+\semio@project@photo@vbias\relax depth\z@ width\dimexpr\linewidth\relax
       \nointerlineskip
       \hbox{%
@@ -1297,9 +1297,9 @@
   }%
   &
   \multicolumn{6}{@{}>{\raggedright\arraybackslash}p{\semio@project@metaw}@{\semio@project@padendR}@{\semio@table@border@R}}{%
-    \cellcolor{semio-chrome-canvas}%
+    \cellcolor{semio-chrome-interior}%
     \vtop{%
-      \color{semio-chrome-canvas}%
+      \color{semio-chrome-interior}%
       \hrule height\semio@window@bodypad depth\z@ width\dimexpr\linewidth\relax
       \nointerlineskip
       \hbox{%

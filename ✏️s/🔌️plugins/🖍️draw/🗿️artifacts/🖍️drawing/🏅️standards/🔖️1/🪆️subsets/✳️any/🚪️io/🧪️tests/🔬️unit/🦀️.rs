@@ -22,7 +22,7 @@ async fn drawing_document_to_svg_preserves_shape_text_image_and_gradient_nodes()
     }
     let text = DrawingLayerNode::Text(DrawingTextBody { base: default_layer_base(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("T")).to_string().into()).expect("nonempty authored identity"), "T"), x: 0.0, y: 0.0, content: "<a & b>".into(), size: 12.0, font_family: semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::Anta });
     let mut assets = semio_framework_value::paged::PagedMap::default();
-    assets.insert("img".into(), DrawingImageAsset { width: 4, height: 4, samples: vec![[0,0,0,0];16].into() });
+    assets.insert("img", DrawingImageAsset { width: 4, height: 4, samples: vec![[0,0,0,0];16].into() });
     let image = create_drawing_image_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Image")).to_string().into()).expect("nonempty authored identity"), "Image", "img");
 
     let mut doc = default_drawing_document("svg-test", None);
@@ -44,11 +44,22 @@ async fn drawing_document_to_svg_preserves_shape_text_image_and_gradient_nodes()
 #[semio_framework_async_macros::async_test]
 async fn declared_export_rows_run_only_through_owned_factories() {
     use semio_framework::io_schema::{IoPayload, IoResult};
+    use semio_os_kernel::io::io_mechanism::IoRunControl;
+    let grant = semio_framework_value::RetainedCloneGrant {
+        maximum_items: 1,
+        maximum_copy_bytes: 1 << 20,
+        maximum_capacity_bytes: 1 << 20,
+        maximum_release_bytes: 1 << 20,
+        maximum_depth: 64,
+    };
+    let mut allow_encoding = |_| true;
+    let mut encode = semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes, &mut allow_encoding);
+    let mut control = IoRunControl::encoding(&mut encode, grant);
     for kind in ["s.stdio.pdf", "s.stdio.svg", "s.stdio.png", "s.stdio.dxf", "s.stdio.dwg"] {
         let entry = io().entries.iter().find(|entry| entry.into.artifact_kind == kind).unwrap_or_else(|| panic!("the {kind} serializer row is declared"));
         assert!(entry.owned_serializer.is_some(), "{kind} declares its owned factory");
         let doc = default_drawing_document("hop", None);
-        let result: IoResult<IoPayload> = (entry.run)(&IoPayload::Binary(<DrawingSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&doc)));
+        let result: IoResult<IoPayload> = (entry.run)(&IoPayload::Binary(<DrawingSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&doc)), &mut control);
         assert!(result.is_err(), "the borrowed {kind} hop refuses");
     }
 }

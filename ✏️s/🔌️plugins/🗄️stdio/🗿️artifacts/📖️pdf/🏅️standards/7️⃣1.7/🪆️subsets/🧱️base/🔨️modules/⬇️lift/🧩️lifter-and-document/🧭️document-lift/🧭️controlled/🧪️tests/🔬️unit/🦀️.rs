@@ -479,3 +479,65 @@ fn form_images_page_resources_and_acro_form_lift_like_the_reference_lifter_and_b
     assert!(form.pages.iter().flat_map(|page| &page.annotations).filter(|annotation| matches!(annotation.kind, PdfAnnotationKind::Widget { .. })).all(|annotation| annotation.appearance.is_some()), "every widget keeps its appearance streams");
     assert!(!form.forms.is_empty() && form.fonts.iter().any(|font| font.id == "Helv"), "the appearance streams type their forms and the shared default font");
 }
+
+/// 🪙️ What one browser turn grants a decode step: the copy grant, the retained items and the fuel (one unit per token, one per 64 body bytes the importer charges).
+const TURN_COPY: usize = 1_048_463;
+const TURN_ITEMS: usize = 63;
+const TURN_FUEL: usize = 4096;
+
+/// 🧮️ Drives the lift under the importer's accounting (copy charged per unit at 128 bytes, or two per body byte in a run of up to the turn's remaining copy, an allocation charged as copy unless it only reserves empty slots, a turn ending when its copy, item or fuel grant is spent or a demand cannot be met); the outcome, the turns and per stage `(calls, copy)`.
+fn controlled_lift_turns(retained: &PdfSnapshot) -> (Result<PdfSnapshot, String>, usize, std::collections::BTreeMap<&'static str, (usize, usize)>) {
+    use crate::standards::v1_7::subsets::base::modules::lift::ControlledDocumentLiftCursor;
+    let mut source = GraphSource::new(&retained.objects);
+    let mut cursor = DocumentLiftCursor::controlled();
+    let (mut turns, mut remaining, mut items, mut fuel, mut demanded, mut release) = (1, TURN_COPY, TURN_ITEMS, TURN_FUEL, 0, 0);
+    let mut report = std::collections::BTreeMap::new();
+    loop {
+        let stage = cursor.stage_name();
+        let empty = cursor.reserving_empty_slots();
+        let bodies = cursor.runs_bodies();
+        let inline = cursor.next_inline_body_bytes();
+        let unit = if bodies { 2 } else { 128.max(inline) };
+        if remaining < unit || items == 0 || fuel == 0 { turns += 1; (remaining, items, fuel) = (TURN_COPY, TURN_ITEMS, TURN_FUEL); }
+        let work = if bodies { (remaining.saturating_sub(demanded) / (2 * unit)).min(fuel * 64).max(ControlledDocumentLiftCursor::RUN_UNIT_MAXIMUM) } else { 1 };
+        if bodies && work * unit > remaining { turns += 1; (remaining, items, fuel) = (TURN_COPY, TURN_ITEMS, TURN_FUEL); }
+        let boundary = if empty { TURN_COPY * 2 } else { remaining.saturating_sub(unit * work) };
+        let grant = CosGrant { work, allocation_bytes: boundary.min(16 << 20), release_bytes: release.max(TURN_COPY) };
+        let turn = if bodies { cursor.advance_bodies(&retained.trailer, &retained.declared_version, &mut source, grant, false) } else { cursor.advance(&retained.trailer, &retained.declared_version, &mut source, grant, false) };
+        let copied = if empty { 0 } else { turn.allocated_bytes } + turn.work * unit;
+        remaining = remaining.saturating_sub(copied);
+        fuel = fuel.saturating_sub(turn.work.div_ceil(if bodies { 64 } else { 1 }));
+        items = items.saturating_sub(usize::from(turn.allocated_bytes != 0 || inline != 0 && turn.work != 0 && matches!(turn.event, Ok(ControlledLiftEvent::More)) || matches!(turn.event, Ok(ControlledLiftEvent::Complete))));
+        let entry = report.entry(stage).or_insert((0, 0));
+        *entry = (entry.0 + 1, entry.1 + copied);
+        (demanded, release) = (0, 0);
+        match turn.event {
+            Err(reason) => return (Err(reason.to_owned()), turns, report),
+            Ok(ControlledLiftEvent::NeedsAllocation { bytes }) => { demanded = bytes; turns += 1; (remaining, items, fuel) = (TURN_COPY, TURN_ITEMS, TURN_FUEL); }
+            Ok(ControlledLiftEvent::NeedsRelease { bytes }) => { release = bytes; turns += 1; (remaining, items, fuel) = (TURN_COPY, TURN_ITEMS, TURN_FUEL); }
+            Ok(ControlledLiftEvent::More) => {}
+            Ok(ControlledLiftEvent::Complete) => return (Ok(cursor.take_result().expect("completed controlled lift")), turns, report),
+            Ok(ControlledLiftEvent::Deferred(_)) => return (Err("deferred".to_owned()), turns, report),
+            event => panic!("unexpected controlled PDF lift state {event:?}"),
+        }
+    }
+}
+
+/// 🚦️ LAW: the lift fits its share of the registered route's settlement bound (512 host turns plus 512 per MiB of file, preparation and lift each at most half of it): under the browser turn's copy, item and fuel grants every real-world document lifts to the outcome single units reach in at most that many turns.
+#[test]
+fn real_world_documents_lift_within_half_of_their_route_turn_bound() {
+    let ledger: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🌍️real-world/🔣️.json")).unwrap();
+    let mut report = Vec::new();
+    for case in ledger["documents"].as_array().unwrap() {
+        let name = case["name"].as_str().unwrap();
+        let input = fixture_bytes!(format!("../../../../{}", case["path"].as_str().unwrap()));
+        let retained = decode_pdf(input).unwrap();
+        let (outcome, turns, stages) = controlled_lift_turns(&retained);
+        let (single, ..) = controlled_lift_driven(&retained, 0);
+        assert_eq!(outcome.map(typed), single.map(typed), "{name}: the accounted lift reaches the single-unit outcome");
+        let bound = (512 + 512 * input.len().div_ceil(1 << 20)) / 2;
+        report.push((name.to_owned(), turns));
+        assert!(turns <= bound, "{name}: lifted in {turns} turns, above {bound}: {stages:?}");
+    }
+    println!("lift turns (name, turns): {report:?}");
+}

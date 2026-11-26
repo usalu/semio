@@ -9,7 +9,7 @@ fn original_oriented_box_chamfer_keeps_the_exact_bevel_plane_and_reciprocal_trim
 }
 
 fn check_oriented_box_finish(fixture_text:&str,parameter:&str){
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_curve::Curve3;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_framework_3d_brep_surface::Surface;
@@ -181,7 +181,7 @@ fn check_oriented_box_finish(fixture_text:&str,parameter:&str){
 
 #[test]
 fn original_oriented_all_edge_box_chamfer_publishes_exact_bevel_and_corner_planes(){
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_curve::Curve3;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_framework_3d_brep_surface::Surface;

@@ -199,7 +199,7 @@ function DemonstratorLocaleLanding({ locale, onChooseLocale, focusHeading }: { r
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40">
             <Footer
               items={[aProjectOfLuhUdkFooterItem("landingProjectOf", locale, viewportMobile), navbarFillItem(), fundedByZukunftBauFooterItem("landingFundedBy", locale, viewportMobile)]}
-              className="pointer-events-auto ui-chrome-tint"
+              className="pointer-events-auto"
             />
           </div>
         )}
@@ -226,7 +226,6 @@ function DemonstratorLocaleLanding({ locale, onChooseLocale, focusHeading }: { r
                 { key: "language", content: <DemonstratorLocaleSwitcher locale={locale} onChoose={onChooseLocale} /> },
               ]}
               showFullscreenToggle={false}
-              className="ui-chrome-tint"
             />
           </div>
         )}

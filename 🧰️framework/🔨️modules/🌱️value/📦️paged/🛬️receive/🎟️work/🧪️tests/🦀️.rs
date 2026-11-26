@@ -4,6 +4,10 @@ fn denied_begin<R:NativeReceiver<crate::DslValue,T>,T>(receiver:&mut R){
     let denied=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0};
     let turn=crate::effect_fixture::turn::<crate::OriginalRetirementFailure>(denied,1<<20,&mut |effect,reply|receiver.begin_close_into(effect,reply));
     assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert!(!receiver.is_closing());
+    let funded=RetainedCloneGrant{maximum_items:16,maximum_copy_bytes:1<<16,maximum_capacity_bytes:1<<16,maximum_release_bytes:1<<16,maximum_depth:16};
+    crate::effect_fixture::turn::<crate::OriginalRetirementFailure>(funded,1<<20,&mut |effect,reply|receiver.begin_close_into(effect,reply)).result.unwrap();
+    for _ in 0..256{if receiver.terminal_is_empty(){break}crate::effect_fixture::turn::<crate::OriginalRetirementFailure>(funded,1<<20,&mut |effect,reply|receiver.close_step(4096,effect,reply)).result.unwrap();}
+    assert!(receiver.terminal_is_empty());
 }
 #[test]
 fn paged_receiver_headers_are_allocation_free_and_denied_close_start_is_zero_work(){

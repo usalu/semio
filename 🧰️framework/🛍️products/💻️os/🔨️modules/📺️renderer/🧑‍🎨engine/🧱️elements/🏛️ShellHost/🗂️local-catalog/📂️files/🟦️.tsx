@@ -2,7 +2,7 @@ import * as React from "../../../⚛️react-port/🟦️.ts";
 import type { LocalDocument } from "@semio-tech/framework/config/mutations";
 import { localizedLabelTextV1 } from "../../📣️replay-refusal/🟦️.ts";
 
-import { cn, glassClass, SharedBorderRow, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
+import { SharedBorderRow, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 const labels = {
   title: { en: "Files on this device", de: "Dateien auf diesem Gerät" },
   opening: { en: "Opening {name}…", de: "{name} wird geöffnet…" },
@@ -43,7 +43,7 @@ export function LocalFilesV1(props: Readonly<{
     }
   };
   if (documents.length === 0) return null;
-  return <SharedBorderRow as="section" orientation="vertical" aria-label={text("title")} data-level="pane" data-glass-chip="" className={cn("pointer-events-auto px-double py-double text-sm", glassClass)}>
+  return <SharedBorderRow as="section" orientation="vertical" aria-label={text("title")} className={"pointer-events-auto px-double py-double text-sm"}>
     <h2 className="font-semibold">{text("title")}</h2>
     <ul>{documents.map(document => <li key={document.documentId}>
       <button type="button" {...sharedBorderlessBoxProps} className="px-single py-single"

@@ -293,15 +293,18 @@ pub fn fem3d_load_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<
     Ok(instances)
 }
 
-/// 🚨️ The bilingual diagnostic a solid that cannot be meshed carries as its label (English, then German; the scene has no
-/// locale of its own), naming the solid and the mesher's reason.
-pub fn fem3d_unmeshable_solid_label(solid_id: &str, reason: &str) -> String {
-    format!("Solid {solid_id} cannot be meshed: {reason} | Körper {solid_id} lässt sich nicht vernetzen: {reason}")
+/// 🚨️ The diagnostic a solid that cannot be meshed carries as its label, in the requested locale only, naming the solid
+/// and the mesher's reason.
+pub fn fem3d_unmeshable_solid_label(solid_id: &str, reason: &str, locale: semio_plugin::Locale) -> String {
+    match locale {
+        semio_plugin::Locale::En => format!("Solid {solid_id} cannot be meshed: {reason}"),
+        semio_plugin::Locale::De => format!("Körper {solid_id} lässt sich nicht vernetzen: {reason}"),
+    }
 }
 
 /// 🚨️ The marker mesh and label of a solid the mesher refused: its outline prism (base to top along its axis) in the error
 /// tint, so it is still drawn, pickable and visibly wrong instead of silently missing.
-fn fem3d_unmeshable_solid_marker(solid: &FemSolid, reason: &str) -> (Value, String) {
+fn fem3d_unmeshable_solid_marker(solid: &FemSolid, reason: &str, locale: semio_plugin::Locale) -> (Value, String) {
     let count = solid.outline.len() as u32;
     let mut positions: Vec<f64> = Vec::with_capacity(count as usize * 6);
     for height in [solid.base_z, solid.base_z + solid.height] {
@@ -331,7 +334,7 @@ fn fem3d_unmeshable_solid_marker(solid: &FemSolid, reason: &str) -> (Value, Stri
         "colors": colors,
         "attributes": { "normal": { "domain": "face", "semantic": "normal", "interpolation": "constant", "values": normals } }
     } });
-    (mesh, fem3d_unmeshable_solid_label(&solid.id, reason))
+    (mesh, fem3d_unmeshable_solid_label(&solid.id, reason, locale))
 }
 
 /// 🧱️ Every `FemSolid`'s boundary surface as a custom `meshes_json` entry with indexed vertices and
@@ -340,7 +343,7 @@ fn fem3d_unmeshable_solid_marker(solid: &FemSolid, reason: &str) -> (Value, Stri
 /// `semio_s_fem_app_surface::von_mises_color` (min/max taken across ALL solids' averaged values), driving
 /// the react renderer's vertex-color contour (see `PaintTexturedMesh`). `displacements` deforms vertex
 /// positions the same way `fem3d_structural_instances` deforms node/member instances.
-pub fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> Result<(Vec<Value>, Vec<Value>), protocol::wire::ScopedIdentityError> {
+pub fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>, locale: semio_plugin::Locale) -> Result<(Vec<Value>, Vec<Value>), protocol::wire::ScopedIdentityError> {
     use semio_s_fem_app_surface::hex_to_rgb01;
     use semio_s_fem_app_surface::von_mises_color;
 
@@ -349,7 +352,7 @@ pub fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&Hash
     let (solid_meshes, failures) = mesh_preview::fem3d_mesh_preview_partial(doc);
     for (solid_id, reason) in &failures {
         let Some(solid) = doc.solids.iter().find(|solid| &solid.id == solid_id) else { continue };
-        let (mesh, label) = fem3d_unmeshable_solid_marker(solid, reason);
+        let (mesh, label) = fem3d_unmeshable_solid_marker(solid, reason, locale);
         meshes.push(mesh);
         instances.push(instance(solid_id, FEM3D_GRANULARITY_SOLID, &format!("solid-{solid_id}"), [0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0], &label)?);
     }
@@ -408,10 +411,10 @@ pub fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&Hash
 /// 🧊️ Builds the FULL `(meshes_json, instances_json)` pair for a 3D scene: the `"box"` and `"cone"`
 /// primitive meshes plus every `FemSolid`'s custom surface mesh, and every node/member/solid/support/
 /// load instance — shared by the model window and every results view (static/modal/buckling).
-pub fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> Result<(String, String), protocol::wire::ScopedIdentityError> {
+pub fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>, locale: semio_plugin::Locale) -> Result<(String, String), protocol::wire::ScopedIdentityError> {
     let mut meshes = semio_framework_pack_json::parse(&semio_plugin::world3d_meshes_json_from_kinds(&["box".to_string(), "cone".to_string()]), semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default();
     let mut instances = fem3d_structural_instances(doc, displacements, deform_scale)?;
-    let (solid_meshes, solid_instances) = fem3d_solid_mesh_entries(doc, displacements, deform_scale, nodal_stress)?;
+    let (solid_meshes, solid_instances) = fem3d_solid_mesh_entries(doc, displacements, deform_scale, nodal_stress, locale)?;
     meshes.extend(solid_meshes);
     instances.extend(solid_instances);
     instances.extend(fem3d_support_instances(doc, displacements, deform_scale)?);

@@ -29,7 +29,7 @@ import { type PluginWasmHandle as KernelPluginWasmHandle } from "@semio-tech/fra
 import { type PluginManifest, type PluginOperationCompletion, type PluginWasmHandle } from "../🧷️handle-contract/🟦️.ts";
 import { wireEffectToFriendly } from "../🪟️retained-ui-patch/🟦️.ts";
 import { TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN } from "../📬️typed-result/🟦️.ts";
-import { completionFanouts, pendingCompletionEffects, takeTypedOperationTerminalOutputV1 } from "../🏁️operation-completion/🟦️.ts";
+import { completionFanouts, pendingCompletionEffects, takeParkedEffectsV1, takeTypedOperationTerminalOutputV1 } from "../🏁️operation-completion/🟦️.ts";
 import {
   forgetPluginInstanceRetirementV1,
   markPluginInstanceRetiredForPluginV1,
@@ -201,11 +201,16 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       const mediaFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Media: unknown }> => "Media" in frame);
       return mediaFrame ? { port: mediaFrame.Media.port, descriptor: new Uint8Array(mediaFrame.Media.descriptor), data: new Uint8Array(mediaFrame.Media.data) } : null;
     },
-    importAppMedia: async (instanceId, port, descriptor, data) => {
+    importAppMedia: async (instanceId, port, descriptor, data, signal) => {
       const frames = await requireChannel(instanceId).mediaIn(port, descriptor, data);
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
       if (errorFrame) throw new Error(`importAppMedia failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
       if (!frames.some((frame) => "Done" in frame)) throw new Error("importAppMedia failed: missing completion receipt");
+      const parked = takeParkedEffectsV1(instanceId, "load-document");
+      if (parked.length > 1) throw new Error("importAppMedia failed: natural-file.document-load-ambiguous");
+      const load = parked.length === 1 ? wireEffectToFriendly(parked[0]!) : null;
+      if (load === null || typeof load !== "object" || !("loadDocument" in load)) return;
+      await requireChannel(instanceId).loadDocumentArchive({ parent_pack: load.loadDocument.pack, parent_spr: load.loadDocument.spr, members: [] }, signal);
     },
     ...mediaTransportPort(requireChannel),
     readAppDocumentArchive: (instanceId) => requireChannel(instanceId).readDocumentArchive(),

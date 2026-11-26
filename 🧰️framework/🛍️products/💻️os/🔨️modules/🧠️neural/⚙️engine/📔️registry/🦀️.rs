@@ -5,11 +5,14 @@ use std::collections::HashSet;
 use protocol::causal::transition::HistoryFoldIndex;
 use std::hash::Hash;
 use semio_framework_value::ValueType;
-use semio_os_kernel_neural_engine_model::{original_retirement_cursor, OperatorRetirement, Atom, Cardinality, ChannelSpec, ColdDictionaryBuilder, ColdOwner, ColdRetire, Dictionary, EvalError, FieldSpec, NeuralEngineError, Operator, OperatorInfo, OperatorPlanAdmission, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, SCHEMA_KEY, Schema, SchemaRef, VALUE_TYPE_LIST, VALUE_TYPE_NUMBER, Value, ValueRetirement, derive_channel_names, operator_signature, validate_neuron_inputs, validate_operator_outputs};
+use semio_os_kernel_neural_engine_model::{original_retirement_cursor, OperatorRetirement, Atom, Cardinality, ChannelSpec, ColdDictionaryBuilder, ColdOwner, ColdRetire, Dictionary, EvalError, FieldSpec, NeuralEngineError, Operator, OperatorInfo, OperatorPlanAdmission, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, SCHEMA_KEY, Schema, SchemaRef, VALUE_TYPE_LIST, VALUE_TYPE_NUMBER, Value, ValueRetirement, VariadicSpec, derive_channel_names, operator_signature, validate_neuron_inputs, validate_operator_outputs};
 
 #[path = "✅️output/🦀️.rs"]
 mod output;
 pub use output::OperatorFinishCursor;
+#[path = "🧵️variadic-signature/🦀️.rs"]
+mod variadic_signature;
+use variadic_signature::{Scan as VariadicScan, VariadicSignature};
 
 use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect,RetirementPollExit,ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::{RetireOwned,controlled::ControlledRetirement};
@@ -359,7 +362,11 @@ fn read_schema_field_input(input: &Dictionary, field: &FieldSpec) -> Result<Valu
 /// 🧩️ Construct, deconstruct, or modify dictionaries for one schema.
 pub struct SchemaComponent {
     pub schema: Schema,
+    program: Dictionary,
 }
+
+#[path = "⏱️schema-plan/🦀️.rs"]
+mod schema_plan;
 
 impl SchemaComponent {
     fn construct(&self, input: &Dictionary, provided: &[&FieldSpec]) -> Result<Dictionary, NeuralEngineError> {
@@ -412,16 +419,16 @@ impl SchemaComponent {
 }
 
 impl Operator for SchemaComponent {
-    fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)>{OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_copy:usize)->Result<usize,ValueError>{Ok(0)}
+    fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)>{schema_plan::admit(&self.program,input,grant)}
+    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(schema_plan::PLAN_COPY_BYTES)}
+    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_copy:usize)->Result<usize,ValueError>{Ok(schema_plan::PLAN_BYTES)}
     fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(0)}
     fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,ValueError>{Ok(1)}
 
-        fn retire_cold(self: Box<Self>) { self.schema.retire_cold(); }
+        fn retire_cold(self: Box<Self>) { self.program.retire_cold(); self.schema.retire_cold(); }
 
     fn retirement_is_empty(&self) -> bool {
-        self.schema.id.capacity()==0 && self.schema.module.capacity()==0 && self.schema.name.capacity()==0 && self.schema.icon.capacity()==0 && self.schema.summary.capacity()==0 && self.schema.fields.capacity()==0
+        self.program.is_empty() && self.schema.id.capacity()==0 && self.schema.module.capacity()==0 && self.schema.name.capacity()==0 && self.schema.icon.capacity()==0 && self.schema.summary.capacity()==0 && self.schema.fields.capacity()==0
     }
 
     fn next_retire_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(0)}
@@ -433,6 +440,12 @@ impl Operator for SchemaComponent {
         if self.retirement_is_empty() {return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));}
         if grant.maximum_items==0 {return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));}
         if grant.maximum_depth==0 {return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"Schema component handoff requires admitted depth").into());}
+        if !self.program.is_empty() {
+            let mut program=Some(std::mem::take(&mut self.program));
+            let turn=values.push_dictionary(&mut program,effect);
+            if let Some(program)=program {self.program=program;}
+            return Ok(RetainedCloneStep::Progress(turn.result?.unwrap_or_default()));
+        }
         let mut schema=Some(std::mem::take(&mut self.schema));
         let turn=values.push_schema(&mut schema,effect);
         if let Some(schema)=schema {self.schema=schema;}
@@ -470,15 +483,50 @@ pub struct OperatorRecord {
 
 /// 🧭️ Retains only scalar positions into the original registry and input owners.
 #[derive(Clone,Copy,Default)]
-pub struct OperatorPlanCursor {slot:usize,record:Option<usize>,implementation:usize,fallback:Option<usize>,channel:usize,signature:usize,rank:usize,offset:usize,value_rank:Option<usize>,schema_rank:Option<usize>,use_default:bool,phase:u8,progress:RetainedCloneProgress}
+pub struct OperatorPlanCursor {slot:usize,record:Option<usize>,implementation:usize,fallback:Option<usize>,channel:usize,signature:usize,rank:usize,offset:usize,value_rank:Option<usize>,schema_rank:Option<usize>,use_default:bool,phase:u8,progress:RetainedCloneProgress,variadic:VariadicSignature}
 semio_framework_value::artifact_retire_leaf!(OperatorPlanCursor);
 pub enum OperatorPlanStep {Working,Admitted(OperatorPlanAdmission)}
 impl OperatorPlanCursor {
     pub fn new()->Self{Self::default()}
     pub fn step_progress(&self)->RetainedCloneProgress{self.progress}
-    fn value<'a>(&self,record:&'a OperatorRecord,input:&'a Dictionary)->Option<&'a Value>{if self.use_default{record.info.inputs.get(self.channel)?.default.as_ref()}else{input.entry_at_rank(self.value_rank?).map(|(_,value)|value)}}
-    fn schema<'a>(&self,record:&'a OperatorRecord,input:&'a Dictionary)->&'a str{self.value(record,input).and_then(Value::as_dictionary).and_then(|dict|dict.entry_at_rank(self.schema_rank?)).and_then(|(_,value)|value.as_atom()).and_then(Atom::as_str).unwrap_or("")}
+    fn variadic_items<'a>(&self,input:&'a Dictionary)->Option<&'a Dictionary>{input.entry_at_rank(self.value_rank?)?.1.as_dictionary()}
+    fn channel_name<'a>(&self,record:&'a OperatorRecord)->Option<&'a str>{
+        record.info.variadic_input.as_ref().map(|spec|spec.slot_key.as_str()).or_else(||record.info.inputs.get(self.channel).map(|channel|channel.name.as_str()))
+    }
+    fn value<'a>(&self,record:&'a OperatorRecord,input:&'a Dictionary)->Option<&'a Value>{
+        if record.info.variadic_input.is_some(){return self.variadic_items(input)?.entry_at_rank(self.variadic.item_rank?).map(|(_,value)|value)}
+        if self.use_default{record.info.inputs.get(self.channel)?.default.as_ref()}else{input.entry_at_rank(self.value_rank?).map(|(_,value)|value)}
+    }
+    fn schema<'a>(&self,record:&'a OperatorRecord,input:&'a Dictionary)->Option<&'a str>{self.value(record,input)?.as_dictionary()?.entry_at_rank(self.schema_rank?)?.1.as_atom()?.as_str()}
+    fn expected_schema<'a>(&self,record:&'a OperatorRecord)->&'a str{
+        let implementation=&record.implementations[self.implementation];
+        &implementation.schemas[if implementation.repeated_schema(&record.info).is_some(){0}else{self.signature}]
+    }
+    fn reject_implementation(&mut self){self.implementation+=1;self.phase=1}
     fn compare(&mut self,left:&str,right:&str,grant:RetainedCloneGrant)->Option<bool>{let length=left.len().min(right.len());let count=(length-self.offset).min(grant.maximum_copy_bytes);if count==0&&self.offset<length{return None}let same=left.as_bytes()[self.offset..self.offset+count]==right.as_bytes()[self.offset..self.offset+count];self.offset+=count;self.progress=RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()};if !same{self.offset=0;Some(false)}else if self.offset==length{self.offset=0;Some(left.len()==right.len())}else{None}}
+}
+
+fn accepts_variadic_count(spec:&VariadicSpec,count:usize)->bool{count>=spec.min&&spec.max.is_none_or(|max|count<=max)}
+impl OperatorImpl {
+    fn repeated_schema<'a>(&'a self,info:&OperatorInfo)->Option<&'a str>{
+        let [schema]=self.schemas.as_slice() else{return None};
+        info.variadic_input.as_ref().map(|_|schema.as_str())
+    }
+
+    fn accepts_signature_count(&self,info:&OperatorInfo,count:usize)->bool{
+        if let Some(spec)=info.variadic_input.as_ref(){
+            if !accepts_variadic_count(spec,count){return false}
+            if self.repeated_schema(info).is_some(){return true}
+        }
+        count==self.schemas.len()
+    }
+
+    fn matches_signature(&self,info:&OperatorInfo,signature:&[String])->bool{
+        self.accepts_signature_count(info,signature.len())&&match self.repeated_schema(info){
+            Some(schema)=>signature.iter().all(|item|item==schema),
+            None=>self.schemas==signature,
+        }
+    }
 }
 
 /// 📋️ Registry of schemas and operators by id.
@@ -537,7 +585,7 @@ impl Registry {
             }
             self.schema_providers.get_or_insert(schema.id.clone(),HistoryFoldIndex::default()).insert(operator_id.clone(),());
             self.operator_produces.insert(operator_id.clone(), produces);
-            self.operators.insert(operator_id, OperatorRecord { info, implementations: vec![OperatorImpl { schemas: vec![], operator: Box::new(SchemaComponent { schema: schema.into_inner() }) }] }).retire_cold();
+            self.operators.insert(operator_id, OperatorRecord { info, implementations: vec![OperatorImpl { schemas: vec![], operator: Box::new(SchemaComponent { program: schema_plan::compile(&schema), schema: schema.into_inner() }) }] }).retire_cold();
         }
         let operator_produces = self.operator_produces.clone();
         let schema_providers = self.schema_providers.clone();
@@ -651,7 +699,7 @@ impl Registry {
         let implementation = operator
             .implementations
             .iter()
-            .find(|implementation| implementation.schemas == signature)
+            .find(|implementation| !implementation.schemas.is_empty() && implementation.matches_signature(&operator.info, &signature))
             .or_else(|| operator.implementations.iter().find(|implementation| implementation.schemas.is_empty()))
             .ok_or_else(|| EvalError::InvalidInput(format!("no implementation for {operator_id}({})", signature.join(", "))))?;
         let output = ColdOwner::new(implementation.operator.evaluate(input)?);
@@ -679,7 +727,15 @@ impl Registry {
     pub fn next_dispatch_job_demands(&self,operator_id:&str,input:&Option<Dictionary>,cursor:&OperatorPlanCursor,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
         let input=input.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original plan input is absent"))?;
         if cursor.phase==6{let record=self.operators.slot_entry(cursor.record.unwrap()).unwrap().1;let operator=&record.implementations[cursor.implementation].operator;return Ok(semio_framework_value::RetirementDemand{copy_bytes:operator.next_plan_copy_byte_demand(input)?,capacity_bytes:operator.next_plan_capacity_byte_demand(input,copy)?,release_bytes:operator.next_plan_release_byte_demand(input)?,depth:operator.next_plan_depth_demand(input)?})}
-        let bytes=match cursor.phase{0=>self.operators.slot_entry(cursor.slot).map_or(0,|(key,_)|usize::from(cursor.offset<key.len().min(operator_id.len()))),2=>cursor.record.and_then(|slot|self.operators.slot_entry(slot)).and_then(|(_,record)|record.info.inputs.get(cursor.channel)).and_then(|channel|input.entry_at_rank(cursor.rank).map(|(key,_)|usize::from(cursor.offset<key.len().min(channel.name.len())))).unwrap_or(0),3=>cursor.record.and_then(|slot|self.operators.slot_entry(slot)).and_then(|(_,record)|cursor.value(record,input)).and_then(Value::as_dictionary).and_then(|dictionary|dictionary.entry_at_rank(cursor.rank)).map_or(0,|(key,_)|usize::from(cursor.offset<key.len().min(SCHEMA_KEY.len()))),4=>cursor.record.and_then(|slot|self.operators.slot_entry(slot)).map_or(0,|(_,record)|usize::from(cursor.offset<cursor.schema(record,input).len().min(record.implementations[cursor.implementation].schemas[cursor.signature].len()))),_=>0};
+        let record=cursor.record.and_then(|slot|self.operators.slot_entry(slot)).map(|(_,record)|record);
+        let bytes=match cursor.phase{
+            0=>self.operators.slot_entry(cursor.slot).map_or(0,|(key,_)|usize::from(cursor.offset<key.len().min(operator_id.len()))),
+            2=>record.and_then(|record|cursor.channel_name(record)).zip(input.entry_at_rank(cursor.rank)).map_or(0,|(name,(key,_))|usize::from(cursor.offset<key.len().min(name.len()))),
+            3=>record.and_then(|record|cursor.value(record,input)).and_then(Value::as_dictionary).and_then(|dictionary|dictionary.entry_at_rank(cursor.rank)).map_or(0,|(key,_)|usize::from(cursor.offset<key.len().min(SCHEMA_KEY.len()))),
+            4=>record.map_or(0,|record|usize::from(cursor.offset<cursor.schema(record,input).unwrap_or("").len().min(cursor.expected_schema(record).len()))),
+            8=>cursor.variadic.copy_demand(cursor.variadic_items(input)),
+            _=>0,
+        };
         Ok(semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()})
     }
     /// ⏱️ Selects the original implementation without a cold lookup or allocated signature mirror.
@@ -692,13 +748,78 @@ impl Registry {
         cursor.progress=RetainedCloneProgress{copied_items:1,..Default::default()};
         if cursor.phase==0{if cursor.slot==self.operators.slot_count(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original operator kind is absent").into())}if let Some((key,_))=self.operators.slot_entry(cursor.slot){match cursor.compare(key,operator_id,grant){Some(true)=>{cursor.record=Some(cursor.slot);cursor.phase=1;},Some(false)=>cursor.slot+=1,None=>{}}}else{cursor.slot+=1}return Ok(OperatorPlanStep::Working)}
         let record=self.operators.slot_entry(cursor.record.unwrap()).unwrap().1;let original=input.as_ref().unwrap();
+        let variadic=record.info.variadic_input.is_some();
         match cursor.phase {
-            1=>{if cursor.implementation==record.implementations.len(){if let Some(index)=cursor.fallback{cursor.implementation=index;cursor.phase=6;}else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original operator implementation is absent").into())}}else if record.implementations[cursor.implementation].schemas.is_empty(){cursor.fallback.get_or_insert(cursor.implementation);cursor.implementation+=1;}else if record.info.variadic_input.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original variadic signature requires its retained contract cursor").into())}else{cursor.channel=0;cursor.signature=0;cursor.phase=5;}},
-            2=>{if let Some((key,_))=original.entry_at_rank(cursor.rank){match cursor.compare(key,&record.info.inputs[cursor.channel].name,grant){Some(true)=>{cursor.value_rank=Some(cursor.rank);cursor.use_default=false;cursor.rank=0;cursor.phase=3;},Some(false)=>cursor.rank+=1,None=>{}}}else{cursor.value_rank=None;cursor.use_default=true;cursor.rank=0;cursor.phase=3;}},
-            3=>{if let Some(dictionary)=cursor.value(record,original).and_then(Value::as_dictionary){if let Some((key,_))=dictionary.entry_at_rank(cursor.rank){match cursor.compare(key,SCHEMA_KEY,grant){Some(true)=>{cursor.schema_rank=Some(cursor.rank);cursor.phase=4;},Some(false)=>cursor.rank+=1,None=>{}}}else{cursor.schema_rank=None;cursor.phase=4;}}else{cursor.schema_rank=None;cursor.phase=4;}},
-            4=>{match cursor.compare(cursor.schema(record,original),&record.implementations[cursor.implementation].schemas[cursor.signature],grant){Some(true)=>{cursor.signature+=1;cursor.channel+=1;cursor.phase=5;},Some(false)=>{cursor.implementation+=1;cursor.phase=1;},None=>{}}},
+            1=>{
+                if cursor.implementation==record.implementations.len(){
+                    let Some(index)=cursor.fallback else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original operator implementation is absent").into())};
+                    cursor.implementation=index;cursor.phase=6;
+                }else if record.implementations[cursor.implementation].schemas.is_empty(){
+                    cursor.fallback.get_or_insert(cursor.implementation);cursor.implementation+=1;
+                }else{
+                    cursor.channel=0;cursor.signature=0;cursor.rank=0;
+                    if variadic{cursor.variadic=Default::default();}
+                    cursor.phase=if variadic{2}else{5};
+                }
+            },
+            2=>{
+                let next=if variadic{8}else{3};
+                if let Some((key,_))=original.entry_at_rank(cursor.rank){
+                    match cursor.compare(key,cursor.channel_name(record).unwrap(),grant){
+                        Some(true)=>{cursor.value_rank=Some(cursor.rank);cursor.use_default=false;cursor.rank=0;cursor.phase=next;},
+                        Some(false)=>cursor.rank+=1,
+                        None=>{},
+                    }
+                }else{cursor.value_rank=None;cursor.use_default=true;cursor.rank=0;cursor.phase=next;}
+            },
+            3=>{
+                let entry=cursor.value(record,original).and_then(Value::as_dictionary).and_then(|dictionary|dictionary.entry_at_rank(cursor.rank));
+                if let Some((key,_))=entry{
+                    match cursor.compare(key,SCHEMA_KEY,grant){
+                        Some(true)=>cursor.schema_rank=Some(cursor.rank),
+                        Some(false)=>{cursor.rank+=1;return Ok(OperatorPlanStep::Working)},
+                        None=>return Ok(OperatorPlanStep::Working),
+                    }
+                }else{cursor.schema_rank=None;}
+                let implementation=&record.implementations[cursor.implementation];
+                if variadic&&cursor.schema(record,original).is_none(){cursor.phase=8;}
+                else if implementation.repeated_schema(&record.info).is_none()&&cursor.signature>=implementation.schemas.len(){cursor.reject_implementation();}
+                else{cursor.phase=4;}
+            },
+            4=>{
+                match cursor.compare(cursor.schema(record,original).unwrap_or(""),cursor.expected_schema(record),grant){
+                    Some(true)=>{
+                        cursor.signature+=1;
+                        if variadic{
+                            cursor.variadic.repetitions-=1;
+                            if cursor.variadic.repetitions==0{cursor.phase=8;}
+                            else if record.implementations[cursor.implementation].repeated_schema(&record.info).is_none()&&cursor.signature==record.implementations[cursor.implementation].schemas.len(){cursor.reject_implementation();}
+                        }else{cursor.channel+=1;cursor.phase=5;}
+                    },
+                    Some(false)=>cursor.reject_implementation(),
+                    None=>{},
+                }
+            },
             5=>{if cursor.channel==record.info.inputs.len(){if cursor.signature==record.implementations[cursor.implementation].schemas.len(){cursor.phase=6;}else{cursor.implementation+=1;cursor.phase=1;}}else if record.info.inputs[cursor.channel].name.len()==1{if grant.maximum_copy_bytes==0{cursor.progress=Default::default();return Ok(OperatorPlanStep::Working)}cursor.progress.copied_bytes=1;if record.info.inputs[cursor.channel].name.as_bytes()[0]==b'*'{cursor.channel+=1;}else if cursor.signature==record.implementations[cursor.implementation].schemas.len(){cursor.implementation+=1;cursor.phase=1;}else{cursor.rank=0;cursor.phase=2;}}else if cursor.signature==record.implementations[cursor.implementation].schemas.len(){cursor.implementation+=1;cursor.phase=1;}else{cursor.rank=0;cursor.phase=2;}},
             6=>{match record.implementations[cursor.implementation].operator.step_plan(input.take().unwrap(),grant){Ok((admission,progress))=>{cursor.progress=progress;cursor.phase=7;return Ok(OperatorPlanStep::Admitted(admission))},Err((error,original))=>{*input=Some(original);cursor.progress=match &error{EvalError::Retained(error)=>error.retained_progress(),_=>Default::default()};return Err(error)}}},
+            8=>{
+                let items=cursor.variadic_items(original);
+                cursor.progress.copied_bytes=demand.copy_bytes;
+                match cursor.variadic.step(items){
+                    VariadicScan::Advanced=>{},
+                    VariadicScan::Selected(item)=>{
+                        if item.canonical_rank.is_some(){
+                            cursor.variadic.item_rank=item.canonical_rank;
+                            cursor.variadic.repetitions=item.multiplicity;
+                            cursor.rank=0;cursor.phase=3;
+                        }
+                    },
+                    VariadicScan::Exhausted=>{
+                        if record.implementations[cursor.implementation].accepts_signature_count(&record.info,cursor.signature){cursor.phase=6;}
+                        else{cursor.reject_implementation();}
+                    },
+                }
+            },
             _=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original plan was already admitted").into()),
         }
         Ok(OperatorPlanStep::Working)

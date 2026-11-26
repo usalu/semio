@@ -1,7 +1,7 @@
 #[allow(unused_imports)]
 use crate::{editor::animate::config::PresentationConfig, editor::animate::config::PresentationConfigMutation};
 #[allow(unused_imports)]
-use crate::{editor::animate::support::interaction_select_effect, editor::animate::support::new_tile_id, editor::animate::support::PresentationDispatchCtx};
+use crate::{editor::animate::support::interaction_select_effect, editor::animate::support::PresentationDispatchCtx};
 #[allow(unused_imports)]
 use crate::mutations::create_tile::CreateTile;
 #[allow(unused_imports)]
@@ -20,6 +20,16 @@ use semio_plugin::artifact_app_laws::meta;
 
 async fn seed_2x2(app: &mut crate::editor::animate::unit_tests::context::PresentationApp) {
     dispatch(app, PresentationCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn successive_add_commands_mint_distinct_tile_identities() {
+    let mut app = presentation_app().await;
+    dispatch(&mut app, PresentationCommand::AddTile(AddTile { crop: None })).await;
+    dispatch(&mut app, PresentationCommand::AddTile(AddTile { crop: None })).await;
+    let (_, tiles) = crate::presentation_working_scene(&app.snapshot().expect("projection"));
+    assert_eq!(tiles.len(), 2);
+    assert_ne!(tiles[0].id, tiles[1].id);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -19,8 +19,13 @@ fn drain<T: semio_framework_value::retirement::RetireOwned>(value: T) -> (usize,
   let body=wallet.remaining().maximum_copy_bytes.min(262144);
   let demand=owner.next_demand(body).unwrap();
   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-  let (result,physical)=observe(||wallet.run_settled(grant,1<<20,|effect|owner.step(body,effect)));
-  let (turn,_)=result.unwrap().unwrap();
+  let mut measured=None;
+  let (turn,_)=wallet.run_settled(grant,1<<20,|effect|{
+   let (turn,physical)=observe(||owner.step(body,effect));
+   measured=Some(physical);
+   turn
+  }).unwrap().unwrap();
+  let physical=measured.expect("retirement invoked its original producer");
   let progress=turn.result.unwrap().progress();
   assert!(progress.fits(grant));
   assert_eq!(physical,(progress.retained_capacity_bytes,progress.released_bytes));

@@ -5,4 +5,5 @@ message BimPresence {
   string engagement_input = 1;
   string storey = 2;
   semio.framework.ui.viewport.Viewport2d camera = 3;
+  repeated string owned_worksets = 4;
 }

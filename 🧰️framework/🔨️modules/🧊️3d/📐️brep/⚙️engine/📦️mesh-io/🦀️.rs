@@ -58,6 +58,9 @@ mod mesh_text_export;
 pub use mesh_text_export::{MeshTextExport, MeshTextFormat};
 #[path = "🏗️original-import/🦀️.rs"]
 mod original_import;
+#[path = "📥️mesh-publication/🦀️.rs"]
+mod mesh_publication;
+pub use mesh_publication::MeshImportDraft;
 
 // #region 🔖️Types
 

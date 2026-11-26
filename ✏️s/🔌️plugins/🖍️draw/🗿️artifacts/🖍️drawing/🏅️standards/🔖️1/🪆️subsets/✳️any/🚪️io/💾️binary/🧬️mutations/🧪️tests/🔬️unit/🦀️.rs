@@ -54,7 +54,6 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 #[test]
 fn original_operation_receives_nested_drawing_pages_from_the_declared_range() {
     use crate::DrawingMutation;
-    use semio_framework_value::RetainedCloneGrant;
     use semio_s_artifact_draw_drawing_model::{
         DrawingLayerNode, PathSegment, create_drawing_group_layer, create_drawing_path_layer,
         identity::DrawingIdentity,
@@ -72,6 +71,35 @@ fn original_operation_receives_nested_drawing_pages_from_the_declared_range() {
     let operation: DrawingMutation =
         semio_s_artifact_draw_drawing_structure::create_layer::mutation::create_layer(None, None, group);
 
+    assert_original_drawing_range(operation);
+}
+
+#[test]
+fn original_operation_receives_renamed_layer_identifiers() {
+    let operation = DrawingMutation::RenameLayer(semio_s_artifact_draw_drawing_metadata::rename_layer::mutation::RenameLayer {
+        layer_id: "Path".into(),
+        new_name: "Retained Path".into(),
+    });
+    assert_original_drawing_range(operation);
+}
+
+#[test]
+fn original_operation_receives_empty_group() {
+    use semio_s_artifact_draw_drawing_model::{create_drawing_group_layer, identity::DrawingIdentity};
+    let id = DrawingIdentity::admit("layout-group".to_string().into()).unwrap();
+    let group = create_drawing_group_layer(id, "Group");
+    assert_original_drawing_range(semio_s_artifact_draw_drawing_structure::create_layer::mutation::create_layer(None, None, group));
+}
+
+#[test]
+fn original_operation_receives_addressed_rectangle() {
+    let layer = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit("rectangle".to_string().into()).unwrap(), "Rectangle");
+    let op = semio_s_artifact_draw_drawing_structure::create_layer::mutation::create_layer(Some("parent".into()), Some(1), layer);
+    assert_original_drawing_range(op);
+}
+
+fn assert_original_drawing_range(operation: DrawingMutation) {
+    use semio_framework_value::RetainedCloneGrant;
     let mut original = vec![255];
     original.extend(encode_op(&operation).unwrap());
     let end = original.len();
@@ -94,6 +122,9 @@ fn original_operation_receives_nested_drawing_pages_from_the_declared_range() {
         quantum,
         fuel: 1 << 30,
     };
-    let received = dsl::original_receiving::receive_to_completion::<DrawingMutation>(&original, (1, end), stock).unwrap();
+    let received = dsl::original_receiving::receive_to_completion::<DrawingMutation>(&original, (1, end), stock).unwrap_or_else(|error| {
+        use semio_framework_dsl_record::DslVariants;
+        panic!("original Drawing operation {:?}: {error:?}", operation.to_named_record());
+    });
     assert_eq!(received, operation);
 }

@@ -43,6 +43,7 @@ fn quiet_units_share_turns_by_the_slice_where_the_one_step_pacing_spent_a_turn_e
 #[test]
 fn opening_reuses_the_slice_only_while_the_same_pending_owner_makes_paid_progress() {
     for case in contract()["opening"].as_array().unwrap() {
+        let pacing = if case["metered"].as_bool() == Some(true) { OpeningPacing::Metered } else { OpeningPacing::Interactive };
         let mut paid = 0;
         let mut attempts = 0;
         let mut captures = 0;
@@ -52,7 +53,7 @@ fn opening_reuses_the_slice_only_while_the_same_pending_owner_makes_paid_progres
             paid += step["paid"].as_u64().unwrap();
             let ready = step["ready"].as_bool().unwrap();
             captures += u64::from(ready);
-            if !opening_slice_open(ready, paid != previous, step["cancelled"].as_bool().unwrap(), step["yielding"].as_bool().unwrap(), step["elapsedUs"].as_u64()) {
+            if !opening_slice_open(pacing, ready, paid != previous, step["cancelled"].as_bool().unwrap(), step["yielding"].as_bool().unwrap(), step["elapsedUs"].as_u64()) {
                 break;
             }
         }

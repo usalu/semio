@@ -64,7 +64,7 @@ const document=(random:Random,value:unknown):string=>{
 };
 
 const RUN_ENV={...process.env} as Record<string,string|undefined>;
-for(const name of ["SEMIO_FLEET_GROUP","SEMIO_FLEET_NFS_HOST","SEMIO_FLEET_NETWORK","SEMIO_FLEET_CACHE_ENDPOINT"])delete RUN_ENV[name];
+for(const name of ["SEMIO_FLEET_GROUP","SEMIO_FLEET_STORE_ADDRESS","SEMIO_FLEET_NFS_HOST","SEMIO_FLEET_NETWORK","SEMIO_FLEET_CACHE_ENDPOINT"])delete RUN_ENV[name];
 const region=(name:string):string=>shellText.slice(shellText.indexOf(`# #region ${name}`),shellText.indexOf(`# #endregion ${name}`));
 const sh=(script:string,env:Record<string,string>={}):{out:string;err:string;code:number}=>{
  const run=Bun.spawnSync([bash,"-c",script],{env:{...RUN_ENV,...env},stdout:"pipe",stderr:"pipe"});
@@ -77,7 +77,7 @@ function typescriptFacts(raw:unknown):string{
  const topology:FleetTopologyV1=readTopologyV1(raw),lines:string[]=[];
  for(const {id} of topology.groups){
   const group=groupV1(topology,id);
-  for(const platform of PLATFORMS)lines.push(factLine(id,platform,topology.worktree[platform],group.nfs.host,group.nfs.export,group.server.platform,group.server.protocol));
+  for(const platform of PLATFORMS)lines.push(factLine(id,platform,topology.worktree[platform],group.roles.store,group.nfs.export,group.server.platform,group.server.protocol));
  }
  return lines.sort().join("\n");
 }
@@ -88,8 +88,9 @@ WORKER_HOME=/home/probe
 ${region("🔎️Json")}
 for GROUP_ID in ${groups.join(" ")}; do
  for PLATFORM in ${PLATFORMS.join(" ")}; do
+  SEMIO_FLEET_GROUP=$GROUP_ID; SEMIO_FLEET_STORE_ADDRESS=192.0.2.1
 ${chunk}
-  printf '%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n' "$GROUP_ID" "$PLATFORM" "$WORKTREE_TEMPLATE" "$NFS_HOST" "$NFS_EXPORT" "$SERVER_PLATFORM" "$SERVER_PROTOCOL"
+  printf '%s\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n' "$GROUP_ID" "$PLATFORM" "$WORKTREE_TEMPLATE" "$STORE_ORIGIN" "$NFS_EXPORT" "$SERVER_PLATFORM" "$SERVER_PROTOCOL"
  done
 done`;
  const run=sh(script,{TOPOLOGY_JSON:file});
@@ -116,7 +117,7 @@ for(const [label,raw] of sources){
     expect(run.stdout.toString().trimEnd(),`oracle round ${round}`).toBe(expected);
    }
    if(jq){
-    const program=`.groups[] as $g | ${JSON.stringify(PLATFORMS)}[] as $p | [$g.id,$p,.worktree[$p],$g.nfs.host,$g.nfs.export,$g.server.platform,$g.server.protocol] | @tsv`;
+    const program=`.groups[] as $g | ${JSON.stringify(PLATFORMS)}[] as $p | [$g.id,$p,.worktree[$p],$g.roles.store,$g.nfs.export,$g.server.platform,$g.server.protocol] | @tsv`;
     const run=Bun.spawnSync([jq,"-r",program,file],{stdout:"pipe",stderr:"pipe"});
     if(run.exitCode===0)expect(run.stdout.toString().trimEnd().split("\n").sort().join("\n"),`jq round ${round}`).toBe(expected);
    }
@@ -126,11 +127,11 @@ for(const [label,raw] of sources){
 
 test("the incident: ports and access between id and nfs, the server before nfs, and an unknown key before id change no fact",()=>{
  const group=(committed as {groups:Record<string,unknown>[]}).groups[0]!,expected=typescriptFacts(committed);
- const orders=[["id","ports","access","nfs","server","cache","peers"],["id","nfs","server","ports","access","cache","peers"],["server","nfs","id"],["peers","cache","server","access","ports","nfs","id"],["future","id","nfs","server"]];
+ const orders=[["id","ports","access","roles","nfs","server","cache","peers"],["id","roles","nfs","server","ports","access","cache","peers"],["server","roles","nfs","id"],["peers","cache","server","access","ports","nfs","roles","id"],["future","id","roles","nfs","server"]];
  for(const keys of orders){
   const groups=(committed as {groups:Record<string,unknown>[]}).groups.map(item=>Object.fromEntries(keys.map(key=>[key,key==="future"?{id:"g9"}:item[key]]).filter(([,value])=>value!==undefined)));
   const file=write(`incident/${keys.join("-")}.json`,JSON.stringify({...(committed as object),groups},null,1));
-  expect(shellFacts(file,groups.map(item=>item["id"] as string)).out).toContain(factLine("g1","macos",(committed as {worktree:{macos:string}}).worktree.macos,(group["nfs"] as {host:string}).host,(group["nfs"] as {export:string}).export,(group["server"] as {platform:string}).platform,(group["server"] as {protocol:string}).protocol));
+  expect(shellFacts(file,groups.map(item=>item["id"] as string)).out).toContain(factLine("g1","macos",(committed as {worktree:{macos:string}}).worktree.macos,(group["roles"] as {store:string}).store,(group["nfs"] as {export:string}).export,(group["server"] as {platform:string}).platform,(group["server"] as {protocol:string}).protocol));
  }
  expect(expected).toContain("g1\tmacos\t~/Documents/semio");
 });
@@ -191,10 +192,10 @@ test("the PowerShell script reads the topology with ConvertFrom-Json and UTF-8, 
  for(let round=0;round<12;round++){
   const folder=join(scratch,`pwsh-${round}`),script=join(folder,"provision","segment.ps1");
   write(`pwsh-${round}/topology.json`,document(random,reorder(random,committed,round>=3)));
-  write(`pwsh-${round}/provision/segment.ps1`,`$ErrorActionPreference = 'Stop'\n$Server = $false\nforeach ($GroupId in $args) {\n${segment}\n"$GroupId|$Worktree|$NfsHost|$($group[0].nfs.export)|$ServerPlatform|$ServerProtocol"\n}\n`);
+  write(`pwsh-${round}/provision/segment.ps1`,`$ErrorActionPreference = 'Stop'\n$Server = $false\nforeach ($GroupId in $args) {\n${segment}\n"$GroupId|$Worktree|$StoreOrigin|$($group[0].nfs.export)|$ServerPlatform|$ServerProtocol"\n}\n`);
   const run=Bun.spawnSync([pwsh,"-NoProfile","-NonInteractive","-File",script,...groups],{env:RUN_ENV as Record<string,string>,stdout:"pipe",stderr:"pipe"});
   expect(run.stderr.toString(),`round ${round}`).toBe("");
-  const topology=readTopologyV1(committed),expected=groups.map(id=>{const group=groupV1(topology,id);return `${id}|${topology.worktree.windows}|${group.nfs.host}|${group.nfs.export}|${group.server.platform}|${group.server.protocol}`;});
+  const topology=readTopologyV1(committed),expected=groups.map(id=>{const group=groupV1(topology,id);return `${id}|${topology.worktree.windows}|${group.roles.store}|${group.nfs.export}|${group.server.platform}|${group.server.protocol}`;});
   expect(run.stdout.toString().trimEnd().split(/\r?\n/u)).toEqual(expected);
  }
 });

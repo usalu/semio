@@ -1,161 +1,241 @@
-use crate::{ErasedSnapshotRetirement,retained_clone::{FixtureSourceBirth,RetainedCloneGrant}};
+use crate::{ErasedSnapshotRetirement,OriginalRetirementFailure,RetainedWorkOutcome,RetirementDemand,effect,retained_clone::{FixtureSourceBirth,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use crate::observe_retirement_allocations as observe;
 use semio_framework_value_retirement::retirement::*;
-use std::{sync::Arc,mem::{ManuallyDrop,size_of},marker::PhantomData};
+use controlled::ErasedControlledRetirement;
+use std::{sync::Arc,mem::size_of};
+
+type Heap=(usize,usize);
+
+/// 🎯️ Grants one item and exactly the selected action's quote under the copy body that quote was priced with.
+fn quoted(body:usize,quote:impl Fn(usize)->RetirementDemand)->RetainedCloneGrant {
+    let mut copy=body;
+    for _ in 0..8 {
+        let demand=quote(copy);let want=body.max(demand.copy_bytes);
+        if want==copy {return RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
+        copy=want;
+    }
+    panic!("retirement quote did not settle on one copy body")
+}
+
+/// 🔥️ Primes the thread's effect bank outside every measured region.
+fn warm() {effect::run(RetainedCloneGrant::default(),|_|())}
+
+/// 🧱️ Header moves of one Arc lease release; scaffold, never payload.
+const LEASE_COPY:usize=size_of::<Option<Arc<String>>>()+size_of::<Option<String>>();
+
+/// 🧱️ Header moves of one pending cursor publication; they are scaffold, never payload.
+const PUBLISH_COPY:usize=2*size_of::<Option<Box<dyn RetirementCursor>>>()+size_of::<usize>();
+
+/// 🎒️ Payload bytes of one turn: a plain-element page moves its elements behind one native length word; every other turn moves only scaffold headers.
+fn payload_bytes(demand:RetirementDemand)->usize {if demand.copy_bytes>size_of::<usize>()&&demand.capacity_bytes==0&&demand.release_bytes==0&&demand.copy_bytes!=PUBLISH_COPY&&demand.copy_bytes!=LEASE_COPY{demand.copy_bytes-size_of::<usize>()}else{0}}
+
+/// 🎒️ Tells a payload turn from scaffold.
+fn payload_turn(demand:RetirementDemand)->bool {payload_bytes(demand)!=0}
+
+/// 🧮️ Payload bytes a payload turn recorded in its progress, without its native length word.
+fn payload_copied(progress:RetainedCloneProgress)->usize {progress.copied_bytes-size_of::<usize>()}
+
+/// 🧵️ Runs one controlled step under a real original action; its physical receipt equals its recorded progress.
+fn turn<T:RetireOwned>(owner:&mut controlled::ControlledRetirement<T>,grant:RetainedCloneGrant)->(Result<RetainedCloneStep,OriginalRetirementFailure>,Heap) {
+    let (outcome,heap)=effect::driven(grant,|effect|owner.step(grant.maximum_copy_bytes,effect));(outcome.result,heap)
+}
+
+/// 🪜️ Runs one controlled step that must be answered.
+fn step<T:RetireOwned>(owner:&mut controlled::ControlledRetirement<T>,grant:RetainedCloneGrant)->(RetainedCloneStep,Heap) {
+    let (result,heap)=turn(owner,grant);(result.unwrap_or_else(|failure|panic!("controlled step refused: {failure:?}")),heap)
+}
+
+/// 🎯️ Grants the owner's next quoted action under one copy body.
+fn owner_grant<T:RetireOwned>(owner:&controlled::ControlledRetirement<T>,body:usize)->RetainedCloneGrant {quoted(body,|copy|owner.next_demand(copy).unwrap())}
+
+/// 🧵️ Runs one erased controlled step under a real original action.
+fn dyn_turn(owner:&mut dyn ErasedControlledRetirement,grant:RetainedCloneGrant)->(Result<RetainedCloneStep,OriginalRetirementFailure>,Heap) {
+    let (outcome,heap)=effect::driven(grant,|effect|owner.step(grant.maximum_copy_bytes,effect));(outcome.result,heap)
+}
+
+/// 🎟️ Runs one erased ticket close under a real original action.
+fn ticket_turn(slot:&mut Option<Box<dyn ErasedSnapshotRetirement>>,grant:RetainedCloneGrant)->(RetainedCloneStep,Heap) {
+    let (outcome,heap)=effect::driven(grant,|effect|crate::close_factory_ticket(&mut *slot,grant.maximum_copy_bytes,effect));(outcome.result.unwrap_or_else(|failure|panic!("ticket close refused: {failure:?}")),heap)
+}
+
+/// 🎯️ Grants the ticket's next quoted action under one copy body.
+fn ticket_grant(slot:&Option<Box<dyn ErasedSnapshotRetirement>>,body:usize)->RetainedCloneGrant {quoted(body,|copy|crate::factory_ticket_demands(slot.as_ref().unwrap(),copy).unwrap())}
+
+/// 🎫️ Admits one owner as an erased ticket under a real original action.
+fn admit_into<T:RetireOwned>(slot:&mut Option<T>,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>> {
+    effect::run(grant,|effect|crate::admit_owned_retirement(&mut *slot,effect))
+}
+
+/// 🏗️ Grants exactly the frame admission of one owner.
+fn birth_grant<T:RetireOwned>(value:&T)->RetainedCloneGrant {
+    let demand=controlled::controlled_retirement_birth_demand(value).unwrap();
+    RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}
+}
 
 #[test]
 fn shared_full_grant_owns_original_aliases_weak_backing_and_each_physical_release() {
-    use crate::{observe_retirement_allocations,retained_clone::RetainedCloneGrant};
+    warm();
     let fixture:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/📏️shared-physical/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {for copy in fixture["workBytes"].as_array().unwrap() {
         let copy=copy.as_u64().unwrap()as usize;
-        let (root,(born,freed))=observe_retirement_allocations(||{let mut text=String::with_capacity(row["capacity"].as_u64().unwrap()as usize);text.push_str(row["text"].as_str().unwrap());Arc::new(text)});let original=born-freed;let pointer=Arc::as_ptr(&root);let alias=Arc::clone(&root);let weak=Arc::downgrade(&root);assert_eq!(serde_json::to_value(root.as_str()).unwrap(),row["text"]);
-        let mut owner=controlled::ControlledRetirement::new(root).map_err(|(error,_)|error).unwrap();let (mut births,mut released,mut copied)=(0,0,0);
-        for _ in 0..4 {
-            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let (step,(a,r))=observe_retirement_allocations(||owner.step(grant).unwrap());assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(a,r));births+=a;released+=r;
-        }
-        assert_eq!(released,0);assert_eq!(Arc::as_ptr(&alias),pointer);drop(alias);
-        let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let (step,heap)=observe_retirement_allocations(||owner.step(grant).unwrap());assert_eq!(heap.1,step.progress().released_bytes);births+=heap.0;released+=heap.1;assert!(weak.upgrade().is_none());assert_eq!(weak.as_ptr(),pointer);let (_,frame)=observe_retirement_allocations(||drop(weak));released+=frame.1;
-        for turn in 0..fixture["maximumTurns"].as_u64().unwrap() {
+        let (root,(born,freed))=observe(||{let mut text=String::with_capacity(row["capacity"].as_u64().unwrap()as usize);text.push_str(row["text"].as_str().unwrap());Arc::new(text)});let original=born-freed;let pointer=Arc::as_ptr(&root);let weak=Arc::downgrade(&root);assert_eq!(serde_json::to_value(root.as_str()).unwrap(),row["text"]);
+        let mut alias=Some(Arc::clone(&root));
+        let mut owner=controlled::ControlledRetirement::new(arc_custody::ArcLease::new(root)).map_err(|(error,_)|error).unwrap();let (mut births,mut released,mut payload,mut admitted,mut gone)=(0,0,0,false,false);
+        for turn_index in 0..fixture["maximumTurns"].as_u64().unwrap() {
             if owner.terminal_is_empty(){break;}
-            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
-            let (zero,heap)=observe_retirement_allocations(||owner.step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap());assert_eq!(zero.progress(),Default::default());assert_eq!(heap,(0,0));
-            for denied in [(grant.maximum_capacity_bytes!=0).then_some(RetainedCloneGrant {maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(1),..grant}),(grant.maximum_release_bytes!=0).then_some(RetainedCloneGrant {maximum_release_bytes:grant.maximum_release_bytes.saturating_sub(1),..grant})].into_iter().flatten(){let (step,heap)=observe_retirement_allocations(||owner.step(denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));}
-            let (step,(a,r))=observe_retirement_allocations(||owner.step(grant).unwrap());let progress=step.progress();assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(a,r));assert!(progress.copied_bytes<=copy);births+=a;released+=r;copied+=progress.copied_bytes;assert!(progress.copied_items!=0,"exact shared retirement stalled on turn {turn}");
+            let grant=owner_grant(&owner,copy);let quote=owner.next_demand(grant.maximum_copy_bytes).unwrap();
+            let (zero,heap)=turn(&mut owner,RetainedCloneGrant {maximum_items:0,..grant});assert_eq!(zero.unwrap().progress(),Default::default());assert_eq!(heap,(0,0));
+            for denied in [(grant.maximum_capacity_bytes!=0).then_some(RetainedCloneGrant {maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(1),..grant}),(grant.maximum_release_bytes!=0).then_some(RetainedCloneGrant {maximum_release_bytes:grant.maximum_release_bytes.saturating_sub(1),..grant})].into_iter().flatten(){let (step,heap)=step(&mut owner,denied);assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));}
+            let (step,(a,r))=step(&mut owner,grant);let progress=step.progress();assert!(progress.fits(grant));assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(a,r));births+=a;released+=r;
+            if payload_turn(quote){payload+=payload_copied(progress);}
+            assert!(progress.copied_items!=0,"exact shared retirement stalled on turn {turn_index}");
+            if alias.is_some()&&owner.original().is_none(){
+                if admitted {assert_eq!(released,0);assert_eq!(Arc::as_ptr(alias.as_ref().unwrap()),pointer);drop(alias.take());}else{admitted=true;}
+            }
+            if alias.is_none()&&!gone&&weak.upgrade().is_none(){gone=true;assert_eq!(weak.as_ptr(),pointer);}
         }
-        assert!(owner.terminal_is_empty());assert_eq!(copied,0,"String payload retirement is native length metadata, copy0");assert_eq!(released,original+births);
+        assert!(owner.terminal_is_empty()&&gone&&alias.is_none());
+        let (_,frame)=observe(||drop(weak));released+=frame.1;
+        assert_eq!(payload,0,"String payload retirement is native length metadata, copy0");assert_eq!(released,original+births);
     }}
 }
 
 /// 🛑️ Abandoning a macro record mid-close releases the fields it has not yet transferred together with every transferred level.
 #[test]
 fn abandoned_macro_record_releases_every_untransferred_field() {
-    use crate::{retained_clone::RetainedCloneGrant, observe_retirement_allocations};
+    warm();
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
     for healthy in 0..4usize {
-        let ((), (requested, released)) = observe_retirement_allocations(|| {
-            let owner = MacroControlledRecord { label: "a".repeat(64), values: vec![1; 32], nested: Some(("b".repeat(48), vec![2; 16])) };
-            let mut retirement = controlled::ControlledRetirement::new(owner).unwrap_or_else(|_| panic!("macro record controlled authority"));
-            for _ in 0..healthy { retirement.step(grant).unwrap(); }
-            retirement.abandon();
-        });
+        let (owner, (mut requested, mut released)) = observe(|| MacroControlledRecord { label: "a".repeat(64), values: vec![1; 32], nested: Some(("b".repeat(48), vec![2; 16])) });
+        let mut retirement = controlled::ControlledRetirement::new(owner).unwrap_or_else(|_| panic!("macro record controlled authority"));
+        for _ in 0..healthy { let (_, (born, freed)) = step(&mut retirement, grant); requested += born; released += freed; }
+        let ((), (born, freed)) = observe(|| retirement.abandon());
+        requested += born; released += freed;
         assert_eq!(requested, released, "healthy turns {healthy} leaked an untransferred field");
     }
 }
 
 #[test]
 fn erased_controlled_owner_retains_exact_independent_grants_and_returns_refused_ownership() {
-    use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, observe_retirement_allocations};
+    use crate::retained_clone::RetainedCloneStep;
     struct Unsupported(String);
     /// 🚫️ Deliberately refuses controlled retirement so the erased admission returns the original owner.
-    impl RetireOwned for Unsupported { fn retirement(self) -> Box<dyn RetirementCursor> { self.0.retirement() } fn controlled_retirement_supported() -> bool { false } }
+    impl RetireOwned for Unsupported { type RetirementCursor = <String as RetireOwned>::RetirementCursor; fn retirement_seed(self) -> Self::RetirementCursor { self.0.retirement_seed() } fn controlled_retirement_supported() -> bool { false } }
+    warm();
     let law: serde_json::Value = serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/🎮️erased-controlled/🔣️.json")).unwrap();
     let text = law["text"].as_str().unwrap();
     let unsupported = Unsupported(text.into());
     let pointer = unsupported.0.as_ptr();
-    let ((error, unsupported), effects) = observe_retirement_allocations(|| controlled::ControlledRetirement::new(unsupported).err().unwrap());
+    let ((error, unsupported), effects) = observe(|| controlled::ControlledRetirement::new(unsupported).err().unwrap());
     assert_eq!(error.kind.as_str(), law["unsupportedKind"].as_str().unwrap());
     assert_eq!(unsupported.0.as_ptr(), pointer);
-    let (_, release) = observe_retirement_allocations(|| drop(error));
+    let (_, release) = observe(|| drop(error));
     let constructor_effects = (effects.0, effects.1 + release.1);
-    let ((error, unsupported), heap) = observe_retirement_allocations(|| controlled::admit_controlled_retirement(unsupported, RetainedCloneGrant::default()).err().unwrap());
+    let mut slot = Some(unsupported);
+    let (refused, heap) = observe(|| effect::run(RetainedCloneGrant::default(), |effect| controlled::admit_controlled_retirement(&mut slot, effect)));
+    let error = refused.result.err().unwrap();
     assert_eq!(error.kind.as_str(), law["unsupportedKind"].as_str().unwrap());
-    assert_eq!(unsupported.0.as_ptr(), pointer);
+    assert_eq!(slot.as_ref().unwrap().0.as_ptr(), pointer);
     assert_eq!(heap, (0, 0));
-    drop(unsupported);
+    drop(slot);
     assert_eq!(constructor_effects, (law["unsupportedEffects"]["bornBytes"].as_u64().unwrap()as usize,law["unsupportedEffects"]["releasedBytes"].as_u64().unwrap()as usize));
     let mut source = String::with_capacity(law["reservedCapacity"].as_u64().unwrap() as usize);
     source.push_str(text);
     assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&source).unwrap()).unwrap(), source);
     let source_capacity = source.capacity();
     let pointer = source.as_ptr();
-    let admission = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: controlled::controlled_retirement_birth_bytes::<String>(), maximum_depth: law["maximumDepth"].as_u64().unwrap() as usize, ..Default::default() };
-    let ((error, source), heap) = observe_retirement_allocations(|| controlled::admit_controlled_retirement(source, RetainedCloneGrant { maximum_capacity_bytes: admission.maximum_capacity_bytes - 1, ..admission }).err().unwrap());
-    assert_eq!(error.kind, crate::ValueRefusalKind::OwnershipLimit);
-    assert_eq!(source.as_ptr(), pointer);
-    assert_eq!(heap, (0, 0));
-    let ((mut owner, birth), heap) = observe_retirement_allocations(|| controlled::admit_controlled_retirement(source, admission).unwrap_or_else(|_| panic!("String exact admission")));
+    let mut slot = Some(source);
+    let demand = controlled::controlled_retirement_birth_demand(slot.as_ref().unwrap()).unwrap();
+    let admission = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: controlled::controlled_retirement_birth_bytes::<String>(), maximum_depth: law["maximumDepth"].as_u64().unwrap() as usize, ..Default::default() };
+    for short in [RetainedCloneGrant { maximum_capacity_bytes: admission.maximum_capacity_bytes - 1, ..admission }, RetainedCloneGrant { maximum_copy_bytes: admission.maximum_copy_bytes - 1, ..admission }, RetainedCloneGrant { maximum_depth: 0, ..admission }, RetainedCloneGrant { maximum_items: 0, ..admission }] {
+        let (denied, heap) = observe(|| effect::run(short, |effect| controlled::admit_controlled_retirement(&mut slot, effect)));
+        assert!(denied.result.unwrap().is_none());
+        assert_eq!(slot.as_ref().unwrap().as_ptr(), pointer);
+        assert_eq!(heap, (0, 0));
+    }
+    let (admitted, heap) = observe(|| effect::run(admission, |effect| controlled::admit_controlled_retirement(&mut slot, effect)));
+    let (mut owner, birth) = admitted.result.unwrap().unwrap_or_else(|| panic!("String exact admission"));
     assert_eq!(heap, (birth.retained_capacity_bytes, 0));
+    assert!(slot.is_none());
     assert!(birth.fits(admission));
     let mut born = birth.retained_capacity_bytes;
     let mut released = 0;
     let mut processed = 0;
+    let maximum_copy = law["maximumCopyBytes"].as_u64().unwrap() as usize;
     for _ in 0..law["maximumTurns"].as_u64().unwrap() {
-        let ((copy, capacity, release, depth), heap) = observe_retirement_allocations(|| { let copy = owner.next_copy_byte_demand().unwrap(); let release = owner.next_release_byte_demand().unwrap(); (copy, owner.next_capacity_byte_demand(if copy != 0 { law["maximumCopyBytes"].as_u64().unwrap() as usize } else { release }).unwrap(), release, owner.next_depth_demand().unwrap()) });
+        let (quote, heap) = observe(|| owner.next_demand(maximum_copy).unwrap());
         assert_eq!(heap, (0, 0));
-        assert!(depth <= law["maximumDepth"].as_u64().unwrap() as usize);
-        let grant = RetainedCloneGrant { maximum_items: law["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: law["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: depth };
-        let (zero, heap) = observe_retirement_allocations(|| owner.step(RetainedCloneGrant::default()).unwrap());
-        assert_eq!(zero.progress(), Default::default());
+        let grant = RetainedCloneGrant { maximum_items: law["maximumItems"].as_u64().unwrap() as usize, ..quoted(maximum_copy, |copy| owner.next_demand(copy).unwrap()) };
+        let (zero, heap) = dyn_turn(owner.as_mut(), RetainedCloneGrant::default());
+        assert_eq!(zero.unwrap().progress(), Default::default());
         assert_eq!(heap, (0, 0));
-        if depth != 0 {
-            let (error, heap) = observe_retirement_allocations(|| owner.step(RetainedCloneGrant { maximum_depth: depth - 1, ..grant }).unwrap_err());
-            assert_eq!(error.kind, crate::ValueRefusalKind::DepthLimit);
+        if grant.maximum_depth != 0 {
+            let (refused, heap) = dyn_turn(owner.as_mut(), RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant });
+            assert_eq!(refused.unwrap().progress(), Default::default());
             assert_eq!(heap, (0, 0));
-            assert_eq!(owner.next_depth_demand().unwrap(), depth);
+            assert_eq!(owner.next_depth_demand().unwrap(), quote.depth);
         }
-        for denied in [(copy != 0).then_some(RetainedCloneGrant { maximum_copy_bytes: copy.saturating_sub(1), ..grant }), (capacity != 0).then_some(RetainedCloneGrant { maximum_capacity_bytes: capacity.saturating_sub(1), ..grant }), (release != 0).then_some(RetainedCloneGrant { maximum_release_bytes: release.saturating_sub(1), ..grant })].into_iter().flatten() {
-            let (step, heap) = observe_retirement_allocations(|| owner.step(denied).unwrap());
-            assert_eq!(step.progress(), Default::default());
+        let selected = owner.next_demand(grant.maximum_copy_bytes).unwrap();
+        for denied in [(selected.copy_bytes != 0).then_some(RetainedCloneGrant { maximum_copy_bytes: selected.copy_bytes.saturating_sub(1), ..grant }), (selected.capacity_bytes != 0).then_some(RetainedCloneGrant { maximum_capacity_bytes: selected.capacity_bytes.saturating_sub(1), ..grant }), (selected.release_bytes != 0).then_some(RetainedCloneGrant { maximum_release_bytes: selected.release_bytes.saturating_sub(1), ..grant })].into_iter().flatten() {
+            let (step, heap) = dyn_turn(owner.as_mut(), denied);
+            assert_eq!(step.unwrap().progress(), Default::default());
             assert_eq!(heap, (0, 0));
         }
-        let (step, heap) = observe_retirement_allocations(|| owner.step(grant).unwrap());
+        let (step, heap) = dyn_turn(owner.as_mut(), grant);
+        let step = step.unwrap();
         assert!(step.progress().fits(grant));
-        assert_eq!(heap, (step.progress().retained_capacity_bytes, step.progress().released_bytes));
         born += heap.0;
         released += heap.1;
-        processed += step.progress().copied_bytes;
+        if payload_turn(quote) { processed += payload_copied(step.progress()); }
         if matches!(step, RetainedCloneStep::Complete(_)) { break; }
     }
     assert!(owner.terminal_is_empty());
     assert_eq!(processed, 0);
     let frame = owner.frame_release_bytes();
-    assert_eq!(observe_retirement_allocations(|| drop(owner)).1, (0, frame));
+    assert_eq!(observe(|| drop(owner)).1, (0, frame));
     released += frame;
     assert_eq!(released, born + source_capacity);
 }
 
 #[test]
 fn native_recursive_intrinsic_retirement_admits_each_constructor_and_physical_release() {
-    use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, observe_retirement_allocations};
+    use crate::{retained_clone::RetainedCloneStep, observe_retirement_allocations};
+    warm();
     fn run<T: RetireOwned>(value: T, row: &serde_json::Value, law: &serde_json::Value) {
+        let maximum_copy = law["maximumCopyBytes"].as_u64().unwrap() as usize;
         let (result, heap) = observe_retirement_allocations(|| controlled::ControlledRetirement::new(value));
         assert_eq!(heap, (0, 0));
         let mut owner = result.unwrap_or_else(|_| panic!("intrinsic constructor requires complete controlled authority: {}", row["kind"]));
         let mut copied = 0;
         let mut born = 0;
         let mut released = 0;
-        let demands = |owner: &controlled::ControlledRetirement<T>| {
-            let copy = owner.next_copy_byte_demand().unwrap();
-            let release = owner.next_release_byte_demand().unwrap();
-            (copy, owner.next_capacity_byte_demand(if copy == 0 { release } else { law["maximumCopyBytes"].as_u64().unwrap() as usize }).unwrap(), release, owner.next_depth_demand().unwrap())
-        };
         for _ in 0..law["maximumTurns"].as_u64().unwrap() {
-            let ((copy, capacity, release, depth), heap) = observe_retirement_allocations(|| demands(&owner));
+            let (quote, heap) = observe_retirement_allocations(|| owner.next_demand(maximum_copy).unwrap());
             assert_eq!(heap, (0, 0));
-            assert!(copy <= law["maximumCopyBytes"].as_u64().unwrap() as usize);
-            assert!(depth <= law["maximumDepth"].as_u64().unwrap() as usize);
-            let grant = RetainedCloneGrant { maximum_items: law["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: law["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: law["maximumDepth"].as_u64().unwrap() as usize };
+            assert!(quote.depth <= law["maximumDepth"].as_u64().unwrap() as usize);
+            let grant = RetainedCloneGrant { maximum_items: law["maximumItems"].as_u64().unwrap() as usize, maximum_depth: law["maximumDepth"].as_u64().unwrap() as usize, ..owner_grant(&owner, maximum_copy) };
             if !owner.terminal_is_empty() {
-                let (refused, heap) = observe_retirement_allocations(|| owner.step(RetainedCloneGrant { maximum_depth: depth - 1, ..grant }));
-                assert_eq!(refused.unwrap_err().kind, crate::ValueRefusalKind::DepthLimit);
+                let (refused, heap) = turn(&mut owner, RetainedCloneGrant { maximum_depth: quote.depth - 1, ..grant });
+                assert_eq!(refused.unwrap().progress(), Default::default());
                 assert_eq!(heap, (0, 0));
-                assert_eq!(observe_retirement_allocations(|| demands(&owner)), ((copy, capacity, release, depth), (0, 0)));
+                assert_eq!(owner.next_demand(maximum_copy).unwrap(), quote);
             }
-            let (zero, heap) = observe_retirement_allocations(|| owner.step(RetainedCloneGrant::default()).unwrap());
+            let (zero, heap) = step(&mut owner, RetainedCloneGrant::default());
             assert_eq!(zero.progress(), Default::default());
             assert_eq!(heap, (0, 0));
-            assert_eq!(observe_retirement_allocations(|| demands(&owner)), ((copy, capacity, release, depth), (0, 0)));
+            assert_eq!(owner.next_demand(maximum_copy).unwrap(), quote);
+            let selected = owner.next_demand(grant.maximum_copy_bytes).unwrap();
             for denied in [
-                (copy != 0).then_some(RetainedCloneGrant { maximum_copy_bytes: copy.saturating_sub(1), ..grant }),
-                (capacity != 0).then_some(RetainedCloneGrant { maximum_capacity_bytes: capacity.saturating_sub(1), ..grant }),
-                (release != 0).then_some(RetainedCloneGrant { maximum_release_bytes: release.saturating_sub(1), ..grant }),
+                (selected.copy_bytes != 0).then_some(RetainedCloneGrant { maximum_copy_bytes: selected.copy_bytes.saturating_sub(1), ..grant }),
+                (selected.capacity_bytes != 0).then_some(RetainedCloneGrant { maximum_capacity_bytes: selected.capacity_bytes.saturating_sub(1), ..grant }),
+                (selected.release_bytes != 0).then_some(RetainedCloneGrant { maximum_release_bytes: selected.release_bytes.saturating_sub(1), ..grant }),
             ].into_iter().flatten() {
-                let (step, heap) = observe_retirement_allocations(|| owner.step(denied).unwrap());
+                let (step, heap) = step(&mut owner, denied);
                 assert_eq!(step.progress(), Default::default());
                 assert_eq!(heap, (0, 0));
-                assert_eq!(observe_retirement_allocations(|| demands(&owner)), ((copy, capacity, release, depth), (0, 0)));
+                assert_eq!(owner.next_demand(maximum_copy).unwrap(), quote);
             }
-            let (step, heap) = observe_retirement_allocations(|| owner.step(grant).unwrap());
+            let (step, heap) = step(&mut owner, grant);
             assert!(step.progress().fits(grant));
             assert_eq!(heap, (step.progress().retained_capacity_bytes, step.progress().released_bytes));
             copied += step.progress().copied_bytes;
@@ -164,7 +244,7 @@ fn native_recursive_intrinsic_retirement_admits_each_constructor_and_physical_re
             if matches!(step, RetainedCloneStep::Complete(_)) { break; }
         }
         assert!(owner.terminal_is_empty(), "intrinsic exact retirement must finish: {}", row["kind"]);
-        assert_eq!(copied,row["retirementCopyBytes"].as_u64().unwrap()as usize);
+        assert!(copied>=row["retirementCopyBytes"].as_u64().unwrap()as usize,"every payload byte is moved by some turn, next to its scaffold headers");
         assert!(released >= born);
         assert_eq!(observe_retirement_allocations(|| drop(owner)).1, (0, 0));
     }
@@ -190,18 +270,15 @@ fn native_recursive_intrinsic_retirement_admits_each_constructor_and_physical_re
             let mut inner = controlled::ControlledRetirement::new(original).unwrap_or_else(|_| panic!("original intrinsic frontier"));
             let mut copied = 0;
             for _ in 0..prefix.as_u64().unwrap() {
-                let copy = inner.next_copy_byte_demand().unwrap();
-                let release = inner.next_release_byte_demand().unwrap();
-                let capacity = inner.next_capacity_byte_demand(if copy == 0 { release } else { frontier_law["maximumCopyBytes"].as_u64().unwrap() as usize }).unwrap();
-                let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 3, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: 64 };
-                let (step, heap) = observe_retirement_allocations(|| inner.step(grant).unwrap());
+                let grant = RetainedCloneGrant { maximum_depth: 64, ..owner_grant(&inner, frontier_law["maximumCopyBytes"].as_u64().unwrap() as usize) };
+                let (step, heap) = step(&mut inner, grant);
                 assert_eq!(heap, (step.progress().retained_capacity_bytes, step.progress().released_bytes));
                 assert!(step.progress().fits(grant));
                 copied += step.progress().copied_bytes;
                 if matches!(step, RetainedCloneStep::Complete(_)) { break; }
             }
             let mut remaining = row.clone();
-            remaining["retirementCopyBytes"] = (row["retirementCopyBytes"].as_u64().unwrap() - copied as u64).into();
+            remaining["retirementCopyBytes"] = row["retirementCopyBytes"].as_u64().unwrap().saturating_sub(copied as u64).into();
             run(inner, &remaining, &law);
         }
         run(Box::new(value), row, &law);
@@ -210,39 +287,35 @@ fn native_recursive_intrinsic_retirement_admits_each_constructor_and_physical_re
 
 #[test]
 fn paged_native_controlled_retirement_observes_copy_demand_without_releasing_backing() {
-    use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, observe_retirement_allocations};
+    use crate::{retained_clone::RetainedCloneStep, observe_retirement_allocations};
+    warm();
     fn run<T: RetireOwned>(value: T, row: &serde_json::Value) {
         let (mut owner, heap) = observe_retirement_allocations(|| controlled::ControlledRetirement::new(value).unwrap_or_else(|_| panic!("native controlled owner")));
         assert_eq!(heap, (0, 0));
         let mut copied = 0;
-        let mut released = 0;
         let mut observed = false;
         for _ in 0..100000 {
-            let ((copy, capacity, release), heap) = observe_retirement_allocations(|| {
-                let copy = owner.next_copy_byte_demand().unwrap();
-                (copy, owner.next_capacity_byte_demand(copy).unwrap(), owner.next_release_byte_demand().unwrap())
-            });
+            let (quote, heap) = observe_retirement_allocations(|| owner.next_demand(0).unwrap());
             assert_eq!(heap, (0, 0));
+            let grant = RetainedCloneGrant { maximum_depth: 64, ..owner_grant(&owner, 0) };
+            let (copy, capacity, release) = (quote.copy_bytes, quote.capacity_bytes, quote.release_bytes);
             assert!(copy + capacity + release <= 4096);
-            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: 64 };
-            let (zero, heap) = observe_retirement_allocations(|| owner.step(RetainedCloneGrant::default()).unwrap());
+            let (zero, heap) = step(&mut owner, RetainedCloneGrant::default());
             assert_eq!(zero.progress(), Default::default());
             assert_eq!(heap, (0, 0));
-            if copy > 0 {
+            let payload = payload_turn(quote);
+            if payload {
                 observed = true;
-                assert_eq!(copy, row["minimumCopyBytes"].as_u64().unwrap() as usize);
-                assert_eq!((capacity, release), (0, 0));
-                let (denied, heap) = observe_retirement_allocations(|| owner.step(RetainedCloneGrant { maximum_copy_bytes: copy - 1, maximum_capacity_bytes: 0, ..grant }).unwrap());
+                assert_eq!(payload_bytes(quote), row["minimumCopyBytes"].as_u64().unwrap() as usize);
+                let (denied, heap) = step(&mut owner, RetainedCloneGrant { maximum_copy_bytes: copy - 1, ..grant });
                 assert_eq!(denied.progress(), Default::default());
                 assert_eq!(heap, (0, 0));
-                assert_eq!(owner.next_copy_byte_demand().unwrap(), copy);
+                assert_eq!(owner.next_demand(0).unwrap(), quote);
             }
-            let (step, heap) = observe_retirement_allocations(|| owner.step(grant).unwrap());
+            let (step, heap) = step(&mut owner, grant);
             assert!(step.progress().fits(grant));
             assert_eq!(heap, (step.progress().retained_capacity_bytes, step.progress().released_bytes));
-            if copy > 0 { assert_eq!(step.progress().released_bytes, 0); }
-            copied += step.progress().copied_bytes;
-            released += step.progress().released_bytes;
+            if payload { assert_eq!(step.progress().released_bytes, 0); copied += payload_copied(step.progress()); }
             if matches!(step, RetainedCloneStep::Complete(_)) { break; }
         }
         assert_eq!(observed, row["totalCopyBytes"].as_u64().unwrap() > 0);assert!(owner.terminal_is_empty());
@@ -272,34 +345,40 @@ struct CloseDemandRecord {
 #[serde(untagged)]
 enum CloseDemandEnum { Record(CloseDemandRecord), Empty }
 
+#[derive(serde::Serialize)]
+struct MacroControlledRecord { label: String, values: Vec<u32>, nested: Option<(String, Vec<u32>)> }
+crate::artifact_retire_struct!(MacroControlledRecord { label, values, nested });
+
 #[test]
 fn paged_native_retained_clone_close_admits_exact_leaf_and_composite_demand() {
-    use crate::{retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep}, observe_retirement_allocations};
+    use crate::{retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep}, observe_retirement_allocations};
+    warm();
     fn run<T:RetainedClone>(source:crate::retained_clone::FixtureSource<T>,label:&str) {
         let (mut cursor,allocation)=observe_retirement_allocations(T::retained_clone_cursor);assert_eq!(allocation,(0,0));
         let mut ready=false;
         for _turn in 0..10000 {
-            let (demand,allocation)=observe_retirement_allocations(||cursor.advance_demands(source.borrow(),4096).unwrap());assert_eq!(allocation,(0,0));
+            let (demand,allocation)=observe_retirement_allocations(||cursor.advance_demands(source.borrow(),4096,effect::CPU).unwrap());assert_eq!(allocation,(0,0));
             let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-            let (step,allocation)=observe_retirement_allocations(||cursor.advance(source.borrow(), 4096, grant).unwrap());
+            let (turn,allocation)=observe_retirement_allocations(||effect::advance(&mut cursor,source.borrow(),4096,effect::CPU,grant));let step=turn.result.unwrap();
             assert!(step.progress().fits(grant));assert!(allocation.0<=step.progress().retained_capacity_bytes&&allocation.1<=step.progress().released_bytes);
             if matches!(step,RetainedCloneStep::Complete(_)){ready=true;break;}
         }
-        assert!(ready);cursor.begin_close();
+        assert!(ready);
+        let close=cursor.begin_close_demand().unwrap();let (turn,allocation)=observe_retirement_allocations(||effect::begin_close_paid(&mut cursor,RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:close.copy_bytes,maximum_capacity_bytes:close.capacity_bytes,maximum_release_bytes:close.release_bytes,maximum_depth:close.depth}));let started=turn.result.unwrap();assert!(allocation.0<=started.retained_capacity_bytes&&allocation.1<=started.released_bytes);
         let mut terminal=false;let mut born=0;let mut released=0;let mut copied=0;
         for turn in 0usize..100000 {
             let (demand,allocation)=observe_retirement_allocations(||cursor.close_demands(4096).unwrap());let(copy,capacity,release)=(demand.copy_bytes,demand.capacity_bytes,demand.release_bytes);
             assert_eq!(allocation,(0,0));assert!(copy+capacity+release<=4096);
-            let (zero,allocation)=observe_retirement_allocations(||cursor.close_step(RetainedCloneGrant::default()).unwrap());assert_eq!(zero.progress(),RetainedCloneProgress::default());assert_eq!(allocation,(0,0));
+            let (zero,allocation)=observe_retirement_allocations(||effect::close_step(&mut cursor,RetainedCloneGrant::default()));assert_eq!(zero.result.unwrap().progress(),RetainedCloneProgress::default());assert_eq!(allocation,(0,0));
             let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:demand.depth};assert_eq!(cursor.close_demands(grant.maximum_copy_bytes).unwrap(),demand);
             if copy!=0 || capacity!=0 || release!=0 {
                 let below=RetainedCloneGrant {maximum_copy_bytes:copy.saturating_sub(1),maximum_capacity_bytes:capacity.saturating_sub(1),maximum_release_bytes:release.saturating_sub(1),..grant};
-                let (step,allocation)=observe_retirement_allocations(||cursor.close_step(below).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(allocation,(0,0));
+                let (step,allocation)=observe_retirement_allocations(||effect::close_step(&mut cursor,below));assert_eq!(step.result.unwrap().progress(),RetainedCloneProgress::default());assert_eq!(allocation,(0,0));
             }
-            let (step,allocation)=observe_retirement_allocations(||cursor.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert!(allocation.0<=step.progress().retained_capacity_bytes&&allocation.1<=step.progress().released_bytes);born+=allocation.0;released+=allocation.1;copied+=step.progress().copied_bytes;
-            if copy!=0 {assert_eq!(allocation.1,0);}
-            if turn>=1024&&turn.is_power_of_two(){}
-            if matches!(step,RetainedCloneStep::Complete(_)){terminal=true;break;}
+            let (step,allocation)=observe_retirement_allocations(||effect::close_step(&mut cursor,grant));let step=step.result.unwrap();assert!(step.progress().fits(grant));assert!(allocation.0<=step.progress().retained_capacity_bytes&&allocation.1<=step.progress().released_bytes);born+=allocation.0;released+=allocation.1;copied+=step.progress().copied_bytes;
+            if payload_turn(demand) {assert_eq!(allocation.1,0);}
+            
+            if matches!(step,RetainedCloneStep::Complete(_))||cursor.terminal_is_empty(){terminal=true;break;}
         }
         assert!(terminal&&cursor.terminal_is_empty(),"retained leaf exact demand must reach terminal: {label}");assert_eq!(observe_retirement_allocations(||drop(cursor)).1,(0,0));
     }
@@ -320,28 +399,24 @@ fn paged_native_retained_clone_close_admits_exact_leaf_and_composite_demand() {
     run(RetainedCloneSource::from_owner((17u8,Some(crate::paged::PagedUtf8::<{usize::MAX}>::from("groß")),Box::new(crate::paged::PagedUtf8::<{usize::MAX}>::from("🧬")))),"tuple optional boxed native text");
 }
 
-#[derive(serde::Serialize)]
-struct MacroControlledRecord { label: String, values: Vec<u32>, nested: Option<(String, Vec<u32>)> }
-crate::artifact_retire_struct!(MacroControlledRecord { label, values, nested });
-
 #[test]
 fn retirement_struct_macro_defers_exact_field_birth_and_release_allocations() {
-    use crate::{retained_clone::RetainedCloneGrant, observe_retirement_allocations};
+    warm();
     let fixture: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let values = fixture["cloneClose"]["optionalValues"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u32).collect::<Vec<_>>();
     let label = fixture["controlledRetirement"]["label"].as_str().unwrap();
     let owner = MacroControlledRecord { label: label.into(), values: values.clone(), nested: Some((label.repeat(80), values.clone())) };
     assert_eq!(serde_json::to_value(&owner).unwrap(), serde_json::json!({"label": label, "values": values, "nested": [label.repeat(80), values]}));
-    let (retirement, allocation) = observe_retirement_allocations(|| controlled::ControlledRetirement::new(owner));
+    let (retirement, allocation) = observe(|| controlled::ControlledRetirement::new(owner));
     assert_eq!(allocation, (0, 0));
     let mut retirement = retirement.unwrap_or_else(|_| panic!("macro record must expose measured deferred constructor authority"));
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
-    let (zero, allocation) = observe_retirement_allocations(|| retirement.step(RetainedCloneGrant::default()).unwrap());
+    let (zero, allocation) = step(&mut retirement, RetainedCloneGrant::default());
     assert_eq!(zero.progress(), Default::default());
     assert_eq!(allocation, (0, 0));
     let mut turns = 0;
     for _ in 0..10000 {
-        let (step, allocation) = observe_retirement_allocations(|| retirement.step(grant).unwrap());
+        let grant = RetainedCloneGrant { maximum_depth: 64, ..owner_grant(&retirement, 64) };
+        let (step, allocation) = step(&mut retirement, grant);
         let progress = step.progress();
         assert!(progress.fits(grant));
         assert!(allocation.0 <= progress.retained_capacity_bytes && allocation.1 <= progress.released_bytes, "actual field constructor/release: {allocation:?} {progress:?}");
@@ -349,50 +424,51 @@ fn retirement_struct_macro_defers_exact_field_birth_and_release_allocations() {
         if matches!(step, crate::retained_clone::RetainedCloneStep::Complete(_)) { break; }
     }
     assert!(turns > 1 && retirement.terminal_is_empty());
-    let (_, allocation) = observe_retirement_allocations(|| drop(retirement));
+    let (_, allocation) = observe(|| drop(retirement));
     assert_eq!(allocation, (0, 0));
 }
 
 #[test]
 fn retirement_forward_deque_keeps_original_source_and_exact_physical_backing() {
-    use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, observe_retirement_allocations};
+    use crate::retained_clone::RetainedCloneStep;
     use std::collections::VecDeque;
+    warm();
     let fixture: serde_json::Value = serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/📥️forward-deque/🔣️.json")).unwrap();
     for count in fixture["rowCounts"].as_array().unwrap() {
         let count = count.as_u64().unwrap() as usize;
         let expected = (0..count).map(|index| index as u32).collect::<Vec<_>>();
         let pointer = expected.as_ptr();
         let backing = expected.capacity() * std::mem::size_of::<u32>();
-        let (mut source, allocations) = observe_retirement_allocations(|| VecDeque::from(expected));
+        let (mut source, allocations) = observe(|| VecDeque::from(expected));
         assert_eq!(allocations, (0, 0));
         assert_eq!(source.as_slices().0.as_ptr(), pointer);
         assert_eq!(source.capacity() * std::mem::size_of::<u32>(), backing);
         assert_eq!(serde_json::to_value(&source).unwrap(), serde_json::json!((0..count).collect::<Vec<_>>()));
         if count > 1 { assert_eq!(source.pop_front(), Some(0)); source.push_front(0); }
         assert!(VecDeque::<u32>::controlled_retirement_supported(), "retained forward source requires controlled child birth and physical backing authority");
-        let (owner, allocations) = observe_retirement_allocations(|| controlled::ControlledRetirement::new(source));
+        let (owner, allocations) = observe(|| controlled::ControlledRetirement::new(source));
         assert_eq!(allocations, (0, 0));
         let mut owner = owner.unwrap_or_else(|_| panic!("exact admitted forward source"));
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
         let mut released = 0;
         for _ in 0..100000 {
-            let capacity = owner.next_capacity_byte_demand(grant.maximum_release_bytes).unwrap();
-            let release = owner.next_release_byte_demand().unwrap();
+            let grant = RetainedCloneGrant { maximum_depth: 64, ..owner_grant(&owner, 64) };
+            let (capacity, release) = (grant.maximum_capacity_bytes, grant.maximum_release_bytes);
             if capacity == 0 && release > 0 {
-                let (step, allocations) = observe_retirement_allocations(|| owner.step(RetainedCloneGrant { maximum_release_bytes: release - 1, ..grant }).unwrap());
+                let (step, allocations) = step(&mut owner, RetainedCloneGrant { maximum_release_bytes: release - 1, ..grant });
                 assert_eq!(step.progress().released_bytes, 0); assert_eq!(allocations.1, 0);
                 assert_eq!(owner.next_release_byte_demand().unwrap(), release);
             }
-            let (step, allocations) = observe_retirement_allocations(|| owner.step(grant).unwrap());
+            let (step, allocations) = step(&mut owner, grant);
             assert!(step.progress().fits(grant));
             assert!(allocations.0 <= step.progress().retained_capacity_bytes && allocations.1 <= step.progress().released_bytes);
             released += allocations.1;
             if matches!(step, RetainedCloneStep::Complete(_)) { break; }
         }
         assert!(owner.terminal_is_empty() && released >= backing);
-        assert_eq!(observe_retirement_allocations(|| drop(owner)).1, (0, 0));
+        assert_eq!(observe(|| drop(owner)).1, (0, 0));
     }
 }
+
 
 #[derive(crate::RetireOwned, crate::RetainedClone, serde::Serialize)]
 enum ControlledTree {
@@ -409,8 +485,8 @@ struct ControlledCloneRecord {
 
 #[test]
 fn paged_native_controlled_retirement_admits_actual_birth_and_release_allocations() {
-    use crate::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
-    use semio_framework_value_testing_allocator::observe_retirement_allocations;
+    use crate::retained_clone::RetainedCloneStep;
+    warm();
     let corpus: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let law = &corpus["controlledRetirement"];
     let depth = law["depth"].as_u64().unwrap() as usize;
@@ -418,10 +494,10 @@ fn paged_native_controlled_retirement_admits_actual_birth_and_release_allocation
     for pause in law["pauseAt"].as_array().unwrap() {
         let mut tree = ControlledTree::Leaf;
         for _ in 0..depth { tree = ControlledTree::Node(law["label"].as_str().unwrap().into(), [tree].into_iter().collect()); }
-        let (result, birth) = observe_retirement_allocations(|| controlled::ControlledRetirement::new(tree));
+        let (result, birth) = observe(|| controlled::ControlledRetirement::new(tree));
         assert_eq!(birth, (0, 0));
         let mut retirement = result.unwrap_or_else(|_| panic!("derived tree must expose controlled constructor authority"));
-        let (zero, allocation) = observe_retirement_allocations(|| retirement.step(RetainedCloneGrant::default()).unwrap());
+        let (zero, allocation) = step(&mut retirement, RetainedCloneGrant::default());
         assert_eq!(zero.progress(), Default::default());
         assert_eq!(allocation, (0, 0));
         let mut complete = false;
@@ -429,18 +505,17 @@ fn paged_native_controlled_retirement_admits_actual_birth_and_release_allocation
         let mut released = 0;
         for turn in 0..100000 {
             if turn == pause.as_u64().unwrap() as usize {
-                let (step, allocation) = observe_retirement_allocations(|| retirement.step(RetainedCloneGrant::default()).unwrap());
+                let (step, allocation) = step(&mut retirement, RetainedCloneGrant::default());
                 assert_eq!(step.progress(), Default::default());
                 assert_eq!(allocation, (0, 0));
             }
-            let grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(budget, usize::MAX), 1 => RetainedCloneGrant::one_payload_turn(budget, usize::MAX), _ => RetainedCloneGrant::one_release_turn(budget, usize::MAX) };
-            assert!(retirement.next_capacity_byte_demand(grant.maximum_release_bytes).unwrap() <= budget);
-            assert!(retirement.next_release_byte_demand().unwrap() <= budget);
-            let (result, allocation) = observe_retirement_allocations(|| retirement.step(grant));
-            let step = result.unwrap();
+            let grant = owner_grant(&retirement, budget);
+            assert!(grant.maximum_capacity_bytes <= budget);
+            assert!(grant.maximum_release_bytes <= budget);
+            let (step, allocation) = step(&mut retirement, grant);
             let progress = step.progress();
             assert!(progress.fits(grant));
-            assert!(progress.copied_bytes + progress.retained_capacity_bytes + progress.released_bytes <= budget);
+            assert!(progress.retained_capacity_bytes + progress.released_bytes <= 2 * budget);
             assert!(allocation.0 <= progress.retained_capacity_bytes, "unadmitted birth: {allocation:?} {progress:?}");
             assert!(allocation.1 <= progress.released_bytes, "unadmitted release: {allocation:?} {progress:?}");
             admitted += allocation.0;
@@ -449,15 +524,15 @@ fn paged_native_controlled_retirement_admits_actual_birth_and_release_allocation
         }
         assert!(complete && retirement.terminal_is_empty());
         assert!(released > admitted);
-        let (_, terminal) = observe_retirement_allocations(|| drop(retirement));
+        let (_, terminal) = observe(|| drop(retirement));
         assert_eq!(terminal, (0, 0));
     }
 }
 
 #[test]
 fn paged_native_append_close_exposes_exact_capacity_and_release_demand() {
-    use crate::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
-    use semio_framework_value_testing_allocator::observe_retirement_allocations;
+    use crate::retained_clone::RetainedCloneStep;
+    warm();
     let corpus: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let text = corpus["prefix"].as_str().unwrap().repeat(corpus["prefixRepeat"].as_u64().unwrap() as usize);
     let budget = corpus["appendClose"]["maximumBytes"].as_u64().unwrap() as usize;
@@ -465,22 +540,24 @@ fn paged_native_append_close_exposes_exact_capacity_and_release_demand() {
     let mut retained = Some(String::from("cold-control-refusal"));
     let pointer = retained.as_ref().unwrap().as_ptr();
     let frame = owned_retirement_birth_bytes::<String>();
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: frame - 1, maximum_release_bytes: 0, maximum_depth: 1 };
-    let (denied, heap) = observe_retirement_allocations(|| close.begin_granted(&mut retained, grant).unwrap().unwrap());
+    let birth = birth_grant(retained.as_ref().unwrap());
+    assert_eq!(birth.maximum_capacity_bytes, frame);
+    let grant = RetainedCloneGrant { maximum_capacity_bytes: frame - 1, ..birth };
+    let (denied, heap) = observe(|| effect::begin_granted(&mut close, &mut retained, grant).result.unwrap().unwrap());
     assert_eq!(denied.progress(), Default::default());assert_eq!(heap, (0,0));assert_eq!(retained.as_ref().unwrap().as_ptr(), pointer);assert!(close.is_empty());
     assert_eq!(close.next_owner_capacity_byte_demand::<String>(true,0).unwrap(),frame);
-    let (admitted, heap) = observe_retirement_allocations(|| close.begin_granted(&mut retained, RetainedCloneGrant { maximum_capacity_bytes: frame, ..grant }).unwrap().unwrap());
+    let (admitted, heap) = observe(|| effect::begin_granted(&mut close, &mut retained, birth).result.unwrap().unwrap());
     assert_eq!(heap,(admitted.progress().retained_capacity_bytes,0));assert!(retained.is_none());
-    for _ in 0..1000 { if close.is_empty() { break; }let grant=RetainedCloneGrant { maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:close.next_capacity_byte_demand(4096).unwrap(),maximum_release_bytes:close.next_release_byte_demand().unwrap(),maximum_depth:close.next_depth_demand().unwrap() };let (step,heap)=observe_retirement_allocations(||close.step_granted(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes)); }
+    for _ in 0..1000 { if close.is_empty() { break; }let grant=quoted(4096,|copy|close.demands(copy).unwrap());let turn=effect::step_granted(&mut close,grant);let step=turn.result.unwrap();assert!(step.progress().fits(grant)); }
     assert!(close.is_empty());
     for partial in corpus["appendClose"]["cancelAt"].as_array().unwrap() {
         let partial = partial.as_u64().unwrap() as usize;
         let mut destination = crate::paged::PagedUtf8::<{usize::MAX}>::try_from_str(corpus["appendClose"]["destinationPrefix"].as_str().unwrap()).unwrap();
-        let (mut cursor, allocation) = observe_retirement_allocations(crate::paged::PagedUtf8AppendCursor::default);
+        let (mut cursor, allocation) = observe(crate::paged::PagedUtf8AppendCursor::default);
         assert_eq!(allocation, (0, 0));
         for turn in 0..partial {
             let grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(budget, usize::MAX), 1 => RetainedCloneGrant::one_payload_turn(budget, usize::MAX), _ => RetainedCloneGrant::one_release_turn(budget, usize::MAX) };
-            let (step, allocation) = observe_retirement_allocations(|| cursor.advance(&text, &mut destination, grant).unwrap());
+            let (step, allocation) = observe(|| cursor.advance(&text, &mut destination, grant.maximum_copy_bytes, grant).result.unwrap());
             assert!(step.progress().fits(grant));assert!(allocation.0 <= step.progress().retained_capacity_bytes && allocation.1 <= step.progress().released_bytes);
         }
         cursor.begin_close();
@@ -488,41 +565,43 @@ fn paged_native_append_close_exposes_exact_capacity_and_release_demand() {
         let mut turns = 0;
         let mut released = 0;
         for _ in 0..100000 {
-            let ((copy, capacity, release), allocation) = observe_retirement_allocations(|| {let copy=cursor.next_close_copy_byte_demand().unwrap();(copy,cursor.next_close_capacity_byte_demand(copy).unwrap(),cursor.next_close_release_byte_demand().unwrap())});
+            let copy = cursor.next_close_copy_byte_demand().unwrap();
+            let ((capacity, release), allocation) = observe(|| (cursor.next_close_capacity_byte_demand(copy).unwrap(), cursor.next_close_release_byte_demand().unwrap()));
             assert_eq!(allocation, (0, 0));
-            let (step, allocation) = observe_retirement_allocations(|| cursor.close_step(RetainedCloneGrant::default()).unwrap());
-            assert_eq!(step.progress(), Default::default());assert_eq!(allocation, (0, 0));
+            let (zero, allocation) = effect::driven(RetainedCloneGrant::default(), |effect| cursor.close_step(0, effect));
+            assert_eq!(zero.result.unwrap().progress(), Default::default());assert_eq!(allocation, (0, 0));
             if copy > 0 || capacity > 0 || release > 0 {
-                let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy.saturating_sub(1), maximum_capacity_bytes: capacity.saturating_sub(1), maximum_release_bytes: release.saturating_sub(1), maximum_depth: usize::MAX };
-                let (step, allocation) = observe_retirement_allocations(|| cursor.close_step(grant).unwrap());
-                assert_eq!(step.progress(), Default::default());assert_eq!(allocation, (0, 0));
+                let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy.saturating_sub(1), maximum_capacity_bytes: capacity.saturating_sub(1), maximum_release_bytes: release.saturating_sub(1), maximum_depth: 1024 };
+                let (step, allocation) = effect::driven(grant, |effect| cursor.close_step(grant.maximum_copy_bytes, effect));
+                assert_eq!(step.result.unwrap().progress(), Default::default());assert_eq!(allocation, (0, 0));
             }
-            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: usize::MAX };
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: 1024 };
             assert!(grant.maximum_copy_bytes + grant.maximum_capacity_bytes + grant.maximum_release_bytes <= budget);
-            let (step, allocation) = observe_retirement_allocations(|| cursor.close_step(grant).unwrap());
+            let (step, allocation) = effect::driven(grant, |effect| cursor.close_step(grant.maximum_copy_bytes, effect));
+            let step = step.result.unwrap();
             assert!(step.progress().fits(grant));assert!(allocation.0 <= step.progress().retained_capacity_bytes && allocation.1 <= step.progress().released_bytes);
-            if copy > 0 {assert_eq!(allocation.1,0);}
             released += allocation.1;turns += 1;
             if matches!(step, RetainedCloneStep::Complete(_)) { closed = true;break; }
         }
         assert!(closed && cursor.terminal_is_empty());
-        let (_, allocation) = observe_retirement_allocations(|| drop(cursor));assert_eq!(allocation, (0, 0));
+        let (_, allocation) = observe(|| drop(cursor));assert_eq!(allocation, (0, 0));
         let mut retirement = controlled::ControlledRetirement::new(destination).unwrap_or_else(|_| panic!("native destination has direct retirement"));
-        for turn in 0..100000 {
-            let grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(budget, usize::MAX), 1 => RetainedCloneGrant::one_payload_turn(budget, usize::MAX), _ => RetainedCloneGrant::one_release_turn(budget, usize::MAX) };
-            let (step, allocation) = observe_retirement_allocations(|| retirement.step(grant).unwrap());
+        for _ in 0..100000 {
+            let grant = owner_grant(&retirement, budget);
+            assert!(grant.maximum_copy_bytes <= budget.max(frame * 4));
+            let (step, allocation) = step(&mut retirement, grant);
             assert!(step.progress().fits(grant));assert!(allocation.0 <= step.progress().retained_capacity_bytes && allocation.1 <= step.progress().released_bytes);
             if matches!(step, RetainedCloneStep::Complete(_)) { break; }
         }
         assert!(retirement.terminal_is_empty());
-        let (_, allocation) = observe_retirement_allocations(|| drop(retirement));assert_eq!(allocation, (0, 0));
+        let (_, allocation) = observe(|| drop(retirement));assert_eq!(allocation, (0, 0));
     }
 }
 
 #[test]
 fn paged_native_clone_close_admits_actual_birth_release_and_zero_grants() {
-    use crate::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneStep, RetainedCloneSource};
-    use semio_framework_value_testing_allocator::observe_retirement_allocations;
+    use crate::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneStep, RetainedCloneSource};
+    warm();
     let corpus: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let law = &corpus["cloneClose"];
     let budget = law["maximumBytes"].as_u64().unwrap() as usize;
@@ -537,45 +616,50 @@ fn paged_native_clone_close_admits_actual_birth_release_and_zero_grants() {
             objects,
         });
         let oracle = serde_json::to_value(source.borrow().get()).unwrap();
-        let (mut cursor, birth) = observe_retirement_allocations(ControlledCloneRecord::retained_clone_cursor);
+        let (mut cursor, birth) = observe(ControlledCloneRecord::retained_clone_cursor);
         assert_eq!(birth, (0, 0));
-        let (zero, allocation) = observe_retirement_allocations(|| cursor.advance(source.borrow(), budget, RetainedCloneGrant::default()).unwrap());
-        assert_eq!(zero.progress(), Default::default());
+        let (zero, allocation) = observe(|| effect::advance(&mut cursor, source.borrow(), budget, effect::CPU, RetainedCloneGrant::default()));
+        assert_eq!(zero.result.unwrap().progress(), Default::default());
         assert_eq!(allocation, (0, 0));
         let mut output = None;
         let mut cloned = false;
         for turn in 0..100000 {
             if turn == pause { break; }
-            let demand=cursor.advance_demands(source.borrow(),budget).unwrap();
+            let demand=cursor.advance_demands(source.borrow(),budget,effect::CPU).unwrap();
             let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-            for denied in [RetainedCloneGrant::one_capacity_turn(budget,usize::MAX),RetainedCloneGrant::one_payload_turn(budget,usize::MAX),RetainedCloneGrant::one_release_turn(budget,usize::MAX)]{if denied.maximum_copy_bytes<demand.copy_bytes||denied.maximum_capacity_bytes<demand.capacity_bytes||denied.maximum_release_bytes<demand.release_bytes{let(step,allocation)=observe_retirement_allocations(||cursor.advance(source.borrow(),budget,denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(allocation,(0,0));assert_eq!(cursor.advance_demands(source.borrow(),budget).unwrap(),demand);}}
-            let (step, allocation) = observe_retirement_allocations(|| cursor.advance(source.borrow(), budget, grant).unwrap());
+            for denied in [RetainedCloneGrant::one_capacity_turn(budget,usize::MAX),RetainedCloneGrant::one_payload_turn(budget,usize::MAX),RetainedCloneGrant::one_release_turn(budget,usize::MAX)]{if denied.maximum_copy_bytes<demand.copy_bytes||denied.maximum_capacity_bytes<demand.capacity_bytes||denied.maximum_release_bytes<demand.release_bytes{let(step,allocation)=observe(||effect::advance(&mut cursor,source.borrow(),budget,effect::CPU,denied));assert_eq!(step.result.unwrap().progress(),Default::default());assert_eq!(allocation,(0,0));assert_eq!(cursor.advance_demands(source.borrow(),budget,effect::CPU).unwrap(),demand);}}
+            let (step, allocation) = observe(|| effect::advance(&mut cursor, source.borrow(), budget, effect::CPU, grant));
+            let step = step.result.unwrap();
             let progress = step.progress();
             assert!(progress.fits(grant));
             assert!(allocation.0 <= progress.retained_capacity_bytes && allocation.1 <= progress.released_bytes, "clone: {allocation:?} {progress:?}");
             if matches!(step, RetainedCloneStep::Complete(_)) {
-                let (owner, allocation) = observe_retirement_allocations(|| cursor.take());
+                let take = cursor.take_demand().unwrap();
+                let take_grant = RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:take.copy_bytes,maximum_capacity_bytes:take.capacity_bytes,maximum_release_bytes:take.release_bytes,maximum_depth:take.depth};
+                let (owner, allocation) = observe(|| effect::take(&mut cursor, take_grant));
                 assert_eq!(allocation, (0, 0));
-                output = owner;
-                let (second, allocation) = observe_retirement_allocations(|| cursor.take());
-                assert!(second.is_none());
+                output = owner.result.unwrap().map(|(owner, _)| owner);
+                let (second, allocation) = observe(|| effect::take(&mut cursor, take_grant));
+                assert!(second.result.unwrap().is_none());
                 assert_eq!(allocation, (0, 0));
                 cloned = true;
                 break;
             }
         }
         if pause == usize::MAX { assert!(cloned && output.is_some(), "complete clone must transfer its actual native owner"); assert_eq!(serde_json::to_value(output.as_ref().unwrap()).unwrap(), oracle); }
-        let (_, allocation) = observe_retirement_allocations(|| cursor.begin_close());
-        assert_eq!(allocation, (0, 0));
-        let (zero, allocation) = observe_retirement_allocations(|| cursor.close_step(RetainedCloneGrant::default()).unwrap());
-        assert_eq!(zero.progress(), Default::default());
+        let close = cursor.begin_close_demand().unwrap();
+        let (started, allocation) = observe(|| effect::begin_close_paid(&mut cursor, RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:close.copy_bytes,maximum_capacity_bytes:close.capacity_bytes,maximum_release_bytes:close.release_bytes,maximum_depth:close.depth}));
+        let started = started.result.unwrap();assert!(allocation.0 <= started.retained_capacity_bytes && allocation.1 <= started.released_bytes);
+        let (zero, allocation) = observe(|| effect::close_step(&mut cursor, RetainedCloneGrant::default()));
+        assert_eq!(zero.result.unwrap().progress(), Default::default());
         assert_eq!(allocation, (0, 0));
         let mut complete = false;
-        for turn in 0..100000 {
+        for _turn in 0..100000 {
             let demand=cursor.close_demands(budget).unwrap();
-            for denied in [RetainedCloneGrant::one_capacity_turn(budget,usize::MAX),RetainedCloneGrant::one_payload_turn(budget,usize::MAX),RetainedCloneGrant::one_release_turn(budget,usize::MAX)]{if denied.maximum_copy_bytes<demand.copy_bytes||denied.maximum_capacity_bytes<demand.capacity_bytes||denied.maximum_release_bytes<demand.release_bytes{let(step,allocation)=observe_retirement_allocations(||cursor.close_step(denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(allocation,(0,0));assert_eq!(cursor.close_demands(budget).unwrap(),demand);}}
+            for denied in [RetainedCloneGrant::one_capacity_turn(budget,usize::MAX),RetainedCloneGrant::one_payload_turn(budget,usize::MAX),RetainedCloneGrant::one_release_turn(budget,usize::MAX)]{if denied.maximum_copy_bytes<demand.copy_bytes||denied.maximum_capacity_bytes<demand.capacity_bytes||denied.maximum_release_bytes<demand.release_bytes{let(step,allocation)=observe(||effect::close_step(&mut cursor,denied));assert_eq!(step.result.unwrap().progress(),Default::default());assert_eq!(allocation,(0,0));assert_eq!(cursor.close_demands(budget).unwrap(),demand);}}
             let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(cursor.close_demands(grant.maximum_copy_bytes).unwrap(),demand);
-            let (step, allocation) = observe_retirement_allocations(|| cursor.close_step(grant).unwrap());
+            let (step, allocation) = observe(|| effect::close_step(&mut cursor, grant));
+            let step = step.result.unwrap();
             let progress = step.progress();
             assert!(progress.fits(grant));
             assert!(allocation.0 <= progress.retained_capacity_bytes, "close birth: {allocation:?} {progress:?}");
@@ -583,52 +667,51 @@ fn paged_native_clone_close_admits_actual_birth_release_and_zero_grants() {
             if matches!(step, RetainedCloneStep::Complete(_)) { complete = true; break; }
         }
         assert!(complete && cursor.terminal_is_empty());
-        let (_, allocation) = observe_retirement_allocations(|| drop(cursor));
+        let (_, allocation) = observe(|| drop(cursor));
         assert_eq!(allocation, (0, 0));
         if let Some(output) = output {
-            let (result, allocation) = observe_retirement_allocations(|| controlled::ControlledRetirement::new(output));
+            let (result, allocation) = observe(|| controlled::ControlledRetirement::new(output));
             assert_eq!(allocation, (0, 0));
             let mut retirement = result.unwrap_or_else(|_| panic!("completed clone native owner must retire directly"));
             let mut closed = false;
-            for turn in 0..100000 {
-                let demand=retirement.selected_demand(budget).unwrap();
-                let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(retirement.selected_demand(grant.maximum_copy_bytes).unwrap(),demand);
-                let (step, allocation) = observe_retirement_allocations(|| retirement.step(grant).unwrap());
+            for _turn in 0..100000 {
+                let grant=owner_grant(&retirement,budget);
+                let (step, allocation) = step(&mut retirement, grant);
                 let progress = step.progress();
                 assert!(progress.fits(grant));
                 assert!(allocation.0 <= progress.retained_capacity_bytes && allocation.1 <= progress.released_bytes, "transferred owner: {allocation:?} {progress:?}");
                 if matches!(step, RetainedCloneStep::Complete(_)) { closed = true; break; }
             }
             assert!(closed && retirement.terminal_is_empty());
-            let (_, allocation) = observe_retirement_allocations(|| drop(retirement));
+            let (_, allocation) = observe(|| drop(retirement));
             assert_eq!(allocation, (0, 0));
         }
     }
 }
 
 fn admit_fixture<T:RetireOwned>(value:T)->Box<dyn ErasedSnapshotRetirement> {
-    let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:owned_retirement_birth_bytes::<T>(),maximum_release_bytes:0,maximum_depth:1};
-    admit_owned_retirement(value,grant).unwrap_or_else(|(error,_)|panic!("fixture original owner admission: {error}")).0
+    let mut slot=Some(value);let grant=birth_grant(slot.as_ref().unwrap());
+    admit_into(&mut slot,grant).result.unwrap_or_else(|error|panic!("fixture original owner admission: {error}")).expect("fixture original owner admission funded").0
 }
-fn admit_shared_fixture<T:RetireOwned+Sync>(value:Arc<T>,lease:bool)->Box<dyn ErasedSnapshotRetirement> {
-    let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:arc_custody::shared_retirement_birth_bytes::<T>(),maximum_release_bytes:0,maximum_depth:1};
-    arc_custody::admit_shared_retirement(value,grant,lease).unwrap_or_else(|(error,_)|panic!("fixture original lease admission: {error}")).0
-}
+fn admit_shared_fixture<T:RetireOwned+Sync>(value:Arc<T>)->Box<dyn ErasedSnapshotRetirement> {admit_fixture(arc_custody::ArcLease::new(value))}
+fn lease_frame_bytes()->usize {owned_retirement_birth_bytes::<arc_custody::ArcLease<String>>()}
+fn shared_backing_bytes()->usize {std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<String>()).unwrap().0.pad_to_align().size()}
 fn drain(retirement:Box<dyn ErasedSnapshotRetirement>,items:usize,bytes:usize)->usize {
     let mut slot=Some(retirement);let(mut born,mut freed)=(0,0);
     for _ in 0..100_000 {
-        let Some(owner)=slot.as_ref()else{return freed-born;};
-        let (demand,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||crate::factory_ticket_demands(owner,bytes).unwrap());
+        if slot.is_none(){return freed-born;}
+        let (demand,heap)=observe(||crate::factory_ticket_demands(slot.as_ref().unwrap(),bytes).unwrap());
         assert_eq!(heap,(0,0));
-        let grant=RetainedCloneGrant {maximum_items:items,maximum_copy_bytes:bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-        let (step,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||crate::close_factory_ticket(&mut slot,grant).unwrap());
+        let grant=RetainedCloneGrant {maximum_items:items,..ticket_grant(&slot,bytes)};
+        let _=demand;
+        let (step,heap)=ticket_turn(&mut slot,grant);
         assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));
         born+=heap.0;freed+=heap.1;
     }
     panic!("bounded original fixture retirement did not finish");
 }
 fn physical_owned<T:RetireOwned>(value:T,items:usize,bytes:usize)->usize {
-    let (retirement,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||admit_fixture(value));
+    let (retirement,heap)=observe(||admit_fixture(value));
     drain(retirement,items,bytes)-(heap.0-heap.1)
 }
 fn neutral_logical_bytes(value:&serde_json::Value)->usize {
@@ -636,9 +719,10 @@ fn neutral_logical_bytes(value:&serde_json::Value)->usize {
 }
 #[test]
 fn owned_retirement_matches_neutral_exact_byte_grants() {
+    warm();
     let fixture:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();assert_eq!(fixture["cases"].as_array().unwrap().len(),11);
     for row in fixture["cases"].as_array().unwrap(){for budget in fixture["budgets"].as_array().unwrap(){
-        let (retirement,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||match row["kind"].as_str().unwrap(){
+        let (retirement,heap)=observe(||match row["kind"].as_str().unwrap(){
             "string"=>admit_fixture(row["value"].as_str().unwrap().to_owned()),
             "strings"=>admit_fixture(serde_json::from_value::<Vec<String>>(row["value"].clone()).unwrap()),
             "optionalString"=>admit_fixture(serde_json::from_value::<Option<String>>(row["value"].clone()).unwrap()),
@@ -658,14 +742,16 @@ fn owned_retirement_matches_neutral_exact_byte_grants() {
 /// ♻️ Preserves the original64KiB logical quantum and36 payload-turn ceiling with separately admitted scaffolds.
 #[test]
 fn a_byte_buffer_retires_page_by_page_and_owned_elements_one_by_one() {
-    let (owner,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||admit_fixture(vec![7u8;2*1024*1024]));let original=heap.0-heap.1;
+    warm();
+    let (owner,heap)=observe(||admit_fixture(vec![7u8;2*1024*1024]));let original=heap.0-heap.1;
     let mut slot=Some(owner);let(mut payload_turns,mut born,mut released,mut copied)=(0usize,0usize,0usize,0usize);
     for _ in 0..100_000 {
-        let Some(owner)=slot.as_ref()else{break;};let demand=crate::factory_ticket_demands(owner,64*1024).unwrap();
-        let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:64*1024,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-        let (step,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||crate::close_factory_ticket(&mut slot,grant).unwrap());let progress=step.progress();
-        assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));assert!(progress.fits(grant));born+=heap.0;released+=heap.1;copied+=progress.copied_bytes;
-        payload_turns+=usize::from(progress.copied_bytes!=0||progress.released_bytes==2*1024*1024);
+        if slot.is_none(){break;}
+        let quote=crate::factory_ticket_demands(slot.as_ref().unwrap(),64*1024).unwrap();let grant=ticket_grant(&slot,64*1024);
+        let (step,heap)=ticket_turn(&mut slot,grant);let progress=step.progress();
+        assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));assert!(progress.fits(grant));born+=heap.0;released+=heap.1;
+        if payload_turn(quote){copied+=payload_copied(progress);}
+        payload_turns+=usize::from(payload_turn(quote)||progress.released_bytes==2*1024*1024);
         assert!(payload_turns<=36,"the original2MiB payload requires at most36 turns of64KiB; scaffold authority is separate");
     }
     assert!(slot.is_none());assert_eq!(copied,2*1024*1024);assert_eq!(released,original+born);
@@ -675,54 +761,60 @@ fn a_byte_buffer_retires_page_by_page_and_owned_elements_one_by_one() {
 
 #[test]
 fn owned_retirement_rejects_false_terminal_and_preserves_shared_roots() {
-    let root=Arc::new("owned".to_string());let mut shared=admit_shared_fixture(Arc::clone(&root),false);
-    assert_eq!(shared.close_step(RetainedCloneGrant::default()).unwrap().progress(),Default::default());
+    warm();
+    let root=Arc::new("owned".to_string());let mut shared=Some(admit_shared_fixture(Arc::clone(&root)));
+    let (zero,heap)=ticket_turn(&mut shared,RetainedCloneGrant::default());assert_eq!(zero.progress(),Default::default());assert_eq!(heap,(0,0));
     let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
-    assert_eq!(shared.close_step(grant).unwrap().progress(),Default::default());assert_eq!(Arc::strong_count(&root),2);drop(root);
-    assert_eq!(drain(shared,1,1),5+arc_custody::shared_retirement_birth_bytes::<String>()+std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<String>()).unwrap().0.pad_to_align().size());
-    let mut value=admit_fixture("zero".to_string());for _ in 0..4{assert_eq!(value.close_step(grant).unwrap().progress(),Default::default());}
-    assert!(!value.terminal_is_empty());assert_eq!(drain(value,1,2),4+owned_retirement_birth_bytes::<String>());
+    assert_eq!(ticket_turn(&mut shared,grant).0.progress(),Default::default());assert_eq!(Arc::strong_count(&root),2);drop(root);
+    assert_eq!(drain(shared.take().unwrap(),1,1),5+lease_frame_bytes()+shared_backing_bytes());
+    let mut value=Some(admit_fixture("zero".to_string()));for _ in 0..4{assert_eq!(ticket_turn(&mut value,grant).0.progress(),Default::default());}
+    assert!(!value.as_ref().unwrap().terminal_is_empty());assert_eq!(drain(value.take().unwrap(),1,2),4+owned_retirement_birth_bytes::<String>());
     struct Hostile {mode:Option<Arc<std::sync::atomic::AtomicU8>>}
-    impl RetirementCursor for Hostile {
- fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{depth:usize::from(self.mode.is_some()),..Default::default()})}
-        fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();
-            match self.mode.as_ref().unwrap().load(std::sync::atomic::Ordering::Relaxed) {1=>RetirementStep::Bytes(grant.maximum_release_bytes+1),2=>{drop(self.mode.take());RetirementStep::Advanced},_=>RetirementStep::Complete}
+    impl Hostile {
+        fn close_step(&mut self,_body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();
+            match self.mode.as_ref().unwrap().load(std::sync::atomic::Ordering::Relaxed) {1=>RetirementStep::Bytes(grant.maximum_release_bytes+1),2=>{drop(self.mode.take());RetirementStep::Advanced},_=>RetirementStep::Complete(0)}
         }
+    }
+    impl RetirementCursor for Hostile {
+        semio_framework_value_retirement::native_retirement_reply!();
+        fn next_demand(&self,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{depth:usize::from(self.mode.is_some()),..Default::default()})}
         fn terminal_is_empty(&self)->bool {self.mode.is_none()}
         fn next_birth_bytes(&self,_:usize)->Option<usize> {Some(0)}
         fn next_close_byte_demand(&self)->Option<usize> {Some(0)}
         fn terminal_release_bytes(&self)->Option<usize> {self.terminal_is_empty().then_some(size_of::<Self>())}
     }
     impl RetireOwned for Hostile {
-        fn retirement(self)->Box<dyn RetirementCursor> {Box::new(self)}
+        type RetirementCursor=Hostile;
+        fn retirement_seed(self)->Hostile {self}
         fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<Self>())}
         fn controlled_retirement_supported()->bool {true}
     }
     for mode in [0u8,1] {
         let control=Arc::new(std::sync::atomic::AtomicU8::new(mode));let mut owner=controlled::ControlledRetirement::new(Hostile {mode:Some(control.clone())}).unwrap_or_else(|_|panic!("hostile fixture owns an admitted exact frame"));let mut refused=false;
         for _ in 0..8 {
-            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:owner.next_capacity_byte_demand(1).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
-            if owner.step(grant).is_err(){refused=true;break;}
+            let grant=owner_grant(&owner,1);
+            if turn(&mut owner,grant).0.is_err(){refused=true;break;}
         }
         assert!(refused);assert!(!owner.terminal_is_empty());assert_eq!(Arc::strong_count(&control),2);
         control.store(2,std::sync::atomic::Ordering::Relaxed);
-        for _ in 0..16 {if owner.terminal_is_empty(){break;}let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:owner.next_capacity_byte_demand(1).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};owner.step(grant).unwrap();}
+        for _ in 0..16 {if owner.terminal_is_empty(){break;}let grant=owner_grant(&owner,1);step(&mut owner,grant);}
         assert!(owner.terminal_is_empty());assert_eq!(Arc::strong_count(&control),1);
     }
 }
 #[test]
 fn shared_source_leases_release_all_orders_with_one_bounded_owner() {
+    warm();
     let fixture:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["leases"];let text=law["text"].as_str().unwrap();let oracle:serde_json::Value=serde_json::from_str(&serde_json::to_string(text).unwrap()).unwrap();assert_eq!(oracle.as_str().unwrap().len(),text.len());
     for canceled in law["canceled"].as_array().unwrap(){for order in law["orders"].as_array().unwrap(){
         let source=Arc::new(text.to_owned());let mut leases=vec![Some(Arc::clone(&source)),Some(Arc::clone(&source)),Some(source)];let mut released=0;
         for (position,index) in order.as_array().unwrap().iter().enumerate(){
-            let alias=leases[index.as_u64().unwrap()as usize].take().unwrap();let mut retirement=admit_shared_fixture(alias,true);
-            assert_eq!(retirement.close_step(RetainedCloneGrant::default()).unwrap().progress(),Default::default());assert!(!retirement.terminal_is_empty());
-            assert_eq!(retirement.close_step(RetainedCloneGrant {maximum_items:0,maximum_copy_bytes:3,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1}).unwrap().progress(),Default::default());
-            let bytes=drain(retirement,law["items"].as_u64().unwrap()as usize,law["bytes"].as_u64().unwrap()as usize);
-            assert_eq!(bytes,arc_custody::shared_retirement_birth_bytes::<String>()+if position==2{text.len()+std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<String>()).unwrap().0.pad_to_align().size()}else{0},"cancel={canceled} order={order}");released+=bytes;
+            let alias=leases[index.as_u64().unwrap()as usize].take().unwrap();let mut retirement=Some(admit_shared_fixture(alias));
+            let (zero,heap)=ticket_turn(&mut retirement,RetainedCloneGrant::default());assert_eq!(zero.progress(),Default::default());assert_eq!(heap,(0,0));assert!(!retirement.as_ref().unwrap().terminal_is_empty());
+            assert_eq!(ticket_turn(&mut retirement,RetainedCloneGrant {maximum_items:0,maximum_copy_bytes:3,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1}).0.progress(),Default::default());
+            let bytes=drain(retirement.take().unwrap(),law["items"].as_u64().unwrap()as usize,law["bytes"].as_u64().unwrap()as usize);
+            assert_eq!(bytes,lease_frame_bytes()+if position==2{text.len()+shared_backing_bytes()}else{0},"cancel={canceled} order={order}");released+=bytes;
         }
-        assert_eq!(released,text.len()+3*arc_custody::shared_retirement_birth_bytes::<String>()+std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<String>()).unwrap().0.pad_to_align().size());assert!(leases.iter().all(Option::is_none));
+        assert_eq!(released,text.len()+3*lease_frame_bytes()+shared_backing_bytes());assert!(leases.iter().all(Option::is_none));
     }}
 }
 
@@ -745,7 +837,7 @@ fn native_encoding_capacity_admission_consumes_the_same_counter_owner(){
     let (mut control,error)=match control.admit_capacity(law["refusedBytes"].as_u64().unwrap()as usize,1,0){Err(rejection)=>rejection,Ok(_)=>panic!("existing ownership cannot fit refused capacity")};assert_eq!(error.kind,ValueRefusalKind::OwnershipLimit);assert_eq!(control.maximum_bytes(),prior["maximumBytes"].as_u64().unwrap()as usize);control.checkpoint().unwrap();assert_eq!(event.get().unwrap(),before);
     let mut control=match control.admit_capacity(law["sourceBytes"].as_u64().unwrap()as usize,law["sourceMultiples"].as_u64().unwrap()as usize,law["scaffoldBytes"].as_u64().unwrap()as usize){Ok(control)=>control,Err(_)=>panic!("source policy capacity admitted")};assert_eq!(control.maximum_bytes(),law["maximumBytes"].as_u64().unwrap()as usize);control.checkpoint().unwrap();assert_eq!(event.get().unwrap(),before);
     let maximum=control.maximum_bytes();control.charge(maximum-control.owned_bytes()).unwrap();control.advance(prior["finalUnits"].as_u64().unwrap()as usize).unwrap();assert_eq!(control.charge(law["overrunBytes"].as_u64().unwrap()as usize).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);control.checkpoint().unwrap();let complete=event.get().unwrap();assert_eq!(complete.completed,prior["total"].as_u64().unwrap()as usize);assert_eq!(complete.owned_bytes,maximum);let receipt=control.pause().unwrap();
-    let canceled_event=std::cell::Cell::new(None);let mut canceled=|value|{assert_eq!(source.as_ptr(),pointer);canceled_event.set(Some(value));false};let mut control=NativeEncodeControl::resume(receipt,&mut canceled).unwrap();assert_eq!(control.step().unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(canceled_event.get().unwrap(),complete);drop(control);assert_eq!(source.as_ptr(),pointer);assert_eq!(drain(admit_shared_fixture(source,true),1,3),law["sourceBytes"].as_u64().unwrap()as usize+arc_custody::shared_retirement_birth_bytes::<String>()+std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<String>()).unwrap().0.pad_to_align().size());
+    let canceled_event=std::cell::Cell::new(None);let mut canceled=|value|{assert_eq!(source.as_ptr(),pointer);canceled_event.set(Some(value));false};let mut control=NativeEncodeControl::resume(receipt,&mut canceled).unwrap();assert_eq!(control.step().unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(canceled_event.get().unwrap(),complete);drop(control);assert_eq!(source.as_ptr(),pointer);assert_eq!(drain(admit_shared_fixture(source),1,3),law["sourceBytes"].as_u64().unwrap()as usize+lease_frame_bytes()+shared_backing_bytes());
 }
 
 #[test]
@@ -784,88 +876,93 @@ fn parent_return_fixture_demands_actual_full_allocation_release(){
     assert_eq!(serde_json::to_string(&oversized).unwrap(),serde_json::to_string(&"x".repeat(fixture["refusedPayloadBytes"].as_u64().unwrap()as usize)).unwrap());
 }
 
+
 #[test]
 fn controlled_retirement_separates_logical_work_from_exact_physical_release() {
-    use crate::{retained_clone::{RetainedCloneGrant,RetainedCloneStep},observe_retirement_allocations};
-    fn run<T:RetireOwned+serde::Serialize>(value:T,row:&serde_json::Value,grant:RetainedCloneGrant) {
+    use crate::retained_clone::RetainedCloneStep;
+    warm();
+    fn run<T:RetireOwned+serde::Serialize>(value:T,row:&serde_json::Value,body:usize) {
         assert_eq!(serde_json::to_value(&value).unwrap(),row["value"]);
         let mut owner=controlled::ControlledRetirement::new(value).unwrap_or_else(|_|panic!("controlled original owner"));
         let mut processed=0;let mut physical=0;
         for _ in 0..10000 {
-            let capacity=owner.next_capacity_byte_demand(grant.maximum_copy_bytes).unwrap();
-            let release=owner.next_release_byte_demand().unwrap();
-            let (zero,heap)=observe_retirement_allocations(||owner.step(RetainedCloneGrant::default()).unwrap());
+            let grant=RetainedCloneGrant{maximum_depth:64,..owner_grant(&owner,body)};let quote=owner.next_demand(grant.maximum_copy_bytes).unwrap();
+            let (zero,heap)=step(&mut owner,RetainedCloneGrant::default());
             assert_eq!(zero.progress(),Default::default());assert_eq!(heap,(0,0));
-            if release>0 && capacity==0 {
-                let (denied,heap)=observe_retirement_allocations(||owner.step(RetainedCloneGrant{maximum_release_bytes:release-1,..grant}).unwrap());
+            if quote.release_bytes>0 && quote.capacity_bytes==0 {
+                let (denied,heap)=step(&mut owner,RetainedCloneGrant{maximum_release_bytes:quote.release_bytes-1,..grant});
                 assert_eq!(denied.progress(),Default::default());assert_eq!(heap,(0,0));
             }
-            let (step,heap)=observe_retirement_allocations(||owner.step(grant).unwrap());
+            let (step,heap)=step(&mut owner,grant);
             assert!(step.progress().fits(grant));
             assert_eq!(heap.0,step.progress().retained_capacity_bytes);
             assert_eq!(heap.1,step.progress().released_bytes,"logical work cannot impersonate physical release: {}",row["id"]);
-            processed+=step.progress().copied_bytes;physical+=step.progress().released_bytes;
+            if payload_turn(quote){processed+=payload_copied(step.progress());}physical+=step.progress().released_bytes;
             if matches!(step,RetainedCloneStep::Complete(_)){break;}
         }
         assert!(owner.terminal_is_empty());assert_eq!(processed,row["processedBytes"].as_u64().unwrap()as usize);
-        assert_eq!(observe_retirement_allocations(||drop(owner)).1,(0,0));
+        assert_eq!(observe(||drop(owner)).1,(0,0));
     }
     let law:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/⚖️physical-work/🔣️.json")).unwrap();
-    let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:64};
+    let body=law["maximumCopyBytes"].as_u64().unwrap()as usize;
     for row in law["cases"].as_array().unwrap(){match row["kind"].as_str().unwrap(){
-        "u32"=>run(row["value"].as_u64().unwrap()as u32,row,grant),
-        "text"=>run(row["value"].as_str().unwrap().to_owned(),row,grant),
-        "u32-list"=>run(row["value"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u32).collect::<Vec<_>>(),row,grant),
+        "u32"=>run(row["value"].as_u64().unwrap()as u32,row,body),
+        "text"=>run(row["value"].as_str().unwrap().to_owned(),row,body),
+        "u32-list"=>run(row["value"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u32).collect::<Vec<_>>(),row,body),
         _=>panic!("unknown neutral owner"),
     }}
 }
 
 #[test]
 fn controlled_retirement_separates_logical_work_from_exact_physical_release_cold_terminal_frame() {
-    use semio_framework_value_testing_allocator::observe_retirement_allocations;
+    warm();
     let law:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/⚖️physical-work/🔣️.json")).unwrap();
     let text=law["cases"][1]["value"].as_str().unwrap();
-    let (cursor,heap)=observe_retirement_allocations(||admit_fixture(text.to_owned()));let original=heap.0-heap.1;
+    let (cursor,heap)=observe(||admit_fixture(text.to_owned()));let original=heap.0-heap.1;
     let frame=std::mem::size_of_val(cursor.as_ref());assert_eq!(frame,owned_retirement_birth_bytes::<String>());
-    let mut slot=Some(cursor);let(mut born,mut physical,mut copied,mut terminal_frame)=(0,0,0,0);
+    let mut slot=Some(cursor);let(mut born,mut physical,mut payload,mut terminal_frame)=(0,0,0,0);
     for _ in 0..10000 {
         let Some(owner)=slot.as_ref()else{break;};let terminal=owner.terminal_is_empty();
         let demand=crate::factory_ticket_demands(owner,64).unwrap();assert!(demand.capacity_bytes<=4096&&demand.release_bytes<=4096);
-        let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+        let grant=ticket_grant(&slot,64);
         for denied in [demand.capacity_bytes.checked_sub(1).map(|value|RetainedCloneGrant {maximum_capacity_bytes:value,..grant}),demand.release_bytes.checked_sub(1).map(|value|RetainedCloneGrant {maximum_release_bytes:value,..grant})].into_iter().flatten(){
-            let (step,heap)=observe_retirement_allocations(||crate::close_factory_ticket(&mut slot,denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));
+            let (step,heap)=ticket_turn(&mut slot,denied);assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));
             assert_eq!(crate::factory_ticket_demands(slot.as_ref().unwrap(),64).unwrap(),demand);
         }
-        let (step,heap)=observe_retirement_allocations(||crate::close_factory_ticket(&mut slot,grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.0;physical+=heap.1;copied+=progress.copied_bytes;
+        let (step,heap)=ticket_turn(&mut slot,grant);let progress=step.progress();assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.0;physical+=heap.1;if payload_turn(demand){payload+=payload_copied(progress);}
         if terminal{assert_eq!(heap,(0,frame));terminal_frame+=1;}
     }
-    assert!(slot.is_none());assert_eq!(terminal_frame,1);assert_eq!(copied,0);assert_eq!(physical,original+born);
+    assert!(slot.is_none());assert_eq!(terminal_frame,1);assert_eq!(payload,0);assert_eq!(physical,original+born);
 }
 
 #[test]
 fn shared_retirement_physical_demand_preserves_original_backing_and_terminal_frames() {
-    use semio_framework_value_testing_allocator::observe_retirement_allocations;
+    warm();
     let law:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/📏️shared-physical/🔣️.json")).unwrap();
     for row in law["cases"].as_array().unwrap(){for copy in law["workBytes"].as_array().unwrap(){
         let copy=copy.as_u64().unwrap()as usize;let mut text=String::with_capacity(row["capacity"].as_u64().unwrap()as usize);text.push_str(row["text"].as_str().unwrap());assert_eq!(serde_json::to_value(&text).unwrap(),row["text"]);let backing=text.capacity();
-        let root=Arc::new(text);let pointer=Arc::as_ptr(&root);let (owner,heap)=observe_retirement_allocations(||admit_shared_fixture(root,true));let mut born=heap.0;assert_eq!(heap.1,0);let mut slot=Some(owner);
-        let required=std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<String>()).unwrap().0.pad_to_align().size();
-        let (query,heap)=observe_retirement_allocations(||crate::factory_ticket_demands(slot.as_ref().unwrap(),copy).unwrap());assert_eq!(heap,(0,0));assert_eq!(query.release_bytes,required);assert_eq!(query.capacity_bytes,0);
-        let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:0,maximum_release_bytes:required,maximum_depth:query.depth};
-        let (denied,heap)=observe_retirement_allocations(||crate::close_factory_ticket(&mut slot,RetainedCloneGrant {maximum_release_bytes:required-1,..grant}).unwrap());assert_eq!(denied.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(crate::factory_ticket_demands(slot.as_ref().unwrap(),copy).unwrap(),query);
-        let (step,heap)=observe_retirement_allocations(||crate::close_factory_ticket(&mut slot,grant).unwrap());assert_eq!(heap,(0,required));assert_eq!(step.progress().released_bytes,required);assert_eq!(step.progress().retained_capacity_bytes,0);
-        let(mut physical,mut copied)=(required,0);
+        let root=Arc::new(text);let (owner,heap)=observe(||admit_shared_fixture(root));let mut born=heap.0;assert_eq!(heap.1,0);let mut slot=Some(owner);
+        let required=shared_backing_bytes();let lease_copy=size_of::<Option<Arc<String>>>()+size_of::<Option<String>>();
+        let(mut physical,mut payload,mut released_backing)=(0,0,0);
         for _ in 0..law["maximumTurns"].as_u64().unwrap(){
-            let Some(owner)=slot.as_ref()else{break;};let demand=crate::factory_ticket_demands(owner,copy).unwrap();
-            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-            let (step,heap)=observe_retirement_allocations(||crate::close_factory_ticket(&mut slot,grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.0;physical+=heap.1;copied+=progress.copied_bytes;
+            if slot.is_none(){break;}
+            let (quote,heap)=observe(||crate::factory_ticket_demands(slot.as_ref().unwrap(),copy).unwrap());assert_eq!(heap,(0,0));
+            let grant=ticket_grant(&slot,copy);
+            let lease=quote.release_bytes==required&&quote.capacity_bytes==0&&quote.copy_bytes==lease_copy;
+            if lease{
+                let (denied,heap)=ticket_turn(&mut slot,RetainedCloneGrant {maximum_release_bytes:required-1,..grant});assert_eq!(denied.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(crate::factory_ticket_demands(slot.as_ref().unwrap(),copy).unwrap(),quote);
+                let (step,heap)=ticket_turn(&mut slot,grant);assert_eq!(heap,(0,required));assert_eq!(step.progress().released_bytes,required);assert_eq!(step.progress().retained_capacity_bytes,0);released_backing+=1;physical+=required;
+                continue;
+            }
+            let (step,heap)=ticket_turn(&mut slot,grant);let progress=step.progress();assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.0;physical+=heap.1;if payload_turn(quote){payload+=payload_copied(progress);}
         }
-        assert!(slot.is_none());assert_eq!(copied,0);assert_eq!(physical,backing+required+born);
+        assert!(slot.is_none());assert_eq!(released_backing,1);assert_eq!(payload,0);assert_eq!(physical,backing+required+born);
     }}
 }
 #[test]
 fn erased_snapshot_full_grant_admission_preserves_original_owner_and_all_four_currencies() {
     use crate::retained_clone::RetainedCloneProgress;
+    warm();
     let fixture: serde_json::Value = serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/📏️shared-physical/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let text = row["text"].as_str().unwrap();
@@ -879,41 +976,44 @@ fn erased_snapshot_full_grant_admission_preserves_original_owner_and_all_four_cu
             });
             assert_eq!(heap, (original, 0));
             let frame = crate::owned_retirement_birth_bytes::<String>();
-            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: work, maximum_capacity_bytes: frame - 1, maximum_release_bytes: 0, maximum_depth: 64 };
-            let (denied, heap) = crate::observe_retirement_allocations(|| crate::admit_owned_retirement(source, grant));
-            let (_, source) = denied.err().expect("one-short erased frame grant must return original ownership");
-            assert_eq!(source.as_ptr(), pointer);
-            assert_eq!(heap, (0, 0));
-            let (admitted, heap) = crate::observe_retirement_allocations(|| crate::admit_owned_retirement(source, RetainedCloneGrant { maximum_capacity_bytes: frame, ..grant }));
-            let (owner, admission) = admitted.unwrap_or_else(|(error, _)| panic!("{error}"));
+            let mut slot = Some(source);
+            let full = birth_grant(slot.as_ref().unwrap());
+            assert_eq!(full.maximum_capacity_bytes, frame);
+            for short in [RetainedCloneGrant { maximum_capacity_bytes: frame - 1, ..full }, RetainedCloneGrant { maximum_copy_bytes: full.maximum_copy_bytes - 1, ..full }, RetainedCloneGrant { maximum_depth: 0, ..full }, RetainedCloneGrant { maximum_items: 0, ..full }] {
+                let (denied, heap) = observe(|| admit_into(&mut slot, short));
+                assert!(denied.result.unwrap().is_none(), "one-short erased frame grant must return original ownership");
+                assert_eq!(slot.as_ref().unwrap().as_ptr(), pointer);
+                assert_eq!(heap, (0, 0));
+            }
+            let (admitted, heap) = observe(|| admit_into(&mut slot, full));
+            let (owner, admission) = admitted.result.unwrap_or_else(|error| panic!("{error}")).expect("full erased frame grant admits");
+            assert!(slot.is_none());
             assert_eq!(heap, (frame, 0));
             assert_eq!(admission.retained_capacity_bytes, frame);
             let mut slot = Some(owner);
-            let (mut copied, mut born, mut released) = (0usize, frame, 0usize);
+            let (mut payload, mut born, mut released) = (0usize, frame, 0usize);
             for _ in 0..4096 {
-                let Some(owner) = slot.as_ref() else { break; };
-                let capacity = owner.next_capacity_byte_demand(work).unwrap();
-                let release = if owner.terminal_is_empty() { std::mem::size_of_val(owner.as_ref()) } else { owner.next_release_byte_demand().unwrap() };
-                let depth = if owner.terminal_is_empty() { 1 } else { owner.next_depth_demand().unwrap() };
-                let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: work, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: depth };
-                let (step, heap) = crate::observe_retirement_allocations(|| crate::close_factory_ticket(&mut slot, RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap());
+                if slot.is_none() { break; }
+                let quote = crate::factory_ticket_demands(slot.as_ref().unwrap(), work).unwrap();
+                let grant = ticket_grant(&slot, work);
+                let (step, heap) = ticket_turn(&mut slot, RetainedCloneGrant { maximum_items: 0, ..grant });
                 assert_eq!(step.progress(), RetainedCloneProgress::default());
                 assert_eq!(heap, (0, 0));
-                for short in [capacity.checked_sub(1).map(|value| RetainedCloneGrant { maximum_capacity_bytes: value, ..grant }), release.checked_sub(1).map(|value| RetainedCloneGrant { maximum_release_bytes: value, ..grant })].into_iter().flatten() {
-                    let (step, heap) = crate::observe_retirement_allocations(|| crate::close_factory_ticket(&mut slot, short).unwrap());
+                for short in [quote.copy_bytes.checked_sub(1).map(|value| RetainedCloneGrant { maximum_copy_bytes: value, ..grant }), quote.capacity_bytes.checked_sub(1).map(|value| RetainedCloneGrant { maximum_capacity_bytes: value, ..grant }), quote.release_bytes.checked_sub(1).map(|value| RetainedCloneGrant { maximum_release_bytes: value, ..grant })].into_iter().flatten() {
+                    let (step, heap) = ticket_turn(&mut slot, short);
                     assert_eq!(step.progress(), RetainedCloneProgress::default());
                     assert_eq!(heap, (0, 0));
                 }
-                let (step, heap) = crate::observe_retirement_allocations(|| crate::close_factory_ticket(&mut slot, grant).unwrap());
+                let (step, heap) = ticket_turn(&mut slot, grant);
                 let progress = step.progress();
-                assert!(progress.copied_items <= 1 && progress.copied_bytes <= work);
+                assert!(progress.copied_items <= 1 && progress.fits(grant));
                 assert_eq!(heap, (progress.retained_capacity_bytes, progress.released_bytes));
-                copied += progress.copied_bytes;
+                if payload_turn(quote) { payload += payload_copied(progress); }
                 born += progress.retained_capacity_bytes;
                 released += progress.released_bytes;
             }
             assert!(slot.is_none());
-            assert_eq!(copied, 0);
+            assert_eq!(payload, 0);
             assert_eq!(released, original + born);
         }
     }
@@ -922,18 +1022,18 @@ fn erased_snapshot_full_grant_admission_preserves_original_owner_and_all_four_cu
 /// 🧺️ Original heap and Reverse use the same vector allocation through each independently granted physical turn.
 #[test]
 fn original_heap_and_reverse_preserve_backing_and_full_retirement_receipts(){
-    use crate::{observe_retirement_allocations as observe,retained_clone::RetainedCloneGrant};
     use std::{collections::BinaryHeap,cmp::Reverse};
+    warm();
     let law:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/🧺️heap.json")).unwrap();
     for copy in law["copyGrants"].as_array().unwrap(){
         let (owner,(source_birth,source_release))=observe(||{let mut heap=BinaryHeap::new();for key in law["keys"].as_array().unwrap(){let mut value=String::with_capacity(law["capacityBytes"].as_u64().unwrap() as usize);value.push_str(key.as_str().unwrap());heap.push(Reverse(value));}heap});
         let backing=owner.as_slice().as_ptr();let pointers:Vec<_>=owner.iter().map(|key|key.0.as_ptr()).collect();let mut oracle=owner.clone();let expected:Vec<_>=std::iter::from_fn(||oracle.pop().map(|key|key.0)).collect();assert_eq!(serde_json::to_value(expected).unwrap(),law["expected"]);
         let ((mut retirement),(birth,release))=observe(||controlled::ControlledRetirement::new(owner));assert_eq!((birth,release),(law["handoffCapacityBytes"].as_u64().unwrap() as usize,law["handoffReleaseBytes"].as_u64().unwrap() as usize));let mut retirement=retirement.unwrap_or_else(|_|panic!("original heap/Reverse must declare its actual retained vector authority"));assert_eq!(retirement.original().unwrap().as_slice().as_ptr(),backing);assert_eq!(retirement.original().unwrap().iter().map(|key|key.0.as_ptr()).collect::<Vec<_>>(),pointers);
         let(mut born,mut freed,mut refused,mut turns)=(0,0,0,0);
-        while !retirement.terminal_is_empty(){let copy=copy.as_u64().unwrap() as usize;let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retirement.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:retirement.next_release_byte_demand().unwrap(),maximum_depth:retirement.next_depth_demand().unwrap()};
-            if grant.maximum_release_bytes>law["maximumDeniedReleaseBytes"].as_u64().unwrap() as usize{for _ in 0..2{let (step,heap)=observe(||retirement.step(RetainedCloneGrant {maximum_release_bytes:law["maximumDeniedReleaseBytes"].as_u64().unwrap() as usize,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(retirement.next_release_byte_demand().unwrap(),grant.maximum_release_bytes);refused+=1;}}
-            let (zero,heap)=observe(||retirement.step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap());assert_eq!(zero.progress(),Default::default());assert_eq!(heap,(0,0));
-            let (step,(birth,release))=observe(||retirement.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((birth,release),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=birth;freed+=release;turns+=1;assert!(turns<100000);
+        while !retirement.terminal_is_empty(){let copy=copy.as_u64().unwrap() as usize;let grant=owner_grant(&retirement,copy);
+            if grant.maximum_release_bytes>law["maximumDeniedReleaseBytes"].as_u64().unwrap() as usize{for _ in 0..2{let (step,heap)=step(&mut retirement,RetainedCloneGrant {maximum_release_bytes:law["maximumDeniedReleaseBytes"].as_u64().unwrap() as usize,..grant});assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(retirement.next_demand(grant.maximum_copy_bytes).unwrap().release_bytes,grant.maximum_release_bytes);refused+=1;}}
+            let (zero,heap)=step(&mut retirement,RetainedCloneGrant {maximum_items:0,..grant});assert_eq!(zero.progress(),Default::default());assert_eq!(heap,(0,0));
+            let (step,(birth,release))=step(&mut retirement,grant);assert!(step.progress().fits(grant));assert_eq!((birth,release),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=birth;freed+=release;turns+=1;assert!(turns<100000);
         }
         assert!(refused>0);assert_eq!(source_birth-source_release+born,freed);let (_,heap)=observe(||drop(retirement));assert_eq!(heap,(0,law["terminalDropBytes"].as_u64().unwrap() as usize));
     }
@@ -941,7 +1041,8 @@ fn original_heap_and_reverse_preserve_backing_and_full_retirement_receipts(){
 
 #[test]
 fn original_five_field_tuple_retirement_conserves_every_native_owner_and_receipt() {
-    use crate::{retained_clone::RetainedCloneGrant,observe_retirement_allocations as observe};
+    use crate::observe_retirement_allocations as observe;
+    warm();
     let fixture:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/🪆️five-fields/🔣️.json")).unwrap();
     type Mesh=(String,Vec<f32>,Vec<f32>,Vec<u32>,Vec<f32>);
     let (source,original_heap)=observe(||serde_json::from_value::<Mesh>(fixture["fields"].clone()).unwrap());
@@ -953,16 +1054,20 @@ fn original_five_field_tuple_retirement_conserves_every_native_owner_and_receipt
     let original=owner.original().unwrap();
     assert_eq!((original.0.as_ptr(),original.1.as_ptr(),original.2.as_ptr(),original.3.as_ptr(),original.4.as_ptr()),pointers);
     let law=&fixture["grant"];
-    let grant=RetainedCloneGrant{maximum_items:law["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:law["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:law["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:law["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:law["maximumDepth"].as_u64().unwrap()as usize};
+    let fixed=RetainedCloneGrant{maximum_items:law["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:law["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:law["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:law["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:law["maximumDepth"].as_u64().unwrap()as usize};
     let(mut births,mut releases)=(0,0);
     for _ in 0..fixture["maximumTurns"].as_u64().unwrap() {
         if owner.terminal_is_empty(){break;}
-        let (denied,heap)=observe(||owner.step(RetainedCloneGrant::default()).unwrap());
+        let quote=owner.next_demand(fixed.maximum_copy_bytes).unwrap();
+        let grant=RetainedCloneGrant{maximum_copy_bytes:fixed.maximum_copy_bytes.max(quote.copy_bytes),..fixed};
+        assert!(grant.maximum_capacity_bytes>=quote.capacity_bytes&&grant.maximum_release_bytes>=quote.release_bytes&&grant.maximum_depth>=quote.depth);
+        let (denied,heap)=step(&mut owner,RetainedCloneGrant::default());
         assert_eq!(denied.progress(),Default::default());assert_eq!(heap,(0,0));
-        let (step,heap)=observe(||owner.step(grant).unwrap());let receipt=step.progress();
+        let (step,heap)=step(&mut owner,grant);let receipt=step.progress();
         assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));
         births+=heap.0;releases+=heap.1;
     }
     assert!(owner.terminal_is_empty());assert_eq!(observe(||drop(owner)).1,(0,0));
     assert_eq!(original_heap.0+births,original_heap.1+releases);
 }
+

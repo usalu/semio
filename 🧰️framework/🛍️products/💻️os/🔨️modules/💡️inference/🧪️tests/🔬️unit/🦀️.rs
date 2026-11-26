@@ -80,6 +80,43 @@ async fn cold_and_warm_cache_match_pure_recompute() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn populated_cache_retires_its_concrete_value_layouts() {
+    use semio_framework_job::{Generation, OperationId, OriginalJobFixtureCaller};
+    use semio_framework_value::retirement::controlled::ControlledRetirement;
+    use semio_framework_value::{RetainedCloneGrant, RetainedWorkPoll};
+
+    let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, ..Default::default() }).await;
+    cache.insert(DepHash([1; 32]), 7u64, 8);
+    cache.insert(DepHash([2; 32]), vec![String::from("typed value")], 128);
+    let mut owned = ControlledRetirement::new(cache).ok().expect("typed cache retirement");
+    let stock = RetainedCloneGrant { maximum_items: 1024, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 128 };
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(13), Generation(1), stock, || Some(1), 1000, 1 << 20);
+    for _ in 0..1024 {
+        if owned.terminal_is_empty() {
+            break;
+        }
+        let demand = owned.next_demand(4096).expect("concrete cache retirement demand");
+        let grant = RetainedCloneGrant {
+            maximum_items: 1,
+            maximum_copy_bytes: demand.copy_bytes,
+            maximum_capacity_bytes: demand.capacity_bytes,
+            maximum_release_bytes: demand.release_bytes,
+            maximum_depth: demand.depth,
+        };
+        caller.retirement_turn(grant, |cx| {
+            let (turn, work) = cx.with_original_effect(grant, |_, effect| owned.step(4096, effect))?.expect("original cache retirement effect");
+            cx.consume_fuel(work.try_into().expect("work fits u64"));
+            if let RetainedWorkPoll::Complete(turn) = turn {
+                cx.consume_retained(turn.result.expect("concrete cache retirement turn").progress())?;
+            }
+            Ok(())
+        }).expect("admitted cache retirement turn");
+    }
+    assert!(owned.terminal_is_empty(), "both layouts must close under their own exact quote");
+    caller.retire(stock);
+}
+
+#[semio_framework_async_macros::async_test]
 async fn tiny_budget_eviction_storm_still_matches_pure_recompute() {
     let snapshot = base_snapshot().await;
     let pure = infer_field::<DagSnapshot, WeightSum>(&snapshot, None);
@@ -337,7 +374,7 @@ fn close_stepped(caller:&mut semio_framework_job::OriginalJobFixtureCaller,grant
 
 fn stepped_projection(snapshot:&SlowSnapshot,values:&InferenceValues<i64>)->BTreeMap<String,i64>{values.iter().map(|(ordinal,value)|(snapshot.nodes[ordinal].0.clone(),*value)).collect()}
 
-fn run_stepped(snapshot:&SlowSnapshot,mut cache:Option<&mut InferenceCache>,items:usize)->(BTreeMap<String,i64>,usize,usize){
+fn run_stepped(snapshot:&SlowSnapshot,mut cache:Option<&mut OriginalInferenceCache<i64>>,items:usize)->(BTreeMap<String,i64>,usize,usize){
  let mut cursor=InferenceCursor::new();let mut values=InferenceValues::new();let(mut calls,mut spent)=(0,0);let mut progress=0.0;let(mut caller,grant)=original_inference_fixture_caller(items);
  loop{
   let(report,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<SlowSnapshot,SlowWeightSum>(snapshot,snapshot,cache.as_deref_mut(),&mut cursor,&mut values,cx))).unwrap().unwrap());
@@ -356,9 +393,10 @@ async fn original_stepped_driver_matches_neutral_dag_for_each_finite_turn(){
 
 #[semio_framework_async_macros::async_test]
 async fn original_stepped_cache_option_preserves_values_without_unfunded_cache_publication(){
- let fixture=stepped_fixture();let snapshot=SlowSnapshot::from_fixture(&fixture);let mut cache=InferenceCache::new(InferenceCacheConfig{enabled:true,record_stats:true,..Default::default()}).await;
- for _ in 0..2{let(values,_,spent)=run_stepped(&snapshot,Some(&mut cache),1);assert_eq!(values,expected_values(&fixture));assert!(spent>0);assert_eq!(cache.len(),0)}
+ let fixture=stepped_fixture();let snapshot=SlowSnapshot::from_fixture(&fixture);let mut cache=OriginalInferenceCache::new(4096);
+ for _ in 0..2{let(values,_,spent)=run_stepped(&snapshot,Some(&mut cache),1);assert_eq!(values,expected_values(&fixture));assert!(spent>0);assert_eq!(cache.used_bytes(),0)}
 }
+
 
 #[semio_framework_async_macros::async_test]
 async fn original_stepped_cancel_retains_finished_rows_and_closes_pending_before_source(){
@@ -747,12 +785,12 @@ async fn a_cancelled_diff_update_leaves_the_session_distrusting_its_values_until
     let cancel = &fixture["cancel"];
     snapshot.edit(cancel);
     let mut update = session.begin_update::<EditSnapshot, EditSum, _>(&touches_of(cancel), true);
-    let (mut caller,grant)=original_inference_fixture_caller(count_of(cancel,"fuel"));
-    let report=caller.turn(grant,|cx|Ok(update_field_cold::<EditSnapshot,EditSum>(&snapshot,&mut cache,&mut update))).unwrap().unwrap();
+    let fuel = count_of(cancel, "fuel");
+    let report = step_field_cold::<EditSnapshot, EditSum>(&snapshot, &mut cache, &mut update, fuel).unwrap();
+    assert!(report.computed <= fuel);
     assert_eq!(report.done, cancel["doneAfterFuel"].as_bool().unwrap());
     update.cancel();
-    assert!(matches!(caller.turn(grant,|cx|Ok(update_field_cold::<EditSnapshot,EditSum>(&snapshot,&mut cache,&mut update))).unwrap(),Err(InferenceWorkFailure::Driver(InferenceError::Cancelled))));
-    caller.retire(grant);
+    assert!(matches!(step_field_cold::<EditSnapshot, EditSum>(&snapshot, &mut cache, &mut update, fuel), Err(InferenceWorkFailure::Driver(InferenceError::Cancelled))));
     let partial = session.finish_update(update);
     assert!(!partial.done);
     let held = session.field_values::<EditSnapshot, EditSum>().unwrap();

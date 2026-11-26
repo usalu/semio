@@ -29,7 +29,15 @@ impl RetirementQueue {
     }
     fn placement_depth(&self)->usize{(self.frames.len()+1).max(self.frames.adoption_depth_demand().unwrap_or(usize::MAX))}
     fn placement_bytes<T:?Sized>()->usize{size_of::<Option<Box<T>>>()+size_of::<Option<Box<dyn ErasedSnapshotRetirement>>>()+size_of::<Box<dyn ErasedSnapshotRetirement>>()+2*size_of::<usize>()}
-    pub fn admit_owned_demand<T:RetireOwned>(&self,value:&T)->Result<RetirementDemand,ValueError>{let mut demand=retirement::controlled::controlled_retirement_birth_demand(value)?;demand.copy_bytes=demand.copy_bytes.checked_add(Self::placement_bytes::<dyn ErasedSnapshotRetirement>()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit,"retirement queue placement extent overflow"))?;demand.depth=self.frames.len().checked_add(1).ok_or_else(||refusal(ValueRefusalKind::DepthLimit,"retirement queue frame depth overflow"))?.max(self.frames.adoption_depth_demand().map_err(ValueError::from)?);Ok(demand)}
+    /// 📏️ Quotes the fixed frame layout and placement for a ready original of this type.
+    pub fn admit_owned_slot_demand<T:RetireOwned>(&self)->Result<RetirementDemand,ValueError>{
+        let capacity_bytes=Self::frame_birth_bytes::<T>();
+        self.with_placement_demand(RetirementDemand{copy_bytes:size_of::<Option<T>>()+capacity_bytes,capacity_bytes,depth:1,..Default::default()})
+    }
+    pub fn admit_owned_demand<T:RetireOwned>(&self,value:&T)->Result<RetirementDemand,ValueError>{
+        self.with_placement_demand(retirement::controlled::controlled_retirement_birth_demand(value)?)
+    }
+    fn with_placement_demand(&self,mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.copy_bytes=demand.copy_bytes.checked_add(Self::placement_bytes::<dyn ErasedSnapshotRetirement>()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit,"retirement queue placement extent overflow"))?;demand.depth=self.frames.len().checked_add(1).ok_or_else(||refusal(ValueRefusalKind::DepthLimit,"retirement queue frame depth overflow"))?.max(self.frames.adoption_depth_demand().map_err(ValueError::from)?);Ok(demand)}
     pub fn admit_owned<T:RetireOwned>(&mut self,original:&mut Option<T>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<RetainedCloneProgress>,ValueError>{
         let Some(value)=original.as_ref()else{return RetainedWorkOutcome{result:Ok(None),work:0}};let demand=match self.admit_owned_demand(value){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};let grant=effect.grant();
         let remaining=match effect.remaining_work_units(){Ok(remaining)=>remaining,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};if remaining<2||!self.has_reserved_slot()||self.pending.is_some()||!retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(None),work:0}}

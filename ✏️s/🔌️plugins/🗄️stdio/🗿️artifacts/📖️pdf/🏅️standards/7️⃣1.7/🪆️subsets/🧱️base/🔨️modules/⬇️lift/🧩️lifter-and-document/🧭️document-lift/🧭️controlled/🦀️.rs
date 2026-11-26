@@ -135,6 +135,7 @@ enum FormStep { Start, Head, Fields }
 enum ResourceLocation { Direct(PageAttribute), Indirect(ObjRef), FormDefaults(ObjRef) }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 enum Category { Font, XObject, ExtGState, ColorSpace, Shading, Pattern, Properties }
 
 impl Category {

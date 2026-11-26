@@ -10,12 +10,12 @@ use semio_s_artifact_bim_model_coordination::editor::bim::commands::{create_enti
 use semio_s_artifact_bim_model_move_storey::editor::bim::commands::{move_storey, place_elements, remove_classification, remove_property, set_classification, set_property, split_wall};
 use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::{diagnostics as diagnostics_panel, outliner as outliner_panel};
 use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, world};
-use semio_plugin::PluginApp as _;
+use semio_plugin::{ArtifactEditor as _, PluginApp as _};
 use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of;
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::{bim_app, dispatch, history_verb, render_text, view, BimApp};
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, run};
 use semio_ui_locale::{LabelText, Locale};
-use semio_s_artifact_bim_model_bim::editor::bim::BimModelApp;
+use semio_s_artifact_bim_model_bim::editor::bim::{BIM_TOOL_IDS, BimCommand, BimModelApp, all_keybindings, create_bim_app};
 
 fn code(result: Result<Emit<ModelMutation, NoConfigMutation>, Fault>) -> Option<String> {
     result.err().map(|fault| fault.code.0)
@@ -321,7 +321,7 @@ async fn every_modify_utility_is_armed_by_its_own_key_in_the_plan_and_the_3d_win
         for window in [semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID] {
             assert!(for_window(window).iter().any(|utility| utility.as_str() == id), "{id} is armed in {window}");
         }
-        let command = BimModelApp::command_from_action(arm, None, None).unwrap_or_else(|error| panic!("{arm}: {}", error.message));
+        let command = BimModelApp::command_from_action(arm, &mut None, &mut None).unwrap_or_else(|error| panic!("{arm}: {}", error.message));
         assert!(BIM_TOOL_IDS.contains(&command.command_id()), "{arm} is a tool command");
         for labels in [&BimLabels::NATIVE_EN, &BimLabels::NATIVE_DE] {
             assert!((row.label)(labels).as_str().len() > 1, "{id} has a label");
@@ -356,7 +356,7 @@ async fn moving_a_wall_between_storeys_by_menu_key_or_drop_is_one_undoable_row_a
     assert_eq!(host(&app, "w-south"), hosted, "the openings follow their host");
     history_verb(&mut app, "undo").await;
     assert_eq!(app.snapshot().expect("snapshot").walls["w-south"].storey, "st-ground");
-    let dropped = BimModelApp::command_from_action("setField", Some((semio_plugin::DslValue::object([("field", "storey"), ("value", "st-first"), (semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::DRAG_ELEMENT_MIME, "w-east")].map(|(key, value)| (key.to_string(), semio_plugin::DslValue::String(value.into()))))).clone()), None).expect("the drop decodes");
+    let dropped = BimModelApp::command_from_action("setField", &mut Some((semio_plugin::DslValue::object([("field", "storey"), ("value", "st-first"), (semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::DRAG_ELEMENT_MIME, "w-east")].map(|(key, value)| (key.to_string(), semio_plugin::DslValue::String(value.into()))))).clone()), &mut None).expect("the drop decodes");
     assert!(dispatch(&mut app, dropped).await.edited_document());
     assert_eq!(app.snapshot().expect("snapshot").walls["w-east"].storey, "st-first", "the row dropped on a storey stands on it");
     history_verb(&mut app, "undo").await;
@@ -447,6 +447,61 @@ async fn the_diagnostics_panel_of_the_mounted_app_names_a_clean_model_in_both_la
 }
 
 #[semio_framework_async_macros::async_test]
+async fn the_mounted_editor_analyzes_and_downloads_both_ifc_dialects() {
+    use semio_plugin::Effect;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc;
+    use semio_s_artifact_stdio_contract::part21::parse_part21;
+
+    let mut app = bim_app().await;
+    let snapshot = app.snapshot().expect("snapshot");
+    assert!(!snapshot.walls.is_empty() && !snapshot.slabs.is_empty());
+    let initial = view(Locale::En, &[(plan::WINDOW_KIND_ID, plan::WINDOW_KIND_ID)], Some(plan::WINDOW_KIND_ID));
+    assert!(!render_text(&mut app, plan::BODY_KEY, &initial).await.is_empty());
+    for format in ["ifc2x3", "ifc4"] {
+        let arguments = semio_plugin::DslValue::object([("format".to_string(), semio_plugin::DslValue::String(format.into()))]);
+        let command = BimModelApp::command_from_action("exportModel", &mut Some(arguments), &mut None).expect("export action");
+        let result = dispatch(&mut app, command).await;
+        assert!(!result.edited_document());
+        let [Effect::DownloadMediaExport { filename, mime_type, data, encoding: None }] = result.requested_effects.as_slice() else {
+            panic!("expected the mounted IFC download: {:?}", result.requested_effects);
+        };
+        assert!(filename.ends_with(".ifc"));
+        assert_eq!(mime_type, "application/x-step");
+        let document = parse_part21(data).expect("the owning Part-21 codec accepts the file");
+        assert_eq!(document.by_type("IfcProject").count(), 1);
+        assert!(document.by_type("IfcWallStandardCase").chain(document.by_type("IfcWall")).count() > 0);
+        assert!(document.by_type("IfcSlab").count() > 0);
+        let expected = if format == "ifc4" { ifc::export_ifc4(&snapshot) } else { ifc::export_ifc2x3(&snapshot) };
+        assert_eq!(data.as_bytes(), expected.expect("the registered serializer").0);
+    }
+    let analyze = BimModelApp::command_from_action("analyseModel", &mut None, &mut None).expect("analyze action");
+    assert!(!dispatch(&mut app, analyze).await.edited_document());
+    assert_eq!(app.snapshot().expect("snapshot"), snapshot);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_mounted_issues_command_downloads_a_bcf_archive() {
+    use semio_plugin::Effect;
+    use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::bcf;
+
+    let mut app = bim_app().await;
+    let snapshot = app.snapshot().expect("snapshot");
+    let arguments = semio_plugin::DslValue::object([("format".to_string(), semio_plugin::DslValue::String("bcf".into()))]);
+    let command = BimModelApp::command_from_action("exportModel", &mut Some(arguments), &mut None).expect("issues action");
+    let result = dispatch(&mut app, command).await;
+    let [Effect::DownloadMediaExport { filename, mime_type, data, encoding: Some(encoding) }] = result.requested_effects.as_slice() else {
+        panic!("expected the mounted BCF archive: {:?}", result.requested_effects);
+    };
+    assert!(filename.ends_with(".bcfzip"));
+    assert_eq!(mime_type, "application/zip");
+    assert_eq!(encoding, semio_plugin::kernel::MEDIA_EXPORT_BASE64_ENCODING);
+    let bytes = semio_plugin::kernel::media_export_bytes(data, Some(encoding)).expect("the shell decodes the download");
+    assert_eq!(bytes, bcf::export_bcf(&snapshot).expect("the registered BCF serializer"));
+    assert_eq!(bcf::read_document(&bytes).expect("BCF archive roundtrip").version, "2.1");
+    assert!(!result.edited_document());
+}
+
+#[semio_framework_async_macros::async_test]
 async fn activating_a_finding_selects_its_elements_in_the_shared_elements_domain_without_touching_the_document() {
     let mut app = bim_app().await;
     let before = app.document_pack().await.expect("pack");
@@ -474,4 +529,38 @@ async fn classifying_and_unclassifying_through_the_typed_commands_are_undoable_r
     assert!(app.snapshot().expect("snapshot").classifications.is_empty(), "the classification of both walls is one row");
     history_verb(&mut app, "undo").await;
     assert!(app.snapshot().expect("snapshot").classification_systems.is_empty(), "the new system is one row");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_mounted_editor_creates_a_sheet_and_exports_svg_and_pdf() {
+    use semio_plugin::Effect;
+    use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet;
+    use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::dispatch_in;
+    use semio_s_artifact_bim_model_coordination::editor::bim::commands::create_entity::CreateEntity;
+
+    let mut app = bim_app().await;
+    let command = BimCommand::CreateEntity(CreateEntity { kind: "sheet".into(), parent: String::new(), name: "Details".into() });
+    assert!(dispatch(&mut app, command).await.edited_document());
+    let addressed = view(Locale::En, &[("model", sheet::WINDOW_KIND_ID)], Some("model"));
+    assert!(!render_text(&mut app, sheet::BODY_KEY, &addressed).await.is_empty());
+    for format in ["svg", "pdf"] {
+        let arguments = semio_plugin::DslValue::object([("format".to_owned(), semio_plugin::DslValue::String(format.into()))]);
+        let command = BimModelApp::command_from_action("exportSheets", &mut Some(arguments), &mut None).expect("sheet export action");
+        let result = dispatch_in(&mut app, command, &addressed).await;
+        let [Effect::DownloadMediaExport { filename, mime_type, data, encoding }] = result.requested_effects.as_slice() else {
+            panic!("expected a mounted sheet download: {:?}", result.requested_effects);
+        };
+        assert!(filename.ends_with(&format!(".{format}")));
+        let bytes = semio_plugin::kernel::media_export_bytes(data, encoding.as_deref()).expect("shell download");
+        if format == "pdf" {
+            assert_eq!(mime_type, "application/pdf");
+            assert!(bytes.starts_with(b"%PDF-"));
+            assert!(bytes.windows(5).any(|window| window == b"%%EOF"));
+        } else {
+            assert_eq!(mime_type, "image/svg+xml");
+            let svg = std::str::from_utf8(&bytes).expect("SVG text");
+            assert!(svg.contains("<svg") && svg.contains("Details"));
+        }
+        assert!(!result.edited_document());
+    }
 }

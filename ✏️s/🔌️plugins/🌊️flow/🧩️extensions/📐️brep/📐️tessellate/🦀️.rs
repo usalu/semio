@@ -1,6 +1,6 @@
 //! 📐️ One original tessellation invocation owns request, query and canonical mesh through paid closure.
 use semio_s_spatial_kernel_semio_session::{Session,SessionCapture};
-use flow_extension_sdk::geometry::{GeometryStep,GeometryWorkFailure,GeometryWorkIdentity};
+use semio_os_flow_geometry::{GeometryStep,GeometryWorkFailure,GeometryWorkIdentity};
 use semio_framework_job::{StepContext,OriginalDomainProjection,OriginalDomainFailure,OriginalDomainView as View};
 use semio_framework_pack_json::{ArtifactCanonicalJsonTree as Tree,ArtifactCanonicalJsonNode as Node,ArtifactCanonicalJsonText as Text,JsonGrammarCursor,JsonMemberPolicy,Value};
 use pack::record::{OwnedProjectedPackWireCursor,BorrowedProjectedPackFailure};

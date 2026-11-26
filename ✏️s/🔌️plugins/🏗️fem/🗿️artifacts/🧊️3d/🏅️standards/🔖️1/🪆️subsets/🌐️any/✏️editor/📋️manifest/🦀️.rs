@@ -145,6 +145,7 @@ pub fn create_fem3d_app() -> AppDefinition {
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", semio_s_fem_app_surface::result_display_action_args())
+            .window_kind_action_refs(window_results::FEM3D_WINDOW_RESULTS, vec!["setResultDisplay".into()])
             .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
             .action_interactive_job("addBar", InteractiveJobClassification::Migrated)
             .action_interactive_job("addFrame", InteractiveJobClassification::Migrated)

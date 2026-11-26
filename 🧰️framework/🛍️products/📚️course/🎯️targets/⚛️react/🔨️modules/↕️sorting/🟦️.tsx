@@ -167,7 +167,7 @@ export function SortingTaskView(props: TaskViewProps<SheetSortingTask, SortingAn
               data-icon-host=""
               key={id}
               {...ROW}
-              className="course-sort bg-background"
+              className="course-sort"
               data-course-item={id}
               data-presence-anchor={PRESENCE_ANCHORS.item(id)}
               data-course-drag={keys === undefined ? undefined : ""}

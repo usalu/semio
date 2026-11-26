@@ -292,9 +292,8 @@ class Beat6_Consistency(_visuals.ClipScene):
         return group
 
     def backed(self, label, color=None):
-        """🎴 A label on an opaque background chip so the drawing below never runs through it."""
-        chip = _engine.Rectangle(width=label.width + 0.12, height=label.height + 0.1, stroke_color=color or BG, stroke_width=_d.W_THIN if color else 0,
-                                        fill_color=BG, fill_opacity=1).move_to(label)
+        """🎴 Overlay a drawing label with the shared glass chip."""
+        chip = _art.window_frame(label.width + 0.12, label.height + 0.1, color=color or BG, stroke_width=_d.W_THIN if color else 0, glass=True).move_to(label)
         return _engine.VGroup(chip, label)
 
     def underline(self, token, color):

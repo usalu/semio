@@ -813,6 +813,6 @@ struct AppDocumentStoreOwnerProducer<A>(std::marker::PhantomData<fn()->A>);
 impl<A:ArtifactApp> store::os_store::document_store_owners::DocumentStoreOwnerProducer<A::Snapshot,A::Mutation> for AppDocumentStoreOwnerProducer<A>{
  fn source_demands()->Result<RetirementDemand,ValueError>{A::document_store_owners_source_demands()}
  fn admit_sources(grant:RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<A::Snapshot,A::Mutation>,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<A::Snapshot,A::Mutation>>{
-  A::build_document_store_owners(grant).unwrap_or_else(||Err(store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError{error:ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"surface did not supply its declared native document owner catalog"),owners:None,progress:Default::default()}))
+  A::persisted_document_store_owners(grant).unwrap_or_else(||Err(store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError{error:ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"surface did not supply its declared native document owner catalog"),owners:None,progress:Default::default()}))
  }
 }

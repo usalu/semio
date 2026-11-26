@@ -18,18 +18,6 @@ pub const MAX_U_VALUE: f64 = 10.0;
 pub type Problem = (&'static str, &'static str);
 //#endregion 🔖️Limits
 
-impl SpaceConditions {
-    /// 🌡️ Conditions that state nothing: the record a first `set-space-conditions` fills in.
-    pub fn empty() -> Self {
-        Self { occupancy: None, occupancy_density: None, heating_setpoint: None, cooling_setpoint: None, ventilation_rate: None, lighting_power_density: None, equipment_power_density: None, schedule: None }
-    }
-
-    /// 🌡️ Whether the space is heated: it states a heating set point.
-    pub fn heated(&self) -> bool {
-        self.heating_setpoint.is_some()
-    }
-}
-
 fn blank(text: &Option<String>) -> bool {
     text.as_ref().is_some_and(|text| text.trim().is_empty())
 }

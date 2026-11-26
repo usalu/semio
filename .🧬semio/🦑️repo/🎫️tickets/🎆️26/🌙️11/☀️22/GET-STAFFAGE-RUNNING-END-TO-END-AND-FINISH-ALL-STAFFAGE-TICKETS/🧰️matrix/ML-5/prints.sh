@@ -1,0 +1,3 @@
+# 🖨️ Whether documents print at every authored band and its ends (sourced by q.sh): prints.sh <tag> <file relative to $GEN>…
+shift
+for f in "$@"; do cap 600 "$T" "$B" "$U/🧰️matrix/MC/prints.ts" "$GEN/$f" 2>&1 | cut -c1-400; done

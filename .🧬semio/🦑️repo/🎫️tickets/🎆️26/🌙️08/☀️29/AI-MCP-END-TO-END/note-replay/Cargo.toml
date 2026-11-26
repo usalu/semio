@@ -11,6 +11,7 @@ name = "note-mcp-replay"
 path = "../note-mcp-replay.rs"
 
 [dependencies]
+semio-framework-artifact-reference = { path = "../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-io-base64 = { path = "../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-os-store-text-io = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📦️packages/🦀️rust" }

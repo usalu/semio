@@ -21,6 +21,42 @@ fn drain_fixture_cancellation(session:&mut FlowEvalSession){
     for _ in 0..1_000_000{if session.preview_cancellation_terminal_is_empty(){return}funded(FIXTURE_SESSION_GRANT,|effect|session.preview_cancellation_step(effect)).unwrap();}
     panic!("original fixture cancellation stalled");
 }
+#[test]
+fn original_preview_cancel_reserves_a_queue_slot_for_a_displaced_root() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧹️retirement/🧪️tests/🧫️fixtures/🎟️session-source/🔣️.json")).unwrap();
+    let source = fixture["cases"].as_array().unwrap().iter().find(|case| case["id"] == "large").unwrap();
+    for copy in fixture["copyBudgets"].as_array().unwrap() {
+        let copy = copy.as_u64().unwrap() as usize;
+        let mut session = FlowEvalSession::new();
+        session.painted_eval_json = source["text"].as_str().unwrap().repeat(source["repeat"].as_u64().unwrap() as usize);
+        assert_eq!(session.painted_eval_json.len(), source["utf8Bytes"].as_u64().unwrap() as usize);
+        let reset = funded(FIXTURE_SESSION_GRANT, |effect| session.set_eval_json(&mut None, effect)).unwrap();
+        assert!(reset.is_some());
+        assert!(session.next_retirement_admission_demands().is_err());
+        session.cancel_preview_evaluation("preview-1", FIXTURE_SESSION_GRANT).unwrap();
+        assert!(!session.resume_preview_evaluation());
+        for _ in 0..100_000 {
+            if session.preview_cancellation_terminal_is_empty() {
+                break;
+            }
+            let demand = session.next_preview_cancellation_demands(copy).unwrap();
+            let grant = RetainedCloneGrant {
+                maximum_items: 1,
+                maximum_copy_bytes: copy.max(demand.copy_bytes),
+                maximum_capacity_bytes: demand.capacity_bytes,
+                maximum_release_bytes: demand.release_bytes,
+                maximum_depth: demand.depth,
+            };
+            let step = funded(grant, |effect| session.preview_cancellation_step(effect)).unwrap();
+            assert!(step.progress().fits(grant));
+        }
+        assert!(session.preview_cancellation_terminal_is_empty());
+        assert!(session.retirement_is_empty());
+        assert!(session.resume_preview_evaluation());
+        session.retire_cold();
+    }
+}
+
 fn capture_fixture_baseline(session:&mut FlowEvalSession,host:&FlowHost){
     funded(FIXTURE_SESSION_GRANT,|effect|session.capture_baseline_from(host,effect)).unwrap();
     if !session.baseline_capture_terminal_is_empty(){

@@ -1,0 +1,37 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-page}[2026/11/25 v0.1.0 semio physical page surfaces]
+\RequirePackage{semio-tokens}
+
+% 🎨 The same physical sheet and frame roles are used by document classes and standalone articles.
+\newcommand{\semio@page@theme}[1]{%
+  \colorlet{semio-chrome-sheet}{semio-chrome-#1-base}%
+  \colorlet{semio-chrome-interior}{semio-chrome-#1-window}%
+  \pagecolor{semio-chrome-sheet}%
+}
+
+\newdimen\semio@page@left
+\newdimen\semio@page@top
+\newdimen\semio@page@height
+% 📐 Extend the interior above and below the text area by the space occupied by page chrome.
+\newcommand{\semio@page@surface}[2]{%
+  \semio@page@left=\oddsidemargin
+  \if@twoside\ifodd\c@page\else\semio@page@left=\evensidemargin\fi\fi
+  \advance\semio@page@left by \dimexpr1in+\hoffset\relax
+  \semio@page@top=\dimexpr1in+\voffset+\topmargin+\headheight+\headsep-#1\relax
+  \semio@page@height=\dimexpr\textheight+#1+#2\relax
+  \put(\semio@page@left,-\semio@page@top){%
+    \textcolor{semio-chrome-interior}{\raisebox{-\semio@page@height}{\rule{\textwidth}{\semio@page@height}}}%
+  }%
+}
+
+% 📄 Apply to an article with standard LaTeX running heads and footers.
+\newcommand{\SemioArticleSurfaces}[1]{%
+  \AtBeginDocument{%
+    \semio@page@theme{#1}%
+    \color{semio-chrome-#1-foreground}%
+    \global\let\default@color\current@color
+  }%
+  \AddToHook{shipout/background}{%
+    \semio@page@surface{\dimexpr\headheight+\headsep\relax}{\dimexpr\footskip+\dp\strutbox\relax}%
+  }%
+}

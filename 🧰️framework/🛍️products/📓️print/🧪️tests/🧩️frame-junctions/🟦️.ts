@@ -189,5 +189,5 @@ export function verifyFrameJunctions(): void {
   assert.equal((edges.match(/\\textcolor\{#2\}\{\\rule\{\\semio@stroke@hairline\}/g) ?? []).length, 2);
   for (const source of [core, window, table]) assert.doesNotMatch(source, /frame@top@color|frame@bottom@color|frame@edge@neutral|window_top_color|frame@top@shared|long@shared@edge/);
   assert.match(table, /\\endhead\s*\\semio@table@long@break@foot\s*\\endfoot\s*\\endlastfoot/);
-  assert.ok(table.includes(String.raw`\textcolor{semio-chrome-canvas}{\rule{\dimexpr\linewidth-2\arrayrulewidth\relax}{\arrayrulewidth}}`));
+  assert.ok(table.includes(String.raw`\textcolor{semio-chrome-interior}{\rule{\dimexpr\linewidth-2\arrayrulewidth\relax}{\arrayrulewidth}}`));
 }

@@ -122,7 +122,7 @@ fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<
         return Ok(RuntimeMaintenanceStatus::Ready);
     }
     let (terminal, faulted) = match session.checked_out_outcome() {
-        Ok(Some(view)) => (view.is_terminal(), matches!(view, semio_framework_job::JobOutcomeView::Fault { .. } | semio_framework_job::JobOutcomeView::Cancelled { .. })),
+        Ok(Some(view)) => (view.is_terminal(), matches!(view, semio_framework_job::JobOutcomeView::Fault { .. })),
         Ok(None) => (false, false),
         Err(_) => return Ok(RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::TakeOutcome)),
     };

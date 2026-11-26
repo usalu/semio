@@ -29,7 +29,7 @@ semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/�
 semio-framework-dsl-record = { path = "../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-replication = { path = "../../../../📡️replication/📦️packages/🦀️rust" }
+semio_framework_replication = { package = "semio-framework-replication", path = "../../../../📡️replication/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust", features = ["testkit"] }

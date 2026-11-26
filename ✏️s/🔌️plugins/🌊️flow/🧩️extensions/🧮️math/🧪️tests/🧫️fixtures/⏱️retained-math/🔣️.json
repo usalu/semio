@@ -1,0 +1,594 @@
+{
+  "caseCount": 28,
+  "oneTurnFuel": 1,
+  "fundedTurnFuel": 256,
+  "cancelCutoffs": [
+    0,
+    1,
+    3,
+    8,
+    32
+  ],
+  "rows": [
+    {
+      "id": "add",
+      "operator": "math.add",
+      "input": {
+        "a": {
+          "$schema": "number",
+          "value": 2
+        },
+        "b": {
+          "$schema": "number",
+          "value": 3
+        }
+      },
+      "output": {
+        "sum": {
+          "$schema": "number",
+          "value": 5
+        }
+      }
+    },
+    {
+      "id": "subtract",
+      "operator": "math.subtract",
+      "input": {
+        "a": {
+          "$schema": "number",
+          "value": 2
+        },
+        "b": {
+          "$schema": "number",
+          "value": 3
+        }
+      },
+      "output": {
+        "difference": {
+          "$schema": "number",
+          "value": -1
+        }
+      }
+    },
+    {
+      "id": "multiply",
+      "operator": "math.multiply",
+      "input": {
+        "a": {
+          "$schema": "number",
+          "value": 3
+        },
+        "b": {
+          "$schema": "number",
+          "value": -8
+        }
+      },
+      "output": {
+        "product": {
+          "$schema": "number",
+          "value": -24
+        }
+      }
+    },
+    {
+      "id": "divide",
+      "operator": "math.divide",
+      "input": {
+        "a": {
+          "$schema": "number",
+          "value": -7
+        },
+        "b": {
+          "$schema": "number",
+          "value": 2
+        }
+      },
+      "output": {
+        "quotient": {
+          "$schema": "number",
+          "value": -3.5
+        }
+      }
+    },
+    {
+      "id": "power",
+      "operator": "math.power",
+      "input": {
+        "a": {
+          "$schema": "number",
+          "value": 9
+        },
+        "b": {
+          "$schema": "number",
+          "value": 0.5
+        }
+      },
+      "output": {
+        "power": {
+          "$schema": "number",
+          "value": 3
+        }
+      }
+    },
+    {
+      "id": "modulo",
+      "operator": "math.modulo",
+      "input": {
+        "a": {
+          "$schema": "number",
+          "value": -7
+        },
+        "b": {
+          "$schema": "number",
+          "value": 2
+        }
+      },
+      "output": {
+        "modulo": {
+          "$schema": "number",
+          "value": -1
+        }
+      }
+    },
+    {
+      "id": "min",
+      "operator": "math.min",
+      "input": {
+        "a": {
+          "$schema": "number",
+          "value": 9
+        },
+        "b": {
+          "$schema": "number",
+          "value": -2
+        }
+      },
+      "output": {
+        "minimum": {
+          "$schema": "number",
+          "value": -2
+        }
+      }
+    },
+    {
+      "id": "max",
+      "operator": "math.max",
+      "input": {
+        "a": {
+          "$schema": "number",
+          "value": 9
+        },
+        "b": {
+          "$schema": "number",
+          "value": -2
+        }
+      },
+      "output": {
+        "maximum": {
+          "$schema": "number",
+          "value": 9
+        }
+      }
+    },
+    {
+      "id": "negate",
+      "operator": "math.negate",
+      "input": {
+        "number": {
+          "$schema": "number",
+          "value": -3
+        }
+      },
+      "output": {
+        "negated": {
+          "$schema": "number",
+          "value": 3
+        }
+      }
+    },
+    {
+      "id": "abs",
+      "operator": "math.abs",
+      "input": {
+        "number": {
+          "$schema": "number",
+          "value": -7
+        }
+      },
+      "output": {
+        "absolute": {
+          "$schema": "number",
+          "value": 7
+        }
+      }
+    },
+    {
+      "id": "sqrt",
+      "operator": "math.sqrt",
+      "input": {
+        "number": {
+          "$schema": "number",
+          "value": 25
+        }
+      },
+      "output": {
+        "root": {
+          "$schema": "number",
+          "value": 5
+        }
+      }
+    },
+    {
+      "id": "floor",
+      "operator": "math.floor",
+      "input": {
+        "number": {
+          "$schema": "number",
+          "value": -1.2
+        }
+      },
+      "output": {
+        "floor": {
+          "$schema": "number",
+          "value": -2
+        }
+      }
+    },
+    {
+      "id": "ceil",
+      "operator": "math.ceil",
+      "input": {
+        "number": {
+          "$schema": "number",
+          "value": -1.2
+        }
+      },
+      "output": {
+        "ceiling": {
+          "$schema": "number",
+          "value": -1
+        }
+      }
+    },
+    {
+      "id": "round",
+      "operator": "math.round",
+      "input": {
+        "number": {
+          "$schema": "number",
+          "value": -1.5
+        }
+      },
+      "output": {
+        "rounded": {
+          "$schema": "number",
+          "value": -2
+        }
+      }
+    },
+    {
+      "id": "sin",
+      "operator": "math.sin",
+      "input": {
+        "number": {
+          "$schema": "number",
+          "value": 0.7
+        }
+      },
+      "output": {
+        "sine": {
+          "$schema": "number",
+          "value": 0.644217687237691
+        }
+      }
+    },
+    {
+      "id": "cos",
+      "operator": "math.cos",
+      "input": {
+        "number": {
+          "$schema": "number",
+          "value": 0.7
+        }
+      },
+      "output": {
+        "cosine": {
+          "$schema": "number",
+          "value": 0.7648421872844885
+        }
+      }
+    },
+    {
+      "id": "tan",
+      "operator": "math.tan",
+      "input": {
+        "number": {
+          "$schema": "number",
+          "value": 0.7
+        }
+      },
+      "output": {
+        "tangent": {
+          "$schema": "number",
+          "value": 0.8422883804630793
+        }
+      }
+    },
+    {
+      "id": "passThrough",
+      "operator": "math.passThrough",
+      "input": {
+        "number": {
+          "$schema": "number",
+          "value": 1.25
+        }
+      },
+      "output": {
+        "numberOut": {
+          "$schema": "number",
+          "value": 1.25
+        }
+      }
+    },
+    {
+      "id": "remap",
+      "operator": "math.remap",
+      "input": {
+        "value": {
+          "$schema": "number",
+          "value": 3
+        },
+        "fromMin": {
+          "$schema": "number",
+          "value": 1
+        },
+        "fromMax": {
+          "$schema": "number",
+          "value": 5
+        },
+        "toMin": {
+          "$schema": "number",
+          "value": 10
+        },
+        "toMax": {
+          "$schema": "number",
+          "value": 30
+        }
+      },
+      "output": {
+        "remapped": {
+          "$schema": "number",
+          "value": 20
+        }
+      }
+    },
+    {
+      "id": "random",
+      "operator": "math.random",
+      "input": {
+        "seed": {
+          "$schema": "number",
+          "value": 42
+        },
+        "min": {
+          "$schema": "number",
+          "value": 2
+        },
+        "max": {
+          "$schema": "number",
+          "value": 6
+        }
+      },
+      "output": {
+        "random": {
+          "$schema": "number",
+          "value": 4.710492705001616
+        }
+      }
+    },
+    {
+      "id": "sparseNumberSum",
+      "operator": "math.sum",
+      "input": {
+        "list": {
+          "$schema": "list",
+          "2": {
+            "$schema": "number",
+            "value": 1e+16
+          },
+          "10": {
+            "$schema": "number",
+            "value": -1e+16
+          },
+          "11": {
+            "$schema": "number",
+            "value": 3
+          }
+        }
+      },
+      "output": {
+        "sum": {
+          "$schema": "number",
+          "value": 3
+        }
+      }
+    },
+    {
+      "id": "emptySum",
+      "operator": "math.sum",
+      "input": {
+        "list": {
+          "$schema": "list"
+        }
+      },
+      "output": {
+        "sum": {
+          "$schema": "number",
+          "value": 0
+        }
+      }
+    },
+    {
+      "id": "sparseNumericAdd",
+      "operator": "math.addVariadic",
+      "input": {
+        "items": {
+          "$schema": "list",
+          "2": {
+            "$schema": "number",
+            "value": 1e+16
+          },
+          "10": {
+            "$schema": "number",
+            "value": -1e+16
+          },
+          "11": {
+            "$schema": "number",
+            "value": 3
+          }
+        }
+      },
+      "output": {
+        "sum": {
+          "$schema": "number",
+          "value": 3
+        }
+      }
+    },
+    {
+      "id": "vectorAdd",
+      "operator": "math.add",
+      "input": {
+        "a": {
+          "$schema": "vector",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "b": {
+          "$schema": "vector",
+          "x": 9,
+          "y": -3,
+          "z": 2
+        }
+      },
+      "output": {
+        "sum": {
+          "$schema": "vector",
+          "x": 10,
+          "y": -1,
+          "z": 5
+        }
+      }
+    },
+    {
+      "id": "pointSubtract",
+      "operator": "math.subtract",
+      "input": {
+        "a": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "b": {
+          "$schema": "point",
+          "x": 9,
+          "y": -3,
+          "z": 2
+        }
+      },
+      "output": {
+        "difference": {
+          "$schema": "point",
+          "x": -8,
+          "y": 5,
+          "z": 1
+        }
+      }
+    },
+    {
+      "id": "sparsePointAdd",
+      "operator": "math.addVariadic",
+      "input": {
+        "items": {
+          "$schema": "list",
+          "2": {
+            "$schema": "point",
+            "x": 1,
+            "y": 2,
+            "z": 3
+          },
+          "10": {
+            "$schema": "point",
+            "x": 9,
+            "y": -3,
+            "z": 2
+          }
+        }
+      },
+      "output": {
+        "sum": {
+          "$schema": "point",
+          "x": 10,
+          "y": -1,
+          "z": 5
+        }
+      }
+    },
+    {
+      "id": "pointMove",
+      "operator": "math.move",
+      "input": {
+        "subject": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "offset": {
+          "$schema": "vector",
+          "x": 9,
+          "y": -3,
+          "z": 2
+        }
+      },
+      "output": {
+        "point": {
+          "$schema": "point",
+          "x": 10,
+          "y": -1,
+          "z": 5
+        },
+        "vector": null
+      }
+    },
+    {
+      "id": "vectorMove",
+      "operator": "math.move",
+      "input": {
+        "subject": {
+          "$schema": "vector",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "offset": {
+          "$schema": "vector",
+          "x": 9,
+          "y": -3,
+          "z": 2
+        }
+      },
+      "output": {
+        "vector": {
+          "$schema": "vector",
+          "x": 10,
+          "y": -1,
+          "z": 5
+        },
+        "point": null
+      }
+    }
+  ]
+}

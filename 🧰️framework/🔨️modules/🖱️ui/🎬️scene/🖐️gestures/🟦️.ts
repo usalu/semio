@@ -21,6 +21,7 @@ export type ContinuousGestureAbortReason = "blur" | "captureLost" | "frozen" | "
 export type ContinuousGestureLane<Value> = {
   readonly offer: (value: Value) => void;
   readonly commit: (value?: Value) => void;
+  readonly commitExact: (value: Value) => void;
   readonly abort: (reason: ContinuousGestureAbortReason) => void;
   readonly open: () => boolean;
   readonly inFlight: () => boolean;
@@ -63,6 +64,7 @@ function isPromiseLike(value: unknown): value is PromiseLike<void> {
  * A press can be cancelled while it is open (offered and not yet released): the owed value is dropped,
  * the cancel is sent after the round trip in flight and before anything offered later, and the release
  * of the cancelled press is ignored — the receiver drops the press with zero trace.
+ * `commitExact` admits a new discrete entry even when a preceding press was cancelled.
  *
  * A send that rejects frees the lane; the fault reaches `onFault` and the owed value is still sent,
  * because a gesture must not be wedged by one refused round trip. A port that answers anything but a
@@ -109,6 +111,12 @@ export function createContinuousGestureLane<Value>(ports: ContinuousGestureLaneP
         pump();
       });
   };
+  const publishCommit = (value: Value): void => {
+    last = { value };
+    owed = { value, phase: "commit" };
+    open = false;
+    pump();
+  };
   return {
     offer(value) {
       last = { value };
@@ -124,10 +132,10 @@ export function createContinuousGestureLane<Value>(ports: ContinuousGestureLaneP
       }
       const released = value ?? owed?.value ?? last?.value;
       if (released === undefined) return;
-      last = { value: released as Value };
-      owed = { value: released as Value, phase: "commit" };
-      open = false;
-      pump();
+      publishCommit(released);
+    },
+    commitExact(value) {
+      publishCommit(value);
     },
     abort(reason) {
       if (!open) return;

@@ -131,7 +131,7 @@ test("repo capacity status marks a grant that is lent back in English and German
 
 test("repo capacity run admits an arbitrary command, hands it the grant and returns its exit code",async()=>{
  const directory=fresh(),lines:string[]=[],context={environment:{...process.env,LANG:"en_US.UTF-8"} as NodeJS.ProcessEnv,write:(line:string)=>lines.push(line),directory,policy:fast,sample:async()=>({host:host(),swappedOutMegabytes:0})};
- expect(await runCapacityCommandV1(["run","--memory=100","--","node","-e","process.exit(process.env.SEMIO_HOST_CAPACITY_GRANT&&JSON.parse(process.env.SEMIO_HOST_CAPACITY_PLAN).fixedMegabytes===100?0:3)"],context)).toBe(0);
+ expect(await runCapacityCommandV1(["run","--memory=100","--","node","-e","process.exit(process.env.SEMIO_HOST_CAPACITY_GRANT&&JSON.parse(process.env.SEMIO_HOST_CAPACITY_PLAN).memoryMegabytes===100?0:3)"],context)).toBe(0);
  expect(await runCapacityCommandV1(["run","--memory=100","--","node","-e","process.exit(7)"],context)).toBe(7);
  expect(lines.some(line=>/admitted command/u.test(line))).toBe(false);
  expect(readdirSync(join(directory,"grants"))).toEqual([]);

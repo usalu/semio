@@ -4,6 +4,10 @@
 
 use super::*;
 
+#[path = "🧱️owned-entry/🦀️.rs"]
+mod owned_entry;
+pub use owned_entry::{BudgetedOwnedEntry,EntryOwners};
+
 // #region 🔖️Dictionary
 /// 📚️ Immutable, unordered, collision-free key-value collection. `serde` is TEST-ONLY
 /// (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01, tenth-seam pass — see

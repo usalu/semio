@@ -36,18 +36,16 @@ fn a_bound_document_round_trips_through_the_guest_json_decoder() {
 }
 
 /// 🧊️ The isolated compile worker of a unit-test process (see [`ISOLATED_COMPILE_TEST_ENTRY`]): a
-/// no-op in an ordinary test run, the whole worker when its two inputs are set.
+/// no-op in an ordinary test run, the whole worker when its inputs are set.
 #[test]
 fn isolated_compile_worker_entry() {
-    use std::io::Read as _;
     let (Some(engine), Some(out)) = (std::env::var_os(ISOLATED_COMPILE_TEST_ENGINE), std::env::var_os(ISOLATED_COMPILE_TEST_OUT)) else { return };
-    let mut bytes = Vec::new();
-    std::io::stdin().read_to_end(&mut bytes).expect("component on stdin");
-    let result = semio_plugin_host::compile_component_isolated(&engine.to_string_lossy(), &bytes, Path::new(&out));
+    let component_bytes = std::env::var(ISOLATED_COMPILE_TEST_BYTES).unwrap().parse().unwrap();
+    let result = semio_plugin_host::compile_component_isolated(&engine.to_string_lossy(), std::io::stdin().lock(), component_bytes, Path::new(&out));
     if let Err(error) = &result {
         eprintln!("{error}");
     }
-    std::process::exit(i32::from(result.is_err()));
+    std::process::exit(semio_plugin_host::isolated_compile_exit_code(result));
 }
 
 /// 📮️ Hub commit acknowledgement requires a document actor status newer than its relayed batch.

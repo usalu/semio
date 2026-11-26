@@ -131,3 +131,17 @@ test("a builder leaves out the rows of an excluded list, whichever order they ar
   expect(()=>log.builder().exclude({} as never)).toThrow();
  }finally{log.close();rmSync(directory,{recursive:true,force:true});}
 });
+
+test("settling a log between waves keeps every row readable, writes the buffered lines and lets later rows join",()=>{
+ const directory=mkdtempSync(join(tmpdir(),"row-log-settle-")),log=createRowLogV1({path:join(directory,"rows.log")});
+ try{
+  const row=(n:number)=>({kind:"exists",path:`/w/${n}`,fact:n}),list=log.append([row(1),row(2),row(3)]);
+  log.settle();
+  expect(log.stats().pendingBytes).toBe(0);
+  expect([...list.rows()]).toEqual([row(1),row(2),row(3)]);
+  const later=log.append([row(2),row(9)]);
+  expect([...later.rows()]).toEqual([row(2),row(9)]);expect(log.size()).toBe(4);
+  log.settle();log.settle();
+  expect([...list.rows()].length+[...later.rows()].length).toBe(5);
+ }finally{log.close();rmSync(directory,{recursive:true,force:true});}
+});

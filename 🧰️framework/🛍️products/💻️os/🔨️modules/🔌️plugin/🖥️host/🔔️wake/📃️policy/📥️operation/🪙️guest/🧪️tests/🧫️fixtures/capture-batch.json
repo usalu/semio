@@ -1,0 +1,28 @@
+{
+  "headerWords": [71, 3, 1, 7, 100000, 10000, 4096, 65536, 65536, 65536, 64, 3, 40, 2, 1, 12],
+  "source": [11, 12, 13],
+  "revision": 1,
+  "rows": [
+    [11, 12, 13, 20, 32, 1, 1, 1, 3, 15, 5, 1, 2, 2, 12, 4, 0, 1, 0, 2, 0, 0, 0],
+    [11, 12, 13, 21, 64, 2, 1, 2, 4, 25, 6, 3, 4, 2, 12, 4, 0, 2, 2, 13, 2, 3, 2]
+  ],
+  "phases": {
+    "copy": [71, 568, 71, 639],
+    "header": [19, 4, 17, 19],
+    "sre": [74, 486, 80, 74],
+    "claim": [24, 185, 25, 24]
+  },
+  "schedules": [
+    {"name":"batched","items":512,"turns":[3,1,3,2]},
+    {"name":"partially funded windows","items":3,"turns":[24,7,25,9]},
+    {"name":"one step per turn","items":1,"turns":[71,19,74,24]}
+  ],
+  "stops": [
+    {"name":"copy allowance splits a word","mode":"copy","limit":5,"bytes":5,"items":1,"work":6},
+    {"name":"work allowance splits a word","mode":"fuel","limit":4,"bytes":3,"items":1,"work":4},
+    {"name":"zero item grant preserves the initial frontier","mode":"items","limit":0,"bytes":0,"items":0,"work":0},
+    {"name":"ordinary cancellation between words","mode":"cancel","limit":1,"bytes":8,"items":1,"work":9},
+    {"name":"deadline interrupts a capture","mode":"deadline","limit":1,"bytes":8,"items":1,"work":9},
+    {"name":"one paid retirement word after cancellation","mode":"retire","limit":1,"bytes":8,"items":1,"work":9}
+  ]
+}

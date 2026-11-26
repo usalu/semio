@@ -33,6 +33,27 @@
       {"paid":1,"ready":false,"cancelled":false,"yielding":false,"elapsedUs":8000},
       {"paid":1,"ready":true,"cancelled":false,"yielding":false,"elapsedUs":8001}
     ],"outcome":[1,1,0]},
+    {"name":"metered opening reaches one capture after the interactive slice","metered":true,"steps":[
+      {"paid":1,"ready":false,"cancelled":false,"yielding":false,"elapsedUs":10000},
+      {"paid":1,"ready":true,"cancelled":false,"yielding":false,"elapsedUs":20000},
+      {"paid":1,"ready":true,"cancelled":false,"yielding":false,"elapsedUs":25000}
+    ],"outcome":[2,2,1]},
+    {"name":"metered opening respects the lifecycle ceiling","metered":true,"steps":[
+      {"paid":1,"ready":false,"cancelled":false,"yielding":false,"elapsedUs":5000000},
+      {"paid":1,"ready":true,"cancelled":false,"yielding":false,"elapsedUs":5000001}
+    ],"outcome":[1,1,0]},
+    {"name":"metered opening respects Source yield","metered":true,"steps":[
+      {"paid":1,"ready":false,"cancelled":false,"yielding":true,"elapsedUs":10000},
+      {"paid":1,"ready":true,"cancelled":false,"yielding":false,"elapsedUs":20000}
+    ],"outcome":[1,1,0]},
+    {"name":"metered opening respects cancellation","metered":true,"steps":[
+      {"paid":1,"ready":false,"cancelled":true,"yielding":false,"elapsedUs":10000},
+      {"paid":1,"ready":true,"cancelled":false,"yielding":false,"elapsedUs":20000}
+    ],"outcome":[1,1,0]},
+    {"name":"metered opening stops when the real clock is lost","metered":true,"steps":[
+      {"paid":1,"ready":false,"cancelled":false,"yielding":false,"elapsedUs":null},
+      {"paid":1,"ready":true,"cancelled":false,"yielding":false,"elapsedUs":20000}
+    ],"outcome":[1,1,0]},
     {"name":"clock lost","steps":[
       {"paid":1,"ready":false,"cancelled":false,"yielding":false,"elapsedUs":null},
       {"paid":1,"ready":true,"cancelled":false,"yielding":false,"elapsedUs":2}

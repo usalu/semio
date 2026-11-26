@@ -539,6 +539,10 @@ pub async fn test_retained_cancellation_publication_boundaries<A: ArtifactApp<Pr
     pub async fn test_retained_stale_publication_boundary<A: ArtifactApp<Presence = semio_plugin_testing_fixtures_publication::publication_fixture::presence::PublicationPresence, PresenceMutation = semio_plugin_testing_fixtures_publication::publication_fixture::presence::mutations::PublicationPresenceMutation> + Default>() {
         typed_command_full_operation_tests::retained_cancellation_publication_boundaries::<A>(true).await;
     }
+    #[doc(hidden)]
+    pub async fn test_retained_stale_window_publication<A: ArtifactApp, W: semio_plugin_window_config::WindowConfigOwner>(view: semio_framework::ViewModel, mutation: fn() -> W::Mutation) {
+        typed_command_full_operation_tests::retained_stale_window_publication::<A, W>(view, mutation).await;
+    }
     fn fixture_close_turn<P: PluginApp>(app: &mut P, original_grant:RetainedCloneGrant, cx: &mut semio_framework_job::StepContext<'_>) -> PluginLifecycleStep {
         let _demand = app.close_retirement_demands(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
         app.close_step(cx, original_grant).unwrap()

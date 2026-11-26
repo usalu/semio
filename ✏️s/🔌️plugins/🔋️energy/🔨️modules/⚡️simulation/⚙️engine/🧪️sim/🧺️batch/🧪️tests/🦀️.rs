@@ -39,6 +39,14 @@ fn packet_page_birth_waits_for_the_next_original_turn() {
         let mut original = OriginalEnergyCaller::new(operation.operation, operation.generation);
         let mut job = EnergyJob::new(operation, crate::model::test_model_single_zone(), SimulationConfig::default()).unwrap();
         job.start_wire(EnergyWireKind::Preview, 1, JobPayloadStream::Preview).unwrap();
+        for _ in 0..128 {
+            let build = job.wire_build.as_ref().unwrap();
+            if build.builder.as_ref().is_some_and(|builder| builder.is_initialized()) { break; }
+            assert_eq!(original.turn(ENERGY_BATCH_GRANT, 8, u64::MAX, |cx| Ok(job.step_wire_build(cx))).unwrap(), Ok(false));
+        }
+        let builder = job.wire_build.as_ref().unwrap().builder.as_ref().unwrap();
+        assert!(builder.is_initialized());
+        assert!(builder.staged_page_len().is_none());
         let result = original.turn(ENERGY_BATCH_GRANT, 8, u64::MAX, |cx| {
             if case["pageAlreadyGranted"].as_bool().unwrap() { cx.grant_payload_page(); }
             Ok(job.step_wire_build(cx))
@@ -46,10 +54,10 @@ fn packet_page_birth_waits_for_the_next_original_turn() {
         assert_eq!(result, Ok(false));
         let build = job.wire_build.as_ref().unwrap();
         assert_eq!(build.field, 0);
-        assert_eq!(build.writer.staged_page_len().is_some(), case["staged"].as_bool().unwrap());
+        assert_eq!(build.builder.as_ref().unwrap().staged_page_len().is_some(), case["staged"].as_bool().unwrap());
         if !case["staged"].as_bool().unwrap() {
             assert_eq!(original.turn(ENERGY_BATCH_GRANT, 8, u64::MAX, |cx| Ok(job.step_wire_build(cx))).unwrap(), Ok(false));
-            assert!(job.wire_build.as_ref().unwrap().writer.staged_page_len().is_some());
+            assert!(job.wire_build.as_ref().unwrap().builder.as_ref().unwrap().staged_page_len().is_some());
         }
         original.close_job(&mut job);
         drop(job);

@@ -109,18 +109,11 @@ fn declared_outcome_holds() {
     assert_eq!(declared_path, message.target, "the declared path must match the emitted target");
 }
 
-/// ↩️ `resize-tile-crop`'s inverse is BASE-derived from the target's CURRENT crop and never looks at
-/// the payload's rect — so even a refused degenerate resize inverts to a healthy restore of the
-/// crop the deck still holds.
+/// ↩️ A refused resize leaves the healthy crop outside undo history.
 #[test]
-fn inverse_restores_the_healthy_base_crop_not_the_refused_rect() {
+fn a_refused_resize_has_an_empty_inverse() {
     let inverse = inverse_presentation_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
-    assert_eq!(inverse.len(), 1, "resize-tile-crop undoes with exactly one step once its target exists, got {inverse:?}");
-    let PresentationMutation::ResizeTileCrop(undo) = &inverse[0] else {
-        panic!("resize-tile-crop's inverse must be a resize-tile-crop, got {:?}", inverse[0]);
-    };
-    assert_eq!(undo.id, "t-hero", "the inverse addresses the same tile");
-    assert_eq!(undo.new_crop, FigureTileFrame { x: 0.25, y: 0.25, width: 0.5, height: 0.5 }, "the inverse carries the base crop, never the degenerate one the payload proposed");
+    assert!(inverse.is_empty());
 }
 
 /// 🪪️ The fixture is bound to `resize-tile-crop`'s own descriptor, whose address reaches all the way
@@ -136,8 +129,9 @@ fn semantics_bind_this_fixture_to_resize_tile_crop() {
     );
 }
 
-/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
 #[semio_framework_async_macros::async_test]
-async fn inverse_diffs_sum_to_the_negative_diff() {
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+async fn zero_width_crop_obeys_the_fatal_outcome_law() {
+    let outcome = <PresentationMutation as protocol::ColdMutation<PresentationSnapshot>>::diff(&mutation(), &before());
+    assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
 }

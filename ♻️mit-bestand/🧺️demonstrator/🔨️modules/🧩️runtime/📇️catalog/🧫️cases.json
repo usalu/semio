@@ -36,16 +36,7 @@
       "runtimeVariant": "fem3d"
     }
   ],
-  "withheldExtensions": [
-    "cad-extension-aec-building",
-    "cad-extension-aec-building-energy",
-    "cad-extension-aec-building-structure",
-    "cad-extension-spatial-shape",
-    "process-extension-concrete",
-    "process-extension-metal",
-    "process-extension-robotic",
-    "process-extension-wood"
-  ],
+  "withheldExtensions": [],
   "invalidVariants": [
     "",
     "unknown",

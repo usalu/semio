@@ -1,0 +1,254 @@
+[
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "elevation",
+  "id": "cane-shaft",
+  "set": {
+   "points": [
+    [
+     0.19,
+     -0.02
+    ],
+    [
+     0.942,
+     -0.02
+    ],
+    [
+     0.942,
+     0.02
+    ],
+    [
+     0.19,
+     0.02
+    ]
+   ],
+   "penMm": 0.17
+  },
+  "why": "the cane strip 40 mm wide with a 0.17 mm outline (0.21 mm at 1:1000): the 75 mm strip filled the 74 mm between the boots and closed the slit between the legs that the body leaves open, so the silhouette guard read 167 mm as soon as the left thigh stood at its place"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "elevation",
+  "id": "cane-band-tip",
+  "set": {
+   "points": [
+    [
+     0.942,
+     -0.02
+    ],
+    [
+     1.216,
+     -0.02
+    ],
+    [
+     1.216,
+     0.02
+    ],
+    [
+     0.942,
+     0.02
+    ]
+   ],
+   "penMm": 0.17
+  },
+  "why": "the cane strip 40 mm wide with a 0.17 mm outline (0.21 mm at 1:1000): the 75 mm strip filled the 74 mm between the boots and closed the slit between the legs that the body leaves open, so the silhouette guard read 167 mm as soon as the left thigh stood at its place"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "elevation",
+  "id": "cane-grip",
+  "set": {
+   "points": [
+    [
+     -0.072,
+     -0.02
+    ],
+    [
+     0.19,
+     -0.02
+    ],
+    [
+     0.19,
+     0.02
+    ],
+    [
+     -0.072,
+     0.02
+    ]
+   ],
+   "penMm": 0.17
+  },
+  "why": "the cane strip 40 mm wide with a 0.17 mm outline (0.21 mm at 1:1000): the 75 mm strip filled the 74 mm between the boots and closed the slit between the legs that the body leaves open, so the silhouette guard read 167 mm as soon as the left thigh stood at its place"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "front",
+  "id": "cane-shaft",
+  "set": {
+   "points": [
+    [
+     0.19,
+     -0.02
+    ],
+    [
+     0.942,
+     -0.02
+    ],
+    [
+     0.942,
+     0.02
+    ],
+    [
+     0.19,
+     0.02
+    ]
+   ],
+   "penMm": 0.17
+  },
+  "why": "the cane strip 40 mm wide with a 0.17 mm outline (0.21 mm at 1:1000): the 75 mm strip filled the 74 mm between the boots and closed the slit between the legs that the body leaves open, so the silhouette guard read 167 mm as soon as the left thigh stood at its place"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "front",
+  "id": "cane-band-tip",
+  "set": {
+   "points": [
+    [
+     0.942,
+     -0.02
+    ],
+    [
+     1.216,
+     -0.02
+    ],
+    [
+     1.216,
+     0.02
+    ],
+    [
+     0.942,
+     0.02
+    ]
+   ],
+   "penMm": 0.17
+  },
+  "why": "the cane strip 40 mm wide with a 0.17 mm outline (0.21 mm at 1:1000): the 75 mm strip filled the 74 mm between the boots and closed the slit between the legs that the body leaves open, so the silhouette guard read 167 mm as soon as the left thigh stood at its place"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "front",
+  "id": "cane-grip",
+  "set": {
+   "points": [
+    [
+     -0.072,
+     -0.02
+    ],
+    [
+     0.19,
+     -0.02
+    ],
+    [
+     0.19,
+     0.02
+    ],
+    [
+     -0.072,
+     0.02
+    ]
+   ],
+   "penMm": 0.17
+  },
+  "why": "the cane strip 40 mm wide with a 0.17 mm outline (0.21 mm at 1:1000): the 75 mm strip filled the 74 mm between the boots and closed the slit between the legs that the body leaves open, so the silhouette guard read 167 mm as soon as the left thigh stood at its place"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "plan",
+  "id": "cane-shaft",
+  "set": {
+   "points": [
+    [
+     0.19,
+     -0.02
+    ],
+    [
+     0.942,
+     -0.02
+    ],
+    [
+     0.942,
+     0.02
+    ],
+    [
+     0.19,
+     0.02
+    ]
+   ],
+   "penMm": 0.17
+  },
+  "why": "the cane strip 40 mm wide with a 0.17 mm outline (0.21 mm at 1:1000): the 75 mm strip filled the 74 mm between the boots and closed the slit between the legs that the body leaves open, so the silhouette guard read 167 mm as soon as the left thigh stood at its place"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "plan",
+  "id": "cane-band-tip",
+  "set": {
+   "points": [
+    [
+     0.942,
+     -0.02
+    ],
+    [
+     1.216,
+     -0.02
+    ],
+    [
+     1.216,
+     0.02
+    ],
+    [
+     0.942,
+     0.02
+    ]
+   ],
+   "penMm": 0.17
+  },
+  "why": "the cane strip 40 mm wide with a 0.17 mm outline (0.21 mm at 1:1000): the 75 mm strip filled the 74 mm between the boots and closed the slit between the legs that the body leaves open, so the silhouette guard read 167 mm as soon as the left thigh stood at its place"
+ },
+ {
+  "op": "set",
+  "scale": "500",
+  "view": "plan",
+  "id": "cane-grip",
+  "set": {
+   "points": [
+    [
+     -0.072,
+     -0.02
+    ],
+    [
+     0.19,
+     -0.02
+    ],
+    [
+     0.19,
+     0.02
+    ],
+    [
+     -0.072,
+     0.02
+    ]
+   ],
+   "penMm": 0.17
+  },
+  "why": "the cane strip 40 mm wide with a 0.17 mm outline (0.21 mm at 1:1000): the 75 mm strip filled the 74 mm between the boots and closed the slit between the legs that the body leaves open, so the silhouette guard read 167 mm as soon as the left thigh stood at its place"
+ }
+]

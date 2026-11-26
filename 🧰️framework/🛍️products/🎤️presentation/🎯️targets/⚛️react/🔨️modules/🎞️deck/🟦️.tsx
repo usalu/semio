@@ -21,6 +21,7 @@ import Reveal from "reveal.js";
 // #endregion 🔌️Adapters
 import {
   DEFAULT_SURFACE_CHROME,
+  applyPresentationPrintSurfaces,
   type PresentationMountOptions,
   readPresentationSlideIndicesFromUrl,
   syncPresentationSlideSizeVars,
@@ -204,8 +205,17 @@ export const PresentationDeck: FC<{
       }
       scheduleFinalizeAutoAnimateRest();
     };
+    const onPdfReady = (): void => {
+      syncPresentationSlideSizeVars(deckEl, deck);
+      applyPresentationPrintSurfaces(deckEl);
+    };
+    deck.on("pdf-ready", onPdfReady);
     void deck.initialize().then(() => {
       relaxHiddenPreflight();
+      const slideNumber = deckEl.querySelector(".slide-number");
+      slideNumber?.setAttribute("data-level", "pane");
+      slideNumber?.setAttribute("data-glass-chip", "");
+      slideNumber?.classList.add("ui-glass");
       syncRevealBackgroundKind(deckEl);
       syncPresentationSlideSizeVars(deckEl, deck);
       syncSlideAspect(deckEl);
@@ -268,6 +278,7 @@ export const PresentationDeck: FC<{
       deck.off("slidechanged", onSlideChanged);
       deck.off("resize", onResize);
       deck.off("autoanimate", onAutoAnimate);
+      deck.off("pdf-ready", onPdfReady);
       try {
         deck.destroy();
       } catch {}
@@ -280,8 +291,8 @@ export const PresentationDeck: FC<{
       <PresentationSlideAspectContext.Provider value={slideAspect}>
         <PresentationInteractionProvider>
           <PresentationSlideInteractionBridge deckRef={deckRef} />
-          <div className="reveal" ref={deckDivRef} style={{ width: "100vw", height: "100vh" }}>
-            <div className="slides">
+          <div className="reveal" data-level="base" ref={deckDivRef} style={{ width: "100vw", height: "100vh" }}>
+            <div className="slides ui-surface" data-level="window">
               {presentation.chapters.flatMap((chapter) =>
                 chapter.sequences.map((sequence) => (
                   <section key={`${chapter.id}-${sequence.id}`}>

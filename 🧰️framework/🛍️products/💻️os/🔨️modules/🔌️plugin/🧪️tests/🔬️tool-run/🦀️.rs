@@ -43,7 +43,6 @@ use semio_plugin_interaction::UiAssemblyResult;
 use semio_plugin_instance_app::VcsArtifactApp;
 use semio_plugin_window_config::{WindowConfigOwner, WindowConfigOwnerRegistry, bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners};
 use semio_plugin_window_transient::window_transient::WindowTransientOwner;
-#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_testing_laws::artifact_app_laws;
 use semio_plugin_builder as builder;
 use semio_plugin_document_media as document_ingress;

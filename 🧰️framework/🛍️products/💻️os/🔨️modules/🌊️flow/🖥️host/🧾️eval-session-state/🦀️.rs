@@ -374,7 +374,7 @@ impl SessionRetirement {
     pub(super) fn admission_demands(&self)->Result<RetirementDemand,ValueError>{
         if self.root.is_none(){return Ok(RetirementDemand{depth:1,..Default::default()})}
         if !self.owners.has_reserved_slot(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"session retirement requires an admitted original queue slot"))}
-        Ok(RetirementDemand{capacity_bytes:RetirementQueue::frame_birth_bytes::<SessionCollectionOwner>(),depth:self.owners.len()+1,..Default::default()})
+        self.owners.admit_owned_slot_demand::<SessionCollectionOwner>()
     }
     pub(super) fn preflight(&self,grant:RetainedCloneGrant)->Result<(),ValueError>{
         if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"session mutation requires an admitted item"))}

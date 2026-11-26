@@ -16,6 +16,24 @@ impl<T, const N: usize> LazySlots<T, N> {
         Self { cell: std::cell::OnceCell::new() }
     }
 
+    /// 🔎️ Reads already materialised slots without allocating an unused table.
+    pub fn resident_slots(&self) -> &[Option<T>] {
+        self.cell.get().map_or(&[], |slots| slots.as_ref())
+    }
+
+    /// 🔄️ Takes the first occupied slot in round-robin order, starting at the supplied cursor.
+    pub fn take_next_occupied_slot(&mut self, start: usize) -> Option<(usize, T)> {
+        let slots = self.cell.get_mut()?;
+        if slots.is_empty() {
+            return None;
+        }
+        let start = start % slots.len();
+        let index = slots[start..].iter().position(Option::is_some)
+            .map(|offset| start + offset)
+            .or_else(|| slots[..start].iter().position(Option::is_some))?;
+        slots[index].take().map(|owner| (index, owner))
+    }
+
     fn fill() -> Box<[Option<T>]> {
         let mut slots: Vec<Option<T>> = Vec::with_capacity(N);
         slots.resize_with(N, || None);
@@ -46,6 +64,21 @@ impl<T, const N: usize> std::ops::DerefMut for LazySlots<T, N> {
 #[cfg(test)]
 mod tests {
     use super::LazySlots;
+
+    #[test]
+    fn polling_vacancies_preserves_lazy_allocation_and_rotates_across_live_owners() {
+        let mut slots = LazySlots::<Box<[u8; 4096]>, 1024>::new();
+        assert!(slots.take_next_occupied_slot(1023).is_none());
+        assert!(slots.cell.get().is_none());
+        slots[1000] = Some(Box::new([1; 4096]));
+        slots[2] = Some(Box::new([2; 4096]));
+        let (index, owner) = slots.take_next_occupied_slot(999).unwrap();
+        assert_eq!((index, owner[0]), (1000, 1));
+        let (index, owner) = slots.take_next_occupied_slot(1001).unwrap();
+        assert_eq!((index, owner[0]), (2, 2));
+        assert!(slots.take_next_occupied_slot(0).is_none());
+        assert!(LazySlots::<u8, 0>::new().take_next_occupied_slot(1).is_none());
+    }
 
     #[test]
     fn empty_table_is_all_zero_and_materialises_n_vacant_slots_on_first_access() {

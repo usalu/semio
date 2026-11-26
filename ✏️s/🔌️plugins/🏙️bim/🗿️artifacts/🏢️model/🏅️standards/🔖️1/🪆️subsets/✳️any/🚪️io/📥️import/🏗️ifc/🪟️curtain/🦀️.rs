@@ -31,14 +31,12 @@ pub fn read(i: &mut Import<'_>) {
         };
         let id = Doc::identity(args, "IFCCURTAINWALL").unwrap_or_else(|| format!("cw-{}", instance.id));
         wall.storey = storey;
-        wall.curtain_wall_type = match i.model.curtain_wall_types.iter().find(|(_, known)| **known == kind) {
-            Some((known, _)) => known.clone(),
-            None => {
-                let fresh = Import::unused(&type_id, |candidate| i.model.curtain_wall_types.contains_key(candidate));
-                i.model.curtain_wall_types.cold_insert(fresh.clone(), kind);
-                fresh
-            }
-        };
+        let known = i.model.curtain_wall_types.iter().find(|(_, known)| **known == kind).map(|(known, _)| known.clone());
+        wall.curtain_wall_type = known.unwrap_or_else(|| {
+            let fresh = Import::unused(&type_id, |candidate| i.model.curtain_wall_types.contains_key(candidate));
+            i.model.curtain_wall_types.cold_insert(fresh.clone(), kind);
+            fresh
+        });
         if let Some(overrides) = label(&rows, "CurtainPanelOverrides").and_then(|text| from_json_str::<BTreeMap<String, CurtainPanelOverride>>(&text, JsonMemberPolicy::Reject).ok()) {
             for (key, mut row) in overrides {
                 row.curtain = id.clone();

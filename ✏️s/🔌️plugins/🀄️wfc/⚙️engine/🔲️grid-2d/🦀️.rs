@@ -113,6 +113,8 @@ pub enum Boundary {
     Mirror,
 }
 
+semio_framework_value::artifact_retire_leaf!(Boundary);
+
 pub fn resolve_coord(coord: i32, size: usize, boundary: Boundary) -> Option<usize> {
     if coord >= 0 && (coord as usize) < size {
         return Some(coord as usize);
@@ -143,7 +145,7 @@ pub fn resolve_coord(coord: i32, size: usize, boundary: Boundary) -> Option<usiz
 
 // #region 🔖️Topology
 /// 🗺️ A dense, row-major 2D grid topology. `NodeId(y * width + x)`.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct Grid2dTopology {
     width: usize,
     height: usize,

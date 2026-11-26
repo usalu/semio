@@ -50,6 +50,7 @@ pub fn deflate_controlled<C:DeflateEncodeControl>(raw:&[u8],control:&mut C)->Res
                     if raw[cpos+len]!=raw[i+len]{break}len+=1;
                 }
                 if len>best_len{best_len=len;best_dist=i-cpos;}
+                if best_len>=NICE_MATCH{break}
                 candidate=prev[cpos];chain+=1;
             }
         }
@@ -61,8 +62,8 @@ pub fn deflate_controlled<C:DeflateEncodeControl>(raw:&[u8],control:&mut C)->Res
             let extra=DIST_EXTRA[di];if extra>0{writer.write_bits(best_dist as u32-DIST_BASE[di],extra as u32);}best_len
         }else{writer.write_huffman_code(codes[raw[i] as usize],lengths[raw[i] as usize]);1};
         if writer.bytes.len()-emitted>=256{emitted=writer.bytes.len();control.checkpoint(DeflateEncodeProgress{phase:DeflateEncodePhase::WriteOutput,completed:emitted,total:output_limit})?;}
-        let end=i+consumed;while i<end{
-            if raw.len()-i>=MIN_MATCH{let h=hash3(raw[i],raw[i+1],raw[i+2]);prev[i]=head[h];head[h]=i as u32;}
+        let end=i+consumed;let inserted=if consumed>MAX_INSERT{i+1}else{end};while i<end{
+            if i<inserted&&raw.len()-i>=MIN_MATCH{let h=hash3(raw[i],raw[i+1],raw[i+2]);prev[i]=head[h];head[h]=i as u32;}
             i+=1;if i%256==0{control.checkpoint(DeflateEncodeProgress{phase:DeflateEncodePhase::ScanInput,completed:i,total:raw.len()})?;}
         }
     }
@@ -107,7 +108,11 @@ const HASH_BITS: u32 = 15;
 
 pub(super) const HASH_SIZE: usize = 1 << HASH_BITS;
 
-pub(super) const MAX_CHAIN: usize = 128;
+pub(super) const MAX_CHAIN: usize = 16;
+
+pub(super) const NICE_MATCH: usize = 32;
+
+pub(super) const MAX_INSERT: usize = 16;
 
 pub(super) fn hash3(a: u8, b: u8, c: u8) -> usize {
     let value = (a as u32) | (b as u32) << 8 | (c as u32) << 16;
@@ -115,7 +120,7 @@ pub(super) fn hash3(a: u8, b: u8, c: u8) -> usize {
 }
 
 /// 🗜️ One fixed-Huffman (`BTYPE=1`) block over the whole input, found via a greedy hash-chain
-/// LZ77 match finder (min match 3, max 258, 32 KiB window, `MAX_CHAIN` probes) — a real matcher,
+/// LZ77 match finder (min match 3, max 258, 32 KiB window, at most `MAX_CHAIN` probes, none after a match of `NICE_MATCH`, and only the first position of a match longer than `MAX_INSERT` enters the chains) — a real matcher,
 /// not a stored-block passthrough, so segment payloads still shrink.
 pub fn deflate(raw: &[u8]) -> Vec<u8> {
     let lit_len_lengths = fixed_literal_length_lengths();
@@ -156,6 +161,9 @@ pub fn deflate(raw: &[u8]) -> Vec<u8> {
                     best_len = len;
                     best_dist = i - cpos;
                 }
+                if best_len >= NICE_MATCH {
+                    break;
+                }
                 candidate = prev[cpos];
                 chain += 1;
             }
@@ -175,8 +183,11 @@ pub fn deflate(raw: &[u8]) -> Vec<u8> {
                 writer.write_bits(best_dist as u32 - DIST_BASE[dist_index], extra_dist as u32);
             }
             let end = i + best_len;
+            let inserted = if best_len > MAX_INSERT { i + 1 } else { end };
             while i < end {
-                insert(i, raw, &mut head, &mut prev);
+                if i < inserted {
+                    insert(i, raw, &mut head, &mut prev);
+                }
                 i += 1;
             }
         } else {

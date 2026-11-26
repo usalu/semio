@@ -1,12 +1,13 @@
 import { expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import Ajv from "ajv";
 import consistencySchema from "../../../🧬️schema/🧾️owner-consistency.json" with { type: "json" };
 import registrySchema from "../../../🧬️schema/📋️owners.json" with { type: "json" };
-import { BUILD_OWNER_REGISTRY_FILE, cargoPackageName, checkBuildOwnerRegistry, findOwnerFindings, memoryOwnerTree, moveOwnerScopes, reconcileBuildOwnerRegistry, syncOwnerRegistry, type OwnerFinding, type OwnerRow, type OwnerTreePolicy } from "../🟦️.ts";
+import { BUILD_OWNER_REGISTRY_FILE, cargoPackageName, explainOwnerlessRoot, ownerlessCrateManifests, withOwnerRegistryLockV1, checkBuildOwnerRegistry, findOwnerFindings, memoryOwnerTree, moveOwnerScopes, reconcileBuildOwnerRegistry, syncOwnerRegistry, type OwnerFinding, type OwnerRow, type OwnerTreePolicy } from "../🟦️.ts";
 import { readBuildOwnerRegistryV1 } from "../../🚪️admission/🟦️.ts";
 import fixture from "./🔣️.json" with { type: "json" };
 
@@ -113,7 +114,7 @@ test("a manifest symlink is reported as not an ordinary file on disk", () => {
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
-test("an on-disk peer write wins when it arrives after reconciliation read its baseline", () => {
+test("an on-disk peer write that arrives after reconciliation read its baseline is kept and the reconciliation runs again on it", () => {
   const root = mkdtempSync(join(tmpdir(), "owners-peer-"));
   const file = join(root, BUILD_OWNER_REGISTRY_FILE);
   const peer = JSON.stringify({ version: 1, owners: [{ name: "external", root: "external", manifest: "external/Cargo.toml", packages: [] }], catalogProviders: [] });
@@ -129,10 +130,46 @@ test("an on-disk peer write wins when it arrives after reconciliation read its b
     mkdirSync(join(root, "needed"));
     writeFileSync(join(root, "needed", "Cargo.toml"), '[package]\nname = "needed"\n');
     writeFileSync(file, JSON.stringify({ version: 1, owners: [], catalogProviders: [] }));
-    expect(() => reconcileBuildOwnerRegistry(root, { scope: "needed", write: true }, editingPolicy)).toThrow("Build owner registry changed during reconciliation");
+    expect(reconcileBuildOwnerRegistry(root, { scope: "needed", write: true }, editingPolicy).registry.owners.map(owner => owner.name)).toEqual(["external", "needed"]);
     expect(seen).toBe(true);
-    expect(readFileSync(file, "utf8")).toBe(peer);
+    expect(JSON.parse(readFileSync(file, "utf8")).owners.map((owner: { name: string }) => owner.name)).toEqual(["external", "needed"]);
     expect(readdirSync(root).sort()).toEqual(["needed", BUILD_OWNER_REGISTRY_FILE].sort());
-    expect(reconcileBuildOwnerRegistry(root, { scope: "needed", write: true }, policy).registry.owners.map(owner => owner.name)).toEqual(["external", "needed"]);
+    expect(reconcileBuildOwnerRegistry(root, { scope: "needed", write: true }, policy).changed).toBe(false);
   } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("additions only adds the missing rows and leaves every other row alone", () => {
+  const root = mkdtempSync(join(tmpdir(), "owners-additions-"));
+  try {
+    mkdirSync(join(root, "new"));
+    writeFileSync(join(root, "new", "Cargo.toml"), '[package]\nname = "crate-new"\n');
+    writeFileSync(join(root, BUILD_OWNER_REGISTRY_FILE), JSON.stringify({ version: 1, owners: [{ name: "gone", root: "gone", manifest: "gone/Cargo.toml", packages: [] }], catalogProviders: [] }));
+    expect(ownerlessCrateManifests(root, undefined, policy)).toEqual(["new/Cargo.toml"]);
+    const result = reconcileBuildOwnerRegistry(root, { write: true, additionsOnly: true }, policy);
+    expect(result.added).toEqual(["crate-new"]);
+    expect(result.removed).toEqual([]);
+    expect(JSON.parse(readFileSync(join(root, BUILD_OWNER_REGISTRY_FILE), "utf8")).owners.map((owner: { name: string }) => owner.name)).toEqual(["crate-new", "gone"]);
+    expect(ownerlessCrateManifests(root, undefined, policy)).toEqual([]);
+    expect(explainOwnerlessRoot(root, "new", policy)).toContain("the row of crate-new exists");
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("the registry lock refuses a second writer instead of hanging, releases after a failure and takes over the lock of an ended or stale holder", () => {
+  const root = mkdtempSync(join(tmpdir(), "owners-lock-"));
+  const file = join(root, BUILD_OWNER_REGISTRY_FILE);
+  const lock = join(tmpdir(), `semio-build-owners-${createHash("sha256").update(file).digest("hex").slice(0, 16)}.lock`);
+  try {
+    expect(() => withOwnerRegistryLockV1(file, () => withOwnerRegistryLockV1(file, () => 0, { waitMilliseconds: 80 }), { waitMilliseconds: 80 })).toThrow("is locked by another writer");
+    expect(withOwnerRegistryLockV1(file, () => "free")).toBe("free");
+    expect(() => withOwnerRegistryLockV1(file, () => { throw Error("boom"); })).toThrow("boom");
+    expect(withOwnerRegistryLockV1(file, () => "free again")).toBe("free again");
+    const ended = Bun.spawnSync([process.execPath, "-e", ""]).pid;
+    mkdirSync(lock);
+    writeFileSync(join(lock, "owner"), `${ended} ${Date.now()}\n`);
+    expect(withOwnerRegistryLockV1(file, () => "ended holder replaced", { waitMilliseconds: 2000 })).toBe("ended holder replaced");
+    mkdirSync(lock);
+    writeFileSync(join(lock, "owner"), `${process.pid} 0\n`);
+    expect(withOwnerRegistryLockV1(file, () => "stale holder replaced", { staleMilliseconds: 0, waitMilliseconds: 2000 })).toBe("stale holder replaced");
+    expect(existsSync(lock)).toBe(false);
+  } finally { rmSync(lock, { recursive: true, force: true }); rmSync(root, { recursive: true, force: true }); }
 });

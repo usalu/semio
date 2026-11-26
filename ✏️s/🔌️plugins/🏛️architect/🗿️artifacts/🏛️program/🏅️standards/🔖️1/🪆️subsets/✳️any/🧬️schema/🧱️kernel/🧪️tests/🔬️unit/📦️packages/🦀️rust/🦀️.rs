@@ -48,7 +48,6 @@ pub mod examples {
 pub mod editor {
     #[path = "."]
     pub mod architect {
-        pub use semio_s_artifact_architect_program_architect::editor::architect::*;
         #[path = "."]
         pub mod config {
             #[path = "../../../../../../✏️editor/🎚️config/🚪️io/🦀️.rs"]

@@ -199,7 +199,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
                     let viewport_height_for_widgets = overlay.screen_height();
                     let mut ctx = framework_widget_context(overlay, None, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
                     ctx.pick_clip = Some(content);
-                    render_ui_document_step(&mut cursor.document, &document, content, &mut ctx, surface, controller.as_str(), self.chrome.chrome_build.driver.drag, &mut hosts, cx)
+                    render_ui_document_step(&mut cursor.document, &document, content, semio_ui_theme::Level::Dialog, &mut ctx, surface, controller.as_str(), self.chrome.chrome_build.driver.drag, &mut hosts, cx)
                 };
                 self.docs.panel_documents.insert(surface.to_string(), document);
                 if !complete {

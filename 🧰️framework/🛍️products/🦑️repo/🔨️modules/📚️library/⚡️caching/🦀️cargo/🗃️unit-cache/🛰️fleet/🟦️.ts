@@ -1,7 +1,7 @@
 import {createHash,randomBytes} from "node:crypto";
 import {hostname} from "node:os";
-import {mkdirSync,readFileSync,realpathSync,writeFileSync} from "node:fs";
-import {dirname,join} from "node:path";
+import {closeSync,mkdirSync,openSync,readFileSync,readSync,realpathSync,writeFileSync} from "node:fs";
+import {basename,dirname,join} from "node:path";
 import {differingComponentsV1,unitKeyComponentsV1,type RustcUnitV1,type unitKeyV1} from "../🔏️key/🟦️.ts";
 import {decodeActionResultV1,parseRemoteUnitV1,type KeyComponentsV1} from "./📦️wire/🟦️.ts";
 import {type UnitEventV1} from "../💾️store/🟦️.ts";
@@ -160,12 +160,27 @@ export function rootPathsV1(kinds:readonly string[],named:Readonly<Record<string
 /** 🌳️ Which of the named directories (and their resolved spellings) the compiled outputs hold, with the first output that does (dependency files are not scanned); `undefined` when none. */
 export function leakedRootKindsV1(outputs:readonly string[],named:Readonly<Record<string,string|undefined>>):Readonly<{file:string;kinds:readonly string[]}>|undefined{
  const resolved=(value:string)=>{try{return realpathSync(value);}catch{return value;}};
- const roots=Object.entries(named).filter((row):row is [string,string]=>typeof row[1]==="string"&&row[1].length>=4).map(([kind,value])=>[kind,[...new Set([value,resolved(value)])]] as const),kinds=new Set<string>();
+ const spellings=(value:string)=>[...new Set([value,resolved(value)].flatMap(path=>[path,path.replaceAll("\\","/"),path.replaceAll("\\","\\\\")]))];
+ const roots=Object.entries(named).filter((row):row is [string,string]=>typeof row[1]==="string"&&row[1].length>=4).map(([kind,value])=>({kind,value,spellings:spellings(value).map(path=>Buffer.from(path))})),kinds=new Set<string>();
+ const overlap=Math.max(1,...roots.flatMap(root=>root.spellings.map(bytes=>bytes.length)))-1;
+ const blockBytes=64*1024,buffer=Buffer.allocUnsafe(blockBytes+overlap);
  let file:string|undefined;
  for(const path of outputs){
   if(path.endsWith(".d"))continue;
-  let bytes:Buffer;try{bytes=readFileSync(path);}catch{continue;}
-  for(const [kind,spellings] of roots)if(spellings.some(spelling=>bytes.includes(spelling))){kinds.add(kind);file??=path.split("/").at(-1)+": "+spellings[0];}
+  let descriptor:number|undefined;
+  try{
+   descriptor=openSync(path,"r");
+   let retained=0;
+   while(kinds.size<roots.length){
+    const read=readSync(descriptor,buffer,retained,blockBytes,null);
+    if(read===0)break;
+    const window=buffer.subarray(0,retained+read);
+    for(const root of roots)if(!kinds.has(root.kind)&&root.spellings.some(bytes=>window.includes(bytes))){kinds.add(root.kind);file??=basename(path)+": "+root.value;}
+    retained=Math.min(overlap,window.length);
+    window.copy(buffer,0,window.length-retained);
+   }
+  }catch{return Object.freeze({file:path,kinds:["unreadable"]});}
+  finally{if(descriptor!==undefined)closeSync(descriptor);}
  }
  return kinds.size===0||file===undefined?undefined:Object.freeze({file,kinds:[...kinds].sort()});
 }
@@ -234,10 +249,10 @@ export async function obtainFleetUnitV1(unit:FleetUnitV1,event:(kind:UnitEventV1
 const jobExtras=(unit:FleetUnitV1)=>({...unit.run?{run:true as const}:{},...unit.tools===undefined?{}:{tools:{...unit.tools}},...unit.keyComponents===undefined?{}:{keyComponents:unit.keyComponents}});
 
 /** 🎁️ A local hit of a unit this machine never shared: queues it once so a machine that already built something fills the fleet cache too (the worker first asks the server whether it has the unit). Cheap when the unit is settled: one file test. */
-export function offerFleetUnitV1(unit:FleetUnitV1):void{
+export function offerFleetUnitV1(unit:FleetUnitV1,hint?:Readonly<{neutralKey:string;kinds:readonly string[]}>):void{
  try{
   if(!unit.client.settings.upload||offeredV1(unit.root,unit.key))return;
-  enqueueUploadV1(unit.root,{version:1,key:unit.key,localKey:unit.localKey,slot:unit.slot,crate:unit.crate,cwd:unit.cwd,workspace:unit.workspace??null,laneRoot:unit.laneRoot??null,owner:unit.owner,claimed:false,offer:true,costMs:0,platform:unit.platform,queuedMs:Date.now(),...jobExtras(unit)})&&startUploaderV1(unit.root,unit.environment);
+  enqueueUploadV1(unit.root,{version:1,key:unit.key,localKey:unit.localKey,slot:unit.slot,crate:unit.crate,cwd:unit.cwd,workspace:unit.workspace??null,laneRoot:unit.laneRoot??null,owner:unit.owner,claimed:false,offer:true,costMs:0,platform:unit.platform,queuedMs:Date.now(),...jobExtras(unit),...hint===undefined?{}:{hint:{neutralKey:hint.neutralKey,kinds:[...hint.kinds]}}})&&startUploaderV1(unit.root,unit.environment);
  }catch{}
 }
 

@@ -21,6 +21,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 kurbo = "0.13.1"

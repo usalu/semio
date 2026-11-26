@@ -10,7 +10,7 @@ include!("🧰️original-support.rs");
 
 #[test]
 fn original_straight_sweeps_use_directed_displacement_and_keep_profile_placement() {
-    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_os_flow_geometry::GeometryWorkIdentity;
     use semio_framework_3d_brep_representation::topology::EntityRef;
     use semio_s_spatial_kernel_semio_session::{point_dictionary, read_channel_number, read_geometry, vector_dictionary};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️original-straight-sweeps.json")).unwrap();

@@ -31,8 +31,9 @@ impl<P,Mu> TimeTravelStoreState<P,Mu>where P: store::os_store::serialization::Ar
     0=>{let result=OriginalReplayPublication::admit(store,&mut self.finished,&mut self.commit_request,cx,&mut self.commit_publisher,&mut self.commit_resident);match result{Ok(true)=>self.commit_stage=1,Ok(false)=>{},Err(failure)=>{if failure.retained_progress()!=Default::default(){return Err(failure)}self.commit_failure=Some(failure);self.commit_outcome=Some(if self.finished.as_ref().is_some_and(|finished|finished.revision!=store.content_revision()){TimeTravelCommit::Stale}else{TimeTravelCommit::Blocked});self.commit_closing=true;}}},
     1=>{if self.commit_publisher.as_mut().unwrap().advance(store,cx)?{self.commit_stage=2;}},
     2=>{if self.commit_publisher.as_mut().unwrap().publish(store,cx)?{self.commit_stage=3;}},
-    3=>{if self.commit_publisher.as_mut().unwrap().take_receipt(cx,&mut self.commit_receipt)?{self.commit_stage=4;}},
-    4=>{if self.commit_publisher.as_mut().unwrap().acknowledge(cx)?{self.commit_stage=5;self.commit_closing=true;}},
+    3=>{let grant=cx.retained_grant();let Some((outbound,performed))=cx.with_original_effect(grant,|_,effect|store.advance_original_outbound(effect))?else{return Ok(TimeTravelCommit::Pending)};cx.consume_work(performed);let progress=match &outbound{Ok(Some((_,p)))=>*p,Err(error)=>error.retained_progress(),_=>Default::default()};cx.consume_retained(progress)?;if let Err(error)=outbound{return Err(error.into())}if progress==Default::default(){self.commit_stage=4;}},
+    4=>{if self.commit_publisher.as_mut().unwrap().take_receipt(cx,&mut self.commit_receipt)?{self.commit_stage=5;}},
+    5=>{if self.commit_publisher.as_mut().unwrap().acknowledge(cx)?{self.commit_stage=6;self.commit_closing=true;}},
     _=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"completed replay original driver phase changed").into()),
    }Ok(TimeTravelCommit::Pending)
   })();match result{Ok(outcome)=>Ok(outcome),Err(failure)=>{self.retain_commit_failure(failure)?;Ok(TimeTravelCommit::Pending)}}

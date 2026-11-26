@@ -14,6 +14,7 @@ pub(super) async fn poll_kernel_turn<PA: semio_plugin_reactor_app::PluginApp, T,
     command_page: &mut Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
     cold_pair_page: Option<&semio_framework::kernel::ColdDocumentPairPage>,
     budget: semio_framework::kernel::Budget,
+    opening_pacing: OpeningPacing,
     prepare: impl FnOnce(&semio_framework::kernel::TurnResult) -> Result<Prepared, semio_framework::Fault>,
     publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
     identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
@@ -32,7 +33,7 @@ pub(super) async fn poll_kernel_turn<PA: semio_plugin_reactor_app::PluginApp, T,
     trace_turn_phase_retention("lifecycle");
     let close_cleanup_work = drive_turn_retirement(runtime, cx)?;
     semio_plugin_runtime_instances::inst_opening::plugin_resume_actor_openings(runtime, identity, cx, |ready, progressed, cx| {
-        opening_slice_open(ready, progressed, cx.is_cancelled(), cx.should_yield(), guest_turn_executing_us())
+        opening_slice_open(opening_pacing, ready, progressed, cx.is_cancelled(), cx.should_yield(), guest_turn_executing_us())
     }).await?;
     PATCHES.with(|patches| redirty_acknowledged_deferred_surfaces(patches, &mut dirty,cx))?;
     redirty_arena_starved_surfaces(&mut dirty)?;

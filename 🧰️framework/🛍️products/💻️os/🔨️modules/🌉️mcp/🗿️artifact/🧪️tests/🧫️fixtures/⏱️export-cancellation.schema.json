@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pluginId", "schema", "port", "cases"],
+  "properties": {
+    "pluginId": { "type": "string", "minLength": 1 },
+    "schema": { "type": "string", "minLength": 1 },
+    "port": { "type": "string", "minLength": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "cancelAt", "after", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "cancelAt": { "enum": ["opening-guest", "loading-document", "reading-document", null] },
+          "after": { "type": ["number", "null"], "minimum": 0, "exclusiveMaximum": 1 },
+          "expected": { "enum": ["CANCELLED", "EXPORTED"] }
+        }
+      }
+    }
+  }
+}

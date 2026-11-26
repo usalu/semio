@@ -7,7 +7,7 @@ import { SessionAuthorityNotice } from "./🔖️session-notice/🟦️.tsx";
 import * as React from "../⚛️react-port/🟦️.ts";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "../⚛️react-port/🟦️.ts";
 import { localeRequestToApply } from "./🌐️locale-request/🟦️.ts";
-import { type Anchor, ANCHORS, Button, CanvasSkeleton, cn, ContextMenuController, ContextMenuTriggerButton, createShellScope, detectShellLocale, disposeShellI18nInstance, Footer, Layout, LevelProvider, Navbar, PanelDockProvider, type ShellScope, SharedBorderRow, SharedBorderRowCell, ShellScopeProvider, TextSelectionContextMenuHost, TutorialBar, UIIntroduction, UiKeybindingsProvider } from "@semio-tech/ui-react";
+import { type Anchor, ANCHORS, Button, CanvasSkeleton, ContextMenuController, ContextMenuTriggerButton, createShellScope, detectShellLocale, disposeShellI18nInstance, Footer, Layout, LevelProvider, Navbar, PanelDockProvider, type ShellScope, SharedBorderRow, SharedBorderRowCell, ShellScopeProvider, TextSelectionContextMenuHost, TutorialBar, UIIntroduction, UiKeybindingsProvider } from "@semio-tech/ui-react";
 import { commitUiPreferencesConfigMutation, readUiPreferences } from "../🎚️UiPreferences/🟦️.ts";
 import { setLocale } from "@semio-tech/framework/config/mutations";
 import type { ShellLocale } from "@semio-tech/framework";

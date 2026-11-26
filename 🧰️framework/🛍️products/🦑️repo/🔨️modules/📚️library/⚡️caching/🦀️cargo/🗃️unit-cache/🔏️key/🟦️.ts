@@ -66,6 +66,11 @@ export function rustcBypassV1(unit:RustcUnitV1,args:readonly string[]):RustcBypa
 /** 🔤️ Hex SHA-256 of bytes or text. */
 export function sha256V1(value:string|Uint8Array):string{return createHash("sha256").update(value).digest("hex");}
 
+/** 🧬️ A local memory sample is reusable only for the same non-incremental compiler inputs. */
+export function localCompilerInputKeyV1(unitKey:string, packageName:string, version:string, incremental:boolean, externDigests:readonly string[] = []):string|undefined{
+ return incremental||!packageName||!version?undefined:sha256V1(JSON.stringify([unitKey,packageName,version,externDigests]));
+}
+
 /** 🧭️ Replaces every occurrence of the lane root so equal compilations in different lanes produce equal text. */
 export function laneNeutralV1(text:string,laneRoot:string|undefined):string{
  if(!laneRoot)return text;

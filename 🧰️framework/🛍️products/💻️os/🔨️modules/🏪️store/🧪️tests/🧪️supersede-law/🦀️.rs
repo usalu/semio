@@ -49,6 +49,9 @@ impl OpBinary for LawOp {
     }
 }
 
+semio_os_dsl::original_decoded_operation_receiving!(LawOp);
+semio_os_store_one_item_publication::artifact_persisted_binary_operation!(LawOp);
+
 impl OpText for LawOp {
     fn print_op(&self) -> String {
         self.0.print_op()

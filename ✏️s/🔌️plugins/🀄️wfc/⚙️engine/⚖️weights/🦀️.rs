@@ -7,7 +7,7 @@ use crate::ids::PatternId;
 
 // #region 🔖️Weights
 /// ⚖️ Per-pattern weight table with precomputed entropy terms.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct WeightTable {
     w: Vec<f64>,
     ln_w: Vec<f64>,

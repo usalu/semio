@@ -1,3 +1,4 @@
+import {processPidExistsV1} from "../../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import{spawnSync}from"node:child_process";
 import{existsSync,readdirSync,readFileSync,renameSync,rmSync,writeFileSync}from"node:fs";
 import{join}from"node:path";
@@ -19,7 +20,7 @@ export function ownerPoolProcessStartV1(pid:number,platform:NodeJS.Platform=proc
 }
 
 /** 🫀️ Whether a process exists (`EPERM` means it does, owned by somebody else); works on every platform. */
-export function ownerPoolAliveV1(pid:number):boolean{try{process.kill(pid,0);return true;}catch(error){return(error as{code?:string}).code==="EPERM";}}
+export function ownerPoolAliveV1(pid:number):boolean{return processPidExistsV1(pid);}
 
 /** 📝️ Writes the lease of a pool process (a temporary file and a rename, so a child never reads half of it). */
 export function writeOwnerPoolLeaseV1(file:string,lease:OwnerPoolLeaseV1):void{const temporary=`${file}.${process.pid}.tmp`;writeFileSync(temporary,JSON.stringify(lease));renameSync(temporary,file);}

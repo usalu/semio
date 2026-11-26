@@ -72,12 +72,11 @@ fn committed_diff_is_canonical() {
     assert_eq!(reencoded, original, "rename-tile/no-ops-when-the-tile-already-has-that-name: committed diff JSON is not canonical");
 }
 
-/// 🩹 Applying the committed diff directly to `before` yields the committed `after`, with the
-/// tile-bearing `presentation` slot never set.
+/// 🩹 The committed identity diff preserves the source, tile list and schema.
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: PresentationDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    assert!(decoded.presentation.is_none(), "an identity rename must leave the composed deck slot unset");
+    assert_eq!(decoded, PresentationDiff::default(), "this operation must carry the identity diff");
     let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-tile/no-ops-when-the-tile-already-has-that-name: committed diff did not carry before to after");
 }
@@ -111,20 +110,14 @@ fn declared_outcome_holds() {
     assert!(messages[0].target.is_empty(), "rename-tile's no-op warning carries no target address");
 }
 
-/// ↩️ `rename-tile`'s inverse is BASE-derived: it restores the name the tile currently carries.
-/// Here that IS the requested name, so the rename is its own inverse and replaying it changes
-/// nothing.
+/// ↩️ A no-op leaves undo history empty and preserves the full snapshot.
 #[test]
-fn inverse_restores_the_base_name_and_is_its_own_inverse_here() {
+fn unchanged_name_has_an_empty_inverse() {
     let base = before();
-    let inverse = inverse_presentation_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
-    assert_eq!(inverse.len(), 1, "rename-tile undoes with exactly one step, got {inverse:?}");
-    let PresentationMutation::RenameTile(undo) = &inverse[0] else {
-        panic!("rename-tile's inverse must be a rename-tile, got {:?}", inverse[0]);
-    };
-    assert_eq!((undo.id.as_str(), undo.new_name.as_str()), ("t-hero", "Hero"), "the inverse restores the captured name, which here equals the requested one");
-    let restored = apply_presentation_mutation(&apply_presentation_mutation(&base, &mutation()).expect("forward applies"), &inverse[0]).expect("inverse step applies");
-    assert_eq!(restored, base, "rename-tile/no-ops-when-the-tile-already-has-that-name: inverse did not restore the before-snapshot");
+    let operation = mutation();
+    let inverse = inverse_presentation_mutation(&base, &operation).expect("valid retained mutation inverse fixture");
+    assert!(inverse.is_empty());
+    assert_eq!(apply_presentation_mutation(&base, &operation).expect("no-op applies"), base);
 }
 
 /// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.

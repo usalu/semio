@@ -28,4 +28,23 @@ The generated capsule emits its receipt's `requestSequence` as canonical quoted 
 
 `plugin_resume_actor_openings` used to advance a single selected gate once per kernel turn. Its native VCS app factory deliberately retains each proper materialized owner or partial step and returns pending after admitting registration, actor, controller, store, child construction, or cleanup work. The original allocation-owned `PendingNativeCreation` also retains authority, app, source bind and handback phases. An empty outer Poll had to price a new JSON Input and output capsule for each gate. Those exact gates account for the 40 observed empty Polls. Raising time or fuel alone leaves that pacing in place.
 
-The reactor now reuses its existing 8 ms quiet interval for one selected pending opening. The runtime retains the same instance identity across up to 64 original-context steps in that turn. Each next step requires a change in the actual retained progress or original work observer and stops at completion, cancellation, cooperative yield, deadline, lost clock, or the fixed step cap. The original opening engine still executes each construction, checked admission and retirement step. Selecting a second instance and preparing or publishing a second receipt are outside the loop. The quiet scheduling law models completion with exactly one capture and rejection of an additional step when a request is parked, yielding, cancelled, or has reached or lost its clock. A rebuilt managed component is needed to measure the new count.
+The reactor now reuses its existing 8 ms quiet interval for one selected pending opening. The runtime retains the same instance identity across up to 64 original-context steps in that turn. Each next step requires a change in the actual retained progress or original work observer and stops at completion, cancellation, cooperative yield, deadline, lost clock, or the fixed step cap. The original opening engine still executes each construction, checked admission and retirement step. Selecting a second instance and preparing or publishing a second receipt are outside the loop. The quiet scheduling law models completion with exactly one capture and rejection of an additional step when a request is parked, yielding, cancelled, or has reached or lost its clock.
+
+## Rebuilt Note Lifecycle
+
+The raw prototype component with SHA-256 `794785f1e15990754b2cbf2a3e91b7c8567b3f5a75c2818944d83490fe9665f8` reproduced the same Captured identity and exact ACK. The rebuilt component includes both the quiet opening loop and the canonical empty Poll input specialization. Three interleaved fresh Bun WebAssembly processes per component produced the same turn and receipt counts in every run. All turns reported MoreWork, no pending input and no effects. Each ACK carried the actual received Captured receipt and completed paid output and input closure.
+
+| Measurement | Installed baseline | Rebuilt component |
+| --- | ---: | ---: |
+| Captured turn, zero-based | 40 | 3 |
+| ACK turn, zero-based | 41 | 4 |
+| Total kernel turns | 42 | 5 |
+| Input export calls | 84 | 7 |
+| Issued guest epochs through ACK closure | 23,895 | 2,913 |
+| Guest Input work | 383,927 | 34,294 |
+| Open Input through Captured, median | 2,753.406 ms | 342.630 ms |
+| Open Input through ACK output, median | 2,800.652 ms | 402.434 ms |
+| Open Input through final paid closure, median | 2,805.972 ms | 411.127 ms |
+| Entire diagnostic execution, median | 3,208.554 ms | 866.378 ms |
+
+Timings through Captured, ACK and final closure start after Boot, immediately before the first Open input allocation. Total execution includes component parsing, JIT compilation and Boot. This independently verifies the guest lifecycle and actual receipt count for those bytes. The native MCP transport, host fuel and managed publication are separate checks.

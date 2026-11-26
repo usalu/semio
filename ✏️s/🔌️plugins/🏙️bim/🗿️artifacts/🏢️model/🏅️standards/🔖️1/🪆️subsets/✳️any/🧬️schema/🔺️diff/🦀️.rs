@@ -1,14 +1,12 @@
 //! 🔺️ BIM model diff: a sparse per-collection keyed delta (`Created | Deleted | Replaced | Patched` per id) plus a
-//! project patch. The central applier is the only caller of [`MutationDiff::apply`]; `between` exists for
-//! sync and import only and is never called from a mutation leaf.
+//! project patch. The central applier is the only caller of [`ColdMutationDiff::apply`].
 
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::entities::*;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::*;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{StructuralSupport, LoadCase, StructuralLoad, StructuralLocation, Restraints};
-use protocol::{ApplyCapability, ColdDiffAlgebra, DiffAlgebra, DiffRegions, MutationApplyError, MutationApplyResult, MutationDiff, TouchedPaths};
+use protocol::{ApplyCapability, ColdDiffAlgebra, ColdMutationDiff, DiffAlgebra, DiffRegions, MutationApplyResult, MutationDiff, TouchedPaths};
 use schema::ArtifactSchema;
-use std::collections::BTreeMap;
 
 #[path = "🩹️patches/🦀️.rs"]
 pub mod patches;
@@ -113,18 +111,20 @@ macro_rules! model_diff {
             )*
         }
 
-        impl MutationDiff<ModelSnapshot> for ModelDiff {
-            fn apply(&self, base: &ModelSnapshot, _capability: ApplyCapability) -> MutationApplyResult<ModelSnapshot> {
-                let mut next = base.clone();
-                if let Some(patch) = &self.project {
-                    next.project = patch.write(&base.project);
-                }
+        impl MutationDiff<ModelSnapshot> for ModelDiff {}
+
+        impl ColdMutationDiff<ModelSnapshot> for ModelDiff {
+            fn apply(&self, unpublished: &mut ModelSnapshot, _capability: ApplyCapability) -> MutationApplyResult<()> {
                 $(
-                    if let Some(delta) = &self.$field {
-                        next.$field = delta.write_into(&base.$field).map_err(|error| error.under([stringify!($field)]))?;
-                    }
+                    let $field = self.$field.as_ref().filter(|delta| !delta.is_empty())
+                        .map(|delta| delta.write_into(&unpublished.$field).map_err(|error| error.under([stringify!($field)])))
+                        .transpose()?;
                 )*
-                Ok(next)
+                if let Some(patch) = &self.project {
+                    unpublished.project = patch.write(&unpublished.project);
+                }
+                $( if let Some(rows) = $field { unpublished.$field = rows; } )*
+                Ok(())
             }
 
             fn absorb(&mut self, other: Self) {
@@ -134,15 +134,17 @@ macro_rules! model_diff {
         }
 
         impl DiffAlgebra<ModelSnapshot> for ModelDiff {
+            fn is_empty(&self) -> bool {
+                self.project.as_ref().is_none_or(<ProjectPatch as Patch<Project>>::is_empty) $( && self.$field.as_ref().is_none_or(KeyedDelta::is_empty) )*
+            }
+        }
+
+        impl ColdDiffAlgebra<ModelSnapshot> for ModelDiff {
             fn inverse(&self, base: &ModelSnapshot) -> Self {
                 Self {
                     project: self.project.as_ref().map(|patch| patch.restoring(&base.project)).filter(|patch| !<ProjectPatch as Patch<Project>>::is_empty(patch)),
                     $( $field: self.$field.as_ref().map(|delta| delta.inverse(&base.$field)).and_then(non_empty), )*
                 }
-            }
-
-            fn is_empty(&self) -> bool {
-                self.project.as_ref().is_none_or(<ProjectPatch as Patch<Project>>::is_empty) $( && self.$field.as_ref().is_none_or(KeyedDelta::is_empty) )*
             }
         }
 

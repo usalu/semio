@@ -116,7 +116,7 @@ export function ExportPanel(props: ExportPanelProps): ReactElement {
             const wrongViewpoint = !spatial && !drawing;
             const blocked = capability.available && !wrongViewpoint && FRAMED.includes(format) && needsClip;
             return (
-              <SharedBorderRow as="li" orientation="vertical" key={format} data-format={format} data-state={kind ?? (wrongViewpoint ? "needs-drawing" : blocked ? "needs-clip" : "available")} className="bg-panel">
+              <SharedBorderRow as="li" orientation="vertical" key={format} data-format={format} data-state={kind ?? (wrongViewpoint ? "needs-drawing" : blocked ? "needs-clip" : "available")}>
                 <Cell className="justify-between">
                   <h3 className="m-0 text-sm font-semibold">{t(`detail.format.${format}`)}</h3>
                   <Tag>{t(capability.available ? "detail.export.available" : kind === "unavailable" ? "detail.export.unavailable" : "detail.export.unsupported")}</Tag>
@@ -147,7 +147,7 @@ export function ExportPanel(props: ExportPanelProps): ReactElement {
         </SharedBorderRow>
       )}
       {asset.exports.includes("component") ? (
-        <Column data-format="component" className="bg-panel">
+        <Column data-format="component">
           <SectionTitle level={3}>{t("detail.format.component")}</SectionTitle>
           <Note>{t("detail.format.component.body")}</Note>
           <Cell className="overflow-x-auto"><code className="block whitespace-pre font-mono text-xs">{snippet}</code></Cell>

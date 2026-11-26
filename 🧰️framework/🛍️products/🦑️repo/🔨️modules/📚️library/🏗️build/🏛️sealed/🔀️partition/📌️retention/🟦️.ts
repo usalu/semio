@@ -1,4 +1,5 @@
 import {randomUUID} from "node:crypto";
+import {processPidExistsV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import {mkdirSync} from "node:fs";
 import {join,resolve} from "node:path";
 import {SqliteDatabaseV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗃️sqlite/🟦️.ts";
@@ -17,7 +18,7 @@ export function partitionReferencesV1(group:PartitionGroupV1):readonly Readonly<
 const parse=(text:string):PartitionGroupV1|undefined=>{try{const value=JSON.parse(text);if(!value||Object.keys(value).sort().join(",")!=="door,kernels,version"||value.version!==1||!Array.isArray(value.kernels))return;return partitionGroupV1(value.door,value.kernels);}catch{return;}};
 const groupKey=(door:string,kernels:readonly string[])=>sealedHashV1(JSON.stringify([door,[...kernels].sort()]));
 function database(root:string,policy:SealedPolicyV1){const dir=join(resolve(root),...policy.cacheDirectory.split("/"));mkdirSync(dir,{recursive:true});const db=new SqliteDatabaseV1(join(dir,"partition.sqlite"));db.exec("PRAGMA busy_timeout=5000; CREATE TABLE IF NOT EXISTS groups (id TEXT PRIMARY KEY, current TEXT NOT NULL, previous TEXT NOT NULL); CREATE TABLE IF NOT EXISTS pins (token TEXT PRIMARY KEY, pid INTEGER NOT NULL, value TEXT NOT NULL)");return db;}
-function livePins(db:SqliteDatabaseV1):PartitionGroupV1[]{const groups:PartitionGroupV1[]=[];for(const row of db.query<{token:string;pid:number;value:string},[]>("SELECT token,pid,value FROM pins").all()){if(!Number.isSafeInteger(row.pid)||row.pid<=0)throw Error("Corrupt sealed partition reader process");let alive=true;try{process.kill(row.pid,0);}catch(error){if((error as NodeJS.ErrnoException).code==="ESRCH")alive=false;}if(!alive){db.run("DELETE FROM pins WHERE token=?",row.token);continue;}const group=parse(row.value);if(!group)throw Error("Corrupt sealed partition reader");groups.push(group);}return groups;}
+function livePins(db:SqliteDatabaseV1):PartitionGroupV1[]{const groups:PartitionGroupV1[]=[];for(const row of db.query<{token:string;pid:number;value:string},[]>("SELECT token,pid,value FROM pins").all()){if(!Number.isSafeInteger(row.pid)||row.pid<=0)throw Error("Corrupt sealed partition reader process");if(!processPidExistsV1(row.pid)){db.run("DELETE FROM pins WHERE token=?",row.token);continue;}const group=parse(row.value);if(!group)throw Error("Corrupt sealed partition reader");groups.push(group);}return groups;}
 /** 🔒️ Serializes group publication, reader registration and collection under one crash-released store lock. */
 export function withPartitionStoreV1<T>(root:string,policy:SealedPolicyV1,body:(db:SqliteDatabaseV1)=>T):T{const db=database(root,policy);try{db.exec("BEGIN IMMEDIATE");try{const result=body(db);db.exec("COMMIT");return result;}catch(error){db.exec("ROLLBACK");throw error;}}finally{db.close();}}
 /** 🧩️ Tells whether every snapshot of a group loads here and all captures agree on the files they share. */

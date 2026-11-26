@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 
 const generated = join(import.meta.dirname, "🗑️generated");
-const build = join(generated, "native-host", "debug", "build");
+const build = process.argv[3] ? resolve(process.argv[3]) : join(generated,"native-host","debug","build");
 const folderOwner = "semio-os-store-sync-native";
 const storageVariant = process.argv[2] ?? "9d0b44bf77df9a85";
 const folders = new Set<string>();
@@ -61,4 +61,7 @@ for (const [name, library] of [["semio_os_store_sync_native", storage], ["semio_
 for (const dir of folders) args.push("-L", `dependency=${dir}`);
 for (const dir of native) args.push("-L", `native=${dir}`);
 console.log("[DEBUG] Link native folder owner", storageVariant, folders.size);
-process.exit(Bun.spawnSync(args, { stdout: "inherit", stderr: "inherit" }).exitCode);
+const compiler = args.indexOf("rustc") + 1;
+const response = join(generated, "wfc-seeded-folder.args");
+writeFileSync(response, args.slice(compiler).join("\n") + "\n");
+process.exit(Bun.spawnSync([...args.slice(0,compiler), "@" + response], { stdout: "inherit", stderr: "inherit" }).exitCode);

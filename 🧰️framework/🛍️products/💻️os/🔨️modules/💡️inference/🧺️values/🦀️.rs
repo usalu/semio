@@ -1,10 +1,11 @@
 //! 🧺️ Original source ordinals retain typed values and every partial parent/output owner.
-use super::{InferenceWorkFailure,OriginalInferenceScope};
+use super::{DepHash,InferenceWorkFailure,OriginalInferenceScope};
 use semio_framework_job::{OriginalCallerSourceLoan,StepContext,OriginalTurnFailure};
 use semio_framework_value::{retirement::{RetireOwned, controlled::ControlledRetirement}, RetainedCloneProgress, ValueError, ValueRefusalKind};
 use semio_framework_value_persistent::list::PagedList;
 
-type Rows<V> = PagedList<Option<V>,{usize::MAX}>;
+type Row<V> = (Option<V>,Option<DepHash>);
+type Rows<V> = PagedList<Row<V>,{usize::MAX}>;
 type Payload<V> = (Rows<V>,Vec<V>,Option<V>,Option<V>,Option<ControlledRetirement<Vec<V>>>);
 
 pub struct InferenceValues<V:RetireOwned> {
@@ -26,7 +27,8 @@ impl<V:RetireOwned> Default for InferenceValues<V> {
 
 impl<V:RetireOwned> InferenceValues<V> {
     pub fn new()->Self { Self::default() }
-    pub fn get(&self,source:usize)->Option<&V> { self.rows.get(source)?.as_ref() }
+    pub fn get(&self,source:usize)->Option<&V> { self.rows.get(source)?.0.as_ref() }
+    pub fn fingerprint(&self,source:usize)->Option<DepHash> { self.rows.get(source)?.1 }
     pub fn iter(&self)->impl Iterator<Item=(usize,&V)> { (0..self.rows.len()).filter_map(|source|self.get(source).map(|value|(source,value))) }
     pub fn is_empty(&self)->bool { self.iter().next().is_none() }
     pub fn source_extent(&self)->Option<usize> { self.extent }
@@ -102,23 +104,23 @@ impl<V:RetireOwned> InferenceValues<V> {
             }
         }
         let depth=self.rows.next_push_depth_demand().map_err(ValueError::from)?;
-        if !metadata(cx,size_of::<Option<V>>(),depth)? { return Ok(false); }
-        self.rows.push_reserved(None).map_err(|_|changed())?;Ok(false)
+        if !metadata(cx,size_of::<Row<V>>(),depth)? { return Ok(false); }
+        self.rows.push_reserved((None,None)).map_err(|_|changed())?;Ok(false)
     }
 
     /// 📥️ A refused publication retains the exact typed output in its donor.
     pub fn publish_step(&mut self,source:usize,donor:&mut Option<V>,cx:&mut StepContext<'_>)->Result<bool,InferenceWorkFailure> {
         self.validate(cx)?;
-        if self.closing||!self.rows_ready()||donor.is_none()||self.rows.get(source).is_none_or(Option::is_some) { return Err(changed().into()); }
+        if self.closing||!self.rows_ready()||donor.is_none()||self.rows.get(source).is_none_or(|row|row.0.is_some()) { return Err(changed().into()); }
         if cx.should_yield()||cx.is_cancelled()||!metadata(cx,size_of::<Option<V>>(),2)? { return Ok(false); }
-        *self.rows.get_mut(source).ok_or_else(changed)?=donor.take();Ok(true)
+        self.rows.get_mut(source).ok_or_else(changed)?.0=donor.take();Ok(true)
     }
 
-    pub(super) fn publish_output_step(&mut self,source:usize,cx:&mut StepContext<'_>)->Result<bool,InferenceWorkFailure>{
+    pub(super) fn publish_output_step(&mut self,source:usize,fingerprint:Option<DepHash>,cx:&mut StepContext<'_>)->Result<bool,InferenceWorkFailure>{
         self.validate(cx)?;
-        if self.closing||!self.rows_ready()||self.output.is_none()||self.rows.get(source).is_none_or(Option::is_some){return Err(changed().into())}
-        if cx.should_yield()||cx.is_cancelled()||!metadata(cx,size_of::<Option<V>>(),2)?{return Ok(false)}
-        *self.rows.get_mut(source).ok_or_else(changed)?=self.output.take();Ok(true)
+        if self.closing||!self.rows_ready()||self.output.is_none()||self.rows.get(source).is_none_or(|row|row.0.is_some()){return Err(changed().into())}
+        if cx.should_yield()||cx.is_cancelled()||!metadata(cx,size_of::<Row<V>>(),2)?{return Ok(false)}
+        *self.rows.get_mut(source).ok_or_else(changed)?=(self.output.take(),fingerprint);Ok(true)
     }
 
     /// 📏️ Quotes the actual payload cursor or the original source-loan return selected by close_step.

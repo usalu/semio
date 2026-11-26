@@ -68,6 +68,9 @@
     "maximumReleaseBytes": 16777216,
     "maximumDepth": 128
   },
+  "batchedRetirement": {
+    "uiPatches": []
+  },
   "states": [
     {
       "event": "publish",

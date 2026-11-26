@@ -173,12 +173,16 @@ fn the_building_rotation_and_the_true_north_turn_the_azimuths() {
     snapshot.buildings.get_mut("bldg").expect("building").rotation = std::f64::consts::FRAC_PI_2;
     let turned = infer(&snapshot).energy_envelopes["sp"].clone();
     let south = surfaces(&turned, SurfaceKind::Wall).into_iter().find(|surface| surface.element == "w-south").map(|surface| surface.azimuth).expect("a wall");
-    assert!(near(south, 270.0), "the south wall of a building turned a quarter counter-clockwise faces west: {south}");
+    assert!(near(south, 90.0), "the south wall of a building turned a quarter counter-clockwise faces east: {south}");
     snapshot.buildings.get_mut("bldg").expect("building").rotation = 0.0;
     snapshot.sites.get_mut("site").expect("site").true_north = std::f64::consts::FRAC_PI_2;
     let north = infer(&snapshot).energy_envelopes["sp"].clone();
     let south = surfaces(&north, SurfaceKind::Wall).into_iter().find(|surface| surface.element == "w-south").map(|surface| surface.azimuth).expect("a wall");
-    assert!(near(south, 270.0), "{south}");
+    assert!(near(south, 270.0), "the south wall faces west when site north points toward −x: {south}");
+    snapshot.buildings.get_mut("bldg").expect("building").rotation = std::f64::consts::FRAC_PI_2;
+    let aligned = infer(&snapshot).energy_envelopes["sp"].clone();
+    let south = surfaces(&aligned, SurfaceKind::Wall).into_iter().find(|surface| surface.element == "w-south").map(|surface| surface.azimuth).expect("a wall");
+    assert!(near(south, 180.0), "matching rotations keep the wall facing south relative to true north: {south}");
 }
 
 #[test]
@@ -277,7 +281,8 @@ fn a_layer_without_conductivity_leaves_the_transmittance_open_and_is_reported() 
     let envelope = &inference.energy_envelopes["sp"];
     assert!(surfaces(envelope, SurfaceKind::Wall).iter().all(|surface| surface.u_value.is_none()));
     assert!(envelope.issues.iter().any(|issue| issue.code == EnergyCode::ThermalDataMissing && issue.element == "w-south" && issue.detail == "ins"), "{:?}", envelope.issues);
-    assert_eq!(inference.energy_totals["project"].missing, 6);
+    assert!(surfaces(envelope, SurfaceKind::Floor)[0].u_value.is_some());
+    assert_eq!(inference.energy_totals["project"].missing, 5);
 }
 
 #[test]
@@ -308,7 +313,7 @@ fn the_diagnostics_name_the_surfaces_without_thermal_data_in_both_languages() {
 }
 
 #[test]
-fn editing_the_conditions_recomputes_the_envelope_and_the_totals_only() {
+fn editing_the_conditions_recomputes_the_energy_and_diagnostics_only() {
     let mut snapshot = room();
     let mut session = ModelInferenceSession::new();
     session.refresh(&snapshot);
@@ -318,8 +323,8 @@ fn editing_the_conditions_recomputes_the_envelope_and_the_totals_only() {
     snapshot = protocol::apply_diff_cold(&diff, &snapshot).expect("the diff applies");
     let after = session.update(&snapshot, &diff).clone();
     let report = session.report();
-    assert!(!report.gated && report.computed <= 4, "{report:?}");
-    assert!(report.computed_by_kind.keys().all(|kind| matches!(*kind, "envelope" | "energy-totals" | "diagnostics")), "{:?}", report.computed_by_kind);
+    assert!(!report.gated && report.computed == 5, "{report:?}");
+    assert_eq!(report.computed_by_kind, std::collections::BTreeMap::from([("diagnostic-index", 1), ("diagnostics", 1), ("energy-totals", 2), ("envelope", 1)]));
     assert!(near(after.energy_totals["project"].transmission, before.transmission));
     assert_eq!(after, infer(&snapshot));
     assert!(kinds::ENERGY != 0);

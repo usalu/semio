@@ -1,0 +1,3 @@
+# PDF Graphics Compile Budget
+
+The admission policy's carving list may only shrink, so the observed 1,562 MiB peak cannot be admitted by adding a new exception above the 1,536 MiB library limit. PDF content operators, colour state and XObjects depend cyclically on one another. The independent text, property-list and line-style operand types were split into a lower-level content-values crate and re-exported by the graphics crate. Offline Cargo metadata resolves the new workspace member. The WASI build rebuilt the lower crate, graphics, lifter, IO exporter and BIM sheets successfully without another graphics warden cancellation.

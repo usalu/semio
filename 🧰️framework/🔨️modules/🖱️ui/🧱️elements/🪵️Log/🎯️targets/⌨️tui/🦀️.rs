@@ -7,7 +7,7 @@ use semio_ui_tui_core::event::{Key, KeyEvent, MouseEvent, MouseKind};
 use semio_ui_tui_core::geometry::{Pos, Rect};
 use semio_ui_tui_core::rows::paint_scroll_bar;
 use semio_ui_tui_core::text::{elide, Elision};
-use semio_ui_tui_core::theme::{Role, Surface, Theme};
+use semio_ui_tui_core::theme::{Role, Theme};
 use std::cell::Cell as Shared;
 use std::collections::VecDeque;
 
@@ -97,7 +97,7 @@ pub fn paint_log(log: &LogState, theme: &Theme, rect: Rect, buf: &mut CellBuffer
     if rect.width == 0 || rect.height == 0 {
         return;
     }
-    let bg = theme.surface(Surface::Window);
+    let bg = buf.owner_background();
     let fg = theme.role(Role::Foreground);
     buf.fill_rect(rect, Cell::blank(fg, bg));
     let rows = usize::from(rect.height);

@@ -74,12 +74,11 @@ fn committed_diff_is_canonical() {
     assert_eq!(reencoded, original, "resize-source-frame/no-ops-when-the-frame-is-already-identical: committed diff JSON is not canonical");
 }
 
-/// 🩹 Applying the committed diff directly to `before` yields the committed `after`, with the deck
-/// slot never set.
+/// 🩹 The committed identity diff preserves the source, tile list and schema.
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: PresentationDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    assert!(decoded.presentation.is_none(), "a frame-identity resize must leave the composed deck slot unset");
+    assert_eq!(decoded, PresentationDiff::default(), "this operation must carry the identity diff");
     let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "resize-source-frame/no-ops-when-the-frame-is-already-identical: committed diff did not carry before to after");
 }
@@ -118,22 +117,14 @@ fn declared_outcome_holds() {
     assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Warning, "an unchanged frame is a warning, never the Fatal a degenerate rect raises");
 }
 
-/// ↩️ `resize-source-frame`'s inverse ignores its payload and rebuilds from the BASE source's frame,
-/// so here it is the same rect — a value-identical resize is its own inverse.
+/// ↩️ A no-op leaves undo history empty and preserves the full snapshot.
 #[test]
-fn inverse_restores_the_base_frame() {
+fn unchanged_frame_has_an_empty_inverse() {
     let base = before();
-    let PresentationMutation::ResizeSourceFrame(payload) = mutation() else {
-        panic!("committed mutation must be a resize-source-frame");
-    };
-    let inverse = inverse_presentation_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
-    assert_eq!(inverse.len(), 1, "resize-source-frame always undoes with exactly one step, got {inverse:?}");
-    let PresentationMutation::ResizeSourceFrame(undo) = &inverse[0] else {
-        panic!("resize-source-frame's inverse must be a resize-source-frame, got {:?}", inverse[0]);
-    };
-    assert_eq!(undo.new_frame, payload.new_frame, "the inverse restores the captured base frame, which here equals the requested one");
-    let restored = apply_presentation_mutation(&apply_presentation_mutation(&base, &mutation()).expect("forward applies"), &inverse[0]).expect("inverse step applies");
-    assert_eq!(restored, base, "resize-source-frame/no-ops-when-the-frame-is-already-identical: inverse did not restore the before-snapshot");
+    let operation = mutation();
+    let inverse = inverse_presentation_mutation(&base, &operation).expect("valid retained mutation inverse fixture");
+    assert!(inverse.is_empty());
+    assert_eq!(apply_presentation_mutation(&base, &operation).expect("no-op applies"), base);
 }
 
 /// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.

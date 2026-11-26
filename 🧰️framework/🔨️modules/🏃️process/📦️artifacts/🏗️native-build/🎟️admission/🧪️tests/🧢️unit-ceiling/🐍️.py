@@ -1,5 +1,5 @@
 """🧢️ Independent Python oracle of the compile-memory budget (standard library only). A unit key is `<package>@<crate>|<target>|<profile>|<crate types>` (exactly four `|` parts, the first holds an `@`, crate and target are not empty; any other key is ignored). A key whose crate types hold a linked type (cdylib, bin, dylib, staticlib) is a final link unit with the final budget of the active worker class, every other key a library unit with the library budget. The peak of a unit is the largest `peakRssBytes` of its rows, rounded up to whole MiB. A unit is exceeded when that peak is above the budget of its kind; it is listed when its (crate, target) is on the carving list. A carving entry is resolved when some row of its (crate, target) exists and every unit of it is within its own budget; its reported peak is the largest peak and its budget the largest budget of those units. `ok` means no unlisted exceeded unit and no resolved entry. Order: exceeded and resolved by peak descending, then key (resolved: crate, then target). The fresh rows of a ledger are, per key, the rows that record `lines` and lie within the policy tolerance of the row with the greatest `atMs` (ties: the later row in the file). The runtime ceiling of a running compile unit (`ceilings`) is read from its compiler command line split at white space: the crate is the first `--crate-name` value (`--crate-name X` or `--crate-name=X`; none or empty means no unit, null), the target the first `--target` value (`host` without), the crate types every `--crate-type` value split at commas, plus `bin` when `--test` is present. The unit is `<crate>|<target>`; a linked type among the types makes it a `final` unit with the final budget, else `library` with the library budget; a unit whose (crate, target) is on the carving list is `listed` with `measuredMegabytes` and may reach the larger of its declared `budgetMegabytes` and the budget of its kind. usage: 🐍️.py <schema.json> <corpus.json> prints {"verdicts": [...], "fresh": [...], "ceilings": [...]} for every case as JSON."""
-import json, sys
+import json, re, sys
 
 MIB = 1048576
 LINKED = {"cdylib", "bin", "dylib", "staticlib"}
@@ -18,6 +18,11 @@ def budget_of(policy, key):
     return cls["finalMegabytes"] if LINKED & set(key.split("|")[3].split(",")) else cls["libraryMegabytes"]
 
 
+def carving_of(policy, crate, target):
+    own = next((e for e in policy["carving"] if e["crate"] == crate and e["target"] == target), None)
+    return own or next((f for f in policy.get("families", []) if f["target"] == target and re.fullmatch(f["pattern"], crate)), None)
+
+
 def verdict(policy, rows):
     unit = {}
     for row in rows:
@@ -30,7 +35,7 @@ def verdict(policy, rows):
         g["peak"] = max(g["peak"], p)
         g["budget"] = max(g["budget"], budget_of(policy, k))
         g["fits"] = g["fits"] and p <= budget_of(policy, k)
-    listed = {(e["crate"], e["target"]) for e in policy["carving"]}
+    listed = {parse(k) for k in unit if parse(k) and carving_of(policy, *parse(k))}
     cls = policy["classes"][policy["workerClass"]]
     exceeded = [{"key": k, "crate": parse(k)[0], "target": parse(k)[1], "kind": "final" if LINKED & set(k.split("|")[3].split(",")) else "library", "peakMegabytes": p, "budgetMegabytes": budget_of(policy, k), "listed": parse(k) in listed} for k, p in unit.items() if p > budget_of(policy, k)]
     exceeded.sort(key=lambda e: (-e["peakMegabytes"], e["key"]))
@@ -75,7 +80,7 @@ def ceiling(policy, command):
     cls = policy["classes"][policy["workerClass"]]
     final = bool(LINKED & set(types))
     base = cls["finalMegabytes"] if final else cls["libraryMegabytes"]
-    entry = next((e for e in policy["carving"] if e["crate"] == crate and e["target"] == target), None)
+    entry = carving_of(policy, crate, target)
     out = {"unit": crate + "|" + target, "kind": "final" if final else "library", "megabytes": max(entry["budgetMegabytes"], base) if entry else base, "listed": entry is not None}
     if entry:
         out["measuredMegabytes"] = entry["measuredMegabytes"]

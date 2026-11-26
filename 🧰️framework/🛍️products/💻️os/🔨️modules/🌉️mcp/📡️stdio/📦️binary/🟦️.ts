@@ -2,7 +2,6 @@
 import { accessSync, constants as fsConstants, readFileSync, statSync } from "node:fs";
 import { posix, win32 } from "node:path";
 import { createInterface } from "node:readline";
-import { cargoTargetDirectory } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { CARGO_BUILD_OWNER_PID_ENV, cargoBinarySourcesFreshnessV1, parseCargoBinarySourcesV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { runToolSyncV1, startToolV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
@@ -20,16 +19,7 @@ function pathApi(platform: NodeJS.Platform): typeof posix {
   return platform === "win32" ? win32 : posix;
 }
 
-/** 📁️ Absolute Cargo target root shared by the build and black-box test gates. */
-export function resolveMcpTargetDirectory(repoRoot: string, env: NodeJS.ProcessEnv = process.env, _platform: NodeJS.Platform = process.platform): string {
-  return cargoTargetDirectory(repoRoot, env);
-}
-
-/** 📦️ The exact artifact Cargo's MCP build command must produce for `profile`, ignoring test overrides. */
-export function resolveBuiltMcpBinaryPath(repoRoot: string, env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform, profile: McpBuildProfile = "debug"): string {
-  const filename = platform === "win32" ? `${MCP_BINARY_NAME}.exe` : MCP_BINARY_NAME;
-  return pathApi(platform).join(resolveMcpTargetDirectory(repoRoot, env, platform), profile, filename);
-}
+export { resolveBuiltMcpBinaryPath, resolveMcpTargetDirectory } from "../../📦️binary/🟦️.ts";
 
 /** 📁️ The staged release executable — the one a tarball ships and an end user installs. */
 export function resolveStagedReleaseMcpBinaryPath(repoRoot: string, platform: NodeJS.Platform = process.platform): string {

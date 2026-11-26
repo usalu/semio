@@ -34,9 +34,10 @@
  *   SEMIO_PROBE_LANES=edit,viewer,generate   SEMIO_PROBE_EXAMPLES=<id>,<id>   SEMIO_PROBE_BUDGET=<seconds>
  */
 import { chromium } from "playwright";
-import { writeFileSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
+import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { exampleFixtureFor } from "./🐍️example-fixtures.mjs";
+import { gradeDeliveryBounds, gradeMeshRoles } from "./🐍️example-oracle.mjs";
 
 const origin = process.env.SEMIO_PROBE_ORIGIN ?? "http://127.0.0.1:6118";
 const outRoot = join(import.meta.dir, "🗑️generated", process.env.SEMIO_PROBE_OUT ?? "wgpu-examples/matrix");
@@ -49,10 +50,10 @@ const budgetSeconds = Number(process.env.SEMIO_PROBE_BUDGET ?? 150);
 const minSeconds = Number(process.env.SEMIO_PROBE_MIN_SECONDS ?? 0);
 const viewport = { width: 1440, height: 900 };
 
-/** 📚️ The eight bundled examples of `s.procedural.generation3d@1/*`, by their own `pub const ID`.
+/** 📚️ The bundled examples of `s.procedural.generation3d@1/*`, by their own `pub const ID`.
  * `(none)` is the ninth lane React's journey probe calls `No example`: the plugin booted with no
  * `?example=` at all, whose preview must carry NOTHING. */
-const ALL_EXAMPLES = ["hexagonal-mushroom-column", "rectangle-extrude-volume", "rectangle-wire-preview", "box-shell-preview", "box-fillet-preview", "sphere-cut-with-torus", "sphere-box-fuse", "face-sweep-extrude"];
+const ALL_EXAMPLES = ["hexagonal-mushroom-column", "mesh-workbench", "rectangle-extrude-volume", "rectangle-wire-preview", "box-shell-preview", "box-fillet-preview", "sphere-cut-with-torus", "sphere-box-fuse", "face-sweep-extrude"];
 const NO_EXAMPLE = "(none)";
 
 /** 🛣️ One lane = one url shape. `generate` opens the three-pane generate layout, whose preview window
@@ -103,7 +104,7 @@ const previewSurface = (published) => {
  */
 const publicationVerdict = (example, published) => {
   const fixture = fixtureFor(example);
-  if (!fixture) return null;
+  if (!fixture) return { ok: false, failures: ["missing required example geometry fixture"] };
   const surface = previewSurface(published);
   const failures = [];
   /** 🩺️ Two different absences a reader must be able to tell apart: a renderer whose wasm predates
@@ -116,11 +117,14 @@ const publicationVerdict = (example, published) => {
   const expectedRoles = fixture.delivery.meshRoles;
   if (surface) {
     if (meshes.length !== fixture.delivery.meshes) failures.push(`published ${meshes.length} meshes, the fixture delivers exactly ${fixture.delivery.meshes}`);
-    if (roles["(unstamped)"]) failures.push(`${roles["(unstamped)"]} published meshes carry no role stamp — the staged guest predates preview_mesh_role`);
-    for (const role of new Set([...Object.keys(expectedRoles), ...Object.keys(roles)])) {
-      if ((roles[role] ?? 0) !== (expectedRoles[role] ?? 0)) failures.push(`role ${role}: published ${roles[role] ?? 0}, the fixture delivers ${expectedRoles[role] ?? 0}`);
-    }
+    failures.push(...gradeMeshRoles(expectedRoles, roles));
   }
+  const framed = meshes.filter((mesh) => mesh.bboxMin && mesh.bboxMax);
+  const deliveryBounds = framed.length ? {
+    min: [0, 1, 2].map((axis) => Math.min(...framed.map((mesh) => mesh.bboxMin[axis]))),
+    max: [0, 1, 2].map((axis) => Math.max(...framed.map((mesh) => mesh.bboxMax[axis]))),
+  } : null;
+  failures.push(...gradeDeliveryBounds(deliveryBounds, fixture.delivery.boundingBoxMin, fixture.delivery.boundingBoxMax, fixture.delivery.boundingBoxTolerance));
   const targets = meshes.filter((mesh) => mesh.role === fixture.preview.kind && mesh.bboxMin);
   let box = null;
   if (surface && targets.length === 0) failures.push(`no published mesh carries the fixture's own preview role ${fixture.preview.kind} with bounds`);
@@ -274,6 +278,7 @@ for (const lane of lanes) {
 
     let sample = { windowIds: [], sceneInstances: 0, sceneDraws: 0, scenePasses: 0, quadCount: 0, dom: { status: null, alert: null }, progress: null, geometry: null, meshSurfaces: [], published: null, converged: false };
     let stable = 0;
+    let oracle = publicationVerdict(example, null);
     let firstConvergedMs = null;
     let flip = 0;
     /** ⏱️ The per-example budget is WALL clock from the row's own start (`at()`), not an iteration count: `measure()` itself takes seconds, so counting loop turns let one example run far past `SEMIO_PROBE_BUDGET`. */
@@ -284,20 +289,20 @@ for (const lane of lanes) {
         await page.mouse.move(3 + flip, 3).catch(() => {});
       }
       sample = await measure();
-      if (sample.converged) {
+      oracle = publicationVerdict(example, sample.published);
+      if (sample.converged && oracle.ok) {
         firstConvergedMs ??= at();
         stable += 1;
       } else stable = 0;
     }
 
     const bootExample = has("wgpu-shell boot example").at(-1) ?? null;
-    const oracle = publicationVerdict(example, sample.published);
     const row = {
       oracle,
       example,
       lane,
       url,
-      verdict: sample.converged ? "pass" : "fail",
+      verdict: stable >= 2 ? "pass" : "fail",
       timeToMeshSeconds: firstConvergedMs === null ? null : Math.round(firstConvergedMs / 10) / 100,
       elapsedSeconds: Math.round(at() / 1000),
       windowIds: sample.windowIds,
@@ -329,3 +334,4 @@ for (const lane of lanes) {
 publish(true);
 await browser.close();
 console.log("DONE", JSON.stringify({ pass: results.filter((row) => row.verdict === "pass").length, total: results.length, out: outRoot }, null, 2));
+if (!results.length || results.some((row) => row.verdict !== "pass")) process.exitCode = 1;

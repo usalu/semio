@@ -127,7 +127,7 @@ pub mod testing {
     /// 🪜️ The snapshot with the height of `storey` changed by `delta` through the one-field storey patch the height mutation writes.
     pub fn raised(snapshot: &ModelSnapshot, storey: &str, delta: f64) -> ModelSnapshot {
         let height = snapshot.storeys[storey].height + delta;
-        let diff = ModelDiff::storeys(storey.into(), Entry::Patched(StoreyPatch { height: Some(height), ..Default::default() }));
+        let diff = ModelDiff::storeys(storey, Entry::Patched(StoreyPatch { height: Some(height), ..Default::default() }));
         protocol::apply_diff_cold(&diff, snapshot).expect("the height edit applies")
     }
 

@@ -1,0 +1,62 @@
+[
+  {
+    "name": "ordinary with grant",
+    "wire": "{\"Poll\":{\"events\":[{\"instanceOpen\":{\"request\":{\"activationGeneration\":\"1\",\"instanceId\":0,\"requestSequence\":1},\"purpose\":\"ordinary\",\"appId\":\"s.note.note@1/*#editor\",\"actor\":\"editor\",\"config\":[],\"assets\":[],\"capabilities\":[{\"token\":\"0\",\"id\":\"artifacts.write\",\"scope\":\"plugin\"}],\"quotas\":{}}}],\"command_page\":null,\"cold_pair_page\":null,\"limits\":[32,64,128,256,8,1024,512,8192,4,64,16]}}",
+    "valid": true,
+    "canonical": true
+  },
+  {
+    "name": "ordinary without grants",
+    "wire": "{\"Poll\":{\"events\":[{\"instanceOpen\":{\"request\":{\"activationGeneration\":\"1\",\"instanceId\":0,\"requestSequence\":1},\"purpose\":\"ordinary\",\"appId\":\"s.note.note@1/*#editor\",\"actor\":\"editor\",\"config\":[],\"assets\":[],\"capabilities\":[],\"quotas\":{}}}],\"command_page\":null,\"cold_pair_page\":null,\"limits\":[32,64,128,256,8,1024,512,8192,4,64,16]}}",
+    "valid": true,
+    "canonical": true
+  },
+  {
+    "name": "escaped actor",
+    "wire": "{\"Poll\":{\"events\":[{\"instanceOpen\":{\"request\":{\"activationGeneration\":\"1\",\"instanceId\":0,\"requestSequence\":1},\"purpose\":\"ordinary\",\"appId\":\"s.note.note@1/*#editor\",\"actor\":\"edit\\u006fr\",\"config\":[],\"assets\":[],\"capabilities\":[{\"token\":\"0\",\"id\":\"artifacts.write\",\"scope\":\"plugin\"}],\"quotas\":{}}}],\"command_page\":null,\"cold_pair_page\":null,\"limits\":[32,64,128,256,8,1024,512,8192,4,64,16]}}",
+    "valid": true,
+    "canonical": false
+  },
+  {
+    "name": "custom quotas",
+    "wire": "{\"Poll\":{\"events\":[{\"instanceOpen\":{\"request\":{\"activationGeneration\":\"1\",\"instanceId\":0,\"requestSequence\":1},\"purpose\":\"ordinary\",\"appId\":\"s.note.note@1/*#editor\",\"actor\":\"editor\",\"config\":[],\"assets\":[],\"capabilities\":[{\"token\":\"0\",\"id\":\"artifacts.write\",\"scope\":\"plugin\"}],\"quotas\":{\"memoryBytes\":500}}}],\"command_page\":null,\"cold_pair_page\":null,\"limits\":[32,64,128,256,8,1024,512,8192,4,64,16]}}",
+    "valid": true,
+    "canonical": false
+  },
+  {
+    "name": "custom config",
+    "wire": "{\"Poll\":{\"events\":[{\"instanceOpen\":{\"request\":{\"activationGeneration\":\"1\",\"instanceId\":0,\"requestSequence\":1},\"purpose\":\"ordinary\",\"appId\":\"s.note.note@1/*#editor\",\"actor\":\"editor\",\"config\":[0,4],\"assets\":[],\"capabilities\":[{\"token\":\"0\",\"id\":\"artifacts.write\",\"scope\":\"plugin\"}],\"quotas\":{}}}],\"command_page\":null,\"cold_pair_page\":null,\"limits\":[32,64,128,256,8,1024,512,8192,4,64,16]}}",
+    "valid": true,
+    "canonical": false
+  },
+  {
+    "name": "nonempty assets",
+    "wire": "{\"Poll\":{\"events\":[{\"instanceOpen\":{\"request\":{\"activationGeneration\":\"1\",\"instanceId\":0,\"requestSequence\":1},\"purpose\":\"ordinary\",\"appId\":\"s.note.note@1/*#editor\",\"actor\":\"editor\",\"config\":[],\"assets\":[[\"a\",[1]]],\"capabilities\":[{\"token\":\"0\",\"id\":\"artifacts.write\",\"scope\":\"plugin\"}],\"quotas\":{}}}],\"command_page\":null,\"cold_pair_page\":null,\"limits\":[32,64,128,256,8,1024,512,8192,4,64,16]}}",
+    "valid": true,
+    "canonical": false
+  },
+  {
+    "name": "bad separator",
+    "wire": "{\"Poll\":{\"events\":[{\"instanceOpen\":{\"request\":{\"activationGeneration\":\"1\",\"instanceId\":0,\"requestSequence\":1},\"purpose\":\"ordinary\",\"appId\":\"s.note.note@1/*#editor\",\"actor\":\"editor\",\"config\":[,],\"assets\":[],\"capabilities\":[{\"token\":\"0\",\"id\":\"artifacts.write\",\"scope\":\"plugin\"}],\"quotas\":{}}}],\"command_page\":null,\"cold_pair_page\":null,\"limits\":[32,64,128,256,8,1024,512,8192,4,64,16]}}",
+    "valid": false,
+    "canonical": false
+  },
+  {
+    "name": "zero request sequence",
+    "wire": "{\"Poll\":{\"events\":[{\"instanceOpen\":{\"request\":{\"activationGeneration\":\"1\",\"instanceId\":0,\"requestSequence\":0},\"purpose\":\"ordinary\",\"appId\":\"s.note.note@1/*#editor\",\"actor\":\"editor\",\"config\":[],\"assets\":[],\"capabilities\":[{\"token\":\"0\",\"id\":\"artifacts.write\",\"scope\":\"plugin\"}],\"quotas\":{}}}],\"command_page\":null,\"cold_pair_page\":null,\"limits\":[32,64,128,256,8,1024,512,8192,4,64,16]}}",
+    "valid": false,
+    "canonical": false
+  },
+  {
+    "name": "unknown member",
+    "wire": "{\"Poll\":{\"events\":[{\"instanceOpen\":{\"request\":{\"activationGeneration\":\"1\",\"instanceId\":0,\"requestSequence\":1},\"purpose\":\"ordinary\",\"appId\":\"s.note.note@1/*#editor\",\"actor\":\"editor\",\"config\":[],\"assets\":[],\"capabilities\":[{\"token\":\"0\",\"id\":\"artifacts.write\",\"scope\":\"plugin\"}],\"extra\":1,\"quotas\":{}}}],\"command_page\":null,\"cold_pair_page\":null,\"limits\":[32,64,128,256,8,1024,512,8192,4,64,16]}}",
+    "valid": false,
+    "canonical": false
+  },
+  {
+    "name": "trailing data",
+    "wire": "{\"Poll\":{\"events\":[{\"instanceOpen\":{\"request\":{\"activationGeneration\":\"1\",\"instanceId\":0,\"requestSequence\":1},\"purpose\":\"ordinary\",\"appId\":\"s.note.note@1/*#editor\",\"actor\":\"editor\",\"config\":[],\"assets\":[],\"capabilities\":[{\"token\":\"0\",\"id\":\"artifacts.write\",\"scope\":\"plugin\"}],\"quotas\":{}}}],\"command_page\":null,\"cold_pair_page\":null,\"limits\":[32,64,128,256,8,1024,512,8192,4,64,16]}}?",
+    "valid": false,
+    "canonical": false
+  }
+]

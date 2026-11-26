@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import {processPidExistsV1} from "../🔖️identity/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 📐️ The declared grace of a termination.
@@ -104,7 +105,7 @@ export async function terminateOwnedProcessTreeGracefullyV1(rootPid: number, hos
   if (owned === undefined) return terminateOwnedProcessTree(rootPid, host);
   const grace = host.graceMilliseconds ?? TERMINATION_POLICY_V1.graceMilliseconds, poll = host.pollMilliseconds ?? TERMINATION_POLICY_V1.pollMilliseconds;
   const sleep = host.sleep ?? ((milliseconds: number) => new Promise<void>((done) => setTimeout(done, milliseconds)));
-  const lives = host.alive ?? ((pid: number): boolean => { try { process.kill(pid, 0); return true; } catch (error) { return (error as NodeJS.ErrnoException).code === "EPERM"; } });
+  const lives = host.alive ?? processPidExistsV1;
   signalOwnedRowsV1(owned, host.initialSignal ?? "SIGTERM", host.record);
   for (let waited = 0; waited < grace && owned.some((row) => lives(row.pid)); waited += poll) await sleep(poll);
   const left = owned.filter((row) => lives(row.pid)), fresh = lives(rootPid) ? ownedRowsV1(rootPid) ?? [] : [];

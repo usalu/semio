@@ -45,6 +45,13 @@ test("compile requests admit minimum within maximum like the schema oracle",()=>
  for(const row of fixture.requests){expect(oracleRequest(row.value),row.name).toBe(row.schemaAccepts);if(row.accepted)expect(readCompilerCapacityRequestV1(row.value as never),row.name).toMatchObject(row.value);else expect(()=>readCompilerCapacityRequestV1(row.value as never),row.name).toThrow();}
  expect(compileUnitsRequestV1(planCompileUnitsV1({cores:10,availableMegabytes:null,pressure:null,grantedJobs:null,grantedMegabytes:null,unitMegabytes:2048}))).toEqual({kind:"available",maximumParallelism:5,minimumParallelism:3});
 });
+test("a nested compile respects the caller's explicit parallelism limit",async()=>{
+ const probe={platform:"darwin" as const,run:async()=>{throw Error("counter unavailable");},read:async()=>""};
+ for(const row of fixture.parallelismLimits){
+  const {decision}=await compileUnitsForHostV1({environment:{SEMIO_COMPILER_PARALLELISM:row.limit},needed:row.needed??undefined,cores:10,probe});
+  expect(decision.preferred).toBe(row.expected);
+ }
+});
 test("the live host is read with free memory, pressure and the cores of the machine",async()=>{
  const live=await readCompileUnitsHostV1({environment:{}}),planned=await compileUnitsForHostV1({environment:{}});
  expect(live.cores).toBe(availableParallelism());expect(live.grantedJobs).toBeNull();expect(planned.request.kind).toBe("available");expect(planned.decision.preferred).toBeLessThanOrEqual(Math.max(1,Math.floor(live.cores/2)));

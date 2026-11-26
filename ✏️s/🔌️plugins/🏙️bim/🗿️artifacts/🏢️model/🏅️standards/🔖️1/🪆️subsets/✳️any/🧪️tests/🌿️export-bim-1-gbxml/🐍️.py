@@ -3,7 +3,7 @@
 
 lxml (libxml2), shapely (GEOS) and numpy have never seen this repository's writer. They open the committed files `🧫️fixtures/🌿️gbxml/<case>/gbxml.xml` and:
 
-* parse each as namespaced XML and require the gbXML root with version 7.03 and metric units; when the official schema `🧫️fixtures/🌿️gbxml/📜️schema/GreenBuildingXML_Ver7.03.xsd` is committed the document is
+* parse each as namespaced XML and require the gbXML root with version 7.03 and metric units; each document is
   validated with `lxml.etree.XMLSchema` (the structural audit below runs either way);
 * check ids (`xs:ID` syntax, uniqueness) and that every `...IdRef` resolves, units and ranges (U-values positive, g-values in 0..1, azimuth in 0..360, tilt in 0..180 and consistent with the surface type,
   heating set point not above the cooling one, areas and volumes positive), one `AdjacentSpaceId` for an outer surface and two (different spaces of one building) for a shared partition, and that a partition is
@@ -45,7 +45,7 @@ SURFACE_TYPES = {"InteriorWall", "ExteriorWall", "Roof", "InteriorFloor", "Expos
 OUTER = {"ExteriorWall", "UndergroundWall", "Roof", "SlabOnGrade", "ExposedFloor"}
 INTERIOR = {"InteriorWall", "InteriorFloor", "Ceiling"}
 TILT = {"ExteriorWall": 90, "UndergroundWall": 90, "InteriorWall": 90, "Roof": 0, "Ceiling": 0, "SlabOnGrade": 180, "ExposedFloor": 180, "InteriorFloor": 180}
-CONDITIONS = {"HeatedAndCooled", "HeatedOnly", "CooledOnly", "Unconditioned"}
+CONDITIONS = {"HeatedAndCooled", "Heated", "Cooled", "Unconditioned"}
 OPENINGS = {"FixedWindow": "window", "OperableWindow": "window", "NonSlidingDoor": "door", "SlidingDoor": "door"}
 IDREFS = [("AdjacentSpaceId", "spaceIdRef", "Space"), ("Space", "zoneIdRef", "Zone"), ("Space", "buildingStoreyIdRef", "BuildingStorey"), ("Surface", "constructionIdRef", "Construction"), ("Opening", "constructionIdRef", "Construction"),
           ("Opening", "windowTypeIdRef", "WindowType"), ("LayerId", "layerIdRef", "Layer"), ("MaterialId", "materialIdRef", "Material")]
@@ -173,6 +173,12 @@ def structure_problems(model):
     for name, expected in [("temperatureUnit", "C"), ("lengthUnit", "Meters"), ("areaUnit", "SquareMeters"), ("volumeUnit", "CubicMeters"), ("useSIUnitsForResults", "true")]:
         if root.get(name) != expected:
             problems.append("%s is %r, not %r" % (name, root.get(name), expected))
+    for building in root.iter(q("Building")):
+        if not building.get("buildingType"):
+            problems.append("%s: missing building type" % building.get("id"))
+    for surface in model.surfaces:
+        if not surface.get("constructionIdRef"):
+            problems.append("%s: missing construction reference" % surface.get("id"))
     for owner, attribute, target in IDREFS:
         for element in root.iter(q(owner)):
             reference = element.get(attribute)
@@ -186,11 +192,16 @@ def structure_problems(model):
             problems.append("%s: area %s and volume %s must be positive" % (space_id, area, volume))
         elif not 0.5 < volume / area < 20:
             problems.append("%s: the clear height %s is implausible" % (space_id, volume / area))
-        for name in ("LightPowerPerArea", "EquipPowerPerArea", "OAFlowPerArea", "PeopleNumber"):
+        if space.find(q("OAFlowPerArea")) is not None:
+            problems.append("%s: OAFlowPerArea belongs to its zone" % space_id)
+        for name in ("LightPowerPerArea", "EquipPowerPerArea", "PeopleNumber"):
             value = number_of(space, name)
             if value is not None and value < 0:
                 problems.append("%s: %s is negative" % (space_id, name))
     for zone_id, zone in model.zones.items():
+        flow = number_of(zone, "OAFlowPerArea")
+        if flow is not None and flow < 0:
+            problems.append("%s: outdoor air flow is negative" % zone_id)
         heating, cooling = number_of(zone, "DesignHeatT"), number_of(zone, "DesignCoolT")
         if heating is not None and cooling is not None and heating > cooling:
             problems.append("%s: heating set point %s above cooling %s" % (zone_id, heating, cooling))
@@ -199,7 +210,7 @@ def structure_problems(model):
                 problems.append("%s: set point %s is no room temperature in degrees Celsius" % (zone_id, value))
     for identity, construction in model.constructions.items():
         value = number_of(construction, "U-value")
-        if value is None or not 0 < value < 20:
+        if (value is None and construction.get("constructionIsSchematic") != "true") or (value is not None and not 0 < value < 20):
             problems.append("%s: U-value %s out of range" % (identity, value))
     for identity, window_type in model.window_types.items():
         u_value, g_value = number_of(window_type, "U-value"), number_of(window_type, "SolarHeatGainCoeff")
@@ -294,26 +305,29 @@ def geometry_problems(model):
 
 def closure_problems(model):
     """🩺️ Every space is a closed polyhedron: outward area vectors sum to zero, the divergence theorem gives the volume, the floors give the area."""
-    sums, volumes, floors = {}, {}, {}
-    for surface in model.surfaces:
-        polygon, vector, normal, _, _ = surface_geometry(model, surface)
-        centre = polygon.mean(axis=0)
-        spaces = [item.get("spaceIdRef") for item in surface.findall(q("AdjacentSpaceId"))]
-        for index, space in enumerate(spaces):
-            sign = 1.0 if index == 0 else -1.0
-            sums[space] = sums.get(space, np.zeros(3)) + sign * vector / 2.0
-            volumes[space] = volumes.get(space, 0.0) + sign * float(np.dot(centre, vector / 2.0)) / 3.0
-            if sign * normal[2] < -0.99:
-                floors[space] = floors.get(space, 0.0) + np.linalg.norm(vector) / 2.0
     problems = []
     for identity, space in model.spaces.items():
-        if np.linalg.norm(sums.get(identity, np.zeros(3))) > 1e-5:
-            problems.append("%s: the outward area vectors of its surfaces sum to %s, not zero (the envelope is not closed)" % (identity, sums.get(identity)))
-            continue
-        if abs(volumes.get(identity, 0.0) - number_of(space, "Volume")) > 1e-5 * number_of(space, "Volume"):
-            problems.append("%s: the polygons enclose %.6f m3, the file says %.6f" % (identity, volumes.get(identity, 0.0), number_of(space, "Volume")))
-        if abs(floors.get(identity, 0.0) - number_of(space, "Area")) > 1e-5 * number_of(space, "Area"):
-            problems.append("%s: the floors add up to %.6f m2, the file says %.6f" % (identity, floors.get(identity, 0.0), number_of(space, "Area")))
+        expected = {surface.get("id") for surface in model.surfaces
+                    if any(item.get("spaceIdRef") == identity for item in surface.findall(q("AdjacentSpaceId")))}
+        boundaries = space.findall(q("SpaceBoundary"))
+        references = [boundary.get("surfaceIdRef") for boundary in boundaries]
+        if set(references) != expected or len(references) != len(expected):
+            problems.append("%s: interior boundaries do not account for each adjacent surface once" % identity)
+        area_vector_sum = np.zeros(3)
+        volume, floor = 0.0, 0.0
+        for boundary in boundaries:
+            polygon = loop_of(boundary.find(q("PlanarGeometry")))
+            vector = area_vector(polygon) / 2.0
+            area_vector_sum += vector
+            volume += float(np.dot(polygon[0], vector)) / 3.0
+            if vector[2] < -0.99 * np.linalg.norm(vector):
+                floor += np.linalg.norm(vector)
+        if np.linalg.norm(area_vector_sum) > 1e-5:
+            problems.append("%s: interior boundary area vectors sum to %s" % (identity, area_vector_sum))
+        if abs(volume - number_of(space, "Volume")) > 1e-5 * number_of(space, "Volume"):
+            problems.append("%s: the interior boundaries enclose %.6f m3, the file says %.6f" % (identity, volume, number_of(space, "Volume")))
+        if abs(floor - number_of(space, "Area")) > 1e-5 * number_of(space, "Area"):
+            problems.append("%s: the interior floors add up to %.6f m2, the file says %.6f" % (identity, floor, number_of(space, "Area")))
     return problems
 
 
@@ -354,7 +368,7 @@ def measure(model):
             "area": number_of(space, "Area"),
             "volume": number_of(space, "Volume"),
         }
-        for key, name, owner in [("heating", "DesignHeatT", zone), ("cooling", "DesignCoolT", zone), ("people", "PeopleNumber", space), ("lighting", "LightPowerPerArea", space), ("equipment", "EquipPowerPerArea", space), ("outdoor_air", "OAFlowPerArea", space)]:
+        for key, name, owner in [("heating", "DesignHeatT", zone), ("cooling", "DesignCoolT", zone), ("people", "PeopleNumber", space), ("lighting", "LightPowerPerArea", space), ("equipment", "EquipPowerPerArea", space), ("outdoor_air", "OAFlowPerArea", zone)]:
             value = None if owner is None else number_of(owner, name)
             if value is not None:
                 row[key] = value
@@ -396,7 +410,9 @@ def measure(model):
             "openings": openings,
         }
         if name is not None:
-            row["construction"], row["u_value"] = name, u_value
+            row["construction"] = name
+        if u_value is not None:
+            row["u_value"] = u_value
         surfaces[row["cad"][0]] = row
         by_type[row["kind"]] = by_type.get(row["kind"], 0.0) + area
     constructions = {}
@@ -434,6 +450,20 @@ def measure(model):
 
 
 # region 🔖️Inference differential
+def internal_slab_transmittance(model, surface, down):
+    """🌡️ Recompute directional U from the exported layer thicknesses, conductivities and both internal ISO 6946 surface films."""
+    construction = model.constructions[surface.get("constructionIdRef")]
+    layers = construction.findall(q("LayerId"))
+    if not layers:
+        return None
+    resistance = 0.0
+    for layer_id in layers:
+        layer = model.layers[layer_id.get("layerIdRef")]
+        material = model.materials[layer.find(q("MaterialId")).get("materialIdRef")]
+        resistance += number_of(material, "Thickness") / number_of(material, "Conductivity")
+    return 1.0 / (resistance + 2.0 * (0.17 if down else 0.10))
+
+
 def groups_from_file(model, snapshot):
     """🌡️ The groups `kind|boundary|neighbour|sector -> {area, loss}` of every space, regrouped from the file alone (the keys and the F-free loss `U x A` of the inference oracle)."""
     conditions = snapshot.get("space_conditions", {})
@@ -470,7 +500,14 @@ def groups_from_file(model, snapshot):
             net = gross if boundary == "ground" else max(gross - cut, 0.0)
             key = "%s|%s|%s|%s" % (label, boundary, other, "-" if where is None else sector(where))
             if net > 1e-12:
-                add(space, key, net, u_value)
+                directional_u = u_value
+                if horizontal and len(spaces) == 2 and u_value is not None:
+                    measured = internal_slab_transmittance(model, surface, down)
+                    if measured is not None:
+                        if index == 0 and abs(measured - u_value) > 1e-6:
+                            raise ValueError("%s: declared U-value does not match its exported layers and heat-flow direction" % surface.get("id"))
+                        directional_u = measured
+                add(space, key, net, directional_u)
             for opening in surface.findall(q("Opening")):
                 hole = float(np.linalg.norm(area_vector(loop_of(opening.find(q("PlanarGeometry"))))) / 2.0)
                 kind_name = OPENINGS[opening.get("openingType")]
@@ -507,12 +544,8 @@ def differential_problems(model, snapshot, expected):
 
 
 # region 🔖️Schema
-def schema_problems(root, document):
-    """📜️ Validation with the official XSD when it is committed under `🧫️fixtures/🌿️gbxml/📜️schema`."""
-    schema_path = root / "📜️schema" / "GreenBuildingXML_Ver7.03.xsd"
-    if not schema_path.exists():
-        return None
-    schema = etree.XMLSchema(etree.parse(str(schema_path)))
+def schema_problems(schema, document):
+    """📜️ Validate the emitted document against the official gbXML 7.03 schema."""
     parsed = etree.fromstring(document)
     return [] if schema.validate(parsed) else [str(error) for error in schema.error_log]
 
@@ -546,9 +579,10 @@ def export_handler(ctx):
     uris = ctx.step_input_uris()
     document = ctx.input_bytes(next(uri for uri in uris if uri.endswith(".xml")))
     snapshot = json.loads(ctx.input_bytes(next(uri for uri in uris if "📸️snapshot" in uri)).decode("utf-8"))
-    expected = next((json.loads(ctx.input_bytes(uri).decode("utf-8")) for uri in uris if "💡️inference" in uri), None)
+    expected = next((json.loads(ctx.input_bytes(uri).decode("utf-8")) for uri in uris if "/💡️inference/" in uri), None)
     model = Model(document)
-    problems = audit(model, snapshot, expected)
+    schema = etree.XMLSchema(etree.fromstring(ctx.input_bytes(next(uri for uri in uris if uri.endswith(".xsd")))))
+    problems = schema_problems(schema, document) + audit(model, snapshot, expected)
     if problems:
         raise AssertionError("; ".join(problems))
     table = measure(model)
@@ -573,8 +607,12 @@ def main(arguments):
     """🏃️ `check` audits the committed files against the committed tables; `write` rewrites the measured tables from the files."""
     command, root = arguments[0], Path(arguments[1])
     problems = []
-    schema_seen = False
-    for case in sorted(path for path in root.iterdir() if path.is_dir() and (path / "gbxml.xml").exists()):
+    schema = etree.XMLSchema(etree.parse(str(root / "📜️schema" / "GreenBuildingXML_Ver7.03.xsd")))
+    for name in ("🏠️box", "🏘️zoning", "🧱️stack", "🏠️house"):
+        case = root / name
+        if not (case / "gbxml.xml").is_file():
+            problems.append("%s: missing gbxml.xml" % name)
+            continue
         document = (case / "gbxml.xml").read_bytes()
         own = case / "📸️snapshot" / "🔣️.json"
         shared = root.parent / "💡️inferences" / "🌡️energy-envelope" / case.name / "📸️snapshot" / "🔣️.json"
@@ -583,9 +621,7 @@ def main(arguments):
         expected = json.loads(table_path.read_text(encoding="utf-8")) if table_path.exists() else None
         model = Model(document)
         found = audit(model, snapshot, expected)
-        schema = schema_problems(root, document)
-        schema_seen = schema_seen or schema is not None
-        found += schema or []
+        found += schema_problems(schema, document)
         problems += ["%s: %s" % (case.name, item) for item in found]
         table = measure(model)
         path = case / "🔬️measure" / "🔣️.json"
@@ -597,7 +633,7 @@ def main(arguments):
             problems.append("%s: the committed table differs from the measurement of the committed file" % case.name)
     for problem in problems:
         print("[FAIL] %s" % problem)
-    print("%s: %s (lxml %s, shapely %s, numpy %s, XSD %s)" % (command, "%d problem(s)" % len(problems) if problems else "oracle agrees", etree.LXML_VERSION, shapely.__version__, np.__version__, "validated" if schema_seen else "not committed, structural audit only"))
+    print("%s: %s (lxml %s, shapely %s, numpy %s, gbXML 7.03 XSD)" % (command, "%d problem(s)" % len(problems) if problems else "oracle agrees", etree.LXML_VERSION, shapely.__version__, np.__version__))
     return 1 if problems else 0
 
 

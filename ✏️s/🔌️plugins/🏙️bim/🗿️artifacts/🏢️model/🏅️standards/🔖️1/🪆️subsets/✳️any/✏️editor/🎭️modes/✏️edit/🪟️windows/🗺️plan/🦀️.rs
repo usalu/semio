@@ -5,6 +5,7 @@
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
 
+use crate::editor::bim::kit::visible_in_options;
 use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::{canvas_surface, meta_record, path, path_record, text_record, Paint, Rgba};
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
@@ -136,7 +137,7 @@ pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config:
     let view = active_view(snapshot, config);
     let filtered = view.as_ref().and_then(|view| inference.view_linework.get(view)).map(|drawing| {
         let mut lines = drawing.lines.clone();
-        let visible = |id: &String| inference.option_scope.includes(id, &config.selected_options, &config.workset_visibility);
+        let visible = |id: &String| visible_in_options(inference, id, &config.selected_options, &config.workset_visibility);
         lines.regions.retain(|region| visible(&region.element));
         lines.polylines.retain(|line| visible(&line.element));
         lines.texts.retain(|text| visible(&text.element));

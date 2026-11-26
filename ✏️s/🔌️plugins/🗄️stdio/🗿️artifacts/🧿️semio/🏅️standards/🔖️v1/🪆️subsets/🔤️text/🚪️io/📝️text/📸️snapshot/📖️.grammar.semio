@@ -8,7 +8,7 @@ start document
 # — hand-rolled, mirroring `🖼️image`'s own hex/bracket-encoded value convention.
 #
 # `document` matches the fixture-honesty harness's own reconstructed body shape (mandatory `semio
-# s.stdio.semio.text.dsl v1` preamble stripped and replaced with the bare `envelope_id()` token —
+# stdio.semio.text.dsl v1` preamble stripped and replaced with the bare `envelope_id()` token —
 # `artifact-mark` below — before recognition, same convention every other semio subset's own
 # grammar uses).
 artifact-mark = "stdio.semio.text"

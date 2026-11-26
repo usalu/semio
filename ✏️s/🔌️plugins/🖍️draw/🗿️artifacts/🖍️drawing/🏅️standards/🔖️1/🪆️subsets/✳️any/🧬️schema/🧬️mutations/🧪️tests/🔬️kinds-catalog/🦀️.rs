@@ -45,7 +45,7 @@ fn canonical_tagged_mutations_match_the_owned_schema_validator() {
             documents.push(std::fs::read_to_string(mutation.join("🧬️schema/🔣️.json")).unwrap());
         }
         for mutation in directories(&owner.join("🧪️tests/🧫️fixtures/🧬️mutations")) {
-            for scenario in directories(&mutation) {
+            for scenario in directories(&mutation).into_iter().filter(|path| path.file_name().is_some_and(|name| name != "🎛️input-choices")) {
                 fixtures.push(std::fs::read_to_string(scenario.join("🦠️mutation/🔣️.json")).unwrap());
             }
         }

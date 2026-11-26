@@ -126,6 +126,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
                 None,
             )
             .await
+            .with_committed_render_snapshot(std::sync::Arc::ptr_eq(source, snapshot))
             .with_original_tool_run(tool_runs.original_view_for(view_state.window_id.as_deref()))
             .with_tool_run_poll(tool_runs.poll_view_for(view_state.window_id.as_deref()))
             .with_instance(self.tools.instance_operation_owner.clone())

@@ -240,7 +240,7 @@ _LENGTH_BASE = (3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43,
 _LENGTH_EXTRA = (0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0)
 _DIST_BASE = (1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577)
 _DIST_EXTRA = (0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13)
-_WINDOW, _MIN_MATCH, _MAX_MATCH, _MAX_CHAIN, _HASH_BITS = 32768, 3, 258, 128, 15
+_WINDOW, _MIN_MATCH, _MAX_MATCH, _MAX_CHAIN, _NICE_MATCH, _MAX_INSERT, _HASH_BITS = 32768, 3, 258, 16, 32, 16, 15
 
 
 def _canonical_codes(lengths: List[int]) -> List[int]:
@@ -304,7 +304,7 @@ def _hash3(a: int, b: int, c: int) -> int:
 
 
 def deflate(raw: bytes) -> bytes:
-    """🗜️ The pack's one deflate: a single fixed-Huffman block over a greedy hash-chain LZ77 (3..258 byte matches, 32 KiB window, 128 probes). Pinned by its own specification so equal input is equal output in every language."""
+    """🗜️ The pack's one deflate: a single fixed-Huffman block over a greedy hash-chain LZ77 (3..258 byte matches, 32 KiB window, at most the chain-limit probes per position, none after a match of the nice length, and only the first position of a match longer than the insert limit enters the chains). Pinned by its own specification so equal input is equal output in every language."""
     writer = _BitWriter()
     writer.write(1, 1)
     writer.write(1, 2)
@@ -335,6 +335,8 @@ def deflate(raw: bytes) -> bytes:
                 if length > best_length:
                     best_length = length
                     best_distance = i - candidate
+                if best_length >= _NICE_MATCH:
+                    break
                 candidate = prev[candidate]
                 chain += 1
         if best_length >= _MIN_MATCH:
@@ -346,7 +348,7 @@ def deflate(raw: bytes) -> bytes:
             writer.huffman(_FIXED_DISTANCE_CODES[index], 5)
             if _DIST_EXTRA[index]:
                 writer.write(best_distance - _DIST_BASE[index], _DIST_EXTRA[index])
-            for position in range(i, i + best_length):
+            for position in range(i, i + (best_length if best_length <= _MAX_INSERT else 1)):
                 insert(position)
             i += best_length
         else:

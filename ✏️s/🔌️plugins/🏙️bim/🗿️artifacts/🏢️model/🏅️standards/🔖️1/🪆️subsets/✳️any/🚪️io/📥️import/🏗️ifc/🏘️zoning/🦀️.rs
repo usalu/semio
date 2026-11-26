@@ -1,7 +1,7 @@
 //! 🏘️ Zones, area schemes and room finishes of an IFC file: every `IfcZone` becomes a zone (its category, and the occupancy density it was exported with), the spaces assigned to it through
 //! `IfcRelAssignsToGroup` join it, every `IfcGroup` of `ObjectType` `AreaScheme` becomes an area scheme (the measure and the counted usages and zones are read from `Semio_Authoring`), and the finish of a
 //! space is the material its `Semio_Authoring` names, else the material of the same name that `Pset_SpaceCoveringRequirements` names. A file that was not exported by this model brings no
-//! density, so its zones start without occupancy; a covering that names no known material is reported, not invented.
+//! density, so its zones start without occupancy. IFC2X3 GROUP proxies preserve unassigned zones and area rules.
 
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use crate::standards::v1::subsets::any::io::import::ifc::data::{label, number};
@@ -58,7 +58,8 @@ fn free(i: &Import<'_>, candidate: &str) -> bool {
 }
 
 fn zones(i: &mut Import<'_>) {
-    for (instance, args) in i.doc.rows("IFCZONE") {
+    let unassigned = i.doc.rows("IFCPROXY").into_iter().filter(|(_, args)| text(args, 4) == "UnassignedZone" && args.get(7).and_then(Part21Value::as_enum) == Some("GROUP"));
+    for (instance, args) in i.doc.rows("IFCZONE").into_iter().chain(unassigned) {
         let rows = authoring_of(&i.doc, instance.id);
         let name = text(args, 2);
         let id = label(&rows, "Id").filter(|candidate| free(i, candidate)).unwrap_or_else(|| Import::unused(&format!("z-{}", Import::slug(&name)), |candidate| !free(i, candidate)));
@@ -81,7 +82,8 @@ fn list(rows: &BTreeMap<String, Part21Value>, name: &str) -> Vec<String> {
 }
 
 fn schemes(i: &mut Import<'_>) {
-    for (instance, args) in i.doc.rows("IFCGROUP").into_iter().filter(|(_, args)| text(args, 4) == "AreaScheme") {
+    let proxies = i.doc.rows("IFCPROXY").into_iter().filter(|(_, args)| args.get(7).and_then(Part21Value::as_enum) == Some("GROUP"));
+    for (instance, args) in i.doc.rows("IFCGROUP").into_iter().chain(proxies).filter(|(_, args)| text(args, 4) == "AreaScheme") {
         let rows = authoring_of(&i.doc, instance.id);
         let name = text(args, 2);
         let id = label(&rows, "Id").filter(|candidate| free(i, candidate)).unwrap_or_else(|| Import::unused(&format!("as-{}", Import::slug(&name)), |candidate| !free(i, candidate)));

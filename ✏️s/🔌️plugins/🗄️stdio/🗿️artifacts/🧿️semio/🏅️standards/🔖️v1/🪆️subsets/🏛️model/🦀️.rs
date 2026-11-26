@@ -38,6 +38,9 @@ pub use semio_s_artifact_stdio_semio_model_examples::examples;
 pub mod editor {
     pub use semio_s_artifact_stdio_semio_model_io::editor::*;
 
+    #[path = "✏️editor/🪆️child/🦀️.rs"]
+    pub mod child_editor;
+
     pub use semio_s_artifact_stdio_semio_model_examples::editor::presence;
     pub use semio_s_artifact_stdio_semio_model_examples::editor::config;
     #[path = "."]

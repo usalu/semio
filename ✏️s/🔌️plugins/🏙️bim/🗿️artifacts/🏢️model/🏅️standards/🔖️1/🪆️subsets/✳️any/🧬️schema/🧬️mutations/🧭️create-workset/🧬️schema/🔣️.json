@@ -1,13 +1,18 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-workset/schema.json",
   "title": "CreateWorkset",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "mutation",
     "id",
     "workset"
   ],
   "properties": {
+    "mutation": {
+      "const": "createWorkset"
+    },
     "id": {
       "type": "string"
     },

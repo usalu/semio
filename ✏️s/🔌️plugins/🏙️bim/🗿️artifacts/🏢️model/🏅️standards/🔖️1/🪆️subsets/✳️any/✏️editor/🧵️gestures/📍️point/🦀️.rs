@@ -2,7 +2,7 @@
 //! bounded space and the number is the next free one of the storey) and the stair (press the foot, drag the direction and release, or click the foot and click the direction).
 
 use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{angle, dist, point2, same, P};
-use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, STOREY_MISSING, TYPE_MISSING};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{snap_mark, length_label, Pointer, Step, Tool, ToolContext, ToolEvent, STOREY_MISSING, TYPE_MISSING};
 use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Column, Space, Stair};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{SpaceBoundary, StairFlight, TopConstraint};
@@ -135,7 +135,7 @@ impl Tool for Point {
             marks.push(Mark::path(&[foot, at], false, Style::Ghost));
             marks.push(length_label(foot, at));
         }
-        marks.extend(self.hover.as_ref().map(Mark::snap));
+        marks.extend(self.hover.as_ref().map(snap_mark));
         Preview::of(marks)
     }
 }

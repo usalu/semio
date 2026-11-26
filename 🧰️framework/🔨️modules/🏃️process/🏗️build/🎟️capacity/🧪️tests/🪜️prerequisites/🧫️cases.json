@@ -1,0 +1,108 @@
+{
+  "models": [
+    {
+      "host": 1,
+      "preferred": 1,
+      "reserve": 1,
+      "coreLimit": 0
+    },
+    {
+      "host": 2,
+      "preferred": 1,
+      "reserve": 1,
+      "coreLimit": 1
+    },
+    {
+      "host": 4,
+      "preferred": 2,
+      "reserve": 1,
+      "coreLimit": 3
+    },
+    {
+      "host": 12,
+      "preferred": 6,
+      "reserve": 3,
+      "coreLimit": 9
+    },
+    {
+      "host": 16,
+      "preferred": 8,
+      "reserve": 4,
+      "coreLimit": 12
+    },
+    {
+      "host": 32,
+      "preferred": 16,
+      "reserve": 8,
+      "coreLimit": 24
+    }
+  ],
+  "runtime": {
+    "childWaitMs": 5000
+  },
+  "plan": {
+    "jobs": [
+      {
+        "id": "descriptor",
+        "command": [
+          "repo",
+          "run"
+        ],
+        "after": [
+          "job:font"
+        ]
+      },
+      {
+        "id": "font",
+        "command": [
+          "repo",
+          "run"
+        ],
+        "after": []
+      },
+      {
+        "id": "transpile",
+        "command": [
+          "repo",
+          "run"
+        ],
+        "after": []
+      },
+      {
+        "id": "copy",
+        "command": [
+          "artifact-copy"
+        ],
+        "after": [
+          "job:transpile"
+        ]
+      }
+    ],
+    "stageAfter": {
+      "describe": [
+        "job:descriptor"
+      ],
+      "browser": [
+        "job:transpile",
+        "job:copy"
+      ]
+    },
+    "before": [
+      "font",
+      "transpile",
+      "descriptor"
+    ],
+    "remaining": [
+      {
+        "id": "copy",
+        "after": []
+      }
+    ],
+    "remainingStages": {
+      "describe": [],
+      "browser": [
+        "job:copy"
+      ]
+    }
+  }
+}

@@ -51,6 +51,7 @@ impl FactoryChildSlot{
  pub fn new(original:Arc<dyn FactoryRetirement>)->Self{Self{original:ManuallyDrop::new(Some(original)),ticket:ManuallyDrop::new(None),admission:Admission::empty(),close:Default::default()}}
  pub fn original(&self)->Option<&Arc<dyn FactoryRetirement>>{self.original.as_ref()}
  pub fn has_ticket(&self)->bool{self.ticket.is_some()}
+ pub fn ticket_is_terminal(&self)->bool{self.ticket.as_ref().is_some_and(|ticket|ticket.terminal_is_empty())}
  pub fn admission_is_pending(&self)->bool{self.admission.phase==AdmissionPhase::Started}
  pub fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.ticket.is_none()&&self.admission.terminal_is_empty()&&self.close.is_empty()}
  pub fn preparation_is_complete(&self)->bool{self.original.is_none()&&self.ticket.as_ref().is_some_and(|ticket|ticket.preparation_is_complete())}

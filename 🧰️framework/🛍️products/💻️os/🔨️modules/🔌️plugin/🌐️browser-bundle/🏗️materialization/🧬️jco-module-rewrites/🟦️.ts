@@ -78,9 +78,14 @@ const JCO_FACTORY_WASI_IMPORT = /imports\[(['"])(wasi:([a-z][a-z0-9-]*)\/([a-z][
 const JCO_FACTORY_WASI_EXPORT = "export const wasiImports = ";
 const camel = (name: string): string => name.replace(/-([a-z0-9])/g, (_match, letter: string) => letter.toUpperCase());
 
+/** 🧩️ Identifies the pinned jco browser instantiation entry. */
+export function isBrowserCoreFactory(source: string): boolean {
+  return source.includes(JCO_FACTORY_EXPORT);
+}
+
 /** 🏭️ Completes a jco instantiation factory (`--instantiation async`) for the browser: the factory asks its caller for every import, so the module imports the WASI interfaces it names from the preview2 shim (relocated to the vendor directory by `rewritePreview2ShimImports`) and exports them as `wasiImports`, the import object the bridge extends with the activation's own host. The rewrite is idempotent and refuses a module that is not a factory, since only a factory keeps instance state out of module scope. */
 export function rewriteJcoComponentFactory(source: string): string {
-  if (!source.includes(JCO_FACTORY_EXPORT)) throw new Error("jco component module is not an instantiation factory: transpile with --instantiation async");
+  if (!isBrowserCoreFactory(source)) throw new Error("jco component module is not an instantiation factory: transpile with --instantiation async");
   if (source.includes(JCO_FACTORY_WASI_EXPORT)) return source;
   const interfaces = new Map<string, { readonly packageName: string; readonly member: string }>();
   for (const match of source.matchAll(JCO_FACTORY_WASI_IMPORT)) interfaces.set(match[2]!, { packageName: match[3]!, member: camel(match[4]!) });

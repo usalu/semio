@@ -44,7 +44,7 @@ fn the_vectors_cover_text_binary_and_refusals() {
 #[test]
 fn reads_equal_the_vector_bytes() {
     for vector in vectors().iter().filter(|vector| vector.kind != "refuse") {
-        assert_eq!(hex(bytes_in(env!("CARGO_MANIFEST_DIR"), vector.relative)), vector.bytes_hex, "{}", vector.id);
+        assert_eq!(hex(bytes_in(&crate::runtime_manifest_dir(), vector.relative)), vector.bytes_hex, "{}", vector.id);
         assert_eq!(hex(&std::fs::read(fixture_path!(vector.relative)).expect("reads")), vector.bytes_hex, "{}", vector.id);
         assert_eq!(hex(fixture_bytes!(vector.relative)), vector.bytes_hex, "{}", vector.id);
     }
@@ -55,7 +55,7 @@ fn text_reads_equal_the_decoded_vector_bytes() {
     for vector in vectors().iter().filter(|vector| vector.kind == "text") {
         let bytes: Vec<u8> = (0..vector.bytes_hex.len()).step_by(2).map(|at| u8::from_str_radix(&vector.bytes_hex[at..at + 2], 16).expect("hex")).collect();
         let decoded = String::from_utf8(bytes).expect("the text vector is UTF-8");
-        assert_eq!(text_in(env!("CARGO_MANIFEST_DIR"), vector.relative), decoded, "{}", vector.id);
+        assert_eq!(text_in(&crate::runtime_manifest_dir(), vector.relative), decoded, "{}", vector.id);
         assert_eq!(fixture_text!(vector.relative), decoded, "{}", vector.id);
     }
 }
@@ -65,7 +65,7 @@ fn refused_reads_name_the_resolved_path_and_both_inputs() {
     for vector in vectors().iter().filter(|vector| vector.kind != "text") {
         let relative = vector.relative;
         let message = refusal(move || {
-            let _ = text_in(env!("CARGO_MANIFEST_DIR"), relative);
+            let _ = text_in(&crate::runtime_manifest_dir(), relative);
         });
         assert!(message.contains("fixture"), "{}: {message}", vector.id);
         assert!(message.contains(relative), "{}: {message}", vector.id);
@@ -78,17 +78,36 @@ fn refused_reads_name_the_resolved_path_and_both_inputs() {
 #[test]
 fn missing_bytes_name_the_resolved_path() {
     let message = refusal(|| {
-        let _ = bytes_in(env!("CARGO_MANIFEST_DIR"), "missing.bin");
+        let _ = bytes_in(&crate::runtime_manifest_dir(), "missing.bin");
     });
     assert!(message.contains("missing.bin") && message.contains("CARGO_MANIFEST_DIR"), "{message}");
 }
 
 #[test]
 fn paths_resolve_below_the_manifest_directory_of_the_caller() {
-    assert_eq!(manifest_dir!(), std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")));
-    assert_eq!(fixture_path!("Cargo.toml"), path_in(env!("CARGO_MANIFEST_DIR"), "Cargo.toml"));
+    assert_eq!(manifest_dir!(), std::path::PathBuf::from(crate::runtime_manifest_dir()));
+    assert_eq!(fixture_path!("Cargo.toml"), path_in(&crate::runtime_manifest_dir(), "Cargo.toml"));
     assert!(fixture_path!("Cargo.toml").is_file());
     assert!(fixture_path!("../../🧪️tests").is_dir());
+}
+
+#[test]
+fn relocated_runtime_manifest_reads_relocated_fixture() {
+    if std::env::var_os("SEMIO_FIXTURE_RELOCATED").is_some() {
+        assert_eq!(fixture_text!("sample.txt"), "relocated");
+        assert_eq!(fixture_bytes!("sample.txt"), b"relocated");
+        return;
+    }
+    let directory = std::env::temp_dir().join(format!("semio-fixture-relocated-{}", std::process::id()));
+    std::fs::create_dir_all(&directory).expect("create relocated package");
+    std::fs::write(directory.join("sample.txt"), "relocated").expect("write fixture");
+    let result = std::process::Command::new(std::env::current_exe().expect("test executable"))
+        .args(["--exact", "tests::relocated_runtime_manifest_reads_relocated_fixture"])
+        .env("SEMIO_FIXTURE_RELOCATED", "1")
+        .env("CARGO_MANIFEST_DIR", &directory)
+        .status().expect("run relocated fixture test");
+    std::fs::remove_dir_all(directory).expect("remove relocated package");
+    assert!(result.success());
 }
 
 #[test]
@@ -96,7 +115,7 @@ fn the_repository_root_is_the_declared_package_workspace() {
     let root = repo_root!();
     assert!(root.join("📋️project.json").is_file());
     assert!(root.join("package.json").is_file());
-    assert_eq!(root, repo_root_in(env!("CARGO_MANIFEST_DIR")));
+    assert_eq!(root, repo_root_in(&crate::runtime_manifest_dir()));
     assert!(manifest_dir!().starts_with(&root));
 }
 
@@ -110,19 +129,19 @@ fn a_missing_repository_root_is_refused() {
 
 #[test]
 fn repository_reads_equal_std_and_are_shared_between_calls() {
-    let manifest = env!("CARGO_MANIFEST_DIR");
-    let root = repo_root_in(manifest);
-    assert_eq!(repo_text_in(manifest, "package.json"), std::fs::read_to_string(root.join("package.json")).expect("reads"));
-    assert_eq!(repo_bytes_in(manifest, "package.json"), std::fs::read(root.join("package.json")).expect("reads").as_slice());
-    assert!(std::ptr::eq(repo_bytes_in(manifest, "package.json"), repo_bytes_in(manifest, "package.json")));
-    assert_eq!(repo_text!("package.json"), repo_text_in(manifest, "package.json"));
-    assert_eq!(repo_bytes!("package.json"), repo_bytes_in(manifest, "package.json"));
+    let manifest = crate::runtime_manifest_dir();
+    let root = repo_root_in(&manifest);
+    assert_eq!(repo_text_in(&manifest, "package.json"), std::fs::read_to_string(root.join("package.json")).expect("reads"));
+    assert_eq!(repo_bytes_in(&manifest, "package.json"), std::fs::read(root.join("package.json")).expect("reads").as_slice());
+    assert!(std::ptr::eq(repo_bytes_in(&manifest, "package.json"), repo_bytes_in(&manifest, "package.json")));
+    assert_eq!(repo_text!("package.json"), repo_text_in(&manifest, "package.json"));
+    assert_eq!(repo_bytes!("package.json"), repo_bytes_in(&manifest, "package.json"));
 }
 
 #[test]
 fn missing_repository_files_are_refused_with_their_path() {
     let message = refusal(|| {
-        let _ = repo_bytes_in(env!("CARGO_MANIFEST_DIR"), "missing-in-the-repository.bin");
+        let _ = repo_bytes_in(&crate::runtime_manifest_dir(), "missing-in-the-repository.bin");
     });
     assert!(message.contains("missing-in-the-repository.bin") && message.contains("CARGO_MANIFEST_DIR"), "{message}");
 }

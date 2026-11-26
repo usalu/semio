@@ -29,6 +29,8 @@ import sys
 from pathlib import Path
 
 import jsonschema
+from referencing import Registry, Resource
+from referencing.jsonschema import DRAFT7
 import numpy as np
 from shapely.geometry import Polygon
 
@@ -143,7 +145,10 @@ def validate(document):
     for name, path in (("energy facet", ENERGY_FACET), ("export schema", EXPORT_SCHEMA)):
         schema = json.loads(path.read_text(encoding="utf-8"))
         jsonschema.Draft7Validator.check_schema(schema)
-        for error in jsonschema.Draft7Validator(schema).iter_errors(document):
+        model = json.loads((ENERGY_FACET.parent / "⚡️model" / "🔣️.json").read_text(encoding="utf-8"))
+        registry = Registry().with_resource("https://json.schemas.assets.semio-tech.com/s/energy/model/model.json", Resource(contents=model, specification=DRAFT7))
+        value = {key: document[key] for key in schema["properties"] if key in document} if name == "energy facet" else document
+        for error in jsonschema.Draft7Validator(schema, registry=registry).iter_errors(value):
             problems.append("%s: %s: %s" % (name, "/".join(str(part) for part in error.path), error.message[:160]))
     return problems
 

@@ -1,0 +1,1 @@
+export default { root: "C:/semio", test: { environment: "jsdom", include: ["🧰️framework/**/📺️renderer/🧑‍🎨engine/🧪️tests/🌍️world3d-picking-and-previews/*.ts", "🧰️framework/**/📺️renderer/🧑‍🎨engine/🧪️tests/🎯️world3d-pick-bounds/*.ts"], exclude: ["**/node_modules/**", ".cache/**"], testTimeout: 120000 } };

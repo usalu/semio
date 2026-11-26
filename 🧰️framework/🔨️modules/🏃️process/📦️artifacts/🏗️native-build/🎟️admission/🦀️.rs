@@ -5,7 +5,7 @@
 //! helper thread spend it on another unit while this one can never reacquire it), runs rustc, streams the
 //! child's resident memory and pressure charge every second and reports peak RSS, CPU time and rmeta time. Any
 //! other invocation (version and print probes) and any build without a broker runs rustc unchanged.
-//! The wire protocol is the `🎟️admission/🧬️schema/🔣️.json` `$defs` `AdmitRequestV1`, `VerdictV1`,
+//! The wire protocol is the `🎟️admission/🧬️schema/🔣️.json` `$defs` `AdmitRequestV1`, `VerdictV1`, `RefusalV1`,
 //! `RssReportV1` and `DoneReportV1`.
 //! @see ../../📓️2026-10-13-scalable-build-architecture.md §6.2 (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)
 
@@ -123,11 +123,14 @@ fn json_string(value: &str) -> String {
 /// 📨️ The canonical `AdmitRequestV1` line of a unit.
 fn admit_request(unit: &Unit, pass: &str, pid: u32) -> String {
     let list = |values: &[String]| values.iter().map(|value| json_string(value)).collect::<Vec<_>>().join(",");
+    let local_input = env::var("SEMIO_RUSTC_UNIT_LOCAL_INPUT_KEY").ok()
+        .filter(|key| key.len() == 64 && key.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)))
+        .map(|key| format!(",\"localInputKey\":{}", json_string(&key))).unwrap_or_default();
     format!(
-        "{{\"v\":1,\"op\":\"admit\",\"pass\":{},\"pid\":{},\"crate\":{},\"package\":{},\"version\":{},\"target\":{},\"crateTypes\":[{}],\"outDir\":{},\"extraFilename\":{},\"source\":{},\"manifestDir\":{},\"primary\":{},\"buildScriptOutDir\":{},\"externs\":[{}]}}\n",
+        "{{\"v\":1,\"op\":\"admit\",\"pass\":{},\"pid\":{},\"crate\":{},\"package\":{},\"version\":{},\"target\":{},\"crateTypes\":[{}],\"outDir\":{},\"extraFilename\":{},\"source\":{},\"manifestDir\":{},\"primary\":{},\"buildScriptOutDir\":{},\"externs\":[{}]{}}}\n",
         json_string(pass), pid, json_string(&unit.crate_name), json_string(&unit.package), json_string(&unit.version), json_string(&unit.target), list(&unit.crate_types),
         json_string(&unit.out_dir), json_string(&unit.extra_filename), json_string(&unit.source), json_string(&unit.manifest_dir), unit.primary,
-        unit.build_script_out_dir.as_deref().map(json_string).unwrap_or_else(|| "null".to_string()), list(&unit.externs)
+        unit.build_script_out_dir.as_deref().map(json_string).unwrap_or_else(|| "null".to_string()), list(&unit.externs), local_input
     )
 }
 
@@ -359,12 +362,31 @@ impl Broker {
         let mut line = String::new();
         let mut reader = self.reader.lock().map_err(|_| std::io::Error::other("broker reader poisoned"))?;
         if reader.read_line(&mut line)? == 0 { return Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "broker closed")); }
-        match line.trim_end() {
-            "{\"v\":1,\"op\":\"verdict\",\"admitted\":true}" => Ok(true),
-            "{\"v\":1,\"op\":\"verdict\",\"admitted\":false}" => Ok(false),
-            other => Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("unexpected broker line: {other}"))),
+        decode_verdict(line.trim_end())
+    }
+}
+
+/// 🧾️ Interprets a queue reply or a terminal refusal from the owning compiler broker.
+fn decode_verdict(line: &str) -> std::io::Result<bool> {
+    match line {
+        r#"{"v":1,"op":"verdict","admitted":true}"# => return Ok(true),
+        r#"{"v":1,"op":"verdict","admitted":false}"# => return Ok(false),
+        _ => {}
+    }
+    if let Some((reason, value)) = line.strip_prefix(r#"{"v":1,"op":"refused","reason":""#).and_then(|wire| wire.strip_suffix('}')).and_then(|wire| wire.split_once(r#"","predictedBytes":"#)) {
+        if let Some((predicted, allowance)) = value.split_once(r#","allowanceBytes":"#).and_then(|(peak, limit)| Some((peak.parse::<u64>().ok()?, limit.parse::<u64>().ok()?))) {
+            let mib = 1 << 20;
+            let message = match reason {
+                "parent-memory" => Some(format!("compiler needs an estimated {} MiB but its parent memory grant allows {} MiB; retry with a larger active grant, a fleet worker, or a smaller compiler unit / Der Compiler benötigt geschätzt {} MiB, die übergeordnete Speicherzuteilung erlaubt {} MiB; mit größerer aktiver Zuteilung, einem Flotten-Worker oder einer kleineren Compiler-Einheit erneut versuchen", predicted.div_ceil(mib), allowance / mib, predicted.div_ceil(mib), allowance / mib)),
+                "beyond-host" => Some(format!("compiler needs an estimated {} MiB but this host can hold at most {} MiB beside its reserves; the unit belongs to a larger machine of the fleet and is queued there, never compiled here / Der Compiler benötigt geschätzt {} MiB, dieser Host kann neben seinen Reserven höchstens {} MiB halten; die Einheit gehört auf eine größere Maschine der Flotte, wird dort eingereiht und hier nie kompiliert", predicted.div_ceil(mib), allowance / mib, predicted.div_ceil(mib), allowance / mib)),
+                "no-host-fits" => Some(format!("compiler needs an estimated {} MiB but the largest host of the fleet can hold at most {} MiB; no machine can run this unit / Der Compiler benötigt geschätzt {} MiB, der größte Host der Flotte kann höchstens {} MiB halten; keine Maschine kann diese Einheit ausführen", predicted.div_ceil(mib), allowance / mib, predicted.div_ceil(mib), allowance / mib)),
+                "fleet-placement" => Some("fleet-only pass refused local compilation; use a fleet worker or requeue under an eligible local grant / Der Flottenlauf verweigert lokale Kompilierung; Flotten-Worker verwenden oder mit passender lokaler Zuteilung erneut einreihen".to_string()),
+                _ => None,
+            };
+            if let Some(message) = message { return Err(std::io::Error::new(std::io::ErrorKind::PermissionDenied, message)); }
         }
     }
+    Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("unexpected broker line: {line}")))
 }
 
 /// 🧵️ Bounds rustc's parallel front end to the cores the run was admitted: Cargo's `-Z threads=0` means every core of the host whatever the admission granted, and each extra front-end thread keeps its own arenas (measured on one 2.7 MB crate: 1 thread 2.9 GB peak, 4 threads 5.4 GB, 10 threads 5.2 GB). `tokens` is the admitted parallelism; a thread count of 0 becomes `tokens`, a larger one is capped to it, a smaller one stays. The rewrite happens only here, at the process that starts rustc, so Cargo's fingerprints and the unit cache keys still see the authored flag.
@@ -442,29 +464,30 @@ fn bounded_argfiles(args: &[OsString], tokens: Option<usize>) -> Result<(Vec<OsS
     match result { Ok(result) => Ok((result, copies)), Err(error) => { for copy in copies { let _ = std::fs::remove_file(copy); } Err(error) } }
 }
 
-/// 🪶️ Whether a compile produces a `cdylib` final (a plugin component), in either spelling of its crate type.
-fn is_cdylib_final(args: &[OsString]) -> bool {
-    args.iter().enumerate().any(|(index, arg)| match arg.to_str() {
-        Some("--crate-type") => args.get(index + 1).and_then(|value| value.to_str()) == Some("cdylib"),
-        Some(text) => text == "--crate-type=cdylib",
-        None => false,
-    })
-}
-
-/// 🪶️ The front-end thread grant of one compile: a `cdylib` final has a front end of one entry point whose work is the codegen and the link-time optimisation of its whole dependency closure, so extra front-end threads add arenas that hold the closure's metadata without adding speed (the 1438-unit demonstrator final measured 4 to 5.9 GB resident and was killed by the host's memory pressure); it gets one thread whatever the run was admitted. Every other compile keeps the admitted grant.
-/// @see ./🧪️tests/🧵️frontend-threads/🟦️.ts
-fn frontend_tokens(args: &[OsString], tokens: Option<usize>) -> Option<usize> {
-    tokens.filter(|count| *count >= 1).map(|count| if is_cdylib_final(args) { 1 } else { count })
-}
-
-/// 🪶️ Keeps the LLVM back end of every admitted `cdylib` final serial (`-Z no-parallel-backend`, keeping its codegen units and ThinLTO): the ThinLTO coordinator holds the whole dependency closure's bitcode once, and every extra codegen or ThinLTO worker adds a parsed module with its imported function bodies on top, so the flow hub final granted four cores was jetsam-killed at 3.33 GiB resident before it finished, while the Energy final of a 1438-unit closure ran serial to a 2.78 GiB peak (ticket 26/09/09/PROCEDURAL-3D-END-TO-END `📓️hub-cdylib-memory-2026-11-24.md`, ticket 26/11/17 `💥️demonstrator-oom.md`). A final is one unit whose speed is bounded by the memory the host can spare, not by idle cores. Output is identical, the flag only schedules; like the thread bound it is added at the process that starts rustc, so fingerprints and unit cache keys never see it.
-/// @see ./🧪️tests/🧵️frontend-threads/🟦️.ts
-fn serial_backend(args: Vec<OsString>, tokens: Option<usize>) -> Vec<OsString> {
-    if tokens.filter(|count| *count >= 1).is_none() || !is_cdylib_final(&args) { return args }
-    let mut result = args;
-    result.push(OsString::from("-Z"));
-    result.push(OsString::from("no-parallel-backend"));
-    result
+/// 🧵️ Reads the compiler mode from direct arguments and response files before spending the run's parallelism.
+fn compiler_parallelism(args: &[OsString], tokens: Option<usize>) -> Result<(usize, bool), String> {
+    let mut expects_type = false;
+    let mut final_component = false;
+    let mut nightly = false;
+    let mut inspect = |argument: &str| {
+        let types = argument.strip_prefix("--crate-type=").or_else(|| expects_type.then_some(argument));
+        final_component |= types.is_some_and(|types| types.split(',').any(|kind| kind == "cdylib"));
+        expects_type = argument == "--crate-type";
+        nightly |= argument.starts_with("-Z");
+    };
+    for argument in args {
+        let Some(text) = argument.to_str() else { inspect(""); continue };
+        if let Some(path) = text.strip_prefix('@') {
+            let file = std::fs::File::open(path).map_err(|error| format!("cannot read compiler response file: {error}"))?;
+            for line in BufReader::new(file).lines() {
+                inspect(&line.map_err(|error| format!("cannot read compiler response file: {error}"))?);
+            }
+        } else {
+            inspect(text);
+        }
+    }
+    let grant = tokens.filter(|count| *count > 0);
+    Ok((if final_component { 1 } else { grant.unwrap_or(1) }, grant == Some(1) || (final_component && (nightly || grant.is_some()))))
 }
 
 /// 🎟️ The admitted parallelism of this run, from the variable the launcher sets for every child of its jobserver.
@@ -505,7 +528,7 @@ fn passthrough(rustc: &OsString, args: &[OsString], waits: bool) -> ExitCode {
 /// ⏳️ Waits for the broker's admission while KEEPING the jobserver token Cargo gave this job. The token is never written back: Cargo's helper
 /// thread reads every freed token to start or park for another unit, so a unit that handed its token back could not reacquire it while the
 /// units that took it wait for admission in turn (no rustc running, fifo empty). Holding it cannot starve admission: a broker with nothing
-/// running always admits its first waiter.
+/// running can admit a waiter within its parent grant, or refuse the job without starting rustc.
 fn await_admission(mut verdict: impl FnMut() -> Result<bool, String>) -> Result<(), String> {
     while !verdict()? {}
     Ok(())
@@ -515,9 +538,9 @@ fn await_admission(mut verdict: impl FnMut() -> Result<bool, String>) -> Result<
 fn scheduled(rustc: &OsString, args: &[OsString], unit: &Unit, endpoint: &str, pass: &str) -> Result<ExitCode, String> {
     let broker = Arc::new(Broker::connect(endpoint).map_err(|error| format!("build broker unreachable at {endpoint}: {error}"))?);
     broker.send(&admit_request(unit, pass, std::process::id())).map_err(|error| format!("broker admission request failed: {error}"))?;
-    await_admission(|| broker.verdict().map_err(|error| format!("broker verdict failed: {error}")))?;
+    await_admission(|| broker.verdict().map_err(|error| format!("{} ({}): compiler broker verdict failed: {error}", unit.crate_name, unit.target)))?;
     let start_ms = now_ms();
-    let mut child = Command::new(rustc).args(args).stdin(Stdio::inherit()).stdout(Stdio::inherit()).stderr(Stdio::piped()).spawn().map_err(|error| format!("cannot run {}: {error}", rustc.to_string_lossy()))?;
+    let mut child = Command::new(rustc).args(args).env_remove("SEMIO_RUSTC_UNIT_LOCAL_INPUT_KEY").stdin(Stdio::inherit()).stdout(Stdio::inherit()).stderr(Stdio::piped()).spawn().map_err(|error| format!("cannot run {}: {error}", rustc.to_string_lossy()))?;
     let stderr = child.stderr.take().ok_or("rustc stderr unavailable")?;
     let rmeta_ms = Arc::new(Mutex::new(None::<u64>));
     let forwarder = {
@@ -571,7 +594,12 @@ fn main() -> ExitCode {
     let text = match expand_admission_arguments(&args) { Ok(text) => text, Err(error) => { eprintln!("semio-build-scheduler: {error}"); return ExitCode::from(1); } };
     let unit = parse_unit(&text, &|name| env::var(name).ok()).map(|unit| Unit { source: absolute(&unit.source), out_dir: absolute(&unit.out_dir), externs: unit.externs.iter().map(|path| absolute(path)).collect(), ..unit });
     let tokens = admitted_tokens();
-    let (args, copies) = match bounded_argfiles(&args, frontend_tokens(&args, tokens)) { Ok((bounded, copies)) => (serial_backend(bounded, tokens), copies), Err(error) => { eprintln!("semio-build-scheduler: {error}"); return ExitCode::from(1); } };
+    let (threads, serial) = match compiler_parallelism(&args, tokens) {
+        Ok(policy) => policy,
+        Err(error) => { eprintln!("semio-build-scheduler: {error}"); return ExitCode::from(1); }
+    };
+    let (mut args, copies) = match bounded_argfiles(&args, Some(threads)) { Ok(result) => result, Err(error) => { eprintln!("semio-build-scheduler: {error}"); return ExitCode::from(1); } };
+    if serial { args.extend([OsString::from("-Z"), OsString::from("no-parallel-backend")]); }
     let code = match (unit, env::var("SEMIO_BUILD_BROKER").ok(), env::var("SEMIO_BUILD_PASS").ok()) {
         (Some(unit), Some(endpoint), Some(pass)) => scheduled(&rustc, &args, &unit, &endpoint, &pass).unwrap_or_else(|error| {
             eprintln!("semio-build-scheduler: {error}");
@@ -698,6 +726,24 @@ mod tests {
         assert_eq!(await_admission(|| Err("broker closed".to_string())), Err("broker closed".to_string()));
     }
 
+    /// 🧱️ Terminal parent and placement refusals prevent execution and keep actionable diagnostics.
+    #[test]
+    fn decodes_terminal_admission_refusals() {
+        let parent = decode_verdict(r#"{"v":1,"op":"refused","reason":"parent-memory","predictedBytes":2469606196,"allowanceBytes":2147483648}"#).unwrap_err();
+        assert_eq!(parent.kind(), std::io::ErrorKind::PermissionDenied);
+        assert!(parent.to_string().contains("2356 MiB") && parent.to_string().contains("2048 MiB"));
+        let placement = decode_verdict(r#"{"v":1,"op":"refused","reason":"fleet-placement","predictedBytes":2469606196,"allowanceBytes":0}"#).unwrap_err();
+        assert_eq!(placement.kind(), std::io::ErrorKind::PermissionDenied);
+        assert!(placement.to_string().contains("fleet-only pass refused local compilation"));
+        let beyond = decode_verdict(r#"{"v":1,"op":"refused","reason":"beyond-host","predictedBytes":5368709120,"allowanceBytes":4294967296}"#).unwrap_err();
+        assert_eq!(beyond.kind(), std::io::ErrorKind::PermissionDenied);
+        assert!(beyond.to_string().contains("5120 MiB") && beyond.to_string().contains("4096 MiB") && beyond.to_string().contains("never compiled here"));
+        let none = decode_verdict(r#"{"v":1,"op":"refused","reason":"no-host-fits","predictedBytes":5368709120,"allowanceBytes":4294967296}"#).unwrap_err();
+        assert_eq!(none.kind(), std::io::ErrorKind::PermissionDenied);
+        assert!(none.to_string().contains("no machine can run this unit"));
+        assert_eq!(decode_verdict(r#"{"v":1,"op":"refused","reason":"parent-memory","predictedBytes":0,"allowanceBytes":wrong}"#).unwrap_err().kind(), std::io::ErrorKind::InvalidData);
+    }
+
     /// 🧵️ The front end follows the admitted parallelism: 0 and larger counts become the grant, smaller ones stay, both spellings, nothing without a grant.
     #[test]
     fn bounds_front_end_threads() {
@@ -717,27 +763,21 @@ mod tests {
         }
     }
 
-    /// 🪶️ A `cdylib` final gets one front-end thread, in both spellings of its crate type; every other compile and every missing grant is unchanged.
+    /// 🧵️ The admitted token count bounds both compiler front-end and LLVM parallelism.
     #[test]
-    fn grants_one_front_end_thread_to_a_cdylib_final() {
-        let os = |items: &[&str]| items.iter().map(OsString::from).collect::<Vec<_>>();
-        assert_eq!(frontend_tokens(&os(&["--crate-type", "cdylib", "a.rs"]), Some(8)), Some(1));
-        assert_eq!(frontend_tokens(&os(&["--crate-type=cdylib"]), Some(8)), Some(1));
-        assert_eq!(frontend_tokens(&os(&["--crate-type", "lib"]), Some(8)), Some(8));
-        assert_eq!(frontend_tokens(&os(&["--crate-type", "cdylib"]), None), None);
-        assert_eq!(frontend_tokens(&os(&["--crate-type", "cdylib"]), Some(0)), None);
-    }
-
-    /// 🪶️ A `cdylib` final admitted any grant runs its back end serially; libraries and runs without a grant are untouched.
-    #[test]
-    fn serializes_the_back_end_of_a_granted_cdylib_final() {
-        let os = |items: &[&str]| items.iter().map(OsString::from).collect::<Vec<_>>();
-        assert_eq!(serial_backend(os(&["--crate-type", "cdylib", "a.rs"]), Some(1)), os(&["--crate-type", "cdylib", "a.rs", "-Z", "no-parallel-backend"]));
-        assert_eq!(serial_backend(os(&["--crate-type=cdylib"]), Some(1)), os(&["--crate-type=cdylib", "-Z", "no-parallel-backend"]));
-        assert_eq!(serial_backend(os(&["--crate-type", "cdylib", "a.rs"]), Some(8)), os(&["--crate-type", "cdylib", "a.rs", "-Z", "no-parallel-backend"]));
-        assert_eq!(serial_backend(os(&["--crate-type", "lib"]), Some(8)), os(&["--crate-type", "lib"]));
-        assert_eq!(serial_backend(os(&["--crate-type", "cdylib"]), None), os(&["--crate-type", "cdylib"]));
-        assert_eq!(serial_backend(os(&["--crate-type", "cdylib"]), Some(0)), os(&["--crate-type", "cdylib"]));
+    fn compiler_workers_fit_their_admission() {
+        for (args, grant, expected) in [
+            (vec!["--crate-type", "cdylib", "a.rs"], Some(8), (1, true)),
+            (vec!["--crate-type=cdylib"], Some(8), (1, true)),
+            (vec!["--crate-type=cdylib", "-Zthreads=2"], None, (1, true)),
+            (vec!["--crate-type=cdylib"], None, (1, false)),
+            (vec!["--crate-type=lib"], Some(1), (1, true)),
+            (vec!["--crate-type=lib"], Some(8), (8, false)),
+            (vec!["--crate-type=lib"], Some(0), (1, false)),
+        ] {
+            let args = args.into_iter().map(OsString::from).collect::<Vec<_>>();
+            assert_eq!(compiler_parallelism(&args, grant).unwrap(), expected);
+        }
     }
 
     /// 📎️ Changed response files use owned bounded copies and unreadable files fail closed.

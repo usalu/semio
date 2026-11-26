@@ -7,5 +7,56 @@
   {"expected":false,"reply":{"structuredContent":{"jobId":"job-a","status":"SUCCEEDED","complete":true,"artifactId":"document-b","artifactKind":"test.bitmap","inferenceSchema":"test.solve","pluginId":"test","payloadBytes":14,"payload":{"pixels":"AA=="}}}},
   {"expected":false,"reply":{"structuredContent":{"jobId":"job-a","status":"SUCCEEDED","complete":true,"artifactId":"document-a","artifactKind":"test.bitmap","inferenceSchema":"test.solve","pluginId":"test","payloadBytes":0,"payload":null}}},
   {"expected":false,"reply":{"structuredContent":{"jobId":"job-a","status":"SUCCEEDED","complete":true,"artifactId":"document-a","artifactKind":"test.bitmap","inferenceSchema":"test.solve","pluginId":"test","payloadBytes":14,"payload":{"pixels":42}}}}
- ]
+ ],
+ "jobSnapshots":[
+ {
+  "name": "exact solution",
+  "snapshot": {},
+  "valid": true
+ },
+ {
+  "name": "foreign job",
+  "snapshot": {
+   "jobId": "job-b"
+  },
+  "valid": false
+ },
+ {
+  "name": "different producer",
+  "snapshot": {
+   "kind": "artifact.create"
+  },
+  "valid": false
+ },
+ {
+  "name": "unfinished job",
+  "snapshot": {
+   "status": "RUNNING"
+  },
+  "valid": false
+ },
+ {
+  "name": "different persisted solution",
+  "result": {
+   "payload": {
+    "pixels": "AQ=="
+   }
+  },
+  "snapshot": {},
+  "valid": false
+ },
+ {
+  "name": "missing retained result",
+  "snapshot": {
+   "result": null
+  },
+  "valid": false
+ },
+ {
+  "name": "error with stale success fields",
+  "isError": true,
+  "snapshot": {},
+  "valid": false
+ }
+]
 }

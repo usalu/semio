@@ -22,6 +22,7 @@
         "nonRustcWindowMs": 10000,
         "brokerEnvironment": "SEMIO_BUILD_BROKER",
         "passEnvironment": "SEMIO_BUILD_PASS",
+        "placementEnvironment": "SEMIO_BUILD_PASS_PLACEMENT",
         "storeNamespace": "semio.build-telemetry/v1",
         "storeDirectory": "build-telemetry",
         "storeFile": "units.jsonl",
@@ -41,8 +42,16 @@
           "cancelledFactorBasisPoints": 12500,
           "cancelledMemoryMilliseconds": 3600000
         },
+        "growth": {
+          "description": "Grant growth: a unit that needs more than the parent memory grant asks the host for a supplementary reservation of the difference (the fair queue of the host capacity gate decides against free memory, the warden thresholds and the interactive reserve) and waits for it at most `waitMilliseconds`, printing a progress line every `progressMilliseconds`. A unit that no memory this host can ever hold carries is queued for a larger machine; a unit that no machine of the fleet can hold is refused. `fleetDirectory` is the folder below the fleet store that holds one `memory.json` per origin.",
+          "waitMilliseconds": 900000,
+          "progressMilliseconds": 30000,
+          "fleetDirectory": "origins",
+          "fleetFile": "memory.json",
+          "fleetStalenessMilliseconds": 86400000
+        },
         "unitCeiling": {
-          "description": "The compile-memory budget per worker class: the most one compile unit may hold at its peak so that it fits the smallest worker (a 16 GB Mac that runs several agents). A library unit (everything but a `cdylib`) stays within `libraryMegabytes`; only a final `cdylib` link unit may use the higher `finalMegabytes`, and it must use the serial back end. `workerClass` names the class the fleet is carved for. `carving` is the closed list of units known to exceed their budget, each with its measured peak and the reduction it waits for; the list may only shrink. Every carving entry declares `budgetMegabytes`, the budget the host warden enforces at runtime for that unit (at least its measured peak, at most 10 percent above it): a unit on the list is cancelled while it runs once its resident footprint exceeds it; an unlisted unit is cancelled above the budget of its kind.",
+          "description": "The compile-memory budget per worker class: the most one compile unit may hold at its peak so that it fits the smallest worker (a 16 GB Mac that runs several agents). A library unit (everything but a `cdylib`) stays within `libraryMegabytes`; only a final `cdylib` link unit may use the higher `finalMegabytes`, and it must use the serial back end. `workerClass` names the class the fleet is carved for. `carving` is the closed list of units known to exceed their budget, each with its measured peak and the reduction it waits for; the list may only shrink. Every carving entry declares `budgetMegabytes`, the budget the host warden enforces at runtime for that unit (at least its measured peak, at most 10 percent above it): a unit on the list is cancelled while it runs once its resident footprint exceeds it; an unlisted unit is cancelled above the budget of its kind. `families` is the closed list of homogeneous generated shard families (a regular expression over the whole crate name plus a target) whose per-shard peaks vary from run to run: its `measuredMegabytes` is the class measurement, the largest peak observed over any shard of the family (the `source` names the log lines), and its `budgetMegabytes` the budget every shard of the family may reach (at least the class measurement, at most 10 percent above it). A unit with its own carving entry uses that entry, else the family it matches.",
           "workerClass": "16g",
           "classes": {
             "16g": {
@@ -105,8 +114,8 @@
             {
               "crate": "semio_s_artifact_stdio_pdf_model",
               "target": "wasm32-wasip2",
-              "measuredMegabytes": 3330,
-              "budgetMegabytes": 3500,
+              "measuredMegabytes": 3525,
+              "budgetMegabytes": 3720,
               "action": "split-families"
             },
             {
@@ -119,8 +128,8 @@
             {
               "crate": "semio_s_artifact_stdio_binary_io_registry",
               "target": "wasm32-wasip2",
-              "measuredMegabytes": 2925,
-              "budgetMegabytes": 3100,
+              "measuredMegabytes": 3167,
+              "budgetMegabytes": 3350,
               "action": "split-app-fleet"
             },
             {
@@ -154,8 +163,8 @@
             {
               "crate": "semio_s_artifact_stdio_dwg_snapshot_objects",
               "target": "wasm32-wasip2",
-              "measuredMegabytes": 2160,
-              "budgetMegabytes": 2300,
+              "measuredMegabytes": 2457,
+              "budgetMegabytes": 2600,
               "action": "split-families"
             },
             {
@@ -189,8 +198,8 @@
             {
               "crate": "semio_s_artifact_stdio_semio_cad_member",
               "target": "wasm32-wasip2",
-              "measuredMegabytes": 1712,
-              "budgetMegabytes": 1800,
+              "measuredMegabytes": 1830,
+              "budgetMegabytes": 1940,
               "action": "split-store"
             },
             {
@@ -229,17 +238,17 @@
               "action": "serial-backend"
             },
             {
-              "crate": "semio_hub_sourcing_component",
+              "crate": "semio_hub_process_component",
               "target": "wasm32-wasip2",
-              "measuredMegabytes": 5519,
-              "budgetMegabytes": 5600,
+              "measuredMegabytes": 8944,
+              "budgetMegabytes": 9800,
               "action": "thin-lto-closure"
             },
             {
               "crate": "semio_hub_sourcing",
               "target": "wasm32-wasip2",
-              "measuredMegabytes": 4273,
-              "budgetMegabytes": 4500,
+              "measuredMegabytes": 4000,
+              "budgetMegabytes": 4400,
               "action": "split-app-fleet"
             },
             {
@@ -287,8 +296,8 @@
             {
               "crate": "semio_s_artifact_stdio_semio_kit_member",
               "target": "wasm32-wasip2",
-              "measuredMegabytes": 1616,
-              "budgetMegabytes": 1700,
+              "measuredMegabytes": 1788,
+              "budgetMegabytes": 1890,
               "action": "split-store"
             },
             {
@@ -304,20 +313,6 @@
               "measuredMegabytes": 1578,
               "budgetMegabytes": 1700,
               "action": "split-families"
-            },
-            {
-              "crate": "semio_s_plugin_sourcing_slabs_component",
-              "target": "wasm32-wasip2",
-              "measuredMegabytes": 4196,
-              "budgetMegabytes": 4400,
-              "action": "thin-lto-closure"
-            },
-            {
-              "crate": "semio_s_plugin_sourcing_windows_component",
-              "target": "wasm32-wasip2",
-              "measuredMegabytes": 4116,
-              "budgetMegabytes": 4300,
-              "action": "thin-lto-closure"
             },
             {
               "crate": "semio_s_artifact_sourcing_curation_inferences",
@@ -350,16 +345,59 @@
             {
               "crate": "semio_hub_stdio_component",
               "target": "wasm32-wasip2",
-              "measuredMegabytes": 8792,
-              "budgetMegabytes": 9300,
+              "measuredMegabytes": 9306,
+              "budgetMegabytes": 9820,
+              "action": "serial-backend"
+            },
+            {
+              "crate": "semio_hub_stdio_office_component",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 4231,
+              "budgetMegabytes": 4470,
               "action": "serial-backend"
             },
             {
               "crate": "semio_s_artifact_bim_model_snapshot",
               "target": "wasm32-wasip2",
-              "measuredMegabytes": 2772,
-              "budgetMegabytes": 2900,
+              "measuredMegabytes": 3016,
+              "budgetMegabytes": 3190,
               "action": "split-families"
+            },
+            {
+              "crate": "semio_s_artifact_fem_2d_model",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 1549,
+              "budgetMegabytes": 1640,
+              "action": "split-families"
+            }
+          ],
+          "families": [
+            {
+              "family": "ifc2x3",
+              "pattern": "semio_s_artifact_stdio_ifc2x3_catalog_(entities|types)_[0-9]+",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 3440,
+              "budgetMegabytes": 3630,
+              "action": "split-families",
+              "source": "warden.log lines 'peaked at N MB, above' of the family, wasm32-wasip2: ifc2x3_catalog_entities_03 3440 MB (cancelled), _00 2868 MB (cancelled, earlier 1841), _02 3242 MB; types_00 1694 MB"
+            },
+            {
+              "family": "ifc4",
+              "pattern": "semio_s_artifact_stdio_ifc4_catalog_(entities|types)_[0-9]+",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 3125,
+              "budgetMegabytes": 3300,
+              "action": "split-families",
+              "source": "warden.log lines 'peaked at N MB, above' of the family, wasm32-wasip2: ifc4_catalog_entities_06 3125 MB; _01 2716 MB; the other ifc4 shards 1647 to 2000 MB"
+            },
+            {
+              "family": "ifc4x3-add2",
+              "pattern": "semio_s_artifact_stdio_ifc4x3_add2_catalog_(entities|types)_[0-9]+",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 3282,
+              "budgetMegabytes": 3470,
+              "action": "split-families",
+              "source": "warden.log lines 'peaked at N MB, above' of the family, wasm32-wasip2: ifc4x3_add2_catalog_entities_05 3282 MB; _04 3271 MB; _00 3097 MB; the other shards 1538 to 1888 MB"
             }
           ]
         }
@@ -498,6 +536,15 @@
             "swap": "unit {unit} is held back: the host is actively swapping (it needs about {predicted} MB); waited {seconds} s",
             "cancelled": "unit {unit} was cancelled by the host warden before and is held back until it fits: it needs about {predicted} MB, the host has {available} MB available with a margin of {margin} MB (warden level {level}); waited {seconds} s"
           },
+          "growth": {
+            "asking": "unit {unit} needs about {predicted} MB but its memory grant is {grant} MB: asking the host to grow the grant by {extra} MB (at most {minutes} min)",
+            "waiting": "unit {unit} still waits for {extra} MB of grant growth: it needs about {predicted} MB, grant {grant} MB, host {available} MB available, {reserve} MB reserved; waited {seconds} s",
+            "grown": "unit {unit}: the memory grant grew to {granted} MB after {seconds} s",
+            "timeout": "unit {unit} got no grant growth within {minutes} min: it needs about {predicted} MB, grant {grant} MB; the host may be busy, retry or use a fleet worker",
+            "beyondHost": "unit {unit} needs about {predicted} MB but this host can hold at most {holdable} MB beside its reserves: it is queued for a larger machine (the largest holds {largest} MB) and never compiles here",
+            "refused": "no machine of the fleet can hold unit {unit}: it needs about {predicted} MB and the largest host ({origin}) holds at most {largest} MB",
+            "cancelled": "unit {unit}: waiting for grant growth was cancelled after {seconds} s"
+          },
           "unitCeiling": {
             "kinds": {
               "library": "library",
@@ -514,6 +561,15 @@
             "warden": "Einheit {unit} wird zurückgehalten: der Host-Warden steht auf Stufe {level} ({available} MB verfügbar, sie braucht etwa {predicted} MB); {seconds} s gewartet",
             "swap": "Einheit {unit} wird zurückgehalten: der Host lagert aktiv Speicher aus (die Einheit braucht etwa {predicted} MB); {seconds} s gewartet",
             "cancelled": "Einheit {unit} wurde zuvor vom Host-Warden abgebrochen und wird zurückgehalten, bis sie passt: sie braucht etwa {predicted} MB, der Host hat {available} MB verfügbar bei einem Abstand von {margin} MB (Warden-Stufe {level}); {seconds} s gewartet"
+          },
+          "growth": {
+            "asking": "Einheit {unit} braucht etwa {predicted} MB, ihre Speicherzuteilung beträgt aber {grant} MB: der Host wird gebeten, die Zuteilung um {extra} MB zu vergrößern (höchstens {minutes} min)",
+            "waiting": "Einheit {unit} wartet weiter auf {extra} MB Zuteilungswachstum: sie braucht etwa {predicted} MB, Zuteilung {grant} MB, Host {available} MB verfügbar, {reserve} MB reserviert; {seconds} s gewartet",
+            "grown": "Einheit {unit}: die Speicherzuteilung ist nach {seconds} s auf {granted} MB gewachsen",
+            "timeout": "Einheit {unit} bekam innerhalb von {minutes} min kein Zuteilungswachstum: sie braucht etwa {predicted} MB, Zuteilung {grant} MB; der Host ist womöglich ausgelastet, erneut versuchen oder einen Flotten-Worker nutzen",
+            "beyondHost": "Einheit {unit} braucht etwa {predicted} MB, dieser Host kann neben seinen Reserven höchstens {holdable} MB halten: sie wird für eine größere Maschine eingereiht (die größte hält {largest} MB) und wird hier nie kompiliert",
+            "refused": "Keine Maschine der Flotte kann Einheit {unit} halten: sie braucht etwa {predicted} MB, der größte Host ({origin}) hält höchstens {largest} MB",
+            "cancelled": "Einheit {unit}: das Warten auf Zuteilungswachstum wurde nach {seconds} s abgebrochen"
           },
           "unitCeiling": {
             "kinds": {
@@ -558,6 +614,10 @@
         },
         "op": {
           "const": "admit"
+        },
+        "localInputKey": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
         },
         "pass": {
           "type": "string",
@@ -827,6 +887,10 @@
         "op": {
           "const": "recall"
         },
+        "localInputKey": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
         "pass": {
           "type": "string",
           "pattern": "^[A-Za-z0-9_.:-]{1,128}$"
@@ -862,6 +926,18 @@
         "admitted": {
           "type": "boolean"
         }
+      }
+    },
+    "RefusalV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["v", "op", "reason", "predictedBytes", "allowanceBytes"],
+      "properties": {
+        "v": {"const": 1},
+        "op": {"const": "refused"},
+        "reason": {"enum": ["parent-memory", "fleet-placement", "beyond-host", "no-host-fits"]},
+        "predictedBytes": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "allowanceBytes": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}
       }
     },
     "RssReportV1": {

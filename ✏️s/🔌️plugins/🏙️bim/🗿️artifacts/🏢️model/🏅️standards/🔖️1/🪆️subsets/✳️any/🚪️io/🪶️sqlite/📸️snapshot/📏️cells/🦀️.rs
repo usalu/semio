@@ -1,9 +1,9 @@
 //! 📏️ Borrowed native BIM roles are counted before typed reconstruction.
-use super::*;
+use super::{SCHEMA,Result,add,class,compare_text,invalid};
 use semio_framework_dsl_record::{FieldValue as F,RecordValue as R};
-use semio_framework_value::DslValue;
+use semio_framework_value::{DslValue,ValueError,ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl as N;
-use store::sqlite_snapshot::SqliteDatabaseLimits;
+use semio_framework_io_sqlite_model::SqliteDatabaseLimits;
 const WIDTHS:&[(&str,usize)]=&[
  ("bim_document",2),
  ("bim_project",6),
@@ -14,8 +14,8 @@ const WIDTHS:&[(&str,usize)]=&[
  ("bim_roof_type",5),
  ("bim_column_type",6),
  ("bim_beam_type",6),
- ("bim_window_type",22),
- ("bim_door_type",20),
+ ("bim_window_type",31),
+ ("bim_door_type",23),
  ("bim_site",17),
  ("bim_building",18),
  ("bim_storey",13),
@@ -48,7 +48,7 @@ const WIDTHS:&[(&str,usize)]=&[
  ("bim_space_outline",12),
  ("bim_property_set",4),
  ("bim_property_value",11),
- ("bim_curtain_wall_type",11),
+ ("bim_curtain_wall_type",20),
  ("bim_curtain_panel_override",11),
  ("bim_ramp",30),
  ("bim_ceiling_type",5),
@@ -97,20 +97,72 @@ const WIDTHS:&[(&str,usize)]=&[
  ("bim_property_default",9),
  ("bim_property_allowed",10),
  ("bim_classification_item",6),
- ("bim_classification_assignment",5),];
-pub(super)fn extent(limits:SqliteDatabaseLimits)->Result<()>{if SCHEMA.len()>limits.max_schema_bytes||limits.max_tables<WIDTHS.len()||WIDTHS.iter().any(|(_,width)|*width>limits.max_columns)||limits.max_rows<2{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"BIM authored schema extent exceeds caller limits"))}Ok(())}
+ ("bim_classification_assignment",5),
+ ("bim_support",31),
+ ("bim_load_case",9),
+ ("bim_structural_load",35),
+ ("bim_option_group",5),
+ ("bim_design_option",7),
+ ("bim_workset",6),
+ ("bim_element_option",5),
+ ("bim_element_workset",5),
+ ("bim_space_conditions",24),
+ ("bim_clash_set",11),
+ ("bim_clash_a",2),
+ ("bim_clash_a_class",4),
+ ("bim_clash_a_storey",4),
+ ("bim_clash_a_phase",4),
+ ("bim_clash_a_element",4),
+ ("bim_clash_b",2),
+ ("bim_clash_b_class",4),
+ ("bim_clash_b_storey",4),
+ ("bim_clash_b_phase",4),
+ ("bim_clash_b_element",4),
+ ("bim_rule",10),
+ ("bim_rule_scope",3),
+ ("bim_rule_scope_storey",4),
+ ("bim_rule_scope_phase",4),
+ ("bim_rule_scope_element",4),
+ ("bim_issue",14),
+ ("bim_issue_label",4),
+ ("bim_issue_element",4),
+ ("bim_issue_viewpoint",38),
+ ("bim_issue_isolate",4),
+ ("bim_issue_comment",8),
+ ("bim_component",22),
+ ("bim_component_override",7),
+ ("bim_mep_element",17),
+ ("bim_mep_path",12),
+];
+/// 📊️ Checks the fixed schema extent without allocating tables or columns.
+pub fn extent(limits:SqliteDatabaseLimits)->Result<()>{if SCHEMA.len()>limits.max_schema_bytes||limits.max_tables<WIDTHS.len()||WIDTHS.iter().any(|(_,width)|*width>limits.max_columns)||limits.max_rows<2{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"BIM authored schema extent exceeds caller limits"))}Ok(())}
 fn shape(value:&R,count:u16)->Result<()>{if value.fields.keys().copied().eq(0..count){Ok(())}else{Err(invalid("BIM native record field map differs"))}}
 fn field(value:&R,id:u16)->Result<&F>{value.get(id).ok_or_else(||invalid("BIM native required role is absent"))}
 fn record(value:&F,count:u16)->Result<&R>{let F::Record(value)=value else{return Err(invalid("BIM native role requires record"))};shape(value,count)?;Ok(value)}
 fn block(value:&F,count:u16)->Result<&R>{let F::Block(value)=value else{return Err(invalid("BIM native role requires authored block"))};record(value,count)}
+fn absent(value:&F)->bool{matches!(value,F::Absent)||matches!(value,F::Block(inner) if matches!(inner.as_ref(),F::Absent))}
 fn items(value:&F)->Result<&[F]>{let F::List(value)=value else{return Err(invalid("BIM native role requires ordered list"))};Ok(value)}
 fn map<'a>(value:&'a F,n:&mut N<'_>)->Result<&'a[(String,F)]>{let F::Map(value)=value else{return Err(invalid("BIM native role requires literal map"))};for pair in value.windows(2){if compare_text(&pair[0].0,&pair[1].0,n)?!=std::cmp::Ordering::Less{return Err(invalid("BIM native map keys are not strictly sorted"))}}Ok(value)}
 fn statements(value:&F)->Result<&[(String,R)]>{let value=if let F::Block(value)=value{value.as_ref()}else{value};let F::Statements(value)=value else{return Err(invalid("BIM variant requires statements"))};Ok(value)}
-fn symbol(name:&str)->Result<&'static str>{match name{"flat"=>Ok("Flat"),"shed"=>Ok("Shed"),"gable"=>Ok("Gable"),"hip"=>Ok("Hip"),"mansard"=>Ok("Mansard"),"window"=>Ok("Window"),"door"=>Ok("Door"),"void"=>Ok("Void"),"straight"=>Ok("Straight"),"l-turn"=>Ok("LTurn"),"u-turn"=>Ok("UTurn"),"spiral"=>Ok("Spiral"),"none"=>Ok("None"),"glass"=>Ok("Glass"),"panel"=>Ok("Panel"),"empty"=>Ok("Empty"),"solid"=>Ok("Solid"),"iso"=>Ok("Iso"),"custom"=>Ok("Custom"),"field"=>Ok("Field"),"property"=>Ok("Property"),"bounded"=>Ok("Bounded"),"explicit"=>Ok("Explicit"),"extrusion"=>Ok("Extrusion"),"revolution"=>Ok("Revolution"),"sweep"=>Ok("Sweep"),"cuboid"=>Ok("Cuboid"),"rectangle"=>Ok("Rectangle"),"circle"=>Ok("Circle"),"i-shape"=>Ok("IShape"),"family"=>Ok("Family"),"line"=>Ok("Line"),"arc"=>Ok("Arc"),"unconnected"=>Ok("Unconnected"),"storey-top"=>Ok("StoreyTop"),"storey"=>Ok("Storey"),"roof"=>Ok("Roof"),"slab"=>Ok("Slab"),"ceiling"=>Ok("Ceiling"),"spacing"=>Ok("Spacing"),"lines"=>Ok("Lines"),"point"=>Ok("Point"),"wall-face"=>Ok("WallFace"),"wall-axis"=>Ok("WallAxis"),"wall-end"=>Ok("WallEnd"),"opening-centre"=>Ok("OpeningCentre"),"grid"=>Ok("Grid"),"column-centre"=>Ok("ColumnCentre"),"polygon"=>Ok("Polygon"),_=>Err(invalid("BIM variant keyword is undeclared"))}}
+fn symbol(name:&str)->Result<&'static str>{match name{"area"=>Ok("Area"),"duct"=>Ok("Duct"),"pipe"=>Ok("Pipe"),"tray"=>Ok("Tray"),"flat"=>Ok("Flat"),"shed"=>Ok("Shed"),"gable"=>Ok("Gable"),"hip"=>Ok("Hip"),"mansard"=>Ok("Mansard"),"window"=>Ok("Window"),"door"=>Ok("Door"),"void"=>Ok("Void"),"straight"=>Ok("Straight"),"l-turn"=>Ok("LTurn"),"u-turn"=>Ok("UTurn"),"spiral"=>Ok("Spiral"),"none"=>Ok("None"),"glass"=>Ok("Glass"),"panel"=>Ok("Panel"),"empty"=>Ok("Empty"),"solid"=>Ok("Solid"),"iso"=>Ok("Iso"),"custom"=>Ok("Custom"),"field"=>Ok("Field"),"property"=>Ok("Property"),"bounded"=>Ok("Bounded"),"explicit"=>Ok("Explicit"),"extrusion"=>Ok("Extrusion"),"revolution"=>Ok("Revolution"),"sweep"=>Ok("Sweep"),"cuboid"=>Ok("Cuboid"),"rectangle"=>Ok("Rectangle"),"circle"=>Ok("Circle"),"i-shape"=>Ok("IShape"),"family"=>Ok("Family"),"line"=>Ok("Line"),"arc"=>Ok("Arc"),"unconnected"=>Ok("Unconnected"),"storey-top"=>Ok("StoreyTop"),"storey"=>Ok("Storey"),"roof"=>Ok("Roof"),"slab"=>Ok("Slab"),"ceiling"=>Ok("Ceiling"),"spacing"=>Ok("Spacing"),"lines"=>Ok("Lines"),"point"=>Ok("Point"),"wall-face"=>Ok("WallFace"),"wall-axis"=>Ok("WallAxis"),"wall-end"=>Ok("WallEnd"),"opening-centre"=>Ok("OpeningCentre"),"grid"=>Ok("Grid"),"column-centre"=>Ok("ColumnCentre"),"polygon"=>Ok("Polygon"),_=>Err(invalid("BIM variant keyword is undeclared"))}}
 fn variant(value:&F)->Result<(&str,&R)>{let[(name,value)]=statements(value)?else{return Err(invalid("BIM variant count differs"))};Ok((symbol(name)?,value))}
 fn enumeration(value:&F,names:&[&str],n:&mut N<'_>)->Result<usize>{n.step()?;let F::Enum(index)=value else{return Err(invalid("BIM scalar enum requires ordinal"))};names.get(*index as usize).map(|name|name.len()).ok_or_else(||invalid("BIM enum ordinal is undeclared"))}
-fn enum_names(kind:&str)->Option<&'static[&'static str]>{match kind{"MaterialCategory"=>Some(&["Concrete","Masonry","Wood","Metal","Glass","Insulation","Finish","Membrane","Other"]),"LayerFunction"=>Some(&["Structure","Substrate","Insulation","Finish","Membrane","Core"]),"LocationLine"=>Some(&["Center","Interior","Exterior","CoreCenter"]),"Phase"=>Some(&["Existing","New","Demolished","Temporary"]),"DoorLeaves"=>Some(&["Single","Double"]),"Swing"=>Some(&["Left","Right"]),"Turn"=>Some(&["Left","Right"]),"StringerKind"=>Some(&["None","Closed","Open","Mono"]),"RiserKind"=>Some(&["Open","Closed"]),"PropertyKind"=>Some(&["Text","Real","Integer","Boolean","Length","Area","Volume","Angle"]),"TemplateTarget"=>Some(&["Site","Building","Storey","Wall","CurtainWall","Column","Beam","Slab","Ceiling","Roof","Window","Door","Void","Stair","Ramp","Railing","Space","Zone","WallType","SlabType","CeilingType","RoofType","ColumnType","BeamType","WindowType","DoorType"]),"AnchorEnd"=>Some(&["Start","End"]),"WallSide"=>Some(&["Left","Right"]),"TagCategory"=>Some(&["Name","Type","Number","Size"]),"Terminator"=>Some(&["Tick","Arrow","Dot"]),"DimensionUnit"=>Some(&["Metre","Centimetre","Millimetre"]),"FamilyCategory"=>Some(&["Furniture","Equipment","Casework","Plumbing","Lighting","Mechanical","Electrical","Generic","Profile"]),"ParameterKind"=>Some(&["Length","Angle","Real","Integer","Boolean","Text","Material"]),"SolidAxis"=>Some(&["X","Y","Z"]),"IsoSize"=>Some(&["A0","A1","A2","A3","A4"]),"Orientation"=>Some(&["Landscape","Portrait"]),"ScheduleCategory"=>Some(&["Wall","CurtainWall","Slab","Roof","Column","Beam","Window","Door","Void","Stair","Railing","Space","Finish","Material"]),"ScheduleField"=>Some(&["Id","Name","Kind","Storey","Level","Type","Phase","Material","Host","Number","Usage","Surface","Swing","Leaves","Panes","Count","Length","Width","Height","Perimeter","GrossSideArea","OpeningArea","NetSideArea","GrossArea","NetArea","SurfaceArea","GrossVolume","NetVolume","Mass","Risers","Thickness","LayerArea","LayerVolume","LayerMass","FinishArea"]),"ScheduleOp"=>Some(&["Equals","NotEquals","Contains","Greater","GreaterOrEqual","Less","LessOrEqual","Empty","NotEmpty"]),"EndJoin"=>Some(&["Miter","Butt","None"]),"ViewKind"=>Some(&["Plan","CeilingPlan","Section","Elevation","Orthographic","Perspective"]),"DetailLevel"=>Some(&["Coarse","Medium","Fine"]),"ViewCategory"=>Some(&["Walls","CurtainWalls","Columns","Beams","Slabs","Roofs","Openings","Stairs","Railings","Spaces","Grids"]),"HostSide"=>Some(&["Left","Right"]),"AreaMeasure"=>Some(&["Gross","Net"]),_=>None}}
+fn enum_names(kind:&str)->Option<&'static[&'static str]>{match kind{"MepSystem"=>Some(&["Supply","Return","Exhaust","DomesticWater","Waste","Gas","Power","Data","Lighting"]),"ElementClass"=>Some(&["Wall","CurtainWall","Window","Door","Column","Beam","Slab","Ceiling","Roof","Stair","Ramp","Railing","WallSweep","Component","Mep"]),"RuleKind"=>Some(&["MinClearHeight","MaxRiser","MinTread","MinStairWidth","MinDoorWidth","MaxRampSlope","MinCorridorWidth","MaxCompartmentArea"]),"RuleSeverity"=>Some(&["Error","Warning","Note"]),"IssueStatus"=>Some(&["Open","InProgress","Resolved","Closed"]),"IssuePriority"=>Some(&["Low","Normal","High","Critical"]),"MaterialCategory"=>Some(&["Concrete","Masonry","Wood","Metal","Glass","Insulation","Finish","Membrane","Other"]),"LayerFunction"=>Some(&["Structure","Substrate","Insulation","Finish","Membrane","Core"]),"LocationLine"=>Some(&["Center","Interior","Exterior","CoreCenter"]),"Phase"=>Some(&["Existing","New","Demolished","Temporary"]),"DoorLeaves"=>Some(&["Single","Double"]),"Swing"=>Some(&["Left","Right"]),"Turn"=>Some(&["Left","Right"]),"StringerKind"=>Some(&["None","Closed","Open","Mono"]),"RiserKind"=>Some(&["Open","Closed"]),"PropertyKind"=>Some(&["Text","Real","Integer","Boolean","Length","Area","Volume","Angle"]),"TemplateTarget"=>Some(&["Site","Building","Storey","Wall","CurtainWall","Column","Beam","Slab","Ceiling","Roof","Window","Door","Void","Stair","Ramp","Railing","Space","Zone","WallType","SlabType","CeilingType","RoofType","ColumnType","BeamType","WindowType","DoorType"]),"AnchorEnd"=>Some(&["Start","End"]),"WallSide"=>Some(&["Left","Right"]),"TagCategory"=>Some(&["Name","Type","Number","Size"]),"Terminator"=>Some(&["Tick","Arrow","Dot"]),"DimensionUnit"=>Some(&["Metre","Centimetre","Millimetre"]),"FamilyCategory"=>Some(&["Furniture","Equipment","Casework","Plumbing","Lighting","Mechanical","Electrical","Generic","Profile"]),"ParameterKind"=>Some(&["Length","Angle","Real","Integer","Boolean","Text","Material"]),"SolidAxis"=>Some(&["X","Y","Z"]),"IsoSize"=>Some(&["A0","A1","A2","A3","A4"]),"Orientation"=>Some(&["Landscape","Portrait"]),"ScheduleCategory"=>Some(&["Wall","CurtainWall","Slab","Roof","Column","Beam","Window","Door","Void","Stair","Railing","Space","Finish","Material"]),"ScheduleField"=>Some(&["Id","Name","Kind","Storey","Level","Type","Phase","Material","Host","Number","Usage","Surface","Swing","Leaves","Panes","Count","Length","Width","Height","Perimeter","GrossSideArea","OpeningArea","NetSideArea","GrossArea","NetArea","SurfaceArea","GrossVolume","NetVolume","Mass","Risers","Thickness","LayerArea","LayerVolume","LayerMass","FinishArea","UValue","GValue"]),"ScheduleOp"=>Some(&["Equals","NotEquals","Contains","Greater","GreaterOrEqual","Less","LessOrEqual","Empty","NotEmpty"]),"EndJoin"=>Some(&["Miter","Butt","None"]),"ViewKind"=>Some(&["Plan","CeilingPlan","Section","Elevation","Orthographic","Perspective"]),"DetailLevel"=>Some(&["Coarse","Medium","Fine"]),"ViewCategory"=>Some(&["Walls","CurtainWalls","Columns","Beams","Slabs","Roofs","Openings","Stairs","Railings","Spaces","Grids"]),"HostSide"=>Some(&["Left","Right"]),"AreaMeasure"=>Some(&["Gross","Net"]),_=>None}}
 fn plan(kind:&str)->Result<&'static[&'static str]>{match kind{
+ "StructuralSupport"=>Ok(&["text","text","structural-location","point3","restraints"]),
+ "LoadCase"=>Ok(&["text","text","f64"]),
+ "StructuralLoad"=>Ok(&["text","text","text","structural-location","point3","point3"]),
+ "OptionGroup"|"ElementMembership"=>Ok(&["text"]),
+ "DesignOption"=>Ok(&["text","text","bool"]),
+ "Workset"=>Ok(&["text","bool"]),
+ "SpaceConditions"=>Ok(&["?text","?f64","?f64","?f64","?f64","?f64","?f64","?text"]),
+ "ClashSet"=>Ok(&["text","@clash-a","@clash-b","f64","f64"]),
+ "Rule"=>Ok(&["text","RuleKind","f64","RuleSeverity","@rule-scope"]),
+ "Issue"=>Ok(&["text","text","IssueStatus","IssuePriority","text","text","text","@issue-label","@issue-element","?clash-ref","@viewpoint"]),
+ "IssueComment"=>Ok(&["text","text","text","text"]),
+ "Component"=>Ok(&["text","text","point","f64","f64","bool","?text","?MepSystem","text"]),
+ "ComponentOverride"=>Ok(&["text","text","text"]),
+ "MepElement"=>Ok(&["text","MepSystem","mep-shape","@mep-path","text"]),
  "Material"=>Ok(&["text","MaterialCategory","rgb","f64","f64","f64"]),
  "WallType"=>Ok(&["text","@wall-layer"]),
  "SlabType"=>Ok(&["text","@slab-layer"]),
@@ -118,9 +170,9 @@ fn plan(kind:&str)->Result<&'static[&'static str]>{match kind{
  "CeilingType"=>Ok(&["text","@ceiling-layer"]),
  "ColumnType"=>Ok(&["text","@profile","text"]),
  "BeamType"=>Ok(&["text","@profile","text"]),
- "WindowType"=>Ok(&["text","f64","f64","f64","f64","f64","u32","text"]),
- "DoorType"=>Ok(&["text","f64","f64","f64","f64","DoorLeaves","Swing","text"]),
- "CurtainWallType"=>Ok(&["text","@grid","@grid","@profile","@profile","panel","text","text"]),
+ "WindowType"=>Ok(&["text","f64","f64","f64","f64","f64","u32","text","?f64","?f64","?f64"]),
+ "DoorType"=>Ok(&["text","f64","f64","f64","f64","DoorLeaves","Swing","text","?f64"]),
+ "CurtainWallType"=>Ok(&["text","@grid","@grid","@profile","@profile","panel","text","text","?f64","?f64","?f64"]),
  "Site"=>Ok(&["text","f64","f64","f64","f64","@site-boundary"]),
  "Building"=>Ok(&["text","text","point","f64","f64"]),
  "Storey"=>Ok(&["text","text","i32","f64","?f64"]),
@@ -164,10 +216,14 @@ fn plan(kind:&str)->Result<&'static[&'static str]>{match kind{
  "ClassificationItem"=>Ok(&["text","text","?text"]),
  "Layer"=>Ok(&["text","f64","LayerFunction"]),
  "Point2"=>Ok(&["f64","f64"]),
+ "Point3"=>Ok(&["f64","f64","f64"]),
  "Vertex"=>Ok(&["point","f64"]),
  "ExprPoint"=>Ok(&["text","text"]),
  _=>Err(invalid("BIM native entity kind is undeclared"))}}
 fn variant_plan(kind:&str,name:&str)->Result<&'static[&'static str]>{match(kind,name){
+ ("structural-location","Point")|("mep-shape","Pipe")=>Ok(&["f64"]),
+ ("structural-location","Line")|("mep-shape","Duct"|"Tray")=>Ok(&["f64","f64"]),
+ ("structural-location","Area")=>Ok(&[]),
  ("roof","Flat")=>Ok(&[]),
  ("roof","Shed")=>Ok(&["f64","f64"]),
  ("roof","Gable")=>Ok(&["f64","f64"]),
@@ -227,25 +283,36 @@ fn variant_plan(kind:&str,name:&str)->Result<&'static[&'static str]>{match(kind,
  _=>Err(invalid("BIM native variant is undeclared"))}}
 fn floats(value:&R,ids:&[u16],n:&mut N<'_>)->Result<usize>{let mut bytes=0;for id in ids{bytes=add(bytes,cost(field(value,*id)?,"f64",n)?)?;}Ok(bytes)}
 fn costs(value:&R,roles:&[&str],n:&mut N<'_>)->Result<usize>{shape(value,u16::try_from(roles.len()).map_err(|e|invalid(e.to_string()))?)?;let mut bytes=0;for(id,kind)in roles.iter().enumerate(){bytes=add(bytes,cost(field(value,id as u16)?,kind,n)?)?;}Ok(bytes)}
-fn cost(value:&F,kind:&str,n:&mut N<'_>)->Result<usize>{n.step()?;if let Some(kind)=kind.strip_prefix('?'){return if matches!(value,F::Absent)||matches!(value,F::Block(inner)if matches!(inner.as_ref(),F::Absent)){Ok(0)}else{cost(value,kind,n)}}if kind.starts_with('@'){return Ok(0)}if let Some(names)=enum_names(kind){return enumeration(value,names,n)}match kind{
+fn cost(value:&F,kind:&str,n:&mut N<'_>)->Result<usize>{n.step()?;if let Some(kind)=kind.strip_prefix('?'){return if absent(value){Ok(0)}else{cost(value,kind,n)}}if kind.starts_with('@'){return Ok(0)}if let Some(names)=enum_names(kind){return enumeration(value,names,n)}match kind{
  "text"=>match value{F::Text(value)=>Ok(value.len()),_=>Err(invalid("BIM scalar requires text"))},
  "f64"=>match value{F::Float(value)=>Ok(if value.is_finite(){16+class(*value).len()}else{8+class(*value).len()}),_=>Err(invalid("BIM scalar requires binary64"))},
  "i32"=>match value{F::Int(value)if i32::try_from(*value).is_ok()=>Ok(8),_=>Err(invalid("BIM scalar requires signed32"))},
  "u32"=>match value{F::UInt(value)if u32::try_from(*value).is_ok()=>Ok(8),_=>Err(invalid("BIM scalar requires unsigned32"))},
  "bool"=>match value{F::Bool(_)=>Ok(8),_=>Err(invalid("BIM scalar requires Boolean"))},
  "point"|"slope"=>floats(block(value,2)?,&[0,1],n),"rgb"=>floats(block(value,3)?,&[0,1,2],n),
+ "point3"=>floats(record(value,3)?,&[0,1,2],n),
+ "point3-block"=>floats(block(value,3)?,&[0,1,2],n),
+ "restraints"=>costs(record(value,6)?,&["bool";6],n),
+ "clash-ref"=>costs(block(value,3)?,&["text";3],n),
+ "section"=>costs(block(value,2)?,&["point3-block";2],n),
  "expr3"=>costs(block(value,3)?,&["text","text","text"],n),
  "stringer"=>costs(block(value,3)?,&["StringerKind","f64","f64"],n),
  "plane"|"crop"=>costs(block(value,2)?,&["point","point"],n),
  "camera"=>costs(block(value,5)?,&["point","f64","f64","f64","f64"],n),
  "host"=>costs(block(value,4)?,&["text","HostSide","u32","f64"],n),
  "property"=>property(value,n),
- "roof"|"opening"|"flight"|"infill"|"panel"|"paper"|"key"|"space"|"solid"=>{let(name,value)=variant(value)?;add(name.len(),costs(value,variant_plan(kind,name)?,n)?)},
+ "roof"|"opening"|"flight"|"infill"|"panel"|"paper"|"key"|"space"|"solid"|"structural-location"|"mep-shape"=>{let(name,value)=variant(value)?;add(name.len(),costs(value,variant_plan(kind,name)?,n)?)},
  _=>Err(invalid("BIM scalar role is undeclared"))}}
 struct Census{limits:SqliteDatabaseLimits,rows:usize,bytes:usize}
 impl Census{
  fn row(&mut self,table:&str,bytes:usize,n:&mut N<'_>)->Result<()>{n.step()?;if !WIDTHS.iter().any(|(name,_)|*name==table){return Err(invalid("BIM native semantic table is undeclared"))}let rows=add(self.rows,1)?;let bytes=add(self.bytes,bytes)?;if rows>self.limits.max_rows{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"BIM semantic row limit exceeded"))}if bytes>self.limits.max_value_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"BIM semantic value limit exceeded"))}self.rows=rows;self.bytes=bytes;Ok(())}
  fn list(&mut self,value:&F,table:&str,kind:&str,n:&mut N<'_>)->Result<()>{for value in items(value)?{if let Ok(roles)=plan(kind){let value=record(value,roles.len()as u16)?;self.entity(value,table,kind,24,n)?;}else{self.row(table,add(24,cost(value,kind,n)?)?,n)?;}}Ok(())}
+ fn selector(&mut self,value:&F,tables:[&str;5],n:&mut N<'_>)->Result<()>{
+  let selector=block(value,4)?;
+  self.row(tables[0],16,n)?;
+  for (index,kind) in ["ElementClass","text","Phase","text"].iter().enumerate(){self.list(field(selector,index as u16)?,tables[index+1],kind,n)?;}
+  Ok(())
+ }
  fn owned_variant(&mut self,value:&F,table:&str,kind:&str,n:&mut N<'_>)->Result<()>{let(name,value)=variant(value)?;self.named_variant(name,value,table,kind,16,n)}
  fn named_variant(&mut self,name:&str,value:&R,table:&str,kind:&str,base:usize,n:&mut N<'_>)->Result<()>{self.row(table,add(add(base,name.len())?,costs(value,variant_plan(kind,name)?,n)?)?,n)?;match(kind,name){
  ("profile","Custom")=>self.list(field(value,0)?,"bim_profile_outline","Vertex",n)?,
@@ -253,6 +320,23 @@ impl Census{
  ("parametric","Polygon")=>self.list(field(value,0)?,"bim_parametric_polygon_point","ExprPoint",n)?,
  _=>{}}Ok(())}
  fn entity(&mut self,value:&R,table:&str,kind:&str,base:usize,n:&mut N<'_>)->Result<()>{let roles=plan(kind)?;self.row(table,add(base,costs(value,roles,n)?)?,n)?;for(id,kind)in roles.iter().enumerate(){let value=field(value,id as u16)?;match *kind{
+ "@clash-a"=>self.selector(value,["bim_clash_a","bim_clash_a_class","bim_clash_a_storey","bim_clash_a_phase","bim_clash_a_element"],n)?,
+ "@clash-b"=>self.selector(value,["bim_clash_b","bim_clash_b_class","bim_clash_b_storey","bim_clash_b_phase","bim_clash_b_element"],n)?,
+ "@rule-scope"=>{
+  let scope=block(value,4)?;
+  self.row("bim_rule_scope",add(16,cost(field(scope,3)?,"text",n)?)?,n)?;
+  self.list(field(scope,0)?,"bim_rule_scope_storey","text",n)?;
+  self.list(field(scope,1)?,"bim_rule_scope_phase","Phase",n)?;
+  self.list(field(scope,2)?,"bim_rule_scope_element","text",n)?;
+ },
+ "@issue-label"=>self.list(value,"bim_issue_label","text",n)?,
+ "@issue-element"=>self.list(value,"bim_issue_element","text",n)?,
+ "@viewpoint" if !absent(value)=>{
+  let viewpoint=block(value,3)?;
+  self.row("bim_issue_viewpoint",add(16,costs(viewpoint,&["camera","?section","@isolate"],n)?)?,n)?;
+  self.list(field(viewpoint,2)?,"bim_issue_isolate","text",n)?;
+ },
+ "@mep-path"=>self.list(value,"bim_mep_path","Point3",n)?,
  "@wall-layer"=>self.list(value,"bim_wall_layer","Layer",n)?,
  "@slab-layer"=>self.list(value,"bim_slab_layer","Layer",n)?,
  "@ceiling-layer"=>self.list(value,"bim_ceiling_layer","Layer",n)?,
@@ -292,54 +376,71 @@ impl Census{
  _=>{}}}Ok(())}
 }
 fn property(value:&F,n:&mut N<'_>)->Result<usize>{n.step()?;let F::Value(DslValue::Object(values))=value else{return Err(invalid("BIM property requires intrinsic tagged object"))};let[(kind,value)]=values.as_slice()else{return Err(invalid("BIM property tag count differs"))};let DslValue::Object(values)=value else{return Err(invalid("BIM property requires payload object"))};let[(name,value)]=values.as_slice()else{return Err(invalid("BIM property payload count differs"))};if name!="value"{return Err(invalid("BIM property payload role differs"))}let bytes=match(kind.as_str(),value){("Text",DslValue::String(value))=>value.len(),("Integer",value)if value.as_i64().is_some_and(|v|i32::try_from(v).is_ok())=>8,("Boolean",DslValue::Bool(_))=>8,("Real"|"Length"|"Area"|"Volume"|"Angle",value)=>{let value=value.as_f64().ok_or_else(||invalid("BIM property requires binary64"))?;if value.is_finite(){16+class(value).len()}else{8+class(value).len()}},_=>return Err(invalid("BIM property typed payload differs"))};add(kind.len(),bytes)}
-pub(super)fn admit_record(source:&R,limits:SqliteDatabaseLimits,n:&mut N<'_>)->Result<()>{extent(limits)?;n.scoped_stage(|n|{n.begin_stage(0)?;shape(source,49)?;let mut c=Census{limits,rows:0,bytes:0};c.row("bim_document",add(8,cost(field(source,0)?,"text",n)?)?,n)?;let project=block(field(source,1)?,5)?;c.row("bim_project",add(16,costs(project,&["text","text","text","text","@phase-names"],n)?)?,n)?;c.list(field(project,4)?,"bim_phase_name","text",n)?;
+/// 🔍️ Checks borrowed native rows and values before reconstructing the typed snapshot.
+pub fn admit_record(source:&R,limits:SqliteDatabaseLimits,n:&mut N<'_>)->Result<()>{extent(limits)?;n.scoped_stage(|n|{n.begin_stage(0)?;shape(source,65)?;let mut c=Census{limits,rows:0,bytes:0};c.row("bim_document",add(8,cost(field(source,0)?,"text",n)?)?,n)?;let project=block(field(source,4)?,5)?;c.row("bim_project",add(16,costs(project,&["text","text","text","text","@phase-names"],n)?)?,n)?;c.list(field(project,4)?,"bim_phase_name","text",n)?;
  for(id,table,kind)in[
- (2,"bim_material","Material"),
- (3,"bim_wall_type","WallType"),
- (4,"bim_slab_type","SlabType"),
- (5,"bim_roof_type","RoofType"),
- (6,"bim_column_type","ColumnType"),
- (7,"bim_beam_type","BeamType"),
- (8,"bim_window_type","WindowType"),
- (9,"bim_door_type","DoorType"),
- (10,"bim_curtain_wall_type","CurtainWallType"),
- (11,"bim_site","Site"),
- (12,"bim_building","Building"),
- (13,"bim_storey","Storey"),
- (14,"bim_grid","GridLine"),
- (15,"bim_wall","Wall"),
- (16,"bim_curtain_wall","CurtainWall"),
- (17,"bim_curtain_panel_override","CurtainPanelOverride"),
- (18,"bim_column","Column"),
- (19,"bim_beam","Beam"),
- (20,"bim_slab","Slab"),
- (21,"bim_roof","Roof"),
- (22,"bim_opening","Opening"),
- (23,"bim_stair","Stair"),
- (24,"bim_railing","Railing"),
- (25,"bim_ramp","Ramp"),
- (26,"bim_ceiling_type","CeilingType"),
- (27,"bim_ceiling","Ceiling"),
- (28,"bim_space","Space"),
- (29,"bim_zone","Zone"),
- (30,"bim_area_scheme","AreaScheme"),
- (31,"bim_view","View"),
- (32,"bim_sheet","Sheet"),
- (33,"bim_viewport","Viewport"),
- (34,"bim_sheet_revision","SheetRevision"),
- (35,"bim_dimension","Dimension"),
- (36,"bim_tag","Tag"),
- (37,"bim_text_note","TextNote"),
- (38,"bim_leader","Leader"),
- (39,"bim_annotation_style","AnnotationStyle"),
- (40,"bim_wall_sweep","WallSweep"),
- (41,"bim_schedule","Schedule"),
- (42,"bim_family","Family"),
- (43,"bim_family_parameter","FamilyParameter"),
- (44,"bim_family_solid","FamilySolid"),
- (45,"bim_property_template","PropertyTemplate"),
- (46,"bim_classification_system","ClassificationSystem"),
+ (1,"bim_support","StructuralSupport"),
+ (2,"bim_load_case","LoadCase"),
+ (3,"bim_structural_load","StructuralLoad"),
+ (5,"bim_option_group","OptionGroup"),
+ (6,"bim_design_option","DesignOption"),
+ (7,"bim_workset","Workset"),
+ (8,"bim_element_option","ElementMembership"),
+ (9,"bim_element_workset","ElementMembership"),
+ (10,"bim_material","Material"),
+ (11,"bim_wall_type","WallType"),
+ (12,"bim_slab_type","SlabType"),
+ (13,"bim_roof_type","RoofType"),
+ (14,"bim_column_type","ColumnType"),
+ (15,"bim_beam_type","BeamType"),
+ (16,"bim_window_type","WindowType"),
+ (17,"bim_door_type","DoorType"),
+ (18,"bim_curtain_wall_type","CurtainWallType"),
+ (19,"bim_site","Site"),
+ (20,"bim_building","Building"),
+ (21,"bim_storey","Storey"),
+ (22,"bim_grid","GridLine"),
+ (23,"bim_wall","Wall"),
+ (24,"bim_curtain_wall","CurtainWall"),
+ (25,"bim_curtain_panel_override","CurtainPanelOverride"),
+ (26,"bim_column","Column"),
+ (27,"bim_beam","Beam"),
+ (28,"bim_slab","Slab"),
+ (29,"bim_roof","Roof"),
+ (30,"bim_opening","Opening"),
+ (31,"bim_stair","Stair"),
+ (32,"bim_railing","Railing"),
+ (33,"bim_ramp","Ramp"),
+ (34,"bim_ceiling_type","CeilingType"),
+ (35,"bim_ceiling","Ceiling"),
+ (36,"bim_space","Space"),
+ (37,"bim_zone","Zone"),
+ (38,"bim_area_scheme","AreaScheme"),
+ (39,"bim_space_conditions","SpaceConditions"),
+ (40,"bim_view","View"),
+ (41,"bim_sheet","Sheet"),
+ (42,"bim_viewport","Viewport"),
+ (43,"bim_sheet_revision","SheetRevision"),
+ (44,"bim_clash_set","ClashSet"),
+ (45,"bim_rule","Rule"),
+ (46,"bim_issue","Issue"),
+ (47,"bim_issue_comment","IssueComment"),
+ (48,"bim_dimension","Dimension"),
+ (49,"bim_tag","Tag"),
+ (50,"bim_text_note","TextNote"),
+ (51,"bim_leader","Leader"),
+ (52,"bim_annotation_style","AnnotationStyle"),
+ (53,"bim_wall_sweep","WallSweep"),
+ (54,"bim_schedule","Schedule"),
+ (55,"bim_family","Family"),
+ (56,"bim_family_parameter","FamilyParameter"),
+ (57,"bim_family_solid","FamilySolid"),
+ (58,"bim_component","Component"),
+ (59,"bim_component_override","ComponentOverride"),
+ (60,"bim_mep_element","MepElement"),
+ (61,"bim_property_template","PropertyTemplate"),
+ (62,"bim_classification_system","ClassificationSystem"),
  ]{for(key,value)in map(field(source,id)?,n)?{let roles=plan(kind)?;let value=record(value,roles.len()as u16)?;c.entity(value,table,kind,add(24,key.len())?,n)?;}}
- for(key,sets)in map(field(source,47)?,n)?{c.row("bim_property_element",add(24,key.len())?,n)?;for(name,properties)in map(sets,n)?{c.row("bim_property_set",add(24,name.len())?,n)?;for(name,value)in map(properties,n)?{c.row("bim_property_value",add(add(24,name.len())?,property(value,n)?)?,n)?;}}}
- for(key,values)in map(field(source,48)?,n)?{c.row("bim_classification_element",add(24,key.len())?,n)?;for(name,value)in map(values,n)?{c.row("bim_classification_assignment",add(add(24,name.len())?,cost(value,"text",n)?)?,n)?;}}
+ for(key,sets)in map(field(source,63)?,n)?{c.row("bim_property_element",add(24,key.len())?,n)?;for(name,properties)in map(sets,n)?{c.row("bim_property_set",add(24,name.len())?,n)?;for(name,value)in map(properties,n)?{c.row("bim_property_value",add(add(24,name.len())?,property(value,n)?)?,n)?;}}}
+ for(key,values)in map(field(source,64)?,n)?{c.row("bim_classification_element",add(24,key.len())?,n)?;for(name,value)in map(values,n)?{c.row("bim_classification_assignment",add(add(24,name.len())?,cost(value,"text",n)?)?,n)?;}}
  n.checkpoint()})}

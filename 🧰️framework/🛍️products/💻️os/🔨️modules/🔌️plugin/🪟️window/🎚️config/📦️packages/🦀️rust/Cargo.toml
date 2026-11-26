@@ -64,6 +64,10 @@ semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️jo
 blake3 = { version = "1.8", features = ["pure"] }
 
 [[test]]
+name = "commit_policy"
+path = "../../../../../../../../🔨️modules/🧵️job/🕰️clock-identity-and-budget/🧪️tests/🔁️commit-policy/🦀️.rs"
+
+[[test]]
 name = "window_genesis"
 path = "../../🧪️tests/🧬️genesis/🦀️.rs"
 

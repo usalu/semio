@@ -1,4 +1,4 @@
-import { readFileSync, statfsSync, mkdirSync } from "node:fs";
+import { copyFileSync, readFileSync, statfsSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 
 const root = process.cwd();
@@ -20,42 +20,72 @@ mkdirSync(artifactRoot, { recursive: true });
 const env = { ...process.env, SEMIO_BUILD_MODE: "prototype", RUSTC: compiler.stdout.toString().trim(), RUSTC_WRAPPER: "", RUSTFLAGS: "-Zthreads=1", CARGO_HOME: cacheHome, CARGO_TARGET_DIR: artifactRoot, CARGO_BUILD_BUILD_DIR: artifactRoot, CARGO_INCREMENTAL: "0", CARGO_PROFILE_DEV_DEBUG: "0", CARGO_PROFILE_PROTOTYPE_DEBUG: "0" };
 delete env.CARGO_BUILD_TARGET_DIR;
 delete env.RUSTC_WORKSPACE_WRAPPER;
+const bitmapWorkspace = "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap";
+if (process.argv.includes("--bitmap-lock-refresh")) {
+  const workspaceManifest = resolve(bitmapWorkspace, "Cargo.toml");
+  copyFileSync(resolve(bitmapWorkspace, "Cargo.lock"), resolve(import.meta.dir, "🗑️generated", "bitmap-previous.lock"));
+  const inspection = Bun.spawnSync([rustup.command, "run", toolchain, "cargo", "metadata", "--offline", "--format-version", "1", "--manifest-path", workspaceManifest], { cwd: root, stdout: "ignore", stderr: "inherit", env });
+  process.exit(inspection.exitCode);
+}
 const catalogTest = process.argv.includes("--catalog-test");
 const folderTest = process.argv.includes("--folder-test");
+const folderReopenTest = process.argv.includes("--folder-reopen-test");
+const exportCancellationTest = process.argv.includes("--export-cancellation-test");
+const artifactReplyTest = process.argv.includes("--artifact-reply-test");
+const producerRefusalTest = process.argv.includes("--producer-refusal-test") || artifactReplyTest;
 const contextTest = process.argv.includes("--actor-context-test");
 const responseReserveTest = process.argv.includes("--response-reserve-test");
 const dispatchReceiptTest = process.argv.includes("--dispatch-receipt-test");
+const pollFailureRetirementTest = process.argv.includes("--poll-failure-retirement-test");
 const mediaWireTest = process.argv.includes("--media-wire-test");
 const pagedPngTest = process.argv.includes("--paged-png-test");
 const pollRefusalTest = process.argv.includes("--poll-refusal-test");
 const interpreterScalarTest = process.argv.includes("--interpreter-scalar-test");
 const coreGlobalsTest = process.argv.includes("--core-globals-test");
 const sourceClockReplyTest = process.argv.includes("--source-clock-reply-test");
+const actorFailureSelectorTest = process.argv.includes("--actor-failure-selector-test");
+const actorFailureCoreSelectorTest = process.argv.includes("--actor-failure-core-selector-test");
 const actorInputTest = process.argv.includes("--actor-input-test");
+const inferenceSliceTest = process.argv.includes("--inference-slice-test");
+const inferenceGroupTest = process.argv.includes("--inference-group-test");
+const bitmapWorkerTest = process.argv.includes("--bitmap-worker-test");
 const hostEscrowTest = process.argv.includes("--host-escrow-test");
+const postTurnTest = process.argv.includes("--post-turn-test");
 const hostWakeTest = process.argv.includes("--host-wake-test");
 const guardReclaimTest = process.argv.includes("--guard-reclaim-test");
 const packageName = process.argv.includes("--describe") ? "semio-plugin-describe" : "semio-os-mcp";
-const testing = catalogTest || folderTest || contextTest || responseReserveTest || dispatchReceiptTest || mediaWireTest || pagedPngTest || pollRefusalTest || interpreterScalarTest || coreGlobalsTest || sourceClockReplyTest || actorInputTest || hostEscrowTest || hostWakeTest || guardReclaimTest;
+const testing = catalogTest || folderTest || folderReopenTest || exportCancellationTest || producerRefusalTest || contextTest || responseReserveTest || dispatchReceiptTest || pollFailureRetirementTest || mediaWireTest || pagedPngTest || pollRefusalTest || interpreterScalarTest || coreGlobalsTest || sourceClockReplyTest || actorFailureSelectorTest || actorFailureCoreSelectorTest || actorInputTest || inferenceSliceTest || inferenceGroupTest || bitmapWorkerTest || hostEscrowTest || hostWakeTest || postTurnTest || guardReclaimTest;
 const args = [testing ? "test" : "build", "--locked", "--profile", profile, "-j", testing || process.argv.includes("--serial") ? "1" : "2", "-p",
   ...(catalogTest ? ["semio-os-mcp-catalog", "--lib", "model_manifest_binds_the_exact_mode_crate_and_plugin"] :
     folderTest ? ["semio-os-store-sync-native", "--lib", "folder_durability_tests"] :
+    folderReopenTest ? ["semio-os-mcp", "--test", "folder_reopen"] :
+    exportCancellationTest ? ["semio-os-mcp", "--test", "export_cancellation"] :
+    artifactReplyTest ? ["semio-os-mcp-dispatch", "--lib", "every_fault_code_maps_to_the_right_gateway_error_code"] :
+    producerRefusalTest ? ["semio-plugin-host-routers", "-p", "semio-os-mcp-plugin-runtime", "--lib", "producer_refusal"] :
     contextTest ? ["semio-plugin-guest-contract", "--lib", "original_core_wire_publisher_is_ready_in_the_first_paid_bootstrap_borrow"] :
     responseReserveTest ? ["semio-plugin-guest-contract", "--lib", "first_response_quote_refuses_an_insufficient_scope_before_source_or_producer_effects"] :
     dispatchReceiptTest ? ["semio-plugin-guest-contract", "--lib", "fixed_receipt_prices_this_dispatch_against_its_resident_baseline"] :
+    pollFailureRetirementTest ? ["semio-plugin-guest-contract", "--lib", "close_output_retires_only_accepted_poll_causes_before_reentry"] :
     mediaWireTest ? ["semio-plugin-host-wit", "--lib", "original_media_control_preserves_all_wire_fields"] :
     pagedPngTest ? ["semio-framework-pixels-tests", "--lib", "png_decode_moves_paged_original_across_chunk_seams_under_exact_grants"] :
     pollRefusalTest ? ["semio-plugin-host-poll", "--lib"] :
     interpreterScalarTest ? ["semio-plugin-interpreter-runtime", "--test", "original-scalar-call"] :
     coreGlobalsTest ? ["semio-plugin-interpreter", "--lib", "inline_globals_require_the_actual_funded_backing_return"] :
+    actorFailureSelectorTest ? ["semio-plugin-host-actor-failure", "--lib", "actor_failure_selector_"] :
+    actorFailureCoreSelectorTest ? ["semio-plugin-interpreter", "--lib", "actor_failure_selector_"] :
     sourceClockReplyTest ? ["semio-plugin-interpreter-runtime", "--lib", "original_source_clock_same_callback_matches_paid_staging"] :
     actorInputTest ? ["semio-plugin-actor-input", "--lib"] :
+    inferenceSliceTest ? ["semio-plugin-reactor-jobs", "--lib", "original_inference_job_batches_paid_slices_and_preserves_exact_wire"] :
+    inferenceGroupTest ? ["semio-plugin-reactor-jobs", "--lib", "infer::tests::"] :
+    bitmapWorkerTest ? ["semio-s-artifact-wfc-bitmap-tests-shrinks-output-pin", "--features", "testkit", "--lib", "bitmap_worker_cancellation_accounts_for_owned_solver_storage"] :
     hostEscrowTest ? ["semio-plugin-host-wake", "--lib", "escrow"] :
+    postTurnTest ? ["semio-plugin-host-post-turn-relay", "--lib", "capture_tests"] :
     hostWakeTest ? ["semio-plugin-host-wake", ...(process.argv.includes("--unit-only") ? ["--lib"] : [])] :
     guardReclaimTest ? ["semio-framework-job-return", "--lib", "full_escrow_reclaims_one_acknowledged_row_before_minting_its_guard"] :
     [packageName, "--bin", packageName])];
 if (process.argv.includes("--with-descriptor")) args.push("-p", "semio-plugin-describe", "--bin", "semio-plugin-describe");
-if (pagedPngTest || actorInputTest) args.push("--manifest-path", "🧰️framework/Cargo.toml");
+if (pagedPngTest || actorInputTest || actorFailureSelectorTest) args.push("--manifest-path", "🧰️framework/Cargo.toml");
+if (bitmapWorkerTest) args.push("--manifest-path", resolve(bitmapWorkspace, "Cargo.toml"));
 if (!process.argv.includes("--online")) args.push("--offline");
 const optimizeNativeHotPath = process.argv.includes("--optimize-native-hot-path");
 if (optimizeNativeHotPath || process.argv.includes("--optimize-interpreter")) {

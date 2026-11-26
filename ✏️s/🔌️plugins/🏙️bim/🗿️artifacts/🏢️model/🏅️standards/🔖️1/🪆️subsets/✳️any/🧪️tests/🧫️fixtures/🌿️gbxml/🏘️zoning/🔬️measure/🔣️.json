@@ -1,0 +1,327 @@
+{
+  "counts": {
+    "campuses": 1,
+    "buildings": 1,
+    "storeys": 1,
+    "spaces": 2,
+    "zones": 2,
+    "surfaces": 11,
+    "openings": 3,
+    "constructions": 5,
+    "layers": 3,
+    "materials": 3,
+    "window_types": 1
+  },
+  "spaces": {
+    "sp-a": {
+      "name": "0.01 West room",
+      "storey": "Ground",
+      "zone": "Zone A",
+      "condition": "HeatedAndCooled",
+      "area": 9.99,
+      "volume": 29.97,
+      "heating": 20.0,
+      "cooling": 26.0,
+      "people": 0.999,
+      "lighting": 8.0,
+      "equipment": 12.0,
+      "outdoor_air": 1.5
+    },
+    "sp-b": {
+      "name": "0.02 East room",
+      "storey": "Ground",
+      "zone": "Zone B",
+      "condition": "HeatedAndCooled",
+      "area": 9.99,
+      "volume": 29.97,
+      "heating": 22.0,
+      "cooling": 27.0,
+      "people": 0.999,
+      "lighting": 8.0,
+      "equipment": 12.0,
+      "outdoor_air": 1.5
+    }
+  },
+  "surfaces": {
+    "sp-a/w1": {
+      "cad": [
+        "sp-a/w1"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-a"
+      ],
+      "azimuth": 180.0,
+      "tilt": 90.0,
+      "width": 3.7,
+      "height": 3.0,
+      "area": 11.100000000000001,
+      "openings": {
+        "o-a": {
+          "kind": "FixedWindow",
+          "area": 1.4400000000000004,
+          "width": 1.2,
+          "height": 1.2,
+          "offset": [
+            1.25,
+            0.9
+          ],
+          "window_type": "Window"
+        }
+      },
+      "construction": "Insulated brick U=0.342465753",
+      "u_value": 0.342465753
+    },
+    "sp-a/w2": {
+      "cad": [
+        "sp-a/w2",
+        "sp-b/w4"
+      ],
+      "kind": "InteriorWall",
+      "exposed": false,
+      "spaces": [
+        "sp-a",
+        "sp-b"
+      ],
+      "azimuth": 90.0,
+      "tilt": 90.0,
+      "width": 2.7,
+      "height": 3.0,
+      "area": 8.100000000000001,
+      "openings": {
+        "o-part": {
+          "kind": "NonSlidingDoor",
+          "area": 2.1,
+          "width": 1.0,
+          "height": 2.1,
+          "offset": [
+            0.85,
+            0.0
+          ],
+          "construction": "Door U=1.8"
+        }
+      },
+      "construction": "Insulated brick U=0.332225914",
+      "u_value": 0.332225914
+    },
+    "sp-a/w3": {
+      "cad": [
+        "sp-a/w3"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-a"
+      ],
+      "azimuth": 0.0,
+      "tilt": 90.0,
+      "width": 3.7,
+      "height": 3.0,
+      "area": 11.100000000000001,
+      "openings": {},
+      "construction": "Insulated brick U=0.342465753",
+      "u_value": 0.342465753
+    },
+    "sp-a/w4": {
+      "cad": [
+        "sp-a/w4"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-a"
+      ],
+      "azimuth": 270.0,
+      "tilt": 90.0,
+      "width": 2.7,
+      "height": 3.0,
+      "area": 8.100000000000001,
+      "openings": {},
+      "construction": "Insulated brick U=0.342465753",
+      "u_value": 0.342465753
+    },
+    "sp-a/f1": {
+      "cad": [
+        "sp-a/f1"
+      ],
+      "kind": "SlabOnGrade",
+      "exposed": false,
+      "spaces": [
+        "sp-a"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 3.7,
+      "height": 2.7,
+      "area": 9.990000000000002,
+      "openings": {},
+      "construction": "Slab 250 U=2.07253886",
+      "u_value": 2.07253886
+    },
+    "sp-a/c1": {
+      "cad": [
+        "sp-a/c1"
+      ],
+      "kind": "Roof",
+      "exposed": true,
+      "spaces": [
+        "sp-a"
+      ],
+      "azimuth": 0.0,
+      "tilt": 0.0,
+      "width": 3.7,
+      "height": 2.7,
+      "area": 9.990000000000002,
+      "openings": {},
+      "construction": "Unspecified construction"
+    },
+    "sp-b/w1": {
+      "cad": [
+        "sp-b/w1"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-b"
+      ],
+      "azimuth": 180.0,
+      "tilt": 90.0,
+      "width": 3.7,
+      "height": 3.0,
+      "area": 11.099999999999998,
+      "openings": {
+        "o-b": {
+          "kind": "FixedWindow",
+          "area": 1.4399999999999993,
+          "width": 1.2,
+          "height": 1.2,
+          "offset": [
+            1.25,
+            0.9
+          ],
+          "window_type": "Window"
+        }
+      },
+      "construction": "Insulated brick U=0.342465753",
+      "u_value": 0.342465753
+    },
+    "sp-b/w2": {
+      "cad": [
+        "sp-b/w2"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-b"
+      ],
+      "azimuth": 90.0,
+      "tilt": 90.0,
+      "width": 2.7,
+      "height": 3.0,
+      "area": 8.100000000000001,
+      "openings": {},
+      "construction": "Insulated brick U=0.342465753",
+      "u_value": 0.342465753
+    },
+    "sp-b/w3": {
+      "cad": [
+        "sp-b/w3"
+      ],
+      "kind": "ExteriorWall",
+      "exposed": true,
+      "spaces": [
+        "sp-b"
+      ],
+      "azimuth": 0.0,
+      "tilt": 90.0,
+      "width": 3.7,
+      "height": 3.0,
+      "area": 11.099999999999998,
+      "openings": {},
+      "construction": "Insulated brick U=0.342465753",
+      "u_value": 0.342465753
+    },
+    "sp-b/f1": {
+      "cad": [
+        "sp-b/f1"
+      ],
+      "kind": "SlabOnGrade",
+      "exposed": false,
+      "spaces": [
+        "sp-b"
+      ],
+      "azimuth": 0.0,
+      "tilt": 180.0,
+      "width": 3.7,
+      "height": 2.7,
+      "area": 9.989999999999998,
+      "openings": {},
+      "construction": "Slab 250 U=2.07253886",
+      "u_value": 2.07253886
+    },
+    "sp-b/c1": {
+      "cad": [
+        "sp-b/c1"
+      ],
+      "kind": "Roof",
+      "exposed": true,
+      "spaces": [
+        "sp-b"
+      ],
+      "azimuth": 0.0,
+      "tilt": 0.0,
+      "width": 3.7,
+      "height": 2.7,
+      "area": 9.989999999999998,
+      "openings": {},
+      "construction": "Unspecified construction"
+    }
+  },
+  "constructions": {
+    "Insulated brick U=0.342465753": {
+      "u_value": 0.342465753,
+      "layers": [
+        "Brick 200 mm",
+        "Insulation 100 mm"
+      ]
+    },
+    "Insulated brick U=0.332225914": {
+      "u_value": 0.332225914,
+      "layers": [
+        "Brick 200 mm",
+        "Insulation 100 mm"
+      ]
+    },
+    "Slab 250 U=2.07253886": {
+      "u_value": 2.07253886,
+      "layers": [
+        "Brick 250 mm"
+      ]
+    },
+    "Unspecified construction": {
+      "u_value": null,
+      "layers": []
+    },
+    "Door U=1.8": {
+      "u_value": 1.8,
+      "layers": []
+    }
+  },
+  "window_types": {
+    "Window": {
+      "description": "frame fraction 0.25",
+      "u_value": 1.1,
+      "g_value": 0.5
+    }
+  },
+  "totals": {
+    "by_type": {
+      "ExteriorWall": 60.60000000000001,
+      "InteriorWall": 8.100000000000001,
+      "SlabOnGrade": 19.98,
+      "Roof": 19.98
+    },
+    "opening_area": 4.9799999999999995
+  }
+}

@@ -1,6 +1,6 @@
 //! 🧲️ Run-time test fixtures: one reader that resolves a path below the manifest directory of the crate that calls it, so no test file keeps its own copy of the read.
 //!
-//! Every macro expands `env!("CARGO_MANIFEST_DIR")` at the call site, which is the crate being tested, not this crate. Add the crate as a `[dev-dependencies]` entry and `use semio_framework_test_fixtures::fixture_text;` (or `fixture_bytes`, `fixture_path`, `manifest_dir`, `repo_root`). Texts and bytes are leaked so they live as long as the test process, the lifetime the former `include_str!` and `include_bytes!` statics had.
+//! Macros use the test process's `CARGO_MANIFEST_DIR`, or its working directory when that variable is absent. Add the crate as a `[dev-dependencies]` entry and `use semio_framework_test_fixtures::fixture_text;` (or `fixture_bytes`, `fixture_path`, `manifest_dir`, `repo_root`). Texts and bytes are leaked so they live as long as the test process, the lifetime the former `include_str!` and `include_bytes!` statics had.
 //!
 //! @see <https://doc.rust-lang.org/std/macro.env.html>
 //! @see <https://doc.rust-lang.org/std/macro.include_str.html>
@@ -8,6 +8,12 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard, OnceLock, PoisonError};
+
+/// 🧭️ The executing test package directory, supplied by Cargo or its working directory.
+#[must_use]
+pub fn runtime_manifest_dir() -> String {
+    std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| std::env::current_dir().expect("test working directory").into_os_string().into_string().expect("test working directory is UTF-8"))
+}
 
 /// 🧭️ Path of `relative` below `manifest_dir`, without touching the file system.
 #[must_use]
@@ -155,7 +161,7 @@ fn refuse(path: &Path, manifest_dir: &str, relative: &Path, error: &std::io::Err
 #[macro_export]
 macro_rules! wasm_component {
     ($manifest:expr, $dist:expr) => {
-        $crate::wasm_component_in(env!("CARGO_MANIFEST_DIR"), $manifest, $dist)
+        $crate::wasm_component_in(&$crate::runtime_manifest_dir(), $manifest, $dist)
     };
 }
 
@@ -163,7 +169,7 @@ macro_rules! wasm_component {
 #[macro_export]
 macro_rules! manifest_dir {
     () => {
-        ::std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        ::std::path::PathBuf::from($crate::runtime_manifest_dir())
     };
 }
 
@@ -171,7 +177,7 @@ macro_rules! manifest_dir {
 #[macro_export]
 macro_rules! fixture_path {
     ($relative:expr) => {
-        $crate::path_in(env!("CARGO_MANIFEST_DIR"), $relative)
+        $crate::path_in(&$crate::runtime_manifest_dir(), $relative)
     };
 }
 
@@ -179,7 +185,7 @@ macro_rules! fixture_path {
 #[macro_export]
 macro_rules! fixture_text {
     ($relative:expr) => {
-        $crate::text_in(env!("CARGO_MANIFEST_DIR"), $relative)
+        $crate::text_in(&$crate::runtime_manifest_dir(), $relative)
     };
 }
 
@@ -187,7 +193,7 @@ macro_rules! fixture_text {
 #[macro_export]
 macro_rules! fixture_bytes {
     ($relative:expr) => {
-        $crate::bytes_in(env!("CARGO_MANIFEST_DIR"), $relative)
+        $crate::bytes_in(&$crate::runtime_manifest_dir(), $relative)
     };
 }
 
@@ -195,7 +201,7 @@ macro_rules! fixture_bytes {
 #[macro_export]
 macro_rules! repo_root {
     () => {
-        $crate::repo_root_in(env!("CARGO_MANIFEST_DIR"))
+        $crate::repo_root_in(&$crate::runtime_manifest_dir())
     };
 }
 
@@ -203,7 +209,7 @@ macro_rules! repo_root {
 #[macro_export]
 macro_rules! repo_text {
     ($relative:expr) => {
-        $crate::repo_text_in(env!("CARGO_MANIFEST_DIR"), $relative)
+        $crate::repo_text_in(&$crate::runtime_manifest_dir(), $relative)
     };
 }
 
@@ -211,7 +217,7 @@ macro_rules! repo_text {
 #[macro_export]
 macro_rules! repo_bytes {
     ($relative:expr) => {
-        $crate::repo_bytes_in(env!("CARGO_MANIFEST_DIR"), $relative)
+        $crate::repo_bytes_in(&$crate::runtime_manifest_dir(), $relative)
     };
 }
 

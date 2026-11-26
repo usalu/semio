@@ -1053,6 +1053,7 @@ dependencies = [
  "semio-framework-geometry-skeleton",
  "semio-framework-geometry-solids",
  "semio-framework-geometry-vector",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -1066,6 +1067,9 @@ dependencies = [
 [[package]]
 name = "semio-framework-geometry-primitives"
 version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
 
 [[package]]
 name = "semio-framework-geometry-skeleton"
@@ -1082,6 +1086,7 @@ dependencies = [
  "semio-framework-geometry-bulge",
  "semio-framework-geometry-primitives",
  "semio-framework-geometry-vector",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -9217,6 +9222,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-pdf-lifter"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-value",
  "semio-s-artifact-stdio-pdf-conformance-support",
  "semio-s-artifact-stdio-pdf-diff",
  "semio-s-artifact-stdio-pdf-fonts",
@@ -9249,6 +9255,7 @@ dependencies = [
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
+ "semio-framework-value",
  "semio-os-kernel",
  "semio-plugin",
  "semio-repo-test-host",
@@ -9301,11 +9308,77 @@ dependencies = [
  "semio-s-artifact-stdio-binary",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-deflate",
+ "semio-s-artifact-stdio-pdf-model-font",
+ "semio-s-artifact-stdio-pdf-model-graphics",
+ "semio-s-artifact-stdio-pdf-model-object",
+ "semio-s-artifact-stdio-pdf-model-page",
  "semio-s-artifact-stdio-pdf-test-oracle",
  "semio-ui-contract",
  "semio-ui-locale",
  "semio-ui-scene",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-model-content-values"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-pdf-model-object",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-model-font"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-pdf-model-graphics",
+ "semio-s-artifact-stdio-pdf-model-object",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-model-graphics"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-pdf-model-content-values",
+ "semio-s-artifact-stdio-pdf-model-object",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-model-object"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-test-fixtures",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-model-page"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-pdf-model-graphics",
+ "semio-s-artifact-stdio-pdf-model-object",
 ]
 
 [[package]]

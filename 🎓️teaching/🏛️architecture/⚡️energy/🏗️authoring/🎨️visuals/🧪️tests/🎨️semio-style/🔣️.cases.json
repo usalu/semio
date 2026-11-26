@@ -1,5 +1,9 @@
 {
   "schema": "energy-clip-style/v1",
+  "surfaces": [
+    { "appearance": "light", "base": "#f7f3e3", "window": "#e9e6d7", "chip": "#c8c8bb" },
+    { "appearance": "dark", "base": "#001117", "window": "#061a1f", "chip": "#24363a" }
+  ],
   "palette": {
     "P_DEEP_DARK": "dark",
     "P_WHITE": "light",

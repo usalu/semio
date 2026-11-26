@@ -13,6 +13,7 @@ use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Schedule};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Phase, ScheduleField, ScheduleKey, ScheduleOp};
+use semio_s_artifact_bim_model_interaction::editor::bim::modes::edit::windows::schedule::vocabulary;
 use semio_plugin::DslValue;
 use semio_plugin::SurfaceKind;
 use semio_plugin::TableCell;
@@ -148,7 +149,7 @@ fn list_surface(snapshot: &ModelSnapshot, inference: &ModelInference, labels: &B
 //#region 🔖️Table
 /// 🧾️ The columns and rows of the inferred table of `schedule`, texts localized: an item row is keyed by its element id (a pick selects it), a group row `group:<n>`, the grand total `total`.
 pub fn table_parts(schedule: &Schedule, inference: &ModelInference, id: &str, labels: &BimLabels) -> (Vec<DslValue>, Vec<DslValue>) {
-    let columns: Vec<DslValue> = schedule.columns.iter().enumerate().map(|(index, column)| column_value(&format!("c{index}"), &semio_s_artifact_bim_model_interaction::editor::bim::modes::edit::windows::schedule::vocabulary::heading(labels, column))).collect();
+    let columns: Vec<DslValue> = schedule.columns.iter().enumerate().map(|(index, column)| column_value(&format!("c{index}"), &vocabulary::heading(labels, column))).collect();
     let Some(found) = inference.schedules.get(id) else { return (columns, Vec::new()) };
     let rows = found
         .rows
@@ -173,7 +174,7 @@ pub fn table_parts(schedule: &Schedule, inference: &ModelInference, id: &str, la
                             shown_total = true;
                             text(labels.row_total.as_str())
                         }
-                        other => text(semio_s_artifact_bim_model_interaction::editor::bim::modes::edit::windows::schedule::vocabulary::cell_text(labels, &column.key, other)),
+                        other => text(vocabulary::cell_text(labels, &column.key, other)),
                     };
                     (format!("c{index}"), cell)
                 })
@@ -223,8 +224,8 @@ pub fn editor_rows(snapshot: &ModelSnapshot, id: &str, labels: &BimLabels) -> Ve
     let mut rows: Vec<DslValue> = Vec::new();
     let name_action = bim_window_action("editSchedule", Some(object([("id", id), ("part", "name"), ("op", "set"), ("key", "")])));
     push(&mut rows, labels.sf_name.as_str(), String::new(), TableCell::EditableText { value: schedule.name.clone(), action: name_action }, Vec::new());
-    let categories: Vec<UiTreeItemAction> = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ScheduleCategory::ALL.into_iter().filter(|category| *category != schedule.category).map(|category| edit_button(id, "table", &semio_s_artifact_bim_model_interaction::editor::bim::modes::edit::windows::schedule::vocabulary::category_label(labels, category), "category", "set", "", category.token())).collect();
-    push(&mut rows, labels.field_category.as_str(), semio_s_artifact_bim_model_interaction::editor::bim::modes::edit::windows::schedule::vocabulary::category_label(labels, schedule.category), text(schedule.category.token()), categories);
+    let categories: Vec<UiTreeItemAction> = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ScheduleCategory::ALL.into_iter().filter(|category| *category != schedule.category).map(|category| edit_button(id, "table", &vocabulary::category_label(labels, category), "category", "set", "", category.token())).collect();
+    push(&mut rows, labels.field_category.as_str(), vocabulary::category_label(labels, schedule.category), text(schedule.category.token()), categories);
     let mut keys = field_pool(schedule);
     keys.extend(property_keys(schedule));
     keys.dedup();
@@ -246,7 +247,7 @@ pub fn editor_rows(snapshot: &ModelSnapshot, id: &str, labels: &BimLabels) -> Ve
             None => buttons.push(edit_button(id, "plus", labels.act_add.as_str(), "column", "add", &token, "")),
         }
         let state = shown.map_or_else(String::new, |index| format!("{} {}{}", labels.sch_shown.as_str(), index + 1, if schedule.columns[index].total { " Σ" } else { "" }));
-        push(&mut rows, labels.field_columns.as_str(), semio_s_artifact_bim_model_interaction::editor::bim::modes::edit::windows::schedule::vocabulary::key_label(labels, key), text(state), buttons);
+        push(&mut rows, labels.field_columns.as_str(), vocabulary::key_label(labels, key), text(state), buttons);
     }
     for (index, sort) in schedule.sort.iter().enumerate() {
         let token = sort.key.token();
@@ -257,7 +258,7 @@ pub fn editor_rows(snapshot: &ModelSnapshot, id: &str, labels: &BimLabels) -> Ve
         if index + 1 < schedule.sort.len() {
             buttons.push(edit_button(id, "arrow-down", labels.act_down.as_str(), "sort", "down", &token, ""));
         }
-        push(&mut rows, labels.field_sort.as_str(), semio_s_artifact_bim_model_interaction::editor::bim::modes::edit::windows::schedule::vocabulary::key_label(labels, &sort.key), text(if sort.descending { "↓" } else { "↑" }), buttons);
+        push(&mut rows, labels.field_sort.as_str(), vocabulary::key_label(labels, &sort.key), text(if sort.descending { "↓" } else { "↑" }), buttons);
     }
     for (index, group) in schedule.group.iter().enumerate() {
         let token = group.key.token();
@@ -268,13 +269,13 @@ pub fn editor_rows(snapshot: &ModelSnapshot, id: &str, labels: &BimLabels) -> Ve
         if index + 1 < schedule.group.len() {
             buttons.push(edit_button(id, "arrow-down", labels.act_down.as_str(), "group", "down", &token, ""));
         }
-        push(&mut rows, labels.field_group.as_str(), semio_s_artifact_bim_model_interaction::editor::bim::modes::edit::windows::schedule::vocabulary::key_label(labels, &group.key), text(format!("{}", index + 1)), buttons);
+        push(&mut rows, labels.field_group.as_str(), vocabulary::key_label(labels, &group.key), text(format!("{}", index + 1)), buttons);
     }
     for (index, filter) in schedule.filter.iter().enumerate() {
         let position = index.to_string();
         let buttons = vec![edit_button(id, "minus", labels.act_remove.as_str(), "filter", "remove", &position, ""), edit_button(id, "refresh-cw", labels.act_next_comparison.as_str(), "filter", "op", &position, "")];
         let value = if filter.op == ScheduleOp::Empty || filter.op == ScheduleOp::NotEmpty {
-            text(semio_s_artifact_bim_model_interaction::editor::bim::modes::edit::windows::schedule::vocabulary::op_label(labels, filter.op))
+            text(vocabulary::op_label(labels, filter.op))
         } else {
             TableCell::EditableText { value: filter.value.clone(), action: bim_window_action("editSchedule", Some(object([("id", id), ("part", "filter"), ("op", "value"), ("key", position.as_str()), ("value", "")]))) }
         };
@@ -294,7 +295,7 @@ pub fn editor_rows(snapshot: &ModelSnapshot, id: &str, labels: &BimLabels) -> Ve
     }
     for phase in [Phase::Existing, Phase::New, Phase::Demolished, Phase::Temporary] {
         let token = format!("{phase:?}");
-        push(&mut rows, labels.field_scope_phases.as_str(), semio_s_artifact_bim_model_interaction::editor::bim::modes::edit::windows::schedule::vocabulary::phase_label(labels, phase), text(schedule.phases.contains(&phase).to_string()), vec![edit_button(id, "clock", labels.act_toggle.as_str(), "phase", "toggle", &token, "")]);
+        push(&mut rows, labels.field_scope_phases.as_str(), vocabulary::phase_label(labels, phase), text(schedule.phases.contains(&phase).to_string()), vec![edit_button(id, "clock", labels.act_toggle.as_str(), "phase", "toggle", &token, "")]);
     }
     rows
 }

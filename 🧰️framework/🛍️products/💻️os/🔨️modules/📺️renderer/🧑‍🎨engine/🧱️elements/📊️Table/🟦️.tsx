@@ -60,11 +60,6 @@ function tableRowMenuPlacementItems(row: TableRowRecord, onAction: (action: Acti
   return items;
 }
 
-/** 👆️ The `interactionHover` arguments of a domain-bound table row: its one `{ granularity, id }` target on the pointer channel, or none when the pointer leaves the rows. */
-export function tableRowHoverArgs(domainId: string, granularity: string, rowId: string | undefined): { readonly domainId: string; readonly channel: "pointer"; readonly targets: string } {
-  return { domainId, channel: "pointer", targets: rowId === undefined ? "[]" : JSON.stringify([{ granularity, id: rowId }]) };
-}
-
 /** ⌨️ How far one key moves a stepper cell: arrows step once, Page keys step ten, Home/End jump to a bound. */
 export function tableStepperKeyDelta(key: string, cell: { readonly value: number; readonly min: number; readonly max: number; readonly step: number }): number {
   switch (key) {
@@ -345,14 +340,6 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
     [columns, getRowId, node.surfaceId, onAction],
   );
 
-  const hoverRow = useCallback(
-    (id: string | undefined): void => {
-      if (!scene?.domainId || !scene.domainGranularityId) return;
-      onAction({ controllerId: node.controllerId, action: "interactionHover", args: tableRowHoverArgs(scene.domainId, scene.domainGranularityId, id) });
-    },
-    [node.controllerId, onAction, scene?.domainGranularityId, scene?.domainId],
-  );
-
   if (!scene) return <div className="semio-table-empty">{emptySceneLabel}</div>;
 
   const rowDragMime = scene.rowDragMime;
@@ -414,8 +401,6 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
                   : {}
             : undefined
         }
-        onRowMouseEnter={(row) => hoverRow(getRowId(row))}
-        onRowMouseLeave={() => hoverRow(undefined)}
         onRowClick={(row, _index, event) =>
           scene.domainId && scene.domainGranularityId
             ? onAction({

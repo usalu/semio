@@ -76,7 +76,7 @@ where
         if self.wire.original_outbox.front().is_some_and(semio_os_spr::atomic_group::AtomicBackboneSender::matches_prepared) {
             return Ok(None);
         }
-        match self.wire.backbone.as_ref(){Some(Backbones::Channel(channel))=>channel.send_original(&mut self.wire.original_outbox,grant),_=>Ok(None)}
+        match self.wire.backbone.as_ref(){Some(Backbones::Channel(channel))=>channel.send_original(&mut self.wire.original_outbox,grant),Some(Backbones::Memory(memory))=>memory.send_original(&mut self.wire.original_outbox,grant),_=>Ok(None)}
     }
 
     /// 🎟️ Advances an authenticated atomic outbox cursor before exposing a physical frame.

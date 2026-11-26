@@ -18,10 +18,8 @@ import {
 } from "../⚛️react-port/🟦️.ts";
 import {
   CanvasPickMenu,
-  cn,
   ContextMenuController,
   DiagramLiveRegion,
-  glassClass,
   pickMostSpecificCanvasTarget,
   SelectionMarquee,
   SharedBorderRow,
@@ -181,7 +179,7 @@ export const useClient = () => {
 export function PresencePeersOverlay({ peers }: { readonly peers: readonly PresencePeer[] }) {
   if (peers.length === 0) return null;
   return (
-    <SharedBorderRow orientation="vertical" data-level="pane" data-glass-chip="" data-presence-peers="" className={cn("pointer-events-none absolute right-0 top-0 z-panel max-w-[14rem] text-xs", glassClass)}>
+    <SharedBorderRow orientation="vertical" overlay="chip" data-presence-peers="" className="pointer-events-none absolute right-0 top-0 z-panel max-w-[14rem] text-xs">
       {peers.map((peer) => (
         <SharedBorderRowCell key={peer.clientId} className="justify-between gap-2 text-muted-foreground">
           <span className="truncate font-medium text-foreground">{peer.name}</span>
@@ -587,10 +585,9 @@ export function FlowGraphCanvasHost(props: FlowGraphCanvasHostProps) {
         <SharedBorderRow
           role="status"
           aria-live="polite"
-          data-level="menu"
-          data-glass-chip=""
+          overlay="chip"
           data-wire-refusal-json={JSON.stringify(wireRefusal)}
-          className={cn("pointer-events-none absolute bottom-2 left-1/2 z-30 -translate-x-1/2 px-2 py-1 text-[0.6875rem] text-destructive", glassClass)}
+          className="pointer-events-none absolute bottom-2 left-1/2 z-30 -translate-x-1/2 px-2 py-1 text-[0.6875rem] text-destructive"
         >
           {wireRefusalText}
         </SharedBorderRow>

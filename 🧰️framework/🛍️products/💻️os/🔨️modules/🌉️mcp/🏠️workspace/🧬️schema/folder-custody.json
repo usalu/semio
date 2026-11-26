@@ -5,7 +5,9 @@
     "version",
     "commits",
     "owners",
-    "schemaReads"
+    "schemaReads",
+    "reopens",
+    "reopenIdentity"
   ],
   "properties": {
     "version": {
@@ -79,6 +81,32 @@
         }
       }
     },
+    "reopenIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "artifactKind", "pluginId", "appId"],
+      "properties": {
+        "schema": {"type": "string"},
+        "artifactKind": {"type": "string"},
+        "pluginId": {"type": "string"},
+        "appId": {"type": "string"}
+      }
+    },
+    "reopens": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "observed", "durable", "archive", "expected"],
+        "properties": {
+          "id": {"type": "string"},
+          "observed": {"type": "string"},
+          "durable": {"type": "string"},
+          "archive": {"type": "boolean"},
+          "expected": {"enum": ["bind", "reuse", "replace", "conflict"]}
+        }
+      }
+    },
     "owners": {
       "type": "array",
       "items": {
@@ -88,7 +116,8 @@
           "id",
           "schema",
           "declarations",
-          "accepted"
+          "accepted",
+          "artifactKind"
         ],
         "properties": {
           "id": {
@@ -101,8 +130,8 @@
             "type": "array",
             "items": {
               "type": "array",
-              "minItems": 3,
-              "maxItems": 3,
+              "minItems": 4,
+              "maxItems": 4,
               "items": {
                 "type": "string"
               }
@@ -110,6 +139,9 @@
           },
           "accepted": {
             "type": "boolean"
+          },
+          "artifactKind": {
+            "type": ["string", "null"]
           }
         }
       }

@@ -15,7 +15,7 @@ const MIN_NORMAL: f64 = 1e-18;
 const RAY_SHIFT: Xyz = [0.0, 2.718281828e-7, 3.141592653e-7];
 
 /// 📦️ Axis-aligned bounding box.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, Default, PartialEq)]
 pub struct Aabb {
     pub min: Xyz,
     pub max: Xyz,
@@ -80,7 +80,7 @@ pub fn mesh_aabb(mesh: &TriMesh) -> Option<Aabb> {
     mesh.bounds().map(|(min, max)| Aabb { min, max })
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq)]
 struct Node {
     aabb: Aabb,
     left: u32,
@@ -96,7 +96,7 @@ impl Node {
 }
 
 /// 🌳️ Median-split bounding volume hierarchy over the triangles of one [`TriMesh`] (leaves hold at most four triangles); build it once per mesh and reuse it for every pair.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq)]
 pub struct Bvh {
     nodes: Vec<Node>,
     order: Vec<u32>,

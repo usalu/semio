@@ -1,4 +1,28 @@
 {
+  "titles": [
+    "aggregator cycle",
+    "aggregator fill",
+    "aggregator tour",
+    "aggregator transform",
+    "aggregator vortex show",
+    "aussuchen cycle",
+    "aussuchen filter",
+    "bearbeiten chain",
+    "bearbeiten cycle",
+    "bearbeiten extensions",
+    "energie cycle",
+    "generator cycle",
+    "koordinator cycle",
+    "koordinator extensions",
+    "lifecycle hidden",
+    "lifecycle idle",
+    "lifecycle offscreen",
+    "lifecycle stagger",
+    "statik cycle",
+    "statik model edit",
+    "verfolgen cycle",
+    "verfolgen routes"
+  ],
   "texts": {
     "playTutorial": {
       "en": "Play Tutorial",
@@ -140,6 +164,30 @@
       "anchor-hole",
       "anchor-set",
       "surface-grind"
+    ]
+  },
+  "cadExtensions": {
+    "paneId": "koordinator",
+    "topic": "cad.computer",
+    "appId": "cad-play",
+    "modules": [
+      { "directory": "🔷️cad-extension-spatial-shape", "moduleId": "spatial-shape", "windowId": "cad-play-shape", "modelDefinitionId": "spatial.shape" },
+      { "directory": "🏢️cad-extension-aec-building", "moduleId": "aec-building", "windowId": "cad-play-building", "modelDefinitionId": "aec.building" },
+      { "directory": "🔥️cad-extension-aec-building-energy", "moduleId": "aec-building-energy", "windowId": "cad-play-energy", "modelDefinitionId": "aec.building.energy" },
+      { "directory": "🏟️cad-extension-aec-building-structure", "moduleId": "aec-building-structure", "windowId": "cad-play-structure-classic", "modelDefinitionId": "aec.building.structure.classic" }
+    ]
+  },
+  "workshop": {
+    "paneId": "bearbeiten",
+    "categoryId": "framework.category.workbench",
+    "panelId": "workshop",
+    "initialMachineCount": 10,
+    "removeMachine": { "en": "Remove Machine", "de": "Maschine entfernen" },
+    "machines": [
+      { "catalogId": "concrete", "machineId": "coreDrill", "seeded": true },
+      { "catalogId": "metal", "machineId": "chopSaw", "seeded": false },
+      { "catalogId": "robotic", "machineId": "sixAxisMill", "seeded": false },
+      { "catalogId": "wood", "machineId": "tableSaw", "seeded": false }
     ]
   },
   "routes": {

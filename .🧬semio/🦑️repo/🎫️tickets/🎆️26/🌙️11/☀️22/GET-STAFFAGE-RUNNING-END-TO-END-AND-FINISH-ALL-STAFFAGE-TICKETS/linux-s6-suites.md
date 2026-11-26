@@ -104,4 +104,4 @@ Command per file, from `R` (driver `suite.sh site <case folder>...`, which calls
 
 Running: release build, then `label-fit`, the smoke and `model-split`.
 
-2026-11-25 19:15: this lane was taken over on the Mac (the Linux worker g1-m04 stopped at the usage limit around 13:10). Report: `site-mac.md`.
+2026-11-25 22:30: this lane was taken over on the Mac (the Linux worker g1-m04 stopped at the usage limit around 13:10) and run to its end there. Report: `site-mac.md` (FINAL).

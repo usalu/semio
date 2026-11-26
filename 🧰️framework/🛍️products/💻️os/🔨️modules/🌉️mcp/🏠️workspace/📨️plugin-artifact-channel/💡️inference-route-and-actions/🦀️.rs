@@ -2,6 +2,17 @@
 
 use super::*;
 
+#[cfg(not(target_arch = "wasm32"))]
+fn inference_refusal(error: semio_plugin_guest_contract::PluginHostError) -> Fault {
+    use semio_framework_value::ValueRefusalKind;
+    let code = match error.value_refusal_kind() {
+        Some(ValueRefusalKind::Canceled) => ACTIVATION_CANCELLED_FAULT_CODE,
+        Some(ValueRefusalKind::WorkLimit | ValueRefusalKind::OwnershipLimit | ValueRefusalKind::AllocationFailed | ValueRefusalKind::DepthLimit) => "budget.exceeded",
+        _ => "app.command.rejected",
+    };
+    Fault { code: code.into(), message: format!("inference refused: {error}") }
+}
+
 //#region 🔖️ArtifactChannel
 #[cfg(not(target_arch = "wasm32"))]
 impl PluginArtifactChannel {
@@ -88,13 +99,13 @@ impl PluginArtifactChannel {
             Err(fault) => Err(fault),
         };
         let result=match registered{
-            Ok(())=>Box::pin(router.infer(&request_bytes,&drivers)).await.map_err(|error|Fault{code:"app.command.rejected".into(),message:format!("inference refused: {error}")}),
+            Ok(())=>Box::pin(router.infer(&request_bytes,&drivers)).await.map_err(inference_refusal),
             Err(fault)=>Err(fault),
         };
         drop(router);
         let closed=self.drive_origin("inference origin retirement",|cx|semio_plugin_host::origin_registry::close_step(identity,&runtime,&compiled,cx)).await;
         if closed.is_ok() { self.close_inference_origin_source(); }
-        let result_bytes=match(result,closed){(Ok(bytes),Ok(()))=>bytes,(Err(fault),Ok(()))=>return Err(fault),(Ok(_),Err(fault))=>return Err(fault),(Err(mut fault),Err(close))=>{fault.message=format!("{}; {}",fault.message,close.message);return Err(fault)}};
+        let result_bytes=match(result,closed){(Ok(bytes),Ok(()))=>bytes,(Err(fault),Ok(()))=>return Err(fault),(Ok(_),Err(fault))=>return Err(fault),(Err(fault),Err(close))=>return Err(Fault{code:"app.command.rejected".into(),message:format!("{}; cleanup: {}",fault.message,close.message)})};
         let result_text = std::str::from_utf8(&result_bytes).map_err(|error| Self::not_wired("decoding the inference result", error))?;
         semio_framework_pack_json::from_json_str(result_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Self::not_wired("decoding the inference result", error))
     }
@@ -191,3 +202,42 @@ impl PluginArtifactChannel {
     }
 }
 //#endregion 🔖️ArtifactChannel
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[test]
+fn native_producer_refusal_projects_the_original_kind_into_mcp_faults() {
+    use semio_framework_value::{ValueError, ValueRefusalKind};
+    use semio_plugin_guest_contract::PluginHostError;
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../💡️inference/🧪️tests/🧫️fixtures/producer-refusal.json")).unwrap();
+    for row in cases.as_array().unwrap() {
+        let message = row["message"].as_str().unwrap();
+        let kind = match row["kind"].as_str() {
+            Some("work") => Some(ValueRefusalKind::WorkLimit),
+            Some("ownership") => Some(ValueRefusalKind::OwnershipLimit),
+            Some("allocation") => Some(ValueRefusalKind::AllocationFailed),
+            Some("depth") => Some(ValueRefusalKind::DepthLimit),
+            Some("cancel") => Some(ValueRefusalKind::Canceled),
+            Some("invalid") => Some(ValueRefusalKind::InvalidValue),
+            Some("unsupported") => Some(ValueRefusalKind::UnsupportedOwner),
+            Some("invariant") => Some(ValueRefusalKind::InvariantViolated),
+            None => None,
+            Some(other) => panic!("unsupported fixture kind {other}"),
+        };
+        let error = match kind {
+            None => PluginHostError::Plugin(message.into()),
+            Some(kind) if row["compound"] == true => {
+                let mut original = semio_framework_job::OriginalTurnFailure::from(ValueError::new(kind, message));
+                original.receipt_refusal = Some(ValueError::literal(ValueRefusalKind::InvariantViolated, "additional receipt failure"));
+                PluginHostError::OriginalTurn(Box::new(original))
+            }
+            Some(kind) => PluginHostError::ProducerRefusal { kind, message: message.into() },
+        };
+        let fault = inference_refusal(error);
+        let gateway = semio_os_mcp_port::channel_port::map_fault(&fault);
+        assert_eq!(gateway.to_tool_error_payload()["code"], row["code"]);
+        assert!(gateway.message.contains(message));
+        if row["compound"] == true {
+            assert!(gateway.message.contains("additional receipt failure"));
+        }
+    }
+}

@@ -32,11 +32,30 @@ args[folderAt + 1] = folder;
 if (operationPolicy) args[operationPolicyAt + 1] = resolve(operationPolicy);
 if (driverPolicy) args.push("--host-driver-policy", resolve(driverPolicy));
 const client = new Client({ name: "semio-sdk-note-create", version: "1" });
-const transport = new StdioClientTransport({ command: resolve(executable), args: withMcpHostDriverPolicy(["stdio", ...args, "--no-bridge", "--auto-approve", "all"]), cwd, env: { ...env, SEMIO_MCP_COMPONENT_MODELS: models }, stderr: "pipe" });
-transport.stderr?.resume();
+const trace = process.env.SEMIO_MCP_POLL_TRACE === "1";
+const startTransport = () => new StdioClientTransport({ command: resolve(executable), args: withMcpHostDriverPolicy(["stdio", ...args, "--no-bridge", "--auto-approve", "all"]), cwd, env: { ...env, SEMIO_MCP_COMPONENT_MODELS: models, ...(trace ? { SEMIO_MCP_POLL_TRACE: "1" } : {}) }, stderr: trace ? "inherit" : "ignore" });
+const transport=startTransport();
 try {
+  const readOnly = process.env.SEMIO_NOTE_SEEDED_READBACK === "1";
+  const seeded = readOnly || process.env.SEMIO_NOTE_SEEDED_HISTORY === "1";
+  if (seeded) await (await import("./note-seeded-history.ts")).seedNote(generated,folder);
   await client.connect(transport);
   console.log(JSON.stringify({ initialized: client.getServerVersion(), tools: (await client.listTools()).tools.length, model: note.pluginId }));
+  if (seeded) {
+    const {verifySeededNote}=await import("./note-seeded-history.ts");
+    await verifySeededNote(client,root,generated,readOnly,false);
+    if (readOnly) {
+      const first=transport.pid;
+      await client.close();
+      const restarted=new Client({name:"semio-note-restart",version:"1"});
+      const second=startTransport();
+      try {
+        await restarted.connect(second);
+        assert(first && second.pid && second.pid!==first);
+        await verifySeededNote(restarted,root,generated,true);
+      } finally { await restarted.close(); }
+    }
+  } else {
   const started = performance.now();
   const artifactId = "sdk-note-create";
   const created = await client.callTool({ name: "artifact_create", arguments: { artifactId, kind: pins.artifactKind } }, undefined, { timeout: 240_000 });
@@ -47,6 +66,7 @@ try {
   console.log(JSON.stringify({ ping: "ok" }));
   assert(created.isError !== true && created.structuredContent?.status === "SUCCEEDED", JSON.stringify(created.structuredContent));
   assert(snapshot.isError !== true && Number(snapshot.structuredContent?.packBytes) > 0, JSON.stringify(snapshot.structuredContent));
+  }
 } finally {
   await client.close();
   await rm(folder, { recursive: true, force: true });

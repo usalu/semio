@@ -433,24 +433,24 @@ pub const METRICS: &[(&str, PlanKind, bool)] = &[
 /// curtain walls, columns, beams, slabs, roofs and railings of the storey with the types they name, the tags of its spaces and the grid lines of its building.
 pub fn dependency(snapshot: &ModelSnapshot, storey: &str) -> DslValue {
     let building = snapshot.storeys.get(storey).map(|row| row.building.clone());
-    let columns = snapshot.columns.iter().filter(|(_, row)| row.storey == storey);
-    let beams = snapshot.beams.iter().filter(|(_, row)| row.storey == storey);
-    let slabs = snapshot.slabs.iter().filter(|(_, row)| row.storey == storey);
-    let ceilings = snapshot.ceilings.iter().filter(|(_, row)| row.storey == storey);
+    let columns = || snapshot.columns.iter().filter(|(_, row)| row.storey == storey);
+    let beams = || snapshot.beams.iter().filter(|(_, row)| row.storey == storey);
+    let slabs = || snapshot.slabs.iter().filter(|(_, row)| row.storey == storey);
+    let ceilings = || snapshot.ceilings.iter().filter(|(_, row)| row.storey == storey);
     let spaces = snapshot.spaces.iter().filter(|(_, row)| row.storey == storey).map(|(id, space)| (id.clone(), dep_object([("number", dep_value(&space.number)), ("name", dep_value(&space.name)), ("boundary", dep_value(&space.boundary))])));
     let grids = snapshot.grids.iter().filter(|(_, row)| Some(&row.building) == building.as_ref());
     dep_object([
         ("storey", dep_value(&snapshot.storeys.get(storey).cloned())),
         ("curtain_walls", dep_records(snapshot.curtain_walls.iter().filter(|(_, row)| row.storey == storey))),
         ("curtain_wall_types", dep_types(snapshot.curtain_walls.values().filter(|row| row.storey == storey).map(|row| &row.curtain_wall_type), &snapshot.curtain_wall_types)),
-        ("columns", dep_records(columns.clone())),
-        ("column_types", dep_types(columns.map(|(_, row)| &row.column_type), &snapshot.column_types)),
-        ("beams", dep_records(beams.clone())),
-        ("beam_types", dep_types(beams.map(|(_, row)| &row.beam_type), &snapshot.beam_types)),
-        ("slabs", dep_records(slabs.clone())),
-        ("slab_types", dep_types(slabs.map(|(_, row)| &row.slab_type), &snapshot.slab_types)),
-        ("ceilings", dep_records(ceilings.clone())),
-        ("ceiling_types", dep_types(ceilings.map(|(_, row)| &row.ceiling_type), &snapshot.ceiling_types)),
+        ("columns", dep_records(columns())),
+        ("column_types", dep_types(columns().map(|(_, row)| &row.column_type), &snapshot.column_types)),
+        ("beams", dep_records(beams())),
+        ("beam_types", dep_types(beams().map(|(_, row)| &row.beam_type), &snapshot.beam_types)),
+        ("slabs", dep_records(slabs())),
+        ("slab_types", dep_types(slabs().map(|(_, row)| &row.slab_type), &snapshot.slab_types)),
+        ("ceilings", dep_records(ceilings())),
+        ("ceiling_types", dep_types(ceilings().map(|(_, row)| &row.ceiling_type), &snapshot.ceiling_types)),
         ("roofs", dep_records(snapshot.roofs.iter().filter(|(_, row)| row.storey == storey))),
         ("railings", dep_records(snapshot.railings.iter().filter(|(_, row)| row.storey == storey))),
         ("ramps", dep_records(snapshot.ramps.iter().filter(|(_, row)| row.storey == storey))),

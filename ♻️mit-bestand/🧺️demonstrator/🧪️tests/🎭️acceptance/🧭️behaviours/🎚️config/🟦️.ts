@@ -1,5 +1,5 @@
 // #region 🧲️Header
-// 🎚️ Playwright config of the behaviour acceptance: the baseline config with only its `testMatch` replaced, so the baseline's 50 executions stay untouched.
+// 🎚️ Playwright config of the behaviour acceptance: the baseline config with only its `testMatch` replaced, so the baseline suite remains separate.
 // Run: PLAYWRIGHT_BASE_URL=<served demonstrator> playwright test --config <this file> [--grep @<pane>]
 // #endregion 🧲️Header
 

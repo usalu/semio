@@ -837,6 +837,11 @@
           "type": "integer",
           "minimum": 1
         },
+        "startMs": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Creation time of the process `pid` in ms since the epoch (the identity of the holder); absent in records written before it was recorded, which are judged by pid alone."
+        },
         "session": {
           "type": "string",
           "pattern": "^[0-9a-f]{12}\\.[a-z][a-z0-9]{0,11}$"
@@ -908,6 +913,11 @@
         "pid": {
           "type": "integer",
           "minimum": 1
+        },
+        "startMs": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Creation time of the process `pid` in ms since the epoch (the identity of the holder); absent in records written before it was recorded, which are judged by pid alone."
         },
         "bootAtMs": {
           "type": "integer",

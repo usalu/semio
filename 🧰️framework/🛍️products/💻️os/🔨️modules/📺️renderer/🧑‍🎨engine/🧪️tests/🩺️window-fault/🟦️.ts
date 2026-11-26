@@ -188,5 +188,6 @@ describe("contributions pack crossing", () => {
     expect(contributionsRefreshSource).toContain('encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", args)');
     expect(contributionsRefreshSource).toContain("pluginEntry.handle.handleCommand(instanceId, wire, environment.targetViewState)");
     expect(contributionsRefreshSource).toContain("page: 0, pageCount: 1");
+    expect(contributionsRefreshSource).toMatch(/if \(deliveryFailure !== undefined\) throw deliveryFailure/);
   });
 });

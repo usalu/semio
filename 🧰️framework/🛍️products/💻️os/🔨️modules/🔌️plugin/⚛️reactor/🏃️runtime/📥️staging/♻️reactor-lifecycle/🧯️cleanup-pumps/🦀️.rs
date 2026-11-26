@@ -265,6 +265,15 @@ pub fn runtime_drain_maintenance_source<PA:PluginApp>(cell:&RuntimeAppCell<PA>,c
         })
     })
 }
+/// 🌫️ True when a close step read an empty ladder only because the host had already spent the step's own budget (deadline or fuel).
+///
+/// Such a reading is scheduling latency, not evidence: the ladder was never given its turn, so it must neither buy nor clear stall debt. The
+/// close job reports it as `contended`, the one reading `runtime_close_stall_verdict` ignores. Only an observed `Pending { 0, 0 }` is judged;
+/// real progress and external waits are never reclassified. Before 2026-11-25 a loaded browser turned this into `plugin.internal.zero-progress`.
+#[doc(hidden)]
+pub fn runtime_close_reading_is_starved(progress: Option<PluginLifecycleStep>, budget_spent: bool) -> bool {
+    budget_spent && matches!(progress, Some(PluginLifecycleStep::Progress(receipt)) if receipt == RetainedCloneProgress::default())
+}
 #[doc(hidden)]
 pub struct RuntimeCloseCleanupJob<PA: PluginApp> {
     pub state: Option<std::sync::Weak<RuntimeCloseWorkerState<PA>>>,
@@ -288,7 +297,9 @@ impl<PA: PluginApp> semio_plugin_job::reserved_job_outcomes::CleanupJob for Runt
 impl<PA: PluginApp> RuntimeCloseCleanupJob<PA> {
     pub fn advance(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{
         let Self{state,progress,contended,..}=self;let Some(original)=state.as_ref()else{return CleanupTurn::Cancelled};
-        match cx.with_original_native_weak_source(original,|state,cx|Ok(Self::advance_source(state,progress,contended,cx))){Ok(turn)=>turn,Err(original)=>CleanupTurn::OriginalFailure(original)}
+        let turn=match cx.with_original_native_weak_source(original,|state,cx|Ok(Self::advance_source(state,progress,contended,cx))){Ok(turn)=>turn,Err(original)=>CleanupTurn::OriginalFailure(original)};
+        if runtime_close_reading_is_starved(*progress,cx.retirement_should_yield()){*contended=true}
+        turn
     }
     pub fn advance_source(state:&RuntimeCloseWorkerState<PA>,outcome_progress:&mut Option<PluginLifecycleStep>,contended:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{
         runtime_close_phase(&state, 8);

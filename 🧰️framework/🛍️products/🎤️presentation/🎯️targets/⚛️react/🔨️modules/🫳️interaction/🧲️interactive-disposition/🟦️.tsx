@@ -54,6 +54,7 @@ export const InteractiveDisposition: FC<{
     <div
       ref={rootRef}
       data-disposition-id={id}
+      data-level={enlarged ? "window" : undefined}
       {...(revealMorphId ? { "data-id": revealMorphId } : {})}
       {...(rowBandId ? { "data-row-band": rowBandId } : {})}
       className={wrapperClass}
@@ -82,11 +83,11 @@ export const InteractiveDisposition: FC<{
       {showControls ? (
         <SharedBorderChipGroup className="presentation-interaction-actions">
           {canResetPosition ? (
-            <button type="button" {...SHARED_BORDER_CELL} className="presentation-interaction-reset" title="Reset position" onClick={onResetClick}>
+            <button type="button" {...SHARED_BORDER_CELL} className="presentation-interaction-reset ui-glass" title="Reset position" onClick={onResetClick}>
               <Icon icon="rotate-ccw" size="small" />
             </button>
           ) : null}
-          <button type="button" {...SHARED_BORDER_CELL} className="presentation-interaction-enlarge" title={enlarged ? "Exit enlarge" : "Enlarge"} aria-pressed={enlarged} onClick={onEnlargeClick}>
+          <button type="button" {...SHARED_BORDER_CELL} className="presentation-interaction-enlarge ui-glass" title={enlarged ? "Exit enlarge" : "Enlarge"} aria-pressed={enlarged} onClick={onEnlargeClick}>
             <Icon icon="maximize-2" size="small" />
           </button>
         </SharedBorderChipGroup>

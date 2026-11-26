@@ -743,6 +743,9 @@ dependencies = [
 [[package]]
 name = "semio-framework-geometry-primitives"
 version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
 
 [[package]]
 name = "semio-framework-geometry-skeleton"
@@ -8977,6 +8980,7 @@ name = "semio-s-artifact-norm-en1999-scene-visual-laws"
 version = "0.1.0"
 dependencies = [
  "semio-s-artifact-norm-en1999-checks",
+ "semio-s-artifact-norm-en1999-mutations",
  "semio-s-artifact-norm-en1999-scene",
  "semio-s-artifact-norm-en1999-scene-core",
  "semio-s-plugin-norm-compliance",

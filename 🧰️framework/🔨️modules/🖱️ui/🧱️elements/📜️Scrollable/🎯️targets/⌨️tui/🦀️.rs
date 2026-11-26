@@ -7,7 +7,7 @@ use semio_ui_tui_core::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind
 use semio_ui_tui_core::geometry::{Pos, Rect};
 use semio_ui_tui_core::rows::paint_scroll_bar;
 use semio_ui_tui_core::text::{display_width, window_cells};
-use semio_ui_tui_core::theme::{Role, Surface, Theme};
+use semio_ui_tui_core::theme::{Role, Theme};
 use semio_ui_tui_core::signal::WidgetSignal;
 use std::cell::Cell as Shared;
 
@@ -109,7 +109,7 @@ pub fn paint_scrollable(s: &ScrollableState, theme: &Theme, rect: Rect, buf: &mu
     if rect.width == 0 || rect.height == 0 {
         return;
     }
-    let bg = theme.surface(Surface::Window);
+    let bg = buf.owner_background();
     let fg = theme.role(Role::Foreground);
     buf.fill_rect(rect, Cell::blank(fg, bg));
     let rows = usize::from(rect.height);

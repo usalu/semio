@@ -1,7 +1,9 @@
 import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import Ajv from "ajv";
 import { selectCargoCapabilityTargetsV1 } from "../🟦️.ts";
+import { createRequire } from "node:module";
 
 /** 🧪️ Proves present-target selection against an independent schema implementation. */
 export function runCargoCapabilityContributionChecks(): number {
@@ -22,7 +24,7 @@ export function runCargoCapabilityContributionChecks(): number {
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { prepareCargoCapabilityLinksV1, admitCargoCapabilityLinksV1 } from "../🟦️.ts";
+import { prepareCargoCapabilityLinksV1, admitCargoCapabilityLinksV1, writeCargoManifestAtomicV1 } from "../🟦️.ts";
 
 /** 🧱️ Proves physical target removal, partial-owner refusal and source-preserving publication. */
 export function runCargoCapabilityPhysicalChecks(): number {
@@ -57,5 +59,40 @@ export function runCargoCapabilityPhysicalChecks(): number {
   const cyclic = structuredClone(corpus.links); cyclic.groups[0].requires = [cyclic.groups[0].feature];
   assert.throws(() => admitCargoCapabilityLinksV1(cyclic));
   assert(before.includes('name = "neutral-parent"'));
-  return 7;
+  writeFileSync(join(owner, "links.json"), JSON.stringify(corpus.links));
+  mkdirSync(join(root, "bravo"));
+  writeFileSync(join(root, "bravo", "Cargo.toml"), '[package]\nname = "neutral-bravo"\n');
+  const outside = source + 'neutral-bravo = { workspace = true, optional = true }\n';
+  writeFileSync(join(owner, "Cargo.toml"), outside);
+  assert.equal(prepareCargoCapabilityLinksV1(root, owner, "Cargo.toml", "links.json"), 1);
+  const merged = readFileSync(join(owner, "Cargo.toml"), "utf8");
+  assert.equal(merged.split("neutral-bravo = {").length, 2);
+  assert.deepEqual((Bun.TOML.parse(merged) as any).dependencies["neutral-bravo"], { workspace: true, optional: true });
+  assert.throws(() => writeCargoManifestAtomicV1(join(owner, "Cargo.toml"), outside + outside));
+  assert.equal(readFileSync(join(owner, "Cargo.toml"), "utf8"), merged);
+  return 9;
+}
+
+/** 🚧️ Proves that every tracked or present Cargo manifest parses with the real TOML parser and repeats no key. */
+export function runCargoManifestParseLawV1(root: string): number {
+  const listed = spawnSync("git", ["-c", "core.quotePath=false", "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", "Cargo.toml", "**/Cargo.toml"], { cwd: root, encoding: "utf8", maxBuffer: 1 << 28 });
+  if (listed.status !== 0) throw new Error("Cargo manifest listing failed");
+  const failures: string[] = [], manifests = listed.stdout.split("\0").filter(Boolean);
+  for (const manifest of manifests) {
+    try { Bun.TOML.parse(readFileSync(join(root, manifest), "utf8")); }
+    catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") failures.push(`${manifest}: ${String(error).slice(0, 160)}`); }
+  }
+  assert.deepEqual(failures, []);
+  assert(manifests.length > 0);
+  return manifests.length;
+}
+
+/** 🧱️ Proves that every crate manifest of the tree has a build owner row, so tooling that writes crate manifests never leaves a native dependency the graph cannot resolve; the message names the repair command the operations catalogue declares. Returns the number of crate manifests without a row, which is 0 when it passes. */
+export function runCargoManifestOwnerRowLawV1(root: string): number {
+  const lazy = createRequire(import.meta.url);
+  const { ownerlessCrateManifests } = lazy("../../../../🏗️build/🕸️graph/🧾️registry-consistency/🟦️.ts");
+  const { buildRepairCommandV1 } = lazy("../../../../🏗️build/⚙️operations/🔤️options/🟦️.ts");
+  const missing = ownerlessCrateManifests(root);
+  assert.deepEqual(missing, [], `crate manifests without a build owner row; run ${buildRepairCommandV1("build-owners-sync")}`);
+  return missing.length;
 }

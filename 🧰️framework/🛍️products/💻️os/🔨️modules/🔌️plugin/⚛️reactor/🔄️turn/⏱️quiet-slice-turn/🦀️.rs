@@ -8,9 +8,21 @@ pub(super) const QUIET_TURN_SLICE_US:u64=8_000;
 /// 🔗️ Shared by the typed-operation, restored-document-load and command-exchange loops of the turn, so every quiet loop closes on the same three signals.
 pub(super) fn quiet_slice_open(host_bound_grew:bool,yielding:bool,executing_us:Option<u64>)->bool{!host_bound_grew&&!yielding&&executing_us.is_some_and(|us|us<QUIET_TURN_SLICE_US)}
 
-/// 🚪️ A quiet opening can step again only while it is pending and its original ledger advanced.
-pub(super) fn opening_slice_open(ready: bool, progressed: bool, cancelled: bool, yielding: bool, executing_us: Option<u64>) -> bool {
-    progressed && !cancelled && quiet_slice_open(ready, yielding, executing_us)
+#[derive(Clone, Copy)]
+pub(super) enum OpeningPacing {
+    Interactive,
+    Metered,
+}
+
+/// 🚪️ A pending opening can step again after paid progress inside its execution regime.
+pub(super) fn opening_slice_open(pacing: OpeningPacing, ready: bool, progressed: bool, cancelled: bool, yielding: bool, executing_us: Option<u64>) -> bool {
+    if ready || !progressed || cancelled || yielding {
+        return false;
+    }
+    match pacing {
+        OpeningPacing::Interactive => quiet_slice_open(false, false, executing_us),
+        OpeningPacing::Metered => executing_us.is_some_and(|us| !semio_framework_trace::guest_lifecycle_turn_contract_violated(us)),
+    }
 }
 
 #[cfg(test)]

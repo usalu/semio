@@ -279,7 +279,9 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
       "tokens": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js"
+        "resolve(repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm\")",
+        "browser: resolve(flowSource, \"🌐️browser/🏃️runtime/🟨️.js\")",
+        "host: resolve(flowSource, \"🖥️host/🏃️runtime/🟨️.js\")"
       ]
     },
     {

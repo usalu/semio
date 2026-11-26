@@ -23,18 +23,6 @@ owned = [
   "standards::v1_7::subsets::base::modules::fonts::truetype::outline",
   "standards::v1_7::subsets::base::schema::mutations::support",
   "standards::v1_7::subsets::base::schema::snapshot::model",
-  "standards::v1_7::subsets::base::schema::snapshot::model::annotations_and_forms",
-  "standards::v1_7::subsets::base::schema::snapshot::model::canonical",
-  "standards::v1_7::subsets::base::schema::snapshot::model::colour_and_graphics_state",
-  "standards::v1_7::subsets::base::schema::snapshot::model::content_operators",
-  "standards::v1_7::subsets::base::schema::snapshot::model::document_metadata",
-  "standards::v1_7::subsets::base::schema::snapshot::model::font_model",
-  "standards::v1_7::subsets::base::schema::snapshot::model::navigation",
-  "standards::v1_7::subsets::base::schema::snapshot::model::object_model",
-  "standards::v1_7::subsets::base::schema::snapshot::model::octets",
-  "standards::v1_7::subsets::base::schema::snapshot::model::octets::output_tests",
-  "standards::v1_7::subsets::base::schema::snapshot::model::page_model",
-  "standards::v1_7::subsets::base::schema::snapshot::model::xobjects",
 ]
 
 [lints]
@@ -69,6 +57,10 @@ semio-s-artifact-stdio-binary = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-deflate = { workspace = true }
 serde_json = { workspace = true }
+semio-s-artifact-stdio-pdf-model-font = { path = "../../🔤️font-model/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-model-graphics = { path = "../../🖋️content-operators/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-model-object = { path = "../../🔗️object-model/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-model-page = { path = "../../📃️page-model/📦️packages/🦀️rust" }
 
 [features]
 testkit = []

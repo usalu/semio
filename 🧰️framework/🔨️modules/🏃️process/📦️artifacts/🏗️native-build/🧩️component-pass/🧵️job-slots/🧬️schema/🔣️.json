@@ -17,6 +17,7 @@
         "localJobsProgressMilliseconds": 60000,
         "unmeasuredQuantile": 0.9,
         "fleetPollMilliseconds": 5000,
+        "fleetBusyWaitMilliseconds": 30000,
         "fleetPassFootprintMegabytes": 512,
         "fleetFloorMegabytes": 512
       }
@@ -44,6 +45,7 @@
         "local-all",
         "local-cap",
         "local-grant",
+        "parent-memory",
         "local-memory",
         "local-pressure",
         "local-unknown"
@@ -356,13 +358,15 @@
               "local-all": "every listed final fits the free memory above the floor",
               "local-cap": "the authored local job cap is reached",
               "local-grant": "the local compile grant bounds the local jobs",
+              "parent-memory": "running passes hold the rest of the parent's memory grant",
               "local-memory": "the free memory above the floor does not carry another final",
               "local-pressure": "memory pressure is raised, so no further local final starts",
               "local-unknown": "the free memory of this machine cannot be read, so only one job runs here"
             }
           },
           "errors": {
-            "definitionRequired": "Closed compile units value required: {detail}"
+            "definitionRequired": "Closed compile units value required: {detail}",
+            "parentMemoryRequired": "Component build needs {required} MiB for the local pass, but the parent granted {allowance} MiB and no fleet placement is admissible"
           },
           "fleet": {
             "plan": "[component-jobs] {operation}: {local} local slot(s) and up to {fleet} fleet slot(s); a fleet job reserves {footprint} MB here, the free worker slots are read again every {seconds} s ({slots} fit a final now)",
@@ -399,13 +403,15 @@
               "local-all": "jedes aufgeführte Endstück passt in den freien Speicher über der Untergrenze",
               "local-cap": "die festgelegte Obergrenze lokaler Jobs ist erreicht",
               "local-grant": "die lokale Compile-Zuteilung begrenzt die lokalen Jobs",
+              "parent-memory": "laufende Durchläufe belegen den Rest der übergeordneten Speicherzuteilung",
               "local-memory": "der freie Speicher über der Untergrenze trägt kein weiteres Endstück",
               "local-pressure": "der Speicherdruck ist erhöht, daher startet kein weiteres lokales Endstück",
               "local-unknown": "der freie Speicher dieser Maschine ist nicht lesbar, daher läuft hier nur ein Job"
             }
           },
           "errors": {
-            "definitionRequired": "Geschlossener Compile-Einheiten-Wert erforderlich: {detail}"
+            "definitionRequired": "Geschlossener Compile-Einheiten-Wert erforderlich: {detail}",
+            "parentMemoryRequired": "Der Komponentenbau benötigt {required} MiB für den lokalen Durchlauf. Der übergeordnete Auftrag gewährt {allowance} MiB und es ist kein Flottenplatz zulässig"
           },
           "fleet": {
             "plan": "[component-jobs] {operation}: {local} lokale Plätze und bis zu {fleet} Flotten-Plätze; ein Flotten-Job belegt hier {footprint} MB, freie Worker-Plätze werden alle {seconds} s neu gelesen ({slots} tragen jetzt ein Endstück)",

@@ -43,6 +43,7 @@ test("law: every declared step the slice worker can print is a step line the sup
  for(const id of ids)await sliceReadStepV1(id,async()=>{
   const bound=steps[id]!.boundMilliseconds/1000;
   for(const seconds of[5,bound+77]){
+   if(id==="inventory")describeSliceReadStepV1(performance.now());
    const row=describeSliceReadStepV1(performance.now()+seconds*1000)!;
    expect(row.id).toBe(id);
    for(const language of["en","de"] as const){
@@ -255,11 +256,13 @@ exit 0
 
 test("verified memo rows advance the bilingual step only at an increased high-water mark",async()=>{
  for(const language of ["en","de"] as const){
-  let rows=0;const watch=readyStepWatchV1(FAST),started=performance.now();
+  let rows=0,high=0,mark=0;const watch=readyStepWatchV1(FAST),started=performance.now();
   await sliceReadStepV1("inventory",async()=>{
    for(const sample of inventoryHeartbeat.verifiedMemo){
     rows=sample.rows;
-    const step=describeSliceReadStepV1(started+1800000+sample.milliseconds)!;
+    const advanced=rows>high,now=advanced?started+1800000+sample.milliseconds:mark+1900000;
+    if(advanced){high=rows;mark=now;}
+    const step=describeSliceReadStepV1(now)!;
     const line=fill(messages[language][step.done>step.total?"host-slice-step-over":"host-slice-step"]!,{seconds:step.done,bound:step.total,phase:step.phase});
     expect(watch.observe([line],sample.milliseconds).overdue).toBe(sample.overdue);
    }

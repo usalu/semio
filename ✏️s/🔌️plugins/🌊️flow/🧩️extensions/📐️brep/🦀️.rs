@@ -1,7 +1,7 @@
 //! 🔷️ Flow brep extension — geometry operators packaged as a runtime-installable unit.
 
 use semio_s_spatial_kernel_semio_session::*;
-use flow_extension_sdk::mesh::*;
+use semio_os_flow_mesh::*;
 use flow_extension_sdk::build_manifest_json;
 use neural_engine::{channel_output, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
 use semio_framework_3d_brep_boolean::BooleanOp;

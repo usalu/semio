@@ -16,6 +16,8 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-bim-model-entity-records = { path = "../../🧱️entities/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-sqlite-schema = { path = "../../../../🚪️io/🪶️sqlite/📸️snapshot/🗄️schema/📦️packages/🦀️rust" }
 semio-ui-contract.workspace = true
 semio-framework-job.workspace = true
 gltf = { version = "1.4.1", default-features = false, features = ["utils", "names", "extras"], optional = true }
@@ -51,12 +53,10 @@ semio-framework-value-derive = { path = "../../../../../../../../../../../../../
 semio-s-artifact-bim-model-examples = { path = "../../../../📚️examples/🏡️house/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-schema = { path = "../../../📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract = { workspace = true }
-semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-gltf-model = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base-model = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 serde_json = { workspace = true, optional = true }
@@ -65,6 +65,7 @@ serde_json = { workspace = true, optional = true }
 testkit = ["dep:serde_json", "dep:quick-xml", "dep:gltf", "dep:semio-framework-test-fixtures", "semio-plugin/artifact-app-testing", "semio-os-kernel/protocol-laws", "semio-os-kernel/mutation-testing", "semio-s-artifact-bim-model-schema/testkit", "semio-s-artifact-bim-model-examples/testkit"]
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde.workspace = true
 serde_json.workspace = true
 gltf = { version = "1.4.1", default-features = false, features = ["utils", "names", "extras"] }

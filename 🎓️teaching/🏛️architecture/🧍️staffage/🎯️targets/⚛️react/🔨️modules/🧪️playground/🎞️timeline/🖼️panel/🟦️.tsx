@@ -99,7 +99,7 @@ export function TimelinePanel(props: {
     else onChange(placement.id, { durationS: 0.1 }, t("playground.timeline.said.length", { title, length: seconds(0.1) }));
   };
   return (
-    <Column as="section" aria-label={t("playground.timeline.title")} className="bg-panel" data-timeline="">
+    <Column as="section" aria-label={t("playground.timeline.title")} data-timeline="">
       <Transport clock={clock} label={t("playground.timeline.transport")} />
       <Bar below="tablet">
         <CheckField label={t("playground.timeline.auto")} checked={chosenS === null} onChange={(auto) => onTimeline(auto ? null : timelineS)} />

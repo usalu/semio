@@ -5,7 +5,7 @@
  "properties":{
   "issuerSame":{"type":"object","additionalProperties":false,"required":["dataEqual","implementationEqual","admitted"],"properties":{"dataEqual":{"const":true},"implementationEqual":{"const":true},"admitted":{"const":true}}},
   "issuerAlias":{"type":"object","additionalProperties":false,"required":["dataEqual","implementationEqual","admitted","providerCalls","pendingId"],"properties":{"dataEqual":{"const":true},"implementationEqual":{"const":false},"admitted":{"const":false},"providerCalls":{"const":0},"pendingId":{"type":"integer","minimum":0}}},
-  "initialWork":{"const":[1,1,2,4]},
+  "initialWork":{"const":[1,1,1,3]},
   "rows":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["id","text"],"properties":{"id":{"type":"integer","minimum":0},"text":{"type":"string"}}}},
   "refuseFirst":{"type":"boolean"},"expectedOrder":{"type":"array","items":{"type":"integer","minimum":0}},"expectedAttempts":{"type":"integer","minimum":0}
  }

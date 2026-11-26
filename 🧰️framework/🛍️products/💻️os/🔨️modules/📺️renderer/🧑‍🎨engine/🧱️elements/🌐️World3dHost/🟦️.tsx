@@ -13,7 +13,7 @@ import { createLongPressV1 } from "../👆️long-press/🟦️.ts";
 import { localizedLabelTextV1 } from "../🏛️ShellHost/📣️replay-refusal/🟦️.ts";
 
 // #region 🔌️Adapters
-import { cn, ContextMenuController, glassClass, IconShotFrame, SelectionMarquee, SharedBorderRow, SharedBorderRowCell, sunPositionFromAzimuthElevation, chromePanelSafeAreaStyle, windowChromeClearedTopOffset } from "@semio-tech/ui-react";
+import { ContextMenuController, glassClass, IconShotFrame, SelectionMarquee, SharedBorderRow, SharedBorderRowCell, sunPositionFromAzimuthElevation, chromePanelSafeAreaStyle, windowChromeClearedTopOffset } from "@semio-tech/ui-react";
 import { toolRunTraceDataAttributes } from "./⏯️tool-run-trace/🟦️.tsx";
 import { World3dAnnotationOverlay, World3dAnnotationProjector, World3dScalarLegendView, World3dSectionClip, world3dModellingDataAttributes, world3dModellingStrings } from "./📏️modelling/🟦️.tsx";
 import { type ComponentSceneHostProps, type InteractionTarget,
@@ -235,9 +235,8 @@ export function World3dHost(props: ComponentSceneHostProps) {
               <SharedBorderRow
                 orientation="vertical"
                 data-world-lower-overlay-rail=""
-                data-level="pane"
-                data-glass-chip=""
-                className={cn("pointer-events-none absolute left-single z-40 max-w-[calc(100%_-_2*var(--spacing-single))] text-xs", glassClass)}
+                overlay="chip"
+                className="pointer-events-none absolute left-single z-40 max-w-[calc(100%_-_2*var(--spacing-single))] text-xs"
                 style={{ bottom: "calc(var(--window-frame-bottom-clearance, 0px) + var(--spacing-single))" }}
               >
                 {scalarLegend ? (

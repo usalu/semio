@@ -837,7 +837,7 @@
     % so side rules meet a real south edge (overlay paints it — enhanced does
     % not draw horizontals at break by itself).
     bottomrule~at~break=\semio@stroke@hairline,
-    colback=semio-chrome-canvas,
+    colback=semio-chrome-interior,
     coltext=semio-chrome-text-normal,
     top=\semio@window@top@clearance,
     left=\semio@window@bodypad,
@@ -2307,14 +2307,14 @@
 % level above what it sits on: its surface is the glass of that level (the level
 % colour at \semio@glass@alpha@<level>) under a veil of the foreground at
 % \semio@chip@tint, so the content beneath shows through and the chip still reads
-% as a surface of its own. The page canvas is the base level, so the chips of a
-% heading and of the page bars are window glass; a window, figure or table is
-% itself a window-level frame, so its chips are the glass of the pane level.
+% as a surface of its own. The opaque window-level interior is shared by the
+% prose, headings, windows, tables and running bands, so every chip uses pane
+% glass.
 % \SemioChipTransparency{false} (profiles that forbid transparency, such as
-% PDF/A-1) fills the same two layers flattened onto the canvas instead.
+% PDF/A-1) fills the same two layers flattened onto the interior.
 \newif\ifsemio@chip@glass
 \semio@chip@glasstrue
-\newcommand{\semio@chip@level}{window}
+\newcommand{\semio@chip@level}{pane}
 \newcommand{\semio@chip@surface}{semio-chrome-\semio@chip@level}
 \newcommand{\semio@chip@alpha}{\csname semio@glass@alpha@\semio@chip@level\endcsname}
 \newcommand{\semio@chip@alpha@pct}{\csname semio@glass@alpha@\semio@chip@level @pct\endcsname}
@@ -2329,7 +2329,7 @@
     \semio@chip@layer{\semio@chip@alpha}{#1}{#2}{#3}%
     \semio@chip@layer{\semio@chip@tint}{semio-chrome-foreground}{#2}{#3}%
   \else
-    \textcolor{#1!\semio@chip@alpha@pct!semio-chrome-canvas!\semio@chip@tint@rest@pct!semio-chrome-foreground}{\rule{#2}{#3}}%
+    \textcolor{#1!\semio@chip@alpha@pct!semio-chrome-interior!\semio@chip@tint@rest@pct!semio-chrome-foreground}{\rule{#2}{#3}}%
   \fi
 }
 
@@ -2374,7 +2374,6 @@
 
 \newcommand{\semio@chip@pane}[2]{%
   \begingroup
-    \renewcommand{\semio@chip@level}{pane}%
     \semio@chip@box{#1}{\semio@chip@surface}{semio-chrome-border-normal}{\semio@chip@inset}{%
       \semio@heading@bar@font\color{semio-chrome-foreground}#2%
     }%
@@ -3177,6 +3176,7 @@
 % 📐️ The bar is lowered by the strut depth its header field ends with, so the
 % navbar rule is the bottom of the head box and meets the text area.
 \newcommand{\semio@chrome@navbar@bar}[1]{%
+  \global\semio@page@bandstrue%
   \leavevmode\lower\dp\strutbox\vbox to \semio@chrome@navbar@height{%
     \semio@chrome@footerfalse
     \vfil
@@ -3402,6 +3402,13 @@
   headsep=-\semio@stroke@hairline,
   bottom=\semio@chrome@page@gap,
   footskip=\dimexpr\semio@chrome@footer@reserve+\semio@window@bodypad\relax,
+}
+\newif\ifsemio@page@bands
+\AddToHook{shipout/background}{%
+  \ifsemio@page@bands
+    \semio@page@surface{\semio@chrome@zone@height}{\dimexpr\semio@window@bodypad+\semio@chrome@zone@height@footer\relax}%
+    \global\semio@page@bandsfalse
+  \fi
 }
 \AtBeginDocument{%
   \semio@column@inset

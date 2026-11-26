@@ -2,6 +2,7 @@
 
 use crate::editor::animate::engine::camera::camera::Camera;
 use crate::editor::animate::engine::config::config::AnimateConfig;
+use crate::editor::animate::engine::scene::scene::CapturedFrame;
 use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects};
 use crate::editor::animate::engine::text::color::Color;
 use crate::editor::animate::engine::video::VideoError;
@@ -9,12 +10,6 @@ use geometry::Affine;
 use semio_framework_raster::RasterError;
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use semio_framework_raster::{SceneRasterizer, VectorScene};
-
-/// 🖼️ Captured mobject state at one timeline sample.
-pub struct CapturedFrame {
-    pub time: f64,
-    pub mobjects: Vec<Sobjects>,
-}
 
 /// 🖌️ Headless Vello/wgpu renderer (via `semio_framework_raster::SceneRasterizer`) with
 /// static-background caching. Native/host-only body; see the `wasm32-wasip2` variant below —
@@ -45,7 +40,10 @@ impl VelloRenderer {
 
     /// 🖼️ Renders captured mobjects to RGBA8 pixels.
     pub fn render_capture(&mut self, capture: &CapturedFrame, camera: &Camera, config: &AnimateConfig) -> Result<Vec<u8>, VideoError> {
-        let static_hash = static_layer_hash(capture, config);
+        self.render_with_hash(capture, camera, config, static_layer_hash(capture, camera, config))
+    }
+
+    pub(super) fn render_with_hash(&mut self, capture: &CapturedFrame, camera: &Camera, config: &AnimateConfig, static_hash: String) -> Result<Vec<u8>, VideoError> {
         if self.static_cache.as_ref().is_some_and(|cache| cache.hash == static_hash) {
             return Ok(self.static_cache.as_ref().expect("cache").pixels.clone());
         }
@@ -79,6 +77,10 @@ impl VelloRenderer {
     /// somehow held a `Self` past a failed `new`, which the type's own API cannot produce.
     pub fn render_capture(&mut self, _capture: &CapturedFrame, _camera: &Camera, _config: &AnimateConfig) -> Result<Vec<u8>, VideoError> {
         Err(video_error_from_raster(RasterError::Adapter("wasm32-wasip2 has no GPU device access (WASI Preview 2 defines no graphics API); headless video rendering is a native/host-only capability".into())))
+    }
+
+    pub(super) fn render_with_hash(&mut self, capture: &CapturedFrame, camera: &Camera, config: &AnimateConfig, _hash: String) -> Result<Vec<u8>, VideoError> {
+        self.render_capture(capture, camera, config)
     }
 }
 
@@ -135,29 +137,17 @@ pub(crate) fn color_from_style(color: Color) -> [f64; 4] {
     color.to_array()
 }
 
-pub(crate) fn static_layer_hash(capture: &CapturedFrame, config: &AnimateConfig) -> String {
-    use framework_hash::{format_number_for_hash, hash_parts};
-    let mut parts = vec![format_number_for_hash(config.background[0]), format_number_for_hash(config.background[1]), format_number_for_hash(config.background[2]), format_number_for_hash(config.background[3]), capture.mobjects.len().to_string()];
-    for mobj in &capture.mobjects {
-        parts.push(mobj.id().to_string());
-        parts.push(mobj.z_order().to_string());
-        parts.push(format_number_for_hash(mobj.opacity()));
-        parts.push(format_number_for_hash(mobj.point_ratio()));
-        let coeffs = mobj.transform().as_coeffs();
-        for c in coeffs {
-            parts.push(format_number_for_hash(c));
-        }
-        parts.push(mobj.paths().len().to_string());
-        for path in mobj.paths() {
-            parts.push(path.elements().len().to_string());
-        }
-    }
-    hash_parts(&parts)
+pub(super) fn static_layer_hash(capture: &CapturedFrame, camera: &Camera, config: &AnimateConfig) -> String {
+    use super::program::VideoProgramBuilder;
+    use semio_framework_value::ToValue;
+    let mut picture = VideoProgramBuilder::new(config);
+    picture.push_capture(capture, camera, config);
+    let value = semio_framework_pack_json::from_dsl_value(&picture.finish().to_value());
+    framework_hash::hash_bytes(semio_framework_pack_json::to_string(&value).as_bytes())
 }
 
-pub(crate) fn frame_hash(capture: &CapturedFrame, config: &AnimateConfig) -> String {
-    use framework_hash::{format_number_for_hash, hash_parts};
-    hash_parts(&[format_number_for_hash(capture.time), static_layer_hash(capture, config)])
+pub(super) fn partial_hash(picture: &str, frames: usize) -> String {
+    framework_hash::hash_parts(&["avc-partial-v1", picture, &frames.to_string()])
 }
 
 #[cfg(all(test, not(all(target_arch = "wasm32", target_env = "p2"))))]

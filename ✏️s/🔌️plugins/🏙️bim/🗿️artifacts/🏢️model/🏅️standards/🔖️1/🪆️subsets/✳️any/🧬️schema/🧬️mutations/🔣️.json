@@ -617,6 +617,39 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-load/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-option-group/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-option-group/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-option-group/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-design-option/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-design-option/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-design-option/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/create-workset/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-workset/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/delete-workset/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-element-option/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/mutation/set-element-workset/schema.json"
     }
   ]
 }

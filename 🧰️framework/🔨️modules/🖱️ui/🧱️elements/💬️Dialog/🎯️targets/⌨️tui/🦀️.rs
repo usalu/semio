@@ -203,7 +203,7 @@ pub fn paint_dialog(d: &DialogState, theme: &Theme, rect: Rect, buf: &mut CellBu
     }
     for (index, (button, slot)) in d.buttons.iter().zip(dialog_button_rects(d, rect)).enumerate() {
         let selected = index == d.selected;
-        let (button_fg, button_bg) = if selected { (theme.role(Role::ActiveForeground), theme.role(Role::ActiveBase)) } else { (fg, theme.surface(Surface::Panel)) };
+        let (button_fg, button_bg) = if selected { (theme.role(Role::ActiveForeground), theme.role(Role::ActiveBase)) } else { (fg, bg) };
         buf.fill_rect(slot, Cell::blank(button_fg, button_bg));
         buf.put_str(Pos { x: slot.x + 1, y: slot.y }, button, button_fg, button_bg, if selected { attr::BOLD } else { 0 }, slot);
     }

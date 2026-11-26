@@ -127,7 +127,7 @@ function workspaceWasmPkgResolveCandidates(repoRoot: string, pkgName: string, su
 export type FlowWasmDeliveryV1=Readonly<{version:1;kind:"source";browser:string;host:string}>|Readonly<{version:1;kind:"publication";root:string}>;
 
 /** 🔎️ Resolves the explicit Flow facet before generic missing-package stubs. */
-export function playgroundFlowWasmDevStubPlugin(repoRoot: string,delivery:FlowWasmDeliveryV1): OwnedBuildPlugin {
+export function playgroundFlowWasmDevStubPlugin(repoRoot: string,delivery:FlowWasmDeliveryV1): Pick<OwnedBuildPlugin, "name" | "enforce" | "resolveId" | "load"> {
   if(validateJsonSchemaSubset(providerSchema.definitions.FlowWasmDeliveryV1,delivery).length)throw Error("Closed explicit Flow delivery required");
   for(const path of delivery.kind==="source"?[delivery.browser,delivery.host]:[delivery.root])if(!isAbsolute(path)||resolve(path)!==path)throw Error("Canonical bounded Flow delivery paths required");
   return {

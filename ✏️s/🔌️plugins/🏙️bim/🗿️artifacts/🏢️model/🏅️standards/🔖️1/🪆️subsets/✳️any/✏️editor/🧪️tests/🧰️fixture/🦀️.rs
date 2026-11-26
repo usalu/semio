@@ -30,7 +30,7 @@ fn layer(material: &str, thickness: f64) -> Layer {
 
 /// 🏠️ Storeys `st-ground` (3 m) and `st-first` (2.8 m), wall type `wt-300`, and a type of every other family; no element yet.
 pub fn model() -> ModelSnapshot {
-    let mut snapshot = BimModelApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
+    let mut snapshot = <BimModelApp as semio_plugin::ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     snapshot.walls.cold_clear();
     let color = Rgb { r: 0.5, g: 0.5, b: 0.5 };
     for (id, category) in [("m-glass", MaterialCategory::Glass), ("m-steel", MaterialCategory::Metal), ("m-concrete", MaterialCategory::Concrete)] {
@@ -49,7 +49,7 @@ pub fn model() -> ModelSnapshot {
 
 /// 🧱️ [`model`] with the four walls of the demo room (8 by 6 metres) on the ground storey.
 pub fn room() -> ModelSnapshot {
-    let mut snapshot = BimModelApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
+    let mut snapshot = <BimModelApp as semio_plugin::ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let extras = model();
     snapshot.materials = extras.materials;
     snapshot.slab_types = extras.slab_types;
@@ -68,7 +68,7 @@ const TABLE: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️i
 pub fn furnished() -> ModelSnapshot {
     let mut snapshot = room();
     let table: ModelSnapshot = from_json_str(TABLE, JsonMemberPolicy::Reject).expect("the table decodes");
-    snapshot.materials.cold_extend(table.materials);
+    snapshot.materials.cold_extend(table.materials.iter().map(|(id, material)| (id.clone(), material.clone())));
     snapshot.families = table.families;
     snapshot.family_parameters = table.family_parameters;
     snapshot.family_solids = table.family_solids;
@@ -274,7 +274,7 @@ pub mod context {
 
     /// 🪟️ Dispatches `command` addressed at the window instance `view` names, as the shell does for a window-scoped action.
     pub async fn dispatch_in(app: &mut BimApp, command: BimCommand, view: &ViewModel) -> Dispatched {
-        let action_meta = semio_plugin::ActionMeta { instance_id: BIM_TEST_INSTANCE, view_state: Some(view.clone()), ..meta("local") };
+        let action_meta = semio_plugin::ActionMeta { instance_id: BIM_TEST_INSTANCE, view_state: Some(view.clone().into()), ..meta("local") };
         let mut result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         let settled = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, BIM_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
@@ -344,7 +344,12 @@ pub mod support {
     use semio_plugin::HistoryView;
 
     pub fn demo() -> ModelSnapshot {
-        BimModelApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births")
+        <BimModelApp as semio_plugin::ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births")
+    }
+
+    /// 🧳️ Makes an empty owner for command laws outside the app's host.
+    pub fn empty_instance() -> semio_plugin::ArtifactInstanceOperationOwnerHandle {
+        semio_plugin::ArtifactInstanceOperationOwnerHandle::new(Box::new(semio_plugin::plugin_app_close_prelude::EmptyArtifactInstanceOperationOwner))
     }
 
     pub fn english() -> ViewModel {

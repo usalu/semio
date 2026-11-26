@@ -76,7 +76,7 @@ impl ClashSetResult {
 }
 
 /// 📦️ The spatial index of one solid: its class and storey, its world mesh, the box of the mesh and the bounding-volume hierarchy over the triangles.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq)]
 pub struct SolidProbe {
     pub class: Option<ElementClass>,
     pub storey: String,

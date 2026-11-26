@@ -292,6 +292,21 @@ fn paint_chip_reflects_on_and_off_colors() {
     let off = ChipState { label: "x".to_string(), on: false };
     let mut buf_off = CellBuffer::new(Size { width: 10, height: 1 }, Cell::blank([0, 0, 0], [0, 0, 0]));
     WidgetState::Chip(off).paint(&theme, rect, &mut buf_off, false);
-    assert_eq!(buf_off.get(0, 0).unwrap().bg, theme.surface(Surface::Panel));
+    assert_eq!(buf_off.get(0, 0).unwrap().bg, theme.surface(Surface::Window));
+}
+#[test]
+fn ordinary_content_keeps_its_owner_through_repeated_paints_and_only_chips_rise() {
+    for appearance in [AppearanceName::Light, AppearanceName::Dark] {
+        let theme = Theme::new(appearance);
+        for (owner, chip) in [(Surface::Base, Surface::Window), (Surface::Window, Surface::Pane), (Surface::Dialog, Surface::Menu), (Surface::Menu, Surface::Menu)] {
+            let rect = Rect::new(0, 0, 16, 2);
+            let mut buf = CellBuffer::new(Size { width: 16, height: 2 }, Cell::blank([0; 3], [0; 3]));
+            buf.set_owner(owner, &theme);
+            WidgetState::Chip(ChipState { label: "x".into(), on: false }).paint(&theme, rect, &mut buf, false);
+            assert_eq!(buf.get(0, 0).unwrap().bg, theme.surface(chip));
+            WidgetState::List(ListState::new(vec!["one".into()])).paint(&theme, rect, &mut buf, false);
+            assert_eq!(buf.get(0, 1).unwrap().bg, theme.surface(owner));
+        }
+    }
 }
 //#endregion 🔖️Widget

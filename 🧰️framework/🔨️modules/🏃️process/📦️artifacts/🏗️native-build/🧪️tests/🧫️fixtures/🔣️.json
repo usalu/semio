@@ -1,4 +1,11 @@
 {
+  "ownedResolverLock": {
+    "tool": "lock-tool",
+    "peer": "z-unrelated",
+    "version": "0.1.0",
+    "edit": "# workspace peer rewrote its lock row during Cargo",
+    "stdout": "pinned Cargo\n"
+  },
   "schema": "semio.process.cargo-artifacts.fixture/v1",
   "compilerCustody": [
     { "id": "custody refusal", "operation": "refuse" },

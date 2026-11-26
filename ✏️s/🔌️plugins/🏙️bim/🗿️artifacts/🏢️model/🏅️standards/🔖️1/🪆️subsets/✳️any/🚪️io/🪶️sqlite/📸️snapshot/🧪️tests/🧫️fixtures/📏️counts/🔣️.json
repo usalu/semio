@@ -2,8 +2,8 @@
   "qualification": "Handwritten domain-to-table role mapping from literal witness; no provider imports/output",
   "tableCount": 128,
   "totalRows": 4036,
-  "witnessSha256": "49fe777e9a5e110b5fc7a9d135e9072a1779eb80946fc7a746b9c278e1c491b0",
-  "ddlSha256": "c660dc73b328372c1f166fe209dca24cfc7db3fb4c64c3fda456580d2a55a77d",
+  "witnessSha256": "502f76b4fd72875040f29f78471e71ef8b539f503b7d11e64bcf324ecfb34e8f",
+  "ddlSha256": "67ea672a58e68245d9d3e6d2380d62ca3488fcac4a8559532c1aec8b5e55ddf9",
   "tables": {
     "bim_document": 1,
     "bim_project": 1,
@@ -134,5 +134,6 @@
     "bim_issue_isolate": 2,
     "bim_mep_path": 7
   },
-  "maxColumns": 59
+  "maxColumns": 59,
+  "floatRoles": 238
 }

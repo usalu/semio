@@ -1,0 +1,1115 @@
+{
+  "schema": "energy.model",
+  "model": {
+    "name": "Model",
+    "version": "semio-bim-1",
+    "site": {
+      "latitude_deg": 47.0,
+      "longitude_deg": 8.0,
+      "elevation_m": 0.0,
+      "time_zone_hours": 1.0,
+      "north_axis_deg": 0.0
+    },
+    "zones": [
+      {
+        "id": 1,
+        "name": "sp-0 Ground",
+        "volume_m3": 57.9975,
+        "multiplier": 1,
+        "conditioned": true,
+        "part_of_total_floor_area": true
+      },
+      {
+        "id": 3,
+        "name": "sp-1 Upper",
+        "volume_m3": 63.269999999999996,
+        "multiplier": 1,
+        "conditioned": true,
+        "part_of_total_floor_area": true
+      },
+      {
+        "id": 5,
+        "name": "sp-b Cellar",
+        "volume_m3": 49.5615,
+        "multiplier": 1,
+        "conditioned": false,
+        "part_of_total_floor_area": false
+      }
+    ],
+    "spaces": [
+      {
+        "id": 2,
+        "name": "Ground",
+        "zone_id": 1,
+        "floor_area_m2": 21.09
+      },
+      {
+        "id": 4,
+        "name": "Upper",
+        "zone_id": 3,
+        "floor_area_m2": 21.09
+      },
+      {
+        "id": 6,
+        "name": "Cellar",
+        "zone_id": 5,
+        "floor_area_m2": 21.09
+      }
+    ],
+    "surfaces": [
+      {
+        "id": 10,
+        "name": "sp-0/w1",
+        "zone_id": 1,
+        "class": "ExteriorWall",
+        "vertices_m": [
+          [
+            0.15000000000000002,
+            0.15000000000000002,
+            0.0
+          ],
+          [
+            5.85,
+            0.15000000000000002,
+            0.0
+          ],
+          [
+            5.85,
+            0.15000000000000002,
+            2.75
+          ],
+          [
+            0.15000000000000002,
+            0.15000000000000002,
+            2.75
+          ]
+        ],
+        "construction_id": 9,
+        "outside_boundary_condition": "OutdoorAir",
+        "sun_exposed": true,
+        "wind_exposed": true,
+        "multiplier": 1
+      },
+      {
+        "id": 11,
+        "name": "sp-0/w2",
+        "zone_id": 1,
+        "class": "ExteriorWall",
+        "vertices_m": [
+          [
+            5.85,
+            0.15000000000000002,
+            0.0
+          ],
+          [
+            5.85,
+            3.85,
+            0.0
+          ],
+          [
+            5.85,
+            3.85,
+            2.75
+          ],
+          [
+            5.85,
+            0.15000000000000002,
+            2.75
+          ]
+        ],
+        "construction_id": 9,
+        "outside_boundary_condition": "OutdoorAir",
+        "sun_exposed": true,
+        "wind_exposed": true,
+        "multiplier": 1
+      },
+      {
+        "id": 12,
+        "name": "sp-0/w3",
+        "zone_id": 1,
+        "class": "ExteriorWall",
+        "vertices_m": [
+          [
+            5.85,
+            3.85,
+            0.0
+          ],
+          [
+            0.15000000000000036,
+            3.8500000000000005,
+            0.0
+          ],
+          [
+            0.15000000000000036,
+            3.8500000000000005,
+            2.75
+          ],
+          [
+            5.85,
+            3.85,
+            2.75
+          ]
+        ],
+        "construction_id": 9,
+        "outside_boundary_condition": "OutdoorAir",
+        "sun_exposed": true,
+        "wind_exposed": true,
+        "multiplier": 1
+      },
+      {
+        "id": 13,
+        "name": "sp-0/w4",
+        "zone_id": 1,
+        "class": "ExteriorWall",
+        "vertices_m": [
+          [
+            0.15000000000000002,
+            3.8500000000000005,
+            0.0
+          ],
+          [
+            0.15000000000000002,
+            0.1499999999999999,
+            0.0
+          ],
+          [
+            0.15000000000000002,
+            0.1499999999999999,
+            2.75
+          ],
+          [
+            0.15000000000000002,
+            3.8500000000000005,
+            2.75
+          ]
+        ],
+        "construction_id": 9,
+        "outside_boundary_condition": "OutdoorAir",
+        "sun_exposed": true,
+        "wind_exposed": true,
+        "multiplier": 1
+      },
+      {
+        "id": 16,
+        "name": "sp-0/f1",
+        "zone_id": 1,
+        "class": "Floor",
+        "vertices_m": [
+          [
+            0.15000000000000002,
+            3.8500000000000005,
+            0.0
+          ],
+          [
+            5.85,
+            3.85,
+            0.0
+          ],
+          [
+            5.85,
+            0.15000000000000002,
+            0.0
+          ],
+          [
+            0.15000000000000002,
+            0.15000000000000002,
+            0.0
+          ]
+        ],
+        "construction_id": 15,
+        "outside_boundary_condition": {
+          "Interzone": 31
+        },
+        "sun_exposed": false,
+        "wind_exposed": false,
+        "multiplier": 1
+      },
+      {
+        "id": 17,
+        "name": "sp-0/c1",
+        "zone_id": 1,
+        "class": "Ceiling",
+        "vertices_m": [
+          [
+            0.15000000000000002,
+            0.15000000000000002,
+            2.75
+          ],
+          [
+            5.85,
+            0.15000000000000002,
+            2.75
+          ],
+          [
+            5.85,
+            3.85,
+            2.75
+          ],
+          [
+            0.15000000000000002,
+            3.8500000000000005,
+            2.75
+          ]
+        ],
+        "construction_id": 15,
+        "outside_boundary_condition": "Adiabatic",
+        "sun_exposed": false,
+        "wind_exposed": false,
+        "multiplier": 1
+      },
+      {
+        "id": 18,
+        "name": "sp-1/w1",
+        "zone_id": 3,
+        "class": "ExteriorWall",
+        "vertices_m": [
+          [
+            0.15000000000000002,
+            0.15000000000000002,
+            3.0
+          ],
+          [
+            5.85,
+            0.15000000000000002,
+            3.0
+          ],
+          [
+            5.85,
+            0.15000000000000002,
+            6.0
+          ],
+          [
+            0.15000000000000002,
+            0.15000000000000002,
+            6.0
+          ]
+        ],
+        "construction_id": 9,
+        "outside_boundary_condition": "OutdoorAir",
+        "sun_exposed": true,
+        "wind_exposed": true,
+        "multiplier": 1
+      },
+      {
+        "id": 19,
+        "name": "sp-1/w2",
+        "zone_id": 3,
+        "class": "ExteriorWall",
+        "vertices_m": [
+          [
+            5.85,
+            0.15000000000000002,
+            3.0
+          ],
+          [
+            5.85,
+            3.85,
+            3.0
+          ],
+          [
+            5.85,
+            3.85,
+            6.0
+          ],
+          [
+            5.85,
+            0.15000000000000002,
+            6.0
+          ]
+        ],
+        "construction_id": 9,
+        "outside_boundary_condition": "OutdoorAir",
+        "sun_exposed": true,
+        "wind_exposed": true,
+        "multiplier": 1
+      },
+      {
+        "id": 20,
+        "name": "sp-1/w3",
+        "zone_id": 3,
+        "class": "ExteriorWall",
+        "vertices_m": [
+          [
+            5.85,
+            3.85,
+            3.0
+          ],
+          [
+            0.15000000000000036,
+            3.8500000000000005,
+            3.0
+          ],
+          [
+            0.15000000000000036,
+            3.8500000000000005,
+            6.0
+          ],
+          [
+            5.85,
+            3.85,
+            6.0
+          ]
+        ],
+        "construction_id": 9,
+        "outside_boundary_condition": "OutdoorAir",
+        "sun_exposed": true,
+        "wind_exposed": true,
+        "multiplier": 1
+      },
+      {
+        "id": 21,
+        "name": "sp-1/w4",
+        "zone_id": 3,
+        "class": "ExteriorWall",
+        "vertices_m": [
+          [
+            0.15000000000000002,
+            3.8500000000000005,
+            3.0
+          ],
+          [
+            0.15000000000000002,
+            0.1499999999999999,
+            3.0
+          ],
+          [
+            0.15000000000000002,
+            0.1499999999999999,
+            6.0
+          ],
+          [
+            0.15000000000000002,
+            3.8500000000000005,
+            6.0
+          ]
+        ],
+        "construction_id": 9,
+        "outside_boundary_condition": "OutdoorAir",
+        "sun_exposed": true,
+        "wind_exposed": true,
+        "multiplier": 1
+      },
+      {
+        "id": 22,
+        "name": "sp-1/f1",
+        "zone_id": 3,
+        "class": "Floor",
+        "vertices_m": [
+          [
+            0.15000000000000002,
+            3.8500000000000005,
+            3.0
+          ],
+          [
+            5.85,
+            3.85,
+            3.0
+          ],
+          [
+            5.85,
+            0.15000000000000002,
+            3.0
+          ],
+          [
+            0.15000000000000002,
+            0.15000000000000002,
+            3.0
+          ]
+        ],
+        "construction_id": 15,
+        "outside_boundary_condition": "Adiabatic",
+        "sun_exposed": false,
+        "wind_exposed": false,
+        "multiplier": 1
+      },
+      {
+        "id": 25,
+        "name": "sp-1/c1",
+        "zone_id": 3,
+        "class": "Roof",
+        "vertices_m": [
+          [
+            0.15000000000000002,
+            0.15000000000000002,
+            6.0
+          ],
+          [
+            5.85,
+            0.15000000000000002,
+            6.0
+          ],
+          [
+            5.85,
+            3.85,
+            6.0
+          ],
+          [
+            0.15000000000000002,
+            3.8500000000000005,
+            6.0
+          ]
+        ],
+        "construction_id": 24,
+        "outside_boundary_condition": "OutdoorAir",
+        "sun_exposed": true,
+        "wind_exposed": true,
+        "multiplier": 1
+      },
+      {
+        "id": 26,
+        "name": "sp-b/w1g",
+        "zone_id": 5,
+        "class": "ExteriorWall",
+        "vertices_m": [
+          [
+            0.15000000000000002,
+            0.15000000000000002,
+            -2.6
+          ],
+          [
+            5.85,
+            0.15000000000000002,
+            -2.6
+          ],
+          [
+            5.85,
+            0.15000000000000002,
+            -0.25
+          ],
+          [
+            0.15000000000000002,
+            0.15000000000000002,
+            -0.25
+          ]
+        ],
+        "construction_id": 9,
+        "outside_boundary_condition": "Ground",
+        "sun_exposed": false,
+        "wind_exposed": false,
+        "multiplier": 1
+      },
+      {
+        "id": 27,
+        "name": "sp-b/w2g",
+        "zone_id": 5,
+        "class": "ExteriorWall",
+        "vertices_m": [
+          [
+            5.85,
+            0.15000000000000002,
+            -2.6
+          ],
+          [
+            5.85,
+            3.85,
+            -2.6
+          ],
+          [
+            5.85,
+            3.85,
+            -0.25
+          ],
+          [
+            5.85,
+            0.15000000000000002,
+            -0.25
+          ]
+        ],
+        "construction_id": 9,
+        "outside_boundary_condition": "Ground",
+        "sun_exposed": false,
+        "wind_exposed": false,
+        "multiplier": 1
+      },
+      {
+        "id": 28,
+        "name": "sp-b/w3g",
+        "zone_id": 5,
+        "class": "ExteriorWall",
+        "vertices_m": [
+          [
+            5.85,
+            3.85,
+            -2.6
+          ],
+          [
+            0.15000000000000036,
+            3.8500000000000005,
+            -2.6
+          ],
+          [
+            0.15000000000000036,
+            3.8500000000000005,
+            -0.25
+          ],
+          [
+            5.85,
+            3.85,
+            -0.25
+          ]
+        ],
+        "construction_id": 9,
+        "outside_boundary_condition": "Ground",
+        "sun_exposed": false,
+        "wind_exposed": false,
+        "multiplier": 1
+      },
+      {
+        "id": 29,
+        "name": "sp-b/w4g",
+        "zone_id": 5,
+        "class": "ExteriorWall",
+        "vertices_m": [
+          [
+            0.15000000000000002,
+            3.8500000000000005,
+            -2.6
+          ],
+          [
+            0.15000000000000002,
+            0.1499999999999999,
+            -2.6
+          ],
+          [
+            0.15000000000000002,
+            0.1499999999999999,
+            -0.25
+          ],
+          [
+            0.15000000000000002,
+            3.8500000000000005,
+            -0.25
+          ]
+        ],
+        "construction_id": 9,
+        "outside_boundary_condition": "Ground",
+        "sun_exposed": false,
+        "wind_exposed": false,
+        "multiplier": 1
+      },
+      {
+        "id": 30,
+        "name": "sp-b/f1",
+        "zone_id": 5,
+        "class": "Floor",
+        "vertices_m": [
+          [
+            0.15000000000000002,
+            3.8500000000000005,
+            -2.6
+          ],
+          [
+            5.85,
+            3.85,
+            -2.6
+          ],
+          [
+            5.85,
+            0.15000000000000002,
+            -2.6
+          ],
+          [
+            0.15000000000000002,
+            0.15000000000000002,
+            -2.6
+          ]
+        ],
+        "construction_id": 15,
+        "outside_boundary_condition": "Ground",
+        "sun_exposed": false,
+        "wind_exposed": false,
+        "multiplier": 1
+      },
+      {
+        "id": 31,
+        "name": "sp-b/c1",
+        "zone_id": 5,
+        "class": "Ceiling",
+        "vertices_m": [
+          [
+            0.15000000000000002,
+            0.15000000000000002,
+            -0.25
+          ],
+          [
+            5.85,
+            0.15000000000000002,
+            -0.25
+          ],
+          [
+            5.85,
+            3.85,
+            -0.25
+          ],
+          [
+            0.15000000000000002,
+            3.8500000000000005,
+            -0.25
+          ]
+        ],
+        "construction_id": 15,
+        "outside_boundary_condition": {
+          "Interzone": 16
+        },
+        "sun_exposed": false,
+        "wind_exposed": false,
+        "multiplier": 1
+      }
+    ],
+    "fenestrations": [
+      {
+        "id": 32,
+        "name": "window sp-0/o1",
+        "surface_id": 11,
+        "u_value_w_m2k": 1.1,
+        "shgc": 0.375,
+        "vlt": 0.375,
+        "area_m2": 1.44,
+        "height_m": 1.2000000000000002,
+        "sill_height_m": 0.9,
+        "frame_conductance_w_k": 0.0,
+        "divider_conductance_w_k": 0.0,
+        "overhang_depth_m": 0.0,
+        "overhang_offset_m": 0.0,
+        "fin_depth_m": 0.0,
+        "fin_offset_m": 0.0,
+        "glazing_construction_id": null,
+        "vertices_m": [
+          [
+            5.85,
+            1.4,
+            0.9
+          ],
+          [
+            5.85,
+            2.6,
+            0.9
+          ],
+          [
+            5.85,
+            2.6,
+            2.1
+          ],
+          [
+            5.85,
+            1.4,
+            2.1
+          ]
+        ]
+      },
+      {
+        "id": 33,
+        "name": "window sp-1/o1",
+        "surface_id": 20,
+        "u_value_w_m2k": 1.1,
+        "shgc": 0.375,
+        "vlt": 0.375,
+        "area_m2": 1.44,
+        "height_m": 1.1999999999999997,
+        "sill_height_m": 0.8999999999999999,
+        "frame_conductance_w_k": 0.0,
+        "divider_conductance_w_k": 0.0,
+        "overhang_depth_m": 0.0,
+        "overhang_offset_m": 0.0,
+        "fin_depth_m": 0.0,
+        "fin_offset_m": 0.0,
+        "glazing_construction_id": null,
+        "vertices_m": [
+          [
+            3.6,
+            3.8500000000000005,
+            3.9
+          ],
+          [
+            2.4,
+            3.8500000000000005,
+            3.9
+          ],
+          [
+            2.4,
+            3.8500000000000005,
+            5.1
+          ],
+          [
+            3.6,
+            3.8500000000000005,
+            5.1
+          ]
+        ]
+      }
+    ],
+    "materials": [
+      {
+        "id": 7,
+        "name": "Insulation 100 mm",
+        "roughness": "MediumRough",
+        "thickness_m": 0.1,
+        "conductivity_w_m_k": 0.04,
+        "density_kg_m3": 1800.0,
+        "specific_heat_j_kg_k": 900.0,
+        "thermal_absorptance": 0.9,
+        "solar_absorptance": 0.7,
+        "visible_absorptance": 0.7
+      },
+      {
+        "id": 8,
+        "name": "Brick 200 mm",
+        "roughness": "MediumRough",
+        "thickness_m": 0.2,
+        "conductivity_w_m_k": 0.8,
+        "density_kg_m3": 1800.0,
+        "specific_heat_j_kg_k": 900.0,
+        "thermal_absorptance": 0.9,
+        "solar_absorptance": 0.7,
+        "visible_absorptance": 0.7
+      },
+      {
+        "id": 14,
+        "name": "Brick 250 mm",
+        "roughness": "MediumRough",
+        "thickness_m": 0.25,
+        "conductivity_w_m_k": 0.8,
+        "density_kg_m3": 1800.0,
+        "specific_heat_j_kg_k": 900.0,
+        "thermal_absorptance": 0.9,
+        "solar_absorptance": 0.7,
+        "visible_absorptance": 0.7
+      },
+      {
+        "id": 23,
+        "name": "Insulation 200 mm",
+        "roughness": "MediumRough",
+        "thickness_m": 0.2,
+        "conductivity_w_m_k": 0.04,
+        "density_kg_m3": 1800.0,
+        "specific_heat_j_kg_k": 900.0,
+        "thermal_absorptance": 0.9,
+        "solar_absorptance": 0.7,
+        "visible_absorptance": 0.7
+      }
+    ],
+    "glazing_materials": [],
+    "gas_materials": [],
+    "constructions": [
+      {
+        "id": 9,
+        "name": "Insulated brick",
+        "layer_material_ids": [
+          7,
+          8
+        ]
+      },
+      {
+        "id": 15,
+        "name": "Slab 250",
+        "layer_material_ids": [
+          14
+        ]
+      },
+      {
+        "id": 24,
+        "name": "Flat roof",
+        "layer_material_ids": [
+          23,
+          8
+        ]
+      }
+    ],
+    "people": [
+      {
+        "id": 38,
+        "zone_id": 1,
+        "schedule_id": 36,
+        "activity_schedule_id": 37,
+        "people_per_area": 0.1,
+        "sensible_fraction": 0.58,
+        "latent_fraction": 0.42000000000000004,
+        "radiant_fraction": 0.3
+      },
+      {
+        "id": 45,
+        "zone_id": 3,
+        "schedule_id": 36,
+        "activity_schedule_id": 37,
+        "people_per_area": 0.1,
+        "sensible_fraction": 0.58,
+        "latent_fraction": 0.42000000000000004,
+        "radiant_fraction": 0.3
+      }
+    ],
+    "lighting": [
+      {
+        "id": 39,
+        "zone_id": 1,
+        "schedule_id": 36,
+        "watts_per_area": 8.0,
+        "radiant_fraction": 0.7,
+        "visible_fraction": 0.2,
+        "return_air_fraction": 0.0
+      },
+      {
+        "id": 46,
+        "zone_id": 3,
+        "schedule_id": 36,
+        "watts_per_area": 8.0,
+        "radiant_fraction": 0.7,
+        "visible_fraction": 0.2,
+        "return_air_fraction": 0.0
+      }
+    ],
+    "equipment": [
+      {
+        "id": 40,
+        "zone_id": 1,
+        "schedule_id": 36,
+        "watts_per_area": 12.0,
+        "radiant_fraction": 0.3,
+        "latent_fraction": 0.0
+      },
+      {
+        "id": 47,
+        "zone_id": 3,
+        "schedule_id": 36,
+        "watts_per_area": 12.0,
+        "radiant_fraction": 0.3,
+        "latent_fraction": 0.0
+      }
+    ],
+    "thermostats": [
+      {
+        "id": 43,
+        "zone_id": 1,
+        "heating_setpoint_schedule_id": 41,
+        "cooling_setpoint_schedule_id": 42,
+        "heating_throttle_range_k": 0.0,
+        "cooling_throttle_range_k": 0.0
+      },
+      {
+        "id": 48,
+        "zone_id": 3,
+        "heating_setpoint_schedule_id": 41,
+        "cooling_setpoint_schedule_id": 42,
+        "heating_throttle_range_k": 0.0,
+        "cooling_throttle_range_k": 0.0
+      }
+    ],
+    "humidistats": [],
+    "setpoint_managers": [],
+    "ideal_loads": [
+      {
+        "id": 44,
+        "zone_id": 1,
+        "max_heating_supply_air_temp_c": 50.0,
+        "min_cooling_supply_air_temp_c": 13.0,
+        "max_heating_capacity_w": null,
+        "max_cooling_capacity_w": null,
+        "outdoor_air_per_person_m3_s": 0.0,
+        "outdoor_air_per_area_m3_s_m2": 0.0015
+      },
+      {
+        "id": 49,
+        "zone_id": 3,
+        "max_heating_supply_air_temp_c": 50.0,
+        "min_cooling_supply_air_temp_c": 13.0,
+        "max_heating_capacity_w": null,
+        "max_cooling_capacity_w": null,
+        "outdoor_air_per_person_m3_s": 0.0,
+        "outdoor_air_per_area_m3_s_m2": 0.0015
+      }
+    ],
+    "zone_equipment": [],
+    "air_loops": [],
+    "plant_loops": [],
+    "outdoor_air_systems": [],
+    "infiltrations": [],
+    "mechanical_ventilations": [],
+    "shading_surfaces": [],
+    "space_lists": [],
+    "thermal_enclosures": [],
+    "adjacency_pairs": [
+      {
+        "surface_a_id": 16,
+        "surface_b_id": 31
+      },
+      {
+        "surface_a_id": 17,
+        "surface_b_id": 22
+      }
+    ],
+    "airflow_network": null,
+    "electrical_load_centers": [],
+    "pv_systems": [],
+    "battery_storage": [],
+    "shw_systems": [],
+    "solar_thermal_systems": [],
+    "refrigeration_systems": [],
+    "water_systems": [],
+    "faults": [],
+    "output_variables": [],
+    "sizing_objects": [],
+    "daylight_zones": [],
+    "room_air_models": [],
+    "ground_temperature": {
+      "building_surface_c": [
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0
+      ],
+      "shallow_c": [
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0
+      ],
+      "deep_c": 18.0
+    },
+    "run_period": {
+      "start_month": 1,
+      "start_day": 1,
+      "end_month": 12,
+      "end_day": 31,
+      "year": 2026
+    },
+    "schedules": {
+      "constants": [
+        {
+          "id": 37,
+          "value": 100.0
+        },
+        {
+          "id": 41,
+          "value": 20.0
+        },
+        {
+          "id": 42,
+          "value": 26.0
+        },
+        {
+          "id": 50,
+          "value": 1.0
+        }
+      ],
+      "daily": [
+        {
+          "id": 34,
+          "hourly_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "interpolation": "Discrete",
+          "limits": null
+        },
+        {
+          "id": 35,
+          "hourly_values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "interpolation": "Discrete",
+          "limits": null
+        }
+      ],
+      "weekly": [
+        {
+          "id": 36,
+          "daily_schedule_ids": [
+            35,
+            34,
+            34,
+            34,
+            34,
+            34,
+            35
+          ]
+        }
+      ],
+      "annual": [],
+      "time_series": []
+    }
+  },
+  "structure": {
+    "childId": "energy-value",
+    "target": {
+      "artifactId": "energy-value",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "value"
+      }
+    }
+  },
+  "zones": {
+    "childId": "energy-table",
+    "target": {
+      "artifactId": "energy-table",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "table"
+      }
+    }
+  },
+  "referencedModel": null,
+  "weatherLink": null
+}

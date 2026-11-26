@@ -203,7 +203,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
                     let progress = step.progress().unwrap_or_default();
                     let unposted = semio_plugin_ownership::bounded_ownership::original_lifecycle_unposted(progress, before, cx.retained_progress())?;
                     cx.consume_retained(unposted)?;
-                    cx.consume_fuel(unposted.copied_items as u64);
+                    cx.consume_fuel(u64::try_from(semio_plugin_instance_ladders::ladders_lifecycle_stores::original_close_work(unposted.copied_items as u128, &progress)).unwrap_or(u64::MAX));
                     return Ok(RetainedCloneStep::Progress(progress));
                 }
                 let demand=self.ladder_ref().close_owned_stores_demands(grant.maximum_copy_bytes)?;let (mut kept,mut fault)=(None,None);

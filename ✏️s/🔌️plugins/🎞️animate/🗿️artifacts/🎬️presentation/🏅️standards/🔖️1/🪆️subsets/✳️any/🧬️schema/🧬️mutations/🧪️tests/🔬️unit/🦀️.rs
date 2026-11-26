@@ -41,8 +41,10 @@ async fn tiles_create_rename_resize_delete_round_trip() {
     assert_eq!(presentation_working_scene(&created).1.len(), 1);
     let renamed = round_trip(&created, &PresentationMutation::RenameTile(rename_tile::RenameTile { id: "t1".into(), new_name: "Hero".into() })).await;
     assert_eq!(presentation_working_scene(&renamed).1[0].name, "Hero");
-    let resized = round_trip(&renamed, &PresentationMutation::ResizeTileCrop(resize_tile_crop::ResizeTileCrop { id: "t1".into(), new_crop: FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 } })).await;
+    let resize = PresentationMutation::ResizeTileCrop(resize_tile_crop::ResizeTileCrop { id: "t1".into(), new_crop: FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 } });
+    let resized = round_trip(&renamed, &resize).await;
     assert_eq!(presentation_working_scene(&resized).1[0].crop.width, 0.4);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&resize, &renamed).await;
     let deleted = round_trip(&resized, &PresentationMutation::DeleteTile(delete_tile::DeleteTile { id: "t1".into() })).await;
     assert!(presentation_working_scene(&deleted).1.is_empty());
 }
@@ -87,8 +89,10 @@ async fn tile_roster_replace_source_and_resize_source_frame_round_trip() {
     next_source.kind = "video".into();
     let replaced = round_trip(&base, &PresentationMutation::ReplaceSource(replace_source::ReplaceSource { new_source: next_source.clone() })).await;
     assert_eq!(presentation_working_scene(&replaced).0.kind, "video");
-    let resized = round_trip(&base, &PresentationMutation::ResizeSourceFrame(resize_source_frame::ResizeSourceFrame { new_frame: FigureTileFrame { x: 0.2, y: 0.2, width: 0.5, height: 0.5 } })).await;
+    let resize = PresentationMutation::ResizeSourceFrame(resize_source_frame::ResizeSourceFrame { new_frame: FigureTileFrame { x: 0.2, y: 0.2, width: 0.5, height: 0.5 } });
+    let resized = round_trip(&base, &resize).await;
     assert_eq!(presentation_working_scene(&resized).0.frame.width, 0.5);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&resize, &base).await;
 }
 
 #[semio_framework_async_macros::async_test]

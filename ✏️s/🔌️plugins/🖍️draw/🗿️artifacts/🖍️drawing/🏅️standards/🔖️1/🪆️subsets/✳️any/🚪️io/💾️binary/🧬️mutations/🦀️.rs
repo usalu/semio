@@ -11,7 +11,11 @@ use crate::DrawingMutation;
 use protocol::OpBinary;
 
 protocol::original_ordinal_operation_receiving!(DrawingMutation);
-protocol::artifact_persisted_binary_operation!(DrawingMutation);
+impl protocol::os_store::ArtifactPersistedOperation for DrawingMutation {
+    fn install_persisted_receiving(wire: protocol::os_store::ArtifactOperationWire<Self>) -> protocol::os_store::ArtifactOperationWire<Self> {
+        wire.with_original_ordinal_binary_receiving()
+    }
+}
 
 impl OpBinary for DrawingMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

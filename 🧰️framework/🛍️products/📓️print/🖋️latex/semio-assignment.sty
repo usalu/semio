@@ -66,9 +66,7 @@
 \cs_new_protected:Npn \semio_assignment_cover_logo:n #1 { \SemioLogoFit { \linewidth } { 1.1cm } {#1} }
 \NewDocumentCommand \makeassignmentcover { } {
   \clearpage
-  \newgeometry { left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm }
-  \thispagestyle { empty }
-  \bool_gset_true:N \g_semio_cover_geometry_bool
+  \semio_cover_geometry_begin:
   \group_begin:
   \semio_theme_apply:
   \setlength { \parskip } { 0pt }

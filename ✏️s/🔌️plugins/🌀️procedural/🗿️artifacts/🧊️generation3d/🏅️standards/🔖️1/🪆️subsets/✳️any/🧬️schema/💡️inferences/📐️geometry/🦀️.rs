@@ -336,13 +336,44 @@ impl<'a> InferredField<GeometryInput<'a>> for Generation3dGeometry {
 }
 
 impl<'a> OriginalInferredField<GeometryInput<'a>> for Generation3dGeometry {
-    type Source = GeometryInput<'a>;
-    fn validate_source(snapshot:&GeometryInput<'a>,source:&Self::Source,cx:&semio_framework_job::StepContext<'_>)->Result<(),InferenceWorkFailure>{cx.original_source_parent()?.validate_borrowed_context(cx)?;if !std::ptr::eq(snapshot,source){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"generation3d geometry inference changed its original input owner").into())}Ok(())}
-    fn plan_source_extent(snapshot:&GeometryInput<'a>,_source:&Self::Source)->Option<(usize,usize)>{Some((snapshot.snapshot.host_snapshot.widgets.len(),snapshot.snapshot.host_snapshot.synapses.len()))}
-    fn plan_source_node<'view>(snapshot:&'view GeometryInput<'a>,_source:&'view Self::Source,ordinal:usize)->Option<&'view str>{snapshot.snapshot.host_snapshot.widgets.get(ordinal).map(widget_id)}
-    fn plan_source_key<'view>(snapshot:&'view GeometryInput<'a>,_source:&'view Self::Source,ordinal:usize)->Option<&'view String>{source_widget_key(snapshot.snapshot,ordinal)}
-    fn plan_source_link<'view>(snapshot:&'view GeometryInput<'a>,_source:&'view Self::Source,ordinal:usize)->Option<(&'view str,&'view str)>{snapshot.snapshot.host_snapshot.synapses.get(ordinal).map(|link|(link.from.as_str(),link.to.as_str()))}
-    fn source_identity(snapshot:&GeometryInput<'a>,_source:&Self::Source)->usize{snapshot.snapshot as*const Generation3dSnapshot as usize}
+    type Source = Generation3dSnapshot;
+
+    fn validate_source(input: &GeometryInput<'a>, source: &Self::Source, cx: &semio_framework_job::StepContext<'_>) -> Result<(), InferenceWorkFailure> {
+        cx.original_source_parent()?.validate_borrowed_context(cx)?;
+        if !std::ptr::eq(input.snapshot, source) {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "generation3d geometry inference changed its original input owner").into());
+        }
+        Ok(())
+    }
+
+    fn plan_source_extent(_: &GeometryInput<'a>, source: &Self::Source) -> Option<(usize, usize)> {
+        Some((source.host_snapshot.widgets.len(), source.host_snapshot.synapses.len()))
+    }
+
+    fn plan_source_node<'view>(_: &'view GeometryInput<'a>, source: &'view Self::Source, ordinal: usize) -> Option<&'view str> {
+        source.host_snapshot.widgets.get(ordinal).map(widget_id)
+    }
+
+    fn plan_source_key<'view>(_: &'view GeometryInput<'a>, source: &'view Self::Source, ordinal: usize) -> Option<&'view String> {
+        source_widget_key(source, ordinal)
+    }
+
+    fn plan_source_link<'view>(_: &'view GeometryInput<'a>, source: &'view Self::Source, ordinal: usize) -> Option<(&'view str, &'view str)> {
+        source.host_snapshot.synapses.get(ordinal).map(|link| (link.from.as_str(), link.to.as_str()))
+    }
+
+    fn source_identity(_: &GeometryInput<'a>, source: &Self::Source) -> usize {
+        std::ptr::from_ref(source) as usize
+    }
+
+    fn original_dependency_step(_: &GeometryInput<'a>, source: &Self::Source, ordinal: usize, pending: &mut Option<Box<dyn InferencePending>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<protocol::OriginalDependencyStep, InferenceWorkFailure> {
+        original_field::dependency::step(source, ordinal, pending, cx)
+    }
+
+    fn original_cache_weight(value: &Self::Value) -> Option<usize> {
+        original_field::dependency::weight(value)
+    }
+
     fn clone_original_parent(original:&Self::Value,output:&mut Option<Self::Value>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,InferenceWorkFailure>{
         let _=cx.original_source_parent()?.source_identity()?;if let Some(output)=output.as_ref(){if !Arc::ptr_eq(original,output){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original inferred parent donor changed its source owner").into())}return Ok(true)}
         let grant=cx.retained_grant();let bytes=std::mem::size_of::<Self::Value>();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}

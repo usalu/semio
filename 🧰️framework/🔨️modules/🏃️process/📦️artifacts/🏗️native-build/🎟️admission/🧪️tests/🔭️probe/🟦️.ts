@@ -25,7 +25,7 @@ const exchange = (endpoint: string, message: object, keepOpen = false): Promise<
 });
 
 test("a live broker answers the probe without queueing the asker", async () => {
-  const broker = await startAdmissionBrokerV1({ physicalBytes: 15 * 1024 ** 3, history: new Map() });
+  const broker = await startAdmissionBrokerV1({ physicalBytes: 15 * 1024 ** 3, totalBytes: 16 * 1024 ** 3, available: () => 16 * 1024 ** 3, warden: () => "calm", cancels: () => [], history: new Map() });
   try {
     broker.registerPass({ id: "wasm-release-00", profile: "release", target: "wasm32-wasip2" });
     const facts = { ...requests.requests.valid[0]!, op: "probe", crateTypes: ["cdylib"], target: "wasm32-wasip2" };

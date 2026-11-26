@@ -1,8 +1,6 @@
 //! 📌️ Annotations and forms of the PDF document model: the appearances, border styles, markup annotations, annotation kinds, form fields and the interactive form. See [`super`].
 
-use super::document_metadata::PdfDate;
-use super::navigation::{PdfAction, PdfDestination, PdfFileSpecification};
-use super::object_model::{PdfDictEntry, PdfRect};
+use semio_s_artifact_stdio_pdf_model_object::{PdfAction, PdfDate, PdfDestination, PdfDictEntry, PdfFileSpecification, PdfRect};
 
 //#region 🔖️Annotations
 /// 🖼️ One appearance sub-dictionary entry: the form XObject `form` shown in appearance `state`.

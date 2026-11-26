@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { CallToolResultSchema, McpError, type JSONRPCMessage } from "@modelcontextprotocol/sdk/types.js";
@@ -35,7 +35,8 @@ async function within<T>(promise: Promise<T>, milliseconds: number, label: strin
 const requireCoreInput = !process.argv.includes("--opening-only");
 const workspace = process.cwd();
 const generated = join(import.meta.dirname, "🗑️generated");
-const executable = join(generated, "native-host", "debug", process.platform === "win32" ? "semio-os-mcp.exe" : "semio-os-mcp");
+const option = (name: string) => process.argv.slice(2).find(arg => arg.startsWith(name + "="))?.slice(name.length+1);
+const executable = resolve(option("--gateway") ?? join(generated, "native-host", "debug", process.platform === "win32" ? "semio-os-mcp.exe" : "semio-os-mcp"));
 const entry = mcpServerEntries(workspace).semio;
 const catalog = takeMcpPluginCatalog(entry.args.slice(4), workspace);
 assert(catalog.env.SEMIO_PLUGIN_CATALOG);
@@ -45,7 +46,7 @@ const models = [];
 for (const pluginId of [pins.pluginId, pins.inferencePluginId]) {
   const plugin = plugins.find(row => row.pluginId === pluginId);
   assert(plugin, `Missing catalog owner ${pluginId}`);
-  const root = join(generated, "m-canon", "browser", mode, "components", componentModelDirectoryKeyV1(plugin.cratePath));
+  const root = join(resolve(option("--" + pluginId) ?? join(generated, "m-canon")), "browser", mode, "components", componentModelDirectoryKeyV1(plugin.cratePath));
   const pair = verifySemanticDescriptorPairBytesV1(await readFile(join(root, "🔣️.json")), await readFile(join(root, "🛂️.descriptor.semio")));
   assert.equal(pair.pluginId, pluginId);
   const preparedActor = await actorPreparationImageIdentityV1(join(root, actorPreparationPolicyV1.image), AbortSignal.timeout(30_000));

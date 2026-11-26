@@ -48,19 +48,24 @@ def without_id(rows):
 
 def members_of(group):
     """👥️ The `ObjectType` (the model id) of every space assigned to a group, sorted."""
-    return sorted(obj.ObjectType for relation in group.IsGroupedBy or [] for obj in relation.RelatedObjects)
+    return sorted(obj.ObjectType for relation in getattr(group, "IsGroupedBy", ()) or [] for obj in relation.RelatedObjects)
+
+
+def group_proxies(model, kind):
+    """🗃️ IFC2X3 group placeholders carrying authored rules without spatial membership."""
+    return [proxy for proxy in model.by_type("IfcProxy") if proxy.ProxyType == "GROUP" and proxy.ObjectType == kind]
 
 
 def zone_rows(model):
     """🏘️ Every `IfcZone` by its authoring id: name, category, reference, density, members and totals."""
     rows = {}
-    for zone in model.by_type("IfcZone"):
+    for zone in [*model.by_type("IfcZone"), *group_proxies(model, "UnassignedZone")]:
         psets = ifcopenshell.util.element.get_psets(zone)
         authoring = without_id(psets.get("Semio_Authoring", {}))
         totals = without_id(ifcopenshell.util.element.get_psets(zone, qtos_only=True).get("Semio_ZoneTotals", {}))
         rows[authoring["Id"]] = {
             "name": zone.Name,
-            "category": zone.ObjectType or "",
+            "category": (zone.ObjectType if zone.is_a("IfcZone") else authoring["Category"]) or "",
             "reference": psets.get("Pset_ZoneCommon", {}).get("Reference"),
             "occupancy_density": float(authoring["OccupancyDensity"]),
             "members": members_of(zone),
@@ -72,7 +77,7 @@ def zone_rows(model):
 def scheme_rows(model):
     """🗃️ Every `IfcGroup` of type `AreaScheme` by its authoring id: name, measure, counted usages and zones."""
     rows = {}
-    for group in model.by_type("IfcGroup", include_subtypes=False):
+    for group in [*model.by_type("IfcGroup", include_subtypes=False), *group_proxies(model, "AreaScheme")]:
         if group.ObjectType != "AreaScheme":
             continue
         authoring = without_id(ifcopenshell.util.element.get_psets(group).get("Semio_Authoring", {}))
@@ -130,7 +135,7 @@ def audit(model, snapshot, table):
         source = snapshot["area_schemes"].get(scheme_id)
         if source is not None and (row["name"], row["measure"], row["usages"], row["zones"]) != (source["name"], source["measure"], source["usages"], source["zones"]):
             problems.append("%s: the rule in the file differs from the snapshot" % scheme_id)
-    for group in model.by_type("IfcGroup", include_subtypes=False):
+    for group in [*model.by_type("IfcGroup", include_subtypes=False), *group_proxies(model, "AreaScheme")]:
         if group.ObjectType == "AreaScheme" and members_of(group):
             problems.append("%s: an area scheme must group no space" % group.Name)
     for space_id, space in snapshot["spaces"].items():

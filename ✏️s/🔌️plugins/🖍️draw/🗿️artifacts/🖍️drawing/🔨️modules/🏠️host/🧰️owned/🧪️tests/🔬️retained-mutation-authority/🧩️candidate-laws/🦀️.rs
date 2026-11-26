@@ -51,16 +51,28 @@ fn retained_image_asset_mutations_replay_sparse_delta_and_reference_refusal(){
 
 #[test]
 fn retained_drawing_depth_plus_one_and_hostile_fields_fault_then_close_terminal_empty() {
+    fn compact_text(value: &str) -> DrawingNativeText {
+        let mut chunks = semio_framework_value_persistent::list::PagedList::default();
+        while !chunks.has_reserved_slot() {
+            chunks.reserve_exact_capacity_one_cold(1, usize::MAX).expect("one exact text chunk");
+        }
+        assert!(chunks.push_reserved(value.to_owned()).is_ok());
+        DrawingNativeText::from_retained_chunks(chunks, value.len()).unwrap()
+    }
+
     let mut layer = semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("leaf")).to_string().into()).expect("nonempty authored identity"), "leaf", Default::default());
     for depth in 0..=DRAWING_MAXIMUM_LAYER_DEPTH {
-        let mut parent = semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((&format!("depth-{depth}"))).to_string().into()).expect("nonempty authored identity"), &format!("depth-{depth}"));
+        let label = format!("depth-{depth}");
+        let mut parent = semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(compact_text(&label)).expect("nonempty authored identity"), "");
         if let DrawingLayerNode::Group(value) = &mut parent {
-            value.children.push(layer);
+            value.base.name = compact_text(&label);
+            value.base.blend_mode = compact_text("normal");
+            value.children = exact_single_layer(layer);
         }
         layer = parent;
     }
     let mut source = semio_s_artifact_draw_drawing_model::default_drawing_document("drawing-depth-plus-one", None);
-    source.layers = vec![layer].into();
+    source.layers = exact_single_layer(layer);
     let mutation = DrawingMutation::SetLayerVisible(SetLayerVisible { layer_id: "missing".into(), visible: false });
     let (source, error) = apply(source, &mutation).expect_err("retained Drawing depth +1 authority rejects");
     assert_eq!(error, "drawing-store.preflight-depth-capacity");
@@ -146,8 +158,9 @@ fn retained_drawing_rebuild_fault_after_every_phase_rolls_back_exact_container_a
             let mutation = DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: Some(1), layer: Box::new(semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("pending")).to_string().into()).expect("nonempty authored identity"), "pending", Default::default())) });
             let operation = semio_framework_job::OperationId(8_500 + phase as u64);
             let generation = semio_framework_job::Generation(850 + phase as u64);
+            let replacement = semio_framework_job::ReplacementIdentity::new(1, operation, generation);
             let held = HeldMutation::new(&mutation, &source);
-            let mut authority = DrawingMutationCandidateAuthority::try_new_from_pool(None, pool.clone()).expect("Drawing rollback candidate borrows one exact pool slot");
+            let mut authority = DrawingMutationCandidateAuthority::try_new_from_pool(Some(replacement), pool.clone()).expect("Drawing rollback candidate borrows one exact pool slot");
             let slot = authority.arena_slot;
             let arena_generation = authority.arena_generation;
             let reverse_owner = authority.container_reverse.as_ref().expect("Drawing rollback reverse owner").as_ptr();
@@ -162,24 +175,25 @@ fn retained_drawing_rebuild_fault_after_every_phase_rolls_back_exact_container_a
                     break;
                 }
                 let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-                let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
-                assert!(!held.step(&mut authority, &mut source, &mut context).expect("Drawing rollback fixture reaches every internal rebuild phase"));
+                let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(MUTATION_STEP_FUEL, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
+                assert!(!held.step_replacement(&mut authority, &mut source, replacement, &mut context).expect("Drawing rollback fixture reaches every internal rebuild phase"));
             }
             assert!(authority.rebuild.as_ref().is_some_and(|rebuild| rebuild.recorded_move_in_phase(phase)));
             if !stale {
                 cancel.cancel_now();
             }
+            let active = if stale { semio_framework_job::ReplacementIdentity::new(replacement.slot(), operation, semio_framework_job::Generation(generation.0 + 1)) } else { replacement };
             let mut rejected_retained = semio_framework_job::RetainedCloneProgress::default();
             let mut rejected = semio_framework_job::StepContext::new(
                 operation,
-                if stale { semio_framework_job::Generation(generation.0 + 1) } else { generation },
-                semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT),
+                generation,
+                semio_framework_job::StepBudget::new(MUTATION_STEP_FUEL, u64::MAX, UNBOUNDED_STEP_GRANT),
                 cancel,
                 semio_framework_job::default_now_us,
                 &mut preview_sequence,
                 &mut rejected_retained,
             );
-            assert_eq!(held.step(&mut authority, &mut source, &mut rejected), Err(if stale { "drawing-store.mutation-candidate-stale-authority" } else { "drawing-store.mutation-candidate-cancelled" }));
+            assert_eq!(held.step_replacement(&mut authority, &mut source, active, &mut rejected), Err(if stale { "drawing-store.mutation-candidate-stale-authority" } else { "drawing-store.mutation-candidate-cancelled" }));
             close_candidate(&mut authority, Some(&mut source));
             assert_eq!(native_layer_backing(&source.layers), source_owner, "rollback restores the exact original live native page backing");
             assert_eq!(source.layers.iter().map(|layer| semio_s_artifact_draw_drawing_model::layer_id(layer)).collect::<Vec<_>>(), source_ids.iter().map(String::as_str).collect::<Vec<_>>(), "rollback restores exact FIFO layer order");
@@ -217,8 +231,9 @@ fn retained_drawing_reorder_fault_after_source_handoff_restores_exact_nested_fif
         let mutation = DrawingMutation::ReorderLayer(ReorderLayer { layer_id: target, parent_id: Some(group_id), index: 2 });
         let operation = semio_framework_job::OperationId(8_700);
         let generation = semio_framework_job::Generation(870);
+        let replacement = semio_framework_job::ReplacementIdentity::new(1, operation, generation);
         let held = HeldMutation::new(&mutation, &source);
-        let mut authority = DrawingMutationCandidateAuthority::try_new_from_pool(None, pool.clone()).expect("Drawing reorder rollback candidate borrows one exact pool slot");
+        let mut authority = DrawingMutationCandidateAuthority::try_new_from_pool(Some(replacement), pool.clone()).expect("Drawing reorder rollback candidate borrows one exact pool slot");
         let slot = authority.arena_slot;
         let reverse_owner = authority.container_reverse.as_ref().expect("Drawing reorder reverse owner").as_ptr();
         let output_owner = authority.container_output.as_ref().expect("Drawing reorder output owner").as_ptr();
@@ -229,25 +244,26 @@ fn retained_drawing_reorder_fault_after_source_handoff_restores_exact_nested_fif
                 break;
             }
             let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
-            assert!(!held.step(&mut authority, &mut source, &mut context).expect("Drawing reorder rollback fixture reaches destination rebuild after source handoff"));
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(MUTATION_STEP_FUEL, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
+            assert!(!held.step_replacement(&mut authority, &mut source, replacement, &mut context).expect("Drawing reorder rollback fixture reaches destination rebuild after source handoff"));
         }
         assert_eq!(authority.rebuild_role, Some(DrawingContainerRebuildRole::Destination));
-        assert!(authority.source_undo.is_some(), "source handoff keeps the exact insertion undo authority until destination publication");
+        assert!(authority.has_source_undo(), "source handoff keeps the exact insertion undo authority until destination publication");
         if !stale {
             cancel.cancel_now();
         }
+        let active = if stale { semio_framework_job::ReplacementIdentity::new(replacement.slot(), operation, semio_framework_job::Generation(generation.0 + 1)) } else { replacement };
         let mut rejected_retained = semio_framework_job::RetainedCloneProgress::default();
         let mut rejected = semio_framework_job::StepContext::new(
             operation,
-            if stale { semio_framework_job::Generation(generation.0 + 1) } else { generation },
-            semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT),
+            generation,
+            semio_framework_job::StepBudget::new(MUTATION_STEP_FUEL, u64::MAX, UNBOUNDED_STEP_GRANT),
             cancel,
             semio_framework_job::default_now_us,
             &mut preview_sequence,
             &mut rejected_retained,
         );
-        assert_eq!(held.step(&mut authority, &mut source, &mut rejected), Err(if stale { "drawing-store.mutation-candidate-stale-authority" } else { "drawing-store.mutation-candidate-cancelled" }));
+        assert_eq!(held.step_replacement(&mut authority, &mut source, active, &mut rejected), Err(if stale { "drawing-store.mutation-candidate-stale-authority" } else { "drawing-store.mutation-candidate-cancelled" }));
         close_candidate(&mut authority, Some(&mut source));
         drop(authority);
         let DrawingLayerNode::Group(group) = source.layers.last().expect("Drawing reorder rollback group remains retained") else { unreachable!("Drawing reorder rollback group remains a group") };

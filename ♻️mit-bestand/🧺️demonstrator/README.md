@@ -51,7 +51,7 @@ The lane tasks are inferred from the playground registry: `prepare-<variant>-rea
 
 ### Deploy
 
-The built site must be served at the root of its host, `demonstrator.entwerfen.mit-bestand.de` (a `CNAME` record), because plugin and module routes and assets are root-absolute. The CDN must serve `.wasm` as `application/wasm` and `.pbf` as `application/x-protobuf`, serve dotfiles, and answer 404 rather than `index.html` for missing files.
+The built site must be served at the root of its host, `demonstrator.entwerfen.mit-bestand.de` (a `CNAME` record), because plugin and module routes and assets are root-absolute. The release stores component cores as opaque `.wasm.gz.bin` files. Browsers stream-decompress them before WebAssembly compilation. GitHub Pages limits a published site to 1 GB. The CDN must serve `.wasm` as `application/wasm` and `.pbf` as `application/x-protobuf`, serve dotfiles, and answer 404 rather than `index.html` for missing files.
 
 ### The chain
 
@@ -77,7 +77,7 @@ The registry is data beside the manifest (`metadata.semio.dashboard` of `📋️
 | readiness | `dev` and `serve` report ready on port `6029` (`MIT_BESTAND_DEMONSTRATOR_PORT`) |
 | global axes | `build-tool` (Nx or Bazel), `cache` (use, skip local, skip all) and `build-mode`, offered on every verb that runs build tasks ([Command registry](../../🧰️framework/🛍️products/🦑️repo/README.md#-command-registry)) |
 
-Current verification is pending. The authored Playwright spec contains twenty-five cases per language project (fifty executions), covering pane startup, editing/history, Energy automatic finalization and abort, overview and funding assets. A passing prototype browser run, release build publication and final live-service readiness are separate checks. The plain `build` target selects its fixed release mode; `serve` and `test-e2e` use the activated prototype. All verification runs use the declared `repo run` targets above.
+Current verification is pending. The authored Playwright spec contains twenty-six cases per language project (fifty-two executions), covering pane startup, editing/history, Energy automatic finalization and abort, overview and funding assets. A passing prototype browser run, release build publication and final live-service readiness are separate checks. The plain `build` target selects its fixed release mode; `serve` and `test-e2e` use the activated prototype. All verification runs use the declared `repo run` targets above.
 
 ## 🇩🇪️ Deutsch
 
@@ -120,7 +120,7 @@ Die Lane-Tasks werden aus der Playground-Registry abgeleitet: `prepare-<Variante
 
 ### Bereitstellung
 
-Die gebaute Seite muss an der Wurzel ihres Hosts ausgeliefert werden, `demonstrator.entwerfen.mit-bestand.de` (ein `CNAME`-Eintrag), weil Plugin- und Modul-Routen sowie Assets wurzelabsolut sind. Das CDN muss `.wasm` als `application/wasm` und `.pbf` als `application/x-protobuf` ausliefern, Dotfiles ausliefern und für fehlende Dateien 404 statt `index.html` antworten.
+Die gebaute Seite muss an der Wurzel ihres Hosts ausgeliefert werden, `demonstrator.entwerfen.mit-bestand.de` (ein `CNAME`-Eintrag), weil Plugin- und Modul-Routen sowie Assets wurzelabsolut sind. Der Release speichert die Komponentenkerne als binäre `.wasm.gz.bin`-Dateien. Der Browser dekomprimiert sie beim Laden vor der WebAssembly-Kompilierung. GitHub Pages begrenzt eine veröffentlichte Website auf 1 GB. Das CDN muss `.wasm` als `application/wasm` und `.pbf` als `application/x-protobuf` ausliefern, Dotfiles ausliefern und für fehlende Dateien 404 statt `index.html` antworten.
 
 ### Die Kette
 
@@ -146,4 +146,4 @@ Das Register sind Daten neben dem Manifest (`metadata.semio.dashboard` in `📋�
 | Bereitschaft | `dev` und `serve` melden sich auf Port `6029` (`MIT_BESTAND_DEMONSTRATOR_PORT`) bereit |
 | globale Achsen | `build-tool` (Nx oder Bazel), `cache` (nutzen, lokal überspringen, alles überspringen) und `build-mode`, angeboten bei jedem Verb, das Build-Tasks ausführt (siehe [Befehlsregister](../../🧰️framework/🛍️products/🦑️repo/README.md#-deutsch)) |
 
-Die aktuelle Verifikation steht noch aus. Die Playwright-Spezifikation enthält fünfundzwanzig Fälle je Sprachprojekt (fünfzig Ausführungen) für Fensterstart, Bearbeitung/Verlauf, automatische Finalisierung und Abbruch bei Energie, Übersicht und Förderlogos. Ein erfolgreicher Prototyp-Browsertest, die Veröffentlichung des Release-Builds und die Bereitschaft des abschließenden Live-Dienstes sind getrennte Prüfungen. Das einfache Target `build` wählt seinen festgelegten Release-Modus; `serve` und `test-e2e` verwenden den aktivierten Prototyp. Alle Prüfläufe verwenden die oben genannten `repo run`-Targets.
+Die aktuelle Verifikation steht noch aus. Die Playwright-Spezifikation enthält sechsundzwanzig Fälle je Sprachprojekt (zweiundfünfzig Ausführungen) für Fensterstart, Bearbeitung/Verlauf, automatische Finalisierung und Abbruch bei Energie, Übersicht und Förderlogos. Ein erfolgreicher Prototyp-Browsertest, die Veröffentlichung des Release-Builds und die Bereitschaft des abschließenden Live-Dienstes sind getrennte Prüfungen. Das einfache Target `build` wählt seinen festgelegten Release-Modus; `serve` und `test-e2e` verwenden den aktivierten Prototyp. Alle Prüfläufe verwenden die oben genannten `repo run`-Targets.

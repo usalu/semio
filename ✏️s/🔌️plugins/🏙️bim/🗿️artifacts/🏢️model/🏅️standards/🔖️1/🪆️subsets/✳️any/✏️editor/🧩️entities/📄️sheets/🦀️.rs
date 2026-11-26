@@ -138,8 +138,8 @@ pub fn scale_of(snapshot: &ModelSnapshot, view: &str) -> u32 {
 /// 🖼️ The view a new viewport of `sheet` shows: a drawable view not on the sheet yet, else the first drawable view.
 pub fn next_view(snapshot: &ModelSnapshot, sheet: &str) -> Option<String> {
     let placed: Vec<&String> = snapshot.viewports.values().filter(|row| row.sheet == sheet).map(|row| &row.view).collect();
+    let first = snapshot.views.iter().find(|(_, view)| view_is_drawn(view.kind)).map(|(id, _)| id.clone());
     let mut drawable = snapshot.views.iter().filter(|(_, view)| view_is_drawn(view.kind)).map(|(id, _)| id);
-    let first = drawable.clone().next().cloned();
     drawable.find(|id| !placed.contains(id)).cloned().or(first)
 }
 

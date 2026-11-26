@@ -5,6 +5,7 @@ import { createTutorialClock } from "@semio-tech/ui-react";
 import { makeEffectDispatchOne } from "../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
 import { parseResolvedPluginViewState } from "@semio-tech/framework-manifest/view-state-and-public-invocation";
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/📦️program-sessions/🟦️.ts";
+import type { InvocationResponse } from "@semio-tech/framework";
 import deepEqual from "fast-deep-equal";
 import hostEffectFixture from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🔁️host-effect-invocation/🔣️.json";
 import dialogOriginFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🔣️.json";
@@ -526,6 +527,27 @@ describe("Shell dialog origin", () => {
       expect(unused).not.toHaveBeenCalled();
       expect(deepEqual(JSON.parse(sent.mock.calls[0]![1]), row.expect.invocation), row.why).toBe(true);
     }
+  });
+
+  it("delivers the deferred declared command's history and interaction output to its exact mounted session", async () => {
+    const { action, args, response } = hostEffectFixture.commandResponse;
+    const reply = JSON.parse(JSON.stringify(response)) as InvocationResponse;
+    const { pluginId, appId, modeId, windowKindId, windowInstanceId } = hostEffectFixture.scope;
+    const session = {
+      pluginId, instanceId: 7,
+      app: { id: appId, windowKinds: [{ id: windowKindId }], commands: [{ id: action }], modes: [] },
+      viewState: { activeModeId: modeId, activeWindowKindId: windowKindId, windowId: windowInstanceId },
+    } as unknown as Parameters<typeof makeEffectDispatchOne>[1];
+    const handleCommand = vi.fn(async () => reply);
+    const handleAction = vi.fn();
+    const plugin = { handle: { handleAction, handleCommand } } as unknown as LoadedProgramState;
+    const received = vi.fn(async (_response: unknown, _target: unknown) => {});
+    await makeEffectDispatchOne(plugin, session, received, () => true, resolvedViewStateFixture)(action, args);
+    expect(handleCommand).toHaveBeenCalledTimes(1);
+    expect(handleAction).not.toHaveBeenCalled();
+    expect(received).toHaveBeenCalledTimes(1);
+    expect(deepEqual(received.mock.lastCall?.[0], response)).toBe(true);
+    expect(received.mock.lastCall?.[1]).toMatchObject({ pluginId, instanceId: 7, viewState: { windowId: windowInstanceId } });
   });
 
   it("drops delayed effect replies and scheduled invocations after the owning mount retires", async () => {

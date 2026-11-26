@@ -147,7 +147,8 @@ pub trait ErasedSnapshotRetirement: Send + std::any::Any {
     fn requires_original_control(&self) -> bool { false }
     /// 📮️ A reply-only owner lends the resident stash that keeps its unanswered turn between drivers.
     fn resident_reply(&mut self)->Option<&mut crate::ReplyStash<crate::OriginalRetirementFailure>>{None}
-    fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementPoll;
+    /// 🚫️ A reply-only owner answers every close through its resident reply and refuses the poll form.
+    fn close_step(&mut self,_body:usize,_effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementPoll{RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"retirement owner closes only through its reply form").into()),work:0})}
     /// 🧵️ Composite owners forward actual caller decoding custody to decoder-bound children.
     fn close_step_controlled(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>, _control: &mut dyn OriginalRetirementControl)->OriginalRetirementPoll {let grant=effect.grant(); self.close_step(body,effect) }
     fn terminal_is_empty(&self) -> bool;

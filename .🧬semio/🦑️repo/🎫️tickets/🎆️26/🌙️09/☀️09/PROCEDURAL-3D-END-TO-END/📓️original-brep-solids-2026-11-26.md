@@ -1,0 +1,11 @@
+# Funded box and sphere inference
+
+The original Generation 3D geometry service reached its existing fixed-output admission and refused both primitive kinds as `UnsupportedOwner`. The original fixed-output producer now reads the authored box dimensions or sphere radius and uses the existing analytic BRep topology publication for their canonical recipes. Box geometry starts at the origin and ends at the width, depth and height. Spheres remain centered at the origin.
+
+Each publication has a private BRep body. It advances topology using the initiating source’s work and allocation effect, and pays to close the publication journal before transferring the completed solid and body. Until donation, cancellation retires the private body and the transaction’s scratch buffers through the same caller. The existing localized input-range path owns authored invalid dimensions and radius. The kernel also validates directly resolved parameters before topology backing starts.
+
+The language-neutral fixture sets a 2 × 3 × 4 box and a radius-2 sphere. Three.js independently builds indexed geometry and checks bounds and enclosed volume against the fixture. Schemas were validated with Ajv. The focused Bun file passed all 3 tests and 31 assertions.
+
+The focused `original-solids` native integration law passed. It exercised the same topology owner and original source effect as production, gave the first topology turn zero capacity and observed an unchanged receipt, then cancelled a second run of each primitive after the first real topology insertion. The native allocation observer matched capacity and release receipts on every measured turn. All retained topology and scratch bytes were recovered. The completed shapes had valid solid roots, produced indexed triangles, and agreed with the fixture on face count, bounds and approximate tessellated volume.
+
+The actual geometry service checkpoint run also completed all four authored widgets with these producers. The isolated topology law deliberately constructs the analytic recipe directly, while the geometry service law covers the real widget input resolution, registry and output publication. The normal compute unit target has unrelated stale test API errors. The standalone integration target compiled against the production library and its repository-owned allocation witness.

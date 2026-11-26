@@ -1215,7 +1215,10 @@
             "frame_width": 0.05,
             "frame_depth": 0.1,
             "panes": 2,
-            "material": "external/glass"
+            "material": "external/glass",
+            "u_value": 1.2,
+            "g_value": 0.6,
+            "frame_fraction": 0.22
           },
           "witness/000": {
             "name": "external/λ",
@@ -1247,7 +1250,8 @@
             "frame_depth": 0.1,
             "leaves": "Single",
             "swing": "Left",
-            "material": "external/wood"
+            "material": "external/wood",
+            "u_value": 1.4
           },
           "door/1": {
             "name": "Door",
@@ -1331,7 +1335,10 @@
             },
             "panel": "Glass",
             "panel_material": "external/panel",
-            "mullion_material": "external/mullion"
+            "mullion_material": "external/mullion",
+            "u_value": 1.5,
+            "g_value": 0.55,
+            "frame_fraction": 0.25
           },
           "witness/000": {
             "name": "external/λ",

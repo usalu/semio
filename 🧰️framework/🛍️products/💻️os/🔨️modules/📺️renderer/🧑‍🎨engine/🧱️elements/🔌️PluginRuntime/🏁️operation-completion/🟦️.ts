@@ -25,6 +25,20 @@ export const pendingTurnEffects = new Map<number, WireVariant[]>();
  * completion subscriber steal an in-flight invocation's own effects. Two owners, two carriers. */
 export const pendingCompletionEffects = new Map<number, WireVariant[]>();
 
+/** 🎟️ Removes and returns the effects of one wire `tag` that a command or its typed operation parked for `instanceId`, leaving every other leftover for the caller that owns it. */
+export function takeParkedEffectsV1(instanceId: number, tag: string): WireVariant[] {
+  const taken: WireVariant[] = [];
+  for (const parked of [pendingTurnEffects, pendingCompletionEffects]) {
+    const effects = parked.get(instanceId);
+    if (effects === undefined) continue;
+    taken.push(...effects.filter((effect) => effect.tag === tag));
+    const rest = effects.filter((effect) => effect.tag !== tag);
+    if (rest.length === 0) parked.delete(instanceId);
+    else parked.set(instanceId, rest);
+  }
+  return taken;
+}
+
 /** 🏁️ One instance's single `AppChannelClient.onOperationCompleted` registration and the subscribers
  * it fans out to. ONE registration per instance is the whole point: a completion's carriers live in
  * {@link pendingCompletionEffects}, which the publishing callback must DRAIN (an undrained map grows

@@ -32,7 +32,7 @@ fn retained_path_edit_cancellation_preserves_the_entire_document() {
     let operation = semio_framework_job::OperationId(8_090);
     let generation = semio_framework_job::Generation(90);
     let held = HeldMutation::new(&mutation, &source);
-    let mut authority = borrowed_candidate(operation,generation).unwrap();
+    let mut authority = borrowed_candidate(None).unwrap();
     let cancel = semio_framework_job::root_cancel_token();
     let mut sequence = 0;
     let mut cloning = 0;
@@ -97,7 +97,7 @@ fn retained_text_edit_cancellation_keeps_the_complete_document() {
     let operation = semio_framework_job::OperationId(8_091);
     let generation = semio_framework_job::Generation(91);
     let held = HeldMutation::new(&mutation, &source);
-    let mut authority = borrowed_candidate(operation, generation).unwrap();
+    let mut authority = borrowed_candidate(None).unwrap();
     let cancel = semio_framework_job::root_cancel_token();
     let mut sequence = 0;
     let mut cloning = 0;

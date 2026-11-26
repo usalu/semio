@@ -296,6 +296,44 @@ export async function registerDocumentPackWireAdapterTests(vitest: PluginRuntime
         expect(sent).toEqual(["LoadDocumentArchive", "PollDocumentArchiveLoad", "PollDocumentArchiveLoad", "PollDocumentArchiveLoad", "AcknowledgeDocumentArchiveLoad"]);
       });
   
+      it("loads the whole-document LoadDocument effect a natural-file import parks on its fresh instance, once, and leaves other parked effects for their owner", async () => {
+        const { decodeAppCommand, encodeAppFrame } = await import("@semio-tech/framework-os");
+        const { pendingTurnEffects } = await import("../../🧱️elements/🔌️PluginRuntime/🏁️operation-completion/🟦️.ts");
+        const turnBroadcast = createTurnOutcomeBroadcast<TurnOutcome>();
+        const sent: string[] = [];
+        const fakeLease = {
+          handle: {
+            manifest: { pluginId: "natural-plugin", label: "N", version: "1.0.0", apps: [], workflows: [], examples: [] } as unknown as import("@semio-tech/framework").PluginManifest,
+            createApp: async () => 31,
+            destroyApp: async () => {},
+            takeSegmentedDownloadChunk: async () => undefined,
+            enqueue: (instanceId: number, events: readonly Uint8Array[]) => {
+              const frames = events.map((frame) => decodeAppCommand(frame)).map((command) => {
+                sent.push(Object.keys(command)[0]!);
+                if ("MediaIn" in command) return encodeAppFrame({ Done: { in_reply_to: command.MediaIn.seq } });
+                if ("LoadDocumentArchive" in command) return encodeAppFrame({ Done: { in_reply_to: command.LoadDocumentArchive.seq } });
+                if ("PollDocumentArchiveLoad" in command) return encodeAppFrame({ DocumentArchiveLoad: { in_reply_to: command.PollDocumentArchiveLoad.seq, status: { operation: command.PollDocumentArchiveLoad.operation, state: "ready", completed: 1, total: 1, ahead: 0, fault: [] } } });
+                if ("AcknowledgeDocumentArchiveLoad" in command) return encodeAppFrame({ Done: { in_reply_to: command.AcknowledgeDocumentArchiveLoad.seq } });
+                throw new Error(`unexpected command ${JSON.stringify(command)}`);
+              });
+              turnBroadcast.push({ instanceId, frames });
+            },
+            outcomes: turnBroadcast.stream,
+            dispose: async () => {},
+          },
+          release: async () => {},
+        };
+        const handle = await adaptPluginHandle("natural-plugin", fakeLease);
+        const instanceId = await handle.createApp("natural-app");
+        const unrelated = { tag: "notify", val: { message: "kept" } };
+        pendingTurnEffects.set(instanceId, [unrelated, { tag: "load-document", val: { docPack: [1, 2], spr: [3] } }]);
+        await handle.importAppMedia?.(instanceId, "artifact:native", {}, new Uint8Array([9]));
+        expect(sent).toEqual(["MediaIn", "LoadDocumentArchive", "PollDocumentArchiveLoad", "AcknowledgeDocumentArchiveLoad"]);
+        expect(handle.documentPack(instanceId)).toEqual({ pack: new Uint8Array([1, 2]), spr: new Uint8Array([3]) });
+        expect(pendingTurnEffects.get(instanceId)).toEqual([unrelated]);
+        pendingTurnEffects.delete(instanceId);
+      });
+
       /** 📜️ `ops` is the third half of the frame, not decoration: a reader of the live document gets the
        * pack, the spr AND the op text, so an adapter that drops it silently loses the document's ops.
        * This law therefore pins the text crossing verbatim, not merely that a document was read. */

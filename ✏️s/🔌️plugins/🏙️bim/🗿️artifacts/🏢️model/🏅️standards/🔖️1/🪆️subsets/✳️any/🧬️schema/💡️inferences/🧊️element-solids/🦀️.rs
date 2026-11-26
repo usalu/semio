@@ -220,7 +220,7 @@ impl SolidBuilder {
 }
 
 /// 📦️ The value of a `Solid` node of the model graph: the solid and, for a roof that fell back to a flat roof, why.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq)]
 pub struct SolidEntry {
     pub solid: ElementSolid,
     pub fallback: Option<crate::standards::v1::subsets::any::schema::inferences::element_solids::roofs::RoofFallback>,

@@ -10,6 +10,7 @@
     "languages": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/definitions/Language" } },
     "labels": { "$ref": "#/definitions/Labels" },
     "flags": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Flag" } },
+    "repairs": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Repair" } },
     "operations": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Operation" } }
   },
   "definitions": {
@@ -155,6 +156,16 @@
         "summary": { "$ref": "#/definitions/LocalizedText" },
         "flags": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/FlagName" } },
         "examples": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Example" } }
+      }
+    },
+    "Repair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "command", "description"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 48 },
+        "command": { "type": "string", "minLength": 6, "pattern": "^repo " },
+        "description": { "$ref": "#/definitions/LocalizedText" }
       }
     },
     "Example": {

@@ -1,0 +1,15 @@
+{
+  "implementations": [
+    { "marker": 1, "schemas": ["number"] },
+    { "marker": 2, "schemas": ["vector", "point", "number"] },
+    { "marker": 3, "schemas": ["vector", "vector", "point"] }
+  ],
+  "cases": [
+    { "case": "unbounded homogeneous", "min": 2, "max": null, "items": { "10": "number", "3": "number", "0": "number", "21": "number", "2": "number" }, "fallback": false, "expected": 1 },
+    { "case": "numeric order", "min": 2, "max": 4, "items": { "10": "number", "2": "point", "1": "vector" }, "fallback": false, "expected": 2 },
+    { "case": "canonical numeric lookup", "min": 2, "max": 4, "items": { "10": "point", "1": "vector", "01": "number", "0009": "number", "7": null, "hint": "number", "999999999999999999999999999999999999999": "number" }, "fallback": false, "expected": 3 },
+    { "case": "max drops typed candidate", "min": 2, "max": 2, "items": { "0": "number", "1": "number", "2": "number" }, "fallback": true, "expected": 4 },
+    { "case": "min refuses", "min": 2, "max": null, "items": { "+0": "number" }, "fallback": false, "expected": null },
+    { "case": "mixed scalar and vector", "min": 2, "max": null, "items": { "0": "number", "1": "vector" }, "fallback": false, "expected": null }
+  ]
+}

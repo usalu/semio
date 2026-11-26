@@ -7,7 +7,7 @@ use semio_ui_tui_core::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind
 use semio_ui_tui_core::geometry::{Pos, Rect};
 use semio_ui_tui_core::rows::{follow_top, navigate_to, paint_scroll_bar, row_style, row_under};
 use semio_ui_tui_core::text::{elide, Elision};
-use semio_ui_tui_core::theme::{Glyph, Role, Status, Surface, Theme};
+use semio_ui_tui_core::theme::{Glyph, Role, Status, Theme};
 use semio_ui_tui_core::signal::WidgetSignal;
 use std::cell::Cell as Shared;
 
@@ -146,7 +146,7 @@ pub fn paint_list(l: &ListState, theme: &Theme, rect: Rect, buf: &mut CellBuffer
     if rect.width == 0 || rect.height == 0 {
         return;
     }
-    let bg = theme.surface(Surface::Window);
+    let bg = buf.owner_background();
     buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), bg));
     let count = l.items.len();
     let rows = usize::from(rect.height);

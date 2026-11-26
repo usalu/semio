@@ -5,8 +5,9 @@ use schema::ArtifactSchema;
 use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 
 
-#[path = "🧱️entities/🦀️.rs"]
-pub mod entities;
+pub mod entities {
+    pub use semio_s_artifact_bim_model_entity_records::*;
+}
 
 pub use entities::*;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Project, PropertySet, ClassificationSet};

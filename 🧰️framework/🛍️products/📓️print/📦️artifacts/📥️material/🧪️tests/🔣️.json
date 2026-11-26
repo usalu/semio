@@ -11,7 +11,7 @@
       "version": 1,
       "kind": "bundle",
       "maximumBytes": 33554432,
-      "maximumFiles": 512
+      "maximumFiles": 640
     },
     {
       "version": 1,

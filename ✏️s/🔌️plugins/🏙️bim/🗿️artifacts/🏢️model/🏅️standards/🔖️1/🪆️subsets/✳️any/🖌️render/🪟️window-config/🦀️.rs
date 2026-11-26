@@ -96,7 +96,12 @@ impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $conf
             fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
                 &Self::DESCRIPTORS[0]
             }
-            fn diff(&self, base: &$config) -> protocol::MutationOutcome<Self::Diff> {
+        }
+
+        impl protocol::ColdMutation<$config> for $mutation {
+            type ReferenceDiff = $diff;
+
+            fn diff(&self, base: &$config) -> protocol::MutationOutcome<Self::ReferenceDiff> {
                 let Self::Replace(Replace { config }) = self;
                 protocol::MutationOutcome::new(<$diff>::changing(base, config))
             }
@@ -116,11 +121,25 @@ impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $conf
 
         impl protocol::OpBinary for $mutation {
             fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-                Ok(protocol::OpText::print_op(self).into_bytes())
+                Ok(store::pack_rt::encode_pack_value(&semio_framework_value::ToValue::to_value(self)))
             }
             fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-                let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
-                semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
+                let value = store::pack_rt::decode_pack_value(bytes).map_err(protocol::ProtocolError::from)?;
+                semio_framework_value::FromValue::from_value(store::pack_rt::renormalize_whole_number_floats(value)).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
+            }
+        }
+
+        ::semio_os_kernel::original_pack_value_operation_receiving!($mutation);
+
+        impl store::os_store::codec_registry::native_snapshot::OriginalArtifactPackReceiving for $config {
+            type Receiving = store::os_store::codec_registry::native_snapshot::OriginalSnapshotRecordReceiving<Self>;
+
+            fn original_pack_birth_demand() -> semio_framework_value::RetirementDemand {
+                semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self::Receiving>(), depth: 1, ..Default::default() }
+            }
+
+            fn admit_original_pack(source: &[u8], limits: protocol::PackLimits, native: &semio_framework_value::NativeDecodeControl<'_>, grant: semio_framework_value::RetainedCloneGrant) -> Result<Option<(Self::Receiving, semio_framework_value::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+                Self::Receiving::admit(source, <Self as pack::snapshot::ArtifactDsl>::envelope_id(), limits, native, grant)
             }
         }
 
@@ -137,6 +156,15 @@ impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $conf
             type Mutation = $mutation;
             type Edit = semio_plugin::app::WindowConfigApplyEdit<Self::State, Self::Mutation>;
             const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+            fn native_pair_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+                Ok(semio_plugin::window_config_native_pair_demands::<Self::State>())
+            }
+            fn admit_native_pair(pack: &[u8], spr: &[u8], pack_limits: protocol::PackLimits, history_limits: store::os_store::codec_registry::native_snapshot::OriginalArtifactHistoryReadLimits, native: &mut semio_framework_value::NativeDecodeControl<'_>, grant: semio_framework_value::RetainedCloneGrant, output: &mut Option<Box<dyn semio_plugin::WindowConfigNativePairReceiving<Self::State>>>) -> Result<semio_framework_value::RetainedCloneProgress, store::os_store::codec_registry::native_snapshot::OriginalArtifactPairFailure> {
+                semio_plugin::admit_window_config_native_pair::<Self::State>(pack, spr, pack_limits, history_limits, native, grant, output)
+            }
+            fn native_operation_wire() -> store::os_store::ArtifactOperationWire<Self::Mutation> {
+                store::os_store::ArtifactOperationWire::canonical().with_original_encoded_binary_receiving()
+            }
             fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
                 std::sync::Arc::new(semio_plugin::app::WindowConfigApplyEdit::new())
             }
@@ -144,6 +172,9 @@ impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $conf
             fn build_store_owners(grant: semio_framework_value::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_plugin::bounded_window_config_store_owners::<Self>(grant) }
             fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
                 semio_plugin::bounded_window_config_preparation_factory::<Self>()
+            }
+            fn store_disposer_birth() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+                semio_plugin::bounded_window_config_store_disposer_birth::<Self>()
             }
             fn build_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
                 semio_plugin::bounded_window_config_store_disposer::<Self>()
@@ -175,13 +206,12 @@ impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $conf
 /// ⚖️ The laws every window configuration owes: the `Replace` mutation applies through its sparse diff, its concrete inverse restores the base, the inverse sums to
 /// the negative diff, and the mutation and the state survive their text and binary codecs.
 #[cfg(any(test, feature = "testkit"))]
-pub async fn assert_window_config_laws<S, D, M>(base: &S, mutation: &M)
+pub async fn assert_window_config_laws<S, M>(base: &S, mutation: &M)
 where
     S: pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + std::fmt::Debug + PartialEq + 'static,
-    D: protocol::MutationDiff<S> + 'static,
-    M: protocol::Mutation<S, Diff = D> + protocol::OpText + protocol::OpBinary + Clone + std::fmt::Debug + PartialEq,
+    M: protocol::Mutation<S> + protocol::ColdMutation<S> + protocol::OpText + protocol::OpBinary + Clone + std::fmt::Debug + PartialEq,
+    M::ReferenceDiff: protocol::ColdDiffAlgebra<S>,
 {
-    use protocol::{ColdMutation, Mutation, OpBinary, OpText};
     let after = protocol::apply_diff_cold(mutation.diff(base).diff(), base).expect("the mutation applies");
     let restored = mutation.inverse(base).expect("the mutation has an inverse").into_iter().rev().fold(after.clone(), |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state).expect("the inverse applies"));
     assert_eq!(&restored, base, "the concrete inverse restores the base");

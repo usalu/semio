@@ -6,7 +6,7 @@
   "maximumCursorBytes": 4096,
   "cloneFrames": {
     "perLevel": 1,
-    "base": 4
+    "base": 3
   },
   "controlledRetirement": {
     "depth": 80,

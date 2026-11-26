@@ -12,7 +12,7 @@ pub(super) fn canvas_scene(projection: String) -> semio_plugin::Canvas2dScene {
 
 pub(super) async fn settle_drawing_geometry(app:&mut DrawingAppFixture,view:Option<&ViewModel>){
     use semio_plugin::reactor::jobs::{registry_driver::RegistryJobDriver,JobStep};
-    for effect in app.0.pending_effects(view, app.1.cx()).await.expect("registered Drawing pending effects").unwrap_or_default(){match effect{
+    for effect in app.prepared_effects(view).await{match effect{
         Effect::CancelJob{job}=>{RegistryJobDriver::generous(job).cancel().expect("registered Drawing geometry cancels");},
         Effect::SpawnJob{job,kind,input,..}if kind=="semio.draw.mounted-vector"=>{let mut driver=RegistryJobDriver::generous(job);driver.start(&kind,input,None).expect("registered Drawing geometry admits");let mut complete=false;for _ in 0..100000{match driver.step().expect("registered Drawing geometry steps"){JobStep::Running(_)=>{},JobStep::Done(_)=>{complete=true;break;},JobStep::Failed(error)=>panic!("registered Drawing geometry failed: {}",String::from_utf8_lossy(&error))}}assert!(complete,"registered Drawing geometry must settle before its canvas witness");},
         _=>{},
@@ -222,7 +222,8 @@ async fn export_document_downloads_a_real_pdf_of_the_document() {
     let (mut app, meta) = inline_selection_app().await;
     let (result, receipt) = settled(&mut app, DrawingCommand::ExportDocument(export_document::ExportDocument { format: "pdf".into(), ..Default::default() }), &meta).await;
     assert!(result.mutations.is_empty(), "an export is not a document operation");
-    let [Effect::DownloadMediaExport { filename, mime_type, data, encoding }] = receipt.effects.as_slice() else { panic!("one download effect, got {:?}", receipt.effects) };
+    let [download] = receipt.downloads.as_slice() else { panic!("one segmented PDF download required") };
+    let (filename, mime_type, data, encoding) = (&download.filename, &download.mime_type, std::str::from_utf8(&download.data).unwrap(), &download.encoding);
     assert!(filename.ends_with(".pdf"), "{filename}");
     assert_eq!(mime_type, "application/pdf");
     assert_eq!(encoding.as_deref(), Some("base64"));
@@ -231,7 +232,8 @@ async fn export_document_downloads_a_real_pdf_of_the_document() {
     let read = semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::io::decode_pdf(&bytes).expect("stdio's reader opens the download");
     assert_eq!(read.pages.len(), 1);
     let (_result, receipt) = settled(&mut app, DrawingCommand::ExportDocument(export_document::ExportDocument { format: "svg".into(), ..Default::default() }), &meta).await;
-    let [Effect::DownloadMediaExport { mime_type, data, encoding, .. }] = receipt.effects.as_slice() else { panic!("one SVG download required") };
+    let [download] = receipt.downloads.as_slice() else { panic!("one segmented SVG download required") };
+    let (mime_type, data, encoding) = (&download.mime_type, std::str::from_utf8(&download.data).unwrap(), &download.encoding);
     assert_eq!(mime_type,"image/svg+xml");assert_eq!(encoding.as_deref(),Some("base64"));assert!(base64_codec::base64_standard_decode(data).unwrap().starts_with(b"<svg"));
     artifact_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }

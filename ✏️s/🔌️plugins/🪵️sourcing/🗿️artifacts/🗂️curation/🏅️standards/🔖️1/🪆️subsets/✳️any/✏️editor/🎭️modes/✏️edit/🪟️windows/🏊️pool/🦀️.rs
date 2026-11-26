@@ -144,8 +144,9 @@ pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels:
         ("curated", labels.col_curated.as_str(), false),
     ];
     let mut kinds = pool_kinds(document, cfg);
-    if let Some(sort) = cfg.filters.sort.as_ref().filter(|sort| sort.column_id == "name") {
-        kinds.sort_by(|a, b| { let ordering = catalog_kind_name(a, locale).cmp(&catalog_kind_name(b, locale)); if sort.direction == SortDirection::Desc { ordering.reverse() } else { ordering } });
+    if let Some(sort) = cfg.filters.sort.as_ref().filter(|sort| matches!(sort.column_id.as_str(), "name" | "module")) {
+        let key = |kind: &ObjectKind| if sort.column_id == "module" { catalog_module_label(&kind.module_id, &kind.module_id, locale) } else { catalog_kind_name(kind, locale) };
+        kinds.sort_by(|a, b| { let ordering = key(a).cmp(&key(b)); if sort.direction == SortDirection::Desc { ordering.reverse() } else { ordering } });
     }
     let rows = kinds.iter().map(|kind| pool_row(document, kind, labels, locale)).collect();
     let table = sourcing_table(SOURCING_CURATION_SURFACE_POOL, &columns, rows, "dropOnPool", cfg.filters.sort.as_ref(), selected_ids, semio_plugin::surface_name(locale, "Pool table", "Pool-Tabelle"))?;

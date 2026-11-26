@@ -179,5 +179,9 @@ export async function discoverBuildGraphPartV1(root:string,registry:BuildOwnerRe
       edgeOnly:[...edgeNames.map(name=>streamed.has(name)?{name,streamed:true as const}:{name}),...refresh.withheld.map(name=>({name}))],reEdge:streaming&&((name:string,fragment:{node?:any})=>streaming.edgesOf(name,fragment.node)),readsOf:(name:string)=>edgeReads.finish(name),carried:refresh.carried,derived:[...derivedFacts.values()],edges:edges as BuildGraphPartV1["edges"],externalNodes,parseUnavailable:rows.filter(row=>row.project===undefined),env,replaceTags:retained?[]:incremental?["policy",POLICY_TAG_V1]:["tests","policy",TEST_TAG_V1,POLICY_TAG_V1],
     };
   },undefined,false,rowLog))).catch(error=>{rowLog.close();throw error;});
-  return {...captured.value,rows:captured.observations,dispose:()=>rowLog.close()};
+  rowLog.settle();
+  return {...captured.value,rows:captured.observations,dispose:disposerOfRowLogV1(rowLog)};
 }
+
+/** 🧹️ The disposer of one part read, made outside the read so its closure holds the row log only and not the scope of the read (stubs of every owner, derived facts, the node rows), which every wave of a long read would otherwise keep until the seal. */
+function disposerOfRowLogV1(rowLog:{close():void}):()=>void{return()=>rowLog.close();}

@@ -16,6 +16,14 @@ pub mod fixture_projection_retirement_tests;
 #[path = "../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs"]
 pub mod plugin_runtime_plugin_builder_contract_support_1;
 
+use semio_os_kernel::os_store::{self as semio_os_store_operation_wire, codec_registry as semio_os_store_codec_registry};
+use semio_plugin_store_lifecycle::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_window_config::{WindowConfigOwner, WindowConfigApplyEdit, WindowConfigApplyMutation, WindowConfigNativePairReceiving, admit_window_config_native_pair, window_config_native_pair_demands, bounded_window_config_preparation_factory, bounded_window_config_preparation_source_birth, bounded_window_config_store_disposer, bounded_window_config_store_disposer_birth, bounded_window_config_store_owners};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
+use std::sync::Arc;
+
+#[path = "../../🪟️window/🎚️config/🗄️store-owners/🌱️initialization/🎟️birth/🧪️tests/🧸️fixture/🦀️.rs"]
+pub mod publication_window_owner;
 
 #[path = "../../🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"]
 pub(crate) mod job_close_fixture;

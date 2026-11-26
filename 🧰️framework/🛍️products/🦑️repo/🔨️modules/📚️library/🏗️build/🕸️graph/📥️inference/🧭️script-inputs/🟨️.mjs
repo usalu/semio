@@ -1,4 +1,5 @@
 import {readTypeScriptPackageProducerV1,typeScriptPackagePublicDirectoryV1} from "./../../../../⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🏭️producer/🟦️.ts";
+import {processPidExistsV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { assertNotReadParentV1, readParentV1 } from "../../../👁️observation/🚧️read-parent/🟨️.mjs";
 import { closeSync as vCloseV1, fstatSync as vFstatV1, lstatSync as vLstatV1, mkdirSync as vMkdirV1, openSync as vOpenV1, readFileSync as vReadV1, writeFileSync as vWriteV1, renameSync as vRenameV1, rmSync as vRmV1 } from "node:fs";
@@ -146,8 +147,30 @@ export function buildImportResourceV1(containing,specifier){
 
 /** 🩺️ Why a package manifest does not resolve a subpath: `export-not-declared` when its `exports` name no such entry, `export-target-missing` (with the absolute target) when the entry is declared and the file it maps to is absent, the state of a manifest whose entry was written before its target; read from the manifest bytes the resolver just observed. */
 function exportDiagnosisV1(manifest, packageName, specifier, directory) {
-  const entry = manifest.exports?.["." + specifier.slice(packageName.length)], leaf = (value) => typeof value === "string" ? value : value && typeof value === "object" ? Object.values(value).map(leaf).find((item) => item !== undefined) : undefined, target = leaf(entry);
+  const entry = packageExportEntryV1(manifest, packageName, specifier), leaf = (value) => typeof value === "string" ? value : value && typeof value === "object" ? Object.values(value).map(leaf).find((item) => item !== undefined) : undefined, target = leaf(entry);
   return target === undefined || target.includes("*") ? { reason: "export-not-declared" } : { reason: "export-target-missing", target: resolve(directory, target) };
+}
+
+/** 🪪️ The entry for an exact public export, including the root shorthand. */
+function packageExportEntryV1(manifest, packageName, specifier) {
+  const subpath = "." + specifier.slice(packageName.length);
+  return typeof manifest.exports === "string" ? (subpath === "." ? manifest.exports : undefined) : manifest.exports?.[subpath];
+}
+
+/** 🎨️ Finds the physical stylesheet of an exact package export when the TypeScript resolver cannot load it as a module. */
+function directStylesheetExportV1(manifest, packageName, specifier, root, host) {
+  const target = packageExportEntryV1(manifest, packageName, specifier);
+  if (typeof target !== "string" || !target.startsWith("./") || !target.endsWith(".css") || /%(?:2f|5c)|[\\*#?]/iu.test(target)) return undefined;
+  let path;
+  try {
+    const segments = target.slice(2).split("/").map(decodeURIComponent);
+    if (segments.some(segment => /^(?:\.{0,2}|node_modules)$/iu.test(segment) || /[\u0000:]/u.test(segment))) return undefined;
+    path = join(root, ...segments);
+  } catch {
+    return undefined;
+  }
+  if (!host.fileExists(path)) return undefined;
+  return host.realpath ? host.realpath(path) : path;
 }
 
 /** 📦️ Resolves a package specifier to the workspace module it names, so imports through `@scope/package` subpaths join a command closure like relative ones; installed registry packages stay covered by their locked external dependency. */
@@ -166,18 +189,28 @@ export function workspacePackageModuleV1(containing, specifier, workspaceRoot, c
    for(const output of producer.outputs){future.set(resolve(output),output);future.set(resolve(dirname(manifest),relative(dirname(physical),output)),output);}
   }
   if(future.size){const view={...host,fileExists:path=>future.has(resolve(path))||host.fileExists(path),directoryExists:path=>[...future.keys()].some(file=>dirname(file)===resolve(path))||host.directoryExists?.(path)===true,realpath:path=>future.get(resolve(path))??(host.realpath?host.realpath(path):path)};resolution=compiler.resolveModuleName(specifier,containing,options,view,undefined,undefined,mode);}
-  const resolvedName=resolution.resolvedModule?.resolvedFileName??(declarations&&promised?.declarations?resolve(workspaceRoot,promised.declarations):undefined),resolved=resolvedName===undefined?undefined:isAbsolute(resolvedName)?resolve(resolvedName):resolvedName;
+  const resolvedName=resolution.resolvedModule?.resolvedFileName??(declarations&&promised?.declarations?resolve(workspaceRoot,promised.declarations):undefined);
+  let resolved = resolvedName !== undefined && isAbsolute(resolvedName) ? resolve(resolvedName) : resolvedName;
   if (!resolved) {
-    const packageName=specifier.startsWith("@")?specifier.split("/").slice(0,2).join("/"):specifier.split("/")[0];
-    for(const manifest of resolution.affectingLocations??[]){
-      const physical=host.realpath?host.realpath(manifest):manifest,local=relative(workspaceRoot,physical);
-      if(local===""||local.startsWith("..")||isAbsolute(local)||local.split(sep).includes("node_modules"))continue;
-      const text=host.readFile(physical);
-      if(text!==undefined&&JSON.parse(text).name===packageName){const diagnosis=exportDiagnosisV1(JSON.parse(text),packageName,specifier,dirname(physical)),error=new Error("Workspace import is not resolved by current package metadata: "+specifier+" from "+containing+" ("+diagnosis.reason+(diagnosis.target?": "+diagnosis.target:"")+")");error.code="MODULE_NOT_FOUND";error.unresolved=true;error.importer=containing;error.specifier=specifier;error.watched=[physical];if(diagnosis.target)error.target=diagnosis.target;throw error;}
+    for (const manifest of resolution.affectingLocations ?? []) {
+      const physical = host.realpath ? host.realpath(manifest) : manifest;
+      const local = relative(workspaceRoot, physical);
+      if (local === "" || local.startsWith("..") || isAbsolute(local) || local.split(sep).includes("node_modules")) continue;
+      const text = host.readFile(physical);
+      if (text === undefined) continue;
+      const metadata = JSON.parse(text);
+      if (metadata.name !== packageName) continue;
+      const root = dirname(physical);
+      resolved = declarations ? undefined : directStylesheetExportV1(metadata, packageName, specifier, root, host);
+      if (resolved) break;
+      const { reason, target } = exportDiagnosisV1(metadata, packageName, specifier, root);
+      throw Object.assign(
+        new Error(`Workspace import is not resolved by current package metadata: ${specifier} from ${containing} (${reason}${target ? `: ${target}` : ""})`),
+        { code: "MODULE_NOT_FOUND", unresolved: true, importer: containing, specifier, watched: [physical], ...(target === undefined ? {} : { target }) },
+      );
     }
-    return undefined;
   }
-  if(!isAbsolute(resolved))return undefined;
+  if (!resolved || !isAbsolute(resolved)) return undefined;
   for(const {root,producer} of packages)if(resolved.startsWith(join(root,typeScriptPackagePublicDirectoryV1)+sep)&&!producer?.outputs.includes(resolved))throw Object.assign(Error("Workspace compiled output requires its authored artifact producer: "+specifier),{code:"MODULE_NOT_FOUND"});
   const local = relative(workspaceRoot, resolved);
   return local === "" || local.startsWith("..") || isAbsolute(local) || local.split(sep).includes("node_modules") ? undefined : resolved;
@@ -1926,7 +1959,7 @@ export async function claimDerivationV1(id, store, scripts) {
     try { verdictDirMadeV1(directory); vWriteV1(file, String(process.pid), { flag: "wx" }); mine = true; } catch {}
     if (mine) return { release: () => { try { vRmV1(file, { force: true }); } catch {} } };
     let holder; try { holder = Number(vReadV1(file, "utf8")); } catch {}
-    if (Number.isInteger(holder) && holder > 0 && holder !== process.pid) { let alive = true; try { process.kill(holder, 0); } catch (error) { alive = error?.code === "EPERM"; } if (!alive) { try { vRmV1(file, { force: true }); } catch {} continue; } }
+    if (Number.isInteger(holder) && holder > 0 && holder !== process.pid) { if (!processPidExistsV1(holder)) { try { vRmV1(file, { force: true }); } catch {} continue; } }
     const stored = await store.load(id), entry = stored && { ...stored, layers: undefined, store, answers: new Map(), checked: null };
     signal?.throwIfAborted();
     if (entry && await closureEntryHoldsAsyncV1(entry, scripts)) return { entry };

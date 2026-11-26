@@ -35,6 +35,10 @@ pub use inferred_field_and_config::*;
 mod cache_and_session;
 pub use cache_and_session::*;
 
+#[path = "🗄️cache-and-session/🎟️original/🦀️.rs"]
+mod original_cache;
+pub use original_cache::OriginalInferenceCache;
+
 #[path = "🔄️field-update/🦀️.rs"]
 mod field_update;
 pub use field_update::*;

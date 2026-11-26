@@ -47,7 +47,16 @@
       },
       "source": "🦀️.rs",
       "laws": [
-        "retired_analytic_mesh_metadata_obeys_exact_byte_grants",
+        "retired_analytic_mesh_metadata_obeys_exact_byte_grants"
+      ]
+    },
+    {
+      "target": {
+        "kind": "lib",
+        "name": "semio_s_spatial_kernel_semio_session"
+      },
+      "source": "🧪️tests/🛂️physical-custody/🦀️.rs",
+      "laws": [
         "original_session_capture_keeps_same_allocation_until_full_typed_grants"
       ]
     },

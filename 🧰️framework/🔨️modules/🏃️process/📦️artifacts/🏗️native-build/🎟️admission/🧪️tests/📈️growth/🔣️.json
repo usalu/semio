@@ -1,0 +1,230 @@
+{
+ "version": 1,
+ "description": "Grant growth law: a unit that needs more than its memory grant is carried (fits), grown into when this machine has the free memory above its floor and interactive reserve (grow), waited for while that room is short (wait), queued for a larger machine when this machine can never hold it (beyond-host: total less floor less interactive reserve, times the budget share) and refused only when no machine of the fleet can (refused). An unknown fleet queues, it never refuses.",
+ "cases": [
+  {
+   "name": "a unit within the grant is carried",
+   "need": 1000,
+   "grant": 1536,
+   "local": {
+    "origin": "g1-server",
+    "totalMegabytes": 32768,
+    "floorMegabytes": 2048,
+    "interactiveReserveMegabytes": 4096,
+    "budgetBasisPoints": 9000,
+    "availableMegabytes": 20000
+   },
+   "fleet": [],
+   "expected": {
+    "kind": "fits"
+   }
+  },
+  {
+   "name": "a large unit above the grant on the 32 GB coordinator with free memory grows the grant (dwg_snapshot_objects, 4894 MB)",
+   "need": 5635,
+   "grant": 1536,
+   "local": {
+    "origin": "g1-server",
+    "totalMegabytes": 32768,
+    "floorMegabytes": 2048,
+    "interactiveReserveMegabytes": 4096,
+    "budgetBasisPoints": 9000,
+    "availableMegabytes": 20000
+   },
+   "fleet": [
+    {
+     "origin": "g1-m01",
+     "totalMegabytes": 16384,
+     "floorMegabytes": 2048,
+     "interactiveReserveMegabytes": 4096,
+     "budgetBasisPoints": 9000
+    }
+   ],
+   "expected": {
+    "kind": "grow"
+   }
+  },
+  {
+   "name": "the same unit while the free memory is short waits for growth",
+   "need": 5635,
+   "grant": 1536,
+   "local": {
+    "origin": "g1-server",
+    "totalMegabytes": 32768,
+    "floorMegabytes": 2048,
+    "interactiveReserveMegabytes": 4096,
+    "budgetBasisPoints": 9000,
+    "availableMegabytes": 7000
+   },
+   "fleet": [
+    {
+     "origin": "g1-m01",
+     "totalMegabytes": 16384,
+     "floorMegabytes": 2048,
+     "interactiveReserveMegabytes": 4096,
+     "budgetBasisPoints": 9000
+    }
+   ],
+   "expected": {
+    "kind": "wait"
+   }
+  },
+  {
+   "name": "a unit at exactly what the coordinator can hold grows",
+   "need": 23961,
+   "grant": 1536,
+   "local": {
+    "origin": "g1-server",
+    "totalMegabytes": 32768,
+    "floorMegabytes": 2048,
+    "interactiveReserveMegabytes": 4096,
+    "budgetBasisPoints": 9000,
+    "availableMegabytes": 30000
+   },
+   "fleet": [],
+   "expected": {
+    "kind": "grow"
+   }
+  },
+  {
+   "name": "a unit above what a 16 GB host can ever hold is queued for the larger coordinator",
+   "need": 12000,
+   "grant": 1536,
+   "local": {
+    "origin": "g1-m01",
+    "totalMegabytes": 16384,
+    "floorMegabytes": 2048,
+    "interactiveReserveMegabytes": 4096,
+    "budgetBasisPoints": 9000,
+    "availableMegabytes": 14000
+   },
+   "fleet": [
+    {
+     "origin": "g1-server",
+     "totalMegabytes": 32768,
+     "floorMegabytes": 2048,
+     "interactiveReserveMegabytes": 4096,
+     "budgetBasisPoints": 9000
+    },
+    {
+     "origin": "g1-m01",
+     "totalMegabytes": 16384,
+     "floorMegabytes": 2048,
+     "interactiveReserveMegabytes": 4096,
+     "budgetBasisPoints": 9000
+    }
+   ],
+   "expected": {
+    "kind": "beyond-host"
+   }
+  },
+  {
+   "name": "an unknown fleet queues instead of refusing",
+   "need": 12000,
+   "grant": 1536,
+   "local": {
+    "origin": "g1-m01",
+    "totalMegabytes": 16384,
+    "floorMegabytes": 2048,
+    "interactiveReserveMegabytes": 4096,
+    "budgetBasisPoints": 9000,
+    "availableMegabytes": 14000
+   },
+   "fleet": null,
+   "expected": {
+    "kind": "beyond-host"
+   }
+  },
+  {
+   "name": "a unit no machine of the fleet can hold is refused",
+   "need": 30000,
+   "grant": 1536,
+   "local": {
+    "origin": "g1-server",
+    "totalMegabytes": 32768,
+    "floorMegabytes": 2048,
+    "interactiveReserveMegabytes": 4096,
+    "budgetBasisPoints": 9000,
+    "availableMegabytes": 30000
+   },
+   "fleet": [
+    {
+     "origin": "g1-m01",
+     "totalMegabytes": 16384,
+     "floorMegabytes": 2048,
+     "interactiveReserveMegabytes": 4096,
+     "budgetBasisPoints": 9000
+    }
+   ],
+   "expected": {
+    "kind": "refused"
+   }
+  },
+  {
+   "name": "a small host refuses a unit that not even the largest host holds",
+   "need": 30000,
+   "grant": 1536,
+   "local": {
+    "origin": "g1-m01",
+    "totalMegabytes": 16384,
+    "floorMegabytes": 2048,
+    "interactiveReserveMegabytes": 4096,
+    "budgetBasisPoints": 9000,
+    "availableMegabytes": 14000
+   },
+   "fleet": [
+    {
+     "origin": "g1-server",
+     "totalMegabytes": 32768,
+     "floorMegabytes": 2048,
+     "interactiveReserveMegabytes": 4096,
+     "budgetBasisPoints": 9000
+    },
+    {
+     "origin": "g1-m01",
+     "totalMegabytes": 16384,
+     "floorMegabytes": 2048,
+     "interactiveReserveMegabytes": 4096,
+     "budgetBasisPoints": 9000
+    }
+   ],
+   "expected": {
+    "kind": "refused"
+   }
+  },
+  {
+   "name": "the interactive reserve and the floor are never grown into",
+   "need": 5635,
+   "grant": 1536,
+   "local": {
+    "origin": "g1-server",
+    "totalMegabytes": 32768,
+    "floorMegabytes": 2048,
+    "interactiveReserveMegabytes": 4096,
+    "budgetBasisPoints": 9000,
+    "availableMegabytes": 9144
+   },
+   "fleet": [],
+   "expected": {
+    "kind": "wait"
+   }
+  },
+  {
+   "name": "a unit under a larger grant is carried on any host",
+   "need": 3000,
+   "grant": 4096,
+   "local": {
+    "origin": "g1-m01",
+    "totalMegabytes": 16384,
+    "floorMegabytes": 2048,
+    "interactiveReserveMegabytes": 4096,
+    "budgetBasisPoints": 9000,
+    "availableMegabytes": 100
+   },
+   "fleet": [],
+   "expected": {
+    "kind": "fits"
+   }
+  }
+ ]
+}

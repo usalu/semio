@@ -1,5 +1,6 @@
 import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {mkdirSync,readdirSync} from "node:fs";
+import {processPidExistsV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import {readHostCapacityStatusV1,hostCapacityDirectoryV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {readLeaseReportV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/📋️status/🟦️.ts";
 import {listSessionSandboxesV1,testSandboxParentV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🏖️sandbox/🟦️.ts";
@@ -106,7 +107,7 @@ async function dispatch(root:string,args:readonly string[],context:SessionComman
   const id=positional[0];if(id===undefined)throw new AgentSessionErrorV1("usage");if(positional.length>1)throw new AgentSessionErrorV1("unknownOption",{value:positional[1]!});
   if(!isAgentSessionIdV1(id))throw new AgentSessionErrorV1("invalidSession",{value:id});
   const row=listAgentSessionsV1(store,ports).find(candidate=>candidate.session.id===id);if(row===undefined)throw new AgentSessionErrorV1("unknown",{id});
-  const anchor=row.session.anchors.at(-1),alive=context.alive??((pid:number)=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}});
+  const anchor=row.session.anchors.at(-1),alive=context.alive??processPidExistsV1;
   if(!switches.has("force")&&row.state!=="gone"&&row.session.agent.origin!=="default"&&row.session.anchors.some(candidate=>alive(candidate.pid)))throw new AgentSessionErrorV1("closeLive",{id,state:say("state."+row.state),pid:anchor!.pid});
   const result=reclaim(row.session),closed=result.kept===0||switches.has("force");
   if(closed)closeAgentSessionV1(store,id,"closed",now);

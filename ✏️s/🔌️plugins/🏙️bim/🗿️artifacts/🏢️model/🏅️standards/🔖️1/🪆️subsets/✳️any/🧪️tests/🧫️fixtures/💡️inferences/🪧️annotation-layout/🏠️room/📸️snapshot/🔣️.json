@@ -276,5 +276,291 @@
       "detail": "Medium",
       "storey": "st-first"
     }
+  },
+  "annotation_styles": {
+    "as-large": {
+      "gap": 0.1,
+      "mark_size": 0.15,
+      "name": "Plan 1:100",
+      "overshoot": 0.2,
+      "precision": 2,
+      "terminator": "Tick",
+      "text_height": 0.4,
+      "unit": "Metre"
+    },
+    "as-plan": {
+      "gap": 0.1,
+      "mark_size": 0.15,
+      "name": "Plan 1:50",
+      "overshoot": 0.2,
+      "precision": 2,
+      "terminator": "Tick",
+      "text_height": 0.25,
+      "unit": "Metre"
+    }
+  },
+  "dimensions": {
+    "dim-south": {
+      "storey": "st-ground",
+      "anchors": [
+        {
+          "WallEnd": {
+            "wall": "w-south",
+            "end": "Start"
+          }
+        },
+        {
+          "WallEnd": {
+            "wall": "w-south",
+            "end": "End"
+          }
+        }
+      ],
+      "angle": 0,
+      "offset": -1,
+      "style": "as-plan",
+      "name": "South length"
+    },
+    "dim-chain": {
+      "storey": "st-ground",
+      "anchors": [
+        {
+          "WallEnd": {
+            "wall": "w-south",
+            "end": "Start"
+          }
+        },
+        {
+          "OpeningCentre": {
+            "opening": "o-win"
+          }
+        },
+        {
+          "WallEnd": {
+            "wall": "w-south",
+            "end": "End"
+          }
+        }
+      ],
+      "angle": 0,
+      "offset": -2,
+      "style": "as-plan",
+      "name": "Window position"
+    },
+    "dim-clear": {
+      "storey": "st-ground",
+      "anchors": [
+        {
+          "WallFace": {
+            "wall": "w-south",
+            "side": "Left"
+          }
+        },
+        {
+          "WallFace": {
+            "wall": "w-north",
+            "side": "Left"
+          }
+        }
+      ],
+      "angle": 1.5707963267948966,
+      "offset": 1,
+      "style": "as-plan",
+      "name": "Clear width"
+    },
+    "dim-thickness": {
+      "storey": "st-ground",
+      "anchors": [
+        {
+          "WallFace": {
+            "wall": "w-east",
+            "side": "Left"
+          }
+        },
+        {
+          "WallFace": {
+            "wall": "w-east",
+            "side": "Right"
+          }
+        }
+      ],
+      "angle": 0,
+      "offset": 1,
+      "style": "as-plan",
+      "name": "East thickness"
+    },
+    "dim-column": {
+      "storey": "st-ground",
+      "anchors": [
+        {
+          "ColumnCentre": {
+            "column": "col-1"
+          }
+        },
+        {
+          "Grid": {
+            "grid": "g-1"
+          }
+        }
+      ],
+      "angle": 1.5707963267948966,
+      "offset": -1,
+      "style": "as-plan",
+      "name": "Column to grid"
+    },
+    "dim-locked": {
+      "storey": "st-ground",
+      "anchors": [
+        {
+          "Point": {
+            "point": {
+              "x": 0,
+              "y": -2
+            }
+          }
+        },
+        {
+          "Point": {
+            "point": {
+              "x": 3,
+              "y": -2
+            }
+          }
+        }
+      ],
+      "angle": 0,
+      "offset": 0,
+      "style": "as-plan",
+      "name": "Kept lock",
+      "lock": 3
+    },
+    "dim-lock-broken": {
+      "storey": "st-ground",
+      "anchors": [
+        {
+          "Point": {
+            "point": {
+              "x": 0,
+              "y": -3
+            }
+          }
+        },
+        {
+          "Point": {
+            "point": {
+              "x": 3,
+              "y": -3
+            }
+          }
+        }
+      ],
+      "angle": 0,
+      "offset": 0,
+      "style": "as-plan",
+      "name": "Broken lock",
+      "lock": 2.5
+    },
+    "dim-parallel": {
+      "storey": "st-ground",
+      "anchors": [
+        {
+          "WallFace": {
+            "wall": "w-south",
+            "side": "Left"
+          }
+        },
+        {
+          "WallFace": {
+            "wall": "w-north",
+            "side": "Left"
+          }
+        }
+      ],
+      "angle": 0,
+      "offset": -1,
+      "style": "as-plan",
+      "name": "Parallel faces"
+    }
+  },
+  "tags": {
+    "tag-name": {
+      "storey": "st-ground",
+      "element": "w-south",
+      "category": "Name",
+      "offset": {
+        "x": 0,
+        "y": -0.5
+      },
+      "style": "as-plan"
+    },
+    "tag-type": {
+      "storey": "st-ground",
+      "element": "w-south",
+      "category": "Type",
+      "offset": {
+        "x": 0,
+        "y": -1
+      },
+      "style": "as-plan"
+    },
+    "tag-size": {
+      "storey": "st-ground",
+      "element": "o-win",
+      "category": "Size",
+      "offset": {
+        "x": 0,
+        "y": 0.8
+      },
+      "style": "as-plan"
+    },
+    "tag-column": {
+      "storey": "st-ground",
+      "element": "col-1",
+      "category": "Size",
+      "offset": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "style": "as-plan"
+    },
+    "tag-empty": {
+      "storey": "st-ground",
+      "element": "w-south",
+      "category": "Number",
+      "offset": {
+        "x": 0,
+        "y": 1
+      },
+      "style": "as-plan"
+    }
+  },
+  "text_notes": {
+    "note-1": {
+      "storey": "st-ground",
+      "position": {
+        "x": 2,
+        "y": 2
+      },
+      "text": "Verify on site",
+      "rotation": 0,
+      "style": "as-plan"
+    }
+  },
+  "leaders": {
+    "lead-1": {
+      "storey": "st-ground",
+      "anchor": {
+        "WallFace": {
+          "wall": "w-south",
+          "side": "Right"
+        }
+      },
+      "offset": {
+        "x": 1,
+        "y": -1
+      },
+      "text": "Brick 300",
+      "style": "as-plan"
+    }
   }
 }

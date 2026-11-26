@@ -1,5 +1,6 @@
 import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {createHash,randomBytes} from "node:crypto";
+import {processPidExistsV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import {lstatSync,readFileSync} from "node:fs";
 import {mkdir,readFile,readdir,rename,rm,stat,utimes,writeFile} from "node:fs/promises";
 import {fileURLToPath} from "node:url";
@@ -130,7 +131,7 @@ export type SnapshotStoreV1=ReturnType<typeof snapshotStoreV1>;
 /** 🧾️ The files whose code decides the verdict of a path that no snapshot names: the input classification and the roster behind it, the ignore rules and the path refusals of the boundary. */
 const VERDICT_CODE_FILES_V1:readonly string[]=["../🟦️.ts","../🧬️schema/🔣️.json","../../🕸️graph/🧭️roster/🟨️.mjs","../../../../🤝️shared-worktree/🚧️boundary/🟦️.ts","../../../../🤝️shared-worktree/🚧️boundary/🔤️fold/🔣️.json"].map(path=>fileURLToPath(new URL(path,import.meta.url)));
 
-const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
+const alive=(pid:number):boolean=>processPidExistsV1(pid);
 
 /** 🩺️ What the health file of the replica daemon of `root` allows: `unusable` (no fresh health, store unreachable or process dead: the manifest cannot be used), `verify` (the daemon does not state that its manifest reflects the tree: it has no verification yet, lost trust through an event that can make the manifest wrong for shared source paths, or its last verification is older than ten minutes; every file the manifest names is then checked against its size and modification time before it is believed) or `trusted` (a sweep of the daemon found the manifest equal to the tree after its last loss). The lifetime failure counters of the health file play no part; the rule is `decideTrustV1` of the shared worktree trust member, the statement is the `trust` object of the health schema. */
 export async function manifestTrustV1(root:string,now:number=Date.now(),isAlive:(pid:number)=>boolean=alive):Promise<"unusable"|"verify"|"trusted">{

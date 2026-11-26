@@ -30,7 +30,6 @@ semio-os-kernel = { workspace = true }
 semio-os-store-one-item = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema = { workspace = true }
-semio-framework-schema-registry = { workspace = true }
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
@@ -65,7 +64,6 @@ semio-s-artifact-norm-en1990-mut-design-basis-structure = { workspace = true }
 semio-s-artifact-norm-en1990-mut-bridge-fatigue-rows = { workspace = true }
 semio-s-artifact-norm-en1990-mut-analysis-rows = { workspace = true }
 semio-s-artifact-norm-en1990-mut-reliability = { workspace = true }
-semio-s-plugin-norm-app-surface = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-s-artifact-norm-contract = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
@@ -84,7 +82,6 @@ serde_json = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-s-plugin-norm-app-surface = { workspace = true, features = ["compliance-testing"] }
 semio-s-plugin-norm-compliance = { workspace = true }
 semio-s-mutation-vectors = { workspace = true }
 serde = { workspace = true }

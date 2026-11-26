@@ -260,7 +260,7 @@ impl Session {
     /// 🔗️ Captures this exact authority for a supplied operator or retained composition reader.
     pub fn capture(&self) -> SessionCapture { SessionCapture::owned(self.clone()) }
     /// 🔌️ Supplies one separately admitted retained-job authority over this kernel family.
-    pub fn port(&self) -> Box<dyn semio_os_flow::geometry::GeometryPort> {Box::new(self.admitted_port())}
+    pub fn port(&self) -> Box<dyn semio_os_flow_geometry::GeometryPort> {Box::new(self.admitted_port())}
     pub(super) fn admitted_port(&self)->SessionPort{
         let mut claims = self.state.claims.try_lock().expect("geometry claims");
         let authority = self.state.next_authority.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -1519,7 +1519,7 @@ pub fn cached_mesh_at_or_finer(&self, handle: &str, tolerance: f64) -> Option<se
 pub fn cached_mesh_payload_bytes(&self, handle: &str, tolerance: f64) -> usize {
     self.with_cached_mesh_at_or_finer(handle, tolerance, mesh_payload_bytes).unwrap_or(0)
 }
-pub(super) fn tessellation_work_units(&self,identity:semio_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64)->usize {
+pub(super) fn tessellation_work_units(&self,identity:semio_os_flow_geometry::GeometryWorkIdentity,handle:&str,tolerance:f64)->usize {
     self.tessellation_jobs().try_lock().ok().and_then(|owner|owner.original().and_then(|registry|registry.jobs.iter().find(|(key,_)|key.0==handle&&key.1==tolerance.to_bits()&&key.2==identity.operation&&key.3==identity.generation).map(|(_,row)|row.source_units+row.job.progress().units_done+if row.validated{row.validation_units}else{0}))).unwrap_or(0)
 }
 
@@ -1833,7 +1833,7 @@ pub fn brep_invoke_json(&self, method: &str, args_json: &str) -> String {
 struct SessionPort {pub(super) authority:SessionCapture,anchor:SessionCapture,retaining:RetainedOwnerGate<Option<SessionRetention>>,retain_receipt:RetainedCloneProgress,cancel_receipt:RetainedCloneProgress}
 impl SessionPort {fn retained_demand(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{let owner=self.retaining.try_lock().map_err(|_|ownership_busy())?;owner.as_ref().map_or(Ok(Default::default()),|owner|owner.demand(self.authority.session.as_ref().ok_or_else(ownership_busy)?,copy))}}
 impl Drop for SessionPort {fn drop(&mut self) {if !std::thread::panicking() {assert!(self.retaining.get_mut().is_none()&&self.authority.terminal_is_empty() && self.anchor.terminal_is_empty(),"geometry port requires terminal-empty retirement");}}}
-impl semio_os_flow::geometry::GeometryPort for SessionPort {
+impl semio_os_flow_geometry::GeometryPort for SessionPort {
     fn begin_retain(&mut self,handles:Vec<String>)->Result<(),(ValueError,Vec<String>)>{if self.retaining.get_mut().is_some(){return Err((ownership_busy(),handles));}let Some(session)=self.authority.session.as_ref()else{return Err((ownership_busy(),handles));};*self.retaining.get_mut()=Some(SessionRetention::new(session,handles)?);Ok(())}
     fn retain_terminal_is_empty(&self)->bool{self.retaining.try_lock().is_ok_and(|owner|owner.is_none())}
     fn next_retain_copy_byte_demand(&self)->Result<usize,ValueError>{self.retained_demand(0).map(|demand|demand.copy_bytes)}
@@ -1842,10 +1842,10 @@ impl semio_os_flow::geometry::GeometryPort for SessionPort {
     fn next_retain_depth_demand(&self)->Result<usize,ValueError>{self.retained_demand(0).map(|demand|demand.depth)}
     fn retain_step_progress(&self)->RetainedCloneProgress{self.retain_receipt}
     fn retain_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{self.retain_receipt=Default::default();let Some(owner)=self.retaining.get_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};let result=owner.step(self.authority.session.as_ref().ok_or_else(ownership_busy)?,effect);self.retain_receipt=owner.normal_step_progress();let step=result?;if owner.terminal_is_empty(){*self.retaining.get_mut()=None;Ok(RetainedCloneStep::Complete(step.progress()))}else{Ok(RetainedCloneStep::Progress(step.progress()))}}
-    fn tessellation_demands(&self,identity:semio_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.authority.session.as_ref().ok_or_else(ownership_busy)?.tessellation_demands(identity,handle,tolerance,copy)}
-    fn tessellate_step(&self,identity:semio_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(semio_os_flow::geometry::GeometryStep,semio_os_flow::geometry::GeometryWorkProgress),semio_os_flow::geometry::GeometryWorkFailure>{self.authority.session.as_ref().ok_or_else(ownership_busy).map_err(|primary|semio_os_flow::geometry::GeometryWorkFailure::new(primary,0))?.tessellate_step(identity,handle,tolerance,cx)}
-    fn cancel_tessellation_demands(&self,identity:semio_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.authority.session.as_ref().ok_or_else(ownership_busy)?.cancel_tessellation_demands(identity,handle,tolerance,copy)}
-    fn cancel_tessellation_step(&self,identity:semio_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(RetainedCloneStep,semio_os_flow::geometry::GeometryWorkProgress),semio_os_flow::geometry::GeometryWorkFailure>{self.authority.session.as_ref().ok_or_else(ownership_busy).map_err(|primary|semio_os_flow::geometry::GeometryWorkFailure::new(primary,0))?.cancel_tessellation_step(identity,handle,tolerance,cx)}
+    fn tessellation_demands(&self,identity:semio_os_flow_geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.authority.session.as_ref().ok_or_else(ownership_busy)?.tessellation_demands(identity,handle,tolerance,copy)}
+    fn tessellate_step(&self,identity:semio_os_flow_geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(semio_os_flow_geometry::GeometryStep,semio_os_flow_geometry::GeometryWorkProgress),semio_os_flow_geometry::GeometryWorkFailure>{self.authority.session.as_ref().ok_or_else(ownership_busy).map_err(|primary|semio_os_flow_geometry::GeometryWorkFailure::new(primary,0))?.tessellate_step(identity,handle,tolerance,cx)}
+    fn cancel_tessellation_demands(&self,identity:semio_os_flow_geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.authority.session.as_ref().ok_or_else(ownership_busy)?.cancel_tessellation_demands(identity,handle,tolerance,copy)}
+    fn cancel_tessellation_step(&self,identity:semio_os_flow_geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(RetainedCloneStep,semio_os_flow_geometry::GeometryWorkProgress),semio_os_flow_geometry::GeometryWorkFailure>{self.authority.session.as_ref().ok_or_else(ownership_busy).map_err(|primary|semio_os_flow_geometry::GeometryWorkFailure::new(primary,0))?.cancel_tessellation_step(identity,handle,tolerance,cx)}
     fn dispose(&self,handle:&str)->Result<(),String> {self.authority.session.as_ref().ok_or("geometry session is closed")?.dispose_geometry(handle)}
     fn begin_cancel(&mut self)->Result<(),ValueError>{self.authority.session.as_ref().ok_or_else(ownership_busy)?.begin_cancel()?;if let Some(owner)=self.retaining.get_mut(){owner.cancel();}Ok(())}
     fn cancel_terminal_is_empty(&self)->bool{self.retain_terminal_is_empty()&&self.authority.session.as_ref().is_none_or(Session::cancel_terminal_is_empty)}

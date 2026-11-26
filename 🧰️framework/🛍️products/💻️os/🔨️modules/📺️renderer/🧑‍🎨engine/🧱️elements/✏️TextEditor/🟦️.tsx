@@ -1,3 +1,4 @@
+import { Surface } from "@semio-tech/ui-react";
 
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/✏️TextEditor/component.tsx
@@ -7,7 +8,7 @@
 // #region 🔌️Adapters
 import { useEffect, useMemo, useRef, useState } from "../⚛️react-port/🟦️.ts";
 import { WasmCanvas } from "@semio-tech/framework/canvas/react-renderer";
-import { Button, cn, ContextMenuController, ContextMenuTriggerButton, glassClass, Input, SharedBorderRow, SharedBorderRowCell, Textarea, useLabel, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
+import { Button, ContextMenuController, ContextMenuTriggerButton, Input, SharedBorderRow, SharedBorderRowCell, Textarea, useLabel, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 import { textEditorActions, type ActionDescriptor, type ActionDispatchLifecycleV1, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene } from "@semio-tech/framework";
 import { useLocalDocumentOwnerV1, useLocalDocumentWindowV1 } from "../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import { useClient } from "@semio-tech/framework-os-node-graph-rs/index";
@@ -226,7 +227,7 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
         }}
       >
         {renameDraft ? (
-          <div className={cn("pointer-events-auto absolute z-50 flex min-w-[12rem]", glassClass)} data-level="pane" data-glass-chip="" style={renamePosition ? { left: renamePosition.x, top: renamePosition.y - 4 } : { left: 12, top: 12 }}>
+          <Surface level="chip" className="pointer-events-auto absolute z-50 flex min-w-[12rem]" style={renamePosition ? { left: renamePosition.x, top: renamePosition.y - 4 } : { left: 12, top: 12 }}>
             <Input
               id="text-editor-rename"
               className="font-mono text-xs text-foreground"
@@ -247,14 +248,14 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
               }}
               onBlur={commitRename}
             />
-          </div>
+          </Surface>
         ) : null}
         {completionsOpen && completions.length > 0
           ? (() => {
               const session = sessionRef.current;
               const position = session ? caretScreenPosition(session) : null;
               return (
-                <SharedBorderRow orientation="vertical" className={cn("pointer-events-auto absolute z-50 max-h-48 min-w-40 overflow-auto p-1", glassClass)} data-level="menu" data-glass-chip="" style={position ? { left: position.x, top: position.y + 18 } : { left: 12, top: 12 }}>
+                <SharedBorderRow orientation="vertical" className="pointer-events-auto absolute z-50 max-h-48 min-w-40 overflow-auto p-1" overlay="menu" style={position ? { left: position.x, top: position.y + 18 } : { left: 12, top: 12 }}>
                   {completions.map((item, index) => (
                     <button {...sharedBorderlessBoxProps}
                       key={`${item.label}-${index}`}
@@ -639,7 +640,7 @@ export function TextEditorHost({ node, onAction, requestContextMenu }: Component
   };
 
   return (
-    <div className="semio-text-editor-host flex h-full min-h-[16rem] w-full flex-col ui-surface" data-level="base" data-surface-id={node.surfaceId} data-dirty={explicitDraft && currentDraft.dirty ? "true" : "false"} aria-busy={explicitDraft && pending || undefined}>
+    <Surface className="semio-text-editor-host flex h-full min-h-[16rem] w-full flex-col" data-surface-id={node.surfaceId} data-dirty={explicitDraft && currentDraft.dirty ? "true" : "false"} aria-busy={explicitDraft && pending || undefined}>
       {isClient ? (
         <WasmEditorSurface scene={displayedScene} controllerId={node.controllerId} surfaceId={node.surfaceId} onAction={sourceOnAction} onSourceCommit={valueSource ? commitSource : undefined} label={valueSource?.label} readOnly={readOnly} explicitDraft={explicitDraft} explicitDraftDirty={currentDraft.dirty} descriptionId={failure ? statusId : undefined} invalid={Boolean(failure)} onDraftChange={valueSource ? changeSource : changeDraft} requestContextMenu={requestContextMenu} />
       ) : (
@@ -689,7 +690,7 @@ export function TextEditorHost({ node, onAction, requestContextMenu }: Component
           </SharedBorderRowCell>
         </SharedBorderRow>
       ) : null}
-    </div>
+    </Surface>
   );
 }
 //#endregion TextEditorHost

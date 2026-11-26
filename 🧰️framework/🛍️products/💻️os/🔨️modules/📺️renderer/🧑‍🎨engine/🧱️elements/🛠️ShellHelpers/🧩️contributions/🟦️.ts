@@ -46,7 +46,8 @@ export type ContributionsPublisher<E> = {
  */
 export function createContributionsPublisher<E>(ports: ContributionsPublisherPorts<E>): ContributionsPublisher<E> {
   const packByKey = new Map<string, string>();
-  const installedByInstance = new Map<number, string>();
+  type Delivery = { installed?: string; pending?: { json: string; done: Promise<boolean> } };
+  const deliveries = new Map<number, Delivery>();
   return {
     async publish(session, environment) {
       try {
@@ -57,24 +58,37 @@ export function createContributionsPublisher<E>(ports: ContributionsPublisherPor
           packByKey.set(packKey, json);
         }
         if (json.length === 0 || json === "[]") return { status: "empty" };
-        const displaced = installedByInstance.get(session.instanceId);
-        if (displaced === json) return { status: "unchanged" };
-        installedByInstance.set(session.instanceId, json);
-        try {
-          await ports.install(session, json, environment);
-        } catch (error) {
-          if (displaced === undefined) installedByInstance.delete(session.instanceId);
-          else installedByInstance.set(session.instanceId, displaced);
-          throw error;
+        const pack = json;
+        const id = session.instanceId;
+        const delivery: Delivery = deliveries.get(id) ?? {};
+        deliveries.set(id, delivery);
+        const previous = delivery.pending;
+        if (previous?.json === pack) {
+          await previous.done;
+          return { status: "unchanged" };
         }
-        return { status: "installed", chars: json.length };
+        if (!previous && delivery.installed === pack) return { status: "unchanged" };
+        const install = async () => {
+          if (deliveries.get(id) !== delivery) throw new Error("Contribution receiver retired");
+          if (delivery.installed === pack) return false;
+          await ports.install(session, pack, environment);
+          delivery.installed = pack;
+          return true;
+        };
+        const done = previous ? previous.done.then(install, install) : Promise.resolve().then(install);
+        delivery.pending = { json: pack, done };
+        try {
+          return await done ? { status: "installed", chars: pack.length } : { status: "unchanged" };
+        } finally {
+          if (delivery.pending?.done === done) delete delivery.pending;
+        }
       } catch (error) {
         return { status: "failed", reason: error instanceof Error ? error.message : String(error) };
       }
     },
     retire(instanceId) {
-      installedByInstance.delete(instanceId);
+      deliveries.delete(instanceId);
     },
-    installedFor: (instanceId) => installedByInstance.get(instanceId) ?? null,
+    installedFor: (instanceId) => deliveries.get(instanceId)?.installed ?? null,
   };
 }

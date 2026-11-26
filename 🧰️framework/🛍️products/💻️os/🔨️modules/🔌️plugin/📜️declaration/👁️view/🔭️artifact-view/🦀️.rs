@@ -14,6 +14,7 @@ pub struct ArtifactView<'a, P> {
     pub children: ChildContentView,
     pub(super) operation: Option<AppOperationContext>,
     pub(super) render_operation: Option<AppRenderOperationContext>,
+    committed_render_snapshot: bool,
     pub(super) parent_document_id: Option<&'a str>,
     snapshot_read: std::sync::Mutex<Option<store::os_store::snapshot_read::SnapshotRead<P>>>,
     tool_run: Option<ToolRunView>,
@@ -44,7 +45,7 @@ impl<'a, P> ArtifactView<'a, P> {
     /// shape every leaf app and test uses. Prefer this over a struct literal: lane views grow
     /// over time, and a constructor absorbs that growth without touching every call site.
     pub fn new(snapshot: &'a P, history: &'a HistoryView) -> Self {
-        Self { snapshot, history, children: ChildContentView::EMPTY, operation: None, render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None, original_tool_run:None,tool_run_poll:None, operations: &[], provisional_generation: 0, instance: None }
+        Self { snapshot, history, children: ChildContentView::EMPTY, operation: None, render_operation: None, committed_render_snapshot: false, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None, original_tool_run:None,tool_run_poll:None, operations: &[], provisional_generation: 0, instance: None }
     }
 
     /// 🪪️ Synchronous retained-worker view bound to one exact admitted operation.
@@ -55,6 +56,7 @@ impl<'a, P> ArtifactView<'a, P> {
             children: ChildContentView::EMPTY,
             operation: Some(operation),
             render_operation: None,
+            committed_render_snapshot: false,
             parent_document_id: None,
             snapshot_read: std::sync::Mutex::new(None),
             tool_run: None, original_tool_run:None,tool_run_poll:None,
@@ -68,7 +70,7 @@ impl<'a, P> ArtifactView<'a, P> {
     /// [`ArtifactOwnedToolJobContext::children`] rather than through a host render pass and so
     /// carries no render identity. Synchronous on purpose: it only moves owned fields.
     pub fn with_children(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView) -> Self {
-        Self { snapshot, history, children, operation: None, render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None, original_tool_run:None,tool_run_poll:None, operations: &[], provisional_generation: 0, instance: None }
+        Self { snapshot, history, children, operation: None, render_operation: None, committed_render_snapshot: false, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None, original_tool_run:None,tool_run_poll:None, operations: &[], provisional_generation: 0, instance: None }
     }
 
     /// 🪪️ Binds a composing retained view to the exact admitted operation it runs under, so its handlers mint ids
@@ -91,6 +93,7 @@ impl<'a, P> ArtifactView<'a, P> {
             children,
             operation: None,
             render_operation: Some(render_operation),
+            committed_render_snapshot: false,
             parent_document_id: Some(parent_document_id),
             snapshot_read: std::sync::Mutex::new(snapshot_read),
             tool_run: None, original_tool_run:None,tool_run_poll:None,
@@ -179,6 +182,17 @@ impl<'a, P> ArtifactView<'a, P> {
 
     pub fn render_operation(&self) -> Option<AppRenderOperationContext> {
         self.render_operation
+    }
+
+    /// 🔐️ Binds the view to the committed source if its snapshot comes from that exact root.
+    pub fn with_committed_render_snapshot(mut self, is_committed: bool) -> Self {
+        self.committed_render_snapshot = is_committed;
+        self
+    }
+
+    /// 🪪️ Supplies command-readable revision authority for a view of the committed source.
+    pub fn committed_render_operation(&self) -> Option<AppRenderOperationContext> {
+        self.render_operation.filter(|_| self.committed_render_snapshot)
     }
 
     /// 🧾️ Returns the exact live store envelope id bound to this host render pass.

@@ -417,7 +417,8 @@ impl ShellArtifactChannel {
     /// cooperative flag the human's own Cancel button flips, so a shell that is still
     /// grinding on an abandoned command stops instead of committing it after the agent
     /// gave up on it.
-    fn round_trip(&self, handle: &BridgeHandle, connection: ShellConnectionId, instance_id: &str, command: &AppCommand) -> Result<Vec<AppFrame>, Fault> {
+    fn round_trip(&self, handle: &BridgeHandle, connection: ShellConnectionId, instance_id: &str, command: &AppCommand, scope: &ActivationScope) -> Result<Vec<AppFrame>, Fault> {
+        scope.checkpoint()?;
         let seq = next_app_command_seq();
         let payload = serde_json::to_vec(&encode_app_command(command)).map_err(|error| fault("channel.not-wired", format!("encoding an AppCommand for the shell: {error}")))?;
         if !handle.send_to(connection, GatewayToShell::AppCommand { seq, instance_id: instance_id.to_string(), command: payload }) {
@@ -439,12 +440,29 @@ impl ShellArtifactChannel {
                         .collect();
                 }
             }
-            if Instant::now() >= deadline {
+            let stopped = scope.checkpoint().err().or_else(|| (Instant::now() >= deadline).then(|| fault("budget.exceeded", format!("the attached shell did not answer this command within {}ms", self.timeout.as_millis()))));
+            if let Some(stopped) = stopped {
                 handle.send_to(connection, GatewayToShell::AppCommand { seq, instance_id: instance_id.to_string(), command: serde_json::to_vec(&serde_json::json!({ "version": SHELL_CHANNEL_PAYLOAD_VERSION, "kind": "cancel", "cancelSeq": seq })).unwrap_or_default() });
-                return Err(fault("budget.exceeded", format!("the attached shell did not answer this command within {}ms", self.timeout.as_millis())));
+                return Err(stopped);
             }
             std::thread::sleep(Duration::from_millis(SHELL_APP_COMMAND_POLL_INTERVAL_MS));
         }
+    }
+
+    /// 📤️ Dispatches a shell-owned export through its correlated command and cancellation lane.
+    pub fn exchange_scoped(&mut self, instance: u32, command: AppCommand, scope: &ActivationScope) -> Result<Vec<AppFrame>, Fault> {
+        scope.checkpoint()?;
+        if matches!(command, AppCommand::Infer(_)) {
+            return Err(fault("plugin.unavailable", "inference never travels the shell route — the gateway owns its own inference guest; resolve a headless session for inference work"));
+        }
+        let Some((handle, connection)) = self.binding.relay_connection() else {
+            return Err(fault(
+                "plugin.unavailable",
+                "this session resolved the `shell` channel and the shell is no longer attached — reconnect the shell and resolve a new context rather than silently editing a different document",
+            ));
+        };
+        let instance_id = self.resolve_instance_id(&handle, connection, instance, &command)?;
+        self.round_trip(&handle, connection, &instance_id, &command, scope)
     }
 }
 
@@ -487,17 +505,7 @@ impl ArtifactChannel for ShellArtifactChannel {
             return Err(fault("channel.not-wired", format!("the shell route sends exactly one command per exchange, received {}", commands.len())));
         }
         let command = commands.into_iter().next().expect("length checked above");
-        if matches!(command, AppCommand::Infer(_)) {
-            return Err(fault("plugin.unavailable", "inference never travels the shell route — the gateway owns its own inference guest; resolve a headless session for inference work"));
-        }
-        let Some((handle, connection)) = self.binding.relay_connection() else {
-            return Err(fault(
-                "plugin.unavailable",
-                "this session resolved the `shell` channel and the shell is no longer attached — reconnect the shell and resolve a new context rather than silently editing a different document",
-            ));
-        };
-        let instance_id = self.resolve_instance_id(&handle, connection, instance, &command)?;
-        self.round_trip(&handle, connection, &instance_id, &command)
+        self.exchange_scoped(instance, command, &ActivationScope::detached())
     }
 
     /// 🐚️ The attached shell owns this session's guest and its document; the gateway has nothing of

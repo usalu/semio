@@ -3,11 +3,11 @@ import json, re, sys
 
 
 def bounded(args, tokens):
-    if not tokens or tokens < 1:
-        return list(args)
+    granted = bool(tokens and tokens > 0)
+    tokens = tokens if granted else 1
     serial = False
     if "--crate-type=cdylib" in args or any(a == "--crate-type" and i + 1 < len(args) and args[i + 1] == "cdylib" for i, a in enumerate(args)):
-        serial = True
+        serial = granted or any(value.startswith("-Z") for value in args)
         tokens = 1
     def fix(value):
         return str(tokens) if re.fullmatch(r"[0-9]+", value) and (int(value) == 0 or int(value) > tokens) else value

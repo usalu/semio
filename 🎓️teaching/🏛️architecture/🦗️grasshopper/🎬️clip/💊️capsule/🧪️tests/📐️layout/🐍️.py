@@ -55,7 +55,7 @@ class SliderLayout(unittest.TestCase):
                    'card': others[0], 'limit_badge': others[1], 'red_box': others[2], 'request': others[3],
                    'col': col, 'table': table, 'minis': minis, 'marker': marker, 'typetag': typetag,
                    'rv': rv, 'vals': trackers, 'width_hi': 3.5, 'value': lambda _: 2.6,
-                   'minis_ready': lambda: None, 'hold': hold, '_morph': SimpleNamespace(scatter=lambda *a, **kw: Wait(.1))}
+                   'minis_ready': lambda: None, 'hold': hold, 'hop': lambda name, source, target: Wait(.1)}
             seq = eval(stage_code, env)
             control_family = {id(x) for x in control.get_family()}
             table_family = {id(x) for x in table.get_family()}

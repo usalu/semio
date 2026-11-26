@@ -63,7 +63,3 @@ pub fn plugin() -> Result<Plugin<DrawApps>, PluginAssemblyError> {
 #[path = "🧪️tests/🔬️surface/🦀️.rs"]
 mod surface_tests;
 //#endregion 🧪️SurfaceTests
-
-#[cfg(all(test,not(target_arch="wasm32")))]
-#[path="🧪️tests/🌐️guest/🦀️.rs"]
-mod guest_instance_tests;

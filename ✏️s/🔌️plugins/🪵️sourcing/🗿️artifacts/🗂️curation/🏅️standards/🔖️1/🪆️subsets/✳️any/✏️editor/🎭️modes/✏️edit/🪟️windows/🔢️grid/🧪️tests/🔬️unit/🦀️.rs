@@ -22,7 +22,7 @@ async fn grid_instance_count_matches_curated_counts_and_normalizes_scale() {
     curation_set(&mut document, "slab-clt-160", 2);
     let cfg = SourcingCurationConfig { filters: Filters { module_ids: vec!["slabs".into()], ..Default::default() }, ..Default::default() };
     let window = GridWindowConfig::default();
-    let node = render(&document, &cfg, &window, semio_plugin::Locale::En).expect("bounded grid");
+    let node = render(&document, &cfg, &window, &[], None, semio_plugin::Locale::En).expect("bounded grid");
     let scene: semio_ui_scene::World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world3d scene");
     assert!(filtered_stock(&document, &cfg.filters).len() > 1, "stock still has more slabs than the curated subset");
     let parts: usize = 2 * box_parts(&crate::stock_of(&document).iter().find(|kind| kind.id == "slab-clt-160").expect("stock kind").geometry).map_or(1, |parts| parts.len());
@@ -37,7 +37,7 @@ async fn representative_mode_shows_one_mesh_per_curated_row() {
     curation_set(&mut document, "slab-clt-160", 2);
     let cfg = SourcingCurationConfig { filters: Filters { module_ids: vec!["slabs".into()], ..Default::default() }, ..Default::default() };
     let window = GridWindowConfig { instance_display: GRID_INSTANCE_DISPLAY_REPRESENTATIVE.into() };
-    let node = render(&document, &cfg, &window, semio_plugin::Locale::En).expect("bounded grid");
+    let node = render(&document, &cfg, &window, &[], None, semio_plugin::Locale::En).expect("bounded grid");
     let parts: usize = box_parts(&crate::stock_of(&document).iter().find(|kind| kind.id == "slab-clt-160").expect("stock kind").geometry).map_or(1, |parts| parts.len());
     assert_eq!(scene_instance_count(&node), parts);
 }
@@ -48,7 +48,7 @@ async fn representative_with_count_adds_glyph_instances() {
     curation_set(&mut document, "slab-clt-160", 2);
     let cfg = SourcingCurationConfig { filters: Filters { module_ids: vec!["slabs".into()], ..Default::default() }, ..Default::default() };
     let window = GridWindowConfig { instance_display: GRID_INSTANCE_DISPLAY_REPRESENTATIVE_WITH_COUNT.into() };
-    let node = render(&document, &cfg, &window, semio_plugin::Locale::En).expect("bounded grid");
+    let node = render(&document, &cfg, &window, &[], None, semio_plugin::Locale::En).expect("bounded grid");
     let scene: semio_ui_scene::World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world3d scene");
     let parts: usize = box_parts(&crate::stock_of(&document).iter().find(|kind| kind.id == "slab-clt-160").expect("stock kind").geometry).map_or(1, |parts| parts.len());
     assert!(scene_instance_count(&node) > parts);
@@ -60,7 +60,7 @@ async fn representative_with_count_adds_glyph_instances() {
 async fn grid_renders_empty_when_nothing_is_curated() {
     let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let cfg = SourcingCurationConfig::default();
-    let node = render(&document, &cfg, &GridWindowConfig::default(), semio_plugin::Locale::En).expect("bounded empty grid");
+    let node = render(&document, &cfg, &GridWindowConfig::default(), &[], None, semio_plugin::Locale::En).expect("bounded empty grid");
     let scene: semio_ui_scene::World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world3d scene");
     assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.meshes_json).unwrap().as_array().unwrap().len(), 0);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.instances_json).unwrap().as_array().unwrap().len(), 0);
@@ -89,7 +89,7 @@ async fn grid_instance_ids_stay_unique_across_curated_copies() {
     let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     curation_set(&mut document, "slab-clt-160", 3);
     let cfg = SourcingCurationConfig { filters: Filters { module_ids: vec!["slabs".into()], ..Default::default() }, ..Default::default() };
-    let node = render(&document, &cfg, &GridWindowConfig::default(), semio_plugin::Locale::En).expect("bounded grid");
+    let node = render(&document, &cfg, &GridWindowConfig::default(), &[], None, semio_plugin::Locale::En).expect("bounded grid");
     let scene: semio_ui_scene::World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world3d scene");
     let ids: Vec<String> = serde_json::from_str::<serde_json::Value>(&scene.instances_json).unwrap().as_array().unwrap().iter().map(|instance| instance["id"].as_str().unwrap().to_string()).collect();
     let unique: std::collections::BTreeSet<&String> = ids.iter().collect();

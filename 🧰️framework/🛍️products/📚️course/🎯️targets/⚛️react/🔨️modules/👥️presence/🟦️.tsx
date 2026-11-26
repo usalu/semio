@@ -22,7 +22,7 @@
 
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactElement, type ReactNode } from "react";
 import { type Anchor, type CourseView, type Cursor, type Place, type PresenceState } from "@semio-tech/course";
-import { Icon, SharedBorderRow, SharedBorderRowCell, presenceColor, presencePaint, sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
+import { Icon, SharedBorderRow, SharedBorderRowCell, presenceColor, presencePaint, sharedBorderlessBoxProps, useLevel, windowFrameChipLevel } from "@semio-tech/ui-react/chrome";
 import { type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { CardIcon, cn } from "../🪟️chrome/🟦️.tsx";
 import { CoursePresence } from "./🧭️rooms/🟦️.ts";
@@ -370,13 +370,14 @@ export function OnlineMark(props: { readonly colour: number; readonly text: Cour
 /** 🃏️ Named colour badges show occupants of a card's pages and home learners pointing or focusing at that card. */
 export function CardPresence(props: { readonly anchor: Anchor; readonly accepts: (place: Place, view?: PresenceState["view"]) => boolean; readonly text: CourseText }): ReactElement | null {
   const { roster, peers, colours, me } = usePresenceView();
+  const level = windowFrameChipLevel(useLevel());
   const pointing = new Set(peers.filter((peer) => peer.cursor?.anchor === props.anchor || peer.focus === props.anchor).map((peer) => peer.tag));
   const learners = roster?.learners.filter((learner) => learner.active && (props.accepts(learner.place, learner.view) || pointing.has(learner.tag))) ?? [];
   if (learners.length === 0) return null;
   return (
     <ul role="list" data-card-presence={props.anchor} aria-label={props.text("course.presence.online", { count: learners.length })} className="course-card-presence">
       {learners.map((learner) => (
-        <li key={learner.tag} data-tag={learner.tag} style={paintStyle(colours.get(learner.tag) ?? 0)} className="course-card-peer">
+        <li key={learner.tag} data-tag={learner.tag} style={paintStyle(colours.get(learner.tag) ?? 0)} data-level={level} data-glass-chip="" className="course-card-peer ui-glass">
           <span aria-hidden="true" className="course-online" />
           <span className="course-name">{learner.display}{learner.tag === me ? ` (${props.text("course.presence.you")})` : ""}</span>
         </li>

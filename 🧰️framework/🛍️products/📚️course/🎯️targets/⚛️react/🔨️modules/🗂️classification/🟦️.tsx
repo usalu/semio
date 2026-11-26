@@ -111,7 +111,7 @@ export function ClassificationTaskView(props: TaskViewProps<SheetClassificationT
     const hint = asked.get(item.id);
     const hintId = hint === undefined ? undefined : elementId(scope, item.id, "hint");
     return (
-      <li key={item.id} data-icon-host="" data-course-drag="" data-course-item={item.id} data-presence-anchor={PRESENCE_ANCHORS.item(item.id)} data-pet-prop={petProp(topic, item.id)} {...ROW} className="course-chip bg-background">
+      <li key={item.id} data-icon-host="" data-course-drag="" data-course-item={item.id} data-presence-anchor={PRESENCE_ANCHORS.item(item.id)} data-pet-prop={petProp(topic, item.id)} {...ROW} className="course-chip">
         <DragGrip title={text("course.classification.drag", { item: itemLabel(item) })} locked={locked} onDrop={drop(item)} />
         <span className="course-row-label min-w-0 text-sm font-semibold">
           <IconLabel icon={item.icon}>

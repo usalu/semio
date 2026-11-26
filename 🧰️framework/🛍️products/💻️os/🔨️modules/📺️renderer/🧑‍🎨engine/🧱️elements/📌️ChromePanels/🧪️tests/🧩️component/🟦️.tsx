@@ -27,6 +27,7 @@ describe("Settings selector names", () => {
   it("exposes each visible setting label as its combobox name in both locales", () => {
     try {
       for (const locale of selectorNames.locales) {
+        if (locale !== "en" && locale !== "de") throw Error(`Unknown fixture locale ${locale}`);
         syncShellLabelLocale(locale);
         const host = {
           locale, locks: {}, layout: "desktop", appearance: "system", terminology: "native", terminologies: ["native"],

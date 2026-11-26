@@ -12,6 +12,8 @@ import {
 } from "../../🎭️actor/📦️packages/🟦️typescript/📮️shard-client/🟦️.ts";
 import { fetchPackageAssets, type PackageAssetDeclaration } from "../📦️package-assets/🟦️.ts";
 import { packageComponentForApp, type PackageComponents } from "../🧩️package-components/🟦️.ts";
+import { publishedPageUrl } from "../../🖼️assets/🌐️published-page/🟦️.ts";
+import { FONT_ASSET } from "../../🖼️canvas/📦️packages/🟦️typescript/🔤️fonts/🟦️.ts";
 import { OwnedResidentLedger } from "../../🌱️value/📦️packages/🟦️typescript/💾️resident/🟦️.ts";
 import { TurnScheduler, type Backpressure, type CoalesceKey, type Lane } from "../../🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler/🟦️.ts";
 import { ON_EXTENSION_REQUEST_ACTIVATION_PREFIX, type PluginCatalog } from "../📚️plugin-catalog/🟦️.ts";
@@ -53,8 +55,8 @@ export function intersectCapabilityGrants(granted: readonly ShardCapabilityGrant
  * layout), just no longer tied to a single worker's lifetime. Delivered as a declared asset attached
  * to the guest's `instance-open` event (see `🟦️.ts`'s `shardWorkerSource`) rather
  * than a worker-bootstrap special case — it must be resident before the first `surface-visible`. */
-function defaultGuestSlimAssetFetcher(moduleUrl: string): Promise<readonly ShardAsset[]> {
-  const vendorUrl = moduleUrl.split(/[?#]/)[0]!.replace(/\/[^/]+\/[^/]+\.js$/, "/🪞️vendor/🔤️guestslim-typst-fonts.bin");
+function defaultGuestSlimAssetFetcher(): Promise<readonly ShardAsset[]> {
+  const vendorUrl = publishedPageUrl(`/🔌️plugin-modules/🪞️vendor/${FONT_ASSET}`);
   return fetch(vendorUrl)
     .then((response) => {
       if (!response.ok) throw new Error(`GuestSlim typst fonts asset fetch failed: ${response.status} ${vendorUrl}`);

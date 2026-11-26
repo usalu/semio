@@ -16,6 +16,7 @@ import {actualCargoCompilerPlanningPortV1} from "../🕸️units/📥️capture/
 import unitGraphs from "../🕸️units/🧪️tests/🧫️fixtures/🔣️.json" with {type:"json"};
 import { BoundedDiagnosticsV1, buildCargoArtifacts, readCargoArtifactBuildPolicyV1, withCapturedCargoArtifactsTaskV1, withCapturedCargoCompilationTaskV1, writeCompletedCargoInvocationProvenanceV1, type CapturedCargoArtifactsV1 } from "../🟦️.ts";
 import {publishedCargoArtifactDirectoryV1} from "../📤️published/🟦️.ts";
+import {cargoResolverLockViewV1,recheckCargoResolverLockV1,withCargoResolverLockV1} from "../🎯️recipe/🔒️resolver-lock/🟦️.ts";
 import {withIssuedLawStorageV1,lawBuildOptionsV1,lawCompilerConfigurationV1,lawSourceBoundaryV1,type LawStorageV1} from "./🦀️cargo/🟦️.ts";
 import type {ScriptInvocation} from "../../../🧭️routing/🟦️.ts";
 import {CurrentPhysicalOwnerV1} from "@semio-tech/framework-filesystem/observation/current";
@@ -213,6 +214,53 @@ test("actual Cargo artifact capture executes the compiler's retained executable 
 });}, 120_000);
 
 test("original Cargo publication oracle preserves private final outputs and shared intermediates",async()=>{ const {testCargoArtifactPublication}=await import("./📦️publication/🟦️.ts");await testCargoArtifactPublication(process.env.SEMIO_TEST_ARTIFACT_DIR!); },120000);
+
+test("actual Cargo retains the owned resolver lock while the live workspace lock changes during execution",async()=>{
+ await withBuildStorageV1(new AbortController().signal,async(held,admission)=>{
+  const law=fixture.ownedResolverLock,root=mkdtempSync(join(held.root,"lp-")),cwd=join(root,"source"),peer=join(cwd,"peer");
+  mkdirSync(peer,{recursive:true});
+  const manifest=join(cwd,"Cargo.toml"),live=join(cwd,"Cargo.lock"),captureDirectory=join(root,"captures");
+  writeFileSync(manifest,`[workspace]\nmembers = ["peer"]\nresolver = "2"\n[profile.prototype]\ninherits = "dev"\n[package]\nname = "${law.tool}"\nversion = "${law.version}"\nedition = "2021"\n[[bin]]\nname = "${law.tool}"\npath = "main.rs"\n`);
+  writeFileSync(join(peer,"Cargo.toml"),`[package]\nname = "${law.peer}"\nversion = "${law.version}"\nedition = "2021"\n[lib]\npath = "lib.rs"\n`);
+  writeFileSync(join(peer,"lib.rs"),"");
+  writeFileSync(join(cwd,"main.rs"),`fn main(){ print!("{}", ${JSON.stringify(law.stdout)}); }\n`);
+  writeFileSync(join(cwd,"build.rs"),`use std::io::Write; fn main(){ let mut lock=std::fs::OpenOptions::new().append(true).open("Cargo.lock").unwrap(); writeln!(lock,"{}", ${JSON.stringify(law.edit)}).unwrap(); }\n`);
+  const environment={...process.env,RUSTC:"rustc",RUSTC_WRAPPER:"",RUSTC_WORKSPACE_WRAPPER:""};
+  const cargo=registeredToolExecutableV1("cargo");
+  expect(spawnSync(cargo,["generate-lockfile","--offline","--manifest-path",manifest],{cwd,env:environment,encoding:"utf8"}).status).toBe(0);
+  const original=readFileSync(live),digest=Buffer.from(await crypto.subtle.digest("SHA-256",new Uint8Array(original))).toString("hex");
+  const policy={version:1 as const,mode:"prototype" as const,cwd,buildDirectory:join(root,"build"),leaseDirectory:fixtureLeaseDirectory,captureDirectory,budgetMs:120000};
+  let path="",consumed=false;
+  await buildCargoArtifacts(manifest,["--bin",law.tool],policy,lawBuildOptionsV1(held,admission,{
+   environment:{RUSTC:"rustc",RUSTC_WRAPPER:"",RUSTC_WORKSPACE_WRAPPER:""},retainCompilationBytes:134217728,retainConsumedSources:true,pinWorkspaceLock:true,
+   consume:capture=>withCapturedCargoArtifactsTaskV1(capture,async artifact=>withCapturedCargoCompilationTaskV1(capture,async compilation=>{
+    expect(readFileSync(live,"utf8")).toContain(law.edit);
+    const receipt=decodeCargoProvenanceV1(artifact.observation),index=JSON.parse(readFileSync(compilation.files.get("index.json")!.path,"utf8"));
+    const override=required(receipt.args.find(arg=>arg.startsWith("resolver.lockfile-path=")));
+    path=JSON.parse(override.slice("resolver.lockfile-path=".length));
+    expect(path).not.toBe(live);
+    expect(receipt.invocationInputs.find(row=>row.path===path)?.sha256).toBe(digest);
+    expect(receipt.invocationInputs.some(row=>row.path===live)).toBe(false);
+    const stored=required(index.files.find((row:{source:string})=>row.source===path));
+    expect(readFileSync(compilation.files.get(stored.path)!.path)).toEqual(original);
+    const binary=required(artifact.files.get(law.tool+(process.platform==="win32"?".exe":"")));
+    expect(spawnSync(binary,[],{encoding:"utf8"}).stdout).toBe(law.stdout);
+    consumed=true;
+   })),
+  }));
+  expect(consumed).toBe(true);
+  expect(existsSync(path)).toBe(false);
+  let refusedPath="";
+  await expect(withCargoResolverLockV1(cwd,captureDirectory,[law.tool],held.storage,admission,async snapshot=>{
+   refusedPath=cargoResolverLockViewV1(snapshot,admission).path;
+   const changed=readFileSync(live,"utf8").replace(`name = "${law.tool}"\nversion = "${law.version}"`,`name = "${law.tool}"\nversion = "9.0.0"`);
+   writeFileSync(live,changed);
+   await recheckCargoResolverLockV1(snapshot,admission);
+  })).rejects.toThrow("Cargo.lock changed in the packages the build depends on");
+  expect(existsSync(refusedPath)).toBe(false);
+  expect(readdirSync(captureDirectory)).toEqual([]);
+ });
+},120000);
 
 function provenancePhysical(root:string):CurrentPhysicalOwnerV1{const started=performance.now(),controller=new AbortController();return new CurrentPhysicalOwnerV1(root,{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>controller.signal.aborted,remainingMs:()=>60000-(performance.now()-started),onProgress:row=>{}});}
 

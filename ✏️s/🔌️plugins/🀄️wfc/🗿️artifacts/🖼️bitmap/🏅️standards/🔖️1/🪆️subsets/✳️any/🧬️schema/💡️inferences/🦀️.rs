@@ -211,12 +211,18 @@ pub fn pattern_universe_entropy(snapshot: &BitmapSnapshot) -> f64 {
     let sample = engine::extract::Sample2d::new(snapshot.input.width as usize, snapshot.input.height as usize, tiles);
     let config = engine::extract::Extract2dConfig { window: snapshot.model.pattern_size.max(1) as usize, periodic_input: snapshot.model.periodic_input, symmetry: symmetry_group(snapshot.model.symmetry) };
     let Ok(extracted) = engine::extract::extract_2d(&[sample], &config) else { return 0.0 };
-    let weights = extracted.model.weights();
-    let total: f64 = (0..extracted.model.pattern_count()).map(|index| weights.w(engine::ids::PatternId::from_index(index))).sum();
-    if total <= 0.0 {
-        return 0.0;
-    }
-    -(0..extracted.model.pattern_count()).map(|index| weights.w(engine::ids::PatternId::from_index(index)) / total).filter(|share| *share > 0.0).map(|share| share * share.ln()).sum::<f64>()
+    compiled_pattern_entropy(&extracted.model)
+}
+
+/// 📊 Computes prior entropy from the weights of the already extracted patterns.
+pub(crate) fn compiled_pattern_entropy(model: &engine::model::CompiledModel) -> f64 {
+    let weights = model.weights();
+    let pattern_weights = (0..model.pattern_count())
+        .map(|index| weights.w(engine::ids::PatternId::from_index(index)));
+    let total = pattern_weights.clone().sum::<f64>();
+    if total <= 0.0 { return 0.0; }
+    pattern_weights.map(|weight| weight / total).filter(|share| *share > 0.0)
+        .fold(0.0, |entropy, share| entropy - share * share.ln())
 }
 //#endregion 🔖️Entropy
 

@@ -40,6 +40,7 @@ impl HeadlessWorkspace {
         };
         let binding = PluginArtifactBinding {
             schema: lease.artifact.schema.clone(),
+            artifact_kind: lease.parent_dialect.artifact_kind.clone(),
             plugin_id: lease.package.plugin_id.clone(),
             app_id: lease.surface.app_id.clone(),
             surface_id: Some(lease.surface.surface_id.clone()),

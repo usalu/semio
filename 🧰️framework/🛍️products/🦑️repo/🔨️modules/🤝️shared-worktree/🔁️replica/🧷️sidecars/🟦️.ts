@@ -64,6 +64,9 @@ export function readSidecarRecordV1(file:string):SidecarRecordV1|undefined{
  try{const value=JSON.parse(readFileSync(file,"utf8")) as unknown;requireShape("Record",value);return value as SidecarRecordV1;}catch{return undefined;}
 }
 
+/** 🎫️ The lease file of one launcher: the base path of the record with the launcher's own pid (`<name>.<pid>.lease`), so a launcher that a newer one replaced never has its lease renewed and leaves by itself. */
+export function sidecarLeaseOfV1(base:string,pid:number):string{return base.endsWith(".lease")?`${base.slice(0,-6)}.${pid}.lease`:`${base}.${pid}`;}
+
 /** ✍️ Renews the lease of a sidecar for the process `pid`. */
 export function writeSidecarLeaseV1(file:string,pid:number,now:number):void{const lease:SidecarLeaseV1={version:1,pid,wallMs:now};requireShape("Lease",lease);writeAtomicV1(file,JSON.stringify(lease));}
 
@@ -127,21 +130,22 @@ export function createSidecarsV1(options:Readonly<{settings:SidecarSettingsV1;fa
  let leasedAt=-Infinity;
  const entryOf=(slot:Slot):string=>join(options.facts.worktree,...slot.spec.script.split("/"));
  const settle=(slot:Slot,why:string):void=>{
-  const ran=now()-slot.startedMs;delete slot.proc;slot.pid=null;slot.lastExit=why;
+  const ran=now()-slot.startedMs,ended=slot.pid;delete slot.proc;slot.pid=null;slot.lastExit=why;revoke(slot,ended);
   if(slot.adopted!==undefined){clearInterval(slot.adopted);delete slot.adopted;}
   if(stopping||slot.halt!==undefined){set(slot,slot.halt??"stopped");delete slot.halt;slot.nextStartMs=null;}
   else{slot.failures=ran>=restart.stableMilliseconds?1:slot.failures+1;slot.restarts++;slot.nextStartMs=now()+sidecarBackoffMillisecondsV1(restart,slot.failures);set(slot,"backoff");}
  };
- const renew=(slot:Slot):void=>{try{writeSidecarLeaseV1(sidecarFilesV1(options.facts.worktree,slot.spec.name).lease,process.pid,Date.now());}catch{}};
+ const renew=(slot:Slot):void=>{if(slot.pid===null)return;try{writeSidecarLeaseV1(sidecarLeaseOfV1(sidecarFilesV1(options.facts.worktree,slot.spec.name).lease,slot.pid),process.pid,Date.now());}catch{}};
+ const revoke=(slot:Slot,pid:number|null):void=>{const base=sidecarFilesV1(options.facts.worktree,slot.spec.name).lease;try{rmSync(base,{force:true});if(pid!==null)rmSync(sidecarLeaseOfV1(base,pid),{force:true});}catch{}};
  const begin=(slot:Slot):void=>{
   let log=-1;
   try{
    log=logFile(slot.spec.name);
    const files=sidecarFilesV1(options.facts.worktree,slot.spec.name);
-   rmSync(files.record,{force:true});renew(slot);
+   rmSync(files.record,{force:true});revoke(slot,null);
    const env:NodeJS.ProcessEnv={...environment,SEMIO_FLEET_ROOT:options.facts.worktree,SEMIO_WORKSPACE_ROOT:options.facts.worktree,SEMIO_FLEET_ORIGIN:options.facts.originId,SEMIO_FLEET_GROUP:options.facts.groupId,SEMIO_FLEET_STORE_ROOT:options.facts.storeRoot,SEMIO_FLEET_SIDECAR:slot.spec.name,SEMIO_FLEET_SIDECAR_RECORD:files.record,SEMIO_FLEET_SIDECAR_LEASE:files.lease,SEMIO_FLEET_SIDECAR_LEASE_MS:String(protocol.leaseMilliseconds)};
    const proc=launch(process.execPath,[entryOf(slot),...slot.spec.arguments],env,log);
-   slot.proc=proc;slot.pid=proc.pid??null;slot.startedMs=now();slot.nextStartMs=null;set(slot,"running");
+   slot.proc=proc;slot.pid=proc.pid??null;slot.startedMs=now();slot.nextStartMs=null;set(slot,"running");renew(slot);
    const done=new Promise<void>(finish=>{
     let settled=false;
     const end=(why:string):void=>{
@@ -158,7 +162,7 @@ export function createSidecarsV1(options:Readonly<{settings:SidecarSettingsV1;fa
   }finally{if(log>=0)try{closeSync(log);}catch{}}
  };
  const adopt=(slot:Slot,record:SidecarRecordV1):void=>{
-  slot.pid=record.pid;slot.startedMs=record.startedMs;slot.nextStartMs=null;slot.lastExit=null;set(slot,"running");renew(slot);
+  slot.pid=record.pid;slot.startedMs=record.startedMs;slot.nextStartMs=null;slot.lastExit=null;set(slot,"running");revoke(slot,null);renew(slot);
   slot.ending=new Promise<void>(finish=>{
    slot.adopted=setInterval(()=>{if(!sidecarRecordLivesV1(record)){settle(slot,"adopted process ended");finish();}},200);
    slot.adopted.unref?.();

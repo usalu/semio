@@ -4,20 +4,6 @@
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{AnnotationAnchor, Point2};
 use crate::standards::v1::subsets::any::schema::snapshot::entities::{Dimension, Leader, TextNote};
 
-impl Dimension {
-    /// 🔗️ The ids of the elements the anchors of the dimension follow, in anchor order.
-    pub fn elements(&self) -> impl Iterator<Item = &str> {
-        self.anchors.iter().filter_map(AnnotationAnchor::element)
-    }
-}
-
-impl Leader {
-    /// 🔗️ The id of the element the leader points at, `None` for a free point.
-    pub fn element(&self) -> Option<&str> {
-        self.anchor.element()
-    }
-}
-
 /// 🔢️ Whether every number of a point is finite.
 pub fn is_finite_point(point: Point2) -> bool {
     point.x.is_finite() && point.y.is_finite()

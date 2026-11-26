@@ -324,7 +324,7 @@ pub mod rate {
 pub mod updater {
     //! 🔄️ Runtime updaters, value trackers, and always-redraw helpers.
 
-    use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects};
+    use crate::editor::animate::engine::scene::sobject::{next_runtime_id, Sobject, Sobjects};
     use std::sync::{Arc, Mutex};
 
     /// 🎚️ Scalar animated parameter with get/set hooks.
@@ -367,7 +367,7 @@ pub mod updater {
         where
             F: Fn(&mut Sobjects, f64) + Send + Sync + 'static,
         {
-            Self { id: ({ u64::from_str_radix(&framework_hash::hash_bytes(concat!(file!(), line!()).as_bytes())[..8], 16).unwrap_or(1) }), name: name.into(), active: true, dt_scale: 1.0, callback: Arc::new(callback) }
+            Self { id: next_runtime_id(), name: name.into(), active: true, dt_scale: 1.0, callback: Arc::new(callback) }
         }
 
         pub fn invoke(&self, target: &mut Sobjects, dt: f64) {

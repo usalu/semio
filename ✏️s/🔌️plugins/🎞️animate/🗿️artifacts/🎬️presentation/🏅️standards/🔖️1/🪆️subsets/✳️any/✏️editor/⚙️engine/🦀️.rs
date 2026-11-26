@@ -15,7 +15,7 @@
 pub mod compiler {
     //! 🌐️ Headless static-site compiler for animate presentation decks.
 
-    use crate::editor::animate::engine::config::config::{AnimateConfig, QualityPreset};
+    use super::presentation_video_config;
     use crate::editor::animate::engine::video::{render_scene, scene_for_hash, OutputFormat};
     use crate::PresentationSnapshot;
     use std::fs;
@@ -58,7 +58,7 @@ pub mod compiler {
     pub async fn compile_scene_to_assets(scene_hash: &str, output_dir: &Path) -> CompileResult<SceneAssetBundle> {
         let scene_dir = output_dir.join("scenes").join(scene_hash);
         fs::create_dir_all(&scene_dir).map_err(|error| PresentationCompileError::new(error.to_string()))?;
-        let config = AnimateConfig::from_quality(QualityPreset::Medium).with_output_dir(&scene_dir).with_media_dir(scene_dir.join("media")).with_subtitles_path(scene_dir.join("scene.srt"));
+        let config = presentation_video_config().with_output_dir(&scene_dir).with_media_dir(scene_dir.join("media")).with_subtitles_path(scene_dir.join("scene.srt"));
         let scene = scene_for_hash(config.clone(), scene_hash);
         let outputs = render_scene(scene, &config, &[OutputFormat::Mp4, OutputFormat::LastFrame]).await.map_err(|error| PresentationCompileError::new(error.to_string()))?;
         Ok(SceneAssetBundle { scene_hash: scene_hash.into(), mp4: outputs.mp4, last_frame: outputs.last_frame, subtitles: Some(scene_dir.join("scene.srt")), sections: outputs.sections })
@@ -141,9 +141,9 @@ pub mod compiler {
         let deck_script_children = if deck_json.is_empty() { Vec::new() } else { vec![HtmlNode::RawText { parent_kind: RawTextKind::Script, text: deck_json.to_string() }] };
         let main = el(
             "main",
-            vec![HtmlAttr::new("id", "animate-presentation-root"), HtmlAttr::new("data-deck-schema", "animate.presentation.deck"), HtmlAttr::new("data-level", "window")],
+            vec![HtmlAttr::new("id", "animate-presentation-root"), HtmlAttr::new("data-deck-schema", "animate.presentation.deck"), HtmlAttr::new("data-level", "base")],
             vec![
-                el("canvas", vec![HtmlAttr::new("id", "animate-presentation-canvas"), HtmlAttr::new("data-window-frame-content", ""), HtmlAttr::new("width", "1280"), HtmlAttr::new("height", "720")], Vec::new()),
+                el("canvas", vec![HtmlAttr::new("id", "animate-presentation-canvas"), HtmlAttr::new("data-window-frame-content", ""), HtmlAttr::new("data-level", "window"), HtmlAttr::new("width", "1280"), HtmlAttr::new("height", "720")], Vec::new()),
                 el("script", vec![HtmlAttr::new("id", "animate-presentation-deck"), HtmlAttr::new("type", "text/dsl")], deck_script_children),
             ],
         );
@@ -353,18 +353,26 @@ pub const DECK_VIDEO_OUTLINE_PIXELS: f64 = 3.0;
 /// 🎨️ The tile outline colour on the overview (straight RGBA).
 pub const DECK_VIDEO_OUTLINE_COLOR: [f64; 4] = [1.0, 0.78, 0.2, 1.0];
 
+/// 🎨️ Canonical dark window paint in the sRGB format consumed by the video rasterizer.
+fn presentation_video_config() -> crate::editor::animate::engine::config::config::AnimateConfig {
+    use crate::editor::animate::engine::config::config::{AnimateConfig, QualityPreset};
+    let mut config = AnimateConfig::from_quality(QualityPreset::Medium);
+    let [r, g, b, a] = semio_ui_styling::CHROME_DARK.level_window;
+    config.background = semio_ui_styling::color::linear_to_rgba8(r, g, b, a).map(|channel| f64::from(channel) / 255.0);
+    config
+}
+
 /// 🎞️ The host video program of a tile deck at the Medium preset: an overview of the whole source picture with every tile
 /// outlined, then one slide per tile showing the tile's crop of the picture, each fitted into the frame (aspect kept, a
 /// margin around it). A still slide is one scene however long it plays, so the program stays a few kilobytes and the
 /// host encodes one picture per slide. The picture is drawn by the host from `source.src`; nothing here decodes it.
 pub fn video_render_program_from_deck(deck: &crate::PresentationSnapshot) -> Result<semio_framework::kernel::VideoRenderProgram, PresentationVideoExportError> {
-    use crate::editor::animate::engine::config::config::{AnimateConfig, QualityPreset};
     use semio_framework::kernel::{VideoRenderImage, VideoRenderOp, VideoRenderPath, VideoRenderProgram, VideoRenderRun, VideoRenderScene, VIDEO_RENDER_PROGRAM_SCHEMA};
     let (source, tiles) = crate::presentation_working_scene(deck);
     if source.src.trim().is_empty() || source.kind == "pdf" {
         return Err(PresentationVideoExportError::SourceKind { kind: source.kind.clone() });
     }
-    let config = AnimateConfig::from_quality(QualityPreset::Medium);
+    let config = presentation_video_config();
     let (width, height) = (f64::from(config.width), f64::from(config.height));
     let fps = config.frame_rate.round().max(1.0) as u32;
     let frames = |seconds: f64| (seconds * f64::from(fps)).round().max(1.0) as u32;
@@ -420,12 +428,11 @@ pub fn video_render_program_from_deck(deck: &crate::PresentationSnapshot) -> Res
 /// captured frame joins one program (`video::VideoProgramBuilder`). The host renders + encodes it
 /// (`Effect::VideoRenderExport`); nothing here touches a GPU or a file system.
 pub fn video_render_program_from_scene(scene: &PresentationScene) -> Result<semio_framework::kernel::VideoRenderProgram, PresentationVideoExportError> {
-    use crate::editor::animate::engine::config::config::{AnimateConfig, QualityPreset};
     let hashes = scene.scene_hashes();
     if hashes.is_empty() {
         return Err(PresentationVideoExportError::NoSceneHashes);
     }
-    let config = AnimateConfig::from_quality(QualityPreset::Medium);
+    let config = presentation_video_config();
     let mut builder = crate::editor::animate::engine::video::VideoProgramBuilder::new(&config);
     for hash in hashes {
         let capture = crate::editor::animate::engine::video::capture_scene(crate::editor::animate::engine::video::scene_for_hash(config.clone(), &hash), &config);

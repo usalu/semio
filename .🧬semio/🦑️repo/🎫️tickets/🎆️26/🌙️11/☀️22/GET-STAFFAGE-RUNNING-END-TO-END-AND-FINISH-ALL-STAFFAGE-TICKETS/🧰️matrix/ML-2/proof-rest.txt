@@ -1,0 +1,286 @@
+== etics-brick-wall-12 21:29 0b56beac8707d967
+gate exit 0 hard findings: 0
+etics-brick-wall-12 1:50 bbox 0.5300/0.53 1.0000/1 1.0000/1  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+etics-brick-wall-12 1:100 bbox 0.5300/0.53 1.0000/1 1.0000/1  elevation 0.9979/7.5mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+etics-brick-wall-12 1:200 bbox 0.5300/0.53 1.0000/1 1.0000/1  elevation 0.9982/7.8mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+etics-brick-wall-12 1:500 bbox 0.5300/0.53 1.0000/1 1.0000/1  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+etics-brick-wall-12 silhouette: OK
+etics-brick-wall-12 validate: 0 issues 
+etics-brick-wall-12 three-views sweep: 0 findings 
+etics-brick-wall-12	every authored scale prints
+check: ✓ etics-brick-wall-12 (1/1)
+== etics-brick-wall-30 21:29 da0a91545e98dc44
+gate exit 0 hard findings: 0
+etics-brick-wall-30 1:50 bbox 0.7100/0.71 1.0000/1 1.0000/1  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+etics-brick-wall-30 1:100 bbox 0.7100/0.71 1.0000/1 1.0000/1  elevation 0.9985/7.5mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+etics-brick-wall-30 1:200 bbox 0.7100/0.71 1.0000/1 1.0000/1  elevation 0.9987/7.8mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+etics-brick-wall-30 1:500 bbox 0.7100/0.71 1.0000/1 1.0000/1  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+etics-brick-wall-30 silhouette: OK
+etics-brick-wall-30 validate: 0 issues 
+etics-brick-wall-30 three-views sweep: 0 findings 
+etics-brick-wall-30	every authored scale prints
+check: ✓ etics-brick-wall-30 (1/1)
+== solid-brick-wall-1960 21:29 e98dec33025718df
+gate exit 0 hard findings: 0
+solid-brick-wall-1960 1:50 bbox 0.4000/0.4 1.0000/1 1.0000/1  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+solid-brick-wall-1960 1:100 bbox 0.4000/0.4 1.0000/1 1.0000/1  elevation 0.9973/7.5mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+solid-brick-wall-1960 1:200 bbox 0.4000/0.4 1.0000/1 1.0000/1  elevation 0.9950/11.7mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+solid-brick-wall-1960 1:500 bbox 0.4000/0.4 1.0000/1 1.0000/1  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+solid-brick-wall-1960 silhouette: OK
+solid-brick-wall-1960 validate: 0 issues 
+solid-brick-wall-1960 three-views sweep: 0 findings 
+solid-brick-wall-1960	every authored scale prints
+check: ✓ solid-brick-wall-1960 (1/1)
+== spiral-stair 21:30 d0fb7b8d0250cd0f
+gate exit 0 hard findings: 0
+spiral-stair 1:50 bbox 1.9314/1.931 3.7359/3.736 1.6000/1.6  elevation 0.9978/10.9mm  front 0.9969/9.6mm  plan 0.9994/10.6mm
+spiral-stair 1:100 bbox 1.9314/1.931 3.7359/3.736 1.6000/1.6  elevation 0.9980/18.8mm  front 0.9971/19.1mm  plan 0.9974/15.9mm
+spiral-stair 1:200 bbox 1.9314/1.931 3.7359/3.736 1.6000/1.6  elevation 0.9958/10.6mm  front 0.9984/7.5mm  plan 0.9952/27.0mm
+spiral-stair 1:500 bbox 1.9453/1.931 3.7442/3.736 1.6233/1.6  elevation 0.9985/20.7mm  front 0.9986/14.6mm  plan 0.9820/75.2mm
+spiral-stair silhouette: OK
+spiral-stair validate: 0 issues 
+spiral-stair three-views sweep: 0 findings 
+spiral-stair	every authored scale prints
+check: ✓ spiral-stair (1/1)
+== stair-flight 21:31 28cfba82a92a7228
+gate exit 0 hard findings: 0
+stair-flight 1:50 bbox 4.5100/4.51 3.9860/3.989 1.2000/1.2  elevation 0.9983/7.7mm  front 0.9980/8.0mm  plan 0.9998/3.8mm
+stair-flight 1:100 bbox 4.5100/4.51 3.9860/3.989 1.2000/1.2  elevation 0.9975/21.9mm  front 0.9965/18.8mm  plan 0.9996/7.5mm
+stair-flight 1:200 bbox 4.5100/4.51 3.9860/3.989 1.2000/1.2  elevation 0.9980/45.0mm  front 0.9965/22.5mm  plan 0.9994/7.5mm
+stair-flight 1:500 bbox 4.5100/4.51 3.9997/3.989 1.2000/1.2  elevation 0.9967/39.4mm  front 0.9984/34.9mm  plan 1.0000/0.0mm
+stair-flight silhouette: OK
+stair-flight validate: 0 issues 
+stair-flight three-views sweep: 0 findings 
+stair-flight	every authored scale prints
+check: ✓ stair-flight (1/1)
+== bicycle-stand 21:31 ca6da3cec2d76c0c
+gate exit 0 hard findings: 0
+bicycle-stand 1:50 bbox 0.7500/0.75 0.8000/0.8 0.0483/0.0483  elevation 0.9966/4.2mm  front 0.9995/1.9mm  plan 0.9982/1.9mm
+bicycle-stand 1:100 bbox 0.7500/0.75 0.8000/0.8 0.0483/0.0483  elevation 0.9947/7.0mm  front 1.0000/0.0mm  plan 0.9995/2.9mm
+bicycle-stand 1:200 bbox 0.7500/0.75 0.8000/0.8 0.0483/0.0483  elevation 0.9944/3.1mm  front 1.0000/0.0mm  plan 0.9995/2.9mm
+bicycle-stand 1:500 bbox 0.7500/0.75 0.8000/0.8 0.0630/0.0483  elevation 0.9982/3.1mm  front 1.0000/0.0mm  plan 0.9982/2.9mm
+bicycle-stand silhouette: OK
+bicycle-stand validate: 0 issues 
+bicycle-stand three-views sweep: 0 findings 
+bicycle-stand	every authored scale prints
+check: ✓ bicycle-stand (1/1)
+== heat-pump-outdoor-unit 21:32 d392cea879c2a4c3
+gate exit 0 hard findings: 0
+heat-pump-outdoor-unit 1:50 bbox 0.4790/0.479 1.4500/1.45 1.1150/1.115  elevation 0.9962/9.4mm  front 0.9994/7.5mm  plan 1.0000/0.0mm
+heat-pump-outdoor-unit 1:100 bbox 0.4790/0.479 1.4500/1.45 1.1150/1.115  elevation 0.9954/30.0mm  front 1.0000/3.8mm  plan 1.0000/0.0mm
+heat-pump-outdoor-unit 1:200 bbox 0.4700/0.479 1.4500/1.45 1.1150/1.115  elevation 0.9828/22.7mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+heat-pump-outdoor-unit 1:500 bbox 0.4700/0.479 1.4500/1.45 1.1150/1.115  elevation 0.9565/39.6mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+heat-pump-outdoor-unit silhouette: OK
+heat-pump-outdoor-unit validate: 0 issues 
+heat-pump-outdoor-unit three-views sweep: 0 findings 
+heat-pump-outdoor-unit	every authored scale prints
+check: ✓ heat-pump-outdoor-unit (1/1)
+== plate-heat-exchanger 21:33 c34554c7afa253f5
+gate exit 0 hard findings: 0
+plate-heat-exchanger 1:50 bbox 0.6200/0.62 0.6200/0.62 0.5035/0.5  elevation 0.9995/9.4mm  front 0.9291/11.3mm  plan 0.9937/5.6mm
+plate-heat-exchanger 1:100 bbox 0.6200/0.62 0.6198/0.62 0.5000/0.5  elevation 1.0000/0.0mm  front 0.9397/0.0mm  plan 0.9918/7.3mm
+plate-heat-exchanger 1:200 bbox 0.6200/0.62 0.6200/0.62 0.5000/0.5  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+plate-heat-exchanger silhouette: OK
+plate-heat-exchanger validate: 0 issues 
+plate-heat-exchanger three-views sweep: 0 findings 
+plate-heat-exchanger	every authored scale prints
+check: ✓ plate-heat-exchanger (1/1)
+== solar-thermal-collector 21:33 db26d9b114278b6d
+gate exit 0 hard findings: 0
+solar-thermal-collector 1:50 bbox 1.6944/1.6957 1.4091/1.4091 1.0000/1  elevation 0.9935/7.5mm  front 0.9977/5.6mm  plan 0.9994/2.7mm
+solar-thermal-collector 1:100 bbox 1.6944/1.6957 1.4091/1.4091 1.0000/1  elevation 0.9957/11.9mm  front 0.9954/5.3mm  plan 0.9977/5.3mm
+solar-thermal-collector 1:200 bbox 1.6905/1.6957 1.4052/1.4091 1.0000/1  elevation 0.9854/14.8mm  front 0.9896/11.0mm  plan 0.9892/13.2mm
+solar-thermal-collector 1:500 bbox 1.6905/1.6957 1.4052/1.4091 1.0000/1  elevation 0.9836/9.4mm  front 0.9770/44.0mm  plan 0.9892/13.2mm
+solar-thermal-collector silhouette: OK
+solar-thermal-collector validate: 0 issues 
+solar-thermal-collector three-views sweep: 0 findings 
+solar-thermal-collector	every authored scale prints
+check: ✓ solar-thermal-collector (1/1)
+== used-coffee-table 21:33 cc90174e3176b0fa
+gate exit 0 hard findings: 0
+used-coffee-table 1:50 bbox 0.8000/0.8 1.2020/1.202 1.2000/1.2  elevation 0.9971/7.5mm  front 0.9987/7.5mm  plan 1.0000/0.0mm
+used-coffee-table 1:100 bbox 0.8000/0.8 1.2020/1.202 1.2000/1.2  elevation 0.9974/11.3mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+used-coffee-table 1:200 bbox 0.8000/0.8 1.2020/1.202 1.2000/1.2  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+used-coffee-table 1:500 bbox 0.8000/0.8 1.2020/1.202 1.2000/1.2  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+used-coffee-table silhouette: OK
+used-coffee-table validate: 0 issues 
+used-coffee-table three-views sweep: 0 findings 
+used-coffee-table	every authored scale prints
+check: ✓ used-coffee-table (1/1)
+== used-folding-bookcase-ladder 21:33 425d3daa218984d2
+gate exit 0 hard findings: 0
+used-folding-bookcase-ladder 1:50 bbox 0.6655/0.665 1.8152/1.815 0.9000/0.9  elevation 0.9993/15.0mm  front 0.9997/13.1mm  plan 1.0000/0.0mm
+used-folding-bookcase-ladder 1:100 bbox 0.6655/0.665 1.8152/1.815 0.9000/0.9  elevation 0.9964/3.8mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+used-folding-bookcase-ladder 1:200 bbox 0.6655/0.665 1.8161/1.815 0.9000/0.9  elevation 0.9406/28.7mm  front 0.9988/14.3mm  plan 0.9996/3.5mm
+used-folding-bookcase-ladder 1:500 bbox 0.6655/0.665 1.8161/1.815 0.9000/0.9  elevation 0.9757/35.8mm  front 0.9988/14.3mm  plan 0.9996/3.5mm
+used-folding-bookcase-ladder silhouette: OK
+used-folding-bookcase-ladder validate: 0 issues 
+used-folding-bookcase-ladder three-views sweep: 0 findings 
+used-folding-bookcase-ladder	every authored scale prints
+check: ✓ used-folding-bookcase-ladder (1/1)
+== used-shoe-cabinet 21:34 1d03d8b7d5ad1f08
+gate exit 0 hard findings: 0
+used-shoe-cabinet 1:50 bbox 0.6000/0.6 1.4900/1.49 0.9000/0.9  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+used-shoe-cabinet 1:100 bbox 0.6000/0.6 1.4900/1.49 0.9000/0.9  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+used-shoe-cabinet 1:200 bbox 0.6000/0.6 1.4650/1.49 0.9000/0.9  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+used-shoe-cabinet 1:500 bbox 0.6000/0.6 1.4650/1.49 0.9000/0.9  elevation 0.9996/17.2mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+used-shoe-cabinet silhouette: OK
+used-shoe-cabinet validate: 0 issues 
+used-shoe-cabinet three-views sweep: 0 findings 
+used-shoe-cabinet	every authored scale prints
+check: ✓ used-shoe-cabinet (1/1)
+== used-tv-sideboard 21:34 0a64b3ccfd094700
+gate exit 0 hard findings: 0
+used-tv-sideboard 1:50 bbox 0.4280/0.428 0.4500/0.45 1.8000/1.8  elevation 1.0000/0.0mm  front 1.0000/1.9mm  plan 1.0000/2.7mm
+used-tv-sideboard 1:100 bbox 0.4250/0.428 0.4500/0.45 1.8000/1.8  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+used-tv-sideboard 1:200 bbox 0.4250/0.428 0.4500/0.45 1.8000/1.8  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+used-tv-sideboard 1:500 bbox 0.4250/0.428 0.4500/0.45 1.8000/1.8  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+used-tv-sideboard silhouette: OK
+used-tv-sideboard validate: 0 issues 
+used-tv-sideboard three-views sweep: 0 findings 
+used-tv-sideboard	every authored scale prints
+check: ✓ used-tv-sideboard (1/1)
+== used-wall-unit 21:35 d9d98d18172043f1
+gate exit 0 hard findings: 0
+used-wall-unit 1:50 bbox 0.5600/0.56 2.0120/2.012 2.7000/2.7  elevation 1.0000/1.9mm  front 0.9998/7.5mm  plan 1.0000/0.0mm
+used-wall-unit 1:100 bbox 0.5600/0.56 2.0120/2.012 2.7000/2.7  elevation 1.0000/0.0mm  front 0.9995/0.0mm  plan 1.0000/0.0mm
+used-wall-unit 1:200 bbox 0.5600/0.56 2.0120/2.012 2.7000/2.7  elevation 0.9975/30.0mm  front 0.9995/0.0mm  plan 1.0000/0.0mm
+used-wall-unit 1:500 bbox 0.5600/0.56 2.0120/2.012 2.7000/2.7  elevation 0.9937/70.7mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+used-wall-unit silhouette: OK
+used-wall-unit validate: 0 issues 
+used-wall-unit three-views sweep: 0 findings 
+used-wall-unit	every authored scale prints
+check: ✓ used-wall-unit (1/1)
+== tealight 21:37 927c85f8848d5e17
+gate exit 0 hard findings: 0
+tealight 1:50 bbox 0.0380/0.038 0.0405/0.0405 0.0380/0.038  elevation 0.9963/0.4mm  front 0.9963/0.4mm  plan 0.9939/0.1mm
+tealight 1:100 bbox 0.0380/0.038 0.0405/0.0405 0.0380/0.038  elevation 0.9873/1.4mm  front 0.9873/1.4mm  plan 0.9939/0.1mm
+tealight 1:200 bbox 0.0380/0.038 0.0405/0.0405 0.0380/0.038  elevation 0.9945/0.3mm  front 0.9945/0.3mm  plan 0.9939/0.1mm
+tealight silhouette: OK
+tealight validate: 0 issues 
+tealight three-views sweep: 0 findings 
+tealight	every authored scale prints
+check: ✓ tealight (1/1)
+== used-bollard-light 21:37 252e3d677d96dad5
+gate exit 0 hard findings: 0
+used-bollard-light 1:50 bbox 0.4964/0.5 1.5000/1.5 0.5000/0.5  elevation 0.9872/10.9mm  front 0.9963/9.4mm  plan 0.9909/2.7mm
+used-bollard-light 1:100 bbox 0.4964/0.5 1.5000/1.5 0.5000/0.5  elevation 0.9946/10.6mm  front 0.9947/8.4mm  plan 0.9907/2.0mm
+used-bollard-light 1:200 bbox 0.4964/0.5 1.5000/1.5 0.5000/0.5  elevation 0.9983/11.7mm  front 0.9983/11.7mm  plan 0.9907/2.0mm
+used-bollard-light 1:500 bbox 0.4964/0.5 1.5000/1.5 0.5000/0.5  elevation 0.9996/5.9mm  front 0.9996/5.9mm  plan 0.9907/2.0mm
+used-bollard-light silhouette: OK
+used-bollard-light validate: 0 issues 
+used-bollard-light three-views sweep: 0 findings 
+used-bollard-light	every authored scale prints
+check: ✓ used-bollard-light (1/1)
+== pendant-lamp 21:38 09ebd0cab7ddf991
+gate exit 0 hard findings: 0
+pendant-lamp 1:50 bbox 0.2640/0.266 0.8000/0.8 0.2660/0.266  elevation 0.9946/1.9mm  front 0.9994/1.9mm  plan 0.9950/1.0mm
+pendant-lamp 1:100 bbox 0.2641/0.266 0.8000/0.8 0.2660/0.266  elevation 0.9943/3.1mm  front 1.0000/0.0mm  plan 0.9952/1.0mm
+pendant-lamp 1:200 bbox 0.2641/0.266 0.8000/0.8 0.2660/0.266  elevation 0.9926/3.1mm  front 1.0000/0.0mm  plan 0.9952/1.0mm
+pendant-lamp silhouette: OK
+pendant-lamp validate: 0 issues 
+pendant-lamp three-views sweep: 0 findings 
+pendant-lamp	every authored scale prints
+check: ✓ pendant-lamp (1/1)
+== ceiling-diffuser 21:38 3f0ca95d17a1bae7
+gate exit 0 hard findings: 0
+ceiling-diffuser 1:50 bbox 0.5950/0.595 0.1200/0.12 0.5950/0.595  elevation 0.9973/5.6mm  front 0.9956/5.6mm  plan 1.0000/0.0mm
+ceiling-diffuser 1:100 bbox 0.5950/0.595 0.1200/0.12 0.5950/0.595  elevation 0.9965/2.3mm  front 0.9942/2.3mm  plan 0.9999/2.3mm
+ceiling-diffuser 1:200 bbox 0.5950/0.595 0.1200/0.12 0.5950/0.595  elevation 0.9974/2.3mm  front 0.9949/2.3mm  plan 0.9999/2.3mm
+ceiling-diffuser silhouette: OK
+ceiling-diffuser validate: 0 issues 
+ceiling-diffuser three-views sweep: 0 findings 
+ceiling-diffuser	every authored scale prints
+check: ✓ ceiling-diffuser (1/1)
+== used-park-lantern 21:39 0cf5e48273fa7f7a
+gate exit 0 hard findings: 0
+used-park-lantern 1:50 bbox 0.4900/0.49 4.6400/4.64 0.4900/0.49  elevation 0.9997/9.4mm  front 0.9988/1.9mm  plan 0.9949/2.7mm
+used-park-lantern 1:100 bbox 0.4900/0.49 4.6400/4.64 0.4900/0.49  elevation 0.9997/7.5mm  front 0.9988/3.8mm  plan 0.9953/1.9mm
+used-park-lantern 1:200 bbox 0.4900/0.49 4.6400/4.64 0.4900/0.49  elevation 0.9938/15.0mm  front 0.9989/15.0mm  plan 0.9953/1.9mm
+used-park-lantern 1:500 bbox 0.4900/0.49 4.6400/4.64 0.4900/0.49  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 0.9953/1.9mm
+used-park-lantern silhouette: OK
+used-park-lantern validate: 0 issues 
+used-park-lantern three-views sweep: 0 findings 
+used-park-lantern	every authored scale prints
+check: ✓ used-park-lantern (1/1)
+== used-playground-roundabout 21:40 ab643beebfdee668
+gate exit 0 hard findings: 0
+used-playground-roundabout 1:50 bbox 2.7966/2.8 1.6500/1.65 2.7983/2.8  elevation 0.9993/13.1mm  front 0.9977/13.1mm  plan 0.9969/4.2mm
+used-playground-roundabout 1:100 bbox 2.7966/2.8 1.6500/1.65 2.7983/2.8  elevation 0.9993/15.0mm  front 0.9976/15.0mm  plan 0.9969/5.3mm
+used-playground-roundabout 1:200 bbox 2.7966/2.8 1.6500/1.65 2.7983/2.8  elevation 0.9998/15.0mm  front 0.9965/7.5mm  plan 0.9975/7.5mm
+used-playground-roundabout 1:500 bbox 2.7966/2.8 1.6500/1.65 2.7983/2.8  elevation 0.9743/32.8mm  front 0.9804/32.8mm  plan 0.9977/10.9mm
+used-playground-roundabout silhouette: OK
+used-playground-roundabout validate: 0 issues 
+used-playground-roundabout three-views sweep: 0 findings 
+used-playground-roundabout	every authored scale prints
+check: ✓ used-playground-roundabout (1/1)
+== waste-bin 21:41 b6abaea081ea7072
+gate exit 0 hard findings: 0
+waste-bin 1:50 bbox 0.5330/0.53 1.0330/1.03 0.5000/0.5  elevation 0.9976/15.0mm  front 0.9960/11.3mm  plan 0.9990/11.3mm
+waste-bin 1:100 bbox 0.5330/0.53 1.0330/1.03 0.5000/0.5  elevation 0.9924/11.3mm  front 0.9905/11.3mm  plan 0.9999/2.1mm
+waste-bin 1:200 bbox 0.5200/0.53 1.0182/1.03 0.5000/0.5  elevation 0.9892/14.3mm  front 0.9908/12.6mm  plan 0.9999/2.0mm
+waste-bin 1:500 bbox 0.5205/0.53 1.0200/1.03 0.5110/0.5  elevation 0.9866/12.0mm  front 0.9781/8.0mm  plan 0.9814/6.1mm
+waste-bin silhouette: OK
+waste-bin validate: 0 issues 
+waste-bin three-views sweep: 0 findings 
+waste-bin	every authored scale prints
+check: ✓ waste-bin (1/1)
+== electric-fan-heater 21:41 cbe66312d30ab9db
+gate exit 0 hard findings: 0
+electric-fan-heater 1:50 bbox 0.1920/0.196 0.3100/0.31 0.2400/0.24  elevation 0.9907/6.1mm  front 0.9419/5.0mm  plan 0.9986/3.8mm
+electric-fan-heater 1:100 bbox 0.1920/0.196 0.3115/0.31 0.2415/0.24  elevation 0.9869/7.3mm  front 0.9709/7.3mm  plan 0.9899/1.9mm
+electric-fan-heater 1:200 bbox 0.1920/0.196 0.3100/0.31 0.2405/0.24  elevation 0.9652/6.1mm  front 0.9223/15.7mm  plan 0.9439/12.2mm
+electric-fan-heater silhouette: OK
+electric-fan-heater validate: 0 issues 
+electric-fan-heater three-views sweep: 0 findings 
+electric-fan-heater	every authored scale prints
+check: ✓ electric-fan-heater (1/1)
+== used-hinged-wardrobe 21:41 c25ecaab3de6820a
+gate exit 0 hard findings: 0
+used-hinged-wardrobe 1:50 bbox 1.5000/1.5 2.0420/2.042 0.5800/0.58  elevation 1.0000/1.9mm  front 0.9999/11.4mm  plan 0.9998/7.5mm
+used-hinged-wardrobe 1:100 bbox 1.5000/1.5 2.0420/2.042 0.5800/0.58  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 0.9998/7.5mm
+used-hinged-wardrobe 1:200 bbox 1.5000/1.5 2.0120/2.042 0.5800/0.58  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+used-hinged-wardrobe 1:500 bbox 1.5000/1.5 2.0120/2.042 0.5560/0.58  elevation 1.0000/0.0mm  front 0.9604/23.6mm  plan 0.9594/41.0mm
+used-hinged-wardrobe silhouette: OK
+used-hinged-wardrobe validate: 0 issues 
+used-hinged-wardrobe three-views sweep: 0 findings 
+used-hinged-wardrobe	every authored scale prints
+check: ✓ used-hinged-wardrobe (1/1)
+== used-harmonium 21:42 808ac0c9bebf6c28
+gate exit 0 hard findings: 0
+used-harmonium 1:50 bbox 0.5300/0.53 1.1500/1.15 1.2240/1.224  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+used-harmonium 1:100 bbox 0.5300/0.53 1.1500/1.15 1.2300/1.224  elevation 1.0000/0.0mm  front 1.0000/0.0mm  plan 1.0000/0.0mm
+used-harmonium 1:200 bbox 0.5300/0.53 1.1500/1.15 1.2000/1.224  elevation 1.0000/0.0mm  front 1.0000/4.7mm  plan 1.0000/0.0mm
+used-harmonium silhouette: OK
+used-harmonium validate: 0 issues 
+used-harmonium three-views sweep: 0 findings 
+used-harmonium	every authored scale prints
+check: ✓ used-harmonium (1/1)
+== used-towel-radiator 21:43 9f730d163dbc2a57
+gate exit 0 hard findings: 0
+used-towel-radiator 1:50 bbox 0.9000/0.9 1.3346/1.334613 0.8400/0.84  elevation 0.9909/6.8mm  front 0.9980/8.0mm  plan 0.9994/3.8mm
+used-towel-radiator 1:100 bbox 0.9000/0.9 1.3351/1.334613 0.8400/0.84  elevation 0.9905/15.0mm  front 0.9962/15.0mm  plan 0.9962/3.5mm
+used-towel-radiator 1:200 bbox 0.9000/0.9 1.3351/1.334613 0.8400/0.84  elevation 0.9916/15.8mm  front 0.9959/15.8mm  plan 0.9996/3.5mm
+used-towel-radiator silhouette: OK
+used-towel-radiator validate: 0 issues 
+used-towel-radiator three-views sweep: 0 findings 
+used-towel-radiator	every authored scale prints
+check: ✓ used-towel-radiator (1/1)
+== used-wall-hung-gas-boiler 21:44 5ce3d2b79f560df3
+gate exit 0 hard findings: 0
+used-wall-hung-gas-boiler 1:50 bbox 1.2240/1.224 1.0290/1.029 0.8000/0.8  elevation 1.0000/1.9mm  front 0.9999/5.6mm  plan 1.0000/0.0mm
+used-wall-hung-gas-boiler 1:100 bbox 1.2240/1.224 1.0290/1.029 0.8000/0.8  elevation 0.9999/3.8mm  front 0.9999/3.8mm  plan 1.0000/0.0mm
+used-wall-hung-gas-boiler 1:200 bbox 1.2240/1.224 1.0290/1.029 0.8000/0.8  elevation 0.9997/4.8mm  front 0.9994/8.0mm  plan 1.0000/4.8mm
+used-wall-hung-gas-boiler silhouette: OK
+used-wall-hung-gas-boiler validate: 0 issues 
+used-wall-hung-gas-boiler three-views sweep: 0 findings 
+used-wall-hung-gas-boiler	every authored scale prints
+check: ✓ used-wall-hung-gas-boiler (1/1)
+🧊️catalog-silhouette exit 0  Test Files 1 passed (1); Tests 26 passed | 359 skipped (385);
+🧊️three-views exit 0  Test Files 1 passed (1); Tests 56 passed | 719 skipped (775);
+🌡️catalog-physics exit 0  Test Files 1 passed (1); Tests 52 passed | 788 skipped (840);
+🫁️breathing-catalog exit 0  Test Files 1 skipped (1); Tests 290 skipped (290);
+✅️asset-validation exit 0  Test Files 1 passed (1); Tests 10 passed | 75 skipped (85);
+⚡️asset-power exit 0  Test Files 1 passed (1); Tests 2 passed | 22 skipped (24);
+🧊️model-bounds exit 0  Test Files 1 passed (1); Tests 8 passed | 74 skipped (82);
+[DEBUG] rest done 21:48

@@ -1,0 +1,8 @@
+[
+  {"args":["run","nightly","rustc","@compile.args"],"tool":"cargo","output":["run","nightly","rustc","@compile.args"],"operation":"cargo"},
+  {"args":["run","--install","stable","cargo.exe","build","-j8","--","-j8"],"tool":"cargo","output":["run","--install","stable","cargo.exe","build","-j1","--","-j8"],"operation":"cargo"},
+  {"args":["run","stable","--","rustdoc","lib.rs"],"tool":"cargo","output":["run","stable","--","rustdoc","lib.rs"],"operation":"cargo"},
+  {"args":["run","stable","--install","rustc","main.rs"],"tool":"cargo","output":["run","stable","--install","rustc","main.rs"],"operation":"cargo"},
+  {"args":["show","active-toolchain"],"tool":null,"output":["show","active-toolchain"],"operation":null},
+  {"args":["run","stable","rustc","--version"],"tool":"cargo","operation":"tool-query","output":["run","stable","rustc","--version"]}
+]

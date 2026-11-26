@@ -16,25 +16,49 @@ pub trait Scene {
 
     fn tear_down(&mut self) {}
 
-    fn config(&self) -> &AnimateConfig;
+    fn stage(&self) -> &BasicStage;
 
-    fn config_mut(&mut self) -> &mut AnimateConfig;
+    fn stage_mut(&mut self) -> &mut BasicStage;
 
-    fn camera(&self) -> &Camera;
+    fn config(&self) -> &AnimateConfig {
+        &self.stage().config
+    }
 
-    fn camera_mut(&mut self) -> &mut Camera;
+    fn config_mut(&mut self) -> &mut AnimateConfig {
+        &mut self.stage_mut().config
+    }
 
-    fn mobjects(&self) -> &HashMap<u64, Sobjects>;
+    fn camera(&self) -> &Camera {
+        &self.stage().camera
+    }
 
-    fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects>;
+    fn camera_mut(&mut self) -> &mut Camera {
+        &mut self.stage_mut().camera
+    }
 
-    fn sections(&self) -> &SectionList;
+    fn mobjects(&self) -> &HashMap<u64, Sobjects> {
+        &self.stage().mobjects
+    }
 
-    fn sections_mut(&mut self) -> &mut SectionList;
+    fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
+        &mut self.stage_mut().mobjects
+    }
 
-    fn scene_time(&self) -> f64;
+    fn sections(&self) -> &SectionList {
+        &self.stage().sections
+    }
 
-    fn set_scene_time(&mut self, time: f64);
+    fn sections_mut(&mut self) -> &mut SectionList {
+        &mut self.stage_mut().sections
+    }
+
+    fn scene_time(&self) -> f64 {
+        self.stage().scene_time
+    }
+
+    fn set_scene_time(&mut self, time: f64) {
+        self.stage_mut().scene_time = time;
+    }
 
     fn add(&mut self, mobject: Sobjects) {
         let id = mobject.id();
@@ -94,10 +118,40 @@ pub trait Scene {
             apply_parent_opacity_tree(m, 1.0);
             run_updaters(m, dt);
         }
+        let stage = self.stage_mut();
+        if let Some(captures) = &mut stage.captures {
+            captures.push(CapturedFrame::new(t, &stage.mobjects));
+        }
+    }
+
+    /// 🎞️ Runs the authored timeline and snapshots every sample, including a still for an empty timeline.
+    fn record_timeline(&mut self, config: &AnimateConfig) -> Vec<CapturedFrame> {
+        self.setup(config);
+        self.stage_mut().captures = Some(Vec::new());
+        self.construct();
+        self.tear_down();
+        let stage = self.stage_mut();
+        let mut captures = stage.captures.take().unwrap_or_default();
+        if captures.is_empty() {
+            captures.push(CapturedFrame::new(stage.scene_time, &stage.mobjects));
+        }
+        captures
     }
 
     fn render_frame_index(&self, frame: u64) -> SceneFrame {
         SceneFrame { frame, time: frame as f64 / self.config().frame_rate, mobject_count: self.mobjects().len(), section: self.sections().find_at_time(self.scene_time()).map(|s| s.name.clone()) }
+    }
+}
+
+/// 📸️ Captured mobject state at one timeline sample.
+pub struct CapturedFrame {
+    pub time: f64,
+    pub mobjects: Vec<Sobjects>,
+}
+
+impl CapturedFrame {
+    fn new(time: f64, mobjects: &HashMap<u64, Sobjects>) -> Self {
+        Self { time, mobjects: mobjects.values().map(Sobject::clone_box).collect() }
     }
 }
 
@@ -131,12 +185,13 @@ pub struct BasicStage {
     pub mobjects: HashMap<u64, Sobjects>,
     pub sections: SectionList,
     pub scene_time: f64,
+    captures: Option<Vec<CapturedFrame>>,
 }
 
 impl BasicStage {
     pub fn new(config: AnimateConfig) -> Self {
         let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
-        Self { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 }
+        Self { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0, captures: None }
     }
 
     pub fn run_construct<S: Scene>(&mut self, scene: &mut S) {
@@ -149,45 +204,23 @@ impl BasicStage {
 impl Scene for BasicStage {
     fn construct(&mut self) {}
 
-    fn config(&self) -> &AnimateConfig {
-        &self.config
+    fn stage(&self) -> &BasicStage {
+        self
     }
 
-    fn config_mut(&mut self) -> &mut AnimateConfig {
-        &mut self.config
+    fn stage_mut(&mut self) -> &mut BasicStage {
+        self
     }
 
-    fn camera(&self) -> &Camera {
-        &self.camera
-    }
 
-    fn camera_mut(&mut self) -> &mut Camera {
-        &mut self.camera
-    }
 
-    fn mobjects(&self) -> &HashMap<u64, Sobjects> {
-        &self.mobjects
-    }
 
-    fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
-        &mut self.mobjects
-    }
 
-    fn sections(&self) -> &SectionList {
-        &self.sections
-    }
 
-    fn sections_mut(&mut self) -> &mut SectionList {
-        &mut self.sections
-    }
 
-    fn scene_time(&self) -> f64 {
-        self.scene_time
-    }
 
-    fn set_scene_time(&mut self, time: f64) {
-        self.scene_time = time;
-    }
+
+
 }
 
 /// 🧪️ Specialized scene for unit tests with fixed frame rate.
@@ -209,35 +242,13 @@ impl Default for TestScene {
 
 impl Scene for TestScene {
     fn construct(&mut self) {}
-    fn config(&self) -> &AnimateConfig {
-        self.inner.config()
+
+    fn stage(&self) -> &BasicStage {
+        &self.inner
     }
-    fn config_mut(&mut self) -> &mut AnimateConfig {
-        self.inner.config_mut()
-    }
-    fn camera(&self) -> &Camera {
-        self.inner.camera()
-    }
-    fn camera_mut(&mut self) -> &mut Camera {
-        self.inner.camera_mut()
-    }
-    fn mobjects(&self) -> &HashMap<u64, Sobjects> {
-        self.inner.mobjects()
-    }
-    fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
-        self.inner.mobjects_mut()
-    }
-    fn sections(&self) -> &SectionList {
-        self.inner.sections()
-    }
-    fn sections_mut(&mut self) -> &mut SectionList {
-        self.inner.sections_mut()
-    }
-    fn scene_time(&self) -> f64 {
-        self.inner.scene_time()
-    }
-    fn set_scene_time(&mut self, time: f64) {
-        self.inner.set_scene_time(time);
+
+    fn stage_mut(&mut self) -> &mut BasicStage {
+        &mut self.inner
     }
 }
 
@@ -249,42 +260,26 @@ pub struct MovingCameraScene {
 
 impl MovingCameraScene {
     pub fn new(config: AnimateConfig) -> Self {
-        let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
-        Self { moving_camera: MovingCamera::new(camera.clone()), inner: BasicStage { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 } }
+        let inner = BasicStage::new(config);
+        Self { moving_camera: MovingCamera::new(inner.camera.clone()), inner }
     }
 }
 
 impl Scene for MovingCameraScene {
     fn construct(&mut self) {}
-    fn config(&self) -> &AnimateConfig {
-        self.inner.config()
+
+    fn stage(&self) -> &BasicStage {
+        &self.inner
     }
-    fn config_mut(&mut self) -> &mut AnimateConfig {
-        self.inner.config_mut()
+
+    fn stage_mut(&mut self) -> &mut BasicStage {
+        &mut self.inner
     }
     fn camera(&self) -> &Camera {
         &self.moving_camera.camera
     }
     fn camera_mut(&mut self) -> &mut Camera {
         &mut self.moving_camera.camera
-    }
-    fn mobjects(&self) -> &HashMap<u64, Sobjects> {
-        self.inner.mobjects()
-    }
-    fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
-        self.inner.mobjects_mut()
-    }
-    fn sections(&self) -> &SectionList {
-        self.inner.sections()
-    }
-    fn sections_mut(&mut self) -> &mut SectionList {
-        self.inner.sections_mut()
-    }
-    fn scene_time(&self) -> f64 {
-        self.inner.scene_time()
-    }
-    fn set_scene_time(&mut self, time: f64) {
-        self.inner.set_scene_time(time);
     }
     fn sample_frame(&mut self, dt: f64) {
         self.moving_camera.interpolate((self.scene_time() * self.config().frame_rate).fract());
@@ -300,42 +295,26 @@ pub struct ThreeDScene {
 
 impl ThreeDScene {
     pub fn new(config: AnimateConfig) -> Self {
-        let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
-        Self { three_d_camera: ThreeDCamera::new(camera.clone()), inner: BasicStage { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 } }
+        let inner = BasicStage::new(config);
+        Self { three_d_camera: ThreeDCamera::new(inner.camera.clone()), inner }
     }
 }
 
 impl Scene for ThreeDScene {
     fn construct(&mut self) {}
-    fn config(&self) -> &AnimateConfig {
-        self.inner.config()
+
+    fn stage(&self) -> &BasicStage {
+        &self.inner
     }
-    fn config_mut(&mut self) -> &mut AnimateConfig {
-        self.inner.config_mut()
+
+    fn stage_mut(&mut self) -> &mut BasicStage {
+        &mut self.inner
     }
     fn camera(&self) -> &Camera {
         &self.three_d_camera.camera
     }
     fn camera_mut(&mut self) -> &mut Camera {
         &mut self.three_d_camera.camera
-    }
-    fn mobjects(&self) -> &HashMap<u64, Sobjects> {
-        self.inner.mobjects()
-    }
-    fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
-        self.inner.mobjects_mut()
-    }
-    fn sections(&self) -> &SectionList {
-        self.inner.sections()
-    }
-    fn sections_mut(&mut self) -> &mut SectionList {
-        self.inner.sections_mut()
-    }
-    fn scene_time(&self) -> f64 {
-        self.inner.scene_time()
-    }
-    fn set_scene_time(&mut self, time: f64) {
-        self.inner.set_scene_time(time);
     }
 }
 
@@ -347,42 +326,26 @@ pub struct ZoomedScene {
 
 impl ZoomedScene {
     pub fn new(config: AnimateConfig, zoom_factor: f64) -> Self {
-        let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
-        Self { zoomed_camera: ZoomedCamera::new(camera.clone(), zoom_factor), inner: BasicStage { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 } }
+        let inner = BasicStage::new(config);
+        Self { zoomed_camera: ZoomedCamera::new(inner.camera.clone(), zoom_factor), inner }
     }
 }
 
 impl Scene for ZoomedScene {
     fn construct(&mut self) {}
-    fn config(&self) -> &AnimateConfig {
-        self.inner.config()
+
+    fn stage(&self) -> &BasicStage {
+        &self.inner
     }
-    fn config_mut(&mut self) -> &mut AnimateConfig {
-        self.inner.config_mut()
+
+    fn stage_mut(&mut self) -> &mut BasicStage {
+        &mut self.inner
     }
     fn camera(&self) -> &Camera {
         &self.zoomed_camera.camera
     }
     fn camera_mut(&mut self) -> &mut Camera {
         &mut self.zoomed_camera.camera
-    }
-    fn mobjects(&self) -> &HashMap<u64, Sobjects> {
-        self.inner.mobjects()
-    }
-    fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
-        self.inner.mobjects_mut()
-    }
-    fn sections(&self) -> &SectionList {
-        self.inner.sections()
-    }
-    fn sections_mut(&mut self) -> &mut SectionList {
-        self.inner.sections_mut()
-    }
-    fn scene_time(&self) -> f64 {
-        self.inner.scene_time()
-    }
-    fn set_scene_time(&mut self, time: f64) {
-        self.inner.set_scene_time(time);
     }
 }
 
@@ -399,35 +362,13 @@ impl VectorScene {
 
 impl Scene for VectorScene {
     fn construct(&mut self) {}
-    fn config(&self) -> &AnimateConfig {
-        self.inner.config()
+
+    fn stage(&self) -> &BasicStage {
+        &self.inner
     }
-    fn config_mut(&mut self) -> &mut AnimateConfig {
-        self.inner.config_mut()
-    }
-    fn camera(&self) -> &Camera {
-        self.inner.camera()
-    }
-    fn camera_mut(&mut self) -> &mut Camera {
-        self.inner.camera_mut()
-    }
-    fn mobjects(&self) -> &HashMap<u64, Sobjects> {
-        self.inner.mobjects()
-    }
-    fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
-        self.inner.mobjects_mut()
-    }
-    fn sections(&self) -> &SectionList {
-        self.inner.sections()
-    }
-    fn sections_mut(&mut self) -> &mut SectionList {
-        self.inner.sections_mut()
-    }
-    fn scene_time(&self) -> f64 {
-        self.inner.scene_time()
-    }
-    fn set_scene_time(&mut self, time: f64) {
-        self.inner.set_scene_time(time);
+
+    fn stage_mut(&mut self) -> &mut BasicStage {
+        &mut self.inner
     }
 }
 

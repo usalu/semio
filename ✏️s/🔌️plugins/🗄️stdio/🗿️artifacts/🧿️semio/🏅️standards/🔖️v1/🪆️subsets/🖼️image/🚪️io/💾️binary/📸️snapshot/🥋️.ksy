@@ -20,7 +20,7 @@ seq:
     type: str
     size: token_len
     encoding: UTF-8
-    doc: "s.stdio.semio.image.pack v1"
+    doc: "stdio.semio.image.pack v1"
   - id: format
     type: u1
     doc: "PACK_BINARY_FORMAT, currently 1"

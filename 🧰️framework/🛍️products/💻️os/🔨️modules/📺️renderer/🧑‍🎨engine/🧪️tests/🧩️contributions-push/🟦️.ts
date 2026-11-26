@@ -78,6 +78,47 @@ describe("contributions push unit", () => {
     expect(publisher.installedFor(1)).toBe(fixture.pack);
   });
 
+  it("shares the guest failure with overlapping refreshes before accepting a retry", async () => {
+    const law = fixture.joinedFailure;
+    const gate = Promise.withResolvers<void>();
+    let attempts = 0;
+    const publisher = createContributionsPublisher<Environment>({
+      registryGeneration: ({ generation }) => generation,
+      buildPack: () => fixture.pack,
+      install: async () => { if (++attempts === 1) await gate.promise; },
+    });
+    const key = sessionKey(fixture.session.instanceId);
+    const first = publisher.publish(key, environment);
+    const joined = publisher.publish(key, environment);
+    gate.reject(new Error(law.reason));
+    const settled = await Promise.all([first, joined]);
+    expect(settled).toEqual([{ status: "failed", reason: law.reason }, { status: "failed", reason: law.reason }]);
+    const retry = await publisher.publish(key, environment);
+    expect([...settled, retry].map(result => result.status)).toEqual(law.statuses);
+    expect(attempts).toBe(law.attempts);
+  });
+
+  it("delivers replacement content in request order across a failed crossing", async () => {
+    const gate = Promise.withResolvers<void>();
+    const observed: string[] = [];
+    const publisher = createContributionsPublisher<Environment>({
+      registryGeneration: ({ generation }) => generation,
+      buildPack: (_, { generation }) => generation,
+      install: async (_, pack) => {
+        observed.push(pack);
+        if (observed.length === 1) await gate.promise;
+      },
+    });
+    const key = sessionKey(fixture.session.instanceId);
+    const changes = ["first", "second", "first"];
+    const runs = changes.map(generation => publisher.publish(key, { generation }));
+    gate.reject(new Error(fixture.joinedFailure.reason));
+    const results = await Promise.all(runs);
+    expect(observed).toEqual(changes);
+    expect(results.map(result => result.status)).toEqual(["failed", "installed", "installed"]);
+    expect(publisher.installedFor(key.instanceId)).toBe(changes.at(-1));
+  });
+
   it("releases the installed content when the guest crossing throws, so a failure can be retried", async () => {
     let attempts = 0;
     const publisher = createContributionsPublisher<Environment>({

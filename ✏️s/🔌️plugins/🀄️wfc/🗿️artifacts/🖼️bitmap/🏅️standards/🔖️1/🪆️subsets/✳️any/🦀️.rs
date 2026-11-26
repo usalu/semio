@@ -20,7 +20,7 @@ fn inference_descriptors() -> &'static [::semio_framework_schema_registry::Artif
 pub fn subset<PA: crate::ArtifactApps>() -> SubsetDeclaration<PA> {
     SubsetDeclaration {
         dialect: crate::WFC_BITMAP_DIALECT,
-        schema: SchemaDeclaration { descriptor: schema::bitmap_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
+        schema: SchemaDeclaration { descriptor: schema::bitmap_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: vec![crate::inferences::bitmap_inference_service()] },
         io: io::io(),
         viewer: viewer_surface::<viewer::BitmapViewer, PA>(viewer::create_bitmap_viewer()),
         editor: editor_surface::<editor::BitmapEditor, PA>(editor::create_bitmap_editor()),

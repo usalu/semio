@@ -46,7 +46,7 @@ export function AssetPanel(props: {
   const known = new Set(options.map((option) => option.value));
   const value = pickValue(placement.pick);
   return (
-    <Column as="section" aria-label={t("playground.selected", { title })} className="bg-panel" data-asset-panel={placement.id}>
+    <Column as="section" aria-label={t("playground.selected", { title })} data-asset-panel={placement.id}>
       <Cell><h2 className="m-0 text-sm font-semibold">{title}</h2></Cell>
       {missing ? <Notice kind="unavailable" compact title={t("playground.asset.missing", { pick: value.slice(value.indexOf(":") + 1) })} /> : null}
       <Bar below="tablet">

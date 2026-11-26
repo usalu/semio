@@ -1,5 +1,6 @@
 import{freeSpaceSyncV1}from"../../../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts";
 import {preparePrivateDirectoryV1} from "../../📨️protocol/📍️endpoint/🔐️directory/🟨️.mjs";
+import {processPidExistsV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs";
 /** 🌐 The per-host graph service: one process per user holds the fact index once and answers plan and status requests from every agent, worktree and workspace over one local socket or pipe. */
 
 import {createServer,connect} from "node:net";
@@ -55,7 +56,7 @@ const sha=text=>createHash("sha256").update(text).digest("hex");
  * @see ../../🧪️tests/💓️keepalive/🟦️.ts */
 export const keepaliveDueV1=({stage,held,sentAt,now,intervalMilliseconds})=>now-sentAt>=intervalMilliseconds&&(stage==="starting"||stage==="attached"&&held===true);
 const hangUp=socket=>{socket.end();setTimeout(()=>socket.destroy(),100).unref?.();};
-const alive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error?.code==="EPERM";}};
+const alive=pid=>processPidExistsV1(pid);
 
 function probe(endpoint,timeout=500){
  return new Promise(resolve=>{

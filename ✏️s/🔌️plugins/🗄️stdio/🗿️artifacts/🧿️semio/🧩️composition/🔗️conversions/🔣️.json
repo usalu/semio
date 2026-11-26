@@ -29,14 +29,18 @@
     {
       "package": "semio-s-artifact-stdio-docx",
       "owner": "../📜️docx",
-      "symbolPackages": []
+      "symbolPackages": [
+        "semio-s-artifact-stdio-docx-base-model"
+      ]
     },
     {
       "package": "semio-s-artifact-stdio-dwg",
       "owner": "../🖊️dwg",
       "symbolPackages": [
+        "semio-s-artifact-stdio-dwg-geometry",
         "semio-s-artifact-stdio-dwg-model",
         "semio-s-artifact-stdio-dwg-read",
+        "semio-s-artifact-stdio-dwg-snapshot",
         "semio-s-artifact-stdio-dwg-write"
       ]
     },
@@ -60,7 +64,9 @@
     {
       "package": "semio-s-artifact-stdio-ifc",
       "owner": "../🏗️ifc",
-      "symbolPackages": []
+      "symbolPackages": [
+        "semio-s-artifact-stdio-ifc-4-model"
+      ]
     },
     {
       "package": "semio-s-artifact-stdio-jpg",
@@ -100,7 +106,10 @@
     {
       "package": "semio-s-artifact-stdio-pdf",
       "owner": "../📖️pdf",
-      "symbolPackages": []
+      "symbolPackages": [
+        "semio-s-artifact-stdio-pdf-conformance-support",
+        "semio-s-artifact-stdio-pdf-lower"
+      ]
     },
     {
       "package": "semio-s-artifact-stdio-ply",
@@ -115,12 +124,16 @@
     {
       "package": "semio-s-artifact-stdio-pptx",
       "owner": "../📽️pptx",
-      "symbolPackages": []
+      "symbolPackages": [
+        "semio-s-artifact-stdio-pptx-base-model"
+      ]
     },
     {
       "package": "semio-s-artifact-stdio-step",
       "owner": "../📐️step",
-      "symbolPackages": []
+      "symbolPackages": [
+        "semio-s-artifact-stdio-step-snapshot"
+      ]
     },
     {
       "package": "semio-s-artifact-stdio-stl",
@@ -207,9 +220,10 @@
       "package": "semio-s-artifact-stdio-semio-brep-import",
       "manifest": "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml",
       "targets": [
-        "semio-s-artifact-stdio-dwg-model",
+        "semio-s-artifact-stdio-dwg-geometry",
         "semio-s-artifact-stdio-dwg-read",
-        "semio-s-artifact-stdio-step"
+        "semio-s-artifact-stdio-step",
+        "semio-s-artifact-stdio-step-snapshot"
       ]
     },
     {
@@ -218,7 +232,7 @@
       "package": "semio-s-artifact-stdio-semio-brep-export",
       "manifest": "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml",
       "targets": [
-        "semio-s-artifact-stdio-dwg-model",
+        "semio-s-artifact-stdio-dwg-geometry",
         "semio-s-artifact-stdio-dwg-write",
         "semio-s-artifact-stdio-step"
       ]
@@ -229,9 +243,11 @@
       "package": "semio-s-artifact-stdio-semio-cad-import",
       "manifest": "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml",
       "targets": [
-        "semio-s-artifact-stdio-dwg-model",
+        "semio-s-artifact-stdio-dwg-geometry",
+        "semio-s-artifact-stdio-dwg-snapshot",
         "semio-s-artifact-stdio-dxf",
-        "semio-s-artifact-stdio-step"
+        "semio-s-artifact-stdio-step",
+        "semio-s-artifact-stdio-step-snapshot"
       ]
     },
     {
@@ -240,9 +256,11 @@
       "package": "semio-s-artifact-stdio-semio-cad-export",
       "manifest": "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml",
       "targets": [
-        "semio-s-artifact-stdio-dwg-model",
+        "semio-s-artifact-stdio-dwg-geometry",
+        "semio-s-artifact-stdio-dwg-snapshot",
         "semio-s-artifact-stdio-dxf",
-        "semio-s-artifact-stdio-step"
+        "semio-s-artifact-stdio-step",
+        "semio-s-artifact-stdio-step-snapshot"
       ]
     },
     {
@@ -251,7 +269,7 @@
       "package": "semio-s-artifact-stdio-semio-document-import",
       "manifest": "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml",
       "targets": [
-        "semio-s-artifact-stdio-docx",
+        "semio-s-artifact-stdio-docx-base-model",
         "semio-s-artifact-stdio-md",
         "semio-s-artifact-stdio-pdf",
         "semio-s-artifact-stdio-txt"
@@ -263,7 +281,7 @@
       "package": "semio-s-artifact-stdio-semio-document-export",
       "manifest": "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml",
       "targets": [
-        "semio-s-artifact-stdio-docx",
+        "semio-s-artifact-stdio-docx-base-model",
         "semio-s-artifact-stdio-md",
         "semio-s-artifact-stdio-pdf",
         "semio-s-artifact-stdio-txt"
@@ -275,8 +293,9 @@
       "package": "semio-s-artifact-stdio-semio-drawing-import",
       "manifest": "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml",
       "targets": [
-        "semio-s-artifact-stdio-dwg-model",
+        "semio-s-artifact-stdio-dwg-geometry",
         "semio-s-artifact-stdio-dwg-read",
+        "semio-s-artifact-stdio-dwg-snapshot",
         "semio-s-artifact-stdio-dxf",
         "semio-s-artifact-stdio-pdf",
         "semio-s-artifact-stdio-svg",
@@ -289,10 +308,12 @@
       "package": "semio-s-artifact-stdio-semio-drawing-export",
       "manifest": "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml",
       "targets": [
-        "semio-s-artifact-stdio-dwg-model",
+        "semio-s-artifact-stdio-dwg-geometry",
+        "semio-s-artifact-stdio-dwg-snapshot",
         "semio-s-artifact-stdio-dwg-write",
         "semio-s-artifact-stdio-dxf",
-        "semio-s-artifact-stdio-pdf",
+        "semio-s-artifact-stdio-pdf-conformance-support",
+        "semio-s-artifact-stdio-pdf-lower",
         "semio-s-artifact-stdio-png",
         "semio-s-artifact-stdio-svg",
         "semio-s-artifact-stdio-xml"
@@ -348,8 +369,9 @@
       "package": "semio-s-artifact-stdio-semio-mesh-import",
       "manifest": "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml",
       "targets": [
-        "semio-s-artifact-stdio-dwg-model",
+        "semio-s-artifact-stdio-dwg-geometry",
         "semio-s-artifact-stdio-dwg-read",
+        "semio-s-artifact-stdio-dwg-snapshot",
         "semio-s-artifact-stdio-gltf-model",
         "semio-s-artifact-stdio-las",
         "semio-s-artifact-stdio-obj",
@@ -363,7 +385,8 @@
       "package": "semio-s-artifact-stdio-semio-mesh-export",
       "manifest": "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml",
       "targets": [
-        "semio-s-artifact-stdio-dwg-model",
+        "semio-s-artifact-stdio-dwg-geometry",
+        "semio-s-artifact-stdio-dwg-snapshot",
         "semio-s-artifact-stdio-dwg-write",
         "semio-s-artifact-stdio-gltf-model",
         "semio-s-artifact-stdio-las",
@@ -380,7 +403,7 @@
       "manifest": "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml",
       "targets": [
         "semio-s-artifact-stdio-bcf",
-        "semio-s-artifact-stdio-ifc"
+        "semio-s-artifact-stdio-ifc-4-model"
       ]
     },
     {
@@ -390,7 +413,7 @@
       "manifest": "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml",
       "targets": [
         "semio-s-artifact-stdio-bcf",
-        "semio-s-artifact-stdio-ifc"
+        "semio-s-artifact-stdio-ifc-4-model"
       ]
     },
     {
@@ -399,7 +422,7 @@
       "package": "semio-s-artifact-stdio-semio-presentation-import",
       "manifest": "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml",
       "targets": [
-        "semio-s-artifact-stdio-pptx"
+        "semio-s-artifact-stdio-pptx-base-model"
       ]
     },
     {
@@ -408,7 +431,7 @@
       "package": "semio-s-artifact-stdio-semio-presentation-export",
       "manifest": "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml",
       "targets": [
-        "semio-s-artifact-stdio-pptx"
+        "semio-s-artifact-stdio-pptx-base-model"
       ]
     },
     {

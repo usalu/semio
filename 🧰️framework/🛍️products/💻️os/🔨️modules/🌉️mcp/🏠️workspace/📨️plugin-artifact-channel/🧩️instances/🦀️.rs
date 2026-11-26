@@ -1,7 +1,7 @@
 //! 🧩️ Instances of the plugin artifact channel: instance discard, open and scoped open, the real exchange entry and the sequence counter. See [`super`].
 
 use super::*;
-use super::native_poll::{close_poll, open_poll, poll_turn};
+use super::native_poll::{close_poll, open_poll, poll_turn, PollPurpose};
 use semio_framework::kernel::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceOpenRequest, Event, TurnStatus};
 
 enum InstanceOpenProgress {
@@ -48,6 +48,15 @@ impl PluginArtifactChannel {
         }
     }
 
+    /// ♻️ Preserves the original cancellation and any guest Source that failed to retire.
+    pub(crate) fn settle_instance_cancellation(&mut self, instance: u32, cancellation: Fault) -> Fault {
+        if !self.closing_instances.contains(&instance) { self.discard_instance(instance); }
+        if let Some(guest) = self.instances.get(&instance) {
+            return Self::not_wired("cancelled command still has a guest Source", format!("{}; {:?}", cancellation.message, guest.cleanup_failure().or_else(|| guest.failure())));
+        }
+        cancellation
+    }
+
     /// 🎬️ Opens the dynamic component and acknowledges its genuine lifecycle receipts.
     pub(crate) fn ensure_instance(&mut self, instance: u32) -> Result<(), Fault> {
         self.ensure_instance_scoped(instance, &ActivationScope::detached())
@@ -55,6 +64,15 @@ impl PluginArtifactChannel {
 
     /// 🎟️ Uses the actual caller scope and source-issued phased startup.
     pub(crate) fn ensure_instance_scoped(&mut self, instance: u32, scope: &ActivationScope) -> Result<(), Fault> {
+        self.ensure_instance_with_source_scope(instance, scope, scope)
+    }
+
+    /// 🗃️ Opens an export guest whose Source remains funded for archive cancellation and receipt closure.
+    pub(crate) fn ensure_export_instance(&mut self, instance: u32, scope: &ActivationScope) -> Result<(), Fault> {
+        self.ensure_instance_with_source_scope(instance, scope, &ActivationScope::detached())
+    }
+
+    fn ensure_instance_with_source_scope(&mut self, instance: u32, scope: &ActivationScope, source_scope: &ActivationScope) -> Result<(), Fault> {
         if self.closing_instances.contains(&instance) { return Err(Self::not_wired("instance retirement", "previous instance retains its original Source")); }
         if self.instances.contains_key(&instance) {
             return Ok(());
@@ -71,7 +89,7 @@ impl PluginArtifactChannel {
             .map_err(|error| Fault { code: "package-assets.root".to_string(), message: error.to_string() })
             .and_then(|root| semio_plugin_host::package_assets::package_file_assets(&root, &self.descriptor.assets).map_err(|message| Fault { code: "package-assets.refused".to_string(), message }))?;
         let origin = crate::compiled_components::native_instance_origin(self.compiled.package_hash).map_err(|error| Self::not_wired("guest poll origin", format!("{error:?}")))?;
-        let mut guest = self.issue_native_poll(actor, origin, scope)?;
+        let mut guest = self.issue_native_poll(actor, origin, source_scope)?;
         let request = ActorInstanceOpenRequest { activation_generation: 1, instance_id: instance, request_sequence: 1 };
         let mut owed = Some(Event::InstanceOpen {
             purpose: semio_framework::kernel::ActorInstanceOpenPurpose::Ordinary,
@@ -85,9 +103,10 @@ impl PluginArtifactChannel {
         });
         let deadline = std::time::Instant::now() + INSTANCE_OPEN_WALL_BUDGET;
         let opened = open_poll(&mut guest, scope, deadline).and_then(|()| {
+            let mut completed_turns = 0_u64;
             loop {
                 let acknowledging = matches!(owed, Some(Event::InstanceLifecycleAck(_)));
-                let progress = poll_turn(&mut guest, owed.as_slice(), scope, deadline, |turn| {
+                let progress = poll_turn(&mut guest, PollPurpose::Lifecycle, owed.as_slice(), scope, deadline, |turn| {
                     instance_open_progress(request, acknowledging, &turn.status, turn.lifecycle_receipt)
                         .map_err(|message| Self::not_wired("instance opening", message))
                 }).map_err(|mut fault| {
@@ -96,9 +115,10 @@ impl PluginArtifactChannel {
                         Some(_) => "lifecycle acknowledgment",
                         None => "waiting for capture",
                     };
-                    fault.message = format!("instance {instance} {phase}: {}", fault.message);
+                    fault.message = format!("instance {instance} {phase} after {completed_turns} completed turns: {}", fault.message);
                     fault
                 })?;
+                completed_turns += 1;
                 owed = match progress {
                     InstanceOpenProgress::WaitForCapture => None,
                     InstanceOpenProgress::Acknowledge(receipt) => Some(Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt })),
@@ -113,10 +133,14 @@ impl PluginArtifactChannel {
     }
 
     /// 🔁️ Drives one `AppCommand` to its terminal frame. The command becomes a retained host batch [Design notes](README.md#source-notes-109).
-    pub(crate) fn exchange_one_real(&mut self, instance: u32, mut real_command: store::AppCommand) -> Result<store::AppFrame, Fault> {
+    pub(crate) fn exchange_one_real(&mut self, instance: u32, real_command: store::AppCommand) -> Result<store::AppFrame, Fault> {
+        self.exchange_one_real_scoped(instance, real_command, &ActivationScope::detached())
+    }
+
+    pub(crate) fn exchange_one_real_scoped(&mut self, instance: u32, mut real_command: store::AppCommand, scope: &ActivationScope) -> Result<store::AppFrame, Fault> {
         let seq = self.take_seq();
         *app_command_seq_mut(&mut real_command) = seq;
-        self.exchange_sequenced(instance, &real_command, seq)
+        self.exchange_sequenced_scoped(instance, &real_command, seq, scope)
     }
 }
 //#endregion 🔖️ArtifactChannel

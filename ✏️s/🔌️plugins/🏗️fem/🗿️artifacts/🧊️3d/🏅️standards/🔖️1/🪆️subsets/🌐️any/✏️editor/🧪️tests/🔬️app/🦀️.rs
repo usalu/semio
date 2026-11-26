@@ -176,6 +176,15 @@ pub mod context {
         result
     }
 
+    /// 🚫️ Dispatches one typed command whose retained operation the app refuses and returns the refusal's debug text, so a law can pin the fault code and then the unchanged document.
+    pub async fn dispatch_refused(app: &mut Fem3dApp, command: Fem3dCommand) -> String {
+        let mut action = meta(&app.3);
+        action.view_state = Some(std::sync::Arc::new(view(window_kind_for(&command))));
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let settled = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, FEM3D_TEST_INSTANCE, semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        format!("{:?}", settled.err().expect("the operation is refused"))
+    }
+
     /// 🧾️ Dispatches one typed command from the model window and drives its retained operation home, returning the
     /// history rows its completions upserted — the rows a gumball gesture's transaction landed as.
     pub async fn dispatch_rows(app: &mut Fem3dApp, command: Fem3dCommand) -> Vec<semio_framework::kernel::HistoryEntry> {

@@ -12,7 +12,7 @@ pub use component::{activation, package_assets};
 pub use semio_framework_actor::{PackageHash, PackageId};
 pub use semio_plugin_guest_contract::original_actor_context;
 pub use semio_plugin_interpreter_runtime::OwnedRuntime;
-pub use semio_plugin_host_engine::{IsolatedCompileTarget, SharedEngineConfig, compile_component_isolated, compiled_cache_scratch_path, default_compiled_cache_root};
+pub use semio_plugin_host_engine::{ISOLATED_COMPILE_DEFERRED_EXIT, IsolatedCompileTarget, SharedEngineConfig, compile_component_isolated, compiled_cache_scratch_path, default_compiled_cache_root, isolated_compile_exit_code};
 pub use semio_plugin_host_guest_runtime::{CompiledHandle, GuestActorOpening, GuestInstance, GuestRuntime, GuestRuntimes, GUEST_CODEC_BUDGET, self_issued_budget, OwnedComponentDocumentCodec, PackageRef, WasmtimeRuntime, retryable_lifecycle_turn};
 pub use semio_plugin_host_post_turn_relay::{PluginInstanceHandle, GuestRelayOperation, GuestRelayOperationAdmission, GuestRelayOperationStatus, GuestRelayNativeHome, GuestRelayOutput, GuestRelayOutputHome, SourceJsonEncoder, OriginalJobBudgetJson, GuestRelayFaultHome, GuestRelayFault, GuestRelayResult, GuestRelayNativeOrigin, GuestRelayNativeResolver, GuestRelayNativeCustody, GuestRelayNativeState, NativeInstanceHome, NativeInstanceRetirement};
 pub use semio_plugin_host_post_turn_relay::origin_registry;

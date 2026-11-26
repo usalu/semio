@@ -11,7 +11,7 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import committed from "../🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import buildPolicy from "../../../📚️library/🏗️build/🔣️policy.json" with {type:"json"};
-import {applyFleetAddressEnvironmentV1,peerStorePathV1,clientProtocolV1,factsV1,worktreePathV1,groupV1,mountPartsV1,mountPlanV1,platformV1,readTopologyV1,serverPartsV1,serverPlanV1,windowsSuperviseScriptV1,workerPartsV1,workerServiceV1,type FleetGroupV1,type FleetPlatformV1,type FleetTopologyV1} from "../🟦️.ts";
+import {applyFleetAddressEnvironmentV1,bindFleetHostsV1,peerStorePathV1,clientProtocolV1,factsV1,worktreePathV1,groupV1,mountPartsV1,mountPlanV1,platformV1,readTopologyV1,serverPartsV1,serverPlanV1,windowsSuperviseScriptV1,workerPartsV1,workerServiceV1,type FleetGroupV1,type FleetPlatformV1,type FleetTopologyV1} from "../🟦️.ts";
 import {checkReachabilityV1,parseTopologyArgumentsV1,preflightLanguagesV1,preflightTextV1,preflightV1,PREFLIGHT_LIMITS_V1,renderFactsV1,runTopologyCommandAsyncV1,runTopologyCommandV1,type PreflightProbesV1,type ReachabilityPortsV1} from "../⌨️command/🟦️.ts";
 import {gitPinsHashV1,type GitGuardsV1} from "../../🌿️git/🟦️.ts";
 import {accessDirectoryV1} from "../../../📚️library/🏗️build/🏡️resident/🔐️consent/🟨️.mjs";
@@ -24,7 +24,9 @@ type Change={name:string;path:(string|number)[];value?:unknown;remove?:boolean};
 const hostedScript=(xml:string):string=>Buffer.from(/-EncodedCommand ([A-Za-z0-9+\/=]+)/u.exec(xml)![1]!,"base64").toString("utf16le");
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),accepts=ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:"#/definitions/Topology"}),python=testPythonV1(),oracle=join(import.meta.dirname,"🐍️.py");
 const PLATFORMS:readonly FleetPlatformV1[]=["linux","macos","windows"],REPLICA="🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica",SCRIPT="📜️script.ts";
-const topology=readTopologyV1(fixture.topology),ids=fixture.topology.groups.map(group=>group.id);
+const HOSTS:Record<string,string>=Object.fromEntries(fixture.topology.groups.map(group=>[`${group.id}-server`,`nfs.${group.id}.example.test`])),bound=(value:FleetTopologyV1):FleetTopologyV1=>bindFleetHostsV1(value,HOSTS);
+const raw=(value:any):any=>({...value,groups:value.groups.map((group:any)=>({...group,nfs:{export:group.nfs.export},cache:{instance:group.cache.instance}}))});
+const topology=bound(readTopologyV1(fixture.topology)),ids=fixture.topology.groups.map(group=>group.id);
 const mutate=(change:Change):unknown=>{
  const copy=structuredClone(fixture.topology) as Record<string,any>;
  let node=copy;
@@ -37,23 +39,25 @@ const unc=(host:string,path:string)=>`\\\\${host}${path.replaceAll("/","\\")}`;
 const variant=(change:(copy:any)=>void):FleetTopologyV1=>{
  const copy=structuredClone(fixture.topology) as any;
  change(copy);
- return readTopologyV1(copy);
+ return bound(readTopologyV1(copy));
 };
 const smbFleet=variant(copy=>{copy.groups[1].server={platform:"linux",protocol:"nfs",network:"10.2.0.0/16"};copy.groups[1].nfs.export="/srv/store-b";copy.groups[2].server.protocol="smb";});
 
-test("the committed topology is accepted by Ajv and by the repository validator, g1 is the macOS group server, and every host, network and cache name stays a placeholder",()=>{
+test("the committed topology is accepted by Ajv and by the repository validator, g1 is the macOS group server, and no host name, address, network or cache endpoint is committed: machines are named by their origin id",()=>{
  expect(accepts(committed)).toBe(true);
  expect(validateJsonSchemaSubset({$ref:"#/definitions/Topology"},committed,schema)).toEqual([]);
  const read=readTopologyV1();
  expect(read.groups.map(group=>group.id)).toEqual(["g1","g2","g3","g4","g5"]);
  const g1=read.groups[0]!;
- expect(g1.nfs).toEqual({host:"nfs.g1.semio.internal",export:"/Users/Shared/semio-store"});
- expect(g1.server).toEqual({platform:"macos",protocol:"nfs",network:"10.0.1.0/24"});
- expect(g1.cache).toEqual({endpoint:"http://cache.g1.semio.internal:6094",instance:"main"});
+ expect(g1.nfs).toEqual({export:"/Users/Shared/semio-store"});
+ expect(g1.server).toEqual({platform:"macos",protocol:"nfs"});
+ expect(g1.cache).toEqual({instance:"main"});
+ expect(g1.roles).toEqual({store:"g1-server",cache:"g1-server",scheduler:"g1-server",relay:"g1-server"});
  for(const group of read.groups.slice(1)){
-  expect(group.nfs).toEqual({host:`nfs.${group.id}.semio.internal`,export:"/srv/semio-store"});
-  expect(group.server).toEqual({platform:"linux",protocol:"nfs",network:`10.0.${group.id.slice(1)}.0/24`});
-  expect(group.cache).toEqual({endpoint:`http://cache.${group.id}.semio.internal:6094`,instance:"main"});
+  expect(group.nfs).toEqual({export:"/srv/semio-store"});
+  expect(group.server).toEqual({platform:"linux",protocol:"nfs"});
+  expect(group.cache).toEqual({instance:"main"});
+  expect(group.roles).toEqual({store:`${group.id}-server`,cache:`${group.id}-server`,scheduler:`${group.id}-server`,relay:`${group.id}-server`});
  }
  for(const group of read.groups){
   expect(group.peers).toEqual(Object.fromEntries(read.groups.filter(other=>other.id!==group.id).map(other=>[other.id,`/mnt/semio-peers/${other.id}`])));
@@ -70,28 +74,29 @@ test("a group whose cache instance differs from the policy namespace is refused,
  expect(()=>readTopologyV1(copy)).toThrow(new RegExp(`g1 needs cache.instance to be the policy instance ${policy}.*braucht cache.instance`,"u"));
 });
 
-test("address environment variables replace one group's host, network and cache endpoint, the file stays unchanged, and the Python oracle agrees",()=>{
- const environment={SEMIO_FLEET_GROUP:"g1",SEMIO_FLEET_NFS_HOST:"203.0.113.10",SEMIO_FLEET_NETWORK:"203.0.113.0/24"};
+test("resolved addresses bind the store and cache roles into one rendering, the file stays unchanged, an unbound group is refused, and the Python oracle agrees",()=>{
+ const environment={SEMIO_FLEET_GROUP:"g1",SEMIO_FLEET_STORE_ADDRESS:"203.0.113.10",SEMIO_FLEET_NETWORK:"203.0.113.0/24"};
  const overlaid=applyFleetAddressEnvironmentV1(readTopologyV1(),environment),group=overlaid.groups[0]!;
  expect(group.nfs.host).toBe("203.0.113.10");
  expect(group.server.network).toBe("203.0.113.0/24");
  expect(group.cache.endpoint).toBe("http://203.0.113.10:6094");
- expect(overlaid.groups[1]!.nfs.host).toBe("nfs.g2.semio.internal");
- expect(readTopologyV1().groups[0]!.nfs.host).toBe("nfs.g1.semio.internal");
- expect(()=>applyFleetAddressEnvironmentV1(readTopologyV1(),{SEMIO_FLEET_GROUP:"g1",SEMIO_FLEET_NFS_HOST:"203.0.113.10"})).toThrow("set together");
- expect(applyFleetAddressEnvironmentV1(readTopologyV1(),{SEMIO_FLEET_GROUP:"zz",SEMIO_FLEET_NFS_HOST:"203.0.113.10",SEMIO_FLEET_NETWORK:"203.0.113.0/24"}).groups[0]!.nfs.host).toBe("nfs.g1.semio.internal");
+ expect(overlaid.groups[1]!.nfs.host).toBeUndefined();
+ expect(readTopologyV1().groups[0]!.nfs.host).toBeUndefined();
+ expect(applyFleetAddressEnvironmentV1(readTopologyV1(),{SEMIO_FLEET_GROUP:"zz",SEMIO_FLEET_STORE_ADDRESS:"203.0.113.10"}).groups[0]!.nfs.host).toBeUndefined();
+ expect(bindFleetHostsV1(readTopologyV1(),{"g1-server":"fd00::7"}).groups[0]!.cache.endpoint).toBe("http://[fd00::7]:6094");
  expect(runTopologyCommandV1(["server-plan","--group","g1","--part","exports"],{platform:"darwin",environment})).toContain("-network 203.0.113.0 -mask 255.255.255.0");
- expect(runTopologyCommandV1(["facts","--group","g1","--platform","macos","--shell","sh"],{platform:"darwin",environment:{}})).toContain("FLEET_NFS_HOST='nfs.g1.semio.internal'");
- expect(provisionShell).toContain("SEMIO_FLEET_NFS_HOST");
- expect(provisionShell).toContain("SEMIO_FLEET_GROUP, SEMIO_FLEET_NFS_HOST and SEMIO_FLEET_NETWORK are set together");
+ expect(runTopologyCommandV1(["facts","--group","g1","--platform","macos","--shell","sh"],{platform:"darwin",environment})).toContain("FLEET_NFS_HOST='203.0.113.10'");
+ expect(runTopologyCommandV1(["facts","--group","g1","--platform","macos","--shell","sh","--addresses","g1-server=203.0.113.11"],{platform:"darwin",environment:{}})).toContain("FLEET_NFS_SOURCE='203.0.113.11:/Users/Shared/semio-store'");
+ expect(()=>runTopologyCommandV1(["facts","--group","g1","--platform","macos","--shell","sh"],{platform:"darwin",environment:{}})).toThrow("Resolved address of the store role required");
+ expect(()=>runTopologyCommandV1(["facts","--group","g1","--platform","macos","--shell","sh","--addresses","Studio Mac=1.2.3.4"],{platform:"darwin",environment:{}})).toThrow("--addresses needs");
+ expect(provisionShell).toContain("SEMIO_FLEET_STORE_ADDRESS");
+ expect(provisionShell).toContain("discover_store_address");
+ expect(provisionShell).not.toContain("SEMIO_FLEET_NFS_HOST and SEMIO_FLEET_NETWORK are set together");
  if(!python)return;
  const topologyFile=join(import.meta.dirname,"..",readdirSync(join(import.meta.dirname,"..")).find(name=>name.endsWith(".json"))!);
  const result=Bun.spawnSync([python,"-I",oracle,"address",topologyFile],{env:{...process.env,...environment},stdout:"pipe",stderr:"pipe"});
  expect(result.exitCode,result.stderr.toString()).toBe(0);
  expect(JSON.parse(result.stdout.toString())).toEqual({endpoint:"http://203.0.113.10:6094",host:"203.0.113.10",network:"203.0.113.0/24"});
- const partial=Bun.spawnSync([python,"-I",oracle,"address",topologyFile],{env:{...process.env,SEMIO_FLEET_GROUP:"g1",SEMIO_FLEET_NFS_HOST:"203.0.113.10",SEMIO_FLEET_NETWORK:""},stderr:"pipe"});
- expect(partial.exitCode).toBe(1);
- expect(partial.stderr.toString()).toContain("set together");
 });
 
 test("unresolved peer hosts are left out of the macOS exports before nfsd checkexports, and the Python oracle writes the same exports",()=>{
@@ -221,8 +226,8 @@ test("no provisioning path writes a cache pointer: the env operation is gone and
 test("an unknown group, platform or shell is refused",()=>{
  expect(()=>groupV1(topology,"zz")).toThrow("Declared fleet group required");
  for(const operation of["mount-plan","server-plan","worker-service","facts"])expect(()=>runTopologyCommandV1([operation,"--group","zz"],{platform:"linux",topology:fixture.topology}),operation).toThrow("Declared fleet group required");
- expect(()=>runTopologyCommandV1(["mount-plan","--group","a1","--platform","beos"],{topology:fixture.topology})).toThrow("--platform must be one of");
- expect(()=>runTopologyCommandV1(["facts","--group","a1","--shell","fish"],{topology:fixture.topology})).toThrow("--shell must be one of");
+ expect(()=>runTopologyCommandV1(["mount-plan","--group","a1","--platform","beos"],{topology:raw(fixture.topology),hosts:HOSTS})).toThrow("--platform must be one of");
+ expect(()=>runTopologyCommandV1(["facts","--group","a1","--shell","fish"],{topology:raw(fixture.topology),hosts:HOSTS})).toThrow("--shell must be one of");
  expect(()=>platformV1("freebsd")).toThrow("Supported fleet platform required");
  expect([platformV1("linux"),platformV1("darwin"),platformV1("win32")]).toEqual(["linux","macos","windows"]);
 });
@@ -260,7 +265,7 @@ test("the worker service keeps the replica daemon alive on every platform",()=>{
  expect(windows).toContain("<RestartOnFailure><Interval>PT1M</Interval><Count>255</Count></RestartOnFailure>");
  expect(windows).toContain("<ExecutionTimeLimit>PT0S</ExecutionTimeLimit>");
  expect(macos).not.toContain("SuccessfulExit");
- expect(runTopologyCommandV1(["worker-service","--group",group.id,"--platform","linux","--part","target"],{topology:fixture.topology})).toBe("/etc/systemd/system/semio-fleet-replica@.service");
+ expect(runTopologyCommandV1(["worker-service","--group",group.id,"--platform","linux","--part","target"],{topology:raw(fixture.topology),hosts:HOSTS})).toBe("/etc/systemd/system/semio-fleet-replica@.service");
 });
 
 type XmlNode={name:string;children:XmlNode[]};
@@ -336,7 +341,7 @@ test("a Windows worker mounts its store at every logon and again every minute un
   expect(definition).toContain(`/d /c if not exist ${drive}\\ ${protocol==="smb"?"net.exe use":"mount.exe -o"}`);
   expect(definition).toContain("<LogonType>InteractiveToken</LogonType><RunLevel>LeastPrivilege</RunLevel>");
   expect(parts["definition"]).toContain("<StartWhenAvailable>true</StartWhenAvailable>");
-  expect(runTopologyCommandV1(["worker-service","--group",group,"--platform","windows","--part","mount-definition"],{topology:fleet})).toBe(definition);
+  expect(runTopologyCommandV1(["worker-service","--group",group,"--platform","windows","--part","mount-definition"],{topology:raw(fleet),hosts:HOSTS})).toBe(definition);
  }
 });
 
@@ -351,9 +356,9 @@ test("the arguments are closed",()=>{
  expect(()=>parseTopologyArgumentsV1(["validate","--reachable","--reachable"])).toThrow("Repeated option");
  expect(()=>parseTopologyArgumentsV1(["facts","--group"])).toThrow("Value required");
  expect(()=>parseTopologyArgumentsV1(["facts","--group","--shell"])).toThrow("Value required");
- expect(()=>runTopologyCommandV1(["facts"],{topology:fixture.topology})).toThrow("Required option missing: --group");
- expect(()=>runTopologyCommandV1(["validate","--reachable"],{topology:fixture.topology})).toThrow("asynchronous");
- expect(runTopologyCommandV1(["validate"],{topology:fixture.topology})).toBe("valid fleet topology: 3 groups (a1, b2, c3)");
+ expect(()=>runTopologyCommandV1(["facts"],{topology:raw(fixture.topology),hosts:HOSTS})).toThrow("Required option missing: --group");
+ expect(()=>runTopologyCommandV1(["validate","--reachable"],{topology:raw(fixture.topology),hosts:HOSTS})).toThrow("asynchronous");
+ expect(runTopologyCommandV1(["validate"],{topology:raw(fixture.topology),hosts:HOSTS})).toBe("valid fleet topology: 3 groups (a1, b2, c3)");
 });
 
 test("every group names its server and the protocol by which each worker platform mounts its store",()=>{
@@ -372,7 +377,7 @@ test("every group names its server and the protocol by which each worker platfor
 
 test("the mount plan of every group follows the protocol of its server, for every platform",()=>{
  for(const group of fixture.topology.groups)for(const platform of PLATFORMS){
-  const plan=mountPlanV1(topology,group.id,platform),host=group.nfs.host,path=group.nfs.export,fromLinux=group.server.platform==="linux";
+  const plan=mountPlanV1(topology,group.id,platform),host=HOSTS[group.roles.store],path=group.nfs.export,fromLinux=group.server.platform==="linux";
   if(platform==="linux"){
    expect(plan).toContain(fromLinux?`${host}:${path} /mnt/semio-store nfs4 vers=4.2,hard,noatime,actimeo=1,lookupcache=none,nconnect=4,_netdev,nofail 0 0`:`${host}:${path} /mnt/semio-store nfs vers=3,hard,noatime,actimeo=1,lookupcache=none,nconnect=4,nolock,_netdev,nofail 0 0`);
    expect(plan).toContain("sudo mount /mnt/semio-store");
@@ -386,11 +391,11 @@ test("the mount plan of every group follows the protocol of its server, for ever
    expect(plan).toContain("Register-ScheduledTask -TaskName semio-fleet-store-mount");
    expect(plan).toContain("--part mount-definition");
   }
-  for(const other of fixture.topology.groups.filter(candidate=>candidate.id!==group.id))expect(plan).not.toContain(other.nfs.host);
+  for(const other of fixture.topology.groups.filter(candidate=>candidate.id!==group.id))expect(plan).not.toContain(HOSTS[other.roles.store]);
  }
  expect(mountPartsV1(topology,"a1","linux")["fstab"]).toBe(factsV1(topology,"a1","linux")["FSTAB_LINE"]);
- expect(runTopologyCommandV1(["mount-plan","--group","b2","--platform","linux","--part","commands"],{topology:fixture.topology})).toBe("sudo mkdir -p /mnt/semio-store\nsudo mount /mnt/semio-store");
- expect(()=>runTopologyCommandV1(["mount-plan","--group","b2","--platform","linux","--part","nope"],{topology:fixture.topology})).toThrow("Declared part required");
+ expect(runTopologyCommandV1(["mount-plan","--group","b2","--platform","linux","--part","commands"],{topology:raw(fixture.topology),hosts:HOSTS})).toBe("sudo mkdir -p /mnt/semio-store\nsudo mount /mnt/semio-store");
+ expect(()=>runTopologyCommandV1(["mount-plan","--group","b2","--platform","linux","--part","nope"],{topology:raw(fixture.topology),hosts:HOSTS})).toThrow("Declared part required");
  const smb=mountPartsV1(smbFleet,"c3","windows");
  expect(smb).toMatchObject({credential:"cmdkey /add:nfs.c3.example.test /user:nfs\\semio-fleet /pass:<password>",cache:"Set-SmbClientConfiguration -DirectoryCacheLifetime 0 -FileInfoCacheLifetime 0 -FileNotFoundCacheLifetime 0 -Force",mount:`net use S: ${unc("nfs.c3.example.test","/store-c")} /persistent:yes`});
  expect(Object.keys(smb)).toEqual(["credential","cache","mount","task"]);
@@ -406,7 +411,7 @@ test("a Linux worker plan sets the inotify limits that the tree of about 122k di
   expect(mountPlanV1(topology,group.id,"linux")).toContain("fs.inotify.max_user_watches=1048576");
  }
  expect(Object.keys(mountPartsV1(topology,"a1","macos"))).not.toContain("sysctl");
- expect(runTopologyCommandV1(["mount-plan","--group","a1","--platform","linux","--part","sysctl-path"],{topology:fixture.topology})).toBe("/etc/sysctl.d/90-semio-fleet.conf");
+ expect(runTopologyCommandV1(["mount-plan","--group","a1","--platform","linux","--part","sysctl-path"],{topology:raw(fixture.topology),hosts:HOSTS})).toBe("/etc/sysctl.d/90-semio-fleet.conf");
  expect(readTopologyV1().worktree.windows.length).toBeLessThanOrEqual(15);
 });
 
@@ -417,8 +422,8 @@ test("the Linux group server exports the store, mounts the peers read-only by th
  expect(parts["exports"]).toStartWith(`${group.nfs.export} 10.1.0.0/24(rw,sync,no_subtree_check,all_squash,anonuid=1500,anongid=1500)`);
  expect(parts["fstab"]).toContain(`${group.nfs.export} /mnt/semio-store none bind 0 0`);
  for(const other of others){
-  expect(parts["exports"]).toContain(` ${other.nfs.host}(ro,sync,no_subtree_check)`);
-  expect(parts["fstab"]).toContain(`${other.nfs.host}:${other.nfs.export} ${(group.peers as unknown as Record<string,string>)[other.id]} nfs vers=3,ro,hard,`);
+  expect(parts["exports"]).toContain(` ${HOSTS[other.roles.store]}(ro,sync,no_subtree_check)`);
+  expect(parts["fstab"]).toContain(`${HOSTS[other.roles.store]}:${other.nfs.export} ${(group.peers as unknown as Record<string,string>)[other.id]} nfs vers=3,ro,hard,`);
  }
  expect(parts["cache-launch"]).toContain("export SEMIO_FLEET_NETWORK=10.1.0.0/24");expect(parts["cache-launch"]).toContain("exec /usr/local/bin/repo remote-cache serve --host fleet --port 6090 --directory /var/lib/semio-remote-cache --max-bytes 214748364800");
  expect(parts["cache-launch"]).toContain(". /etc/semio/remote-cache.env");
@@ -491,8 +496,8 @@ test("the facts quote their values for both shells",()=>{
  expect(renderFactsV1(facts,"powershell")).toContain("$FLEET_WORKTREE='C:\\semio'");
  expect(renderFactsV1({A:"it's"},"sh")).toBe("FLEET_A='it'\\''s'");
  expect(renderFactsV1({A:"it's"},"powershell")).toBe("$FLEET_A='it''s'");
- expect(runTopologyCommandV1(["facts","--group","a1","--platform","macos","--shell","sh"],{topology:fixture.topology})).toContain("FLEET_MOUNT_OPTIONS='vers=4,hard,nobrowse,acregmin=1,acregmax=1,acdirmin=0,acdirmax=0,nonegnamecache'");
- expect(runTopologyCommandV1(["facts","--group","b2","--platform","macos","--shell","sh"],{topology:fixture.topology})).toContain("FLEET_MOUNT_OPTIONS='vers=3,hard,nobrowse,acregmin=1,acregmax=1,acdirmin=0,acdirmax=0,nonegnamecache,nolocks'");
+ expect(runTopologyCommandV1(["facts","--group","a1","--platform","macos","--shell","sh"],{topology:raw(fixture.topology),hosts:HOSTS})).toContain("FLEET_MOUNT_OPTIONS='vers=4,hard,nobrowse,acregmin=1,acregmax=1,acdirmin=0,acdirmax=0,nonegnamecache'");
+ expect(runTopologyCommandV1(["facts","--group","b2","--platform","macos","--shell","sh"],{topology:raw(fixture.topology),hosts:HOSTS})).toContain("FLEET_MOUNT_OPTIONS='vers=3,hard,nobrowse,acregmin=1,acregmax=1,acdirmin=0,acdirmax=0,nonegnamecache,nolocks'");
 });
 
 test("the Linux server plan runs the replica and the relay as the semio account and rebuilds the bootstrap archive through the relay",()=>{
@@ -531,10 +536,10 @@ test("every worker and every group server gets a daily compaction next to its re
  expect(workerPartsV1(topology,"a1","linux",true)["definition"]).toBe(linux["definition"]);
  expect(()=>workerPartsV1(topology,"a1","macos",true)).toThrow("Server platform required");
  expect(()=>workerPartsV1(topology,"b2","linux",true)).toThrow("Server platform required");
- expect(runTopologyCommandV1(["worker-service","--group","a1","--platform","linux","--part","compact-definition","--role","server"],{topology:fixture.topology})).toBe(workerPartsV1(topology,"a1","linux",true)["compact-definition"]!);
- expect(runTopologyCommandV1(["worker-service","--group","b2","--platform","macos","--part","compact-definition","--role","server"],{topology:fixture.topology})).toBe(workerPartsV1(topology,"b2","macos",true)["compact-definition"]!);
- expect(runTopologyCommandV1(["worker-service","--group","a1","--platform","linux","--role","server"],{topology:fixture.topology})).toBe(linux["definition"]!);
- expect(()=>runTopologyCommandV1(["worker-service","--group","a1","--platform","linux","--role","admin"],{topology:fixture.topology})).toThrow("must be one of worker|server");
+ expect(runTopologyCommandV1(["worker-service","--group","a1","--platform","linux","--part","compact-definition","--role","server"],{topology:raw(fixture.topology),hosts:HOSTS})).toBe(workerPartsV1(topology,"a1","linux",true)["compact-definition"]!);
+ expect(runTopologyCommandV1(["worker-service","--group","b2","--platform","macos","--part","compact-definition","--role","server"],{topology:raw(fixture.topology),hosts:HOSTS})).toBe(workerPartsV1(topology,"b2","macos",true)["compact-definition"]!);
+ expect(runTopologyCommandV1(["worker-service","--group","a1","--platform","linux","--role","server"],{topology:raw(fixture.topology),hosts:HOSTS})).toBe(linux["definition"]!);
+ expect(()=>runTopologyCommandV1(["worker-service","--group","a1","--platform","linux","--role","admin"],{topology:raw(fixture.topology),hosts:HOSTS})).toThrow("must be one of worker|server");
  expect(linux["timer-definition"]).toContain("OnCalendar=daily");
  expect(macos["compact-target"]).toBe("__WORKER_HOME__/Library/LaunchAgents/tech.semio.fleet.compact.plist");
  expect(macos["compact-definition"]).toContain(`<string>./${SCRIPT}</string><string>compact</string>`);
@@ -564,8 +569,8 @@ test("the worktree template resolves against the account home per platform, keep
   if(python)expect(Bun.spawnSync([python,"-I",oracle,"worktree",file,"macos",bad],{stdout:"pipe",stderr:"pipe"}).exitCode).toBe(1);
  }
  expect(worktreePathV1(topology,"linux")).toBe("__WORKER_HOME__/semio");
- expect(runTopologyCommandV1(["facts","--group","a1","--platform","macos","--home","/Users/it's me","--shell","sh"],{topology:fixture.topology})).toContain("FLEET_WORKTREE='/Users/it'\\''s me/Documents/semio'");
- expect(runTopologyCommandV1(["facts","--group","a1","--platform","linux","--shell","sh"],{topology:fixture.topology,home:"/home/ann"})).toContain("FLEET_WORKTREE='/home/ann/semio'");
+ expect(runTopologyCommandV1(["facts","--group","a1","--platform","macos","--home","/Users/it's me","--shell","sh"],{topology:raw(fixture.topology),hosts:HOSTS})).toContain("FLEET_WORKTREE='/Users/it'\\''s me/Documents/semio'");
+ expect(runTopologyCommandV1(["facts","--group","a1","--platform","linux","--shell","sh"],{topology:raw(fixture.topology),hosts:HOSTS,home:"/home/ann"})).toContain("FLEET_WORKTREE='/home/ann/semio'");
 });
 
 test("the provisioning script resolves the worktree template and fills the service placeholders for homes with spaces, quotes, ampersands and non-ASCII characters, as the Python oracle does",()=>{
@@ -639,7 +644,7 @@ test("the provisioning scripts name existing files and only commands that the re
  expect(()=>parseReplicaArgumentsV1(["run","--collect-blobs"])).toThrow();
  expect(shell).toContain("--part compact-definition --role");
  expect(powershell).toContain("'compact-definition', '--role', $role");
- const group="a1",call=(...call:string[])=>expect(()=>runTopologyCommandV1(call,{topology:fixture.topology}),call.join(" ")).not.toThrow();
+ const group="a1",call=(...call:string[])=>expect(()=>runTopologyCommandV1(call,{topology:raw(fixture.topology),hosts:HOSTS}),call.join(" ")).not.toThrow();
  for(const arguments_ of[["facts","--group",group,"--platform","linux","--shell","sh"],["facts","--group",group,"--platform","windows","--shell","powershell"],["mount-plan","--group",group,"--platform","macos","--part","plist-path"],["mount-plan","--group",group,"--platform","macos","--part","plist"],["mount-plan","--group",group,"--platform","linux","--part","sysctl-path"],["mount-plan","--group",group,"--platform","linux","--part","sysctl"],
   ...["target","compact-target","compact-definition"].map(part=>["worker-service","--group",group,"--platform","macos","--part",part]),...["target","compact-target","compact-definition"].map(part=>["worker-service","--group",group,"--platform","windows","--part",part]),
   ...["target","compact-target","compact-definition","timer-target","timer-definition"].map(part=>["worker-service","--group",group,"--platform","linux","--part",part]),["worker-service","--group",group,"--platform","linux"],["worker-service","--group",group,"--platform","linux","--part","compact-definition","--role","server"],["worker-service","--group","b2","--platform","macos","--part","compact-definition","--role","server"],["worker-service","--group","c3","--platform","windows","--part","compact-definition","--role","server"]])call(...arguments_);
@@ -674,30 +679,30 @@ test("server platform rules: smb is Windows only, a Windows server needs a folde
 
 test("plain validate stays offline and validate --reachable reports every group with progress",async()=>{
  const forbidden:ReachabilityPortsV1={resolve:async()=>{throw Error("network used");},connect:async()=>{throw Error("network used");}};
- const offline=await runTopologyCommandAsyncV1(["validate"],{topology:fixture.topology,signal:new AbortController().signal,progress:()=>{throw Error("progress");},ports:forbidden});
+ const offline=await runTopologyCommandAsyncV1(["validate"],{topology:raw(fixture.topology),hosts:HOSTS,signal:new AbortController().signal,progress:()=>{throw Error("progress");},ports:forbidden});
  expect(offline).toEqual({text:"valid fleet topology: 3 groups (a1, b2, c3)",exitCode:0});
  const opened:string[]=[],lines:string[]=[],ports:ReachabilityPortsV1={resolve:async host=>{if(host==="nfs.b2.example.test")throw Error("getaddrinfo ENOTFOUND nfs.b2.example.test");return ["192.0.2.1"];},connect:async(address,port)=>{opened.push(`${address}:${port}`);if(port===6090)throw Error("connect ECONNREFUSED");}};
- const report=await runTopologyCommandAsyncV1(["validate","--reachable","--timeout","1000"],{topology:fixture.topology,signal:new AbortController().signal,progress:line=>lines.push(line),ports});
+ const report=await runTopologyCommandAsyncV1(["validate","--reachable","--timeout","1000"],{topology:raw(fixture.topology),hosts:HOSTS,signal:new AbortController().signal,progress:line=>lines.push(line),ports});
  expect(report.exitCode).toBe(1);
  expect(report.text.split("\n")).toEqual([
   "valid fleet topology: 3 groups (a1, b2, c3)",
   "a1 store nfs.a1.example.test:2049 ok 192.0.2.1:2049 open",
-  "a1 cache cache.a1.example.test:6090 FAILED connect ECONNREFUSED",
+  "a1 cache nfs.a1.example.test:6090 FAILED connect ECONNREFUSED",
   "b2 store nfs.b2.example.test:2049 FAILED getaddrinfo ENOTFOUND nfs.b2.example.test",
-  "b2 cache cache.b2.example.test:7000 ok 192.0.2.1:7000 open",
+  "b2 cache nfs.b2.example.test:7000 FAILED getaddrinfo ENOTFOUND nfs.b2.example.test",
   "c3 store nfs.c3.example.test:2049 ok 192.0.2.1:2049 open",
-  "c3 cache cache.c3.example.test:443 ok 192.0.2.1:443 open",
+  "c3 cache nfs.c3.example.test:443 ok 192.0.2.1:443 open",
   "unreachable groups: a1, b2"
  ]);
  expect(lines.length).toBe(6);
- expect(opened.sort()).toEqual(["192.0.2.1:2049","192.0.2.1:2049","192.0.2.1:443","192.0.2.1:6090","192.0.2.1:7000"]);
- const all=await runTopologyCommandAsyncV1(["validate","--reachable"],{topology:fixture.topology,signal:new AbortController().signal,progress:()=>{},ports:{resolve:async()=>["192.0.2.9"],connect:async()=>{}}});
+ expect(opened.sort()).toEqual(["192.0.2.1:2049","192.0.2.1:2049","192.0.2.1:443","192.0.2.1:6090"]);
+ const all=await runTopologyCommandAsyncV1(["validate","--reachable"],{topology:raw(fixture.topology),hosts:HOSTS,signal:new AbortController().signal,progress:()=>{},ports:{resolve:async()=>["192.0.2.9"],connect:async()=>{}}});
  expect(all.exitCode).toBe(0);
  expect(all.text).toEndWith("all 3 groups reachable");
  const smb=await checkReachabilityV1(smbFleet,{timeoutMilliseconds:1000,signal:new AbortController().signal,progress:()=>{},ports:{resolve:async()=>["192.0.2.9"],connect:async()=>{}}});
  expect(smb.checks.find(entry=>entry.group==="c3"&&entry.check==="store")!.port).toBe(445);
- await expect(runTopologyCommandAsyncV1(["validate","--timeout","500"],{topology:fixture.topology,signal:new AbortController().signal,progress:()=>{}})).rejects.toThrow("--timeout needs --reachable");
- for(const bad of["50","70000","x"])await expect(runTopologyCommandAsyncV1(["validate","--reachable","--timeout",bad],{topology:fixture.topology,signal:new AbortController().signal,progress:()=>{},ports:forbidden})).rejects.toThrow("--timeout must be a whole number");
+ await expect(runTopologyCommandAsyncV1(["validate","--timeout","500"],{topology:raw(fixture.topology),hosts:HOSTS,signal:new AbortController().signal,progress:()=>{}})).rejects.toThrow("--timeout needs --reachable");
+ for(const bad of["50","70000","x"])await expect(runTopologyCommandAsyncV1(["validate","--reachable","--timeout",bad],{topology:raw(fixture.topology),hosts:HOSTS,signal:new AbortController().signal,progress:()=>{},ports:forbidden})).rejects.toThrow("--timeout must be a whole number");
 });
 
 test("the reachability check times out a silent host, stops on cancellation and probes real TCP ports",async()=>{
@@ -720,7 +725,8 @@ test("the reachability check times out a silent host, stops on cancellation and 
  await new Promise<void>(done=>listener.listen(0,"127.0.0.1",done));
  const port=(listener.address() as {port:number}).port;
  try{
-  const local=variant(copy=>{for(const group of copy.groups){group.nfs.host="localhost";group.cache.endpoint=`http://localhost:${port}`;}});
+  const local=bindFleetHostsV1(readTopologyV1(fixture.topology),Object.fromEntries(Object.keys(HOSTS).map(origin=>[origin,"localhost"])));
+  for(const group of local.groups)(group as {ports:{cache:number}}).ports.cache=port;
   const real=await checkReachabilityV1(local,{timeoutMilliseconds:2000,signal:new AbortController().signal,progress:()=>{},ports:{resolve:async()=>["127.0.0.1"]}});
   expect(real.checks.filter(entry=>entry.check==="cache").every(entry=>entry.ok&&entry.detail===`127.0.0.1:${port} open`)).toBe(true);
   expect(real.checks.filter(entry=>entry.check==="store").every(entry=>entry.port===2049)).toBe(true);
@@ -800,7 +806,7 @@ test("Windows clients get their attribute and name caches switched off for the p
  expect(facts["NFS_CACHE_KEY"]).toBe("HKLM:\\SOFTWARE\\Microsoft\\ClientForNFS\\CurrentVersion\\Users\\Default\\Cache");
  for(const [name,value] of Object.entries({SMB_CACHE:facts["SMB_CACHE"]!,NFS_CACHE:facts["NFS_CACHE"]!}))for(const item of value.split(","))expect(provisionPowerShell,`${name} ${item}`).toContain(item.replace("=0"," = 0"));
  expect(provisionPowerShell).toContain(facts["NFS_CACHE_KEY"]!);
- expect(runTopologyCommandV1(["mount-plan","--group","c3","--platform","windows","--part","cache"],{topology:smbFleet})).toBe(smb["cache"]!);
+ expect(runTopologyCommandV1(["mount-plan","--group","c3","--platform","windows","--part","cache"],{topology:raw(smbFleet),hosts:HOSTS})).toBe(smb["cache"]!);
 });
 
 test("both provisioning scripts install the daily compaction on every operating system and the server's passes --collect-blobs",()=>{
@@ -1316,7 +1322,7 @@ test("a Windows worker is judged through net use, the registry, schtasks and w32
  expect(statusOf(await windows({"sc.exe query":{code:1,stdout:"The specified service does not exist."}}))["timesync"]).toBe("warn:timesync.no");
  expect(statusOf(await windows({"powershell.exe -NoProfile":{code:0,stdout:"Ready\r\n"}}))["service.replica"]).toBe("fail:service.down");
  expect(statusOf(await windows({"net.exe use":{code:0,stdout:"There are no entries in the list.\n"}}))["mount"]).toBe("fail:mount.missing");
- const smb=readTopologyV1(variantSmb());
+ const smb=bound(readTopologyV1(variantSmb()));
  const smbFiles={"C:\\semio\\.cache\\f\\machine.json":JSON.stringify({originId:"c3-m01",groupId:"c3",storeRoot:"S:\\"})};
  const smbRun=(json:string)=>preflightV1(smb,{platform:"windows",group:"c3",timeoutMilliseconds:1000,languages:["en"],signal:new AbortController().signal,progress:()=>{},probes:fake(smbFiles,(command,args)=>command==="net.exe"?{code:0,stdout:"OK           S:        \\\\nfs.c3.example.test\\store-c   Microsoft Windows Network\n"}:command==="powershell.exe"?{code:0,stdout:json}:commands()(command,args),{status:async()=>({...HEALTHY,groupId:"c3"})})});
  expect(statusOf(await smbRun('{"DirectoryCacheLifetime":0,"FileInfoCacheLifetime":0,"FileNotFoundCacheLifetime":0}'))).toMatchObject({mount:"ok:mount.ok",clientcache:"ok:clientcache.smb"});
@@ -1350,8 +1356,8 @@ test("every finished check is reported as progress in every chosen language, a s
 test("the preflight command takes its closed options, picks its languages, needs the asynchronous runner and exits 1 on a failure",async()=>{
  expect(parseTopologyArgumentsV1(["preflight","--group","a1","--timeout","2000","--lang","de","--worktree","/x","--store","/y"]).operation).toBe("preflight");
  expect(()=>parseTopologyArgumentsV1(["preflight","--reachable"])).toThrow("Unknown option for preflight");
- expect(()=>runTopologyCommandV1(["preflight","--group","a1"],{topology:fixture.topology})).toThrow("asynchronous");
- const context=(probes:Partial<PreflightProbesV1>,environment:Record<string,string>={})=>({platform:"linux",home:"/home/test",topology:fixture.topology,signal:new AbortController().signal,progress:()=>{},environment,probes});
+ expect(()=>runTopologyCommandV1(["preflight","--group","a1"],{topology:raw(fixture.topology),hosts:HOSTS})).toThrow("asynchronous");
+ const context=(probes:Partial<PreflightProbesV1>,environment:Record<string,string>={})=>({platform:"linux",home:"/home/test",topology:raw(fixture.topology),hosts:HOSTS,signal:new AbortController().signal,progress:()=>{},environment,probes});
  const good=await runTopologyCommandAsyncV1(["preflight","--group","a1","--lang","de"],context(fake(linuxFiles(),linuxCommands())));
  expect(good.exitCode).toBe(0);
  expect(good.text).toContain("Alle 24 Prüfungen bestanden.");
@@ -1417,8 +1423,8 @@ test("every group declares the ports of its services and the network policy, lin
  const topology=readTopologyV1(),ajv=new Ajv({strict:true,allowUnionTypes:true}),check=ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:"#/definitions/Topology"});
  expect(check(committed),JSON.stringify(check.errors)).toBe(true);
  for(const group of topology.groups){expect(group.ports,group.id).toEqual({cache:6094,scheduler:8980,worker:8981});expect(group.access).toEqual({enforceNetwork:false,transport:{crossGroup:"sealed",inGroup:"trusted-lan"}});}
- for(const group of topology.groups)expect(new URL(group.cache.endpoint).port,group.id).toBe(String(group.ports!.cache));
- expect(()=>{const copy=structuredClone(committed) as any;copy.groups[0].cache.endpoint="http://cache.g1.semio.internal:6090";readTopologyV1(copy);}).toThrow("needs the port of cache.endpoint to be ports.cache 6094");
+ for(const group of topology.groups)expect(group.cache.endpoint,group.id).toBeUndefined();
+ expect(()=>{const copy=structuredClone(committed) as any;copy.groups[0].roles.store="g2-server";readTopologyV1(copy);}).toThrow("needs the store role to name an origin of its own group");
  const g1=groupV1(topology,"g1"),g2=groupV1(topology,"g2");
  expect(peerStorePathV1(topology,g1,"g2"),"a macOS group server mounts the peers below /Volumes").toBe("/Volumes/semio-peers/g2");
  expect(peerStorePathV1(topology,g2,"g1")).toBe("/mnt/semio-peers/g1");
@@ -1429,7 +1435,7 @@ test("every group declares the ports of its services and the network policy, lin
  expect(()=>readTopologyV1(withLinks({g2:{transport:"relayed",endpoints:["https://cache.g2.example.org:7000"]}}))).toThrow("relayed link");
  expect(()=>readTopologyV1(withLinks({g2:{transport:"pigeon"}}))).toThrow();
  expect(()=>readTopologyV1({...committed,groups:committed.groups.map(group=>group.id==="g1"?{...group,ports:{cache:0,scheduler:1,worker:2}}:group)})).toThrow();
- expect(()=>readTopologyV1({...committed,groups:committed.groups.map(group=>group.id==="g1"?{...group,server:{...group.server,advertise:["cache.g1.example.org"]}}:group)})).not.toThrow();
+ expect(()=>readTopologyV1({...committed,groups:committed.groups.map(group=>group.id==="g1"?{...group,server:{...group.server,advertise:["cache.g1.example.org"]}}:group)})).toThrow();
  const withAccess=(access:unknown)=>({...committed,groups:committed.groups.map(group=>group.id==="g1"?{...group,access}:group)});
  expect(()=>readTopologyV1(withAccess({enforceNetwork:false}))).not.toThrow();
  expect(()=>readTopologyV1(withAccess({enforceNetwork:false,transport:{inGroup:"sealed"}}))).not.toThrow();

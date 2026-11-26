@@ -6,6 +6,8 @@ pub struct OriginalDictionaryLookup{binding:Option<(usize,Option<usize>,usize,us
 impl OriginalDictionaryLookup{
  pub fn comparison_pending(&self)->bool{self.phase==1&&self.binding.is_some_and(|binding|self.byte<binding.3)}
  pub fn complete(&self)->bool{self.phase==2}
+ /// 📍️ The exact matched rank remains bound to the source through completion.
+ pub fn matched_rank(&self)->Option<usize>{self.found}
  pub fn reset(&mut self){*self=Self::default()}
  fn identity(dictionary:&Dictionary,needle:&str)->(usize,Option<usize>,usize,usize){(dictionary as*const Dictionary as usize,dictionary.original_root_identity(),needle.as_ptr()as usize,needle.len())}
  /// 🪜️ Reserves no backing and returns only the real metadata/comparison effects performed.

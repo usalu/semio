@@ -5,7 +5,7 @@ use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_wit
 use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_plugin::{BuiltNode, PanelTreeBuilder, PanelTabDefinition, PanelTabKind, PanelGroup, TreeWindows, UiAssemblyResult, Buildable, HasChildren};
 use semio_ui_locale::Label;
-use std::collections::BTreeMap;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{OptionSelection, WorksetVisibility, selected_option, workset_visibility};
 pub const BODY_KEY: &str = "bim.edit.options";
 /// 🪪️ The unique id of this panel tab, a child of the framework inspection tab.
 pub const PANEL_TAB_ID: &str = "bim.panel.options";
@@ -32,18 +32,18 @@ pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, labels: &Bim
 }
 fn view_row(id: String, label: &str, field: &str, value: &str) -> UiAssemblyResult<BuiltNode> { tree_item_with_icon(id, Label::data(label), "eye", bim_action("setView", Some(ui_value_map([("field", ui_value_text(field)?), ("value", ui_value_text(value)?)])?))) }
 /// 🎚️ Choice controls publish only window-local config diffs and wrap the drawing surface.
-pub fn with_switcher(snapshot: &ModelSnapshot, inference: &ModelInference, selected: &BTreeMap<String, String>, visibility: &BTreeMap<String, bool>, labels: &BimLabels, windows: &TreeWindows<'_>, body: BuiltNode) -> UiAssemblyResult<BuiltNode> {
+pub fn with_switcher(snapshot: &ModelSnapshot, inference: &ModelInference, selected: &[OptionSelection], visibility: &[WorksetVisibility], labels: &BimLabels, windows: &TreeWindows<'_>, body: BuiltNode) -> UiAssemblyResult<BuiltNode> {
     if snapshot.option_groups.is_empty() && snapshot.worksets.is_empty() { return Ok(body); }
     let mut builder = PanelTreeBuilder::new("bim.options.switcher")?;
     for (group_id, group) in &snapshot.option_groups {
-        let current = selected.get(group_id).or_else(|| inference.option_scope.defaults.get(group_id)).and_then(|id| snapshot.design_options.get(id)).map(|option| option.name.as_str()).unwrap_or("");
+        let current = selected_option(selected, group_id).or_else(|| inference.option_scope.defaults.get(group_id).map(String::as_str)).and_then(|id| snapshot.design_options.get(id)).map(|option| option.name.as_str()).unwrap_or("");
         let heading = format!("{}: {}", group.name, current);
         let options: Vec<_> = snapshot.design_options.iter().filter(|(_, option)| option.group == *group_id).collect();
         builder = builder.window_section(windows, &format!("bim.options.switcher.{group_id}"), Some(ui_label(&heading)?), false, &options, |(id, option)| view_row(format!("bim.options.activate.{id}"), &option.name, &format!("option:{group_id}"), id))?;
     }
     let worksets: Vec<_> = snapshot.worksets.iter().collect();
     builder = builder.window_section(windows, "bim.options.switcher.worksets", Some(ui_label(labels.group_worksets.as_str())?), false, &worksets, |(id, workset)| {
-        let shown = visibility.get(*id).copied().unwrap_or(workset.default_visible);
+        let shown = workset_visibility(visibility, id).unwrap_or(workset.default_visible);
         view_row(format!("bim.options.visibility.{id}"), &format!("{} · {}", workset.name, if shown { labels.option_hide.as_str() } else { labels.option_visible.as_str() }), &format!("workset:{id}"), if shown { "false" } else { "true" })
     })?;
     semio_ui_contract::column().try_child(builder.build()?).map_err(|_| ui_capacity_error())?.try_child(body).map_err(|_| ui_capacity_error())?.try_build().map_err(|_| ui_capacity_error())

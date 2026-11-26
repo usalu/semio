@@ -4,6 +4,7 @@
  * - the sprays of a tress are cut across the bone at `--stations` heights from their top to their tip; each cut is the box of the section (forward and lateral range), drawn as an ellipse of `--fit` times its half extents, so the loft is inside the body and tapers as the sprays do;
  * - at the scales of `--group <scale>:<metres>` neighbouring tresses of a bone are one strand as long as they are together at most so wide across, and no section is narrower than `--tip` millimetres on the paper either side of its middle, so a small scale holds few blunt strands;
  * - the sections are shrunk and the whole strand is narrowed until every section lies inside the drawn plan outline of the bone at rest, shortened forward by `--shift` metres per degree the default pose turns the bone, so nothing of the strand shows at rest and in the default pose; a strand below `--least` millimetres on the paper at its widest section is not kept.
+ * - every scale is then evaluated in the default pose: a strand of which more than a tenth of a square millimetre shows beside the union of the filled plan shapes there is drawn in by 15 % (up to nine times) or not kept.
  * In a wind pose the strands of a curtain stream out of the plan as far as the elevation shows, as tapering bodies; nothing of the sheets is touched. A strand the default print profile refuses in a named pose (too fine, or a gap beside it too narrow to print) is not kept: the scale must still print.
  * Strands carry the id `mvt-<tress>` and stand directly under the sheet of their tress, or under the lowest sheet of their bone. The run is idempotent: it removes its own strands first.
  * @see ../../🧰️silhouette/R4-P/preserve.ts — the writer that keeps every untouched byte
@@ -13,7 +14,8 @@ import { join } from "node:path";
 import { S, fileOf } from "../MR/lib.ts";
 import { rewrite } from "../../🧰️silhouette/R4-P/preserve.ts";
 
-const { flattenGeometry } = await import(join(S, "🔨️modules", "🧮️evaluation", "🟦️.ts"));
+const { evaluate, flattenGeometry } = await import(join(S, "🔨️modules", "🧮️evaluation", "🟦️.ts"));
+const engine = await import(join(S, "🧪️tests", "🔭️multiview-coverage", "🧰️.ts"));
 const { restFrames } = await import(join(S, "🔨️modules", "🦴️rig", "🟦️.ts"));
 const clipping: any = (await import(Bun.resolveSync("polygon-clipping", `${join(S, "🧪️tests", "🧊️catalog-silhouette", "🔍️oracles")}/`))).default;
 
@@ -155,6 +157,17 @@ for (const [key, decision] of Object.entries(asset.representations) as [string, 
     }
     added += kept;
     console.log(`${key} ${bone}: ${sheets.length} sheets, ${kept} strands, ${gone} not kept`);
+  }
+  for (let turn = 0; turn <= 9; turn++) {
+    const state: any = evaluate(structuredClone(asset), { kind: "pose", pose: asset.presentation.defaultPose }, engine.scaleSelector(Number(key)));
+    const multiOfRings = (rings: { x: number; y: number }[][]): Multi => rings.filter((ring) => ring.length > 2).map((ring) => ring.map((q) => [q.x, q.y] as P)).filter((ring) => Math.abs(areaOf(ring)) > 1e-9).reduce((acc: Multi, ring) => clipping.xor(acc, [[ring]]), [] as Multi);
+    const drawn: Multi = (state.shapes.plan as any[]).filter((item) => item.shape.filled === true && item.shape.role !== "ground" && !String(item.shape.id).startsWith(PREFIX)).map((item) => multiOfRings(item.rings)).reduce((acc: Multi, multi) => clipping.union(acc, multi), [] as Multi);
+    const free = (rings: { x: number; y: number }[][]): number => { try { return (clipping.difference(multiOfRings(rings), drawn) as Multi).reduce((sum, polygon) => sum + polygon.reduce((part, ring, i) => part + (i === 0 ? 1 : -1) * Math.abs(areaOf(ring)), 0), 0); } catch { return Infinity; } };
+    const beside = new Set<string>((state.shapes.plan as any[]).filter((item) => String(item.shape.id).startsWith(PREFIX) && free(item.rings) > 1e-7).map((item) => `${item.shape.bone}|${item.shape.id}`));
+    if (beside.size === 0) break;
+    if (turn === 9) { geometry.plan = geometry.plan.filter((shape: any) => !beside.has(`${shape.bone}|${shape.id}`)); added -= beside.size; console.log(`${key}: ${beside.size} strands not kept because they show beside the plan of the default pose (${[...beside].join(", ")})`); break; }
+    for (const shape of geometry.plan) if (beside.has(`${shape.bone}|${shape.id}`)) for (const section of shape.sections) { section.rx = round(section.rx * 0.85); section.ry = round(section.ry * 0.85); }
+    console.log(`${key}: ${beside.size} strands drawn in, they showed beside the plan of the default pose (turn ${turn + 1})`);
   }
 }
 const { DEFAULT_PRINT_PROFILE, resolveRepresentation } = await import(join(S, "🔨️modules", "🖨️representation", "🟦️.ts"));

@@ -1,3 +1,5 @@
+import {createInterface} from "node:readline/promises";
+import {spawnSync} from "node:child_process";
 import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 import {collectFleetFactsV1,FLEET_READERS_V1,type FleetReadersV1} from "../📥️readers/🟦️.ts";
@@ -24,10 +26,26 @@ export function fleetArgumentsV1(args:readonly string[]):FleetArgumentsV1{
 }
 
 /** 🎛️ What the command touches besides the checkout: the readers, the clock and the output; tests replace them. */
-export type FleetCommandPortsV1=Readonly<{readers?:FleetReadersV1;now?:()=>number}>;
+export type FleetCommandPortsV1=Readonly<{readers?:FleetReadersV1;now?:()=>number;hostname?:Readonly<{interactive?:boolean;answer?:(question:string)=>Promise<string>;run?:(command:string,args:readonly string[])=>Promise<number>;platform?:string}>;refuse?:(text:string)=>void}>;
 
 /** ▶️ Runs `repo fleet status [--json] [--limit=<n>]`: reads the existing status readers in parallel, aggregates, validates the report against its closed schema and prints it as compact text in the chosen language or as one JSON document. It takes no lease, loads no graph and writes nothing. */
 export async function runFleetCliV1(root:string,args:readonly string[],environment:NodeJS.ProcessEnv,write:(line:string)=>void=writeResultLineV1,ports:FleetCommandPortsV1={}):Promise<number>{
+  if(args[0]==="hostname"){
+  const language:FleetLanguageV1=resolveLanguageV1(["en","de"] as const,args,environment).language,rest=args.slice(1).filter((argument,at,all)=>argument!=="--lang"&&!argument.startsWith("--lang=")&&all[at-1]!=="--lang");
+  if(rest.length!==1||rest[0]!=="apply")throw Error(both("error.syntax"));
+  const {runTopologyCommandAsyncV1}=await import("../../../../🤝️shared-worktree/🗺️topology/⌨️command/🟦️.ts"),{fleetAddressTextV1}=await import("../../../../🤝️shared-worktree/🗺️topology/🧭️addresses/🟦️.ts"),own=ports.hostname??{};
+  const refusal=fleetAddressTextV1("en","hostname.tty")+"\n"+fleetAddressTextV1("de","hostname.tty");
+  const confirm=async(question:string):Promise<boolean>=>{
+   if(!(own.interactive??Boolean(process.stdin.isTTY)))throw Error(refusal);
+   if(own.answer!==undefined)return /^(y|yes|j|ja)$/iu.test((await own.answer(question)).trim());
+   const lines=createInterface({input:process.stdin,output:process.stdout});
+   try{return /^(y|yes|j|ja)$/iu.test((await lines.question(question)).trim());}finally{lines.close();}
+  };
+  const run=own.run??(async(command:string,commandArguments:readonly string[]):Promise<number>=>spawnSync(command,[...commandArguments],{stdio:"inherit"}).status??1);
+  const result=await runTopologyCommandAsyncV1(["hostname","--root",root,"--lang",language],{platform:own.platform??process.platform,signal:new AbortController().signal,progress:write,environment,confirm,run}).catch((error:unknown)=>{if(error instanceof Error&&error.message===refusal){(ports.refuse??console.error)(refusal);return {text:"",exitCode:2};}throw error;});
+  if(result.text!=="")write(result.text);
+  return result.exitCode;
+ }
  const parsed=fleetArgumentsV1(args),language:FleetLanguageV1=resolveLanguageV1(["en","de"] as const,args,environment).language,now=ports.now??Date.now;
  const facts=await collectFleetFactsV1({root,environment,language,now},ports.readers??FLEET_READERS_V1),report=summarizeFleetV1(facts,language),problems=validateFleetReportV1(report);
  if(problems.length>0)throw Error(fleetTextV1(language,"error.invalid",{details:problems.slice(0,3).join("; ")}));

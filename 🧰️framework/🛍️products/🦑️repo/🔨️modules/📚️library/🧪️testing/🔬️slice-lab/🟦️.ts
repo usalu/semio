@@ -205,9 +205,9 @@ export async function startSliceLabFleetV1(work:string,plans:readonly SliceLabPl
   return new Response(answer.body,{status:answer.status,headers:answer.headers});
  }});
  const proxies=plans.map(plan=>proxyFor(plan.origin)),urls=proxies.map(proxy=>`http://127.0.0.1:${proxy.port}`),url=urls[0]!,now=Date.now();
- const factsFor=(endpoint:string,port:number)=>({version:1,group:P.group,generation:1,publishedAtMs:now,publisher:{directory:join(work,"cache"),port,host:"127.0.0.1"},cache:{endpoints:[endpoint],instance:all.defaults.instance,access:"read-write",protocols:["bazel-http","nx-self-hosted"],protocolVersion:1,transport:"trusted-lan"},auth:{scheme:"semio-fleet-v1",roles:["cache-read","cache-write","submit","worker","admin"]}});
+ const factsFor=(endpoint:string,port:number)=>({version:1,group:P.group,generation:1,publishedAtMs:now,publisher:{origin:`${P.group}-server`,directory:join(work,"cache"),port},cache:{instance:all.defaults.instance,access:"read-write",protocols:["bazel-http","nx-self-hosted"],protocolVersion:1,transport:"trusted-lan"},auth:{scheme:"semio-fleet-v1",roles:["cache-read","cache-write","submit","worker","admin"]}});
  mkdirSync(join(plans[0]!.store,"v1","fleet"),{recursive:true});writeFileSync(join(plans[0]!.store,"v1","fleet","cache.json"),JSON.stringify(factsFor(url,proxies[0]!.port!)));
- for(const[at,plan]of plans.entries()){mkdirSync(join(plan.state,"f"),{recursive:true});writeFileSync(join(plan.state,"f","cache-facts.json"),JSON.stringify({version:1,fetchedAtMs:now,checkedAtMs:now,selectedEndpoint:urls[at]!,facts:factsFor(urls[at]!,proxies[at]!.port!)}),{mode:0o600});}
+ for(const[at,plan]of plans.entries()){mkdirSync(join(plan.state,"f"),{recursive:true});writeFileSync(join(plan.state,"f","cache-facts.json"),JSON.stringify({version:1,fetchedAtMs:now,checkedAtMs:now,selectedEndpoint:urls[at]!,candidates:[urls[at]!],selectedExecution:null,facts:factsFor(urls[at]!,proxies[at]!.port!)}),{mode:0o600});}
  return{url,requests,async stop(){controller.abort();for(const proxy of proxies)proxy.stop(true);await server.stop().catch(()=>{});}};
 }
 

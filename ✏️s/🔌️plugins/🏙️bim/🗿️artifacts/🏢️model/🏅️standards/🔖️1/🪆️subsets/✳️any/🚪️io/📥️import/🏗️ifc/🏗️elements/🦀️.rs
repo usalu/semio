@@ -108,14 +108,14 @@ fn column(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
             }
             known
         }
-        None => match i.model.column_types.iter().find(|(_, kind)| kind.profile == profile && kind.material == material) {
-            Some((known, _)) => known.clone(),
-            None => {
+        None => {
+            let known = i.model.column_types.iter().find(|(_, kind)| kind.profile == profile && kind.material == material).map(|(known, _)| known.clone());
+            known.unwrap_or_else(|| {
                 let id = Import::unused("ct-imported", |candidate| i.model.column_types.contains_key(candidate));
                 i.model.column_types.cold_insert(id.clone(), ColumnType { name: "Column".into(), profile: profile.clone(), material });
                 id
-            }
-        },
+            })
+        }
     };
     let base_z = to_building.point(body.position.origin)[2];
     let elevation = i.levels.get(&storey).map_or(0.0, |level| level.elevation);
@@ -149,14 +149,14 @@ fn beam(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
             }
             known
         }
-        None => match i.model.beam_types.iter().find(|(_, kind)| kind.profile == profile && kind.material == material) {
-            Some((known, _)) => known.clone(),
-            None => {
+        None => {
+            let known = i.model.beam_types.iter().find(|(_, kind)| kind.profile == profile && kind.material == material).map(|(known, _)| known.clone());
+            known.unwrap_or_else(|| {
                 let id = Import::unused("bt-imported", |candidate| i.model.beam_types.contains_key(candidate));
                 i.model.beam_types.cold_insert(id.clone(), BeamType { name: "Beam".into(), profile: profile.clone(), material });
                 id
-            }
-        },
+            })
+        }
     };
     let direction = to_building.vector([body.direction[0], body.direction[1], body.direction[2]]);
     let start = Point2 { x: to_building.origin[0], y: to_building.origin[1] };

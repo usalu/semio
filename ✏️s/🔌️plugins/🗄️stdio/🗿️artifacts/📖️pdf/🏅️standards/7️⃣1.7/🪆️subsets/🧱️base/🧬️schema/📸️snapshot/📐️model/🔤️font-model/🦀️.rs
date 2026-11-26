@@ -1,7 +1,7 @@
 //! 🔤️ Fonts of the PDF document model: the encodings, descriptors, programs, ToUnicode maps, CMaps, CID fonts and the font kinds. See [`super`].
 
-use super::content_operators::PdfOp;
-use super::object_model::{PdfDictEntry, PdfMatrix, PdfRect};
+use semio_s_artifact_stdio_pdf_model_graphics::PdfOp;
+use semio_s_artifact_stdio_pdf_model_object::{PdfDictEntry, PdfMatrix, PdfRect};
 
 //#region 🔖️Fonts
 /// 🔡 A predefined simple-font base encoding (§9.6.6, Annex D).

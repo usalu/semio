@@ -10,7 +10,8 @@ import { join } from "node:path";
 
 import { expect, test as browserTest, type Locator, type Page } from "@playwright/test";
 import { isLocalReleaseDependency, significantConsoleErrors } from "./🧬️console/🟦️.ts";
-import { isNewToolRunGroup } from "./🧬️simulation/🟦️.ts";
+import { gisInspectorCount, panelControl } from "./🧬️edits/🟦️.ts";
+import { isNewToolRunGroup, latestToolRunGroup } from "./🧬️simulation/🟦️.ts";
 import { assertDemonstratorE2eArtifactPath } from "../../🔨️modules/🧪️e2e/📁️artifacts/🟦️.ts";
 import languageCases from "../../🔨️modules/🧪️e2e/📁️artifacts/🧫️cases.json" with { type: "json" };
 import artifactPolicy from "../../🔨️modules/🧪️e2e/📁️artifacts/🔣️.json" with { type: "json" };
@@ -535,8 +536,10 @@ test("overview scroll focus", async ({ page }) => {
   const navbar = overview.locator(':scope > div > [data-slot="navbar"]');
   const footer = overview.locator(':scope > div > [data-slot="footer"]');
   const cards = grid.locator("[data-overview-card]");
-  await expect(navbar).toHaveClass(/ui-chrome-tint/);
-  await expect(footer).toHaveClass(/ui-chrome-tint/);
+  for (const band of [navbar, footer]) {
+    await expect(band).toHaveAttribute("data-level", "panel");
+    await expect(band).toHaveClass(/\bui-glass\b/);
+  }
   const topBand = (await navbar.boundingBox())!;
   const bottomBand = (await footer.boundingBox())!;
   const first = (await cards.first().boundingBox())!;
@@ -567,11 +570,11 @@ test.describe("language choice", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     const picker = page.locator('[data-slot="demonstrator-locale-picker"]');
     await expect(picker).toBeVisible();
-    await expect(picker.locator("button")).toHaveCount(LANGUAGE_CASES.length);
-    await expect(picker.locator("[aria-pressed], [aria-checked]")).toHaveCount(0);
+    await expect(picker.getByRole("radio")).toHaveCount(LANGUAGE_CASES.length);
+    await expect(picker.getByRole("radio", { checked: true })).toHaveCount(0);
     await expect(page.locator("[data-layered-card]")).toHaveCount(0);
-    for (const { language } of LANGUAGE_CASES) await expect(picker.locator(`button[lang="${language}"]`)).toBeVisible();
-    await picker.locator('button[data-locale="de"]').click();
+    for (const { language } of LANGUAGE_CASES) await expect(picker.locator(`[role="radio"][lang="${language}"]`)).toBeVisible();
+    await picker.locator('[role="radio"][lang="de"]').click();
     await expect(page.locator("html")).toHaveAttribute("lang", "de");
     await expect(page).toHaveTitle(catalogText("demonstrator.landing.title", "de"));
     await expect(page.locator("[data-layered-card]")).toHaveCount(brandPaneIds().length, { timeout: SHELL_READY_TIMEOUT_MS });
@@ -586,12 +589,13 @@ test("language switch", async ({ page }) => {
   test.setTimeout(TEST_TIMEOUT_MS);
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await dismissIntroduction(page, page.locator('[id="ui.introduction.skip"]'));
-  const switcher = page.locator('[data-slot="demonstrator-locale-switcher"]');
+  const switcher = page.locator('[data-slot="navbar"] [data-language-choice]');
   const first = brandPaneIds()[0]!;
   const tagline = page.locator(`[data-layered-card="${first}"] [data-slot="demonstrator-pane-card-tagline"]`);
   for (const { language } of [LANGUAGE_CASES.find((entry) => entry.language !== projectLanguage().name)!, LANGUAGE_CASES.find((entry) => entry.language === projectLanguage().name)!]) {
-    await switcher.locator(`button[data-locale="${language}"]`).click();
-    await expect(switcher.locator(`button[data-locale="${language}"]`)).toHaveAttribute("aria-pressed", "true");
+    const option = switcher.locator(`[role="radio"][lang="${language}"]`);
+    await option.click();
+    await expect(option).toBeChecked();
     await expect(page.locator("html")).toHaveAttribute("lang", language);
     await expect(page).toHaveTitle(catalogText("demonstrator.landing.title", language));
     await expect(tagline).toHaveText(catalogText(`demonstrator.brand.pane.${first}.tagline`, language), { timeout: SHELL_READY_TIMEOUT_MS });
@@ -610,9 +614,9 @@ test("language switch live", async ({ page }) => {
   const shell = page.locator(`[data-shell-id="${paneId}"]`);
   await shell.evaluate((element) => element.setAttribute("data-remount-probe", "kept"));
   await page.locator("[data-layered-overview-button]").click();
-  const switcher = page.locator('[data-slot="demonstrator-locale-switcher"]');
+  const switcher = page.locator('[data-slot="navbar"] [data-language-choice]');
   for (const { language } of [LANGUAGE_CASES.find((entry) => entry.language !== projectLanguage().name)!, LANGUAGE_CASES.find((entry) => entry.language === projectLanguage().name)!]) {
-    await switcher.locator(`button[data-locale="${language}"]`).click();
+    await switcher.locator(`[role="radio"][lang="${language}"]`).click();
     await expect(page.locator("html")).toHaveAttribute("lang", language);
     await expect(shell).toHaveAttribute("lang", language);
     await expect(shell).toHaveAttribute("data-remount-probe", "kept");
@@ -825,16 +829,6 @@ async function openPaneTab(page: Page, paneId: string, categoryId: string, tabId
   if ((await tab.getAttribute("aria-pressed")) !== "true") await tab.click();
 }
 
-/** 🪪️ Finds the current framework run identity from actual rendered transport IDs, never injected state. */
-async function latestToolRunGroup(page: Page, paneId: string): Promise<string> {
-  return page.locator(`[data-shell-id="${paneId}"] [id], [data-shell-id="${paneId}"] [data-element-alias]`).evaluateAll((elements) => {
-    const runs = elements.flatMap((element) => [element.id, ...(element.getAttribute("data-element-alias") ?? "").split(/\s+/)])
-      .flatMap((id) => /^framework\.toolRun\.(\d+)(?:\.|$)/.exec(id)?.[1] ?? []);
-    const latest = runs.reduce((highest, run) => BigInt(run) > BigInt(highest) ? run : highest, "0");
-    return runs.length ? `framework.toolRun.${latest}` : "";
-  });
-}
-
 test('energie run-cancel', async ({ page }) => {
   test.setTimeout(TEST_TIMEOUT_MS + 4 * SURFACE_CONTENT_TIMEOUT_MS);
   const scenario = simulationCases.energy;
@@ -847,18 +841,21 @@ test('energie run-cancel', async ({ page }) => {
   await openPaneTab(page, scenario.paneId, scenario.toolCategoryId, scenario.toolTabId);
   await simulation.getByRole("tree").click();
   await page.keyboard.press("ControlOrMeta+Enter");
+  await openDocumentTab(page, scenario.paneId, "toolRun");
+  const control = (key: string) => page.locator(`[data-shell-id="${scenario.paneId}"] [data-ui-node-key="${key}"]`);
   await expect.poll(() => latestToolRunGroup(page, scenario.paneId), { timeout: SURFACE_CONTENT_TIMEOUT_MS }).not.toBe("");
   const completedGroup = await latestToolRunGroup(page, scenario.paneId);
-  const completed = page.locator(paneElementSelector(scenario.paneId, completedGroup));
-  const completedStatus = page.locator(paneElementSelector(scenario.paneId, `${completedGroup}.status`));
+  const completed = control(completedGroup);
+  const completedStatus = control(`${completedGroup}.status`);
   await expect(completed.getByRole("progressbar")).toBeVisible();
   await expect(completedStatus).toHaveAttribute("aria-live", /^(polite|off|assertive)$/);
   await expect(completedStatus).toHaveText(new RegExp(projectLanguage().texts.finalized), { timeout: 3 * SURFACE_CONTENT_TIMEOUT_MS });
-  await expect(page.locator(paneElementSelector(scenario.paneId, `${completedGroup}.steps`))).toContainText(new RegExp(projectLanguage().texts.finalStep));
+  const completedSteps = control(`${completedGroup}.steps`);
+  await expect(completedSteps).toContainText(new RegExp(projectLanguage().texts.finalStep));
   await expect(simulation).toContainText(projectLanguage().texts.acceptedResult);
   await capturePaneArtifact(page, scenario.paneId);
 
-  await page.locator(paneElementSelector(scenario.paneId, `${completedGroup}.toolRunStart`)).click();
+  await control(`${completedGroup}.toolRunStart`).click();
   let abortedGroup = "";
   await expect.poll(async () => {
     const candidate = await latestToolRunGroup(page, scenario.paneId);
@@ -866,10 +863,11 @@ test('energie run-cancel', async ({ page }) => {
     abortedGroup = candidate;
     return true;
   }, { timeout: SURFACE_CONTENT_TIMEOUT_MS, message: "restart must publish a distinct nonempty run group before abort" }).toBe(true);
-  const abort = page.locator(paneElementSelector(scenario.paneId, `${abortedGroup}.toolRunAbort`));
+  const abort = control(`${abortedGroup}.toolRunAbort`);
   await expect(abort).toBeEnabled();
   await abort.click();
-  await expect(page.locator(paneElementSelector(scenario.paneId, `${abortedGroup}.status`))).toHaveText(new RegExp(projectLanguage().texts.aborted), { timeout: SURFACE_CONTENT_TIMEOUT_MS });
+  const abortedStatus = control(`${abortedGroup}.status`);
+  await expect(abortedStatus).toHaveText(new RegExp(projectLanguage().texts.aborted), { timeout: SURFACE_CONTENT_TIMEOUT_MS });
   await expect(simulation).toContainText(projectLanguage().texts.noResult);
 });
 
@@ -895,10 +893,10 @@ test('statik undo-redo', async ({ page }) => {
   await expect(caption, "initial automatic solve must settle without a pending/fault suffix").toBeVisible({ timeout: SURFACE_CONTENT_TIMEOUT_MS });
   await caption.click();
   await openPaneTab(page, scenario.paneId, scenario.panelCategoryId, scenario.panelTabId);
-  const transport = page.locator(paneElementSelector(scenario.paneId, "fem3d-play-results.transport.play"));
+  const transport = panelControl(page, scenario.paneId, scenario.panelTabId, "fem3d-play-results.transport.play");
   await expect(transport, "deformation comparisons require paused playback").toHaveText(pausedTransport());
   const fullAmplitude = await worldProjectionSnapshot(results);
-  const phase = page.locator(paneElementSelector(scenario.paneId, "fem3d-play-results.phase.control")).getByRole("slider");
+  const phase = panelControl(page, scenario.paneId, scenario.panelTabId, "fem3d-play-results.phase.control").getByRole("slider");
   await phase.press("Home");
   await expect(phase).toHaveAttribute("aria-valuenow", "0");
   await expect.poll(() => worldProjectionSnapshot(results), { timeout: SURFACE_CONTENT_TIMEOUT_MS, message: "zero phase must reach the result scene before advancing" }).not.toBe(fullAmplitude);
@@ -906,7 +904,7 @@ test('statik undo-redo', async ({ page }) => {
   await phase.press("PageUp");
   await expect(phase).toHaveAttribute("aria-valuenow", String(scenario.phase));
   await expect.poll(() => worldProjectionSnapshot(results), { timeout: SURFACE_CONTENT_TIMEOUT_MS, message: "the chosen nonzero phase must reach the result scene before comparison" }).not.toBe(zeroPhase);
-  const scale = page.locator(paneElementSelector(scenario.paneId, "fem3d-play-results.deformation-scale.control"));
+  const scale = panelControl(page, scenario.paneId, scenario.panelTabId, "fem3d-play-results.deformation-scale.control");
   await expect(scale).toHaveValue(String(scenario.initialScale));
   const content = await worldContentCount(results, true);
   expect(content.meshes + content.instances).toBeGreaterThan(0);
@@ -978,7 +976,7 @@ async function worldInstanceIds(container: Locator): Promise<readonly string[]> 
 
 /** ↩️ Drives the real pane keyboard route after focusing its production scene canvas. */
 async function historyGesture(page: Page, container: Locator, direction: "undo" | "redo"): Promise<void> {
-  await container.locator("canvas").first().click({ position: { x: 8, y: 8 } });
+  await container.click();
   await page.keyboard.press(direction === "undo" ? "ControlOrMeta+z" : "ControlOrMeta+Shift+z");
 }
 
@@ -1005,9 +1003,9 @@ test("generator undo-redo", async ({ page }) => {
   const initialGeometry = await documentWorldProjection(preview);
   const initial = await graphProjection();
   await openDocumentTab(page, "generator", "artifact");
-  await page.locator(paneElementSelector("generator", scenario.heightId)).locator('[data-slot="tree-label"]').click();
+  await page.locator(paneElementSelector("generator", `panel:framework.panel.artifact/procedural-play-graph.nodes␟n:${scenario.heightId}`)).locator('[data-slot="tree-label"]').click();
   await openDocumentTab(page, "generator", "inspection");
-  const input = page.locator(paneElementSelector("generator", "procedural-play-inspector.value.input"));
+  const input = panelControl(page, "generator", "framework.panel.inspection", "procedural-play-inspector.value.input");
   await expect(input).toHaveValue(String(scenario.initial));
   await input.fill(String(scenario.changed));
   await input.press("Tab");
@@ -1035,13 +1033,15 @@ test("koordinator undo-redo", async ({ page }) => {
   for (const window of windows) await waitWorldSettled(window);
   const initial = await Promise.all(windows.map(documentWorldProjection));
   const initialIds = await Promise.all(windows.map(worldInstanceIds));
-  await windows[0]!.locator("canvas").first().click({ position: { x: 8, y: 8 } });
+  await windows[0]!.click();
   await openDocumentTab(page, "koordinator", "catalogue");
-  await page.locator(paneElementSelector("koordinator", scenario.catalogueId)).locator('[data-slot="tree-label"]').click();
+  const box = page.locator(paneElementSelector("koordinator", `panel:framework.panel.catalogue/${scenario.catalogueId}`));
+  await expect(box).toHaveRole("treeitem");
+  await box.locator('[data-slot="tree-label"]').click();
   await expect.poll(async () => (await worldInstanceIds(windows[0]!)).filter((id) => !initialIds[0]!.includes(id)).length, { timeout: SURFACE_CONTENT_TIMEOUT_MS }).toBe(1);
   const newId = (await worldInstanceIds(windows[0]!)).find((id) => !initialIds[0]!.includes(id))!;
   await openDocumentTab(page, "koordinator", "artifact");
-  const row = page.locator(paneElementSelector("koordinator", newId));
+  const row = page.locator(paneElementSelector("koordinator", `panel:framework.panel.artifact/${scenario.rowPrefix}␟${newId}`));
   await expect(row).toContainText(new RegExp(scenario.rowText[projectLanguage().name as Language]));
   await waitWorldSettled(windows[0]!);
   const changed = await documentWorldProjection(windows[0]!);
@@ -1065,12 +1065,14 @@ test("aggregator undo-redo", async ({ page }) => {
   const initialIds = await worldInstanceIds(windows[0]!);
   expect(initialIds).toContain(scenario.seedId);
   const catalogue = await openDocumentTab(page, "aggregator", "catalogue");
-  await catalogue.locator(`[id="${scenario.kindId}"] [data-slot="tree-label"]`).click();
+  const stockKind = catalogue.getByRole("treeitem", { name: scenario.kindId });
+  await expect(stockKind).toHaveCount(1);
+  await stockKind.locator('[data-slot="tree-label"]').click();
   await expect.poll(async () => (await worldInstanceIds(windows[0]!)).filter((id) => !initialIds.includes(id)).length, { timeout: SURFACE_CONTENT_TIMEOUT_MS }).toBe(1);
   const newId = (await worldInstanceIds(windows[0]!)).find((id) => !initialIds.includes(id))!;
   expect(newId).toMatch(/^puzzle3d\.object\.[0-9a-f]+$/);
   await openDocumentTab(page, "aggregator", "artifact");
-  const row = page.locator(paneElementSelector("aggregator", newId));
+  const row = page.locator(paneElementSelector("aggregator", `panel:framework.panel.artifact/puzzle3d-play-document.objects␟${newId}`));
   await expect(row).toContainText(scenario.kindId);
   for (const window of windows) {
     await expect.poll(() => worldInstanceIds(window), { timeout: SURFACE_CONTENT_TIMEOUT_MS }).toEqual([...initialIds, newId].sort());
@@ -1097,11 +1099,11 @@ test("bearbeiten undo-redo", async ({ page }) => {
   const workpiece = page.locator(paneElementSelector("bearbeiten", windowElementId("process-workpiece")));
   await waitWorldSettled(workpiece);
   await openDocumentTab(page, "bearbeiten", "artifact");
-  for (const id of scenario.stepIds) await expect(page.locator(paneElementSelector("bearbeiten", id))).toHaveCount(1);
-  const row = page.locator(paneElementSelector("bearbeiten", scenario.stepId));
+  for (const id of scenario.stepIds) await expect(page.locator(paneElementSelector("bearbeiten", `panel:framework.panel.artifact/${id}`))).toHaveCount(1);
+  const row = page.locator(paneElementSelector("bearbeiten", `panel:framework.panel.artifact/${scenario.stepId}`));
   await row.locator('[data-slot="tree-label"]').click();
   await openDocumentTab(page, "bearbeiten", "inspection");
-  const field = (id: string) => page.locator(paneElementSelector("bearbeiten", `process3d-play-inspector.step.${id}`));
+  const field = (id: string) => panelControl(page, "bearbeiten", "framework.panel.inspection", `process3d-play-inspector.step.${id}`);
   await expect(field("id")).toContainText(scenario.stepId);
   await expect(field("label")).toContainText(scenario.label);
   await expect(field("machine")).toContainText(scenario.machine);
@@ -1119,7 +1121,7 @@ test("bearbeiten undo-redo", async ({ page }) => {
     await historyGesture(page, workpiece, direction);
     await openDocumentTab(page, "bearbeiten", "artifact");
     await row.locator('[data-slot="tree-label"]').click();
-    for (const id of scenario.stepIds) await expect(page.locator(paneElementSelector("bearbeiten", id))).toHaveCount(1);
+    for (const id of scenario.stepIds) await expect(page.locator(paneElementSelector("bearbeiten", `panel:framework.panel.artifact/${id}`))).toHaveCount(1);
     await openDocumentTab(page, "bearbeiten", "inspection");
     await expect(field("enabled")).toContainText(enabled);
     await expect.poll(() => documentWorldProjection(workpiece), { timeout: SURFACE_CONTENT_TIMEOUT_MS }).toBe(projection);
@@ -1134,26 +1136,24 @@ test("verfolgen undo-redo", async ({ page }) => {
   const scenario = editCases.verfolgen;
   const map = page.locator(paneElementSelector("verfolgen", windowElementId("gis2d-main")));
   await openDocumentTab(page, "verfolgen", "inspection");
-  const summary = (kind: string) => page.locator(paneElementSelector("verfolgen", `gis2d-play-inspector.${kind}-count`)).locator('[data-slot="tree-description"]');
-  const positions = Number(await summary("positions").innerText());
-  const routes = await summary("routes").innerText();
-  const regions = await summary("regions").innerText();
-  expect(Number.isSafeInteger(positions)).toBe(true);
+  const positions = await gisInspectorCount(page, "positions");
+  const routes = await gisInspectorCount(page, "routes");
+  const regions = await gisInspectorCount(page, "regions");
   await page.locator(paneElementSelector("verfolgen", "framework.window.gis2dMain.engagement.toggle")).click();
-  const actions = map.locator('[data-slot="window-action-pane"]');
+  const actions = page.locator('[data-shell-id="verfolgen"] [data-slot="window-action-pane"]');
   await actions.locator('[id="action.addFeature"] [data-slot="tree-label"]').click();
   await actions.locator('[id="action.addFeature.arg.label"] input').fill(scenario.label);
   await expect(actions.locator('[id="action.addFeature.arg.lon"] input')).toHaveValue(String(scenario.longitude));
   await expect(actions.locator('[id="action.addFeature.arg.lat"] input')).toHaveValue(String(scenario.latitude));
   await page.locator(paneElementSelector("verfolgen", "framework.window.gis2dMain.action.addFeature.execute")).click();
-  await expect(summary("positions")).toHaveText(String(positions + scenario.delta));
-  await expect(summary("routes")).toHaveText(routes);
-  await expect(summary("regions")).toHaveText(regions);
+  await expect.poll(() => gisInspectorCount(page, "positions")).toBe(positions + scenario.delta);
+  await expect.poll(() => gisInspectorCount(page, "routes")).toBe(routes);
+  await expect.poll(() => gisInspectorCount(page, "regions")).toBe(regions);
   for (const [direction, expected] of [["undo", positions], ["redo", positions + scenario.delta]] as const) {
     await historyGesture(page, map, direction);
-    await expect(summary("positions")).toHaveText(String(expected));
-    await expect(summary("routes")).toHaveText(routes);
-    await expect(summary("regions")).toHaveText(regions);
+    await expect.poll(() => gisInspectorCount(page, "positions")).toBe(expected);
+    await expect.poll(() => gisInspectorCount(page, "routes")).toBe(routes);
+    await expect.poll(() => gisInspectorCount(page, "regions")).toBe(regions);
   }
   await capturePaneArtifact(page, "verfolgen");
 });

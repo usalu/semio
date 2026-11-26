@@ -7,7 +7,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { CallToolResultSchema, type Progress } from "@modelcontextprotocol/sdk/types.js";
 import Ajv from "ajv";
 import { componentModelDirectoryKeyV1 } from "@semio-tech/framework-plugin/model/contract";
-import { inferenceCancellationVerdictV1, inferenceClientVerdictV1, mcpServerEntries, takeMcpPluginCatalog, withMcpHostDriverPolicy } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
+import { exportedDocumentMatchesSnapshotV1, inferenceCancellationVerdictV1, inferenceClientVerdictV1, mcpServerEntries, takeMcpPluginCatalog, withMcpHostDriverPolicy } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { parseInferenceRunInput, parseInferenceSubmitInput } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧬️schema/🟦️.ts";
 import { encodeMcpComponentModelManifestV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/📦️component-models/🟦️.ts";
 import { readNativeCatalogV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
@@ -38,13 +38,22 @@ const owner = await readFile("✏️s/🔌️plugins/🀄️wfc/🗿️artifacts
 const hash = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 const work = await mkdtemp(join(generated, "wfc-seeded-"));
 const folder = join(work, "workspace");
+const pinned = options.includes("--pinned-pair");
+const pinnedArtifact = JSON.parse(await readFile("✏️s/🧑‍💻dev/🤝️mcp-client-e2e/🧫️initial-artifact.json", "utf8"));
+if (pinned) {
+  assert(options.includes("solve") && !["reopen", "export", "cancel"].some(task => options.includes(task)));
+  const writer = join(generated, "wfc-pair", process.platform === "win32" ? "wfc-pinned-pair.exe" : "wfc-pinned-pair");
+  assert.equal(Bun.spawnSync([writer, work, "wfc-seeded-solve"], { stdin: Buffer.from(JSON.stringify(pinnedArtifact.solve)), stderr: "inherit" }).exitCode, 0);
+}
 const fixture = await Promise.all(["PACK", "SPR"].map(async key => {
   const bytes = owner.match(new RegExp(`const GENESIS_${key}_BASE64: &str = "([^"]+)"`))?.[1];
   assert(bytes, `Missing owner ${key} constant`);
-  const decoded = Buffer.from(bytes, "base64");
-  assert.equal(decoded.toString("base64"), bytes);
   const path = join(work, key);
-  await writeFile(path, decoded, { flag: "wx" });
+  const decoded = pinned ? await readFile(path) : Buffer.from(bytes, "base64");
+  if (!pinned) {
+    assert.equal(decoded.toString("base64"), bytes);
+    await writeFile(path, decoded, { flag: "wx" });
+  }
   const sha256 = hash(decoded);
   console.log("[DEBUG] fixture", key, decoded.length, sha256);
   return { key, path, bytes: decoded.length, sha256 };
@@ -56,7 +65,7 @@ const useFolder = (operation: string, id: string) => assert.equal(Bun.spawnSync(
   stderr: "inherit",
 }).exitCode, 0);
 const tasks = options.filter(value => !value.startsWith("--"));
-const modes = ["solve", "cancel"].filter(task => tasks.length === 0 || tasks.includes(task));
+const modes = tasks.length ? ["solve", "cancel", "export", "reopen"].filter(task => tasks.includes(task)) : ["solve", "cancel"];
 assert(modes.length > 0);
 const env = Object.fromEntries(Object.entries({
   ...process.env, ...catalog.env, ...entry.env,
@@ -70,6 +79,7 @@ const stackProbe = options.includes("--stack-probe");
 const openForSubmit = options.includes("--open-for-submit");
 const schemaProbe = options.includes("--schema-probe");
 const cancelDuringHash = options.includes("--cancel-during-hash");
+const largerRequest = options.includes("--large-request");
 const sampleRetirement = options.includes("--sample-retirement");
 const gateway = options.find(option => option.startsWith("--gateway="))?.slice("--gateway=".length);
 const label = options.find(option => option.startsWith("--label="))?.slice("--label=".length);
@@ -77,17 +87,20 @@ const observationMilliseconds = Number(options.find(option => option.startsWith(
 const solveCallMilliseconds = Number(options.find(option => option.startsWith("--solve-timeout-ms="))?.slice("--solve-timeout-ms=".length) ?? 50_000);
 assert(!label || /^[a-z0-9-]+$/u.test(label));
 assert(Number.isSafeInteger(observationMilliseconds) && observationMilliseconds > 0 && observationMilliseconds <= 180_000);
-assert(Number.isSafeInteger(solveCallMilliseconds) && solveCallMilliseconds > 0 && solveCallMilliseconds <= 180_000);
+assert(Number.isSafeInteger(solveCallMilliseconds) && solveCallMilliseconds > 0 && solveCallMilliseconds <= 650_000);
 const registry = stackProbe ? Bun.spawnSync(["repo", "tools", "list", "--json"]) : undefined;
 const python = registry?.exitCode === 0 ? JSON.parse(registry.stdout.toString()).find((tool: { id: string }) => tool.id === "python")?.command : undefined;
 assert(!stackProbe || python, "Pinned Python required for the stack diagnostic");
 assert(!sampleRetirement || process.platform === "darwin" && !stackProbe && label && modes.length === 1 && modes[0] === "solve");
 try {
-  for (const task of modes) {
+  const passes = modes.flatMap(task => task === "reopen" ? [{task,seed:true},{task,seed:false}] : [{task,seed:true}]);
+  for (const {task, seed} of passes) {
     const artifactId = `wfc-seeded-${task}`;
-    useFolder("seed", artifactId);
+    if (seed) useFolder("seed", artifactId);
     const executable = gateway ? resolve(gateway) : join(generated, "native-host", "debug", native("semio-os-mcp"));
-    const cli = withMcpHostDriverPolicy(["stdio", ...catalog.args, "--folder", folder, "--no-bridge", "--auto-approve", "all"]);
+    const folderArgument = catalog.args.indexOf("--folder");
+    assert(folderArgument >= 0);
+    const cli = withMcpHostDriverPolicy(["stdio", ...catalog.args.with(folderArgument + 1, folder), "--no-bridge", "--auto-approve", "all"]);
     const transport = new StdioClientTransport({
       command: stackProbe ? python : executable,
       args: stackProbe ? [join(import.meta.dirname, "wfc-seeded-stack-launch.py"), executable, ...cli] : cli,
@@ -102,6 +115,7 @@ try {
       const connect = client.connect(transport, { signal: AbortSignal.timeout(45_000), timeout: 45_000 });
       transport.stderr?.setEncoding("utf8").on("data", (chunk: string) => {
         stderr = (stderr + chunk).slice(-65_536);
+        if (process.env.SEMIO_DEBUG_COLD_ACTION === "1") process.stderr.write(chunk);
         if (!sampleRetirement || sample || !stderr.includes("[DEBUG] relay retirement body:") || !transport.pid) return;
         const path = join(generated, `wfc-${label}-sample.txt`);
         console.log("[DEBUG] sampling exact gateway after body refusal", transport.pid, Math.round(performance.now() - start), path);
@@ -116,12 +130,48 @@ try {
       assert.equal(client.getServerVersion()?.name, "semio");
       console.log("[DEBUG] gateway PID", transport.pid);
       const call = async (name: string, args: Record<string, unknown> = {}, onprogress?: (progress: Progress) => void) => {
-        const result = await client.callTool({ name, arguments: args }, CallToolResultSchema, { timeout: name === "inference_run" ? solveCallMilliseconds : 50_000, onprogress });
+        const result = await client.callTool({ name, arguments: args }, CallToolResultSchema, { timeout: ["inference_run","artifact_export"].includes(name) ? solveCallMilliseconds : 50_000, onprogress });
         console.log("[DEBUG] tool", name, Math.round(performance.now() - start), JSON.stringify(result.structuredContent).slice(0, name === "inference_list" ? 300 : 2200));
         return result;
       };
       const context = await call("context_resolve", { locale: pins.caller.locale });
       assert.equal(context.structuredContent?.channel, "headless");
+      if (task === "export" || task === "reopen") {
+        const coldExport = task === "export" && options.includes("--export-before-open")
+          ? await call("artifact_export", { artifactId, format: "artifact:out" })
+          : undefined;
+        if (coldExport) output.coldExport = coldExport.structuredContent;
+        const opened = await call("artifact_open", { artifactId });
+        assert.notEqual(opened.isError, true, JSON.stringify(opened.structuredContent));
+        assert.equal(opened.structuredContent?.artifactId, artifactId);
+        const snapshot = await call("artifact_snapshot", { artifactId });
+        const expected = (await Promise.all(fixture.map(row => readFile(row.path, "base64")))).join(".");
+        const parent = (snapshot.structuredContent?.untrusted as {content?: {packBase64?:string;sprBase64?:string}})?.content;
+        assert.equal(parent?.packBase64 + "." + parent?.sprBase64, expected);
+        if (task === "reopen") {
+          const again = await call("artifact_open", { artifactId });
+          const resource = await client.readResource({uri:`semio://artifact/${artifactId}/schema`});
+          const content = resource.contents[0];
+          assert(typeof content?.text === "string");
+          const schema = JSON.parse(content.text);
+          await client.ping();
+          output[seed ? "first-open" : "second-process-open"] = {pid:transport.pid,opened:opened.structuredContent,again:again.structuredContent,schema,pairMatches:true};
+          assert.notEqual(again.isError, true);
+          assert.equal(again.structuredContent?.artifactKind, pins.inferenceArtifactKind);
+          assert.equal(opened.structuredContent?.artifactKind, pins.inferenceArtifactKind);
+          assert.equal(schema.artifactKind, pins.inferenceArtifactKind);
+          continue;
+        }
+        const result = coldExport ?? await call("artifact_export", { artifactId, format: "artifact:out" });
+        output.export = result.structuredContent;
+        assert.notEqual(result.isError, true, JSON.stringify(result.structuredContent));
+        assert.equal(result.structuredContent?.artifactId,artifactId);
+        assert.equal(result.structuredContent?.format,"artifact:out");
+        const media = (result.structuredContent?.untrusted as {content:{contentBase64:string}}).content;
+        assert(exportedDocumentMatchesSnapshotV1(media.contentBase64, expected));
+        await client.ping();
+        continue;
+      }
       if (schemaProbe) {
         try {
           const resource = await client.readResource({ uri: `semio://artifact/${artifactId}/schema` }, { timeout: 10_000 });
@@ -137,7 +187,7 @@ try {
           console.error("[DEBUG] schema", String(error));
         }
       }
-      const listed = await call("inference_list");
+      const listed = await call("inference_list", { inferenceSchema: pins.inferenceSchema });
       assert.notEqual(listed.isError, true);
       const service = (listed.structuredContent?.declared as Record<string, unknown>[]).find(row =>
         row.artifactKind === pins.inferenceArtifactKind && row.inferenceSchema === pins.inferenceSchema);
@@ -147,7 +197,8 @@ try {
       const outputSchema = JSON.parse(contract.outputSchema);
       output[`${task}-service`] = service;
       const binding = { artifactId, artifactKind: pins.inferenceArtifactKind, inferenceSchema: pins.inferenceSchema, pluginId };
-      const args = { inferenceSchema: binding.inferenceSchema, pluginId, revision: 0, documentGeneration: 1, cancellationId: artifactId, ...pins.inferenceLimits };
+      const limits = largerRequest ? {workUnits:100_000_000,maximumElapsedMilliseconds:300_000,retainedPolicy:{maximumItems:1_000_000,maximumCopyBytes:64<<20,maximumCapacityBytes:64<<20,maximumReleaseBytes:64<<20,maximumDepth:128}} : pins.inferenceLimits;
+      const args = { inferenceSchema: binding.inferenceSchema, pluginId, revision: 0, documentGeneration: 1, cancellationId: artifactId, ...limits };
       if (task === "solve") {
         const result = await call("inference_run", parseInferenceRunInput({ ...args, ...binding }), row => {
           progress.push({ milliseconds: Math.round(performance.now() - start), ...row });
@@ -163,13 +214,16 @@ try {
         assert.equal(payload.contradiction, false);
         assert.equal(typeof payload.pixels, "string");
         const pixels = Buffer.from(payload.pixels as string, "base64");
-        assert.equal(pixels.length, 24 * 24);
+        const width = pinned ? pinnedArtifact.solve.output.width : 24;
+        const colors = pinned ? pinnedArtifact.solve.input.palette.length : 3;
+        if (pinned) for (const [field, expected] of Object.entries(pinnedArtifact.result)) assert.deepEqual(payload[field], expected);
+        assert.equal(pixels.length, width * width);
         assert.equal(pixels.toString("base64"), payload.pixels);
-        assert(pixels.every(pixel => pixel < 3));
-        if ("width" in payload) assert.equal(payload.width, 24);
-        if ("height" in payload) assert.equal(payload.height, 24);
-        if ("palette" in payload) assert.equal((payload.palette as unknown[]).length, 3);
-        if ("entropy" in payload) assert.equal((payload.entropy as unknown[]).length, 24 * 24);
+        assert(pixels.every(pixel => pixel < colors));
+        if ("width" in payload) assert.equal(payload.width, width);
+        if ("height" in payload) assert.equal(payload.height, width);
+        if ("palette" in payload) assert.equal((payload.palette as unknown[]).length, colors);
+        if ("entropy" in payload) assert.equal((payload.entropy as unknown[]).length, width * width);
         console.log("[DEBUG] output semantics", JSON.stringify({ cells: pixels.length, paletteIndicesUsed: [...new Set(pixels)].sort(), pixelDigest: hash(pixels), progress: progress.length }));
       } else {
         if (schemaProbe) {
@@ -203,15 +257,20 @@ try {
         const job = (page: typeof submitted) => page.structuredContent?.job as Record<string, unknown> | undefined;
         const active = (row: ReturnType<typeof job>) => ["ACCEPTED", "RUNNING"].includes(String(row?.state).toUpperCase());
         const progressCount = (row: ReturnType<typeof job>) => Array.isArray(row?.progress) ? row.progress.length : 0;
+        let nextEvent = 0;
         const observe = async (page: typeof submitted, waiting: (row: ReturnType<typeof job>) => boolean) => {
           const deadline = performance.now() + observationMilliseconds;
-          for (let poll = 0; !page.isError && waiting(job(page)) && performance.now() < deadline; poll++) {
+          for (let poll = 0; !page.isError && performance.now() < deadline; poll++) {
+            const after = job(page)?.nextCursor;
+            assert(typeof after === "number" && Number.isSafeInteger(after) && after >= 0);
+            nextEvent = Math.max(after, nextEvent);
+            if (!waiting(job(page))) break;
             await Bun.sleep(Math.min(10 * 2 ** poll, 500));
-            page = await call("inference_events", { jobHandle });
+            page = await call("inference_events", { jobHandle, after: nextEvent });
           }
           return page;
         };
-        const milestone = cancelDuringHash ? activationCancel.report : "running in the plugin's guest";
+        const milestone = cancelDuringHash ? activationCancel.report : "activation: opening-guest";
         const dispatched = (row: ReturnType<typeof job>) => {
           if (!Array.isArray(row?.progress)) return false;
           if (!cancelDuringHash) return row.progress.some(progress => progress.message === milestone);
@@ -219,6 +278,12 @@ try {
           return progress?.message === milestone && progress.fraction > activationCancel.startsAt && progress.fraction < activationCancel.finishesAt;
         };
         const observed = await observe(submitted, row => active(row) && (!progressCount(row) || !dispatched(row)));
+        output.cancel = { submitted, observed };
+        if (!active(job(observed))) {
+          const status = await call("job_get", { jobId: job(submitted)?.jobId });
+          output["job-before-cancellation"] = status;
+          await client.ping();
+        }
         assert(dispatched(job(observed)), `No active inference progress was observed at ${milestone}`);
         const cancelled = await call("inference_cancel", { jobHandle });
         const terminal = await observe(cancelled, active);

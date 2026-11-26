@@ -140,11 +140,9 @@ impl HeadlessWorkspace {
             return Ok(None);
         }
         let mut channel = ArtifactChannels::ShellDirect(ShellArtifactChannel::new(Arc::clone(binding), Arc::clone(catalog)).for_plugin(plugin_id));
-        let frames = exchange_blocking(&mut channel, 0, vec![AppCommand::ReadArtifact])
-            .map_err(|fault| GatewayError::new(GatewayErrorCode::Internal, format!("`{plugin_id}` refused ReadArtifact ({}): {}", fault.code, fault.message)))?;
-        match frames.into_iter().next() {
+        let reply = exchange_blocking(&mut channel, 0, vec![AppCommand::ReadArtifact]);
+        match first_artifact_reply(reply)? {
             Some(AppFrame::Artifact { pack, spr }) => Ok(Some((pack, spr))),
-            Some(AppFrame::Error(fault)) => Err(GatewayError::new(GatewayErrorCode::SideEffectRejected, format!("`{plugin_id}` rejected ReadArtifact ({}): {}", fault.code, fault.message))),
             other => Err(GatewayError::new(GatewayErrorCode::Internal, format!("`{plugin_id}` answered ReadArtifact with {other:?}"))),
         }
     }
@@ -174,6 +172,7 @@ impl HeadlessWorkspace {
                 {
                     kinds.entry((schema.clone(), descriptor.manifest.plugin_id.clone(), app.id.clone())).or_insert_with(|| InstalledArtifactKind {
                         schema,
+                        artifact_kind: app.dialect.artifact_kind.clone(),
                         plugin_id: descriptor.manifest.plugin_id.clone(),
                         app_id: app.id.clone(),
                         media_out_ports: ports.clone(),
@@ -203,17 +202,25 @@ impl HeadlessWorkspace {
     /// 📂️ Reopens a persisted pair only through its exact declared schema owner.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn bind_folder_session_document(&self, artifact_id: &str, pack: &[u8], spr: &[u8]) -> Result<bool, GatewayError> {
-        if !matches!(self.origin, WorkspaceOrigin::Folder { .. }) { return Ok(false); }
+        let WorkspaceOrigin::Folder { path } = &self.origin else { return Ok(false); };
         let schema = semio_framework_async::block_on(store::os_store::codec_registry::lane_schema_from_spr(spr)).ok_or_else(|| GatewayError::new(GatewayErrorCode::InputInvalid, "persisted artifact has no schema identity"))?;
         if schema == PROBE_SCHEMA { return Ok(false); }
         let kind = Self::declared_artifact_owner(&schema, &self.installed_artifact_kinds()?)?.ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("persisted schema {schema} has no installed owner")))?;
-        let WorkspaceOrigin::Folder { path } = &self.origin else { unreachable!() };
-        let snapshot = semio_framework_async::block_on(store::sync::FolderEventLogStorage::new(path.clone()).read_snapshot(artifact_id)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?.ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, "folder artifact disappeared"))?;
-        if snapshot.0 != pack || snapshot.1 != spr { return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "folder artifact changed while reopening")); }
-        self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(artifact_id.to_string(), PluginArtifactBinding {
-            schema, plugin_id: kind.plugin_id.clone(), app_id: kind.app_id.clone(), surface_id: None,
-            archive: snapshot.2.map(Arc::new),
-            document: Some(Arc::new(SessionDocumentPair { pack: pack.to_vec(), spr: spr.to_vec() })), backbone: None,
+        let mut bindings = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let (stored_pack, stored_spr, archive) = semio_framework_async::block_on(store::sync::FolderEventLogStorage::new(path.clone()).read_snapshot(artifact_id)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?.ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, "folder artifact disappeared"))?;
+        if stored_pack != pack || stored_spr != spr { return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "folder artifact changed while reopening")); }
+        if bindings.get(artifact_id).is_some_and(|binding| {
+            binding.schema == schema && binding.artifact_kind == kind.artifact_kind &&
+                binding.plugin_id == kind.plugin_id && binding.app_id == kind.app_id &&
+                binding.archive.as_deref() == archive.as_ref() &&
+                binding.document.as_ref().is_some_and(|pair| pair.pack == stored_pack && pair.spr == stored_spr)
+        }) {
+            return Ok(true);
+        }
+        bindings.insert(artifact_id.to_string(), PluginArtifactBinding {
+            schema, artifact_kind: kind.artifact_kind, plugin_id: kind.plugin_id, app_id: kind.app_id, surface_id: None,
+            archive: archive.map(Arc::new),
+            document: Some(Arc::new(SessionDocumentPair { pack: stored_pack, spr: stored_spr })), backbone: None,
             backbone_blocked_by: None, relayed: Arc::default(), relay: Arc::default(), used: hub_link_tick(),
         });
         Ok(true)

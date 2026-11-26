@@ -11,6 +11,21 @@ mod tests {
     }
 
     #[test]
+    fn removing_one_updater_keeps_the_other_active() {
+        let mut object: Sobjects = VSobject::new().into();
+        let first = Updater::new("first", |target, _| target.set_opacity(0.1));
+        let second = Updater::new("second", |target, _| target.set_opacity(0.5));
+        assert_ne!(first.id, second.id);
+        assert_eq!(second.clone().id, second.id);
+        let removed = first.id;
+        add_updater(&mut object, first);
+        add_updater(&mut object, second);
+        object.updaters_mut().retain(|updater| updater.id != removed);
+        run_updaters(&mut object, 1.0 / 60.0);
+        assert_eq!(object.opacity(), 0.5);
+    }
+
+    #[test]
     fn updater_runs_on_object() {
         let mut v: Sobjects = VSobject::new().into();
         let flag = Arc::new(Mutex::new(false));

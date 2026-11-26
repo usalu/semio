@@ -77,7 +77,7 @@ struct SurfaceTable {
 
 #[derive(value_derive::ToValue)]
 struct ConstructionTable {
-    u_value: f64,
+    u_value: Option<f64>,
     layers: Vec<String>,
 }
 
@@ -114,14 +114,14 @@ fn opening_table(row: &OpeningRow, plan: &Plan) -> OpeningTable {
 
 fn surface_table(row: &SurfaceRow, plan: &Plan) -> SurfaceTable {
     let space_cad = |xml: &String| plan.spaces.iter().find(|space| space.xml == *xml).map(|space| space.cad.clone()).unwrap_or_default();
-    let construction = row.construction.as_ref().and_then(|xml| plan.constructions.iter().find(|kind| kind.xml == *xml)).map(|kind| kind.name.clone());
+    let construction = plan.constructions.iter().find(|kind| kind.xml == row.construction);
     SurfaceTable {
         cad: row.cad.clone(),
         kind: row.kind.to_string(),
         exposed: row.exposed,
         spaces: row.spaces.iter().map(space_cad).collect(),
-        construction,
-        u_value: row.construction.as_ref().and_then(|xml| plan.constructions.iter().find(|kind| kind.xml == *xml)).map(|kind| kind.u_value),
+        construction: construction.map(|kind| kind.name.clone()),
+        u_value: construction.and_then(|kind| kind.u_value),
         azimuth: row.azimuth,
         tilt: row.tilt,
         width: row.rect.width,

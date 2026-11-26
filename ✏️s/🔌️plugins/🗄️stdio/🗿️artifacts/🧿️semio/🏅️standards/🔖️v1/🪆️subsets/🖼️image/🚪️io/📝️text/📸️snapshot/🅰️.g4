@@ -1,7 +1,7 @@
 // 🅰️ ANTLR mirror (descriptive, not test-parsed — the real recognizer is
 // ../📖️.grammar.semio, walked by dsl::Recognizer) for s.stdio.semio.image's DSL text
 // representation (store::ArtifactDsl::parse_dsl/print_dsl, ../../🦀️.rs's
-// print_image_snapshot_body/parse_image_snapshot_body). The `semio s.stdio.semio.image.dsl v1`
+// print_image_snapshot_body/parse_image_snapshot_body). The `semio stdio.semio.image.dsl v1`
 // preamble line is stripped by store::semio_format::split_text_preamble before this grammar's
 // `document` production runs — `document` below matches the RECONSTRUCTED body (bare
 // `artifactMark` token standing in for the stripped preamble), same convention every other real

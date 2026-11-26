@@ -2,12 +2,12 @@ import {afterAll,expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {copyFileSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {homedir,tmpdir} from "node:os";
-import {join,resolve} from "node:path";
+import {dirname,join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {createHash} from "node:crypto";
 import vectors from "./🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-import {INTERFACE_POLICY_V1,currentHashV1,dependenciesFileV1,identityFileV1,interfaceDigestV1,interfaceEligibilityV1,interfaceIdentityV1,lexRustV1,maskRustSourceV1,parseListRootV1,rebaseMetadataV1,rebaseRestoredUnitV1,restoredClosureViolationV1,dependencyLibrariesV1,svhBytesV1,writeDependenciesV1,writeIdentitiesV1} from "../🟦️.ts";
+import {INTERFACE_POLICY_V1,currentHashV1,dependenciesFileV1,identityFileV1,interfaceDigestV1,interfaceEligibilityV1,interfaceIdentityV1,lexRustV1,maskRustSourceV1,parseListRootV1,rebaseMetadataV1,rebaseRestoredUnitV1,restoredClosureViolationV1,dependencyLibrariesV1,settleUnitInterfaceV1,svhBytesV1,writeDependenciesV1,writeIdentitiesV1} from "../🟦️.ts";
 import {parseRustcUnitV1} from "../../🔏️key/🟦️.ts";
 
 /** 🧣️ Interface laws: a body-only edit leaves the interface digest of the source alone exactly where no dependant can observe the body, the Python model and the compiler itself agree, and a dependant compiled against the old library, rebased onto the new one, behaves like a dependant compiled against the new one. */
@@ -230,6 +230,16 @@ test("identity sidecars name the current bytes of a metadata file and a changed 
  expect(existsSync(identityFileV1(rmeta))).toBe(true);expect(existsSync(identityFileV1(rlib))).toBe(false);
  writeIdentitiesV1({outputs:[rmeta],digest:fileDigest,basis:"b".repeat(64),identity:undefined,inner:["false"],environment});
  expect(interfaceIdentityV1(rmeta,sha("meta")),"a unit that does not qualify has no identity").toBeUndefined();
+});
+
+test("a newly discovered path scope replaces a memoized interface identity even when the output bytes match",()=>{
+ const path=join(directory("identity-scope"),"liba-a.rmeta"),identity="d".repeat(64),scoped="e".repeat(64);
+ writeFileSync(path,"metadata");
+ const input={outputs:[path],entry:{dependencies:[],environment:[]},producer:true,identityOf:()=>identity,neutralName:(name:string)=>name,readFile:()=>null,digest:fileDigest,inner:["false"],environment};
+ settleUnitInterfaceV1(input);
+ expect(interfaceIdentityV1(path,sha("metadata"))).toBe("iface:"+identity);
+ settleUnitInterfaceV1({...input,identityScope:["cwd="+dirname(path)],identityOf:()=>scoped});
+ expect(interfaceIdentityV1(path,sha("metadata"))).toBe("iface:"+scoped);
 });
 
 real("compiler law (closure): a restored unit is admitted only against the dependency generation it was compiled against, for libraries and for proc-macro libraries",()=>{

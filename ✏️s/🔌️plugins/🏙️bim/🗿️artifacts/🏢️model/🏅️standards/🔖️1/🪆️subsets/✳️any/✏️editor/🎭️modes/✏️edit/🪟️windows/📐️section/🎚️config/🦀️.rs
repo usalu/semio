@@ -2,6 +2,8 @@
 
 use crate::editor::bim::kit::window_config;
 
+use crate::editor::bim::kit::{OptionSelection, WorksetVisibility};
+
 window_config! {
     window: crate::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID,
     schema: "bim.section-window.config",
@@ -12,8 +14,8 @@ window_config! {
     type BimSectionWindowConfig, BimSectionWindowConfigDiff, BimSectionWindowConfigMutation, BimSectionWindowConfigOwner;
     view: String = String::new();
     framed: bool = false;
-    selected_options: std::collections::BTreeMap<String, String> = std::collections::BTreeMap::new();
-    workset_visibility: std::collections::BTreeMap<String, bool> = std::collections::BTreeMap::new();
+    selected_options: Vec<OptionSelection> = Vec::new();
+    workset_visibility: Vec<WorksetVisibility> = Vec::new();
     #[dsl(block)]
     viewport: store::Viewport2d = store::Viewport2d { x: 5.0, y: -1.5, zoom: 40.0 };
 }

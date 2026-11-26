@@ -681,12 +681,12 @@ pub fn paint_image(node: &UiImageNode, bounds: Rect, theme: &Theme, atlas: &mut 
 /// purely the no-host fallback — "there's something visible in that rect" rather than nothing.
 pub fn paint_component_scene(node: &UiComponentSceneNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) {
     let _ = &node.surface_id;
-    push_control_border(draw, bounds, theme, theme.border_normal, theme.panel, semio_ui_draw_contract::SharedBorderState::Normal);
+    push_control_border(draw, bounds, theme, theme.border_normal, Rgba::TRANSPARENT, semio_ui_draw_contract::SharedBorderState::Normal);
 }
 
 /// 🧩️ Same placeholder-chrome treatment as `paint_component_scene`: the plugin body itself is a host
 /// concern (`program_bridge`), out of scope here; label the slot with its `body_key` for now.
 pub fn paint_external_slot(node: &UiExternalSlotNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
-    push_control_border(draw, bounds, theme, theme.border_normal, theme.panel, semio_ui_draw_contract::SharedBorderState::Normal);
+    push_control_border(draw, bounds, theme, theme.border_normal, Rgba::TRANSPARENT, semio_ui_draw_contract::SharedBorderState::Normal);
     draw_text_on(draw, atlas, node.host_status.as_deref().unwrap_or(node.body_key.as_str()), bounds.x + theme.padding_standard, bounds.y + (bounds.h + theme.font_size_small) * 0.5 - 2.0, theme.font_size_small, theme.text_muted);
 }

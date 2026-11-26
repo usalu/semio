@@ -15,7 +15,7 @@ const osDev = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍
 const subsets = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets";
 const fixtures = {
   transitional: join(root, subsets, "🧱️base/🧪️tests/🧫️fixtures/📕️reuse-marketplaces.xlsx"),
-  strict: join(root, subsets, "🔒️strict/🧪️tests/🧫️fixtures/🌐️set-main-namespace-applied/➡️after.xlsx"),
+  strict: join(root, subsets, "🔒️strict/🧪️tests/🧫️fixtures/🔒️reuse-marketplaces-strict.xlsx"),
 };
 const url = process.env.XLSX_PANE_URL ?? "http://127.0.0.1:6272/";
 const out = join(import.meta.dir, "🗑️generated", "standalone-journey");
@@ -148,7 +148,7 @@ async function dialects(browser: Browser) {
       const value = await pane.a1().inputValue().catch(() => null);
       const after = await pane.windows();
       await pane.shot(`dialect-${dialect}`);
-      verdicts.push({ step: `open ${dialect} workbook`, pass: opened.notice?.startsWith("shell.documentTransfer.file-opened|") === true && value === (dialect === "strict" ? "Hello" : "ID"), evidence: { opened, value, newWindows: after.filter(entry => !before.includes(entry)), faults: pane.faults.slice(0, 8) } });
+      verdicts.push({ step: `open ${dialect} workbook`, pass: opened.notice?.startsWith("shell.documentTransfer.file-opened|") === true && value === "ID", evidence: { opened, value, newWindows: after.filter(entry => !before.includes(entry)), faults: pane.faults.slice(0, 8) } });
     }
   } finally {
     await pane.context.close();

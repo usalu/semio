@@ -169,13 +169,16 @@ export function toolJobFullOperationBounded(source: string): boolean {
   );
 }
 
-/** 🔒️ Requires document freshness before Store work and an operation-local fault for stale owners. */
+/** 🔒️ Requires document and window freshness before Store work and an operation-local fault for stale owners. */
 export function toolJobPublicationFreshnessBeforeEveryTurn(source: string): boolean {
   const publisherStart = source.lastIndexOf("fn publish_mounted_typed_operation_unit");
   const publisherOpen = publisherStart < 0 ? -1 : source.indexOf("{", publisherStart);
   const publisher = publisherOpen < 0 ? undefined : toolJobRustBlock(source, publisherOpen);
   if (!publisher) return false;
   const freshness = publisher.body.indexOf("if !typed_operation_document_is_fresh(&mounted.operation");
+  const windowStart = publisher.body.indexOf("let stale_window_config = window_config_selected");
+  const windowFreshness = publisher.body.slice(windowStart, freshness);
+  const pendingWindow = publisher.body.slice(publisher.body.indexOf("let window_config_selected"), windowStart);
   const stale = freshness < 0 ? undefined : toolJobRustBlock(publisher.body, publisher.body.indexOf("{", freshness));
   const cancellation = publisher.body.indexOf("if mounted.reject_cancelled_publication()?");
   const cancelled = cancellation < 0 ? undefined : toolJobRustBlock(publisher.body, publisher.body.indexOf("{", cancellation));
@@ -202,7 +205,13 @@ export function toolJobPublicationFreshnessBeforeEveryTurn(source: string): bool
     .filter((index) => index >= 0);
   return (
     helperExact &&
+    windowStart >= 0 &&
+    pendingWindow.includes("PendingArtifactStorePublication::WindowConfig") &&
+    pendingWindow.includes("!emit.window_config_mutations.is_empty()") &&
+    windowFreshness.includes("window_config_store.borrow(") &&
+    windowFreshness.includes("!authority.matches_committed(&live)") &&
     !!stale &&
+    publisher.body.slice(freshness, publisher.body.indexOf("{", freshness)).includes("|| stale_window_config") &&
     !!cancelled &&
     cancellation < freshness &&
     cancelled.body.includes("mounted.reserve_cancelled_result(cx)?") &&

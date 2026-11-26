@@ -111,7 +111,7 @@ async fn sqlite_snapshot_semio_text_complete_actual_typed_public_io_limits(){
 }
 
 /// 🧵️ Uses literal UTF8 boundaries through every original controlled owner text position.
-fn hex_utf8_document_payload(hex:&str,slot:usize)->store::io::IoPayload{let body=match slot {0=>format!("schema={hex}\nruns=[]"),1=>format!("schema=73\nruns=[[{hex},63,[]]]"),2=>format!("schema=73\nruns=[[65,{hex},[]]]"),_=>format!("schema=73\nruns=[[65,63,[[l,{hex}]]]]")};store::io::IoPayload::Text(format!("semio s.stdio.semio.text.dsl v1\n{body}"))}
+fn hex_utf8_document_payload(hex:&str,slot:usize)->store::io::IoPayload{let body=match slot {0=>format!("schema={hex}\nruns=[]"),1=>format!("schema=73\nruns=[[{hex},63,[]]]"),2=>format!("schema=73\nruns=[[65,{hex},[]]]"),_=>format!("schema=73\nruns=[[65,63,[[l,{hex}]]]]")};store::io::IoPayload::Text(format!("semio stdio.semio.text.dsl v1\n{body}"))}
 #[test]
 fn sqlite_snapshot_semio_text_literal_hex_utf8_boundaries_and_nested_refusals(){
  let authority:serde_json::Value=serde_json::from_str(include_str!("../../../../../✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧵️hex-utf8/🔣️.json")).unwrap();

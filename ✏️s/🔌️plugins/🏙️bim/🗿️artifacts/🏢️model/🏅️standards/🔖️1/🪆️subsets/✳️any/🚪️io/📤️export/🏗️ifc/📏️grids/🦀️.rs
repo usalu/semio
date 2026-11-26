@@ -1,7 +1,6 @@
-//! 📏️ Grid lines as one `IfcGrid` per building. Both axis directions are required, so lines closer to the y axis are U axes, the others V axes; when one direction is empty the first axis of the other is listed in both in IFC 2x3, and in IFC4 (an axis is part
-//! of exactly one list) repeated as a second `IfcGridAxis` that the importer leaves out because the id list names each line once. Each `IfcGridAxis` carries the line label and a two-point polyline.
+//! 📏️ Grid lines as one `IfcGrid` per building. Both directions are required; when one is empty its axis is repeated as a separate `IfcGridAxis` because an axis belongs to exactly one list. The importer leaves the duplicate out because the id list names each line once.
 
-use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{flag, opt_text, refs, rf, unset, Schema};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{flag, opt_text, refs, rf, unset};
 use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::Export;
 
 /// 📏️ Writes the grid of every building that has grid lines.
@@ -24,10 +23,7 @@ pub fn emit(x: &mut Export<'_>) {
         }
         let ids = vertical.iter().chain(&horizontal).map(|(id, _)| id.as_str()).collect::<Vec<_>>().join(",");
         let again = |x: &mut Export<'_>, id: &str, axis: u64| -> (String, u64) {
-            match (x.schema(), drawn.get(&axis)) {
-                (Schema::Ifc4, Some(args)) => (id.to_string(), x.ifc.add("IFCGRIDAXIS", args.clone())),
-                _ => (id.to_string(), axis),
-            }
+            (id.to_string(), x.ifc.add("IFCGRIDAXIS", drawn[&axis].clone()))
         };
         if vertical.is_empty() {
             let (id, axis) = horizontal[0].clone();

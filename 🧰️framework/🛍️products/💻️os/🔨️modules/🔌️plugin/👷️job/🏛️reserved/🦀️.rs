@@ -927,6 +927,7 @@ pub enum FrameworkReservedCommitStage<P,M:store::Mutation<P>+Sync> {
     Validate,
     CheckpointChildren { message: String, authors: Vec<vcs::Author>, keys: Vec<MemberKey>, next: usize, pins: Vec<vcs::CompositionPin> },
     Route { pins: Vec<vcs::CompositionPin> },
+    RevalidateHistory { result: InvocationResult },
     CheckoutChildren { pins: Vec<vcs::CompositionPin>, next: usize, result: InvocationResult },
     Revert { edit_id: String, command:Option<store::os_store::ArtifactNativeVcsCommand<P,M>>, result:Option<store::os_store::ArtifactNativeVcsResult>, resident:semio_os_store_engine_replay::OriginalReplayResident, closing:bool },
     Repin { pins:Option<Vec<vcs::CompositionPin>>, publication:Option<Box<semio_os_store_engine_replay::repin::OriginalRepinPublication<M>>>, retirement:semio_framework_value::retained_clone::RetainedCloneClose, resident:semio_os_store_engine_replay::OriginalReplayResident, changed:bool, closing:bool },

@@ -1,4 +1,5 @@
 import {spawn} from "node:child_process";
+import {processRecordAliveV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 import {statSync} from "node:fs";
 import {readdir} from "node:fs/promises";
 import {join} from "node:path";
@@ -31,7 +32,7 @@ export type RealDiskContextV1=Readonly<{workspace:string;home:string;tmp:string;
 type ImagePressureV1=Readonly<{path:string;requiredFreeBytes:number}>;
 
 const expand=(template:string,context:RealDiskContextV1):string=>template.replaceAll("{store}",readReplicaStoreRoleV1(context.workspace).storeRoot??"").replaceAll("{workspace}",context.workspace).replaceAll("{home}",context.home).replaceAll("{tmp}",context.tmp.replace(/\/+$/u,"")).replaceAll("{uid}",String(context.uid));
-const aliveByDefault=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
+const aliveByDefault=(pid:number):boolean=>processRecordAliveV1(pid);
 
 /** 🚀️ Runs `repo cache gc` of this workspace as the product's own collector and waits for it, in a clean environment that marks it as a child of the recovery so that it never starts a recovery itself. */
 export async function runLedgerCollectorV1(workspace:string,environment:Readonly<Record<string,string|undefined>>,signal?:AbortSignal,reclaimBytes?:number,areas?:string):Promise<void>{

@@ -202,3 +202,5 @@ mod set_camera;
 mod set_result_animation;
 #[path = "../../🎮️commands/👁️set-result-display/🧪️tests/🔬️unit/🦀️.rs"]
 mod set_result_display;
+#[path = "../../🕹️interaction/🧪️tests/🛡️refused-verbs/🦀️.rs"]
+mod refused_verbs;

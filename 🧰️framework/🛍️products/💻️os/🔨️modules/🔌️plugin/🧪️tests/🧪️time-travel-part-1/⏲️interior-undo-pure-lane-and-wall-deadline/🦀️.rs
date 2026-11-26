@@ -2,13 +2,25 @@
 
 //#region 🧭️AcceptanceLaws
 /// 🔁️ A history verb as `actor`, admitted and settled, answering the fault code of a refusal (`None`: applied).
-async fn history_verb_refusal(app: &mut ToyApp, actor: &str, action: &str, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<String> {
+async fn history_verb_refusal(app: &mut ToyApp, actor: &str, action: &str, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Option<String> {
     let meta = ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(actor) };
-    let settled = match app.handle_action(action, None, &meta, identity).await {
-        Ok(admitted) => semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await,
+    let settled = match dispatch(app, action, None, &meta, mounted_policy, identity, cx).await {
+        Ok(admitted) => semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await.map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| panic!("{action}: the refusal is a fault: {failure:?}"))),
         Err(fault) => Err(fault),
     };
     settled.err().map(|fault| fault.code.0)
+}
+
+/// 🔁️ One host poll of an archive load on its original turn: the host renews the turn, the program pays one maintenance step and the load answers its status.
+async fn poll_load_turn(app: &mut ToyApp, operation: u64, cx: &mut semio_framework_job::StepContext<'_>) -> Result<protocol::DocumentArchiveLoadStatus, Fault> {
+    let refused = |failure: &dyn std::fmt::Debug| Fault::from(format!("the load poll's turn was refused: {failure:?}"));
+    let (grant, _) = cx.original_turn_ceiling();
+    artifact_app_laws::fixture_renew_turn(cx, semio_plugin_testing_laws::OriginalFixtureCaller::turn_fuel(), grant).map_err(|failure| refused(&failure))?;
+    artifact_app_laws::ensure_fixture_cancellation_issuer(app, cx).map_err(|failure| refused(&failure))?;
+    cx.consume_fuel(1);
+    let loan = cx.retained_grant();
+    PluginApp::maintenance_step(app, cx, loan).map_err(|failure| refused(&failure))?;
+    PluginApp::poll_document_archive_load(app, operation, &mut artifact_app_laws::fixture_identity(), cx).await
 }
 
 /// 🧮️ What a history step may change: the head, the content revision, the edits, the transitions and the history rows.
@@ -61,29 +73,29 @@ async fn an_interior_undo_over_a_long_history_replays_over_turns_and_cancel_leav
     let fixture = fixture();
     let actor = "author".to_string();
     let mut undeferred = seeded_app_as(&fixture, &actor, mounted_policy, &mut identity).await;
-    undeferred.store.defer_local_replays(None);
+    undeferred.stores.store.defer_local_replays(None);
     bury_edit_of(&mut undeferred, &actor, 600).await;
-    history_verb(&mut undeferred, &actor, "undo", None, mounted_policy, &mut identity).await;
-    let undone = undeferred.store.snapshot().expect("the undeferred undo");
+    history_verb(&mut undeferred, &actor, "undo", None, mounted_policy, &mut identity, cx).await;
+    let undone = undeferred.stores.store.snapshot().expect("the undeferred undo");
     for cancel in [true, false] {
         let mut app = seeded_app_as(&fixture, &actor, mounted_policy, &mut identity).await;
         bury_edit_of(&mut app, &actor, 600).await;
         let before = history_trace(&mut app).await;
-        history_verb(&mut app, &actor, "undo", None, mounted_policy, &mut identity).await;
+        history_verb(&mut app, &actor, "undo", None, mounted_policy, &mut identity, cx).await;
         assert!(app.stores.store.local_step_pending(), "the interior undo waits for its replay");
         assert_eq!(history_trace(&mut app).await, before, "nothing of the step shows before its adoption");
         let status = app.render_ctx().history_patch(true).await.expect("history patch").reprojection.expect("the wire carries the waiting step");
         assert!(status.kind == semio_framework::kernel::HistoryReprojectionKind::Step && status.total > 0 && !status.paused && status.fault.is_none(), "{status:?}");
         for (locale, line) in [(Locale::En, "Replaying history"), (Locale::De, "Verlauf wird neu angewendet")] {
-            let body = render_history(&mut app, locale).await;
+            let body = render_history(&mut app, locale,cx).await;
             assert!(find_node(&body, "framework.history.reprojection.status").is_some_and(|row| row.to_string().contains(line)), "{locale:?}: {body}");
         }
-        assert_eq!(history_verb_refusal(&mut app, &actor, "undo", mounted_policy, &mut identity).await.as_deref(), Some("history.replaying"), "a further history step waits");
-        assert_eq!(history_verb_refusal(&mut app, &actor, "redo", mounted_policy, &mut identity).await.as_deref(), Some("history.replaying"));
+        assert_eq!(history_verb_refusal(&mut app, &actor, "undo", mounted_policy, &mut identity, cx).await.as_deref(), Some("history.replaying"), "a further history step waits");
+        assert_eq!(history_verb_refusal(&mut app, &actor, "redo", mounted_policy, &mut identity, cx).await.as_deref(), Some("history.replaying"));
         let first = seeded_mutation(&app, 0);
-        assert_eq!(rejected(&verb(&mut app, &fixture, "historyEditBegin", vec![("mutationId".into(), DslValue::String(first))], mounted_policy, &mut identity).await), Some("timeTravel.busy"), "history editing waits for the step");
+        assert_eq!(rejected(&verb(&mut app, &fixture, "historyEditBegin", vec![("mutationId".into(), DslValue::String(first))], mounted_policy, &mut identity, cx).await), Some("timeTravel.busy"), "history editing waits for the step");
         if cancel {
-            let cancelled = verb(&mut app, &fixture, "historyEditCancelReplay", Vec::new(), mounted_policy, &mut identity).await;
+            let cancelled = verb(&mut app, &fixture, "historyEditCancelReplay", Vec::new(), mounted_policy, &mut identity, cx).await;
             assert_eq!(rejected(&cancelled), None, "{:?}", cancelled.output);
             assert!(!app.stores.store.local_step_pending() && app.render_ref().reprojection_status().is_none(), "the step is gone");
             for _ in 0..4 {
@@ -137,12 +149,12 @@ async fn a_pure_lane_hydrates_the_head_without_history_and_history_verbs_refuse(
     let files = source.document_pack().await.expect("the source pair");
     let mut pure = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(text(&fixture["actor"]).into()), mounted_policy, &mut identity).await;
     let code = |fault: Fault| fault.code.0;
-    PluginApp::hydrate_pure_head(&mut pure, &head.encode_pack()).await.expect("the head-only lane hydrates");
+    PluginApp::hydrate_pure_head(&mut pure, &head.encode_pack(), cx).await.expect("the head-only lane hydrates");
     assert_eq!(pure.stores.store.snapshot().expect("the pure head"), head, "the pure document is the source head");
     assert!(pure.stores.store.envelope().vcs.edits.is_empty() && pure.time_travel.history_unavailable(), "no history was folded or kept");
-    assert_eq!(history_verb_refusal(&mut pure, &actor, "undo", mounted_policy, &mut identity).await.as_deref(), Some(PURE_HISTORY_UNAVAILABLE_CODE));
+    assert_eq!(history_verb_refusal(&mut pure, &actor, "undo", mounted_policy, &mut identity, cx).await.as_deref(), Some(PURE_HISTORY_UNAVAILABLE_CODE));
     let meta = ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(&actor) };
-    let begin = pure.handle_action("historyEditBegin", Some(&DslValue::object([("mutationId".to_string(), DslValue::String("any".into()))])), &meta, &mut identity).await;
+    let begin = dispatch(&mut pure, "historyEditBegin", Some(DslValue::object([("mutationId".to_string(), DslValue::String("any".into()))])), &meta, mounted_policy, &mut identity, cx).await;
     assert_eq!(begin.err().map(code).as_deref(), Some(PURE_HISTORY_UNAVAILABLE_CODE), "a history edit needs the history");
     assert_eq!(pure.history_snapshot().await.err().map(code).as_deref(), Some(PURE_HISTORY_UNAVAILABLE_CODE), "so does the history query");
     let envelope = pure.stores.store.envelope();
@@ -152,7 +164,7 @@ async fn a_pure_lane_hydrates_the_head_without_history_and_history_verbs_refuse(
     semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(&mut pure, operation, protocol::DocumentArchivePack { parent_pack: files.pack.clone(), parent_spr, members: Vec::new() }, cx).expect("the archive load is admitted");
     let mut polls = 0;
     let status = loop {
-        let status = PluginApp::poll_document_archive_load(&mut pure, operation, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the archive load status");
+        let status = poll_load_turn(&mut pure, operation, cx).await.expect("the archive load status");
         if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
             break status;
         }
@@ -200,7 +212,7 @@ async fn a_deferred_history_step_ends_its_turn_at_the_wall_deadline_not_an_opera
     app.time_travel.set_turn_clock(counted_clock);
     app.stores.store.defer_local_replays(Some(store::os_store::store_schema::ReplayTurnBudget { wall_us: TIME_TRAVEL_TURN_WALL_US, operations: time_travel::TIME_TRAVEL_REPLAY_OPERATIONS, now_us: counted_clock }));
     bury_edit_of(&mut app, &actor, 600).await;
-    history_verb(&mut app, &actor, "undo", None, mounted_policy, &mut identity).await;
+    history_verb(&mut app, &actor, "undo", None, mounted_policy, &mut identity, cx).await;
     assert!(app.stores.store.local_step_pending(), "the interior undo waits for its replay");
     let mut turns = 0usize;
     while app.stores.store.local_step_pending() {

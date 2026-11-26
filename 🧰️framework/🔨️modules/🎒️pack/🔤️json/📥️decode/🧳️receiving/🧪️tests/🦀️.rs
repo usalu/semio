@@ -22,7 +22,7 @@ fn receipt(p:RetainedCloneProgress,heap:Heap,g:RetainedCloneGrant){assert!(p.fit
 fn source<T:RetireOwned+Sync+'static>(value:T)->RetainedCloneSource<T>{let mut bank=bank();let g=bank.loan(1,1<<20);let admitted=fx::admit_owned(&mut bank,value,(),g).result;match admitted{Ok((source,_))=>source,Err(_)=>panic!("fixture source admission refused")}}
 /// 🪪️ Binds one owning alias of the whole retained source through the turn effect.
 fn alias_of<T:RetireOwned+Sync+'static>(root:&RetainedCloneSource<T>,bank:&mut EffectBank,g:RetainedCloneGrant)->semio_framework_value::retained_clone::RetainedOwnedProjection<T>{
-run_poll(bank,g,|effect|{let started=effect.performed_work();let result=semio_framework_pack_json::retained_alias(root.try_borrow().unwrap(),effect).map(|answer|answer.expect("alias funded").0);RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:effect.performed_work()-started})}).result.unwrap()
+run_poll(bank,g,|effect|{let started=effect.performed_work();let result=semio_framework_pack_json_canonical::retained_alias(root.try_borrow().unwrap(),effect).map(|answer|answer.expect("alias funded").0);RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:effect.performed_work()-started})}).result.unwrap()
 }
 fn close_source<T:RetireOwned+Sync>(source:&mut RetainedCloneSource<T>){
 let mut payer=Authorities::new();let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<20,&mut callback);

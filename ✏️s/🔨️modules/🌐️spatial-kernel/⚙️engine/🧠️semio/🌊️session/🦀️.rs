@@ -1,5 +1,5 @@
 //! 🌐️ First-party Semio geometry session with explicit instance ownership.
-use semio_os_flow::mesh::*;
+use semio_os_flow_mesh::*;
 use neural_engine::{Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, VALUE_TYPE_GEOMETRY, VALUE_TYPE_NUMBER, VALUE_TYPE_POINT, VALUE_TYPE_VECTOR};
 use semio_framework_value::{ValueType,ValueError,ValueRefusalKind,OriginalRetirementFailure,OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkPoll};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};

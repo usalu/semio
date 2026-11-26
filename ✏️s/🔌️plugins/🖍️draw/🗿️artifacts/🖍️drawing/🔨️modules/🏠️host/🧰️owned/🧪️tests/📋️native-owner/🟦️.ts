@@ -29,17 +29,18 @@ test("Drawing initializer closes the original catalog one exactly admitted page 
   const law=JSON.parse(readFileSync(join(directory, "🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
   const database=new Database(":memory:");
   try{
-    database.exec("CREATE TABLE pages (ordinal INTEGER PRIMARY KEY, lane TEXT UNIQUE NOT NULL, bytes INTEGER NOT NULL)");
-    law.lanes.forEach((lane:string,index:number)=>database.query("INSERT INTO pages VALUES (?,?,?)").run(index,lane,128+index));
-    let state:Record<string,any>={pages:law.lanes.map((lane:string,index:number)=>({lane,bytes:128+index}))};
-    for(const lane of law.lanes){
-      const row=database.query("SELECT ordinal,lane,bytes FROM pages ORDER BY ordinal LIMIT 1").get() as {ordinal:number,lane:string,bytes:number};
-      expect(row.lane).toBe(lane);
+    database.exec("CREATE TABLE pages (ordinal INTEGER PRIMARY KEY, lane TEXT NOT NULL, extent TEXT NOT NULL, bytes INTEGER NOT NULL, UNIQUE(lane, extent))");
+    const pages = law.lanes.flatMap((lane: string) => law.extents.map((extent: string) => ({ lane, extent })));
+    pages.forEach(({ lane, extent }: { lane: string; extent: string }, index: number) => database.query("INSERT INTO pages VALUES (?,?,?,?)").run(index,lane,extent,128+index));
+    let state: Record<string,any> = { pages };
+    for (const page of pages) {
+      const row = database.query("SELECT ordinal,lane,extent,bytes FROM pages ORDER BY ordinal LIMIT 1").get() as {ordinal:number,lane:string,extent:string,bytes:number};
+      expect({ lane: row.lane, extent: row.extent }).toEqual(page);
       for(const grant of [0,row.bytes-1])expect(database.query("SELECT CASE WHEN ? >= bytes THEN bytes ELSE 0 END AS released FROM pages WHERE ordinal=?").get(grant,row.ordinal)).toEqual({released:0});
       expect(database.query("SELECT CASE WHEN ? >= bytes THEN bytes ELSE 0 END AS released FROM pages WHERE ordinal=?").get(row.bytes,row.ordinal)).toEqual({released:row.bytes});
       database.query("DELETE FROM pages WHERE ordinal=?").run(row.ordinal);
       state=patched(state,[{op:"remove",path:"/pages/0"}]);
-      expect(state.pages.map((page:any)=>page.lane)).toEqual(database.query("SELECT lane FROM pages ORDER BY ordinal").all().map((page:any)=>page.lane));
+      expect(state.pages).toEqual(database.query("SELECT lane,extent FROM pages ORDER BY ordinal").all());
     }
     expect(state).toEqual({pages:[]});
   }finally{database.close();}
@@ -60,9 +61,10 @@ test("Drawing initializer holds original owners in typed pending retirement and 
   const law=JSON.parse(readFileSync(join(owner, "♻️retirement/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
   const database=new Database(":memory:");
   try{
-    database.exec("CREATE TABLE pending (ordinal INTEGER PRIMARY KEY, kind TEXT UNIQUE NOT NULL, backingBytes INTEGER NOT NULL)");
+    database.exec(`CREATE TABLE pending (ordinal INTEGER PRIMARY KEY, kind TEXT UNIQUE NOT NULL, backingBytes INTEGER NOT NULL CHECK (backingBytes <= ${Number(law.maximumBytesPerAxis)}))`);
     law.initializerOwners.forEach((kind:string,index:number)=>database.query("INSERT INTO pending VALUES (?,?,?)").run(index,kind,128));
     expect(database.query("SELECT kind, backingBytes FROM pending ORDER BY ordinal").all()).toEqual(law.initializerOwners.map((kind:string)=>({kind,backingBytes:128})));
+    expect(() => database.query("INSERT INTO pending VALUES (?,?,?)").run(law.initializerOwners.length, "over-limit", law.maximumBytesPerAxis + 1)).toThrow();
     for(const kind of law.initializerOwners){
       const state=patched({pending:{kind,backingBytes:128}},[{op:"move",from:"/pending",path:"/active"}]);
       expect(state).toEqual({active:{kind,backingBytes:128}});

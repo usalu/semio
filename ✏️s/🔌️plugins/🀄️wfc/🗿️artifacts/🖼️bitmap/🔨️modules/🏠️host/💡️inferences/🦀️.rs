@@ -4,6 +4,15 @@ use crate::schema::snapshot::{BitmapSnapshot};
 use crate::standards::v1::subsets::any::io::text::snapshot::{encode_base64};
 use semio_s_plugin_wfc_engine as engine;
 use crate::standards::v1::subsets::any::schema::inferences::*;
+use semio_framework_value::retirement::RetireOwned;
+
+#[path = "📥️route/🦀️.rs"]
+mod route;
+
+/// 🛣️ Installs the original bitmap inference operation with its published request contract.
+pub fn bitmap_inference_service() -> semio_plugin::ArtifactInferenceService {
+    semio_plugin::ArtifactInferenceService::new_retained::<route::BitmapRoute>(bitmap_inference_metadata())
+}
 
 pub const BITMAP_INFERENCE_JOB_KIND: &str = "semio.infer";
 
@@ -51,7 +60,7 @@ pub const BITMAP_INFERENCE_CONTRACT: semio_plugin::ArtifactInferencePayloadContr
     commit: Some(semio_plugin::ArtifactInferenceCommitBinding { action: BITMAP_INFERENCE_COMMIT_ACTION }),
 };
 
-/// 🧭️ Stable host roster identity for the ActionBus-owned cold solve route.
+/// 🧭️ Stable host roster identity shared by the ActionBus factory and the retained cold route.
 pub const fn bitmap_inference_metadata() -> semio_plugin::ArtifactInferenceServiceMetadata {
     semio_plugin::ArtifactInferenceServiceMetadata {
         owner: "wfc",
@@ -149,7 +158,7 @@ pub(crate) enum EncodePhase {
 /// 🧵 Worker-owned parent transaction for bitmap extraction, collapse and commit encoding.
 pub struct BitmapInferenceJob {
     pub(crate) operation: semio_framework_job::Operation,
-    pub(crate) snapshot: BitmapSnapshot,
+    snapshot: Option<BitmapSnapshot>,
     pub(crate) stage: BitmapInferenceStage,
     pub(crate) cursor: usize,
     pub(crate) sample: Option<engine::extract::Sample2d>,
@@ -179,11 +188,35 @@ pub struct BitmapInferenceJob {
     pub(crate) child_end: Option<InferenceChildEnd>,
     pub(crate) output_payload: Option<semio_framework_job_payload::RetainedJobPayload>,
     pub(crate) closing: bool,
+    scratch_seed: Option<BitmapInferenceScratch>,
+    scratch_retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+}
+
+#[derive(semio_framework_value::RetireOwned)]
+enum BitmapInferenceScratch {
+    Snapshot(BitmapSnapshot),
+    Sample(engine::extract::Sample2d),
+    Extracted(engine::extract::ExtractedModel2d),
+    Decoder(engine::extract::PatternDecoder2d),
+    Topology(engine::grid2d::Grid2dTopology),
+    Fixed(Vec<(engine::ids::NodeId, engine::ids::PatternId)>),
+    Entropy(Vec<f64>),
+    Pixels(String),
+    Checkpoint(Vec<u8>),
+    Commit(engine::job::WfcCommit),
+    Child(engine::job::WfcJob<engine::grid2d::Grid2dTopology>),
+    Restore(engine::job::WfcRestore<engine::grid2d::Grid2dTopology>),
 }
 
 impl BitmapInferenceJob {
-    pub fn new(mut operation: semio_framework_job::Operation, request: BitmapInferenceRequest) -> Result<Self, String> {
+    pub fn new(operation: semio_framework_job::Operation, request: BitmapInferenceRequest) -> Result<Self, String> {
         let snapshot = request.resolve_snapshot()?;
+        Self::validate_snapshot(&snapshot, request.checkpoint.as_deref())?;
+        Ok(Self::from_admitted_snapshot(operation, snapshot, request.checkpoint))
+    }
+
+    /// 📋️ Validates the exact snapshot and optional resume bytes before taking their ownership.
+    pub fn validate_snapshot(snapshot: &BitmapSnapshot, checkpoint: Option<&[u8]>) -> Result<(), &'static str> {
         let input_cells = (snapshot.input.width as usize).saturating_mul(snapshot.input.height as usize);
         let output_cells = (snapshot.output.width as usize).saturating_mul(snapshot.output.height as usize);
         let pattern = snapshot.model.pattern_size.max(1) as usize;
@@ -195,14 +228,19 @@ impl BitmapInferenceJob {
             || snapshot.pinned.len() > MAX_BITMAP_PINS
             || snapshot.input.palette.is_empty()
             || (!snapshot.model.periodic_input && pattern > input_min)
-            || request.checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.len() > engine::job::MAX_CHECKPOINT_BYTES)
+            || checkpoint.is_some_and(|checkpoint| checkpoint.len() > engine::job::MAX_CHECKPOINT_BYTES)
         {
-            return Err("bitmap-inference-admission-exceeded".into());
+            return Err("bitmap-inference-admission-exceeded");
         }
+        Ok(())
+    }
+
+    /// 🧺️ Takes an admitted problem and checkpoint without copying either source.
+    pub fn from_admitted_snapshot(mut operation: semio_framework_job::Operation, snapshot: BitmapSnapshot, checkpoint: Option<Vec<u8>>) -> Self {
         operation.seed = snapshot.seed;
-        Ok(Self {
+        Self {
             operation,
-            snapshot,
+            snapshot: Some(snapshot),
             stage: BitmapInferenceStage::Sample,
             cursor: 0,
             sample: None,
@@ -213,7 +251,7 @@ impl BitmapInferenceJob {
             entropy: Vec::new(),
             pixels: String::new(),
             contradiction: false,
-            checkpoint: request.checkpoint,
+            checkpoint,
             restore: None,
             child: None,
             child_commit: None,
@@ -232,11 +270,41 @@ impl BitmapInferenceJob {
             child_end: None,
             output_payload: None,
             closing: false,
-        })
+            scratch_seed: None,
+            scratch_retirement: None,
+        }
     }
 
     pub fn operation(&self) -> semio_framework_job::Operation {
         self.operation
+    }
+
+    fn snapshot(&self) -> &BitmapSnapshot {
+        self.snapshot.as_ref().expect("live bitmap inference snapshot")
+    }
+
+    fn has_scratch(&self) -> bool {
+        self.snapshot.is_some() || self.sample.is_some() || self.extracted.is_some()
+            || self.decoder.is_some() || self.topology.is_some() || self.fixed.capacity()!=0
+            || self.entropy.capacity()!=0 || self.pixels.capacity()!=0
+            || self.checkpoint.is_some() || self.child_commit.is_some()
+            || self.child.is_some() || self.restore.is_some()
+    }
+
+    fn take_scratch(&mut self) -> Option<BitmapInferenceScratch> {
+        use BitmapInferenceScratch::*;
+        self.snapshot.take().map(Snapshot)
+            .or_else(||self.sample.take().map(Sample))
+            .or_else(||self.extracted.take().map(Extracted))
+            .or_else(||self.decoder.take().map(Decoder))
+            .or_else(||self.topology.take().map(Topology))
+            .or_else(||(self.fixed.capacity()!=0).then(||Fixed(std::mem::take(&mut self.fixed))))
+            .or_else(||(self.entropy.capacity()!=0).then(||Entropy(std::mem::take(&mut self.entropy))))
+            .or_else(||(self.pixels.capacity()!=0).then(||Pixels(std::mem::take(&mut self.pixels))))
+            .or_else(||self.checkpoint.take().map(Checkpoint))
+            .or_else(||self.child_commit.take().map(Commit))
+            .or_else(||self.child.take().map(Child))
+            .or_else(||self.restore.take().map(Restore))
     }
 
     pub(crate) fn progress(&self) -> (usize, usize) {
@@ -244,7 +312,7 @@ impl BitmapInferenceJob {
             BitmapInferenceStage::Sample => (0, 1),
             BitmapInferenceStage::Extract => (0, 1),
             BitmapInferenceStage::Topology => (0, 1),
-            BitmapInferenceStage::Fixed => (self.cursor, self.snapshot.pinned.len()),
+            BitmapInferenceStage::Fixed => (self.cursor, self.snapshot().pinned.len()),
             BitmapInferenceStage::Restore | BitmapInferenceStage::Solve => (0, 1),
             BitmapInferenceStage::Decode => (0, 1),
             BitmapInferenceStage::EncodeCommit => (self.encode_cursor, self.pixels.len()),
@@ -282,8 +350,9 @@ impl BitmapInferenceJob {
     /// 🎨️ The first pattern whose anchor tile is that palette index — the anchor convention is what
     /// makes a per-cell colour pin expressible as a pattern pin at all.
     pub(crate) fn pattern_for_color(&self, color: u32) -> Option<engine::ids::PatternId> {
-        let decoder = self.decoder.as_ref()?;
-        let model = &self.extracted.as_ref()?.model;
+        let extracted = self.extracted.as_ref()?;
+        let decoder = &extracted.decoder;
+        let model = &extracted.model;
         (0..model.pattern_count()).map(engine::ids::PatternId::from_index).find(|pattern| decoder.anchor_tile(*pattern).get() == color)
     }
 
@@ -293,45 +362,52 @@ impl BitmapInferenceJob {
     pub(crate) fn advance_compile(&mut self) -> Result<(), String> {
         match self.stage {
             BitmapInferenceStage::Sample => {
-                let indices = self.snapshot.input.indices().ok_or("bitmap-inference-malformed-input")?;
-                if indices.iter().any(|index| usize::from(*index) >= self.snapshot.input.palette.len()) {
+                let input = &self.snapshot().input;
+                let indices = &input.pixels;
+                if indices.len() != (input.width as usize) * (input.height as usize) {
+                    return Err("bitmap-inference-malformed-input".into());
+                }
+                if indices.iter().any(|index| usize::from(*index) >= input.palette.len()) {
                     return Err("bitmap-inference-unknown-palette-index".into());
                 }
                 let tiles = indices.iter().map(|index| engine::ids::TileId(u32::from(*index))).collect();
-                self.sample = Some(engine::extract::Sample2d::new(self.snapshot.input.width as usize, self.snapshot.input.height as usize, tiles));
+                self.sample = Some(engine::extract::Sample2d::new(input.width as usize, input.height as usize, tiles));
                 self.stage = BitmapInferenceStage::Extract;
             }
             BitmapInferenceStage::Extract => {
-                let sample = self.sample.take().ok_or("bitmap-inference-sample-missing")?;
-                let config = engine::extract::Extract2dConfig { window: self.snapshot.model.pattern_size.max(1) as usize, periodic_input: self.snapshot.model.periodic_input, symmetry: symmetry_group(self.snapshot.model.symmetry) };
-                let extracted = engine::extract::extract_2d(&[sample], &config).map_err(|error| format!("{error:?}"))?;
+                let sample = self.sample.as_ref().ok_or("bitmap-inference-sample-missing")?;
+                let model = &self.snapshot().model;
+                let config = engine::extract::Extract2dConfig { window: model.pattern_size.max(1) as usize, periodic_input: model.periodic_input, symmetry: symmetry_group(model.symmetry) };
+                let extracted = engine::extract::extract_2d(std::slice::from_ref(sample), &config).map_err(|error| format!("{error:?}"))?;
                 if extracted.model.pattern_count() > MAX_BITMAP_PATTERNS {
                     return Err("bitmap-inference-pattern-universe-exceeded".into());
                 }
-                self.decoder = Some(extracted.decoder.clone());
                 self.extracted = Some(extracted);
                 self.stage = BitmapInferenceStage::Topology;
             }
             BitmapInferenceStage::Topology => {
-                let boundary = if self.snapshot.output.periodic { engine::grid2d::Boundary::Wrap } else { engine::grid2d::Boundary::Open };
-                let topology = engine::grid2d::Grid2dTopology::new(self.snapshot.output.width as usize, self.snapshot.output.height as usize, &engine::grid2d::Stencil2d::VonNeumann, stencil_relations(), boundary, boundary, None).map_err(|error| format!("{error:?}"))?;
+                let output = &self.snapshot().output;
+                let boundary = if output.periodic { engine::grid2d::Boundary::Wrap } else { engine::grid2d::Boundary::Open };
+                let topology = engine::grid2d::Grid2dTopology::new(output.width as usize, output.height as usize, &engine::grid2d::Stencil2d::VonNeumann, stencil_relations(), boundary, boundary, None).map_err(|error| format!("{error:?}"))?;
                 self.topology = Some(topology);
                 self.cursor = 0;
                 self.stage = BitmapInferenceStage::Fixed;
             }
             BitmapInferenceStage::Fixed => {
-                if let Some(pin) = self.snapshot.pinned.get(self.cursor).copied() {
-                    if pin.x >= self.snapshot.output.width || pin.y >= self.snapshot.output.height {
+                if let Some(pin) = self.snapshot().pinned.get(self.cursor).copied() {
+                    let output = &self.snapshot().output;
+                    if pin.x >= output.width || pin.y >= output.height {
                         return Err("bitmap-inference-pin-outside-output".into());
                     }
                     let pattern = self.pattern_for_color(pin.color).ok_or("bitmap-inference-unreachable-pin")?;
-                    let node = engine::ids::NodeId::from_index((pin.y as usize) * (self.snapshot.output.width as usize) + pin.x as usize);
+                    let node = engine::ids::NodeId::from_index((pin.y as usize) * (output.width as usize) + pin.x as usize);
                     self.fixed.push((node, pattern));
                     self.cursor += 1;
                 } else {
                     self.push_ground_pins();
-                    let model = self.extracted.take().ok_or("bitmap-inference-model-missing")?.model;
                     let topology = self.topology.take().ok_or("bitmap-inference-topology-missing")?;
+                    let engine::extract::ExtractedModel2d { model, decoder } = self.extracted.take().ok_or("bitmap-inference-model-missing")?;
+                    self.decoder = Some(decoder);
                     self.entropy = self.prior_entropy(&model);
                     let fixed = std::mem::take(&mut self.fixed);
                     if let Some(checkpoint) = self.checkpoint.take() {
@@ -354,10 +430,11 @@ impl BitmapInferenceJob {
     /// overlapping-model "ground" constraint, expressed as ordinary pins so it shares one code path
     /// with the authored ones.
     pub(crate) fn push_ground_pins(&mut self) {
-        let Some(ground) = self.snapshot.model.ground else { return };
+        let Some(ground) = self.snapshot().model.ground else { return };
         let Some(pattern) = self.pattern_for_color(ground) else { return };
-        let width = self.snapshot.output.width as usize;
-        let row = (self.snapshot.output.height as usize).saturating_sub(1);
+        let output = &self.snapshot().output;
+        let width = output.width as usize;
+        let row = (output.height as usize).saturating_sub(1);
         for x in 0..width {
             let node = engine::ids::NodeId::from_index(row * width + x);
             if !self.fixed.iter().any(|(fixed, _)| *fixed == node) {
@@ -371,31 +448,23 @@ impl BitmapInferenceJob {
     /// entropy BEFORE arc consistency narrows any cell's domain, the same statement the sibling
     /// assembly artifact's own entropy field makes.
     pub(crate) fn prior_entropy(&self, model: &engine::model::CompiledModel) -> Vec<f64> {
-        let weights = model.weights();
-        let total: f64 = (0..model.pattern_count()).map(|index| weights.w(engine::ids::PatternId::from_index(index))).sum();
-        let universe = if total <= 0.0 {
-            0.0
-        } else {
-            -(0..model.pattern_count())
-                .map(|index| weights.w(engine::ids::PatternId::from_index(index)) / total)
-                .filter(|share| *share > 0.0)
-                .map(|share| share * share.ln())
-                .sum::<f64>()
-        };
-        let cells = (self.snapshot.output.width as usize) * (self.snapshot.output.height as usize);
+        let universe = compiled_pattern_entropy(model);
+        let output = &self.snapshot().output;
+        let cells = (output.width as usize) * (output.height as usize);
         (0..cells).map(|cell| if self.fixed.iter().any(|(node, _)| node.index() == cell) { 0.0 } else { universe }).collect()
     }
 
     /// 🖼️ Turns the collapsed pattern assignment back into palette indices through the extraction
     /// decoder's anchor convention, then into the base64 buffer the commit carries.
     pub(crate) fn decode_commit(&mut self) -> Result<(), String> {
-        let commit = self.child_commit.take().ok_or("bitmap-inference-commit-missing")?;
+        let commit = self.child_commit.as_ref().ok_or("bitmap-inference-commit-missing")?;
         let decoder = self.decoder.as_ref().ok_or("bitmap-inference-decoder-missing")?;
-        let cells = (self.snapshot.output.width as usize) * (self.snapshot.output.height as usize);
+        let snapshot = self.snapshot();
+        let cells = (snapshot.output.width as usize) * (snapshot.output.height as usize);
         if commit.assignment.len() != cells {
             return Err("bitmap-inference-commit-shape".into());
         }
-        let palette_len = self.snapshot.input.palette.len() as u32;
+        let palette_len = snapshot.input.palette.len() as u32;
         let mut indices = Vec::with_capacity(cells);
         for pattern in &commit.assignment {
             let tile = decoder.anchor_tile(engine::ids::PatternId(*pattern));
@@ -576,15 +645,23 @@ impl BitmapInferenceJob {
         if let Some(payload) = self.output_payload.as_ref() {
             return if payload.terminal_is_empty() { Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }) } else { nested(payload.retirement_demands()?) };
         }
-        if let Some(restore) = self.restore.as_ref() {
-            if restore.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }); }
+        if let Some(restore) = self.restore.as_ref().filter(|restore|!restore.retirement_ready()) {
             return Ok(semio_framework_value::RetirementDemand { copy_bytes: restore.next_close_copy_byte_demand()?, capacity_bytes: restore.next_close_capacity_byte_demand(0)?, release_bytes: restore.next_close_release_byte_demand()?, depth: restore.next_close_depth_demand()?.saturating_add(1) });
         }
-        if let Some(child) = self.child.as_ref() {
-            if child.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }); }
+        if let Some(child) = self.child.as_ref().filter(|child|!child.retirement_ready()) {
             return Ok(semio_framework_value::RetirementDemand { copy_bytes: child.next_close_copy_byte_demand()?, capacity_bytes: child.next_close_capacity_byte_demand(0)?, release_bytes: child.next_close_release_byte_demand()?, depth: child.next_close_depth_demand()?.saturating_add(1) });
         }
         if let Some(chunk) = self.output_chunk.as_ref() { return Ok(semio_framework_value::RetirementDemand { release_bytes: chunk.capacity(), depth: 1, ..Default::default() }); }
+        if let Some(ticket) = &self.scratch_retirement { return semio_framework_value::factory_ticket_demands(ticket, 0); }
+        if self.scratch_seed.is_some() || self.has_scratch() {
+            let capacity_bytes=semio_framework_value::retirement::owned_retirement_birth_bytes::<BitmapInferenceScratch>();
+            return Ok(semio_framework_value::RetirementDemand {
+                copy_bytes: std::mem::size_of::<Option<BitmapInferenceScratch>>()+capacity_bytes,
+                capacity_bytes,
+                depth: 1,
+                ..Default::default()
+            });
+        }
         Ok(semio_framework_value::RetirementDemand::default())
     }
 }
@@ -596,8 +673,11 @@ impl BitmapInferenceJob {
         if self.publication.as_ref().is_some_and(|publication| publication.needs_retirement()) {
             return self.retire_delivered(context);
         }
-        if context.is_cancelled() {
+        if self.closing || context.is_cancelled() {
             return Ok(JobOutcomeBorrow::admit_cancelled(context)?);
+        }
+        if context.should_yield() {
+            return Ok(None);
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
             self.stage_fault(b"stale-bitmap-inference-operation".to_vec());
@@ -667,6 +747,7 @@ impl InteractiveJob for BitmapInferenceJob {
     }
 
     fn begin_close(&mut self) {
+        self.closing = true;
         if let Some(restore) = self.restore.as_mut() {
             restore.begin_close();
         }
@@ -678,6 +759,7 @@ impl InteractiveJob for BitmapInferenceJob {
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         semio_framework_job::close_original_nested_step(cx,|cx,grant|{
             use semio_framework_job::{InteractiveJobCloseStep, RetainedCloneProgress};
+            self.begin_close();
             let demand = match self.close_demands() {
                 Ok(demand) => demand,
                 Err(error) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx)),
@@ -712,24 +794,14 @@ impl InteractiveJob for BitmapInferenceJob {
                 let step = close_effect(cx, child_grant, |effect| payload.close_step(effect))?;
                 return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
             }
-            if let Some(restore) = self.restore.as_mut() {
-                if restore.terminal_is_empty() {
-                    cx.consume_fuel(1);
-                    self.restore = None;
-                    return Ok(InteractiveJobCloseStep::Pending { progress: one });
-                }
+            if let Some(restore) = self.restore.as_mut().filter(|restore|!restore.retirement_ready()) {
                 let step = cx.with_retained_loan(child_grant, |same| restore.close_step(same))?;
                 return Ok(match step {
                     InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
                     step => step,
                 });
             }
-            if let Some(child) = self.child.as_mut() {
-                if child.terminal_is_empty() {
-                    cx.consume_fuel(1);
-                    self.child = None;
-                    return Ok(InteractiveJobCloseStep::Pending { progress: one });
-                }
+            if let Some(child) = self.child.as_mut().filter(|child|!child.retirement_ready()) {
                 let step = cx.with_retained_loan(child_grant, |same| child.close_step(same))?;
                 return Ok(match step {
                     InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
@@ -740,7 +812,18 @@ impl InteractiveJob for BitmapInferenceJob {
                 let released_bytes = chunk.capacity(); cx.consume_fuel(1); drop(chunk);
                 return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { released_bytes, ..one } });
             }
-            Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
+            if self.scratch_retirement.is_some() {
+                return semio_framework_job::close_original_effect_step(cx,demand,|effect|
+                    semio_framework_value::close_factory_ticket(&mut self.scratch_retirement,0,effect));
+            }
+            semio_framework_job::close_original_retained_effect_step(cx,demand,|effect|{
+                use semio_framework_value::retained_clone::RetainedCloneStep;
+                if self.scratch_seed.is_none() { self.scratch_seed=self.take_scratch(); }
+                let adopted=semio_framework_value::retirement::admit_owned_retirement(&mut self.scratch_seed,effect).result?;
+                let Some((ticket,progress))=adopted else { return Ok(RetainedCloneStep::Progress(Default::default())); };
+                self.scratch_retirement=Some(ticket);
+                Ok::<_,semio_framework_value::ValueError>(RetainedCloneStep::Progress(progress))
+            })
         })
     }
 
@@ -760,10 +843,11 @@ impl InteractiveJob for BitmapInferenceJob {
         Ok(self.close_demands()?.depth)
     }
 
-    /// 🚪️ Ownership ONLY — deliberately NOT gated on a closing flag: the retained session calls `begin_close`
-    /// itself, and a flag-gated predicate would spin its own close ladder forever.
+    /// 🚪️ Checks that every owned worker resource has drained.
     fn terminal_is_empty(&self) -> bool {
-        self.publication.is_none() && self.output.is_none() && self.output_payload.is_none() && self.restore.is_none() && self.child.is_none() && self.output_chunk.is_none()
+        self.publication.is_none() && self.output.is_none() && self.output_payload.is_none()
+            && self.output_chunk.is_none()
+            && self.scratch_seed.is_none() && self.scratch_retirement.is_none() && !self.has_scratch()
     }
 }
 

@@ -8,7 +8,7 @@ import {fileURLToPath} from "node:url";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import contractSchema from "../../../🏃️execution/🧬️schema/🌐️remote-cache.json" with {type:"json"};
 import {fleetCacheFactsPathV1,fleetCacheLocalPathV1,parseFleetCacheFactsV1,readFleetExecutionV1,readLocalFleetCacheFactsV1,refreshFleetCacheFactsV1,remoteCacheFetchV1,requireFleetCacheShapeV1,resolveAuthorisedRemoteCacheV1,resolveRemoteCacheV1,type FleetCacheFactsV1} from "../🟦️.ts";
-import {fleetCacheEndpointsV1,publishFleetCacheFactsV1,setFleetExecutionV1} from "../📣️publication/🟦️.ts";
+import {publishFleetCacheFactsV1,setFleetExecutionV1} from "../📣️publication/🟦️.ts";
 import {syncFleetIdentityV1} from "../🪪️identity/🟦️.ts";
 import {nxRemoteCacheEnvironmentV1} from "../../🧶️nx/🟦️.ts";
 import {routeNxThroughFlightV1} from "../../🧶️nx/🚦️single-flight/🟦️.ts";
@@ -21,8 +21,11 @@ const directory=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`fleet-${l
 afterAll(async()=>{for(const server of servers)await server.stop();for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 
 const machine=(root:string,storeRoot:string,origin:string="g1-m01")=>{mkdirSync(join(root,".cache","f"),{recursive:true});writeFileSync(join(root,".cache","f","machine.json"),JSON.stringify({version:1,originId:origin,groupId:"g1",storeRoot,key:"k"}));mkdirSync(join(storeRoot,"v1","origins",origin),{recursive:true});};
+process.env.SEMIO_FLEET_DISCOVERY="off";
+const seed=(root:string,endpoint:string,service:"cache"|"execution"="cache")=>{mkdirSync(join(root,".cache","f"),{recursive:true});const path=join(root,".cache","f","last-good.json");let known:Record<string,string>={};try{known=JSON.parse(readFileSync(path,"utf8"));}catch{}writeFileSync(path,JSON.stringify({...known,[`g1-server/${service}`]:endpoint}));};
+const portOf=(url:string):number=>Number(new URL(url).port);
 const ADMIN={role:"admin" as const,originId:"g1-server"};
-const publication=(storeRoot:string,cache:string,endpoints:readonly string[],now:number=Date.now())=>({admin:ADMIN,storeRoot,directory:cache,group:"g1",instance:"semio",endpoints,port:6090,host:"h1",now});
+const publication=(storeRoot:string,cache:string,port:number=6090,now:number=Date.now())=>({admin:ADMIN,storeRoot,directory:cache,group:"g1",instance:"semio",port,now});
 const mode=(path:string)=>statSync(path).mode&0o777;
 const posix=process.platform!=="win32";
 
@@ -31,55 +34,55 @@ async function serving(cache:string,store:string,extra:Partial<Parameters<typeof
  servers.push(server);return server;
 }
 
-const sample:FleetCacheFactsV1={version:1,group:"g1",generation:1,publishedAtMs:1,publisher:{directory:"/var/lib/semio-remote-cache",port:6090,host:"h1"},cache:{endpoints:["http://10.0.0.5:6090"],instance:"semio",access:"read-write",protocols:["bazel-http","nx-self-hosted"],protocolVersion:1},auth:{scheme:"semio-fleet-v1",roles:["cache-read","cache-write","submit","worker","admin"]}};
+const sample:FleetCacheFactsV1={version:1,group:"g1",generation:1,publishedAtMs:1,publisher:{origin:"g1-server",directory:"/var/lib/semio-remote-cache",port:6090},cache:{instance:"semio",access:"read-write",protocols:["bazel-http","nx-self-hosted"],protocolVersion:1},auth:{scheme:"semio-fleet-v1",roles:["cache-read","cache-write","submit","worker","admin"]}};
 const formerFormat={...Object.fromEntries(Object.entries(sample).filter(([name])=>name!=="auth")),credential:{scope:"fleet",id:"0123456789abcdef",token:"A".repeat(43),rotatedAtMs:1}};
 
 test("the fleet schema agrees with an independent JSON-schema implementation, and the former format with a shared token is no longer valid",()=>{
- const withExecution={...sample,execution:{endpoint:"http://10.0.0.5:6091",protocolVersion:2}};
+ const withExecution={...sample,execution:{origin:"g1-server",port:6091,protocolVersion:2}};
  for(const value of[sample,withExecution]){expect(validator("Facts")(value),JSON.stringify(validator("Facts").errors)).toBe(true);expect(()=>requireFleetCacheShapeV1("Facts",value,"x")).not.toThrow();}
- const broken:unknown[]=[{...sample,extra:1},{...sample,auth:{...sample.auth,scheme:"bearer"}},{...sample,cache:{...sample.cache,endpoints:[]}},{...sample,cache:{...sample.cache,access:"read-only"}},{...sample,execution:{endpoint:"ftp://x"}},{...sample,generation:0},{...sample,credential:{scope:"fleet",id:"0123456789abcdef",token:"A".repeat(43),rotatedAtMs:1}},formerFormat];
+ const broken:unknown[]=[{...sample,extra:1},{...sample,auth:{...sample.auth,scheme:"bearer"}},{...sample,cache:{...sample.cache,endpoints:["http://10.0.0.5:6090"]}},{...sample,cache:{...sample.cache,access:"read-only"}},{...sample,execution:{origin:"g1-server"}},{...sample,publisher:{...sample.publisher,host:"h1"}},{...sample,generation:0},{...sample,credential:{scope:"fleet",id:"0123456789abcdef",token:"A".repeat(43),rotatedAtMs:1}},formerFormat];
  for(const value of broken){expect(validator("Facts")(value),JSON.stringify(value).slice(0,100)).toBe(false);expect(()=>requireFleetCacheShapeV1("Facts",value,"x")).toThrow();}
  expect(()=>parseFleetCacheFactsV1(JSON.stringify(formerFormat))).toThrow();
- const copy={version:1,fetchedAtMs:1,checkedAtMs:2,selectedEndpoint:null,facts:sample};
+ const copy={version:1,fetchedAtMs:1,checkedAtMs:2,selectedEndpoint:null,candidates:[],selectedExecution:null,facts:sample};
  expect(validator("LocalCopy")(copy)).toBe(true);expect(validator("LocalCopy")({...copy,extra:1})).toBe(false);expect(()=>requireFleetCacheShapeV1("LocalCopy",{...copy,extra:1},"x")).toThrow();
  expect(validator("LocalCopy")({...copy,facts:formerFormat}),"a local copy of the former format").toBe(false);
 });
 
 test("publishing writes the facts without any secret, once, keeps the execution fact, raises the generation with the content, and the admin key takes over from any earlier publisher",async()=>{
  const store=directory("store"),cache=directory("cache");
- const first=await publishFleetCacheFactsV1(publication(store,cache,["http://10.0.0.5:6090"],1000));
+ const first=await publishFleetCacheFactsV1(publication(store,cache,6090,1000));
  expect(first.changed).toBe(true);expect(first.facts.generation).toBe(1);expect(first.facts.execution).toBeUndefined();
  const path=fleetCacheFactsPathV1(store);expect(path).toBe(join(store,"v1","fleet","cache.json"));
  const text=readFileSync(path,"utf8");expect(parseFleetCacheFactsV1(text)).toEqual(first.facts);expect(validator("Facts")(JSON.parse(text))).toBe(true);
  expect(text.toLowerCase()).not.toContain("token");expect(text).not.toContain("credential");expect(existsSync(join(cache,"fleet","credential.json")),"no credential file is minted").toBe(false);
- expect((await publishFleetCacheFactsV1(publication(store,cache,["http://10.0.0.5:6090"],2000))).changed,"an unchanged publication writes nothing").toBe(false);
+ expect((await publishFleetCacheFactsV1(publication(store,cache,6090,2000))).changed,"an unchanged publication writes nothing").toBe(false);
  expect(readFileSync(path,"utf8")).toContain('"publishedAtMs": 1000');
- const executed=await setFleetExecutionV1(store,{endpoint:"http://10.0.0.5:6091",protocolVersion:2},3000);expect(executed.execution).toEqual({endpoint:"http://10.0.0.5:6091",protocolVersion:2});
- const again=await publishFleetCacheFactsV1(publication(store,cache,["http://10.0.0.5:6090"],4000));expect(again.changed).toBe(false);expect(again.facts.execution).toEqual(executed.execution);
- const moved=await publishFleetCacheFactsV1(publication(store,cache,["http://10.0.0.6:6090","http://10.0.0.5:6090"],5000));expect(moved.changed).toBe(true);expect(moved.facts.execution).toEqual(executed.execution);expect(moved.facts.generation).toBeGreaterThan(first.facts.generation);
+ const executed=await setFleetExecutionV1(store,{origin:"g1-server",port:6091,protocolVersion:2},3000);expect(executed.execution).toEqual({origin:"g1-server",port:6091,protocolVersion:2});
+ const again=await publishFleetCacheFactsV1(publication(store,cache,6090,4000));expect(again.changed).toBe(false);expect(again.facts.execution).toEqual(executed.execution);
+ const moved=await publishFleetCacheFactsV1(publication(store,cache,6092,5000));expect(moved.changed).toBe(true);expect(moved.facts.execution).toEqual(executed.execution);expect(moved.facts.generation).toBeGreaterThan(first.facts.generation);
  expect((await setFleetExecutionV1(store,null,6000)).execution).toBeUndefined();
  await expect(setFleetExecutionV1(directory("empty"),null)).rejects.toThrow("Published fleet cache facts required");
- const theirs=await publishFleetCacheFactsV1({admin:ADMIN,storeRoot:store,directory:directory("other"),group:"g1",instance:"semio",endpoints:["http://10.0.0.9:6091"],port:6091,host:"scratch",now:Date.now()+11*60000});
+ const theirs=await publishFleetCacheFactsV1({admin:ADMIN,storeRoot:store,directory:directory("other"),group:"g1",instance:"semio",port:6091,now:Date.now()+11*60000});
  expect(theirs.facts.generation,"a stale publisher of another identity takes over above the generation in place").toBeGreaterThan(moved.facts.generation);
- const back=await publishFleetCacheFactsV1({...publication(store,cache,["http://10.0.0.5:6090"]),now:Date.now()+1000});expect(back.facts.generation,"the admin key takes over at once").toBeGreaterThan(theirs.facts.generation);
+ const back=await publishFleetCacheFactsV1({...publication(store,cache,6090),now:Date.now()+1000});expect(back.facts.generation,"the admin key takes over at once").toBeGreaterThan(theirs.facts.generation);
 });
 
 test("facts of the former format with the shared token are never read by a client and are replaced by the admin-signed publication",async()=>{
  const store=directory("store"),cache=directory("cache"),root=directory("client");machine(root,store);
  mkdirSync(join(store,"v1","fleet"),{recursive:true});
- writeFileSync(fleetCacheFactsPathV1(store),JSON.stringify({...formerFormat,publishedAtMs:Date.now(),publisher:{directory:"/elsewhere",port:6090,host:"old"}}));
+ writeFileSync(fleetCacheFactsPathV1(store),JSON.stringify({...formerFormat,publishedAtMs:Date.now(),publisher:{origin:"g1-server",directory:"/elsewhere",port:6090}}));
  const refreshed=await refreshFleetCacheFactsV1({root,force:true,probeMilliseconds:100});
  expect(refreshed.state,"a client of the new code reads nothing from the old format").toBe("absent");
  expect(resolveRemoteCacheV1({SEMIO_WORKSPACE_ROOT:root},{root})).toBeUndefined();
  const found=await resolveAuthorisedRemoteCacheV1({SEMIO_WORKSPACE_ROOT:root},{root,probeMilliseconds:100});
  expect(found).toMatchObject({resolution:undefined,authorised:false});
- const own=await publishFleetCacheFactsV1({...publication(store,cache,["http://10.0.0.5:6090"]),directory:"/elsewhere",port:6090,host:"old",now:Date.now()+1000});
+ const own=await publishFleetCacheFactsV1({...publication(store,cache,6090),directory:"/elsewhere",port:6090,now:Date.now()+1000});
  expect(own.facts.auth.scheme,"the same publisher rewrites its former facts in the new format").toBe("semio-fleet-v1");expect(JSON.stringify(own.facts)).not.toContain("credential");
 });
 
 test("the resolver takes the environment first, completes it from the facts, pairs a signature only with an endpoint the facts name, and never puts a secret in the environment",async()=>{
  const store=directory("store"),root=directory("resolve");machine(root,store);
- const copy={version:1 as const,fetchedAtMs:Date.now(),checkedAtMs:Date.now(),selectedEndpoint:"http://10.0.0.6:6090",facts:{...sample,cache:{...sample.cache,endpoints:["http://10.0.0.5:6090","http://10.0.0.6:6090"]}}};
+ const copy={version:1 as const,fetchedAtMs:Date.now(),checkedAtMs:Date.now(),selectedEndpoint:"http://10.0.0.6:6090",candidates:["http://10.0.0.5:6090","http://10.0.0.6:6090"],selectedExecution:null,facts:sample};
  expect(resolveRemoteCacheV1({},{root,copy:undefined})).toBeUndefined();
  const unregistered=resolveRemoteCacheV1({},{root,copy})!;
  expect(unregistered.contract).toMatchObject({endpoint:"http://10.0.0.6:6090",instance:"semio",access:"read-write",upload:true});
@@ -97,7 +100,7 @@ test("the resolver takes the environment first, completes it from the facts, pai
  const foreign=resolveRemoteCacheV1({SEMIO_REMOTE_CACHE_ENDPOINT:"http://evil.example:6099",SEMIO_REMOTE_CACHE_ENDPOINT_OVERRIDE:"1"},{root,copy})!;expect(foreign).toMatchObject({endpointFrom:"environment"});expect(foreign.contract.endpoint).toBe("http://evil.example:6099");expect(foreign.tokenFrom,"no credential for an endpoint the facts do not name").toBe("none");
  const seen:Record<string,string|null>[]=[],spy=(async(input:RequestInfo|URL,init?:RequestInit)=>{seen.push({url:String(input),authorization:new Headers(init?.headers).get("authorization")});return new Response("");}) as typeof fetch;
  const call=remoteCacheFetchV1({SEMIO_WORKSPACE_ROOT:root},{root,base:spy});
- const facts={...sample.cache,endpoints:["http://10.0.0.5:6090"]};writeFileSync(fleetCacheLocalPathV1(root),JSON.stringify({...copy,facts:{...sample,cache:facts}}));
+ writeFileSync(fleetCacheLocalPathV1(root),JSON.stringify({...copy,candidates:["http://10.0.0.5:6090"]}));
  await call("http://10.0.0.5:6090/semio/ac/"+"0".repeat(64));await call("http://evil.example:6090/semio/ac/"+"0".repeat(64));await call("https://static.example/download.tgz");
  expect(seen[0]!.authorization,"the fleet endpoint receives a signature").toStartWith("Semio-Fleet o=g1-m01 r=cache-read a=cache");
  expect(seen[1]!.authorization,"a foreign host receives nothing").toBeNull();expect(seen[2]!.authorization).toBeNull();
@@ -107,13 +110,13 @@ test("the resolver takes the environment first, completes it from the facts, pai
  expect(seen[3]!.authorization,"an operator token goes to its own endpoint").toBe("Bearer explicit-token-1234567");expect(seen[4]!.authorization,"and nowhere else").toBeNull();
  await withoutOverride("http://ci.example:6090/semio/ac/x");expect(seen[5]!.authorization,"a leftover pointer that the healthy facts contradict receives nothing").toBeNull();
  expect(readFleetExecutionV1({},{root,copy})).toBeUndefined();
- expect(readFleetExecutionV1({},{root,copy:{...copy,facts:{...copy.facts,execution:{endpoint:"http://10.0.0.5:6091",protocolVersion:1}}}})).toEqual({endpoint:"http://10.0.0.5:6091",protocolVersion:1});
+ expect(readFleetExecutionV1({},{root,copy:{...copy,selectedExecution:"http://10.0.0.5:6091",facts:{...copy.facts,execution:{origin:"g1-server",port:6091,protocolVersion:1}}}})).toEqual({endpoint:"http://10.0.0.5:6091",protocolVersion:1});
 });
 
 test("a machine is authorised by its own signature with no token anywhere, and keeps its last known copy while the store is gone",async()=>{
  const store=directory("store"),cache=directory("cache"),root=directory("worker"),other=directory("other");machine(root,store);machine(other,store,"g1-m02");
  const server=await serving(cache,store),endpoint=server.url;
- await publishFleetCacheFactsV1(publication(store,cache,["http://192.0.2.1:6090",endpoint]));
+ await publishFleetCacheFactsV1(publication(store,cache,portOf(endpoint)));seed(root,endpoint);seed(other,endpoint);
  const environment={SEMIO_WORKSPACE_ROOT:root};
  expect(resolveRemoteCacheV1(environment,{root}),"nothing known before the first refresh").toBeUndefined();
  const found=await resolveAuthorisedRemoteCacheV1(environment,{root,probeMilliseconds:300});
@@ -141,7 +144,7 @@ test("the cut-over: a machine on the new code against a server on the previous c
  const previous=Bun.serve({hostname:"127.0.0.1",port:0,fetch:request=>{requests.push(`${request.method} ${new URL(request.url).pathname} ${request.headers.get("authorization")?.split(" ")[0]??"-"}`);const given=request.headers.get("authorization");return new Response(given===`Bearer ${"A".repeat(43)}`?"ok":"Unauthorized",{status:given===`Bearer ${"A".repeat(43)}`?404:401,headers:{"www-authenticate":"Bearer"}});}});
  try{
   const endpoint=`http://127.0.0.1:${previous.port}`;
-  await publishFleetCacheFactsV1(publication(store,directory("cache"),[endpoint]));
+  await publishFleetCacheFactsV1(publication(store,directory("cache"),portOf(endpoint)));seed(root,endpoint);
   const started=performance.now(),found=await resolveAuthorisedRemoteCacheV1({SEMIO_WORKSPACE_ROOT:root},{root,probeMilliseconds:500});
   expect(performance.now()-started,"bounded").toBeLessThan(5000);
   expect(found.authorised,"the previous server does not know signatures: refused").toBe(false);expect(found.status).toBe(401);
@@ -153,14 +156,14 @@ test("the cut-over: a machine on the new code against a server on the previous c
  const bearer=await fetch(`${server.url}/semio/v1/cache/x`,{headers:{authorization:`Bearer ${"A".repeat(43)}`}});await bearer.body?.cancel();
  expect(bearer.status,"the previous code sends its shared token: refused, it builds locally").toBe(401);
  const stale=directory("old-client");machine(stale,store);
- writeFileSync(fleetCacheLocalPathV1(stale),JSON.stringify({version:1,fetchedAtMs:Date.now(),checkedAtMs:Date.now(),selectedEndpoint:server.url,facts:formerFormat}));
+ writeFileSync(fleetCacheLocalPathV1(stale),JSON.stringify({version:1,fetchedAtMs:Date.now(),checkedAtMs:Date.now(),selectedEndpoint:server.url,candidates:[server.url],selectedExecution:null,facts:formerFormat}));
  expect(readLocalFleetCacheFactsV1(stale),"a local copy of the former format is dropped by the new code").toBeUndefined();
 });
 
 test("a refresh is skipped within the TTL, reports a missing store as absent and a stalled store as stale within the timeout",async()=>{
  const store=directory("store"),cache=directory("cache"),root=directory("worker");machine(root,store);
  expect((await refreshFleetCacheFactsV1({root,probeMilliseconds:100})).state,"no facts yet").toBe("absent");
- await publishFleetCacheFactsV1(publication(store,cache,["http://127.0.0.1:1"]));
+ await publishFleetCacheFactsV1(publication(store,cache,1));
  const now=Date.now(),first=await refreshFleetCacheFactsV1({root,probeMilliseconds:100,now});expect(first.state).toBe("updated");expect(first.copy?.selectedEndpoint).toBeNull();
  expect((await refreshFleetCacheFactsV1({root,probeMilliseconds:100,now:now+1000})).state).toBe("fresh");
  expect((await refreshFleetCacheFactsV1({root,probeMilliseconds:100,now:now+31000})).state).toBe("checked");
@@ -175,15 +178,12 @@ test("a refresh is skipped within the TTL, reports a missing store as absent and
  const opener=Bun.spawn(["sh","-c",`exec 3<>"${facts}"; sleep 0`]);await opener.exited;
 });
 
-test("only the holder of the group server's admin key publishes the facts, and endpoint discovery lists the private addresses",async()=>{
+test("only the holder of the group server's admin key publishes the facts",async()=>{
  const store=directory("store"),cache=directory("cache");
- await expect(publishFleetCacheFactsV1({...publication(store,cache,["http://10.0.0.5:6090"]),admin:{role:"cache-write" as never,originId:"g1-server"}})).rejects.toThrow("admin signing key");
- await expect(publishFleetCacheFactsV1({...publication(store,cache,["http://10.0.0.5:6090"]),admin:{role:"admin",originId:"g1-m03"}})).rejects.toThrow("admin signing key");
+ await expect(publishFleetCacheFactsV1({...publication(store,cache,6090),admin:{role:"cache-write" as never,originId:"g1-server"}})).rejects.toThrow("admin signing key");
+ await expect(publishFleetCacheFactsV1({...publication(store,cache,6090),admin:{role:"admin",originId:"g1-m03"}})).rejects.toThrow("admin signing key");
  expect(existsSync(fleetCacheFactsPathV1(store)),"nothing was written").toBe(false);
- const interfaces={en0:[{address:"192.168.1.9",family:"IPv4",internal:false},{address:"169.254.3.3",family:"IPv4",internal:false}],lo0:[{address:"127.0.0.1",family:"IPv4",internal:true}],en1:[{address:"10.0.0.4",family:"IPv4",internal:false},{address:"fe80::1",family:"IPv6",internal:false}],docker:[{address:"203.0.113.4",family:"IPv4",internal:false}]} as never;
- expect(fleetCacheEndpointsV1(6090,["http://given:6090"],["http://topology.internal:6090"],interfaces)).toEqual(["http://given:6090","http://10.0.0.4:6090","http://192.168.1.9:6090","http://topology.internal:6090"]);
- expect(fleetCacheEndpointsV1(6090,[],[],{} as never)).toEqual(["http://127.0.0.1:6090"]);
-});
+ });
 
 test("the serve command never publishes the facts; it trusts only the registered origins, and rotation replaces a machine's keys",async()=>{
  const root=directory("server-root"),real=directory("real-store"),cache=directory("cache");machine(root,real,"g1-server");
@@ -197,8 +197,8 @@ test("the serve command never publishes the facts; it trusts only the registered
  expect(await call()).toBe(401);expect(await call({authorization:"Bearer wrong-token-wrong-token"})).toBe(401);
  expect((await syncFleetIdentityV1({root:member})).error).toBeUndefined();
  const signed=remoteCacheFetchV1({SEMIO_WORKSPACE_ROOT:member,SEMIO_REMOTE_CACHE_ENDPOINT:url},{root:member});
- const published=await publishFleetCacheFactsV1({admin:ADMIN,storeRoot:directory("facts"),directory:cache,group:"g1",instance:"main",port:1,endpoints:[url],transport:"sealed"});
- writeFileSync(fleetCacheLocalPathV1(member),JSON.stringify({version:1,fetchedAtMs:Date.now(),checkedAtMs:Date.now(),selectedEndpoint:url,facts:published.facts}));
+ const published=await publishFleetCacheFactsV1({admin:ADMIN,storeRoot:directory("facts"),directory:cache,group:"g1",instance:"main",port:1,transport:"sealed"});
+ writeFileSync(fleetCacheLocalPathV1(member),JSON.stringify({version:1,fetchedAtMs:Date.now(),checkedAtMs:Date.now(),selectedEndpoint:url,candidates:[url],selectedExecution:null,facts:published.facts}));
  expect((await signed(`${url}/status`)).status,"a member of the group store").toBe(200);
  const before=readFileSync(join(member,".cache","f","identity","cache-read.key"),"utf8");
  const rotate=await rotateRemoteCacheV1(["--lang","en"],context(controller.signal,member));expect(rotate.exitCode).toBe(0);
@@ -213,10 +213,10 @@ const nxModules=process.env.SEMIO_TEST_NX_NODE_MODULES,nxPackage=process.env.SEM
 
 test.skipIf(!nxModules||!nxPackage||!posix)("one real Nx 23 task is uploaded from one checkout through the signing front and fetched by another checkout with a cold local cache, with no token anywhere",async()=>{
  const store=directory("store"),cache=directory("cache"),checkouts=[directory("machine-a"),directory("machine-b")],server=await serving(cache,store);
- await publishFleetCacheFactsV1(publication(store,cache,[server.url]));
+ await publishFleetCacheFactsV1(publication(store,cache,portOf(server.url)));
  const count=async(kind:"puts"|"hits"|"misses")=>((await (await remoteCacheFetchV1({SEMIO_WORKSPACE_ROOT:checkouts[0]!},{root:checkouts[0]!})(`${server.url}/status`)).json()) as {counters:{nx:Record<string,number>}}).counters.nx[kind]!;
  for(const [index,root] of checkouts.entries()){
-  machine(root,store,`g1-m0${index+1}`);
+  machine(root,store,`g1-m0${index+1}`);seed(root,server.url);
   mkdirSync(join(root,"libs/a"),{recursive:true});mkdirSync(join(root,"node_modules"));for(const entry of readdirSync(nxModules!))if(entry!=="nx")symlinkSync(join(nxModules!,entry),join(root,"node_modules",entry));symlinkSync(nxPackage!,join(root,"node_modules","nx"));
   writeFileSync(join(root,"nx.json"),JSON.stringify({cacheDirectory:".nx-cache",useDaemonProcess:false,analytics:false,targetDefaults:{build:{cache:true,inputs:["{projectRoot}/**/*"],outputs:["{projectRoot}/out"]}}}));
   writeFileSync(join(root,"libs/a/project.json"),JSON.stringify({name:"a",root:"libs/a",targets:{build:{executor:"nx:run-commands",options:{command:"mkdir -p out && echo built-a > out/a.txt",cwd:"libs/a"}}}}));
@@ -242,26 +242,26 @@ test.skipIf(!nxModules||!nxPackage||!posix)("one real Nx 23 task is uploaded fro
 test("a refresh ignores facts whose endpoints all fail and keeps the previous good local copy",async()=>{
  const store=directory("store"),cache=directory("cache"),dead=directory("dead"),root=directory("worker");machine(root,store);
  const server=await serving(cache,store);
- await publishFleetCacheFactsV1(publication(store,cache,[server.url]));
+ await publishFleetCacheFactsV1(publication(store,cache,portOf(server.url)));seed(root,server.url);
  const now=Date.now(),good=await refreshFleetCacheFactsV1({root,probeMilliseconds:300,now});expect(good.state).toBe("updated");expect(good.copy?.selectedEndpoint).toBe(server.url);
  rmSync(fleetCacheFactsPathV1(store));
- await publishFleetCacheFactsV1({admin:ADMIN,storeRoot:store,directory:dead,group:"g1",instance:"semio",endpoints:["http://127.0.0.1:1"],port:6191,host:"scratch"});
+ await publishFleetCacheFactsV1({admin:ADMIN,storeRoot:store,directory:dead,group:"g1",instance:"semio",port:6191});
  const ignored=await refreshFleetCacheFactsV1({root,force:true,probeMilliseconds:300});
- expect(ignored.state).toBe("stale");expect(ignored.error).toContain("previous good copy");expect(ignored.copy?.facts.cache.endpoints).toEqual([server.url]);
+ expect(ignored.state).toBe("stale");expect(ignored.error).toContain("previous good copy");expect(ignored.copy?.selectedEndpoint).toBe(server.url);
  expect(resolveRemoteCacheV1({SEMIO_WORKSPACE_ROOT:root},{root})?.contract.endpoint,"the dead endpoint is not adopted").toBe(server.url);
 });
 
 test("round trip: facts written by the publisher are read by the cache resolver, the execution reader and the scheduler fact setter; a stale pointer to another port of the cache machine is superseded; `status` validates against its schema with the signed scheme reports the server's own numbers, and renders Bazel through the signing proxy",async()=>{
  const store=directory("store"),cache=directory("cache"),root=directory("client");machine(root,store);
  const server=await serving(cache,store),endpoint=server.url;
- await publishFleetCacheFactsV1(publication(store,cache,[endpoint]));
- await setFleetExecutionV1(store,{endpoint:"http://192.0.2.7:8980",protocolVersion:1});
+ await publishFleetCacheFactsV1(publication(store,cache,portOf(endpoint)));seed(root,endpoint);seed(root,`http://127.0.0.1:${portOf(endpoint)}`,"execution");
+ await setFleetExecutionV1(store,{origin:"g1-server",port:portOf(endpoint),protocolVersion:1});
  const text=readFileSync(fleetCacheFactsPathV1(store),"utf8"),facts=parseFleetCacheFactsV1(text);
- expect(facts.execution,"the scheduler's fact survives a later publication").toEqual({endpoint:"http://192.0.2.7:8980",protocolVersion:1});
- await publishFleetCacheFactsV1(publication(store,cache,[endpoint]));
+ expect(facts.execution,"the scheduler's fact survives a later publication").toEqual({origin:"g1-server",port:portOf(endpoint),protocolVersion:1});
+ await publishFleetCacheFactsV1(publication(store,cache,portOf(endpoint)));
  expect(parseFleetCacheFactsV1(readFileSync(fleetCacheFactsPathV1(store),"utf8")).execution).toEqual(facts.execution);
  expect((await refreshFleetCacheFactsV1({root,force:true,probeMilliseconds:300})).state).toBe("updated");
- expect(readFleetExecutionV1({SEMIO_WORKSPACE_ROOT:root},{root})).toEqual({endpoint:"http://192.0.2.7:8980",protocolVersion:1});
+ expect(readFleetExecutionV1({SEMIO_WORKSPACE_ROOT:root},{root})).toEqual({endpoint:`http://127.0.0.1:${portOf(endpoint)}`,protocolVersion:1});
  const stale={SEMIO_WORKSPACE_ROOT:root,SEMIO_REMOTE_CACHE_ENDPOINT:`http://${new URL(endpoint).hostname}:6090`};
  const resolved=resolveRemoteCacheV1(stale,{root})!;
  expect(resolved,"a leftover pointer on the same machine is superseded by the facts").toMatchObject({endpointFrom:"fleet-facts",tokenFrom:"fleet-identity"});expect(resolved.contract.endpoint).toBe(endpoint);
@@ -277,7 +277,7 @@ test("round trip: facts written by the publisher are read by the cache resolver,
 test("status names why the server gave no numbers: an unsigned machine is denied, a dead endpoint is unreachable, a foreign document is malformed",async()=>{
  const store=directory("store"),cache=directory("cache"),root=directory("client"),bare=directory("bare");machine(root,store);
  const server=await serving(cache,store),endpoint=server.url;
- await publishFleetCacheFactsV1(publication(store,cache,[endpoint]));
+ await publishFleetCacheFactsV1(publication(store,cache,portOf(endpoint)));seed(root,endpoint);
  await refreshFleetCacheFactsV1({root,force:true,probeMilliseconds:300});
  const context=(workspace:string,environment:Record<string,string>):RemoteCacheCommandContextV1=>({root:workspace,environment:{SEMIO_WORKSPACE_ROOT:workspace,...environment},signal:new AbortController().signal,progress:async()=>{},write:()=>{},tools:async()=>[bazelRemoteCacheToolV1()]});
  type Row={server:unknown;serverFault:{reason:string;status:number|null;message:string}|null;remote:{entries:number|null;hits:number|null}};
@@ -300,7 +300,7 @@ test("a healthy verdict of the fleet facts routes Nx at once and the probe runs 
  const hanging=Bun.serve({port:0,fetch:()=>new Promise<Response>(()=>{})}),url=`http://127.0.0.1:${hanging.port}`,root=directory("verdict-root"),warnings:string[]=[];
  try{
   mkdirSync(join(root,".cache","f"),{recursive:true});
-  const facts={...sample,cache:{...sample.cache,endpoints:[url],instance:"main"}},write=(checkedAtMs:number,selectedEndpoint:string|null)=>writeFileSync(fleetCacheLocalPathV1(root),JSON.stringify({version:1,fetchedAtMs:checkedAtMs,checkedAtMs,selectedEndpoint,facts}));
+  const facts={...sample,cache:{...sample.cache,instance:"main"}},write=(checkedAtMs:number,selectedEndpoint:string|null)=>writeFileSync(fleetCacheLocalPathV1(root),JSON.stringify({version:1,fetchedAtMs:checkedAtMs,checkedAtMs,selectedEndpoint,candidates:[url],selectedExecution:null,facts}));
   const {nxCachedVerdictV1,NX_VERDICT_MILLISECONDS_V1}=await import("../../🧶️nx/🟦️.ts"),now=Date.now();
   expect(nxCachedVerdictV1(undefined,now)).toBe(false);expect(nxCachedVerdictV1({selectedEndpoint:null,checkedAtMs:now},now)).toBe(false);
   expect(nxCachedVerdictV1({selectedEndpoint:url,checkedAtMs:now-NX_VERDICT_MILLISECONDS_V1-1},now)).toBe(false);expect(nxCachedVerdictV1({selectedEndpoint:url,checkedAtMs:now-1000},now)).toBe(true);
@@ -318,10 +318,24 @@ test("synchronous resolution never opens a stalled store or delays process exit 
  mkdirSync(join(store,"v1","fleet"),{recursive:true});
  expect(spawnSync("mkfifo",[fleetCacheFactsPathV1(store)]).status).toBe(0);
  const now=Date.now();
- writeFileSync(fleetCacheLocalPathV1(root),JSON.stringify({version:1,fetchedAtMs:now-120000,checkedAtMs:now-120000,selectedEndpoint:"http://10.0.0.5:6090",facts:sample}));
+ writeFileSync(fleetCacheLocalPathV1(root),JSON.stringify({version:1,fetchedAtMs:now-120000,checkedAtMs:now-120000,selectedEndpoint:"http://10.0.0.5:6090",candidates:["http://10.0.0.5:6090"],selectedExecution:null,facts:sample}));
  const modulePath=fileURLToPath(new URL("../🟦️.ts",import.meta.url));
  const started=performance.now();
  const child=spawnSync(process.execPath,["-e",`import {resolveRemoteCacheV1} from ${JSON.stringify(modulePath)}; const r=resolveRemoteCacheV1({SEMIO_WORKSPACE_ROOT:${JSON.stringify(root)}},{root:${JSON.stringify(root)}}); if(r?.contract.endpoint!=="http://10.0.0.5:6090")process.exit(2);`],{timeout:3000,encoding:"utf8"});
  expect(child.status,child.stderr).toBe(0);
  expect(performance.now()-started).toBeLessThan(2500);
+});
+
+test("a probe that misses the scheduler once never erases the endpoint that answered before, unless the published scheduler moved",async()=>{
+ const store=directory("keep-store"),cache=directory("keep-cache"),root=directory("keep-client");machine(root,store);
+ const server=await serving(cache,store);
+ await publishFleetCacheFactsV1(publication(store,cache,portOf(server.url)));seed(root,server.url);
+ await setFleetExecutionV1(store,{origin:"g1-server",port:1,protocolVersion:1});
+ const facts=parseFleetCacheFactsV1(readFileSync(fleetCacheFactsPathV1(store),"utf8")),now=Date.now();
+ writeFileSync(fleetCacheLocalPathV1(root),JSON.stringify({version:1,fetchedAtMs:now,checkedAtMs:now-120000,selectedEndpoint:server.url,candidates:[server.url],selectedExecution:"http://10.0.0.5:1",facts}));
+ const kept=await refreshFleetCacheFactsV1({root,force:true,probeMilliseconds:300});
+ expect(kept.copy?.selectedExecution,"the last scheduler endpoint that answered stays").toBe("http://10.0.0.5:1");
+ await setFleetExecutionV1(store,{origin:"g1-server",port:2,protocolVersion:1});
+ const moved=await refreshFleetCacheFactsV1({root,force:true,probeMilliseconds:300});
+ expect(moved.copy?.selectedExecution,"a moved scheduler does not keep the old endpoint").toBeNull();
 });

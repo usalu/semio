@@ -298,6 +298,9 @@ impl FactoryAuthority{
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path="🧪️tests/⏱️driven/🦀️.rs"]
+pub(crate) mod driven;
 
 pub trait SnapshotRetirementFactory<P:Send+Sync+'static>:FactoryRetirement+Send+Sync{
  fn retirement_birth_bytes(&self,snapshot:&SharedOriginalStorage<P>)->usize;

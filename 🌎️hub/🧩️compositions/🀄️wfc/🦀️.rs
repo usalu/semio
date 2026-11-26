@@ -40,8 +40,8 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 //#endregion 🗃️Apps
 
 /// 💡️ Installs the five resumable solve jobs on the production action bus. Every artifact owns its
-/// own `semio.infer` factory (`s.wfc.<ident>.solve`), and a factory that is not installed before the
-/// builder runs leaves its `.routed_inference(…)` row addressing a tool nothing can execute.
+/// `semio.infer` factory (`s.wfc.<ident>.solve`). The bitmap declaration also installs its retained
+/// cold executable under the same published inference identity.
 fn register_inference_factories() -> Result<(), PluginAssemblyError> {
     let bus = ActionBus::production();
     semio_s_artifact_wfc_bitmap::host::inferences::register_bitmap_inference_factory(&bus).map_err(|error| PluginAssemblyError::new("bitmap-inference-factory", error.to_string()))?;
@@ -62,7 +62,6 @@ pub fn plugin() -> Result<Plugin<WfcApps>, PluginAssemblyError> {
         .label("WFC")
         .version("0.1.0")
         .package_id("semio:wfc")
-        .routed_inference(semio_s_artifact_wfc_bitmap::host::inferences::bitmap_inference_metadata())
         .routed_inference(semio_s_artifact_wfc_grid2d::host::inferences::grid2d_inference_metadata())
         .routed_inference(semio_s_artifact_wfc_2d::host::inferences::wfc2d_inference_metadata())
         .routed_inference(semio_s_artifact_wfc_grid3d::host::inferences::grid3d_inference_metadata())

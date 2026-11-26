@@ -40,12 +40,12 @@ fn the_window_is_a_canvas2d_surface_with_stable_ids() {
 #[test]
 fn an_empty_model_and_every_storey_of_the_demo_render() {
     let empty = ModelSnapshot::default();
-    assert!(render(&empty, &inferred(&empty), &config::BimViewerPlanWindowConfig::default(), &[]).is_ok());
+    assert!(render(&empty, &inferred(&empty), &config::BimViewerPlanWindowConfig::default(), &[], Locale::En).is_ok());
     let model = demo();
     let inference = inferred(&model);
     for storey in ["", "st-ground", "st-first", "gone"] {
         let config = semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::config::BimViewerPlanWindowConfig { storey: storey.into(), ..semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::config::BimViewerPlanWindowConfig::default() };
-        assert!(render(&model, &inference, &config, &[]).is_ok(), "storey {storey:?}");
+        assert!(render(&model, &inference, &config, &[], Locale::En).is_ok(), "storey {storey:?}");
     }
 }
 

@@ -12,6 +12,7 @@ use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::aut
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_2d::booleans::BooleanOperation;
 use semio_framework_2d::regions::{region_boolean, Region};
+use semio_framework_2d::retirement::BlockingTurns;
 use semio_framework_geometry::bulge::{intersect, Extent};
 use semio_framework_geometry::Point;
 
@@ -45,7 +46,7 @@ pub fn code_of(a: BodyKind, b: BodyKind) -> Option<DiagnosticCode> {
 }
 
 fn intersection_area(a: &[Region], b: &[Region]) -> f64 {
-    region_boolean(BooleanOperation::Intersection, a, b, &mut |_| true).map_or(0.0, |rows| rows.iter().map(Region::area).sum())
+    region_boolean(BooleanOperation::Intersection, a, b, &mut |_| true, &mut BlockingTurns::new(1 << 20)).map_or(0.0, |rows| rows.iter().map(Region::area).sum())
 }
 
 fn inside(regions: &[Region], p: Point) -> bool {

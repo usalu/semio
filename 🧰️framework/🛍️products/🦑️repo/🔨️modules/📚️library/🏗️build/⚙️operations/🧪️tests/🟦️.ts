@@ -13,6 +13,7 @@ import {createScriptProcessEnvelope,withScriptProcessEnvelope,createIssuedResour
 import { buildExecPlanV1, runBuildCacheOperationV1 } from "../🟦️.ts"; import type { BuildCacheToolV1 } from "../📋️contract/🟦️.ts";
 import {buildHelpForArgumentsV1,readBuildHelpRequestV1,renderBuildHelpV1,resolveBuildHelpLanguageV1,type BuildHelpCatalogV1,type BuildHelpRequestV1} from "../📖️help/🟦️.ts";
 import {buildExecEnvironmentV1} from "../🌱️exec-environment/🟦️.ts";
+import {cacheArgumentsV1} from "../../🧹️cache-gc/⌨️command/🟦️.ts";
 import {validateBuildTaskArgumentsV1} from "../../🧭️selection/🟦️.ts";
 import snapshots from "./🧫️fixtures/📖️help/🔣️.json" with {type:"json"};
 import catalog from "../🔣️catalog.json" with {type:"json"};
@@ -21,6 +22,19 @@ import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import scoping from "./🧫️fixtures/🧭️scoping/🔣️.json" with {type:"json"};
 
 const help=catalog as BuildHelpCatalogV1,taskOperations=["run","run-many","affected","exec","watch"],entry=(name:string)=>name==="root"?[]:name.split(" ");
+
+test("cache gc help declares a valued reclaim target in both languages",()=>{
+ for(const language of help.languages){
+  const gc=renderBuildHelpV1(help,readBuildHelpRequestV1(help,["cache","gc"]),language);
+  expect(gc).toContain("[--reclaim=<size>]");
+  expect(gc).toContain("--reclaim=<size>");
+  expect(renderBuildHelpV1(help,readBuildHelpRequestV1(help,["cache","status"]),language)).not.toContain("--reclaim");
+ }
+ expect(cacheArgumentsV1(["gc","--reclaim=5GiB"]).reclaimBytes).toBe(5*1024**3);
+ expect(cacheArgumentsV1(["gc","--reclaim","5GiB"]).reclaimBytes).toBe(5*1024**3);
+ expect(()=>cacheArgumentsV1(["gc","--reclaim"])).toThrow("Option --reclaim needs a value");
+ expect(()=>cacheArgumentsV1(["status","--reclaim=5GiB"])).toThrow();
+});
 
 const root=join(import.meta.dir,"../../../../../../../..").replace(/[\\/]+$/u,""),installed=createRequire(import.meta.url),ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`});
 

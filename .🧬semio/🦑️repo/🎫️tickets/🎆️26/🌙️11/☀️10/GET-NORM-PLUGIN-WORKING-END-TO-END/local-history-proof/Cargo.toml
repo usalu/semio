@@ -1,0 +1,12 @@
+cargo-features = ["trim-paths"]
+
+[package]
+name = "semio-local-history-proof"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[lib]
+path = "lib.rs"

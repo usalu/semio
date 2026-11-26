@@ -47,7 +47,7 @@ semio-framework-2d = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-pixels = { workspace = true }
 semio-framework-value-persistent = { workspace = true }
-semio-s-artifact-draw-drawing-io = { workspace = true }
+semio-s-artifact-draw-drawing-io = { workspace = true, features = ["testkit"] }
 semio-framework-value-testing-admission = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-value-clone-source-testing = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }

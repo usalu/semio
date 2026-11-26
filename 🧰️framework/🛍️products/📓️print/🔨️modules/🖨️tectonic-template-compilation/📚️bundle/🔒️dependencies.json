@@ -47,6 +47,12 @@
       "sha256": "7f25c33d4010066ff2eed0286f62854867698b06d10ebad93b1b1ab96d12f936"
     },
     {
+      "name": "amsfonts.sty",
+      "offset": 51786752,
+      "bytes": 5949,
+      "sha256": "dab8b0e621267acfd89736cf97bdcc02647c545c0719c4997be8a7d1bf98f9c3"
+    },
+    {
       "name": "amsgen.sty",
       "offset": 55299584,
       "bytes": 4173,
@@ -65,10 +71,22 @@
       "sha256": "18c28b99321d0f4576cb42e2793d2654828b273700224cd9ee27047f803e99f5"
     },
     {
+      "name": "amssymb.sty",
+      "offset": 51793408,
+      "bytes": 13829,
+      "sha256": "70838b061b56569dd3ed9f339b1bdd1c78ba185de49f27ceae331c97f48b5986"
+    },
+    {
       "name": "amstext.sty",
       "offset": 55555072,
       "bytes": 2444,
       "sha256": "49426425d82407dc702c77236fdeb4b82568ebb9566b8dd849bcfbf9eb9644de"
+    },
+    {
+      "name": "amsthm.sty",
+      "offset": 55274496,
+      "bytes": 12594,
+      "sha256": "8d5e2bdb117297385971927b14fe4804314133dc0027b3171249a08280894626"
     },
     {
       "name": "array.sty",
@@ -501,6 +519,66 @@
       "offset": 1632256,
       "bytes": 419,
       "sha256": "99d210320228a242478c36c0dfde48c7513e4495d4feea7fe3997aab27582dfc"
+    },
+    {
+      "name": "ec-lmbx10.tfm",
+      "offset": 520472064,
+      "bytes": 12076,
+      "sha256": "0895c940bd2e763b70dcab18ebf27fd3f93c2490f43b2a8c028fc7fc24b2e855"
+    },
+    {
+      "name": "ec-lmbx12.tfm",
+      "offset": 520484864,
+      "bytes": 12088,
+      "sha256": "d19c45859d453c0802699d27aa2bff735574b9bc97d8791aa76e3c7de6c38a36"
+    },
+    {
+      "name": "ec-lmcsc10.tfm",
+      "offset": 520592384,
+      "bytes": 11276,
+      "sha256": "0918c1e4cc3cbe056794ec14697f38e266aab7475d48ea182912360c287b9e05"
+    },
+    {
+      "name": "ec-lmr10.tfm",
+      "offset": 520642560,
+      "bytes": 12056,
+      "sha256": "cd13479f463b9a575d053dd7bf0884daa46bfdeffe4b7f537c193861652ac9e5"
+    },
+    {
+      "name": "ec-lmr12.tfm",
+      "offset": 520655360,
+      "bytes": 12092,
+      "sha256": "299021120f0a29ef61278a2363903bd8defbb8faaade458eb79067342aecb56f"
+    },
+    {
+      "name": "ec-lmr17.tfm",
+      "offset": 520668160,
+      "bytes": 12156,
+      "sha256": "67fb845ec934b2d50e788280d2c6d63ae719c9d8ac16a02d42fd346c81196c0c"
+    },
+    {
+      "name": "ec-lmri10.tfm",
+      "offset": 520744960,
+      "bytes": 17148,
+      "sha256": "372f968b4eeb47bf6a6c941c8793bce118d1800f12e194a351c7493ecc158f2a"
+    },
+    {
+      "name": "ec-lmri7.tfm",
+      "offset": 520780800,
+      "bytes": 17168,
+      "sha256": "e7807ea6471b5fc7a14544fd6f72bb82fbb14230d79196f68509a3589e62a678"
+    },
+    {
+      "name": "ec-lmri8.tfm",
+      "offset": 520798720,
+      "bytes": 17152,
+      "sha256": "1440665458738428540918b90c7a3556d6ed3118ff2e0237bd739c60f6edb889"
+    },
+    {
+      "name": "ec-lmtt10.tfm",
+      "offset": 521132032,
+      "bytes": 1372,
+      "sha256": "d1d413f1d0d07f65ff7bc3ebc09a3c104087e20eccd10ccb384da5c4f175c485"
     },
     {
       "name": "english.lbx",
@@ -1277,6 +1355,12 @@
       "sha256": "8c3e23b8bb7d940ff26cb0cf96e0151f540acf55020dc3c1aa8bcdb2eb66305c"
     },
     {
+      "name": "inputenc.sty",
+      "offset": 144146432,
+      "bytes": 5049,
+      "sha256": "16dffe967174f21dbd52ef849bcb74741109f3ce5bc68b881f1ce4aef3133b2a"
+    },
+    {
       "name": "intcalc.sty",
       "offset": 24644608,
       "bytes": 31769,
@@ -1385,10 +1469,190 @@
       "sha256": "5740c8634abaa38900d13dc8053e70e9ef3f20c36a6d7c94d6125331d5806ddf"
     },
     {
+      "name": "lm-ec.enc",
+      "offset": 870049792,
+      "bytes": 2375,
+      "sha256": "7f9932c402d22a937b853406cfdf4166b80260e3ff21a03fe9a4c05105a2918c"
+    },
+    {
+      "name": "lm-mathex.enc",
+      "offset": 870055936,
+      "bytes": 3486,
+      "sha256": "7ecd3eb53329d24551d4e125c741037a4bf94872bf545492b6fb4c7d21f381c4"
+    },
+    {
+      "name": "lm-mathit.enc",
+      "offset": 870060032,
+      "bytes": 2405,
+      "sha256": "0d7b9e82ad6274470876761c22573c28db1f1b32d647b688230b3a366f0e373b"
+    },
+    {
+      "name": "lm-mathsy.enc",
+      "offset": 870063104,
+      "bytes": 2840,
+      "sha256": "a2980b38288ef4024b8a3e170c19c9d4e2ee8b7dde97a59e8148291ffd3443db"
+    },
+    {
+      "name": "lm-rm.enc",
+      "offset": 870134784,
+      "bytes": 2327,
+      "sha256": "8bf8f9bd48d49aa3f3c597716908854e4d9207b009c109e6d9c5887feb856844"
+    },
+    {
+      "name": "lmbx10.pfb",
+      "offset": 1450884096,
+      "bytes": 121021,
+      "sha256": "4acd67f9ece59a12e073aa863dbb1d5cea194f7f7b88ecce4659184d8275aa42"
+    },
+    {
+      "name": "lmbx12.pfb",
+      "offset": 1451009536,
+      "bytes": 116908,
+      "sha256": "fb9b7cf1d13a8a837c2c6b238e7255f8d6f4cd6608bf3024ee68e43d04f01a08"
+    },
+    {
+      "name": "lmcsc10.pfb",
+      "offset": 1452022784,
+      "bytes": 116427,
+      "sha256": "cd00eadf0b9cd4641146a2ef8ff218861e4dc80c7eeb749871dc1f639ded1928"
+    },
+    {
+      "name": "lmex10.pfb",
+      "offset": 1452558848,
+      "bytes": 23055,
+      "sha256": "8e12eda1d29f55271bcef9a5022b42c8c10f8e65060dd6a8880556aa5484c052"
+    },
+    {
+      "name": "lmex10.tfm",
+      "offset": 521726976,
+      "bytes": 992,
+      "sha256": "9547b25fd525782610200d794a82de33037887422751fcc29c5768cfa650e626"
+    },
+    {
+      "name": "lmmi10.pfb",
+      "offset": 1452584448,
+      "bytes": 30388,
+      "sha256": "c24662506b402f3e0033cc75eb746eb490a1b7477e6b3ef52053f5025ec0fc57"
+    },
+    {
+      "name": "lmmi10.tfm",
+      "offset": 521728512,
+      "bytes": 1528,
+      "sha256": "d9fce8963e8cb075bf31a5715a8f4a54688f7026b3a06e882ff2eb9c0d110320"
+    },
+    {
+      "name": "lmmi12.pfb",
+      "offset": 1452617728,
+      "bytes": 30696,
+      "sha256": "19579dda4280cea64aacdd0f80b53b7f1e7930e98fe9858ab38aab33c8623836"
+    },
+    {
+      "name": "lmmi12.tfm",
+      "offset": 521730560,
+      "bytes": 1524,
+      "sha256": "06870b7e003008214eefcf9bc4215006faff9edf5d99bee75211de57620d1818"
+    },
+    {
+      "name": "lmmi5.pfb",
+      "offset": 1452651008,
+      "bytes": 31443,
+      "sha256": "b1f4adc7d712c838c9de8f13182e587eea9fd1ad2b3652c39e5d8d23022ad228"
+    },
+    {
+      "name": "lmmi5.tfm",
+      "offset": 521732608,
+      "bytes": 1508,
+      "sha256": "7bc98c12006eb1d784ce276f5dc008e0d631ee6bc659efadec24801c00d2a462"
+    },
+    {
+      "name": "lmmi6.pfb",
+      "offset": 1452685312,
+      "bytes": 31113,
+      "sha256": "84b90db59b216d7f25f89a45c7565d7cccccc6c32961fe972b1a53558fa2035e"
+    },
+    {
+      "name": "lmmi6.tfm",
+      "offset": 521734656,
+      "bytes": 1512,
+      "sha256": "e7305bead3f6b2c8313e1234cb52376219d4283227c23295fe2f654e3ba3b551"
+    },
+    {
+      "name": "lmmi7.pfb",
+      "offset": 1452719104,
+      "bytes": 30789,
+      "sha256": "7c646a6a841c2e99909f7d5673d778fc104e43efad281ea0b5687636c544c639"
+    },
+    {
+      "name": "lmmi7.tfm",
+      "offset": 521736704,
+      "bytes": 1528,
+      "sha256": "8548d4d19fc2b3671a5e11526f9013df8828b5b9b0f8277dc0ae7148bd1d33f5"
+    },
+    {
+      "name": "lmmi8.pfb",
+      "offset": 1452752896,
+      "bytes": 30635,
+      "sha256": "ec3aa1701ea2dbbd9ea2b7316ffe81726a3a2ecb31442fbaf719800f2625e68d"
+    },
+    {
+      "name": "lmmi8.tfm",
+      "offset": 521738752,
+      "bytes": 1520,
+      "sha256": "8d8514f9b0d11e443d9a3cdc059622b06797c1dbcb3cee994f6ac3329c462a82"
+    },
+    {
       "name": "lmmono10-regular.otf",
       "offset": 2022494208,
       "bytes": 64684,
       "sha256": "22deb6d3be3ffcb40b33f0e010afb256c677d97c2a2bdee1f5740cdc97751558"
+    },
+    {
+      "name": "lmodern.sty",
+      "offset": 150746624,
+      "bytes": 1608,
+      "sha256": "d2877369dcb4bfe7b1b6bba1a3d96c46e93366459c9b46576f1b221009bbe359"
+    },
+    {
+      "name": "lmr10.pfb",
+      "offset": 1452922880,
+      "bytes": 119235,
+      "sha256": "84eb01245abb17c0530ca3909427256d73df8bed2d7243b9f2717ca08c010ac8"
+    },
+    {
+      "name": "lmr12.pfb",
+      "offset": 1453046272,
+      "bytes": 113634,
+      "sha256": "d5fd4fdecfdbc8f97e955964aa2574927182303df178fe0c2e568fe9056e326c"
+    },
+    {
+      "name": "lmr17.pfb",
+      "offset": 1453164032,
+      "bytes": 119752,
+      "sha256": "03b0f1f3e62a2866480f8f12edd465349a8f18afac0d5fb906dd493254d950fb"
+    },
+    {
+      "name": "lmr6.pfb",
+      "offset": 1453412864,
+      "bytes": 123394,
+      "sha256": "0169c3fcc2685ba53356a09c1b96c8f71c250ba5177da7b23e7a819e583ccf88"
+    },
+    {
+      "name": "lmr7.pfb",
+      "offset": 1453540864,
+      "bytes": 121145,
+      "sha256": "cf94a1a79a32c446f11e585164463234a515721d509d2f2cfb0ab61f6f744ddc"
+    },
+    {
+      "name": "lmr8.pfb",
+      "offset": 1453666304,
+      "bytes": 122174,
+      "sha256": "4a117a1dd9cf4f8b7eea4587eaa4f612be7ca329cb1d8255a2c6bb20febbfa69"
+    },
+    {
+      "name": "lmri10.pfb",
+      "offset": 1453918208,
+      "bytes": 112593,
+      "sha256": "1239c71330ac8f0584e22f4d6abd0f016421fc73c545b15512ccf80b263f5c66"
     },
     {
       "name": "lmroman10-bold.otf",
@@ -1431,6 +1695,54 @@
       "offset": 2028336640,
       "bytes": 95128,
       "sha256": "d431b786b9b603662718e79cfe9b441f47a8b0b3e854dde89d5acb3ed7cfd682"
+    },
+    {
+      "name": "lmsy10.pfb",
+      "offset": 1457268224,
+      "bytes": 27863,
+      "sha256": "9969fd5ae5281ad40cdf6d8caf50084636a43ed7b7647e0e9e1195e859cec7cc"
+    },
+    {
+      "name": "lmsy10.tfm",
+      "offset": 521748992,
+      "bytes": 1308,
+      "sha256": "11f429b2c08f944627faa5942277297d7f8fef40edae2bae46cb238b838400ba"
+    },
+    {
+      "name": "lmsy5.tfm",
+      "offset": 521751040,
+      "bytes": 1296,
+      "sha256": "cac282b076edc89a2bbc8cdd1bd899117cd1af05612bca2b203e8b5ebe715431"
+    },
+    {
+      "name": "lmsy6.tfm",
+      "offset": 521753088,
+      "bytes": 1300,
+      "sha256": "8548e4b09655eb2b166bf95df4be4f2a7ae54d5df2069bc04ef233bfd941167b"
+    },
+    {
+      "name": "lmsy7.tfm",
+      "offset": 521755136,
+      "bytes": 1304,
+      "sha256": "3e92767469b4df54c985a533b8064789df60f21ab69d381dbf01bb608e3fbff8"
+    },
+    {
+      "name": "lmsy8.pfb",
+      "offset": 1457389568,
+      "bytes": 27802,
+      "sha256": "e23c98a5dadbaf4f156082cfcfa7b3366f849ee86b0410db53a9c6fe4e67920b"
+    },
+    {
+      "name": "lmsy8.tfm",
+      "offset": 521757184,
+      "bytes": 1304,
+      "sha256": "b6b96268d56481a5bc7cbb34b140ca1fa5017d2767acc4e11a94b30eabd114f7"
+    },
+    {
+      "name": "lmtt10.pfb",
+      "offset": 1458441216,
+      "bytes": 113227,
+      "sha256": "4b266a3e09581283d72e31df9f240811c77e02f8debf720744cc4614f7493616"
     },
     {
       "name": "load-unicode-data.tex",
@@ -1949,6 +2261,18 @@
       "sha256": "172cc5a24f0fa7d780556f2d0fcab7c7a1b60d8f017079a56951ca3a747c82ad"
     },
     {
+      "name": "mathtools.sty",
+      "offset": 155498496,
+      "bytes": 59398,
+      "sha256": "a2b78a3b17d486d75ad904b5215aa5200a3a0253d50da1f2580e2eabb29bc0b1"
+    },
+    {
+      "name": "mhsetup.sty",
+      "offset": 155558912,
+      "bytes": 5582,
+      "sha256": "c3ae1e23f43029fbfc271e3b1440a692e1cd924d1810430b99e4f2aa5b9ccf09"
+    },
+    {
       "name": "microtype-xetex.def",
       "offset": 162184704,
       "bytes": 13146,
@@ -1965,6 +2289,54 @@
       "offset": 162226176,
       "bytes": 90503,
       "sha256": "ba8d47ade005b92c484f131f52a1e158fc0acfc86f6708f7c726f6bbce35c90c"
+    },
+    {
+      "name": "msam10.pfb",
+      "offset": 1123127296,
+      "bytes": 31764,
+      "sha256": "f2e3b470b988a46272125e917531690d3c4d03ac7238f112b07337f972a537fa"
+    },
+    {
+      "name": "msam10.tfm",
+      "offset": 362221568,
+      "bytes": 916,
+      "sha256": "3b54bde5cb0e0bd071eea7bc702ed3a1a284f786779ef8e75b06eba4104bb9f2"
+    },
+    {
+      "name": "msam5.tfm",
+      "offset": 362223104,
+      "bytes": 924,
+      "sha256": "c800d1dfd533040219fcc06d52e0e00c2a20fb9b0039fe9f58ccec53fd003a9f"
+    },
+    {
+      "name": "msam7.tfm",
+      "offset": 362226176,
+      "bytes": 928,
+      "sha256": "719d100c110fa1cfae9ad0b63e6c21753f4980f925fa516c1a04961e206f69d5"
+    },
+    {
+      "name": "msbm10.pfb",
+      "offset": 1123337728,
+      "bytes": 34694,
+      "sha256": "d2121de7e7c14490a2d352e3b62e62882d6c300235464bfa577e6055696e6e62"
+    },
+    {
+      "name": "msbm10.tfm",
+      "offset": 362230784,
+      "bytes": 908,
+      "sha256": "d9f5f519ec718e9dbccb8527c1f5d3b4a008dfb946377f97f71611b385d3d010"
+    },
+    {
+      "name": "msbm5.tfm",
+      "offset": 362232320,
+      "bytes": 940,
+      "sha256": "9e0909a297a3097e50960158d324006ddd5302db665400fa1fdf966df14e1a17"
+    },
+    {
+      "name": "msbm7.tfm",
+      "offset": 362235392,
+      "bytes": 940,
+      "sha256": "361b5530a4b410c6274e9330c11e993843c62e394323aeaa6e0aee61e8042444"
     },
     {
       "name": "mt-cmr.cfg",
@@ -2027,6 +2399,12 @@
       "sha256": "1a82bddbbad0234be439dffccefc2fe26ea9216520be7f1fb888293d9bbd63a4"
     },
     {
+      "name": "omllmm.fd",
+      "offset": 150764544,
+      "bytes": 890,
+      "sha256": "0713fd8996320f03e8085c8da713bdc3a238b32c7ef83f5729151450d4bebbb5"
+    },
+    {
       "name": "omscmsy.fd",
       "offset": 144944128,
       "bytes": 2262,
@@ -2039,10 +2417,22 @@
       "sha256": "b2ac48b774931de1988b88bcfff6076c72ba0a739420a6fdbf1378cddf2c8482"
     },
     {
+      "name": "omslmsy.fd",
+      "offset": 150769152,
+      "bytes": 807,
+      "sha256": "e1df006d08c2a73bba6b1a1f804e96160f2f8aeb7d8518b07da455b7dd45d1ff"
+    },
+    {
       "name": "omxcmex.fd",
       "offset": 144956416,
       "bytes": 2040,
       "sha256": "18ef86924d2a8f33abe9fa92aac9416e73bf9cc92b05e964535abb8ae23816fe"
+    },
+    {
+      "name": "omxlmex.fd",
+      "offset": 150770688,
+      "bytes": 568,
+      "sha256": "57ae2bb311d1126b02d61b9d26de8590d831f7f9a98ca1788cb62de920a495c1"
     },
     {
       "name": "ot1cmr.fd",
@@ -2067,6 +2457,12 @@
       "offset": 144989184,
       "bytes": 4647,
       "sha256": "3b1c1cb3b065751f28a59223c3cdcbd1639549ed5a57c960f22a033d7d4799fa"
+    },
+    {
+      "name": "ot1lmr.fd",
+      "offset": 150773760,
+      "bytes": 1882,
+      "sha256": "51291fc1c1086c51d64f914ecc8051fe0dbe3f7601e89f2a5e18a5df5c6da1ea"
     },
     {
       "name": "pd1enc.def",
@@ -2549,6 +2945,48 @@
       "sha256": "c206a966a49fe47d1c59723d116dac95994468272cda392a56cf7379519c460f"
     },
     {
+      "name": "rm-lmr10.tfm",
+      "offset": 522586112,
+      "bytes": 11868,
+      "sha256": "50dc8240a67003c1ec5bcd55f703c87189aeab0d199c42b4dc3e141a02488998"
+    },
+    {
+      "name": "rm-lmr12.tfm",
+      "offset": 522598912,
+      "bytes": 11888,
+      "sha256": "9d4e3d8e39a41b93d91f79c1c47d2297efb7b1af220b94860693c08361f227aa"
+    },
+    {
+      "name": "rm-lmr17.tfm",
+      "offset": 522611712,
+      "bytes": 11948,
+      "sha256": "f404bd1bd2b76b1ad534597ceb6abdc39fd8e57e3a955eeae27c09f39ee51d37"
+    },
+    {
+      "name": "rm-lmr5.tfm",
+      "offset": 522624512,
+      "bytes": 11804,
+      "sha256": "420a4fc1563b171e5a791bb71211d85e6bf62fd2f2ed2a7f34f742049d6e5071"
+    },
+    {
+      "name": "rm-lmr6.tfm",
+      "offset": 522637312,
+      "bytes": 11836,
+      "sha256": "eb0bfdf8db3ae1409639fac9c88f84923872500d882d9ff8dc37aff445c723fe"
+    },
+    {
+      "name": "rm-lmr7.tfm",
+      "offset": 522650112,
+      "bytes": 11852,
+      "sha256": "373a4f72b5a088f9caee2cfd75adb2b25116e0cba3ad2bfa99b5f8a7e902a482"
+    },
+    {
+      "name": "rm-lmr8.tfm",
+      "offset": 522662912,
+      "bytes": 11864,
+      "sha256": "80bcbfd844d2310ac1d3bead45aee25e91b1a4a0a60ff1771959b9a1e90ec1a2"
+    },
+    {
       "name": "scrartcl.cls",
       "offset": 138569728,
       "bytes": 233526,
@@ -2615,6 +3053,12 @@
       "sha256": "dee88bc30609ea53e4004f8baf91a2951050a635751fecf1c9b1eb7cf471302e"
     },
     {
+      "name": "size11.clo",
+      "offset": 145089024,
+      "bytes": 8464,
+      "sha256": "efc946da03cfa55c75be27d73012ab866fcc935fd47ac4a674026bbdbdcfa9f1"
+    },
+    {
       "name": "standard.bbx",
       "offset": 65167872,
       "bytes": 25680,
@@ -2637,6 +3081,18 @@
       "offset": 145187840,
       "bytes": 10880,
       "sha256": "537d0535c1eb3d4ff06f28398b4e3ec3c2a7b66d0ad046441e6856bddd6c8871"
+    },
+    {
+      "name": "t1lmr.fd",
+      "offset": 150818304,
+      "bytes": 1867,
+      "sha256": "6b61abc8a6796f1884f819afcfc4c33558564f7e5c1d47b720e50ee15dba829a"
+    },
+    {
+      "name": "t1lmtt.fd",
+      "offset": 150825472,
+      "bytes": 2682,
+      "sha256": "eb5aca0fcd27d1d7d97d35e7a4d01eb12ba1a054f9fe1114a779c9ae084be602"
     },
     {
       "name": "tcbbreakable.code.tex",
@@ -2919,6 +3375,18 @@
       "offset": 145389568,
       "bytes": 3680,
       "sha256": "85f78f04e6a9625407f86d519344d3135ff5225f18ef624665a4c0b2e1befdd3"
+    },
+    {
+      "name": "umsa.fd",
+      "offset": 51824128,
+      "bytes": 961,
+      "sha256": "48355e960333be747dd7b4500e76fde7c3ef0b1fa9c74ec0f1438af0d3a661a4"
+    },
+    {
+      "name": "umsb.fd",
+      "offset": 51825664,
+      "bytes": 961,
+      "sha256": "e20f21f6ed631cbe3a627d5da5fef82367732a7d51207f8df5ee7e9c77ee342e"
     },
     {
       "name": "uniquecounter.sty",

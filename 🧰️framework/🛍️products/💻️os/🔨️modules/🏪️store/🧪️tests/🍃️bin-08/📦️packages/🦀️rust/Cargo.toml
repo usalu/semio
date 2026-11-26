@@ -28,6 +28,8 @@ semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-job-payload = { workspace = true }
+semio-os-dsl = { path = "../../../../../🗣️dsl/📦️packages/🦀️rust" }
+semio-os-store-one-item-publication = { path = "../../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
 semio-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
 semio-os-store-engine-owners = { path = "../../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
 semio-os-store-snapshot-clone = { path = "../../../../🧬️snapshot-clone/📦️packages/🦀️rust" }

@@ -16,6 +16,19 @@ pub enum Surface {
     Menu,
 }
 
+impl Surface {
+    /// 🪜️ Resolves the opaque terminal level of a chip on this surface.
+    pub const fn above(self) -> Self {
+        match self {
+            Self::Base => Self::Window,
+            Self::Window => Self::Pane,
+            Self::Pane => Self::Panel,
+            Self::Panel => Self::Dialog,
+            Self::Dialog | Self::Menu => Self::Menu,
+        }
+    }
+}
+
 /// 🎭️ A semantic foreground/border/state role, resolved against the active palette.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Role {

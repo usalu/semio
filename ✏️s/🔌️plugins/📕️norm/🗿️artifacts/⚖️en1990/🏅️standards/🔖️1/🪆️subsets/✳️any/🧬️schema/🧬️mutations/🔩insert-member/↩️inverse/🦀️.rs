@@ -5,5 +5,12 @@ use crate::remove_member::RemoveMember;
 use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 
 pub fn inverse<Op>(payload: &InsertMember, base: &En1990Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_member::RemoveMember> {
-    Ok(vec![Op::from(RemoveMember { index: payload.index.unwrap_or(usize::MAX).min(base.members.len()) })])
+    Ok(match previous(payload, base) {
+        Some(inverse) => vec![Op::from(inverse)],
+        None => Vec::new(),
+    })
+}
+
+fn previous(payload: &InsertMember, base: &En1990Snapshot) -> Option<crate::remove_member::RemoveMember> {
+    Some(RemoveMember { index: payload.index.unwrap_or(usize::MAX).min(base.members.len()) })
 }

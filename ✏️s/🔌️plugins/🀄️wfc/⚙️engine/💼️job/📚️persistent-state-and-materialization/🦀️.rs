@@ -24,6 +24,8 @@ pub(super) struct EntropyEntry {
     pub(super) revision: u64,
 }
 
+semio_framework_value::artifact_retire_leaf!(Removal, Decision, EntropyEntry);
+
 impl PartialEq for EntropyEntry {
     fn eq(&self, other: &Self) -> bool {
         (self.entropy_bits, self.node, self.revision) == (other.entropy_bits, other.node, other.revision)
@@ -51,7 +53,9 @@ pub(super) enum InitPhase {
     Measure,
 }
 
-#[derive(Clone, Debug, Default)]
+semio_framework_value::artifact_retire_leaf!(InitPhase);
+
+#[derive(Clone, Debug, Default, semio_framework_value::RetireOwned)]
 pub(super) struct InitCursor {
     pub(super) phase: InitPhase,
     pub(super) word: usize,
@@ -82,7 +86,9 @@ pub(super) struct ChoiceCursor {
     pub(super) candidate: Option<PatternId>,
 }
 
-#[derive(Clone, Debug)]
+semio_framework_value::artifact_retire_leaf!(ChoiceCursor);
+
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub(super) struct ArcCursor {
     pub(super) source: NodeId,
     pub(super) raw_index: usize,
@@ -118,7 +124,7 @@ impl ArcCursor {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub(super) struct WfcState {
     pub(super) operation_id: u64,
     pub(super) base_revision: u64,
@@ -195,7 +201,9 @@ pub(super) enum CheckpointPhase {
     Done,
 }
 
-#[derive(Clone, Debug)]
+semio_framework_value::artifact_retire_leaf!(CheckpointPhase);
+
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub(super) struct CheckpointBuild {
     pub(super) bytes: Vec<u8>,
     pub(super) byte_limit: usize,
@@ -217,7 +225,7 @@ impl CheckpointBuild {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub(super) struct CommitBuild {
     pub(super) bytes: Vec<u8>,
     pub(super) byte_limit: usize,

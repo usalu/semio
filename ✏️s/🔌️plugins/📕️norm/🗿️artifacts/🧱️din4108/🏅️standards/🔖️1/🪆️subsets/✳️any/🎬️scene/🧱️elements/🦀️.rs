@@ -49,13 +49,13 @@ fn wall_layers(element: &model::EnvelopeElement) -> Vec<WallLayer> {
     element.layers.iter().map(|layer| WallLayer { thickness: layer_thickness(layer), role: role_of(layer), label: loc(&layer.material_id, &layer.material_id) }).collect()
 }
 
-fn element(input: &SceneInput, layout: &Layout, out: &mut Out, element: &model::EnvelopeElement) {
+fn element(input: &SceneInput, layout: &Layout, bindings: &CheckBindings<'_>, out: &mut Out, element: &model::EnvelopeElement) {
     let Some(Pose { frame, length }) = layout.pose(&element.id).cloned() else { return };
     let height = length * PANEL_HEIGHT_RATIO;
     let layers = wall_layers(element);
     let total: f64 = layers.iter().map(|l| l.thickness).sum();
     let end = along(&frame.origin, &frame.x, length);
-    let binding = binding(input.document, input.report, &[&element.id]);
+    let binding = bindings.binding(&element.id);
     let u = u_value_of(element).map_or_else(|| ("n/a".to_owned(), "k. A.".to_owned()), |u| (format!("{u:.3}"), format!("{u:.3}")));
     let name = loc(&format!("{} ({})", element.id, element.kind), &format!("{} ({})", element.id, element.kind));
     out.push(
@@ -78,14 +78,14 @@ fn element(input: &SceneInput, layout: &Layout, out: &mut Out, element: &model::
     out.annotate(Annotation::Label { id: format!("{}:label", element.id), anchor: label_at.clone(), text: name, tone: tone_of(&binding) }, &label_at);
     let from = along(&frame.origin, &frame.z, -LABEL_LIFT);
     out.annotate(Annotation::Dimension { id: format!("{}:thickness", element.id), from: from.clone(), to: along(&from, &frame.y, total), offset: Vec3::ZERO, value: Quantity::new(QuantityKind::Length, total), binding: None }, &from);
-    if let Some(clause) = binding.as_ref().and_then(|b| clause_of(input.report, &b.check_id)) {
+    if let Some(clause) = binding.as_ref().and_then(|b| bindings.clause(&b.check_id)) {
         out.annotate(Annotation::Clause { id: format!("{}:clause", element.id), anchor: entity, clause }, &label_at);
     }
 }
 
-fn zone(input: &SceneInput, layout: &Layout, out: &mut Out, zone: &model::ThermalZone) {
+fn zone(input: &SceneInput, layout: &Layout, bindings: &CheckBindings<'_>, out: &mut Out, zone: &model::ThermalZone) {
     let Some(Pose { frame, length }) = layout.pose(&zone.id).cloned() else { return };
-    let binding = binding(input.document, input.report, &[&zone.id]);
+    let binding = bindings.binding(&zone.id);
     let name = loc(&format!("Zone {}", zone.id), &format!("Zone {}", zone.id));
     let windows: f64 = zone.windows.iter().map(|w| w.area_m2).sum();
     out.push(
@@ -107,9 +107,9 @@ fn zone(input: &SceneInput, layout: &Layout, out: &mut Out, zone: &model::Therma
     out.annotate(Annotation::Label { id: format!("{}:label", zone.id), anchor: at.clone(), text: name, tone: tone_of(&binding) }, &at);
 }
 
-fn bridge(input: &SceneInput, layout: &Layout, out: &mut Out, bridge: &model::ThermalBridge) {
+fn bridge(input: &SceneInput, layout: &Layout, bindings: &CheckBindings<'_>, out: &mut Out, bridge: &model::ThermalBridge) {
     let Some(Pose { frame, length }) = layout.pose(&bridge.id).cloned() else { return };
-    let binding = binding(input.document, input.report, &[&bridge.id]);
+    let binding = bindings.binding(&bridge.id);
     let end = along(&frame.origin, &frame.x, length);
     let name = loc(&format!("Bridge {} ({})", bridge.id, bridge.bb2_type), &format!("Wärmebrücke {} ({})", bridge.id, bridge.bb2_type));
     out.push(
@@ -143,19 +143,20 @@ fn bridge(input: &SceneInput, layout: &Layout, out: &mut Out, bridge: &model::Th
 
 pub(crate) fn project(input: &SceneInput, layout: &Layout, out: &mut Out) {
     let d = input.document;
+    let bindings = CheckBindings::new(d, input.report);
     for row in &d.elements {
         if out.wants(&row.id) {
-            element(input, layout, out, row);
+            element(input, layout, &bindings, out, row);
         }
     }
     for row in &d.zones {
         if out.wants(&row.id) {
-            zone(input, layout, out, row);
+            zone(input, layout, &bindings, out, row);
         }
     }
     for row in &d.thermal_bridges {
         if out.wants(&row.id) {
-            bridge(input, layout, out, row);
+            bridge(input, layout, &bindings, out, row);
         }
     }
 }

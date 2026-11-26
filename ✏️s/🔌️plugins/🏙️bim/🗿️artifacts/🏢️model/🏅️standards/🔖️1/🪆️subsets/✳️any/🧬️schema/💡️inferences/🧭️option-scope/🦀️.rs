@@ -26,15 +26,6 @@ fn effective(base: &ModelSnapshot, memberships: &RetainedOrderedMap<String, Elem
     memberships.get(id).or_else(|| host(base, id).and_then(|parent| memberships.get(parent))).map(|record| record.target.clone())
 }
 impl OptionScope {
-    /// 👁️ One element visibility query without building a separate state holder.
-    pub fn includes(&self, id: &str, selected: &BTreeMap<String, String>, visibility: &BTreeMap<String, bool>) -> bool {
-        let accepts = |id: &str| {
-            self.effective_options.get(id).is_none_or(|option| self.groups.get(option).is_some_and(|group| selected.get(group).or_else(|| self.defaults.get(group)) == Some(option)))
-                && self.effective_worksets.get(id).is_none_or(|workset| visibility.get(workset).copied().unwrap_or_else(|| !self.hidden_worksets.contains(workset)))
-        };
-        accepts(id) && self.hosts.get(id).is_none_or(|parent| accepts(parent))
-    }
-
     /// 👁️ Visible physical ids for local option choices and hidden worksets, including hosted visibility.
     pub fn visible_for(&self, selected: &BTreeMap<String, String>, hidden: &BTreeSet<String>) -> Vec<String> {
         let accepts = |id: &str| {

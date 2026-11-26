@@ -151,8 +151,10 @@ impl AppPresentPhase {
     }
 }
 
+
 pub(super) struct AppPresentCursor {
     pub(super) media_collect:semio_renderer_wgpu_media_slots::original_collect::OriginalPresentedRoster,
+    pub(super) media_input_released:bool,
     pub(super) media_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Vec<semio_renderer_wgpu_media_slots::PresentedMediaSlot>>>,
     pub(super) media_slots: Vec<semio_renderer_wgpu_media_slots::PresentedMediaSlot>,
     pub(super) has_animated_primitives: bool,

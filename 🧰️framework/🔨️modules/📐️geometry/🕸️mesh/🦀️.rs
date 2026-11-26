@@ -14,7 +14,7 @@ use crate::{Point, Vec2};
 use std::collections::BTreeMap;
 
 /// 🕸️ Indexed triangle mesh in metres; triangles are counter-clockwise seen from outside.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq)]
 pub struct TriMesh {
     pub positions: Vec<Xyz>,
     pub normals: Vec<Xyz>,

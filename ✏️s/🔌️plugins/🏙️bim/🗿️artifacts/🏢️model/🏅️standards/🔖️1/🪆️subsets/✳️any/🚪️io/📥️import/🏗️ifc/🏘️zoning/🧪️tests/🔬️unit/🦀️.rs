@@ -1,7 +1,7 @@
 use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
 use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::zoned;
 use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::import_ifc2x3;
-use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{DesignOption, ModelSnapshot, OptionGroup, Workset};
 
 fn exported(model: &ModelSnapshot) -> String {
     String::from_utf8(export_ifc2x3(model).expect("the model exports").0).expect("a text file")
@@ -22,6 +22,19 @@ fn zones_schemes_memberships_and_finishes_survive_the_round_trip_exactly() {
         assert_eq!((&after.zone, &after.floor_finish, &after.wall_finish, &after.ceiling_finish), (&before.zone, &before.floor_finish, &before.wall_finish, &before.ceiling_finish), "{space}");
     }
     assert!(notes.iter().all(|note| !note.contains("IFCZONE") && !note.contains("IFCGROUP") && !note.contains("Covering")), "{notes:?}");
+}
+
+#[test]
+fn empty_groups_options_and_worksets_survive_the_ifc2x3_round_trip() {
+    let mut model = zoned();
+    model.option_groups.cold_insert("group-empty".into(), OptionGroup { name: "Empty option group".into() });
+    model.option_groups.cold_insert("group-design".into(), OptionGroup { name: "Design group".into() });
+    model.design_options.cold_insert("option-empty".into(), DesignOption { group: "group-design".into(), name: "Empty option".into(), primary: true });
+    model.worksets.cold_insert("workset-empty".into(), Workset { name: "Hidden workset".into(), default_visible: false });
+    let (back, _) = import_ifc2x3(exported(&model).as_bytes()).expect("IFC2X3 groups import");
+    assert_eq!(back.option_groups, model.option_groups);
+    assert_eq!(back.design_options, model.design_options);
+    assert_eq!(back.worksets, model.worksets);
 }
 
 #[test]

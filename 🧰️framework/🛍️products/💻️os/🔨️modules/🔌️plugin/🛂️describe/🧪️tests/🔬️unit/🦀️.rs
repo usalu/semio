@@ -1,4 +1,4 @@
-use semio_plugin_extension::describe::describe_plugin;
+use semio_plugin_extension::describe::{describe_plugin, encode_package_descriptor};
 use semio_framework::{IoEntryDescriptor, IoEntryDirection, PackageDescriptor};
 use semio_os_kernel::io;
 

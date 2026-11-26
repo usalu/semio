@@ -409,7 +409,7 @@ impl ArtifactViewer for BimModelViewer {
             return Ok(false);
         }
         if original.command.action_id() != original.tool_id {
-            return Err(refusal("app.command.tool-mismatch", "the BIM view command does not match its exact registered tool"));
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "the BIM view command does not match its exact registered tool").into());
         }
         let tool_id = original.command.action_id();
         semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, BimViewCommand::action_id, BIM_VIEW_RAW_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(tool_id, bim_view_reduce, bim_view_extent))

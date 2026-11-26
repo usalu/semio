@@ -352,25 +352,6 @@ pub fn fixture_step<J: semio_framework_job::InteractiveJob + ?Sized>(job: &mut J
     summary
 }
 
-/// 🎟️ The caller's Work every fixture identity hop commits under: each observed effect is admitted, bounded by the laws' grants and never by a job loan.
-struct FixtureWork;
-impl semio_framework_value::native_encoding::OriginalWorkRecipient for FixtureWork {
-    type Context<'t, 's> = () where 's: 't;
-    fn validate_context<'t, 's>(&self, _: &()) -> Result<(), semio_framework_value::ValueError> where 's: 't { Ok(()) }
-    fn source_turn<'t, 's>(&self, _: &()) -> Option<semio_framework_value::native_encoding::OriginalSourceTurnIdentity> where 's: 't { None }
-    fn admits<'r, 't, 's>(&mut self, _: &mut (), quote: semio_framework_value::native_encoding::OriginalWorkQuote<'r>, observed: u64, additional: u64) -> semio_framework_value::native_encoding::OriginalWorkQuoteComplete<'r> where 's: 't { quote.complete(Ok(observed.checked_add(additional).is_some())) }
-    fn settle_partial<'r, 't, 's>(&mut self, _: &mut (), check: semio_framework_value::native_encoding::OriginalWorkPartialCheck<'r>) -> semio_framework_value::native_encoding::OriginalWorkPartialCheckComplete<'r> where 's: 't { check.complete(Ok(())) }
-    fn recover_partial<'r, 't, 's>(&mut self, _: &mut (), check: semio_framework_value::native_encoding::OriginalWorkPartialCheck<'r>) -> semio_framework_value::native_encoding::OriginalWorkPartialCheckComplete<'r> where 's: 't { check.pending() }
-}
-
-/// 🪢️ Lends the fixture's one Work authority to every native hop of a fixture identity.
-struct FixtureIdentityWork(semio_framework_value::native_encoding::OriginalWorkAuthority<FixtureWork>);
-impl semio_os_kernel::os_vcs::io::binary::entity_identity::control::IdentityWorkLender for FixtureIdentityWork {
-    fn lend(&mut self, control: &mut semio_framework_value::NativeEncodeControl<'_>, operation: &mut dyn FnMut(&mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), semio_framework_value::ValueError>) -> Result<(), semio_framework_value::ValueError> {
-        self.0.with_loan(&mut (), |loan| control.with_work_recipient(loan, |control| operation(control)))?
-    }
-}
-
 /// 🎟️ Lends a live original caller's own Work (the `native_encoder_work` snapshot of its step context) to every native hop of an authoring identity, exactly as the production reserved-commit route does; the caller charges `performed()` back with `consume_fuel`.
 pub struct CallerIdentityWork<'w>(pub &'w mut semio_framework_job::NativeEncoderWork);
 impl semio_os_kernel::os_vcs::io::binary::entity_identity::control::IdentityWorkLender for CallerIdentityWork<'_> {
@@ -379,13 +360,7 @@ impl semio_os_kernel::os_vcs::io::binary::entity_identity::control::IdentityWork
     }
 }
 
-/// 🪪️ One local native authoring identity for a fixture call: `&mut fixture_identity()` lives for the whole statement, awaits included.
-/// Its no-op observer is a zero-sized closure, so leaking it allocates nothing; every hop commits under the fixture's own Work loan.
-pub fn fixture_identity() -> semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'static> {
-    let observer: &'static mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'static> = Box::leak(Box::new(|_: semio_framework_value::native_encoding::NativeEncodeProgress| true));
-    semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).expect("fixture authoring identity admission")
-        .with_work_lender(Box::new(FixtureIdentityWork(semio_framework_value::native_encoding::OriginalWorkAuthority::new(FixtureWork))))
-}
+pub use semio_os_kernel::os_vcs::io::binary::entity_identity::testing::fixture_identity;
 
 /// 🛬️ The archive operation a law's whole-document load runs under: bit 61 alone, below the restore (62) and cold-pair
 /// (63) namespaces.

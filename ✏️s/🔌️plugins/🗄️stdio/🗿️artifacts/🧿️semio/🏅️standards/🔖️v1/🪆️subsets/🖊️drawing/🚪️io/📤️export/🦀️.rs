@@ -107,9 +107,17 @@ pub fn encode_drawing(drawing: &semio_s_artifact_stdio_semio_drawing::schema::sn
         SemioDrawingFormat::Dxf => Ok(semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::io::text::snapshot::print_dxf_document(&::semio_framework_async::poll::resolve_ready(SemioDrawingToDxf::serialize(drawing)).map_err(|e| e.to_string())?).into_bytes()),
         SemioDrawingFormat::Dwg => semio_s_artifact_stdio_dwg_write::standards::v_ac1024::subsets::any::io::export::dwg_to_bytes(&::semio_framework_async::poll::resolve_ready(SemioDrawingToDwg::serialize(drawing)).map_err(|e| e.to_string())?.drawing.to_native()?),
         SemioDrawingFormat::Pdf { version } => {
+            use semio_s_artifact_stdio_pdf_conformance_support::standards::v1_7::subsets::base::modules::writer::{serialize_document, DocumentTrailer, WriteOptions};
+            use semio_s_artifact_stdio_pdf_lower::standards::v1_7::subsets::base::modules::lower::{lower_document, LowerOptions};
             let mut pdf = drawing_to_pdf(drawing)?;
-            pdf.declared_version = version.to_string();
-            semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::export::encode_pdf(&pdf).map_err(|e| e.to_string())
+            let version = if version.is_empty() { "1.7" } else { version };
+            if !version.bytes().all(|byte| byte.is_ascii_digit() || byte == b'.') {
+                return Err(semio_s_artifact_stdio_pdf_lower::standards::v1_7::subsets::base::io::error::PdfEngineError::Malformed("declared PDF version is not numeric".into()).to_string());
+            }
+            pdf.declared_version = version.into();
+            let document = lower_document(&pdf, 1, LowerOptions::default()).map_err(|error| error.to_string())?;
+            let trailer = DocumentTrailer { root: document.root, info: document.info, id: pdf.document_id, extra: Vec::new() };
+            Ok(serialize_document(version, &document.objects, &trailer, &WriteOptions::default()))
         }
         SemioDrawingFormat::Png => semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::encode_png(&::semio_framework_async::poll::resolve_ready(SemioDrawingToPng::serialize(drawing)).map_err(|e| e.to_string())?),
     }

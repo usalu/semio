@@ -17,6 +17,9 @@ assert (wrapper.parent / '../🧪️tests/🎨️visual-pass/🦀️.rs').resolv
 assert '🧪️visual-laws/📦️packages/🦀️rust' in workspace and 'semio-s-artifact-norm-en1999-scene-visual-laws' in router
 assert (manifest.parent / '../../🦀️.rs').resolve() == wrapper.resolve()
 assert (manifest.parent / '../../../../🧬️schema/📸️snapshot/🔣️.json').is_file()
+assert 'facts, kit, layout' in wrapper.read_text()
+assert 'semio-s-artifact-norm-en1999-mutations = { workspace = true }' in manifest.read_text()
+assert 'layout::Layout' in visual.read_text() and 'semio_s_artifact_norm_en1999_mutations::EDIT_RULES' in visual.read_text()
 print('visual tests:', len(re.findall(r'^#\[test\]', visual.read_text(), re.M)))
 for name, entry in [('scene', main), ('visual-laws', wrapper)]:
     files, size, issues = audit['closure'](str(entry), audit['unit_cfg']('macos', [], True), {})
