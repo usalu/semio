@@ -34,7 +34,7 @@ function agent(dir:string,shared:{spans:Span[];alone:boolean[]},ownerDelayMs=250
   mock.events.push("builder:wait");
   const claim=await custody.hold({owners:request?.dirty??[],structural:request===undefined||request.structural,say:(key,fields)=>mock.said.push({key,text:renderCustodyMessageV1(key,fields,"en")})});
   mock.events.push("builder:held");
-  const watched:SliceClaimV1={get token(){return claim.token;},get owners(){return claim.owners;},get structural(){return claim.structural;},extend:options=>claim.extend(options),alone:async options=>{const answer=await claim.alone(options);shared.alone.push(answer);return answer;},release:()=>claim.release()};
+  const watched:SliceClaimV1={get token(){return claim.token;},get owners(){return claim.owners;},get structural(){return claim.structural;},extend:options=>claim.extend(options),alone:async options=>{const answer=await claim.alone(options);shared.alone.push(answer);return answer;},release:()=>claim.release(),settle:finished=>claim.settle(finished),progress:event=>claim.progress(event),fence:(body,options)=>claim.fence(body,options),handover:options=>claim.handover(options),handoverError:(reason,counts)=>claim.handoverError(reason,counts)};
   try{return await body({root:join(dir,".gen")},{published:mock.published},watched);}finally{mock.events.push("builder:released");await claim.release();}
  };
  return mock;

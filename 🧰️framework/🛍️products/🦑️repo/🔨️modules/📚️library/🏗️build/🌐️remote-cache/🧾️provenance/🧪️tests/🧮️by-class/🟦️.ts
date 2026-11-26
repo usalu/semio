@@ -25,7 +25,7 @@ test("a divergence is counted under the kind of result that diverged and /status
  for(const root of[a,b,server])expect((await syncFleetIdentityV1({root})).error).toBeUndefined();
  const running=await startRemoteCacheServerV1({directory:directory("cache"),host:"127.0.0.1",port:0,maximumBytes:2**26,maximumEntryBytes:2**24,maximumAgeDays:30,defaultInstance:"semio",tokens:{},validation:"structure",fleet:{storeRoot:store,group:"g1",networks:["10.77.0.0/16"]}});
  servers.push(running);
- const base=`http://127.0.0.1:${running.port}/semio`,put=(root:string,key:string,bytes:Uint8Array)=>fleetSignedFetchV1({root,audience:"cache"})(`${base}/ac/${key}`,{method:"PUT",body:bytes});
+ const base=`http://127.0.0.1:${running.port}/semio`,put=(root:string,key:string,bytes:Uint8Array<ArrayBuffer>)=>fleetSignedFetchV1({root,audience:"cache"})(`${base}/ac/${key}`,{method:"PUT",body:bytes});
  const cases:[string,string[]][]=[["record",["record.br","closure-1.br"]],["record2",["record.br"]],["closure",["closure-9.br"]],["unit",["unit.json","out/o0"]],["other",["o0"]]];
  for(const [label,paths] of cases){
   const key=sha(label);
@@ -42,7 +42,7 @@ test("a note two machines write differently is replaced by the newer one and cou
  for(const root of[a,b,server])expect((await syncFleetIdentityV1({root})).error).toBeUndefined();
  const cache=directory("cache2"),options={directory:cache,host:"127.0.0.1",port:0,maximumBytes:2**26,maximumEntryBytes:2**24,maximumAgeDays:30,defaultInstance:"semio",tokens:{},validation:"structure" as const,fleet:{storeRoot:store,group:"g1",networks:["10.77.0.0/16"]}};
  const running=await startRemoteCacheServerV1(options);servers.push(running);
- const base=`http://127.0.0.1:${running.port}/semio`,put=(root:string,key:string,bytes:Uint8Array)=>fleetSignedFetchV1({root,audience:"cache"})(`${base}/ac/${key}`,{method:"PUT",body:bytes}),get=async(key:string)=>new Uint8Array(await (await fleetSignedFetchV1({root:a,audience:"cache"})(`${base}/ac/${key}`)).arrayBuffer());
+ const base=`http://127.0.0.1:${running.port}/semio`,put=(root:string,key:string,bytes:Uint8Array<ArrayBuffer>)=>fleetSignedFetchV1({root,audience:"cache"})(`${base}/ac/${key}`,{method:"PUT",body:bytes}),get=async(key:string)=>new Uint8Array(await (await fleetSignedFetchV1({root:a,audience:"cache"})(`${base}/ac/${key}`)).arrayBuffer());
  const note=sha("note"),first=named(["failure.br"],"first"),second=named(["failure.br"],"second");
  expect((await put(a,note,first)).status).toBe(200);expect((await put(b,note,second)).status).toBe(200);
  expect(Buffer.compare(Buffer.from(await get(note)),Buffer.from(second))).toBe(0);
@@ -67,7 +67,7 @@ test("a graph record replaces the older record of its key and the replaced one i
  const store=directory("group3"),a=machine(store,"g1-m01"),b=machine(store,"g1-m02"),server=machine(store,"g1-server");
  for(const root of[a,b,server])expect((await syncFleetIdentityV1({root})).error).toBeUndefined();
  const running=await startRemoteCacheServerV1({directory:directory("cache3"),host:"127.0.0.1",port:0,maximumBytes:2**26,maximumEntryBytes:2**24,maximumAgeDays:30,defaultInstance:"semio",tokens:{},validation:"structure",fleet:{storeRoot:store,group:"g1",networks:["10.77.0.0/16"]}});servers.push(running);
- const base=`http://127.0.0.1:${running.port}/semio`,call=(root:string)=>fleetSignedFetchV1({root,audience:"cache"}),put=(root:string,key:string,bytes:Uint8Array)=>call(root)(`${base}/ac/${key}`,{method:"PUT",body:bytes});
+ const base=`http://127.0.0.1:${running.port}/semio`,call=(root:string)=>fleetSignedFetchV1({root,audience:"cache"}),put=(root:string,key:string,bytes:Uint8Array<ArrayBuffer>)=>call(root)(`${base}/ac/${key}`,{method:"PUT",body:bytes});
  const record=sha("record-key"),older=named(["record.br","leaf/a.json"],"older"),newer=named(["record.br","leaf/a.json"],"newer");
  expect((await put(a,record,older)).status).toBe(200);expect((await put(b,record,newer)).status).toBe(200);
  expect(Buffer.compare(Buffer.from(await (await call(a)(`${base}/ac/${record}`)).arrayBuffer()),Buffer.from(newer))).toBe(0);

@@ -49,7 +49,7 @@ fn builders_produce_sparse_patches() {
     let a = base();
     let layout = PdfTextLayout::new(&a.fonts[0],10.0,&crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::from_objects(&a.objects)).unwrap();
     let ops = layout.show_lines(&["more".to_string()], 10.0, 100.0);
-    let diff = diff_append_page_content(&a, 0, &ops);
+    let diff = diff_append_page_content(&a, 0, &ops.iter().cloned().collect());
     let next = protocol::apply_diff_cold(&diff, &a).unwrap();
     assert_eq!(next.pages[0].content.len(), a.pages[0].content.len() + ops.len());
     let removed = protocol::apply_diff_cold(&diff_remove_content(0, 0, 2), &next).unwrap();

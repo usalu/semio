@@ -36,7 +36,7 @@ describe("overall dimension per viewpoint", () => {
     const d = dimensionOf("elevation");
     expect(d.quantity).toBe("height");
     expect(d.value).toBeCloseTo(hob.dimensions.heightM, 3);
-    expect(d.label).toBe("0.09 m");
+    expect(d.label).toBe(`${hob.dimensions.heightM.toFixed(2)} m`);
     expect(d.spanMm / (1000 / DENOMINATOR)).toBeCloseTo(hob.dimensions.heightM, 3);
   });
 
@@ -44,7 +44,7 @@ describe("overall dimension per viewpoint", () => {
     const d = dimensionOf("plan");
     expect(d.quantity).toBe("depth");
     expect(d.value).toBeCloseTo(hob.dimensions.depthM, 3);
-    expect(d.label).toBe("0.52 m");
+    expect(d.label).toBe(`${hob.dimensions.depthM.toFixed(2)} m`);
     expect(d.spanMm / (1000 / DENOMINATOR)).toBeCloseTo(hob.dimensions.depthM, 2);
   });
 });

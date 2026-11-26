@@ -29,6 +29,8 @@ impl BrepRegistry {
                 }
                 SolidProvenance::SphericalShell(shell,_) => Some(nearest_analytic::spherical_shell_bounds(*shell)),
                 SolidProvenance::SphericalCaps(caps,_) => Some(nearest_analytic::spherical_caps_bounds(*caps)),
+                SolidProvenance::SphericalTorusCut(shape,_) => Some(shape.bounds()),
+                SolidProvenance::SphericalCornerBox(shape,_) => Some(shape.bounds()),
                 SolidProvenance::Frustum(shape,_) => Some(nearest_analytic::frustum_bounds(shape.frame,shape.radii,shape.height)),
                 SolidProvenance::PlanarBoundary(..) | SolidProvenance::Orthogonal(_) | SolidProvenance::PlacedOrthogonal(..) | SolidProvenance::CircularPrism(..) | SolidProvenance::TorusSector(..) | SolidProvenance::Annular(..) => None,
             },

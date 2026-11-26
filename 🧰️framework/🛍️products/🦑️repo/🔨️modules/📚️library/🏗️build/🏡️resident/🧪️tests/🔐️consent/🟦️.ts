@@ -6,11 +6,12 @@ import {chmodSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSy
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import Ajv from "ajv";
+import type {AccessReceiptV1} from "../../🔐️consent/🟨️.mjs";
 import {ACCESS_PROOF_VERSION_V1,createMountReproofV1,mountSignatureV1,forgetLaunchdRefusalV1,launchdRefusalV1,rememberLaunchdRefusalV1,sampleAccessInChildV1,sampleAccessV1,invalidateLauncherMarkerV1,launcherStateV1,launcherConsentedV1,launcherMarkerPathV1,writeLauncherMarkerV1,accessDirectoryV1,accessReceiptsLackingV1,consentIdentityV1,consentRefusalV1,probeConsentV1,protectedFolderOfV1,readAccessReceiptsV1,writeAccessReceiptV1} from "../../🔐️consent/🟨️.mjs";
 import receiptSchema from "../../🔐️consent/🧬️schema/🔣️.json" with {type:"json"};
 import resident from "../../🧬️schema/🔣️.json" with {type:"json"};
 
-const home="/Users/worker",mac={platform:"darwin",home},receipt=(over:Record<string,unknown>={})=>({version:1,role:"service",pid:4242,state:"denied",root:`${home}/Documents/semio`,folder:"Documents",identity:`${home}/.local/share/semio/launcher/bin/repo`,at:1_000_000,...over});
+const home="/Users/worker",mac={platform:"darwin",home},base:AccessReceiptV1={version:1,role:"service",pid:4242,state:"denied",root:`${home}/Documents/semio`,folder:"Documents",identity:`${home}/.local/share/semio/launcher/bin/repo`,at:1_000_000},receipt=(over:Record<string,unknown>={}):AccessReceiptV1=>({...base,...over});
 
 test("only a checkout below Documents, Desktop or Downloads of the user on macOS needs the consent",()=>{
   for(const folder of ["Documents","Desktop","Downloads"])expect(protectedFolderOfV1(`${home}/${folder}/semio/deep`,mac)).toBe(folder);
@@ -21,9 +22,9 @@ test("only a checkout below Documents, Desktop or Downloads of the user on macOS
 
 test("the consent belongs to one identity, the launcher at its install location, whatever bun runtime runs below it",()=>{
   expect(consentIdentityV1({platform:"darwin",home,environment:{}})).toEqual({name:"repo",path:`${home}/.local/share/semio/launcher/bin/repo`});
-  expect(consentIdentityV1({platform:"darwin",home,environment:{XDG_DATA_HOME:"/data"}}).path).toBe("/data/semio/launcher/bin/repo");
+  expect(consentIdentityV1({platform:"darwin",home,environment:{XDG_DATA_HOME:"/data"}})?.path).toBe("/data/semio/launcher/bin/repo");
   expect(consentIdentityV1({platform:"linux",home,environment:{}})).toBeUndefined();
-  expect(consentIdentityV1({platform:"darwin",home,environment:{}}).path).not.toContain("runtimes");
+  expect(consentIdentityV1({platform:"darwin",home,environment:{}})?.path).not.toContain("runtimes");
 });
 
 test("receipts lie outside every protected folder, one folder per checkout, and a checkout inside Documents never names its own receipts",()=>{

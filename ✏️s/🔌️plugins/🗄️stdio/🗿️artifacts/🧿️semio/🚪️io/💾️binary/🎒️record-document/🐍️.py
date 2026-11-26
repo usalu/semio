@@ -240,7 +240,9 @@ _LENGTH_BASE = (3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43,
 _LENGTH_EXTRA = (0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0)
 _DIST_BASE = (1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577)
 _DIST_EXTRA = (0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13)
-_WINDOW, _MIN_MATCH, _MAX_MATCH, _MAX_CHAIN, _NICE_MATCH, _MAX_INSERT, _HASH_BITS = 32768, 3, 258, 16, 32, 16, 15
+_WINDOW, _MIN_MATCH, _MAX_MATCH, _MAX_CHAIN, _NICE_MATCH, _MAX_INSERT, _HASH_BITS = 32768, 3, 258, 4, 8, 4, 15
+_SKIP_SHIFT = 6
+DEFLATE_POLICY = {"maximumChain": _MAX_CHAIN, "niceMatch": _NICE_MATCH, "maximumInsert": _MAX_INSERT, "skipShift": _SKIP_SHIFT}
 
 
 def _canonical_codes(lengths: List[int]) -> List[int]:
@@ -304,7 +306,7 @@ def _hash3(a: int, b: int, c: int) -> int:
 
 
 def deflate(raw: bytes) -> bytes:
-    """🗜️ The pack's one deflate: a single fixed-Huffman block over a greedy hash-chain LZ77 (3..258 byte matches, 32 KiB window, at most the chain-limit probes per position, none after a match of the nice length, and only the first position of a match longer than the insert limit enters the chains). Pinned by its own specification so equal input is equal output in every language."""
+    """🗜️ The pack's one deflate: a single fixed-Huffman block over a greedy hash-chain LZ77 (3..258 byte matches, 32 KiB window, at most the chain-limit probes per position, none after a match of the nice length, and only the first position of a match longer than the insert limit enters the chains, and after a literal run the next `misses >> SKIP_SHIFT` positions are bare literals without a search or an insert). Pinned by its own specification so equal input is equal output in every language."""
     writer = _BitWriter()
     writer.write(1, 1)
     writer.write(1, 2)
@@ -319,10 +321,13 @@ def deflate(raw: bytes) -> bytes:
             head[slot] = position
 
     i = 0
+    misses = 0
+    skip = 0
     while i < size:
         best_length = 0
         best_distance = 0
-        if i + _MIN_MATCH <= size:
+        skipping = skip > 0
+        if not skipping and i + _MIN_MATCH <= size:
             candidate = head[_hash3(raw[i], raw[i + 1], raw[i + 2])]
             chain = 0
             while candidate != -1 and chain < _MAX_CHAIN:
@@ -351,9 +356,16 @@ def deflate(raw: bytes) -> bytes:
             for position in range(i, i + (best_length if best_length <= _MAX_INSERT else 1)):
                 insert(position)
             i += best_length
+            misses = 0
+            skip = 0
         else:
             writer.huffman(_FIXED_LITERAL_CODES[raw[i]], _FIXED_LITERAL_LENGTHS[raw[i]])
-            insert(i)
+            misses += 1
+            if skipping:
+                skip -= 1
+            else:
+                insert(i)
+                skip = misses >> _SKIP_SHIFT
             i += 1
     writer.huffman(_FIXED_LITERAL_CODES[256], _FIXED_LITERAL_LENGTHS[256])
     return writer.finish()

@@ -11,7 +11,7 @@ test("600 owners with one look that never answers end within the bound, 599 pres
  const hanging=new Set(["owner-7"]),abandoned={count:0},began=performance.now();
  const outcomes=await takePassV1({names,concurrency:8,lookMaximumMilliseconds:200,abandoned,attempt:name=>hanging.has(name)?new Promise<never>(()=>{}):Bun.sleep(1).then(()=>"present" as const)});
  expect(performance.now()-began).toBeLessThan(5000);
- expect(new Map([...outcomes].sort())).toEqual(new Map([...model(hanging)].sort()));
+ expect<ReadonlyMap<string,string>>(new Map([...outcomes].sort())).toEqual(new Map([...model(hanging)].sort()));
  expect(abandoned.count).toBe(1);
 });
 

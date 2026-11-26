@@ -62,5 +62,5 @@ export async function* streamJsonObjectV1(file:FileHandle,streamed:ReadonlySet<s
     }
     if(state==="capture"||state==="capture-element"){parts.push(Buffer.from(buffer.subarray(from,bytesRead)));}
   }
-  if(state!=="done")fail();
+  if((state as string)!=="done")fail();
 }

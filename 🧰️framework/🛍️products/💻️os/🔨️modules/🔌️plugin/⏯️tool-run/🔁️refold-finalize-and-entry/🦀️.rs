@@ -8,6 +8,74 @@ use semio_os_kernel::DslValue;
 use std::collections::BTreeSet;
 use semio_framework_value::retirement::arc_custody::original::{SharedOriginalRelease, SharedOriginalStorage};
 
+/// 📸️ Keeps the last published checkpoint visible while the next one arrives in funded slices.
+#[derive(Default)]
+pub struct ToolRunCheckpoint {
+    published: Vec<u8>,
+    incoming: Vec<u8>,
+    visible: bool,
+    operation: Option<u64>,
+    page: usize,
+    offset: usize,
+}
+
+semio_framework_value::artifact_retire_struct!(ToolRunCheckpoint{published,incoming,visible,operation,page,offset});
+
+impl ToolRunCheckpoint {
+    pub fn as_deref(&self) -> Option<&[u8]> {
+        self.visible.then_some(self.published.as_slice())
+    }
+
+    pub fn clear(&mut self) {
+        self.visible = false;
+        self.operation = None;
+    }
+
+    pub fn receive(&mut self, operation: u64, source: &semio_framework_job_payload::RetainedJobPayload, received: &mut bool, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+        use semio_plugin_tool_run_operations::paid;
+        let header = size_of::<Self>();
+        let demand = RetirementDemand { copy_bytes: header, depth: 1, ..Default::default() };
+        let receipt = RetainedCloneProgress { copied_items: 1, copied_bytes: header, ..Default::default() };
+        if self.operation != Some(operation) {
+            paid(cx, demand, |_| {
+                self.incoming.clear();
+                self.page = 0;
+                self.offset = 0;
+                self.operation = Some(operation);
+                Ok(receipt)
+            })?;
+        } else if self.incoming.capacity() < source.len() {
+            let old = self.incoming.capacity();
+            let reserve = RetirementDemand { capacity_bytes: source.len(), release_bytes: old, ..demand };
+            paid(cx, reserve, |_| {
+                self.incoming.try_reserve_exact(source.len() - self.incoming.len()).map_err(|_| ValueError::invariant("checkpoint buffer reservation failed"))?;
+                Ok(RetainedCloneProgress { retained_capacity_bytes: self.incoming.capacity(), released_bytes: old, ..receipt })
+            })?;
+        } else if let Some(page) = source.page(self.page) {
+            let available = cx.retained_grant().maximum_copy_bytes.saturating_sub(header);
+            let count = (page.len() - self.offset).min(available);
+            if count == 0 && self.offset < page.len() { return Ok(()) }
+            let copy = RetirementDemand { copy_bytes: header + count, ..demand };
+            paid(cx, copy, |_| {
+                self.incoming.extend_from_slice(&page[self.offset..self.offset + count]);
+                self.offset += count;
+                if self.offset == page.len() { self.page += 1; self.offset = 0; }
+                Ok(RetainedCloneProgress { copied_bytes: copy.copy_bytes, ..receipt })
+            })?;
+        } else {
+            let publish = RetirementDemand { copy_bytes: header + size_of::<bool>(), ..demand };
+            paid(cx, publish, |_| {
+                std::mem::swap(&mut self.published, &mut self.incoming);
+                self.visible = true;
+                self.operation = None;
+                *received = true;
+                Ok(RetainedCloneProgress { copied_bytes: publish.copy_bytes, ..receipt })
+            })?;
+        }
+        Ok(())
+    }
+}
+
 /// 🗂️ Updates the mounted attempt keys and recent rows for one consumed trace operation.
 #[doc(hidden)]
 pub fn record_tool_run_trace_op(keys:&ToolRunTraceKeys,recent:&mut std::collections::VecDeque<u64>,op:ToolRunTraceOp){
@@ -116,8 +184,9 @@ pub struct ToolRunEntry<A: ArtifactApp> {
     pub rate_origin: Option<(u64, u64)>,
     pub units_per_second: f32,
     pub job: Option<ToolRunJobSlot<A::Config>>,
-    pub checkpoint: Option<Vec<u8>>,
+    pub checkpoint: ToolRunCheckpoint,
     pub pending_step: bool,
+    pub step_start: u64,
     pub finalize: Option<ToolRunFinalize<A>>,
     pub announced: Option<(ToolRunState, u64, String)>,
     pub port: ToolRunJobPort,
@@ -139,6 +208,16 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
     }
 
     pub fn progress(&self) -> semio_framework_tool_run::ToolRunProgress {
+        if let Some(view) = self.native.borrowed_view(self.identity, self.slot.state) {
+            let mut progress = view.progress.clone();
+            progress.identity = view.identity;
+            progress.state = view.state;
+            progress.conflicts = self.conflicts.max(progress.conflicts);
+            for step in self.steps.iter() {
+                progress.steps.push(step.clone());
+            }
+            return progress;
+        }
         semio_framework_tool_run::ToolRunProgress {
             identity: self.identity,
             sequence: self.sequence,
@@ -163,7 +242,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
             || match self.slot.state {
                 ToolRunState::Running => stepping,
                 ToolRunState::Starting | ToolRunState::Finalizing | ToolRunState::Aborting => true,
-                ToolRunState::Paused => self.pending_step && stepping,
+                ToolRunState::Paused => self.pending_step && stepping || self.job.as_ref().is_some_and(|job| job.outcome_received),
                 ToolRunState::Complete => false,
                 _ => self.job.is_some(),
             }
@@ -369,3 +448,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
     }
 }
 //#endregion 🔖️Ledger
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod checkpoint_tests;

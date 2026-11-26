@@ -103,7 +103,7 @@ test("after a hand-over the client asks again, the following service answers, an
  const ticking=setInterval(()=>first.advance(1000),5);
  const handOver=first.started.then(()=>first.service.stop("reload"));
  try{
-  const outcome=await within(requestInvocationPlanV1({root:process.cwd(),request:{arguments:["run","app:test"],tool:"nx",targets:["app:test"]} as never,environment:{SEMIO_BUILD_TOOL:"nx"},agent:"agent-1",write:line=>written.push(line),ports:{
+  const outcome=await within(requestInvocationPlanV1({root:process.cwd(),request:{arguments:["run","app:test"],tool:"nx",targets:["app:test"]} as never,environment:{SEMIO_BUILD_TOOL:"nx"},agent:"agent-1",write:(line:string)=>written.push(line),ports:{
    requestPlanV1:async(options:any)=>{const target=asked++===0?first:second;const result=await requestPlanV1({...options,root,implementation:target.implementation,identify:undefined,environment:env,spawnService:async()=>{await target.service.start();}});answered.push({instance:result.welcome?.service?.instance});return result;},
    spawnHostServiceV1:()=>undefined,probeConsentV1:async()=>({state:"unprotected",folder:"Documents"}),
   }} as never).then(()=>undefined,(error:unknown)=>error));

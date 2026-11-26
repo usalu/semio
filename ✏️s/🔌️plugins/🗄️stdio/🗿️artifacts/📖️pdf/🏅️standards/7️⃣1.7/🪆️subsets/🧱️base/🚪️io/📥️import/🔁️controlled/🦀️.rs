@@ -316,7 +316,19 @@ impl NaturalPdfDecoder {
         self.progress.completed_work_units = self.progress.completed_work_units.saturating_add(units as u64);
         self.live_bytes = self.live_bytes.saturating_add(step.allocated_bytes).checked_sub(step.released_bytes)
             .ok_or_else(|| failure("PDF decoder released backing it does not own"))?;
+        if let Some(releasable) = self.releasable_bytes().filter(|releasable| exceeds_ceiling(self.live_bytes, *releasable, self.contract.max_output_bytes)) {
+            return Err(failure(&format!("natural-file decoder retains at least {} output bytes it can no longer release; maximum is {}", self.live_bytes - releasable, self.contract.max_output_bytes)));
+        }
         Ok(())
+    }
+
+    /// 🔒️ Backing the decoder credits back before it completes: the lift's tables and builder state, its own cursor and the position index. What is live beyond it stays output however the rest of the file reads, so a document already over the ceiling is refused in that turn, not after the lift has copied the rest of the file; `None` while preparation still owns transient backing.
+    fn releasable_bytes(&self) -> Option<usize> {
+        if !matches!(self.phase, Phase::Lift | Phase::TransferLift | Phase::ClosePositions | Phase::DigestGraph | Phase::Publish) { return None; }
+        if self.lifting.as_ref().is_some_and(|owner| !owner.between_pages()) { return None; }
+        let lift = self.lifting.as_ref().map_or(0, |owner| owner.held_bytes() + size_of::<ControlledDocumentLiftCursor>());
+        let positions = self.file.as_ref().map_or(0, |file| file.graph.positions.held_bytes());
+        Some(lift + positions)
     }
 
     fn close_native(&mut self, grant: CosGrant) -> PdfByteGraphReceipt {
@@ -583,6 +595,9 @@ fn refused_for_good(blocked: &mut Option<(PdfByteGraphEvent, usize)>, event: Pdf
     blocked.replace((event, available)) == Some((event, available)) && available >= peak
 }
 
+/// 🧱️ Whether `live` output bytes, less the `releasable` ones the decoder credits back before it completes, exceed the contract's `maximum`.
+fn exceeds_ceiling(live: usize, releasable: usize, maximum: usize) -> bool { live.saturating_sub(releasable) > maximum }
+
 fn failure(reason: &str) -> MediaError { MediaError::Payload(NATURAL_FILE_PORT.into(), reason.into()) }
 
 #[cfg(test)]
@@ -603,6 +618,83 @@ mod tests {
         let mut blocked = None;
         assert!(!refused_for_good(&mut blocked, allocation, 1 << 20, 1 << 20));
         assert!(refused_for_good(&mut blocked, allocation, 1 << 20, 1 << 20));
+    }
+
+    /// 🧱️ LAW: the decoder refuses an over-ceiling document as soon as the output it can no longer release exceeds the ceiling: backing it still credits back never counts, the ceiling itself is allowed, and the bytes are compared exactly.
+    #[test]
+    fn output_the_decoder_can_no_longer_release_is_refused_the_turn_it_passes_the_ceiling() {
+        const MAXIMUM: usize = 32 << 20;
+        assert!(!exceeds_ceiling(MAXIMUM, 0, MAXIMUM), "the ceiling itself is allowed");
+        assert!(exceeds_ceiling(MAXIMUM + 1, 0, MAXIMUM), "one byte over is refused");
+        assert!(!exceeds_ceiling(55_096_972, 55_096_972 - MAXIMUM, MAXIMUM), "backing credited back before completion never counts");
+        assert!(exceeds_ceiling(55_096_972, 55_096_972 - MAXIMUM - 1, MAXIMUM), "what stays held does");
+        assert!(!exceeds_ceiling(0, 1, MAXIMUM), "a release above the live bytes cannot underflow");
+    }
+
+    /// 📏️ The natural-file contract the registered route decodes under (`NATURAL_SOURCE_TOOL_CONTRACT`: 8,192 objects, 4,096 work units per step, 32 MiB of retained output).
+    const NATURAL_CONTRACT: ToolExecutionContract = ToolExecutionContract::resumable(1, 8_192, 4_096, 33_554_432, 7_500, 1, 1);
+
+    /// 📂️ The bytes of a ledger document, found by walking up from the crate to the first directory that holds its path.
+    fn ledger_file(relative: &str) -> Vec<u8> {
+        let start = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let found = start.ancestors().map(|directory| directory.join(relative)).find(|path| path.is_file()).unwrap_or_else(|| panic!("ledger document {relative} is not under {start:?}"));
+        std::fs::read(found).unwrap()
+    }
+
+    /// 🧮️ How a model decode ended: the output bytes live at its end, the steps it took, and the pages lifted and steps taken when the decoder refused the document early.
+    #[derive(Debug)]
+    struct Decoded { live: usize, steps: usize, refused: Option<(usize, usize)> }
+
+    /// 🧮️ Decodes `input` through the real decoder phases under the contract's ceiling and the importer's accounting of output bytes (what its steps allocate less what they release), without host turns: runs for body bytes and slot writes, every demand granted at once.
+    fn decode_model(input: Vec<u8>, contract: ToolExecutionContract) -> Result<Decoded, String> {
+        use PdfByteGraphEvent as Event;
+        let mut decoder = NaturalPdfDecoder::new(contract);
+        decoder.source = PdfNaturalSource::Contiguous(input);
+        let mut grant = CosGrant { work: 1, allocation_bytes: 0, release_bytes: 0 };
+        let (mut live, mut steps) = (0usize, 0usize);
+        loop {
+            let body = decoder.decodes_body_bytes();
+            let written = if body { None } else { decoder.writing_bytes() };
+            grant.work = if body { 4096.max(decoder.body_floor()) } else if written.is_some() { 4096 } else { 1 };
+            steps += 1;
+            let step = decoder.next(grant, body).map_err(|error| error.to_string())?;
+            live = (live + step.allocated_bytes).checked_sub(step.released_bytes).ok_or("a step released backing it does not own")?;
+            if let Some(releasable) = decoder.releasable_bytes().filter(|releasable| exceeds_ceiling(live, *releasable, contract.max_output_bytes)) {
+                let pages = decoder.lifting.as_ref().map_or(0, |owner| owner.pages_lifted());
+                return Ok(Decoded { live: live - releasable, steps, refused: Some((pages, steps)) });
+            }
+            match step.event {
+                Ok(Event::NeedsAllocation { bytes }) => grant.allocation_bytes = bytes,
+                Ok(Event::NeedsRelease { bytes }) => grant.release_bytes = bytes,
+                Ok(Event::More | Event::Object) => { grant.allocation_bytes = 0; grant.release_bytes = 0; }
+                Ok(Event::Complete) => return Ok(Decoded { live, steps, refused: None }),
+                other => return Err(format!("{other:?}")),
+            }
+        }
+    }
+
+    /// 🧱️ LAW: every real-world document decodes within the natural-file contract's 32 MiB of retained output (the thesis retained 55,096,972 bytes before the role dependencies were stored as generators and the lanes charged what they retain), and the decoder refuses a document over its ceiling as soon as the output it cannot release exceeds it: the thesis under three quarters of its own output is refused well before its last page, with the output at refusal within 4 MiB of the ceiling.
+    #[test]
+    fn every_real_world_document_decodes_within_the_output_ceiling_and_an_oversize_one_is_refused_early() {
+        let ledger: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🌍️real-world/🔣️.json")).unwrap();
+        let mut report = Vec::new();
+        let mut thesis = None;
+        for case in ledger["documents"].as_array().unwrap() {
+            let (name, input) = (case["name"].as_str().unwrap(), ledger_file(case["path"].as_str().unwrap()));
+            let decoded = decode_model(input.clone(), NATURAL_CONTRACT).unwrap_or_else(|error| panic!("{name}: {error}"));
+            assert_eq!(decoded.refused, None, "{name}: decoded within the ceiling");
+            assert!(decoded.live <= NATURAL_CONTRACT.max_output_bytes, "{name}: retains {} output bytes, above {}", decoded.live, NATURAL_CONTRACT.max_output_bytes);
+            report.push((name.to_owned(), input.len(), decoded.live, decoded.steps));
+            if name == "bachelor thesis" { thesis = Some((input, decoded)); }
+        }
+        println!("output bytes (name, file, retained, steps): {report:?}");
+        let (input, decoded) = thesis.expect("the ledger holds the bachelor thesis");
+        let ceiling = decoded.live / 4 * 3;
+        let refusing = ToolExecutionContract::resumable(1, 8_192, 4_096, ceiling, 7_500, 1, 1);
+        let early = decode_model(input, refusing).unwrap();
+        let (pages, steps) = early.refused.expect("a document over its ceiling is refused");
+        assert!(pages < 65 && steps < decoded.steps, "refused after {pages} of 65 pages and {steps} of {} steps", decoded.steps);
+        assert!(early.live > ceiling && early.live <= ceiling + (4 << 20), "the output at refusal is {} against a ceiling of {ceiling}", early.live);
     }
 
     /// 📏️ LAW: a bulk run leaves the allocation the previous call demanded fundable, so a large dictionary vector (the institution diagram's 278,528 bytes against a 524,175-byte grant) never stalls at one unit per turn.

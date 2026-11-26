@@ -281,6 +281,7 @@ impl Dashboard {
                 if truncated { self.notice = Some(self.text().replay_truncated.as_str().into()); }
             }
             Message::Control(ServerMsg::SessionChanged { session }) => self.update_session(tui, *session),
+            Message::Control(ServerMsg::Fleet { snapshot }) => self.apply_fleet(tui, *snapshot),
             Message::Control(ServerMsg::SessionRemoved { session_id }) => { self.sessions.remove(&session_id); self.refresh_panes(tui); }
             Message::Output { session_id, data } => {
                 let found = self.windows.iter().position(|window| window.session().is_some_and(|session| session.session_id == session_id));

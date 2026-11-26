@@ -38,7 +38,7 @@ test("the linker identity is the digest of the linker files and equals the indep
  expect(identity).toMatch(/^[0-9a-f]{16}$/u);
  expect(identity).toBe(oracle(one));
  expect(offloadLinkerIdentityV1(two)).toBe(identity);
- expect(oracle(two)).toBe(identity);
+ expect<unknown>(oracle(two)).toBe(identity);
 });
 
 test("a compiler with a different or damaged linker has another identity although its version text is the same; a sysroot without linkers has none; the memo follows a changed file",()=>{

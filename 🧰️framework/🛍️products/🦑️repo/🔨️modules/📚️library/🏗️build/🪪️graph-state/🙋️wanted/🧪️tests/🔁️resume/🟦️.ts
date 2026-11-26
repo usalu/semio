@@ -67,7 +67,7 @@ test("a restart during a serve continues the claim: the new process renews it, a
   expect(ticks).toBe(3);
   expect(JSON.parse(readFileSync(statePath,"utf8")).held,"nothing is held after the answer").toEqual([]);
   expect(JSON.parse(readFileSync(statePath,"utf8")).told.length).toBe(1);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },90000);
 
 test("without the state file the same restart tells the requester nothing is fresh and asks the read to start from zero (control for the test above)",async()=>{
@@ -82,7 +82,7 @@ test("without the state file the same restart tells the requester nothing is fre
    quietMilliseconds:async()=>10**9,say:()=>{},signal:new AbortController().signal,now:time,
    sleep:async()=>{answers.push((await readServedV1({client:requester,requester:"g1-m06"}))?.projects);},rounds:2});
   expect(published[0]).toEqual([]);expect(answers[0],"the requester is told nothing is fresh any more").toEqual([]);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },90000);
 
 test("a damaged state file, the state of another owner and an expired request are not resumed, and the file is replaced atomically",async()=>{
@@ -100,7 +100,7 @@ test("a damaged state file, the state of another owner and an expired request ar
   writeFileSync(path,JSON.stringify({...state,version:2}));expect(store.load()).toBeUndefined();
   const validate=new Ajv({strict:false}).compile({$ref:"#/definitions/ServeState",definitions:schema.definitions});
   expect(validate({...state,reading:"sometimes"})).toBe(false);expect(validate({...state,held:[{...state.held[0],list:[1]}]})).toBe(false);expect(validate(state)).toBe(true);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("every text exists in both languages with the same placeholders",()=>{

@@ -22,9 +22,10 @@ impl RetirementQueue {
     pub fn next_reserve_capacity_byte_demand(&self)->Result<usize,ValueError> {self.frames.next_allocation_bytes().map_err(ValueError::from)}
     pub fn reserve_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress,ValueError>{
         self.step_progress=empty_progress();let grant=effect.grant();let demand=match self.reserve_demand(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
-        if self.has_reserved_slot()||effect.maximum_work_units()<1||!retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
+        if self.has_reserved_slot()||effect.maximum_work_units()<1||!retained_clone::retained_clone_grant_admits(grant,demand){eprintln!("[DEBUG] reserve_step early reserved={} work={} grant={grant:?} demand={demand:?}",self.has_reserved_slot(),effect.maximum_work_units());return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
         let Some(depth)=grant.maximum_depth.checked_sub(1)else{return RetainedWorkOutcome{result:Err(refusal(ValueRefusalKind::DepthLimit,"retirement queue reservation depth is absent")),work:0}};let child=RetainedCloneGrant{maximum_depth:depth,..grant};let turn=self.frames.reserve_one_funded(&mut effect.nested(child));
         let result=match turn.result{Ok(list::PagedListReservationOutcome::Denied)=>Ok(Default::default()),Ok(list::PagedListReservationOutcome::Ready(progress))=>Ok(progress),Err(list::PagedListReservationFailure::Work(error))=>Err(error),Err(list::PagedListReservationFailure::Allocation{error,copied_bytes})=>{let progress=RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0||copied_bytes!=0),copied_bytes,retained_capacity_bytes:error.allocated_bytes,..Default::default()};Err(ValueError::from(error.refusal()).with_retained_progress(progress))}};
+        eprintln!("[DEBUG] reserve_step done result={:?} work={} reserved={}",result.as_ref().map(|p|*p).map_err(|e|e.to_string()),turn.work,self.has_reserved_slot());
         self.step_progress=match &result{Ok(progress)=>*progress,Err(error)=>error.retained_progress()};RetainedWorkOutcome{result,work:turn.work}
     }
     fn placement_depth(&self)->usize{(self.frames.len()+1).max(self.frames.adoption_depth_demand().unwrap_or(usize::MAX))}

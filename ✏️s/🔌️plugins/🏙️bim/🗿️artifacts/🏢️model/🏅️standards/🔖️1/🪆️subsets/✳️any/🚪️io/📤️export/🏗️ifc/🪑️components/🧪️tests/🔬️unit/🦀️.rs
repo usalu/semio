@@ -39,7 +39,8 @@ fn every_component_is_the_class_of_its_family_category_in_ifc4() {
     assert_eq!(count(&document, "IFCFURNITURE"), 4);
     assert_eq!(tags(&document, "IFCSANITARYTERMINAL"), ["cmp-basin", "cmp-wc"]);
     assert_eq!(tags(&document, "IFCLIGHTFIXTURE"), ["cmp-lamp"]);
-    assert_eq!(tags(&document, "IFCFLOWTERMINAL"), ["cmp-diffuser", "cmp-panel"]);
+    assert_eq!(tags(&document, "IFCAIRTERMINAL"), ["cmp-diffuser"]);
+    assert_eq!(tags(&document, "IFCELECTRICAPPLIANCE"), ["cmp-panel"]);
     assert_eq!(count(&document, "IFCBUILDINGELEMENTPROXY"), 3);
 }
 
@@ -49,7 +50,8 @@ fn a_family_becomes_one_type_object_per_kind_of_occurrence_that_carries_the_auth
     assert_eq!(tags(&document, "IFCFURNITURETYPE"), ["fam-chair", "fam-table"]);
     assert_eq!(tags(&document, "IFCSANITARYTERMINALTYPE"), ["fam-basin", "fam-wc"]);
     assert_eq!(tags(&document, "IFCLIGHTFIXTURETYPE"), ["fam-lamp"]);
-    assert_eq!(tags(&document, "IFCFLOWTERMINALTYPE"), ["fam-diffuser", "fam-panel"]);
+    assert_eq!(tags(&document, "IFCAIRTERMINALTYPE"), ["fam-diffuser"]);
+    assert_eq!(tags(&document, "IFCELECTRICAPPLIANCETYPE"), ["fam-panel"]);
     assert_eq!(tags(&document, "IFCBUILDINGELEMENTPROXYTYPE"), ["fam-kitchen", "fam-pillar", "fam-rig"]);
     let (_, table) = rows(&document, "IFCFURNITURETYPE").into_iter().find(|(_, args)| string(args, 7).as_deref() == Some("fam-table")).expect("the table type");
     assert_eq!(string(table, 2).as_deref(), Some("Table"));

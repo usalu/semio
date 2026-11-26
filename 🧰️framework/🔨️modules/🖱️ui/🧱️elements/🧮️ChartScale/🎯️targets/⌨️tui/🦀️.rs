@@ -199,7 +199,7 @@ pub fn domain(sets: &[&[Bucket]], axis: XAxis) -> Option<(u64, u64)> {
         XAxis::Time => {
             let all = sets.iter().flat_map(|set| set.iter());
             let (start, end) = all.fold((u64::MAX, 0u64), |(s, e), bucket| (s.min(bucket.start), e.max(bucket.effective_end())));
-            (start != u64::MAX).then_some((start, end.max(start + 1)))
+            (start != u64::MAX).then(|| (start, end.max(start.saturating_add(1))))
         }
     }
 }

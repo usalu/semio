@@ -14,6 +14,8 @@ impl SolidProvenance {
             Self::Orthogonal(source)=>source.nearest_boundary(point.to_array()).1,
             Self::PlacedOrthogonal(source,frame)=>source.nearest_boundary(frame.to_local(point).to_array()).1,
             Self::SphericalCaps(source,_)=>source.signed_boundary_distance(point),
+            Self::SphericalTorusCut(source,_)=>source.signed_boundary_distance(point),
+            Self::SphericalCornerBox(source,_)=>source.signed_boundary_distance(point),
             Self::RoundedBox(source,_)=>source.signed_boundary_distance(point.to_array()),
             Self::ClippedBox(source)=>source.signed_boundary_distance(point).ok_or_else(invalid)?,
             Self::SphericalShell(source,_)=>spherical_shell_distance(source,point),

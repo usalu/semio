@@ -9,7 +9,7 @@ import{observationWitnessHoldsV1,observationWitnessV1}from"../../../../../../ðŸ‘
 
 const later=()=>Date.now()+60_000;
 const scratch=()=>realpathSync(mkdtempSync(join(tmpdir(),"layered-witness-")));
-const record=(key:string,witness:unknown)=>({key,name:key,kind:"module",digest:moduleNodeDigestV1({key}),edges:[] as string[],extra:{witness,urls:[],sha256:null,provider:"p"}});
+const record=(key:string,witness:Readonly<Record<string,unknown>>)=>({key,name:key,kind:"module",digest:moduleNodeDigestV1({key}),edges:[] as string[],extra:{witness,urls:[],sha256:null,provider:"p"}});
 
 test("the layered verdict equals the verdict of the flat witness of the same rows under edits of either layer",async()=>{
  const root=scratch();
@@ -49,10 +49,10 @@ test("a graph of many nodes stores and loads each distinct base once: bytes and 
   Bun.gc(true);const before=process.memoryUsage().heapUsed;
   const loaded=loadClosureGraphSyncV1(directory)!;Bun.gc(true);const grown=process.memoryUsage().heapUsed-before;
   expect(grown).toBeLessThan(flatBytes/20);
-  const a=loaded.get("n0")!.extra.witness,b=loaded.get("n1")!.extra.witness,c=loaded.get("n99")!.extra.witness;
+  const a=loaded.get("n0")!.extra!.witness!,b=loaded.get("n1")!.extra!.witness!,c=loaded.get("n99")!.extra!.witness!;
   expect(a.base).toBe(b.base);expect(c.base).not.toBe(a.base);
-  for(let at=0;at<nodes;at++)expect(JSON.parse(JSON.stringify(loaded.get("n"+at)!.extra.witness))).toEqual(JSON.parse(JSON.stringify(make(at))));
-  const again=(await loadClosureGraphV1(directory))!;expect(again.get("n5")!.extra.witness.base).toBe(again.get("n6")!.extra.witness.base);
+  for(let at=0;at<nodes;at++)expect(JSON.parse(JSON.stringify(loaded.get("n"+at)!.extra!.witness!))).toEqual(JSON.parse(JSON.stringify(make(at))));
+  const again=(await loadClosureGraphV1(directory))!;expect(again.get("n5")!.extra!.witness!.base).toBe(again.get("n6")!.extra!.witness!.base);
   expect((await saveClosureGraphV1(loaded,directory)).written).toBe(0);
  }finally{rmSync(directory,{recursive:true,force:true});}
 });

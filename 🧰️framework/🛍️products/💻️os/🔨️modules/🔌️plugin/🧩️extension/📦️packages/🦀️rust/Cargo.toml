@@ -45,6 +45,7 @@ semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒�
 semio-plugin-ownership = { path = "../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-control-contract = { path = "../../../../../../../🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }

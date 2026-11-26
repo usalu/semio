@@ -62,6 +62,6 @@ test("the offload gate agrees with an independent model over every combination o
   expect(model.length).toBe(rows.length);
   for (const [index, row] of rows.entries()) {
     const answer = await offloadGateV1({ mode: row.mode as never, door: row.door as boolean, fleetRequired: row.fleetRequired === true, expensive: () => row.expensive as boolean, workerFits: async () => row.fits as boolean, localSlot: async (wait) => wait === 0 ? row.slotNow as boolean : row.slotWait as boolean, worth: () => row.worth as never, beyondHost: () => row.beyondHost === true, slotQueueMilliseconds: () => row.slotQueueMilliseconds as number, host: async () => row.host as never, broker: async () => row.broker as never });
-    expect([answer.offload, answer.queue, answer.reason], JSON.stringify(row)).toEqual(model[index]!);
+    expect<unknown>([answer.offload, answer.queue, answer.reason], JSON.stringify(row)).toEqual(model[index]!);
   }
 });

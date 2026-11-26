@@ -30,6 +30,7 @@ const extract=(name:string):string=>{
 };
 
 type Row={kind:"file"|"digest";path:string;fact:{version?:number;sha256?:string;size?:number;mtimeMs?:number;ctimeMs?:number;ino?:number}};
+const asRow=(row:originalObservation.SourceObservationV1):Row|undefined=>typeof row.fact==="object"&&"sha256" in row.fact?{kind:row.kind==="file"?"file":"digest",path:row.path,fact:row.fact}:undefined;
 
 const world=(owners:number,scenario:{discoveryFailure?:(owner:string,call:number,tree:Map<string,number>)=>Error|undefined;membershipFailures?:(call:number,tree:Map<string,number>)=>string[]|undefined;onDiscover?:(call:number,tree:Map<string,number>)=>void;digestAt?:(call:number)=>string;admissionAt?:(call:number)=>string[];sharedInferenceRead?:boolean;settleRounds?:number;passReuse?:()=>unknown; farm?:{ready:()=>boolean;size:number;discover:(request:Record<string,unknown>,signal?:AbortSignal)=>Promise<unknown>}; pinned?:{rows:Row[];fail?:boolean;before?:()=>void}}={})=>{
  const tree=new Map<string,number>(),names=Array.from({length:owners},(_,index)=>"owner-"+index);
@@ -68,7 +69,7 @@ const world=(owners:number,scenario:{discoveryFailure?:(owner:string,call:number
   buildGraphMembershipV1:async(_root:string,_files:unknown,_invocation:unknown,_volatile:unknown,vanished?:(path:string)=>void)=>{const failing=scenario.membershipFailures?.(++counts.memberships,tree);if(failing&&vanished&&failing.length>0)for(const path of failing)vanished(path.replace("/owned/",""));else if(failing)throw Object.assign(new Error("Build membership changed during discovery: "+failing.join(", ")),{code:"BUILD_MEMBERSHIP_CHANGED",paths:failing});return scenario.digestAt?.(counts.discovered)??"membership";},buildGraphMembersV1:(files:string[])=>files,workspaceBuildFilesV1:async()=>[],inventoryDirectoriesV1:new WeakMap(),
   readFile:async()=>{throw Object.assign(Error("absent"),{code:"ENOENT"});},
   createPassReuseV1:scenario.passReuse??(()=>({memo:undefined,carried:{recycles:0,round:0,passes:0,owners:0,heapMegabytes:0},boundary:()=>{}})),discoverBuildGraphV1:async()=>{counts.discovered++;for(const name of names)observation.observedFs.readFileSync(name+"/src");if(scenario.sharedInferenceRead)observation.observedFs.readFileSync("tooling/shared.ts");scenario.onDiscover?.(counts.discovered,tree);if(scenario.pinned){scenario.pinned.before?.();observation.retainObservedRowsV1(scenario.pinned.rows);if(scenario.pinned.fail)throw Error("failed inference kept its original observations");}return{version:1,projects:Object.fromEntries(names.map(name=>[name,{root:name}])),dependencies:[]};},
-  buildGraphSourceFactsHoldV1:async(rows:readonly Row[],_invocation?:unknown,onStale?:(row:Row)=>void)=>{counts.holds++;const stale=rows.filter(row=>row.fact.version!==undefined&&(tree.get(row.path)??0)!==row.fact.version);for(const row of stale)onStale?.(row);return stale.length===0&&await originalObservation.observationsHold(rows.filter(row=>row.fact.sha256!==undefined),64,new Set(),new Set(),undefined,onStale);},
+  buildGraphSourceFactsHoldV1:async(rows:readonly Row[],_invocation?:unknown,onStale?:(row:Row)=>void)=>{counts.holds++;const stale=rows.filter(row=>row.fact.version!==undefined&&(tree.get(row.path)??0)!==row.fact.version);for(const row of stale)onStale?.(row);return stale.length===0&&await originalObservation.observationsHold(rows.filter(row=>row.fact.sha256!==undefined),64,new Set(),new Set(),undefined,onStale===undefined?undefined:(row:originalObservation.SourceObservationV1)=>{const mapped=asRow(row);if(mapped!==undefined)onStale(mapped);});},
   mkdir:async()=>{},writeFile:async(_path:string,text:string)=>{writes.push(text);},sealVerdictV1,reportSealV1,sliceReadStepV1:(_id:string,run:()=>unknown)=>run(),rename:async()=>{},rm:async()=>{},createHash:()=>({update:()=>({digest:()=>"digest"})}),randomUUID:()=>"nonce",
   graphSnapshotPolicyV1:{maximumSnapshotBytes:1<<30},portableInputs:async(_root:string,value:unknown)=>value,readBuildGraphV1:(value:unknown)=>value,
   GRAPH_LIMITS_V1:limits.definitions.Limits.const,observeOwnerFactsMemoizedV1:undefined as unknown,evictOwnerFactsReferencingV1:undefined as unknown,forgetOwnerFactsReferencingV1:undefined as unknown,graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,graphDirtyTextV1,graphVolatileTextV1,membershipChangePathsV1,followedPathsV1,untoleratedFollowedPathsV1,settleInventoryRoundsV1,awaitPlannerQuietV1:async()=>{},ownerWithheldTextV1,
@@ -93,7 +94,8 @@ for(const fail of [false,true]){
   try{
    writeFileSync(path,loaded);
    const pinned=await row();
-   originalObservation.registerLoadedImplementationRowsV1([{...pinned,kind:"digest"}]);
+   if(pinned.fact.sha256===undefined)throw Error("Actual file row with sha256 required");
+   originalObservation.registerLoadedImplementationRowsV1([{...pinned,kind:"digest",fact:{...pinned.fact,sha256:pinned.fact.sha256}}]);
    writeFileSync(path,live);
    const current=await row();
    const state=world(6,{pinned:{rows:[current],fail}});

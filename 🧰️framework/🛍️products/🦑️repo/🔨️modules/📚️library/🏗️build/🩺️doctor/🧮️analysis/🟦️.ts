@@ -176,6 +176,14 @@ export function analyzeDoctorV1(facts:DoctorFactsV1,options:DoctorAnalysisOption
   if(sessions.damaged>0)add("sessions.damaged","warn","agent-sessions",{count:sessions.damaged});
  }
 
+ const typecheck=facts.typecheck;
+ if(typecheck){
+  const named=(rows:readonly Readonly<{area:string;errors:number;product:number}>[],pick:(row:Readonly<{errors:number;product:number}>)=>number):string=>rows.filter(row=>pick(row)>0).sort((left,right)=>pick(right)-pick(left)||(left.area<right.area?-1:1)).slice(0,policy.typecheck.areasShown).map(row=>row.area+" "+pick(row)).join(", ")||"-";
+  if(typecheck.product>0)add("typecheck.product-errors","warn","library",{areas:named(typecheck.areas,row=>row.product),errors:typecheck.errors,product:typecheck.product});
+  if(typecheck.errors>0)add("typecheck.errors","info","library",{ageSeconds:typecheck.ageSeconds,areas:named(typecheck.areas,row=>row.errors),errors:typecheck.errors,product:typecheck.product,tests:typecheck.tests});
+  if(typecheck.ageSeconds>=policy.typecheck.staleSeconds)add("typecheck.stale","info","library",{ageSeconds:typecheck.ageSeconds});
+ }
+
  const graph=facts.graph;
  if(graph){
   const slowGraph=(leases?.waiters??[]).some(row=>row.owner==="graph"&&row.waitedSeconds>=policy.leases.waitWarnSeconds);

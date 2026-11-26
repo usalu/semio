@@ -5,12 +5,13 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import cases from "./🔣️.json" with {type:"json"};
 import {createSlicePoolV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
+import type {ImplementationQuietPolicyV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🔕️quiet/🟨️.mjs";
 import {implementationDriftPathsV1,implementationPathShownV1,implementationQuietV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🔕️quiet/🟨️.mjs";
 import {HOST_POLICY_V1,renderTextV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
 
 const elasticity=HOST_POLICY_V1.sliceHostElasticity as {maximumMegabytes:number;hostCapBasisPoints:number;minimumMegabytes:number};
 const drift="Stale source facts that a repeated inference cannot refresh; restart required: file:/w/🏗️build/x.ts / Veraltete Quellfakten; Neustart erforderlich: file:/w/🏗️build/x.ts";
-const harness=(exits:{code:number|"done";tail?:string}[],quiet:{milliseconds:number;maximumMilliseconds:number},stamps:Map<string,number|undefined>)=>{
+const harness=(exits:{code:number|"done";tail?:string}[],quiet:ImplementationQuietPolicyV1,stamps:Map<string,number|undefined>)=>{
  const starts:number[]=[],exitsAt:number[]=[],progress:any[]=[];let index=0;
  const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,graceMilliseconds:50,heartbeatMilliseconds:10,hostMegabytes:16384,elasticity,unlearnedMegabytes:2048,
   restartPolicy:{backoffMilliseconds:[1],settleMilliseconds:60000,progressMilliseconds:60000,totalMaximum:10,sameCauseMaximum:10},quietPolicy:quiet,implementationStamps:(paths:Iterable<string>)=>new Map([...paths].map(path=>[path,stamps.get(path)])),

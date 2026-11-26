@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "wasmSha256ByPlugin": {
+    "flow-extension-bim": "d29eaac29dff5d249d589db4f2c56f87042f17c2e25b76e00c10ef5debd30b26",
+    "flow-extension-brep": "6a4a1a7a2b5f631fc28fa587b6712bec0a834233a4dec48d12a36e5d754babaf",
+    "flow-extension-dictionary": "59ae709435a4bbb5f0e9b74ebeaf2824b7faf949da4283a3cde798b8e44cdda8",
+    "flow-extension-draw": "063d8266610765a303adcb8b77bd264a459cf038a3fa46875a9f4eef2f201f5e",
+    "flow-extension-list": "e61f2cfad861e28f761e785d4bc4de31c80f671d879a6aee3f2bc5a016f2ccb8",
+    "flow-extension-logic": "f0e17970a72b675dc4670043c8e915dbbdecefcbd3881b858eab38059e6d189d",
+    "flow-extension-math": "3c31988504f79afdd7d8823c3fbabfbc0e25d7fdbed364d3e4bc0b47c8c11084",
+    "flow-extension-primitive": "3ed874f3af59d71b46c305ea34b650ec4e1575a1c32fdb5d26d4085e64dbbc2b",
+    "flow-extension-text": "41d27c009e8b46dcf95a8d45084736f39ce5072cf2ba7dfcf9eff13ebd6d9f11"
+  }
+}

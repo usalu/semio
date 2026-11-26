@@ -5,7 +5,7 @@ macro_rules! option_cursor_engine{($d:tt)=>{
 use super::*;
 
 pub struct OptionCursor<T: RetainedClone> {
-    pub(super) child: ManuallyDrop<T::Cursor>,
+    pub(super) child: ManuallyDrop<RetainedFieldCursor<T>>,
     pub(super) child_value: ManuallyDrop<Option<T>>,
     route:Option<(semio_framework_value_control_contract::OriginalEffectInvocationIdentity,u8)>,
     selected:Option<(RetirementDemand,u64)>,
@@ -19,7 +19,7 @@ pub struct OptionCursor<T: RetainedClone> {
 
 impl<T: RetainedClone> Default for OptionCursor<T> {
     fn default() -> Self {
-        Self { child: ManuallyDrop::new(T::retained_clone_cursor()), child_value: ManuallyDrop::new(None), route:None, selected:None, child_reply:ManuallyDrop::new(None), output: ManuallyDrop::new(None), source: ManuallyDrop::new(None), spent: false, closing: false, close: ManuallyDrop::new(RetainedCloneClose::default()) }
+        Self { child: ManuallyDrop::new(RetainedFieldCursor::default()), child_value: ManuallyDrop::new(None), route:None, selected:None, child_reply:ManuallyDrop::new(None), output: ManuallyDrop::new(None), source: ManuallyDrop::new(None), spent: false, closing: false, close: ManuallyDrop::new(RetainedCloneClose::default()) }
     }
 }
 

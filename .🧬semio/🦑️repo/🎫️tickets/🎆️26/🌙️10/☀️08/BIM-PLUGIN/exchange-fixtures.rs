@@ -8,6 +8,12 @@ fn main() {
     let input = fs::read_to_string(&args[1]).unwrap();
     let model = decode_model_snapshot_json(&input).unwrap();
     let path = PathBuf::from(&args[2]);
+    #[cfg(feature = "measure-ifc4")]
+    if args[0] == "report4" {
+        let document = bim_schema::standards::v1::subsets::any::io::export::ifc::codec::decode_ifc4(&fs::read(&path).unwrap()).unwrap();
+        println!("{}", bim_ifc::standards::v1::subsets::any::io::export::ifc::projection::report(&model, &document).to_json());
+        return;
+    }
     let before = fs::read(&path).ok();
     let (bytes, notes) = match args[0].to_str().unwrap() {
         "2x3" => export_ifc2x3(&model).unwrap(),

@@ -18,7 +18,7 @@ const ROLE_MODULES:Readonly<Record<RemoteExecutionSidecarRoleV1,string>>={agent:
 export const sidecarRestartPolicyV1=Object.freeze({...schema.definitions.Restart.const});
 
 /** ♻️ The restart numbers of one role: the common ones, overridden by the role's own entry (`pool` restarts within seconds, `ready` never defers for its stage in flight because the next child adopts it). */
-export function sidecarRestartPolicyForV1(role:string):typeof sidecarRestartPolicyV1&Readonly<{serveDeferralMilliseconds:number}>{
+export function sidecarRestartPolicyForV1(role:string):typeof sidecarRestartPolicyV1&Readonly<{serveDeferralMilliseconds:number;drainMaximumMilliseconds?:number;drainPollMilliseconds?:number}>{
  return role==="pool"?{...sidecarRestartPolicyV1,...sidecarRestartPolicyV1.pool}:role==="ready"?{...sidecarRestartPolicyV1,...sidecarRestartPolicyV1.ready}:role==="agent"?{...sidecarRestartPolicyV1,...sidecarRestartPolicyV1.agent}:role==="cache"?{...sidecarRestartPolicyV1,...sidecarRestartPolicyV1.cache}:sidecarRestartPolicyV1;
 }
 
@@ -155,11 +155,11 @@ export async function runRemoteExecutionSidecarLauncherV1(role:RemoteExecutionSi
    }catch{}
   },pick("SEMIO_SIDECAR_SILENCE_POLL_MILLISECONDS",5000)).unref();
  }
- let delay=restart.initialMilliseconds;
+ let delay:number=restart.initialMilliseconds;
  for(;;){
   const started=Date.now();
   let code=1;
-  try{child=launch();alive=true;for(;;){const waiting=child;code=await waiting.exited;if(waiting===child)break;}}catch{}
+  try{child=launch();alive=true;for(;;){const waiting:Child|undefined=child;if(waiting===undefined)break;code=await waiting.exited;if(waiting===child)break;}}catch{}
   alive=false;
   if(stopping)process.exit(code===75?0:code);
   if(code===75){delay=restart.initialMilliseconds;await Bun.sleep(500);continue;}
@@ -177,7 +177,7 @@ if(import.meta.main){
  const controller=new AbortController(),launcher=process.ppid,watch=remoteExecutionSidecarWatchV1(role),work:SidecarWorkV1={busy:false,restartPending:false};
  let changed=false;
  const drain=new AbortController(),override=(name:string,fallback:number):number=>Number(process.env[name])||fallback,restart=sidecarRestartPolicyForV1(role);
- const restarting=createSidecarRestartV1({role,watch,work,policy:{quietMilliseconds:override("SEMIO_SIDECAR_QUIET_MILLISECONDS",restart.quietMilliseconds),maximumDeferralMilliseconds:override("SEMIO_SIDECAR_MAXIMUM_DEFERRAL_MILLISECONDS",restart.maximumDeferralMilliseconds),graceMilliseconds:override("SEMIO_SIDECAR_GRACE_MILLISECONDS",restart.graceMilliseconds),serveDeferralMilliseconds:override("SEMIO_SIDECAR_SERVE_DEFERRAL_MILLISECONDS",restart.serveDeferralMilliseconds),progressStallMilliseconds:override("SEMIO_SIDECAR_PROGRESS_STALL_MILLISECONDS",restart.progressStallMilliseconds),minimumIntervalMilliseconds:override("SEMIO_SIDECAR_MINIMUM_INTERVAL_MILLISECONDS",restart.minimumIntervalMilliseconds),drainMaximumMilliseconds:override("SEMIO_SIDECAR_DRAIN_MAXIMUM_MILLISECONDS",sidecarRestartPolicyV1.agent.drainMaximumMilliseconds),drainPollMilliseconds:override("SEMIO_SIDECAR_DRAIN_POLL_MILLISECONDS",sidecarRestartPolicyV1.agent.drainPollMilliseconds)},begin:()=>{changed=true;},drain:()=>{drain.abort();},abort:()=>{if(sidecarHandsOverV1(role,process.send!==undefined,process.env)){try{process.send({type:"successor"});setTimeout(()=>{controller.abort();},REMOTE_EXECUTION_SIDECAR_RESTART_V1.handoverMilliseconds+30_000).unref();return;}catch{}}controller.abort();},write:line=>{process.stderr.write(`${new Date().toISOString()} ${line}\n`);}});
+ const restarting=createSidecarRestartV1({role,watch,work,policy:{quietMilliseconds:override("SEMIO_SIDECAR_QUIET_MILLISECONDS",restart.quietMilliseconds),maximumDeferralMilliseconds:override("SEMIO_SIDECAR_MAXIMUM_DEFERRAL_MILLISECONDS",restart.maximumDeferralMilliseconds),graceMilliseconds:override("SEMIO_SIDECAR_GRACE_MILLISECONDS",restart.graceMilliseconds),serveDeferralMilliseconds:override("SEMIO_SIDECAR_SERVE_DEFERRAL_MILLISECONDS",restart.serveDeferralMilliseconds),progressStallMilliseconds:override("SEMIO_SIDECAR_PROGRESS_STALL_MILLISECONDS",restart.progressStallMilliseconds),minimumIntervalMilliseconds:override("SEMIO_SIDECAR_MINIMUM_INTERVAL_MILLISECONDS",restart.minimumIntervalMilliseconds),drainMaximumMilliseconds:override("SEMIO_SIDECAR_DRAIN_MAXIMUM_MILLISECONDS",sidecarRestartPolicyV1.agent.drainMaximumMilliseconds),drainPollMilliseconds:override("SEMIO_SIDECAR_DRAIN_POLL_MILLISECONDS",sidecarRestartPolicyV1.agent.drainPollMilliseconds)},begin:()=>{changed=true;},drain:()=>{drain.abort();},abort:()=>{if(sidecarHandsOverV1(role,process.send!==undefined,process.env)){try{process.send?.({type:"successor"});setTimeout(()=>{controller.abort();},REMOTE_EXECUTION_SIDECAR_RESTART_V1.handoverMilliseconds+30_000).unref();return;}catch{}}controller.abort();},write:line=>{process.stderr.write(`${new Date().toISOString()} ${line}\n`);}});
  setInterval(()=>{restarting.tick();},override("SEMIO_SIDECAR_WATCH_MILLISECONDS",restart.watchMilliseconds)).unref();
  if(role!=="pool")for(const name of ["SIGTERM","SIGINT"] as const)process.on(name,()=>{controller.abort();});
  setInterval(()=>{if(process.ppid!==launcher)role==="pool"?process.exit(0):controller.abort();},2000).unref();

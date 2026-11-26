@@ -1,1 +1,9 @@
 export function planGuardVerdictV1(input:{treeMegabytes:number;limitMegabytes:number;ceilingMegabytes:number;availableMegabytes?:number;reserveMegabytes:number;pressure?:string;settled:boolean}):{action:"continue"|"settle"|"refuse";reason?:"ceiling"|"pressure"|"unknown"|"memory"};
+export const SLICE_LIMIT_FLOOR_MEGABYTES_V1:number;
+export const SLICE_LIMIT_SOFT_BASIS_POINTS_V1:number;
+export function sliceLimiterV1(ports?:ReturnType<typeof import("../../../../../🧱️job-limits/🐧️cgroup/🟦️.ts").cgroupPortsV1>):ReturnType<typeof import("../../../../../🧱️job-limits/🐧️cgroup/🟦️.ts").createCgroupLimiterV1>|undefined;
+export function sliceCeilingMegabytesV1(input:{hostMegabytes?:number;hostCapBasisPoints?:number;maximumMegabytes?:number}):number;
+export function sliceBookingV1(input:{declaredMegabytes?:number;learnedMegabytes?:number;unlearnedMegabytes?:number;maximumMegabytes?:number;hostMegabytes?:number;hostCapBasisPoints?:number;minimumMegabytes?:number;serviceLeftMegabytes?:number}):{wantedMegabytes:number;minimumMegabytes:number};
+export function slicePlanCeilingMegabytesV1(input:{hostMegabytes?:number;ceilingBasisPoints?:number;planLimitMegabytes?:number}):number;
+export function sliceLimitPolicyV1(service:{limitBytes:number;currentBytes:number;availableBytes?:number},marginMegabytes?:number,elasticity?:{maximumMegabytes?:number;hostShareBasisPoints?:number;hostFloorMegabytes?:number;hostMegabytes?:number;hostCapBasisPoints?:number;planCeilingMegabytes?:number},learnedMegabytes?:number):{kind:"job";memoryMegabytes:number;swapMegabytes:number;cpuShares:number;pids:number;softRatioBasisPoints:number;enforcement:"hard"}|undefined;
+export function sliceAdmissionV1(input:{requestedMegabytes:number;availableMegabytes:number;floorMegabytes?:number;shareBasisPoints?:number;minimumMegabytes?:number;minimumWaveBasisPoints?:number}):{megabytes:number;reduced:boolean;waveBasisPoints:number};

@@ -15,7 +15,7 @@ use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::sn
 use semio_plugin::{ArtifactView, ConfigView, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use semio_s_artifact_bim_model_move_storey::editor::bim::commands::move_storey::{handle, StoreyUp, ids, StoreyDown, neighbour, storey_of};
+use semio_s_artifact_bim_model_move_storey::editor::bim::commands::move_storey::{handle, StoreyUp, StoreyDown, neighbour, storey_of};
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, run};
 
 fn up(ids: &[&str], selected: &[&str]) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {

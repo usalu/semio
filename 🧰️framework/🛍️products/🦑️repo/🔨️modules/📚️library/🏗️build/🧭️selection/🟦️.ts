@@ -1,4 +1,4 @@
-import {isOpaqueSourcePathV1} from "../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import{isOpaqueSourcePathV1}from"../📥️inputs/👻️opaque-source/🟨️.mjs";
 import {buildOptionsV1,buildSelectorPatternV1,literalBuildProjectSelectorsV1,selectBuildNamesV1,selectLiteralBuildProjectsV1} from "./📥️options/🟦️.ts";
 export {buildOptionsV1} from "./📥️options/🟦️.ts";
 import type { BuildGraphV1 } from "../🕸️graph/📋️model/🟦️.ts";

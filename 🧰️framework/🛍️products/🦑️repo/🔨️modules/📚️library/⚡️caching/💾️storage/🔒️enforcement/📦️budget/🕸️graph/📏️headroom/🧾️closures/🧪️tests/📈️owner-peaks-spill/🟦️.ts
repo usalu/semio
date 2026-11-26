@@ -1,7 +1,7 @@
 /** 📈️ Contract: the learned owner peaks of the graph writer (`np/owner-peaks.json`, replaced through `owner-peaks.json.<pid>.tmp`) live beside the inference data of a selection or context and are a process-private spill like a row log: the closure proof neither reads nor retires them and never refuses the whole store with "Unknown closure reference publication" because of them (the refusal that stopped `repo show project` at 15:07 UTC). */
 import {expect,test} from "bun:test";
 import ts from "typescript";
-import closuresSource from "../../🏷️names/🟦️.ts" with {type:"text"};
+const closuresSource=await Bun.file(new URL("../../🏷️names/🟦️.ts",import.meta.url)).text();
 
 const tree=ts.createSourceFile("closures.ts",String(closuresSource),ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);
 const declared=(name:string)=>tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===name)!;

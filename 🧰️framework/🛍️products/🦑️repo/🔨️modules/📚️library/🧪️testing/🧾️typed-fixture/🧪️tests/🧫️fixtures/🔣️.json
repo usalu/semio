@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "cases": [
+    {"id": "row-ok", "schema": {"type": "object", "additionalProperties": false, "required": ["crate", "version"], "properties": {"crate": {"type": "string"}, "version": {"type": "string"}, "go": {"type": "string"}}}, "value": {"crate": "a", "version": "1"}, "valid": true},
+    {"id": "row-extra", "schema": {"type": "object", "additionalProperties": false, "required": ["crate"], "properties": {"crate": {"type": "string"}}}, "value": {"crate": "a", "stray": 1}, "valid": false},
+    {"id": "row-missing", "schema": {"type": "object", "required": ["crate", "version"], "properties": {"crate": {"type": "string"}, "version": {"type": "string"}}}, "value": {"crate": "a"}, "valid": false},
+    {"id": "list-ok", "schema": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 0}}, "value": [0, 3, 9], "valid": true},
+    {"id": "list-negative", "schema": {"type": "array", "items": {"type": "integer", "minimum": 0}}, "value": [1, -2], "valid": false},
+    {"id": "list-fraction", "schema": {"type": "array", "items": {"type": "integer"}}, "value": [1.5], "valid": false},
+    {"id": "enum-ok", "schema": {"enum": ["release", "prototype"]}, "value": "release", "valid": true},
+    {"id": "enum-other", "schema": {"enum": ["release", "prototype"]}, "value": "debug", "valid": false},
+    {"id": "union-ok", "schema": {"anyOf": [{"type": "null"}, {"type": "string", "minLength": 1}]}, "value": null, "valid": true},
+    {"id": "union-empty", "schema": {"anyOf": [{"type": "null"}, {"type": "string", "minLength": 1}]}, "value": "", "valid": false},
+    {"id": "ref-ok", "schema": {"definitions": {"Name": {"type": "string", "pattern": "^[a-z]+$"}}, "type": "object", "required": ["name"], "properties": {"name": {"$ref": "#/definitions/Name"}}}, "value": {"name": "abc"}, "valid": true},
+    {"id": "ref-bad", "schema": {"definitions": {"Name": {"type": "string", "pattern": "^[a-z]+$"}}, "type": "object", "required": ["name"], "properties": {"name": {"$ref": "#/definitions/Name"}}}, "value": {"name": "A1"}, "valid": false}
+  ]
+}

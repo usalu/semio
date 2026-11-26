@@ -4,7 +4,8 @@
     "timeoutMilliseconds": 8000,
     "parallelism": 4,
     "timeoutOverrides": {
-      "tools": 30000
+      "tools": 30000,
+      "typecheck": 600000
     }
   },
   "leases": {
@@ -52,6 +53,11 @@
   },
   "sessions": {
     "crowdedLive": 8
+  },
+  "typecheck": {
+    "areasShown": 5,
+    "freshSeconds": 600,
+    "staleSeconds": 86400
   },
   "graph": {
     "implementationRoots": [

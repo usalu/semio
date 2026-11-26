@@ -127,7 +127,7 @@ fn snapshot_read_double_return_is_counted_once_and_reclaimed_once() {
     assert!(!aliased.return_now(), "the same generation cannot be returned twice on the aliased path");
     assert_eq!(registry.returned_count(), 0, "an aliased root is reclaimed on the returning thread, not charged to the pump");
     assert_eq!(Arc::strong_count(&aliased_root), 1, "the aliased slot released its own owner alias in the same call");
-    assert!(registry.try_admit_one_returned::<u32,_>(physical_test_close_grant(),|original,_|semio_framework_value::RetainedWorkOutcome{result:Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}).result.map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed return probe").is_none(), "the pump has nothing to reclaim for an aliased return");
+    assert!(effect_tests::with_effect(physical_test_close_grant(),effect_tests::CPU,|effect|registry.try_admit_one_returned::<u32,_>(effect,|original,_|semio_framework_value::RetainedWorkOutcome{result:Ok(original.take().map(|original|(original,RetainedCloneProgress{copied_items:1,..Default::default()}))),work:1})).0.result.map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed return probe").is_none(), "the pump has nothing to reclaim for an aliased return");
     drop(aliased);
     drop(aliased_root);
     assert!(registry.terminal_is_empty());
@@ -138,14 +138,14 @@ fn snapshot_read_double_return_is_counted_once_and_reclaimed_once() {
     assert_eq!(registry.returned_count(), 1);
     let mut reclaimed = None;
     for _ in 0..SNAPSHOT_READ_LEASE_CAPACITY {
-        if let Some(owner) = registry.try_admit_one_returned::<u32,_>(physical_test_close_grant(),|original,_|semio_framework_value::RetainedWorkOutcome{result:Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}).result.map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed return probe") {
+        if let Some(owner) = effect_tests::with_effect(physical_test_close_grant(),effect_tests::CPU,|effect|registry.try_admit_one_returned::<u32,_>(effect,|original,_|semio_framework_value::RetainedWorkOutcome{result:Ok(original.take().map(|original|(original,RetainedCloneProgress{copied_items:1,..Default::default()}))),work:1})).0.result.map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed return probe") {
             reclaimed = Some(owner);
             break;
         }
     }
     assert_eq!(reclaimed.as_deref(), Some(&11));
     assert_eq!(registry.returned_count(), 0);
-    assert!(registry.try_admit_one_returned::<u32,_>(physical_test_close_grant(),|original,_|semio_framework_value::RetainedWorkOutcome{result:Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}).result.map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed return probe").is_none(), "a reclaimed generation is never handed out a second time");
+    assert!(effect_tests::with_effect(physical_test_close_grant(),effect_tests::CPU,|effect|registry.try_admit_one_returned::<u32,_>(effect,|original,_|semio_framework_value::RetainedWorkOutcome{result:Ok(original.take().map(|original|(original,RetainedCloneProgress{copied_items:1,..Default::default()}))),work:1})).0.result.map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed return probe").is_none(), "a reclaimed generation is never handed out a second time");
     drop(reclaimed);
     drop(lease);
     assert!(registry.terminal_is_empty());
@@ -224,23 +224,23 @@ async fn artifact_store_snapshot_roots_and_final_envelope_transfer_in_exact_clos
     assert_eq!((requested, released), (0, 0));
     assert_eq!(store.live.tail_undo_cache.as_ref().unwrap().0.as_ptr(), original);
     let (admitted, requested, released) = effect_tests::with_effect(grant,effect_tests::CPU,|effect|semio_framework_trace_memory_testing::observe_backing(||store.close_cursor_admit(phase,grant,effect))).0;
-    let (tail_id, receipt) = admitted.unwrap();
+    let (tail_id, receipt) = admitted.unwrap_or_else(|_| panic!("quoted tail close admission"));
     assert_eq!((requested, released), (receipt.retained_capacity_bytes, receipt.released_bytes));
     assert_eq!(receipt.retained_capacity_bytes, demand.capacity_bytes);
     drive_retirement_terminal(tail_id.expect("original tail id retires before snapshot"));
     assert_eq!(store.live.tail_undo_cache.as_ref().unwrap().0.capacity(), 0);
     let (tail, requested, released) = effect_tests::with_effect(grant,effect_tests::CPU,|effect|semio_framework_trace_memory_testing::observe_backing(||store.close_cursor_admit(ArtifactStoreCursorDisposerPhase::TailSnapshot,grant,effect))).0;
-    assert!(tail.unwrap().0.is_none());
+    assert!(tail.unwrap_or_else(|_| panic!("tail snapshot close admission")).0.is_none());
     assert_eq!((requested, released), (0, 0));
     for phase in [ArtifactStoreCursorDisposerPhase::CurrentSnapshot, ArtifactStoreCursorDisposerPhase::Envelope] {
         let demand = store.close_cursor_demands(phase, 7).unwrap();
         let grant = RetainedCloneGrant { maximum_copy_bytes: 7, maximum_release_bytes: 0, ..physical_test_close_grant() };
         let (admitted, requested, released) = effect_tests::with_effect(grant,effect_tests::CPU,|effect|semio_framework_trace_memory_testing::observe_backing(||store.close_cursor_admit(phase,grant,effect))).0;
-        let (owner, receipt) = admitted.unwrap();
+        let (owner, receipt) = admitted.unwrap_or_else(|_| panic!("quoted owner close admission"));
         assert_eq!((requested, released), (receipt.retained_capacity_bytes, receipt.released_bytes));
         assert_eq!(receipt.retained_capacity_bytes, demand.capacity_bytes);
         drive_retirement_terminal(owner.expect("current and whole envelope transfer exactly once"));
-        assert!(effect_tests::with_effect(grant,effect_tests::CPU,|effect|store.close_cursor_admit(phase,grant,effect)).0.unwrap().0.is_none());
+        assert!(effect_tests::with_effect(grant,effect_tests::CPU,|effect|store.close_cursor_admit(phase,grant,effect)).0.unwrap_or_else(|_| panic!("terminal close admission")).0.is_none());
     }
     assert!(store.live.current_detached && store.log.envelope_detached);
     close_test_store(&mut store);
@@ -271,6 +271,25 @@ fn rejected_history_mutation_and_metadata_owners_close_under_one_item_grants() {
 }
 
 
+/// 🎞️ Runs one member batch close turn under a real original Work action and settles it like the host does.
+fn driven_batch_close(grant: RetainedCloneGrant, mut call: impl FnMut(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError>) -> RetainedCloneStep {
+    semio_framework_value_clone_source_testing::drive::warm();
+    semio_framework_value_clone_source_testing::drive::drive(grant, effect_tests::CPU, |effect| { let result = call(effect); semio_framework_value::RetirementPollExit::settle(effect, result.map_err(Into::into)) }).result.expect("member batch close turn settles")
+}
+
+/// 🎟️ Closes one member batch under turns whose grant covers its quoted next step on every axis, never spinning: a turn that makes no progress under its own quote fails the law.
+fn close_batch_quoted(batch: &mut MemberStoreOwnedBatch, floor: RetainedCloneGrant) {
+    for _ in 0..1024 {
+        if batch.terminal_is_empty() { return; }
+        let demand = batch.next_demands(floor.maximum_copy_bytes).expect("member batch close quote");
+        let turn = RetainedCloneGrant { maximum_items: floor.maximum_items.max(1), maximum_copy_bytes: floor.maximum_copy_bytes.max(demand.copy_bytes), maximum_capacity_bytes: floor.maximum_capacity_bytes.max(demand.capacity_bytes), maximum_release_bytes: floor.maximum_release_bytes.max(demand.release_bytes), maximum_depth: floor.maximum_depth.max(demand.depth).max(1) };
+        let step = driven_batch_close(turn, |effect| batch.close_granted(effect));
+        assert!(step.progress().fits(turn));
+        assert!(step.progress() != RetainedCloneProgress::default() || batch.terminal_is_empty(), "member batch close made no progress under its own quote {demand:?}");
+    }
+    panic!("member batch close did not terminate");
+}
+
 /// 📏️ Closes an erased member publication on its exact quoted per-axis demands.
 fn close_erased_publication_quoted(publication: &mut dyn ErasedMemberStoreOneItemPublication) {
     publication.begin_close();
@@ -280,7 +299,7 @@ fn close_erased_publication_quoted(publication: &mut dyn ErasedMemberStoreOneIte
         }
         let demand = publication.retirement_demands(4096).expect("current member publication close frontier");
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        let step = publication.close_step(grant).expect("member publication closes on its quoted grant");
+        let step = semio_os_store_testing_doubles::store::closed_with(grant, |effect| publication.close_step(effect)).expect("member publication closes on its quoted grant");
         assert!(step.progress().fits(grant));
     }
     panic!("member publication did not retire its exact owners");
@@ -302,7 +321,7 @@ async fn member_owned_batch_admission_keeps_exact_source_on_wrong_type_stale_rev
     assert!(member.begin_one_item_owned_publication(&mut wrong, ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, ..one_item_test_policy() }).is_err());
     assert_eq!(wrong.mutations.mutations::<i32>().unwrap().as_ptr(), wrong_pointer);
     assert_eq!(serde_json::to_value(wrong.mutations.mutations::<i32>().unwrap()).unwrap(), fixture["wrongType"]);
-    for _ in 0..1024 { if wrong.mutations.terminal_is_empty() { break; } assert!(wrong.mutations.close_granted(grant).unwrap().progress().fits(grant)); }
+    close_batch_quoted(&mut wrong.mutations, grant);
     assert!(wrong.mutations.terminal_is_empty());
     let values = fixture["values"].as_array().unwrap().iter().map(|row| DemoMutation::SetN(SetN { n: row.as_i64().unwrap() as i32 })).collect::<Vec<_>>();
     let pointer = values.as_ptr();
@@ -327,7 +346,7 @@ async fn member_owned_batch_admission_keeps_exact_source_on_wrong_type_stale_rev
     assert!(request.mutations.mutations::<DemoMutation>().is_none());
     assert_eq!(member.snapshot_ref().n, Some(0));
     close_erased_member_publication(&mut *publication, ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, ..one_item_test_policy() });
-    for _ in 0..1024 { if request.mutations.terminal_is_empty() { break; } assert!(request.mutations.close_granted(grant).unwrap().progress().fits(grant)); }
+    close_batch_quoted(&mut request.mutations, grant);
     assert!(request.mutations.terminal_is_empty());
     assert_eq!(member.snapshot_ref().n, Some(0));
     for _ in 0..65_536 { if matches!(SpaceMember::close_owned_step_cold(&mut member, physical_test_close_grant()).unwrap(), RetainedCloneStep::Complete(_)) { break; } }

@@ -45,13 +45,14 @@ test("the fixture is closed, the policy and the texts equal their declaration",(
  }
 });
 
+const fieldsOf=(fields:Readonly<Record<string,string|number|undefined>>):Record<string,string|number>=>Object.fromEntries(Object.entries(fields).flatMap(([name,value])=>value===undefined?[]:[[name,value]]));
 test("the language choice, the messages and the owner concurrency of a headroom equal the independent model",()=>{
  const directory=scratchDirectory("memory-law-");
  try{
   const expected=oracle(["expect",written(directory,"fixture.json",fixture)]);
   fixture.languages.forEach((row,index)=>{expect(memory.selectGraphMemoryLanguagesV1(row.environment),row.name).toEqual(row.expect as ("en"|"de")[]);expect(expected.languages[index],row.name).toEqual(row.expect);});
   fixture.messageCases.forEach((row,index)=>{
-   const actual=memory.renderGraphMemoryMessagesV1(row.key as "waiting",row.fields as Record<string,number>,row.environment);
+   const actual=memory.renderGraphMemoryMessagesV1(row.key as "waiting",fieldsOf(row.fields),row.environment);
    expect(actual).toEqual(row.expect);expect(actual).toEqual(expected.messages[index]);
   });
   expect(()=>memory.renderGraphMemoryMessagesV1("unknown" as "waiting",{},{LANG:"de_DE"})).toThrow();
@@ -206,7 +207,7 @@ test("owners of a kind without a learned peak run alone, learned and persisted p
   for(const[index,row]of fixture.scenarios.entries()){
    const peaks:Record<string,number[]>=Object.fromEntries(Object.entries(row.persisted).map(([kind,megabytes])=>[kind,[megabytes*MEGABYTE]])),{peak,maximumLive,total}=await runScenario(row,peaks);
    expect(peak,row.name).toBe(row.expectPeak);expect(expected.scenarios[index].peak,row.name).toBe(row.expectPeak);
-   expect(Object.fromEntries(Object.entries(peaks).map(([kind,samples])=>[kind,Math.round(Math.max(...samples)/MEGABYTE)])),row.name).toEqual(row.expectLearned);expect(expected.scenarios[index].learned,row.name).toEqual(row.expectLearned);
+   expect<unknown>(Object.fromEntries(Object.entries(peaks).map(([kind,samples])=>[kind,Math.round(Math.max(...samples)/MEGABYTE)])),row.name).toEqual(row.expectLearned);expect(expected.scenarios[index].learned,row.name).toEqual(row.expectLearned);
    if(row.tasks.every(task=>task.growthMegabytes*MEGABYTE<=total))expect(maximumLive,row.name).toBeLessThanOrEqual(total);
   }
  }finally{rmSync(directory,{recursive:true,force:true});}

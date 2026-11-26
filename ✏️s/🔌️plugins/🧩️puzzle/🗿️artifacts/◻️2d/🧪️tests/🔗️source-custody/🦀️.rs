@@ -1,24 +1,28 @@
 //! 🔗️ Native fixtures admit real public source custody and observe its exact final lifecycle.
-use semio_framework_value::retained_clone::{RetainedOwnedProjection,RetainedOwnedProjectionAdmission,RetainedClone,RetainedCloneBorrowAuthority,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneSource,RetainedCloneStep};
+use semio_framework_value::retained_clone::{RetainedOwnedProjection,RetainedOwnedProjectionAdmission,RetainedClone,RetainedCloneBorrowAuthority,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneSource,RetainedCloneStep,with_original_invocation};
 use semio_framework_value::retirement::arc_custody::ArcLease;
 use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,ValueError,ValueRefusalKind};
 use semio_framework_value_clone_source_testing::{admit_owned,admit_projected,drive};
-use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
-use std::cell::RefCell;
 
 const CPU:u64=1048576;
 const BODY:usize=4096;
 const STOCK:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1048576,maximum_copy_bytes:16777216,maximum_capacity_bytes:16777216,maximum_release_bytes:33554432,maximum_depth:256};
-thread_local!{static BANK:RefCell<Option<EffectBank>>=const{RefCell::new(None)};}
-
-fn fresh()->EffectBank{EffectBank::new(Wallet::new(RetainedCloneGrant{maximum_items:usize::MAX,maximum_copy_bytes:usize::MAX,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},1<<62))}
-
-fn lent<R>(operation:impl FnOnce(&mut EffectBank)->R)->R{let mut bank=BANK.with(|slot|slot.borrow_mut().take()).unwrap_or_else(fresh);let result=operation(&mut bank);BANK.with(|slot|*slot.borrow_mut()=Some(bank));result}
-
 /// 🪢️ Runs one synchronous operation inside one funded original effect and returns its value.
 pub fn run<R>(grant:RetainedCloneGrant,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->R{
     let mut output=None;
-    let (poll,_)=lent(|bank|{let outcome=bank.run(grant,CPU,|effect|{let boundary=effect.performed_boundary();output=Some(operation(effect));let work=effect.performed_since(boundary).unwrap();RetainedWorkPoll::Complete(RetainedWorkOutcome::<(),ValueError>{result:Ok(()),work})});assert_ne!(bank.take_admitted(),Some(false));outcome});
+    let mut operation=Some(operation);
+    let (poll,_)=drive::with_bank(|bank|{
+        let outcome=bank.run_with_source(grant,CPU,|effect,source|{
+            let boundary=effect.performed_boundary();
+            let result=with_original_invocation(Some(source.identity()),effect,&mut |effect|{
+                output=Some(operation.take().unwrap()(effect));
+            });
+            let work=effect.performed_since(boundary).unwrap();
+            RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work})
+        });
+        assert_ne!(bank.take_admitted(),Some(false));
+        outcome
+    });
     let RetainedWorkPoll::Complete(turn)=poll else{panic!("synchronous fixture turn stayed pending")};
     turn.result.unwrap();
     output.take().unwrap()
@@ -132,7 +136,7 @@ impl std::ops::DerefMut for Custody {
 pub fn admit() -> Custody {
     let capacity=RetainedCloneBorrowAuthority::<()>::constructor_capacity_bytes();
     assert!(capacity>0&&capacity<=4096);
-    let (source,progress)=lent(|bank|match admit_owned(bank,(),(),STOCK).result{Ok(admitted)=>admitted,Err(_)=>panic!("unit source custody admission refused")});
+    let (source,progress)=drive::with_bank(|bank|match admit_owned(bank,(),(),STOCK).result{Ok(admitted)=>admitted,Err(_)=>panic!("unit source custody admission refused")});
     assert!(progress.fits(STOCK));
     Custody(RetainedCloneBorrowAuthority::from_admitted_source(source))
 }
@@ -143,13 +147,13 @@ pub fn close(source:&mut Custody) {
 
 /// 🔗️ Admits one owned value as a retained source under one funded original admission.
 pub fn admit_owner<T:semio_framework_value::retirement::RetireOwned+Sync+'static>(owner:T,grant:RetainedCloneGrant)->Result<(RetainedCloneSource<T>,RetainedCloneProgress),ValueError>{
-    lent(|bank|admit_owned(bank,owner,(),grant).result.map_err(|_|ValueError::invariant("owned source admission refused")))
+    drive::with_bank(|bank|admit_owned(bank,owner,(),grant).result.map_err(|_|ValueError::invariant("owned source admission refused")))
 }
 
 pub fn admit_source<T:semio_framework_value::retirement::RetireOwned+Sync+Send+'static>(original:std::sync::Arc<T>) -> RetainedCloneSource<T,ArcLease<T>> {
     let capacity=RetainedCloneSource::<T,ArcLease<T>>::constructor_capacity_bytes::<()>();
     assert!(capacity>0&&capacity<=4096);
-    let (source,progress)=lent(|bank|match admit_projected::<T,ArcLease<T>,()>(bank,ArcLease(Some(original)),(),STOCK).result{Ok(admitted)=>admitted,Err(_)=>panic!("snapshot source custody admission refused")});
+    let (source,progress)=drive::with_bank(|bank|match admit_projected::<T,ArcLease<T>,()>(bank,ArcLease(Some(original)),(),STOCK).result{Ok(admitted)=>admitted,Err(_)=>panic!("snapshot source custody admission refused")});
     assert!(progress.fits(STOCK));
     source
 }

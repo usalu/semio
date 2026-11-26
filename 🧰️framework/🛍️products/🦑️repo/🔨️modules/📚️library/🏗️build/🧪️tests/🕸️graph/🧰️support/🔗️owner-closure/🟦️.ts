@@ -87,7 +87,7 @@ export async function prepareOwnerClosureV1({moduleUrl,owner,provided,source,wit
 }
 
 /** 🧩️ Compiles a prepared closure with the caller's stubs for its `provided` names and returns the owner function. */
-export function instantiateOwnerClosureV1(closure:OwnerClosureV1,values:Readonly<Record<string,unknown>>):(...args:any[])=>Promise<any>{
+export function instantiateOwnerClosureV1(closure:OwnerClosureV1,values:Readonly<Record<string,unknown>>):(...args:any[])=>any{
  const missing=closure.provided.filter(name=>!Object.hasOwn(values,name));
  if(missing.length)throw Error("Stubs required for: "+missing.join(", "));
  const all={...closure.imports,...values};

@@ -23,7 +23,7 @@ test("the real Nx handler patch preserves dependency cleanup and reports selecte
  const pristine=applyPatch(current,reversePatch(installed));
  expect(pristine).not.toBe(false);
  const owned=new TextDecoder().decode(applyToolingPatchImagesV1(new Map([[target,new TextEncoder().encode(pristine as string)]]),section).get(target)!);
- expect(owned).toBe(applyPatch(pristine as string,section));
+ expect<unknown>(owned).toBe(applyPatch(pristine as string,section));
  const source=ts.createSourceFile(target,owned,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
  let method="";
  const visit=(node:ts.Node):void=>{if(ts.isMethodDeclaration(node)&&node.name.getText(source)==="handleContinuousTaskExit")method=node.getText(source);ts.forEachChild(node,visit);};visit(source);

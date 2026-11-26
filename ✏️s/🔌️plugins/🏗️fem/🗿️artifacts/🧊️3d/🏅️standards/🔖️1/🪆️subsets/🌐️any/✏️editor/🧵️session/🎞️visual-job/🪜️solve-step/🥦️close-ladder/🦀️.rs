@@ -23,6 +23,7 @@ impl Fem3dNumericalChild {
             && self.ldlt.is_none()
             && self.subspace.is_none()
             && self.modal_mass.is_none()
+            && self.buckling_secondary.is_none()
             && self.solid_domain.is_none()
             && self.analysis_node_ids.terminal_is_empty()
             && self.node_values.terminal_is_empty()
@@ -47,6 +48,13 @@ impl Fem3dNumericalChild {
             let step = matrix.close_step(maximum_bytes);
             if step.0 {
                 self.rejected_pcg_matrix = None;
+            }
+            return Ok(Self::close_rung((false, step.1.max(1), step.2)));
+        }
+        if let Some(secondary) = self.buckling_secondary.as_mut() {
+            let step = secondary.close_step(maximum_bytes);
+            if step.0 {
+                self.buckling_secondary = None;
             }
             return Ok(Self::close_rung((false, step.1.max(1), step.2)));
         }

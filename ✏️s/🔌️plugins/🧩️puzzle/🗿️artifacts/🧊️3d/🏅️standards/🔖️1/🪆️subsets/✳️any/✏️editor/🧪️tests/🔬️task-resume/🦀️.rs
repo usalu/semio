@@ -102,7 +102,7 @@ async fn a_refused_task_resume_answers_with_a_fault_and_the_next_one_still_deliv
         if !app.has_pending_typed_operations() { break; }
         app.advance_typed_operation_publication(&mut fixture_identity(), scope.cx()).await.expect("a refused delivery is an answer, not a failed turn");
         if let Some(outcome) = app.take_task_resume_outcome() { answers.push(outcome); }
-        settle(&mut app, &mut scope).await;
+        answers.extend(settle(&mut app, &mut scope).await.resume_outcomes);
     }
     assert_eq!(answers.len(), 2, "every queued follow-up is answered, in order");
     let fault = answers[0].as_ref().expect_err("a follow-up for a foreign instance is refused");

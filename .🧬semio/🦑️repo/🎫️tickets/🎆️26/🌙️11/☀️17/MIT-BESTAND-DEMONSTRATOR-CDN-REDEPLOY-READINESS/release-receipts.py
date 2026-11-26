@@ -13,6 +13,27 @@ RECEIPT = "🧾️receipt.json"
 BROWSER_CORES = "optimizedBrowserCores"
 ROOT = Path(__file__).resolve().parents[7]
 CASES = ROOT / "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧫️cases.json"
+RETIRED = Path(__file__).with_name("retired-release-wasm.json")
+
+
+def retired_release_wasm():
+    """🗄️ Read exact historically incompatible raw component identities."""
+    document = json.loads(RETIRED.read_bytes())
+    if not isinstance(document, dict) or document.keys() != {"version", "wasmSha256ByPlugin"} or type(document["version"]) is not int or document["version"] != 1:
+        raise ValueError("Invalid retired release component inventory")
+    rows = document["wasmSha256ByPlugin"]
+    if not isinstance(rows, dict) or not rows or any(
+        not re.fullmatch(r"[a-z0-9-]+", module) or not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest)
+        for module, digest in rows.items()
+    ):
+        raise ValueError("Invalid retired release component identity")
+    return rows
+
+
+def require_current_wasm(receipt):
+    module = receipt["pluginId"]
+    if retired_release_wasm().get(module) == receipt["wasmSha256"]:
+        raise ValueError(f"{module}: staged Wasm is retired after runtime incompatibility")
 
 
 def receipt_data(data, path, module):
@@ -135,6 +156,7 @@ def core_certification_request(staged, receipt):
 
 def record_confirmation(staged, destination, module, expected=None):
     data = read_receipt(staged, module)
+    require_current_wasm(data)
     if expected is not None and data != expected:
         raise ValueError(f"{module} changed before optimized browser core certification")
     inventory, = certify_browser_cores([core_certification_request(staged, data)])
@@ -182,15 +204,22 @@ def roster(cases):
 def missing_report(modules, evidence, cases):
     """📋️ List every roster module without a queue confirmation and say whether its release was at least staged."""
     rows = roster(cases)
-    missing = [module for module, _ in rows if not (evidence / f"{module}.json").is_file()]
-    lines = [f"{len(rows) - len(missing)} of {len(rows)} roster modules confirmed; {len(missing)} still missing:"]
-    for module in missing:
+    retired = retired_release_wasm()
+    missing, states = [], []
+    for module, _ in rows:
+        confirmation = evidence / f"{module}.json"
+        previous = retired.get(module)
+        if confirmation.is_file() and (previous is None or read_receipt(confirmation, module)["wasmSha256"] != previous):
+            continue
+        missing.append(module)
         try:
-            receipt_path(modules, module)
-            state = "staged, awaiting confirmation"
+            staged = receipt_path(modules, module)
+            retired_stage = previous is not None and read_receipt(staged, module)["wasmSha256"] == previous
+            state = "retired staged Wasm, awaiting fresh build" if retired_stage else "staged, awaiting confirmation"
         except ValueError:
             state = "no staged release"
-        lines.append(f"  {module}: {state}")
+        states.append(f"  {module}: {state}")
+    lines = [f"{len(rows) - len(missing)} of {len(rows)} roster modules confirmed; {len(missing)} still missing:", *states]
     return missing, "\n".join(lines)
 
 
@@ -219,6 +248,7 @@ def main():
         for module in cases[group]:
             receipt = args.evidence / f"{module}.json"
             expected, inventory = read_confirmation(receipt, module)
+            require_current_wasm(expected)
             staged = receipt_path(args.modules, module)
             if read_receipt(staged, module) != expected:
                 raise ValueError(f"{module} changed since its successful build")

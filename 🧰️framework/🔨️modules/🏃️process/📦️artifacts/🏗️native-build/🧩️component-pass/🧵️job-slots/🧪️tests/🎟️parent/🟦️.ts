@@ -10,6 +10,7 @@ const oracle=fileURLToPath(new URL("./🐍️oracle/🐍️.py",import.meta.url)
 const sample=async()=>({availableMegabytes:8000,ownedMegabytes:0,pressure:"normal" as const});
 const parent=(grant:number,baseline?:number)=>new jobs.ParentComponentMemoryV1(grant,baseline);
 const pass={target:"wasm32-wasip2"};
+const routeOf=(value:string):jobs.PassJobSlotV1=>{if(value==="local"||value==="fleet")return value;throw Error(`unknown pass job slot ${value}`);};
 test("the Python route oracle agrees with the language-neutral component memory cases",()=>{
  const result=spawnSync(testPythonV1()??"python3",["-I",oracle],{input:JSON.stringify(vectors),encoding:"utf8"});
  expect(result.status,result.stderr).toBe(0);
@@ -20,9 +21,9 @@ test("Ajv independently bounds local and fleet footprints for the authored cases
  for(const row of vectors){
   const fleet=row.fleet,local=(row.baseline??0)+row.peak+(row.localFootprint??0),allowance=ajv.compile({type:"integer",...row.grant===null?{}:{maximum:row.grant}});
   const available=fleet?.slots===0&&fleet.waitForCompatibleSlot?fleet.laterSlots:fleet?.slots;
-  const routes:jobs.PassJobSlotV1[]=allowance(local)?["local"]:available&&!row.native&&!row.critical&&allowance((row.baseline??0)+fleet.footprint)?["fleet"]:[];
+  const routes:jobs.PassJobSlotV1[]=allowance(local)?["local"]:available&&fleet&&!row.native&&!row.critical&&allowance((row.baseline??0)+fleet.footprint)?["fleet"]:[];
   const refusals=!routes.length||routes[0]==="fleet"&&fleet?.fails;
-  expect({...refusals?{required:local}:{},routes},row.name).toEqual(row.result);
+  expect({...refusals?{required:local}:{},routes},row.name).toEqual({...row.result,routes:row.result.routes.map(routeOf)});
  }
 });
 for(const row of vectors)test(row.name,async()=>{
@@ -38,7 +39,7 @@ for(const row of vectors)test(row.name,async()=>{
    run:async(_pass,slot)=>{routes.push(slot);if(slot==="fleet"&&row.fleet?.fails)throw new jobs.FleetPlacementFailedErrorV1("lost test worker");},
   });
  }catch(error){refusal=error;}
- expect(routes).toEqual(row.result.routes);
+ expect(routes).toEqual(row.result.routes.map(routeOf));
  if(row.result.required===undefined)expect(refusal).toBeUndefined();
  else{
   expect(refusal).toMatchObject({name:"ParentComponentMemoryRequiredErrorV1",requiredMegabytes:row.result.required,allowanceMegabytes:row.grant});

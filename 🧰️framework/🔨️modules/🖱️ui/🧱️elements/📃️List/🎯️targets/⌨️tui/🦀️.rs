@@ -2,7 +2,7 @@
 //! multi-marked list whose viewport follows the selection, with hover, select-then-activate and a scroll bar.
 //! Wired as a crate-root sibling module of `crate::tui::widget` (see that mod's `pub use crate::tui::list::ListState;`).
 
-use semio_ui_tui_core::cell::{Cell, CellBuffer};
+use semio_ui_tui_core::cell::{attr, Cell, CellBuffer};
 use semio_ui_tui_core::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
 use semio_ui_tui_core::geometry::{Pos, Rect};
 use semio_ui_tui_core::rows::{follow_top, navigate_to, paint_scroll_bar, row_style, row_under};
@@ -23,6 +23,8 @@ pub struct ListState {
     /// 🚦️ The state of each row, parallel to `items` (rows past its end have none); a row with a status shows its
     /// glyph in the status role colour after the mark, and every row then reserves that column.
     pub statuses: Vec<Option<Status>>,
+    /// 🌫️ Whether a row is drawn dimmed (a stale or missing entry), parallel to `items`; rows past its end are not dimmed.
+    pub dimmed: Vec<bool>,
     /// 🈳️ The text shown when the list has no items; the application supplies it in the user's language.
     pub empty: String,
     hover: Option<usize>,
@@ -35,7 +37,7 @@ pub struct ListState {
 impl ListState {
     pub fn new(items: Vec<String>) -> Self {
         let marks = vec![false; items.len()];
-        Self { items, selected: 0, offset: 0, marks, statuses: Vec::new(), empty: String::new(), hover: None, frame: 0, page: Shared::new(0), shown: Shared::new(0), anchored: Shared::new(true) }
+        Self { items, selected: 0, offset: 0, marks, statuses: Vec::new(), dimmed: Vec::new(), empty: String::new(), hover: None, frame: 0, page: Shared::new(0), shown: Shared::new(0), anchored: Shared::new(true) }
     }
 
     /// 🎯️ Selects `position` (clamped) and scrolls it into view; true when the selection moved.
@@ -158,6 +160,7 @@ pub fn paint_list(l: &ListState, theme: &Theme, rect: Rect, buf: &mut CellBuffer
     for (index, position) in (top..(top + rows).min(count)).enumerate() {
         let y = rect.y + index as u16;
         let (fg, row_bg, attrs) = row_style(theme, bg, position == l.selected, focused, l.hover == Some(position));
+        let attrs = if l.dimmed.get(position).copied().unwrap_or(false) { attrs | attr::DIM } else { attrs };
         let line = Rect::new(area.x, y, area.width, 1);
         buf.fill_rect(line, Cell::blank(fg, row_bg));
         let mark = if l.marks.get(position).copied().unwrap_or(false) { theme.glyphs.glyph(Glyph::Check) } else { " " };

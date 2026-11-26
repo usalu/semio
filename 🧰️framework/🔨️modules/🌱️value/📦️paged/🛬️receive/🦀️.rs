@@ -16,7 +16,7 @@ impl<I:NativeValueSource+?Sized,const N:usize> NativeReceiver<I,PagedUtf8<N>> fo
    if self.binding.is_none(){let turn=input.bind(&mut self.binding,effect);return turn.result.map(|p|RetainedCloneStep::Progress(p.unwrap_or_default())).map_err(Into::into)}
    if self.phase==3&&!self.append.complete{let append=&mut self.append;let text=input.get().text()?;let output=self.output.as_mut().ok_or_else(invalid)?;let turn=append.advance_funded(text.as_str(),output,body,effect);return turn.result.map_err(Into::into)}
    if !effect.performed(1)?{return Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"native paged text action exceeded its original work").into())}
-   match self.phase{0=>self.phase=1,1=>{input.get().text()?;self.phase=2;},2=>{*self.output=Some(PagedUtf8::new());self.phase=3;},3=>self.phase=4,_=>return Err(invalid().into())}
+   match self.phase{0=>self.phase=1,1=>{input.get().text()?;self.phase=2;},2=>{*self.output=Some(PagedUtf8::for_source_bytes(input.get().text()?.as_str().len()));self.phase=3;},3=>self.phase=4,_=>return Err(invalid().into())}
    Ok(if self.phase==4{RetainedCloneStep::Complete(receipt(d))}else{RetainedCloneStep::Progress(receipt(d))})})();
   Ok(reply.complete(result))
  }

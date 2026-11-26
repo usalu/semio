@@ -127,7 +127,13 @@ fn retained_paged_list_release_authority_is_distinct_from_copy_and_admits_exact_
     for _ in 0..8 { birth={let funded=funded(&cursor,source.borrow(),128,grant);effect::advance(&mut cursor,source.borrow(),128,MAXIMUM_CLONE_WORK,funded)}.result.unwrap().progress(); if birth.retained_capacity_bytes!=0 { break; } }
     assert_eq!(birth.retained_capacity_bytes,128);
     let mut copy=RetainedCloneProgress::default();
-    for _ in 0..8 { copy={let funded=funded(&cursor,source.borrow(),128,grant);effect::advance(&mut cursor,source.borrow(),128,MAXIMUM_CLONE_WORK,funded)}.result.unwrap().progress(); if copy.copied_bytes!=0 { break; } }
+    for _ in 0..8 {
+        let funded=funded(&cursor,source.borrow(),128,grant);
+        copy=effect::advance(&mut cursor,source.borrow(),128,MAXIMUM_CLONE_WORK,funded).result.unwrap().progress();
+        assert!(copy.fits(funded));
+        if cursor.output_ready(){break;}
+    }
+    assert!(cursor.output_ready());
     assert_eq!(copy.copied_bytes,1);
     let d=cursor.take_demand().unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let taken=effect::take(&mut cursor,g);assert_eq!(taken.work,1);let(value,p)=taken.result.unwrap().unwrap();assert!(p.fits(g));assert_eq!(p.copied_bytes,d.copy_bytes);assert_eq!(value.0,17);
     effect::begin_close(&mut cursor);
@@ -270,7 +276,7 @@ fn retained_paged_list_copy_matches_vec_serde_and_closes_page_by_page() {
         }
         assert!(close_turns < 100_000, "spent cursor close terminates");
     }
-    assert_eq!(close_turns,fixture.expected.spent_close_turns,"a spent cursor funds every original alias, native frame, frontier page and final binding header phase");assert_eq!(close_cpu,u128::from(fixture.expected.spent_close_cpu));assert_eq!(close_born,close_freed);
+    assert_eq!(close_turns,fixture.expected.spent_close_turns,"a spent cursor funds each original frame with exactly {close_cpu} work");assert_eq!(close_cpu,u128::from(fixture.expected.spent_close_cpu));assert_eq!(close_born,close_freed);
     let mut retirement = crate::retirement::controlled::ControlledRetirement::new(copied).map_err(|(error,_)|error).unwrap();
     let mut retirement_turns = 0usize;
     while !retirement.terminal_is_empty() {

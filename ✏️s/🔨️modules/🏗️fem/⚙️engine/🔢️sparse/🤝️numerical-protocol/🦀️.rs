@@ -16,6 +16,19 @@ pub enum NumericalRun {
     Complete,
 }
 
+/// 🔁️ Most bounded units one interactive turn runs back to back; the turn's fuel and deadline still stop it sooner.
+pub const NUMERICAL_RUN_UNITS_PER_TURN: usize = 4096;
+
+/// 🏃️ Repeats one bounded `run` while it only yields and the turn still has fuel and time, so a job spends its whole turn instead of one unit.
+pub fn run_turn<E>(cx: &mut StepContext<'_>, mut run: impl FnMut(&mut StepContext<'_>) -> Result<NumericalRun, E>) -> Result<NumericalRun, E> {
+    let mut outcome = run(cx)?;
+    for _ in 1..NUMERICAL_RUN_UNITS_PER_TURN {
+        if outcome != NumericalRun::Yield || cx.should_yield() || cx.is_cancelled() { break; }
+        outcome = run(cx)?;
+    }
+    Ok(outcome)
+}
+
 /// 🎁️ Owns the one finished payload a numerical job lends at a time, retries a refused admission and pays the lent payload back from the next call's wallet.
 pub struct NumericalOutcomeDesk {
     pub lent: Option<RetainedJobPayload>,

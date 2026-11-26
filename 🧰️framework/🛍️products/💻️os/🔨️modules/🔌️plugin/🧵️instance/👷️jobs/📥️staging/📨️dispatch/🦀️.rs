@@ -47,7 +47,7 @@ impl<A: ArtifactApp> PendingReserved<A> {
     pub async fn resolve_store_conflict(&mut self, stores: &mut InstanceStores<A>, history: &mut CommandHistory<A>, conflict_id: &str, resolution: protocol::ConflictResolution) -> Result<protocol::MergeReport, Fault> {
         let report = stores.store.resolve_conflict(conflict_id, resolution).await.map_err(|error| error.into_fault())?;
         self.dispatch_report = protocol::DispatchReport { policy: report.policy, worst: report.worst, messages: report.replayed.iter().flat_map(|entry| entry.messages.iter().cloned()).collect() };
-        history.cache = None;
+        history.invalidate_cache();
         Ok(report)
     }
 }

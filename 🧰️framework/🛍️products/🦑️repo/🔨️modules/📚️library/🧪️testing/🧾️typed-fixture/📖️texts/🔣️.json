@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "id": "typed-fixture",
+  "languages": ["en", "de"],
+  "messages": {
+    "fixture.invalid": {
+      "en": "The fixture {name} does not match its schema: {problems}",
+      "de": "Die Fixture {name} entspricht nicht ihrem Schema: {problems}"
+    },
+    "fixture.unreadable": {
+      "en": "The fixture {name} cannot be read: {reason}",
+      "de": "Die Fixture {name} kann nicht gelesen werden: {reason}"
+    },
+    "fixture.not-json": {
+      "en": "The fixture {name} is not valid JSON: {reason}",
+      "de": "Die Fixture {name} ist kein gültiges JSON: {reason}"
+    },
+    "stub.unimplemented": {
+      "en": "The stub {name} does not implement {member}; the test did not expect this member to be used",
+      "de": "Der Stub {name} implementiert {member} nicht; der Test hat die Verwendung dieses Members nicht erwartet"
+    }
+  }
+}

@@ -19,7 +19,7 @@ test("a status code of the execution service is classified by its code alone: ca
   [GRPC_CODES_V1.ABORTED,"","infrastructure",false],
   [GRPC_CODES_V1.UNKNOWN,"couldn't read `x.rs`","infrastructure",false],
  ];
- for(const [code,message,reason,transient] of table)expect(classifyOffloadStatusV1({code,message}),`${code} ${message}`).toEqual({reason,transient});
+ for(const [code,message,reason,transient] of table)expect<unknown>(classifyOffloadStatusV1({code,message}),`${code} ${message}`).toEqual({reason,transient});
  expect(classifyOffloadStatusV1({code:GRPC_CODES_V1.UNAVAILABLE}).transient).toBe(true);
 });
 
@@ -63,7 +63,7 @@ test("a compiler result is a result when its stderr holds ordinary diagnostics a
  ];
  for(const [exitCode,stderr,kind,name] of table){
   const verdict=classifyOffloadExitV1({exitCode,stderr});
-  expect(verdict.kind,`${exitCode} ${stderr.slice(0,60)}`).toBe(kind);
+  expect<unknown>(verdict.kind,`${exitCode} ${stderr.slice(0,60)}`).toBe(kind);
   if(name!==undefined)expect(verdict.kind==="environmental"?verdict.class:"",`${exitCode} ${stderr.slice(0,60)}`).toBe(name);
  }
 });

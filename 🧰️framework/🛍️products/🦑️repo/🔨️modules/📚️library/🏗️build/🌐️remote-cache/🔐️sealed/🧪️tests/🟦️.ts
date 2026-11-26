@@ -20,7 +20,7 @@ const importKey=(key:string)=>crypto.subtle.importKey("raw",Buffer.from(key,"hex
 test("the vectors are valid against the schema, the independent Python oracle (standard library only) derives the same server key, request key and IV, reply key and IV from the seeds, and the converted public key is the public key of the converted private key",()=>{
  const validate=ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:"#/definitions/Fixture"});
  expect(validate(fixture),JSON.stringify(validate.errors?.[0])).toBe(true);
- if(python===undefined)return;
+ if(python===null)return;
  const run=Bun.spawnSync([python,"-I",oracle,"check",fixturePath],{stdout:"pipe",stderr:"pipe"});
  expect(run.stdout.toString()+run.stderr.toString()).toBe("ok\n");
  for(const vector of fixture.vectors){
@@ -32,7 +32,7 @@ test("the vectors are valid against the schema, the independent Python oracle (s
 
 test("the ciphertext of every vector opens with the keys of the oracle in an independent AES-GCM implementation (WebCrypto), carries exactly the declared request and reply, and sealing again from the same seeds gives the same bytes",async()=>{
  for(const vector of fixture.vectors){
-  const head=vector.request.head,plain=async(ciphertext:string,key:string,iv:string,additional:Buffer)=>Buffer.from(await crypto.subtle.decrypt({name:"AES-GCM",iv:Buffer.from(iv,"hex"),additionalData:additional,tagLength:128},await importKey(key),Buffer.from(ciphertext,"hex")));
+  const head=vector.request.head,plain=async(ciphertext:string,key:string,iv:string,additional:Buffer)=>Buffer.from(await crypto.subtle.decrypt({name:"AES-GCM",iv:Buffer.from(iv,"hex"),additionalData:Uint8Array.from(additional),tagLength:128},await importKey(key),Uint8Array.from(Buffer.from(ciphertext,"hex"))));
   const stamp=Buffer.alloc(8);stamp.writeBigUInt64BE(BigInt(vector.timestamp));
   const opened=await plain(vector.requestCiphertext,vector.requestKey,vector.requestIv,aad("semio-fleet-sealed/1",vector.group,Buffer.concat([stamp,Buffer.from(vector.nonce,"base64url")])));
   const length=opened.readUInt32BE(0);
@@ -42,14 +42,14 @@ test("the ciphertext of every vector opens with the keys of the oracle in an ind
   const replyLength=answer.readUInt32BE(0);
   expect(JSON.parse(answer.subarray(4,4+replyLength).toString("utf8"))).toEqual(vector.reply.head);
   expect(answer.subarray(4+replyLength).toString("hex")).toBe(vector.reply.bodyHex);
-  const sealed=sealRequestV1({serverPublic:Buffer.from(vector.serverX25519,"hex"),group:vector.group,now:vector.timestamp,request:{method:head.method,target:head.target,headers:head.headers,body:Buffer.from(vector.request.bodyHex,"hex")},seeds:{ephemeral:Buffer.from(vector.askerSeed,"hex"),nonce:Buffer.from(vector.nonce,"base64url")}});
+  const sealed=sealRequestV1({serverPublic:Buffer.from(vector.serverX25519,"hex"),group:vector.group,now:vector.timestamp,request:{method:head.method,target:head.target,headers:Object.fromEntries(Object.entries(head.headers).flatMap(([name,value])=>value===undefined?[]:[[name,value]])),body:Buffer.from(vector.request.bodyHex,"hex")},seeds:{ephemeral:Buffer.from(vector.askerSeed,"hex"),nonce:Buffer.from(vector.nonce,"base64url")}});
   expect(sealed.headers[SEALED_HEADER_V1]).toBe(vector.requestHeader);expect(Buffer.from(sealed.body).toString("hex")).toBe(vector.requestCiphertext);
  }
 });
 
 test("the shared secret of the one-time key and the converted identity key is the one that the OpenSSL command line derives",()=>{
  const openssl=Bun.which("openssl");
- if(openssl===undefined)return;
+ if(openssl===null)return;
  const directory=mkdtempSync(join(tmpdir(),"sealed-openssl-"));scratch.push(directory);
  const server=identity(),asker=generateKeyPairSync("x25519"),serverPrivate=exchangePrivateKeyV1(server.privateKey),serverPublic=createPublicKey(serverPrivate);
  writeFileSync(join(directory,"asker.pem"),asker.privateKey.export({type:"pkcs8",format:"pem"}));writeFileSync(join(directory,"server.pem"),serverPublic.export({type:"spki",format:"pem"}));

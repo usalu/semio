@@ -3,7 +3,7 @@ import {existsSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs"
 import {join} from "node:path";
 import {testScratchRootV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import {admitRemoteExecutionActionV1,readRemoteExecutionHostViewV1,type RemoteExecutionHostViewV1} from "../../🌡️load/🟦️.ts";
-import {READY_STAGE_CLAIM_POLICY_V1 as P,clearReadyStageClaimV1,createReadyStageClaimPublisherV1,readReadyStageClaimV1,readyStageEntitlementV1,readyStageHoldV1,withReadyStageV1,writeReadyStageClaimV1,type ReadyStageClaimV1} from "../../🌡️load/🪑️stage-claim/🟦️.ts";
+import {READY_STAGE_CLAIM_POLICY_V1 as P,clearReadyStageClaimV1,createReadyStageClaimPublisherV1,readReadyStageClaimV1,readyStageEntitlementV1,readyStageHoldV1,withReadyStageV1,writeReadyStageClaimV1,type ReadyStageClaimV1,type ReadyStageRunV1} from "../../🌡️load/🪑️stage-claim/🟦️.ts";
 import {ownerPoolHostOfV1} from "../../🛰️sidecar/🏊️pool/🟦️.ts";
 import {ownerPoolSizingV1,OWNER_POOL_POLICY_V1} from "../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🟦️.ts";
 import fixture from "./🔣️.json";
@@ -12,13 +12,14 @@ const scratch:string[]=[];
 afterEach(()=>{for(const path of scratch.splice(0))rmSync(path,{recursive:true,force:true});});
 const temporary=():string=>{const path=mkdtempSync(join(testScratchRootV1("rexec-stage-claim"),"scratch-"));scratch.push(path);return path;};
 const NOW=1_800_000_000_000;
+const runsByCase:Readonly<Record<string,readonly ReadyStageRunV1[]>>=fixture.runs;
 const host=(total:number,available:number,pressure:"normal"|"warn"|"critical"="normal")=>({version:1,atMs:NOW,platform:"darwin",cores:10,totalMegabytes:total,availableMegabytes:available,pressure,swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:null,openFiles:1000,openFilesMaximum:200000,attachedImages:0});
 const view=(total:number,available:number,pressure:"normal"|"warn"|"critical"="normal"):RemoteExecutionHostViewV1=>({host:host(total,available,pressure),grants:[],waiters:[]} as never);
 const claim=(entitlementMegabytes:number,observedMegabytes:number,atMs:number=NOW,waiting:boolean=false):ReadyStageClaimV1=>({version:1,stage:"workspace",pid:4242,entitlementMegabytes,observedMegabytes,waiting,atMs});
 
 test("The entitlement of every host size and run history equals the Python oracle",()=>{
  for(const row of fixture.entitlements){
-  const runs=(fixture.runs as Record<string,never[]>)[row.case]!;
+  const runs=runsByCase[row.case]!;
   expect(readyStageEntitlementV1({totalMegabytes:row.totalMegabytes,stage:"workspace",runs}),`${row.totalMegabytes} ${row.case}`).toBe(row.entitlementMegabytes);
  }
  const sixteen=(name:string)=>fixture.entitlements.find(row=>row.totalMegabytes===16384&&row.case===name)!.entitlementMegabytes;

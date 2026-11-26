@@ -1,0 +1,16 @@
+{
+  "artifact": "s.stdio.binary",
+  "registry": "semio-s-artifact-stdio-binary-io-registry",
+  "editorOwner": "semio-s-artifact-stdio-binary-mutations",
+  "apps": "BinaryApps",
+  "editor": {
+    "role": "Editor",
+    "closed": "BinaryEditorApps",
+    "payload": "BinaryEditorApp",
+    "concrete": "VcsArtifactApp<EditorApp<editor::binary::BinaryEditor>>"
+  },
+  "viewer": {
+    "role": "Viewer",
+    "concrete": "VcsArtifactApp<ViewerApp<viewer::binary::BinaryViewer>>"
+  }
+}

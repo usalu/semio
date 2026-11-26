@@ -13,6 +13,7 @@ import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../.
 import {buildModePolicy} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import type {LinkedComponentV1} from "@semio-tech/process/native-release";
 import type {DescriptorEmitterV1} from "../🖨️describe/🛠️emitter/🟦️.ts";
+import {descriptorEmitterBindingPolicyV1,readDescriptorEmitterBindingV1} from "../🖨️describe/🛠️emitter/📋️contract/🟦️.ts";
 import type {SemanticDescriptorEmissionV1} from "../🖨️describe/🛂️descriptor-emission/🟦️.ts";
 import { CATALOG_DESCRIPTOR_MAX_BYTES } from "../📇️registry/✅️catalog-verification/🟦️.ts";
 import { verifySemanticDescriptorPairBytesV1 } from "../📇️registry/✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
@@ -88,6 +89,13 @@ export function publishComponentModelV1(token:ComponentModelPublicationV1,compon
   const receipt:ComponentReceiptV1=Object.freeze({schema:COMPONENT_RECEIPT_SCHEMA_ID,pluginId:declared.intent.pluginId,packageId:declared.packageId,profile:componentProfileV1(component.pass.profile),target:COMPONENT_TARGET,wasmSha256:emission.componentSha256,wasmBytes:facts.size,semanticDescriptorSha256:pair.semanticSha256,toolchain:await(scope.toolchainIdentity??=(async()=>{await requireRepositoryRustToolchainV1(options.toolchain);const authority=readNativeCallerAuthorityV1(options.invocation.capabilities),version=await captureOwnedCommandV1(options.toolchain.rustc,["-vV"],options.workspace,{control:options.control,env:options.toolchain.environment,output:authority.transport});await options.toolchain.recheck();return rustToolchainIdentityFromVersionV1(version);})()),sourceTreeDigest:provenance.sourceTreeDigest,provenanceSha256:provenance.root}),receiptBytes=new TextEncoder().encode(encodeComponentReceiptV1(receipt));
   if(!componentReceiptBindsV1(receipt,{profile:declared.intent.mode,pluginId:declared.intent.pluginId,packageId:declared.packageId,wasmSha256:emission.componentSha256,semanticDescriptorSha256:pair.semanticSha256})||pair.pluginId!==receipt.pluginId||pair.packageId!==receipt.packageId)throw Error("Actual linked model receipt and descriptor tuple required");
   const modelFiles: [string, Uint8Array][] = [[protocol.descriptor, json], [protocol.descriptorPack, pack], [protocol.receipt, receiptBytes]];
+  if(emission.emitterPin){
+   const actual={mode:receipt.profile,componentSha256:receipt.wasmSha256,semanticSha256:receipt.semanticDescriptorSha256};
+   const binding=readDescriptorEmitterBindingV1({version:1,componentSha256:actual.componentSha256,semanticSha256:actual.semanticSha256,emitter:emission.emitterPin},actual);
+   const bytes=new TextEncoder().encode(JSON.stringify(binding)+"\n");
+   if(bytes.length>descriptorEmitterBindingPolicyV1.maximumBytes)throw Error("Bounded descriptor emitter binding required");
+   modelFiles.push([descriptorEmitterBindingPolicyV1.name,bytes]);
+  }
   if (emission.actorImage) {
     const image = emission.actorImage;
     assertActorPreparationBindingV1(image, receipt.wasmSha256);

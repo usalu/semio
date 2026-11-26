@@ -29,16 +29,16 @@ test("a question held only by projects that are dirty anyway is not asked again"
  const plan=await state.run([{path:"a/x.ts",kind:"modified"},{path:"b/x.ts",kind:"modified"}]);
  expect(state.asked).toEqual([[]]);
  expect([...plan.dirty].sort()).toEqual(["a","b"]);
- expect(plan.cutoff.questions).toBe(0);
- expect(plan.cutoff.skipped).toBe(1);
+ expect(plan.cutoff?.questions).toBe(0);
+ expect(plan.cutoff?.skipped).toBe(1);
 },30_000);
 
 test("a question that one clean project holds is still asked again",async()=>{
  const state=setup({a:["q"],b:["q"]},["q"]);
  const plan=await state.run([{path:"a/x.ts",kind:"modified"}]);
  expect(state.asked).toEqual([[state.name("q")]]);
- expect(plan.cutoff.questions).toBe(1);
- expect(plan.cutoff.skipped).toBe(0);
+ expect(plan.cutoff?.questions).toBe(1);
+ expect(plan.cutoff?.skipped).toBe(0);
  expect([...plan.dirty]).toEqual(["a"]);
 },30_000);
 

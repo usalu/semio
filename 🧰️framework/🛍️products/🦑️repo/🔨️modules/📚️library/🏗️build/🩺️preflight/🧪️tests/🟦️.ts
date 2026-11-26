@@ -15,7 +15,7 @@ test("only declared journaled Windows refusals yield fold-safe capability",()=>{
   expect(admitted(row),row.id).toBe(true);
   const message=row.probe==="near-match"?protocol.refusals.caseAccess+" ":(protocol.refusals as Readonly<Record<string,string>>)[row.probe]??row.probe,error=row.probe==="foreign"?{message:protocol.refusals.caseAccess}:row.probe==="cancelled"?new DOMException("cancelled","AbortError"):new Error(message);
   const probe=()=>{if(row.probe==="sensitive")return true;if(row.probe==="insensitive")return false;throw error;},run=()=>probeBuildPreflightCaseV1(row.platform,row.kind as "exchange"|"journaled",probe);
-  if(row.expected==="refused"){let caught:unknown;try{run();}catch(failure){caught=failure;}expect(caught,row.id).toBe(error);}else expect(run(),row.id).toBe(row.expected);
+  if(row.expected==="refused"){let caught:unknown;try{run();}catch(failure){caught=failure;}expect(caught,row.id).toBe(error);}else expect<unknown>(run(),row.id).toBe(row.expected);
  }
 });
 test("portable preflight corpus agrees with independent closed-schema admission",()=>{

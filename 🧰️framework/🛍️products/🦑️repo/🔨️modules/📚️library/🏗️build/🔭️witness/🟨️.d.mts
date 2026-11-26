@@ -36,7 +36,7 @@ export function isAmbientEnvironmentNameV1(name: string): boolean;
 /** 📖️ Admits a witness file the planner child wrote; anything malformed is refused. */
 export function readWorldWitnessV1(text: string): WorldWitnessV1;
 /** ⚖️ Tells whether every observation of a witness still holds, stopping at the first that differs. */
-export function verifyWorldWitnessV1(witness: WorldWitnessV1, options: WorldWitnessVerifyOptionsV1): Promise<WorldWitnessVerdictV1>;
+export function verifyWorldWitnessV1(witness: Pick<WorldWitnessV1, "observations">, options: WorldWitnessVerifyOptionsV1): Promise<WorldWitnessVerdictV1>;
 /** 🧮️ Digests the tracked-file listing and the ignore files a git universe depends on. */
 export function worldWitnessGitDigestV1(listing: string | Uint8Array): string;
 /** 🗂️ The names the observations of a witness group under, with their counts. */

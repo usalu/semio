@@ -15,7 +15,9 @@
             match pump_fill_session(&mut original, &mut session) {
                 WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
                 WorkerJobPoll::Outcome | WorkerJobPoll::Terminal => {
-                    match seen_fill_outcome(&mut original, &mut session) {
+                    let outcome = seen_fill_outcome(&mut original, &mut session);
+                    acknowledge_fill_outcome(&mut original, &mut session);
+                    match outcome {
                         FillSeen::Preview => {
                             let job = session.checked_out_job_mut().expect("field cursor job");
                             match job.stage() {
@@ -35,22 +37,18 @@
                                 _ => {}
                             }
                             let _ = job.take_preview().expect("field cursor preview");
-                            acknowledge_fill_outcome(&mut original, &mut session);
                             session.resume().expect("field cursor resume");
                         }
                         FillSeen::Checkpoint => {
                             retire_checked_out_fill_checkpoint(&mut original, &mut session);
-                            acknowledge_fill_outcome(&mut original, &mut session);
                             checkpointed = true;
                             break;
                         }
-                        FillSeen::Yield => {
-                            acknowledge_fill_outcome(&mut original, &mut session);
+                        FillSeen::Pending | FillSeen::Yield => {
                             session.resume().expect("field cursor yield resume");
                         }
                         ended @ (FillSeen::Complete(_) | FillSeen::Cancelled | FillSeen::Fault) => {
                             let fault = session.checked_out_job_mut().and_then(BoardFillJob::take_fault);
-                            acknowledge_fill_outcome(&mut original, &mut session);
                             panic!("field cursor job terminated before checkpoint: {ended:?} fault={fault:?} seen={seen:?}");
                         }
                     }

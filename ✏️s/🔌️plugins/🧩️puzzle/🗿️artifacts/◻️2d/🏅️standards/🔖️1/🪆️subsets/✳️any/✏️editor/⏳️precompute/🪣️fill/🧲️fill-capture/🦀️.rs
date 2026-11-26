@@ -9,6 +9,7 @@ pub(super) struct FillCapture {
     pub(super) capture: ArtifactFillCaptureCursor,
     pub(super) ingress: Option<BoardFillSnapshotIngress>,
     pub(super) construction: semio_framework_job::OriginalConstructionAdmission,
+    pub(super) ingress_admitted: bool,
     pub(super) suggestion_offset: f64,
     pub(super) serial: u64,
     pub(super) open_handles: u64,
@@ -16,12 +17,14 @@ pub(super) struct FillCapture {
 
 impl FillCapture {
     pub(super) fn new(suggestion_offset: f64) -> Self {
-        Self { capture: ArtifactFillCaptureCursor::new(), ingress: None, construction: Default::default(), suggestion_offset, serial: 1, open_handles: 0 }
+        Self { capture: ArtifactFillCaptureCursor::new(), ingress: None, construction: Default::default(), ingress_admitted: false, suggestion_offset, serial: 1, open_handles: 0 }
     }
 
     /// 🔬️ Up to `units` capture units; the captured snapshot once the document is fully streamed.
-    pub(super) fn advance(&mut self, document: &Value, kinds: &[Value], units: usize) -> Result<Option<BoardFillSnapshot>, &'static str> {
-        for _ in 0..units {
+    pub(super) fn advance(&mut self, document: &Value, kinds: &[Value], context: &mut StepContext<'_>) -> Result<Option<BoardFillSnapshot>, &'static str> {
+        for _ in 0..FILL_RUN_CAPTURE_UNITS {
+            if context.should_yield() || context.is_cancelled() { break; }
+            context.consume_fuel(1);
             if let Some(snapshot) = self.capture_one(document, kinds)? {
                 return Ok(Some(snapshot));
             }

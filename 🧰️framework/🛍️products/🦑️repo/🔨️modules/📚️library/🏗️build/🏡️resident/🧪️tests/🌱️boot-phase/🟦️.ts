@@ -9,13 +9,13 @@ import {connectHostV1} from "../../🚪️client/🛰️plan/🟨️.mjs";
 const platform=process.platform==="win32"?"win32":"linux",base=platform==="win32"?tmpdir():"/tmp";
 const privateEnvironment=(directory:string):Record<string,string>=>platform==="win32"?{LOCALAPPDATA:directory}:{XDG_RUNTIME_DIR:directory};
 
-const waitWith=async(log:string|undefined):Promise<{en:string;de:string}|undefined>=>{
- const directory=mkdtempSync(join(base,"boot-phase-")),controller=new AbortController();let told:{en:string;de:string}|undefined;
+const waitWith=async(log:string|undefined):Promise<Record<string,string>|undefined>=>{
+ const directory=mkdtempSync(join(base,"boot-phase-")),controller=new AbortController();let told:Record<string,string>|undefined;
  try{
   await connectHostV1({
    implementation:basename(directory)+"-boot",environment:privateEnvironment(directory),platform,languages:["en","de"],signal:controller.signal,
    spawnService:async({runtime}:{runtime:{log:string}})=>{if(log!==undefined)writeFileSync(runtime.log,log);return{alive:()=>true};},
-   onProgress:(frame:{message:{en:string;de:string};phase:string})=>{if(frame.message?.en?.includes("Waiting for the repo graph service")){told??=frame.message;controller.abort();}},
+   onProgress:frame=>{if(frame.message?.en?.includes("Waiting for the repo graph service")){told??=frame.message;controller.abort();}},
   }).catch(()=>undefined);
   return told;
  }finally{rmSync(directory,{recursive:true,force:true});}

@@ -93,7 +93,7 @@ test("restart backoff frees the worker slot for the next waiting load of any che
  const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:slots.capacity,heartbeatMilliseconds:15,
   restartPolicy:{backoffMilliseconds:[slots.backoffMilliseconds],settleMilliseconds:5000,progressMilliseconds:100,totalMaximum:3},
   reaper:{reap:async()=>0,killNow:()=>undefined},
-  createWorker:(_url:URL,request:{name:string})=>{
+  createWorker:(_url:URL,data)=>{const request={name:String(data.name)};
    const previous=started.includes(request.name),listeners:Record<string,(value:unknown)=>void>={};
    started.push(request.name);
    if(request.name===leader.name&&!previous)queueMicrotask(()=>listeners.exit?.(HOST_POLICY_V1.sliceRestartExitCode));

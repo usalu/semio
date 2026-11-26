@@ -41,8 +41,8 @@ export function startSweepCommand(command: readonly [string, ...string[]], signa
 
 function requireReservation(env: NodeJS.ProcessEnv) {
   const reservation = readLiveHostCapacityReservationV1(env, policy);
-  if (!reservation || reservation.reservedMegabytes < megabytes || reservation.cpu < cpu) {
-    throw Error("The Norm workflow requires the full end-to-end capacity grant");
+  if (reservation?.retainReservation !== true || reservation.reservedMegabytes < megabytes || reservation.cpu < cpu) {
+    throw Error("The Norm workflow requires the full retained end-to-end capacity grant");
   }
 }
 

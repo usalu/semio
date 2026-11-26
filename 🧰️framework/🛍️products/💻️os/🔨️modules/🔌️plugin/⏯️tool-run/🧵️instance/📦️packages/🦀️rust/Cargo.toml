@@ -60,4 +60,4 @@ semio-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/�
 [dev-dependencies]
 
 [features]
-artifact-app-testing = []
+artifact-app-testing = ["semio-plugin-tool-run/artifact-app-testing"]

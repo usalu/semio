@@ -1,0 +1,12 @@
+import {readFileSync} from "node:fs";
+import {pathToFileURL} from "node:url";
+import {resolve} from "node:path";
+const root = pathToFileURL(resolve(process.argv[2])+"/");
+const {toolJobProductionSource}=await import(new URL("📋️inventory/🟦️.ts",root));
+const {toolJobPluginInstanceSource}=await import(new URL("📤️publication/🟦️.ts",root));
+const file=new URL("🏭️factory/🟦️.ts",root);
+const source=readFileSync(file,"utf8").replace(/from\s+"(\.[^"]+)"/g,(_,path)=>'from '+JSON.stringify(new URL(path,file).href));
+const marked=source.replace("return registration&&originalDispatch", "console.log({registration,originalDispatch,originalRoute,originalImport,originalConfiguration,registeredConfiguration,appBuilders,staged});return registration&&originalDispatch").replace("if(!actionEntry||", "console.log(Object.fromEntries(Object.entries({actionEntry,dispatch,reserved,imported,configuration,clipboard,clipboardPreparation,mediaRoute,mediaPreparation,mediaDonation,configurationCommit}).map(([k,v])=>[k,Boolean(v)])));if(!actionEntry||");
+const js=new Bun.Transpiler({loader:"ts"}).transformSync(marked);
+const {toolJobFrameworkReservedRoutesExact}=await import("data:text/javascript;base64,"+Buffer.from(js).toString("base64"));
+console.log(toolJobFrameworkReservedRoutesExact(toolJobProductionSource(toolJobPluginInstanceSource(process.cwd()))));

@@ -25,6 +25,14 @@ name = "ifc"
 path = "🧪️ifc.rs"
 required-features = ["testkit"]
 
+[[test]]
+name = "viewer"
+path = "../../🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "ifc-energy"
+path = "../../../🚪️io/📤️export/🏗️ifc/🔥️energy/🧪️tests/🔬️unit/🦀️.rs"
+
 [dependencies]
 semio-ui-contract.workspace = true
 semio-framework-job.workspace = true

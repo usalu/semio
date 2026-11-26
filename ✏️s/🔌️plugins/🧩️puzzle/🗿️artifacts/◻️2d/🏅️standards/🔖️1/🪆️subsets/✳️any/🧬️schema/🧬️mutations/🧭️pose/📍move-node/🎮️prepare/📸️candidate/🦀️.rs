@@ -1,17 +1,13 @@
 //! 📸️ Produces a native candidate with granted snapshot copying and scalar placement.
 
-use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::{controlled_step, cursor_advance, cursor_retire, cursor_taken, edit_progress, edit_step, list_reserve, pay, settled_step};
-use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetirementPollExit};
+use crate::standards::v1::subsets::any::schema::lookup::borrowed::BorrowedIdentity;
+use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::{cursor_advance, cursor_retire, cursor_take, pay, settled_step};
+use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetirementDemand, RetirementPollExit};
 use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
 use super::{Puzzle2dMoveNodeDisposition, Puzzle2dMoveNodePlan, Puzzle2dMoveNodePreparationCursor, Puzzle2dMoveNodePreparationStep};
 use crate::standards::v1::subsets::any::schema::mutations::MoveNode;
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
-
-
-
-
-
-use semio_framework_value::{ValueError, ValueRefusalKind, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneBinding, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
+use semio_framework_value::{ValueError, retained_clone::{RetainedCloneClose, RetainedCloneCursor, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, RetainedFieldCursor}};
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 
 pub struct Puzzle2dMoveNodeCandidate { pub plan: Puzzle2dMoveNodePlan, pub snapshot: Option<Puzzle2dSnapshot> }
@@ -20,13 +16,13 @@ pub struct Puzzle2dMoveNodeCandidateCursor { state: ManuallyDrop<Puzzle2dMoveNod
 
 #[doc(hidden)]
 pub struct Puzzle2dMoveNodeCandidateState {
-    source: Option<RetainedCloneBinding>,
-    mutation: Option<RetainedCloneBinding>,
+    source: BorrowedIdentity,
+    mutation: BorrowedIdentity,
     preparation: Puzzle2dMoveNodePreparationCursor,
-    snapshot_clone: <Puzzle2dSnapshot as RetainedClone>::Cursor,
+    snapshot_clone: RetainedFieldCursor<Puzzle2dSnapshot>,
     plan: Option<Puzzle2dMoveNodePlan>,
     candidate: Option<Puzzle2dSnapshot>,
-    candidate_close: Option<ControlledRetirement<Puzzle2dSnapshot>>,
+    candidate_close: RetainedCloneClose,
     pub phase: u8,
     closing: bool,
 }
@@ -35,7 +31,7 @@ impl Deref for Puzzle2dMoveNodeCandidateCursor { type Target = Puzzle2dMoveNodeC
 impl DerefMut for Puzzle2dMoveNodeCandidateCursor { fn deref_mut(&mut self) -> &mut Self::Target { &mut self.state } }
 
 impl Default for Puzzle2dMoveNodeCandidateCursor {
-    fn default() -> Self { Self { state: ManuallyDrop::new(Puzzle2dMoveNodeCandidateState { source: None, mutation: None, preparation: Default::default(), snapshot_clone: Puzzle2dSnapshot::retained_clone_cursor(), plan: None, candidate: None, candidate_close: None, phase: 0, closing: false }) } }
+    fn default() -> Self { Self { state: ManuallyDrop::new(Puzzle2dMoveNodeCandidateState { source: Default::default(), mutation: Default::default(), preparation: Default::default(), snapshot_clone: Default::default(), plan: None, candidate: None, candidate_close: Default::default(), phase: 0, closing: false }) } }
 }
 
 impl Puzzle2dMoveNodeCandidateCursor {
@@ -43,8 +39,8 @@ impl Puzzle2dMoveNodeCandidateCursor {
         let grant=effect.grant();
         if self.closing || self.phase == 9 { return Err(refusal("move candidate is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(progress)=source.bind(&mut self.source,effect).result?{return Ok(RetainedCloneStep::Progress(progress))}
-        if let Some(progress)=mutation.bind(&mut self.mutation,effect).result?{return Ok(RetainedCloneStep::Progress(progress))}
+        if let Some(progress)=self.source.bind(source,effect)?{return Ok(RetainedCloneStep::Progress(progress))}
+        if let Some(progress)=self.mutation.bind(mutation,effect)?{return Ok(RetainedCloneStep::Progress(progress))}
         match self.phase {
             0 => {
                 let step = self.preparation.advance(source, mutation, effect)?;
@@ -62,11 +58,10 @@ impl Puzzle2dMoveNodeCandidateCursor {
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             3 => {
-                if grant.maximum_copy_bytes < size_of::<Puzzle2dSnapshot>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
-                let Some(owner)=cursor_taken(&mut self.snapshot_clone,effect)? else { return Ok(RetainedCloneStep::Progress(Default::default())); }; self.candidate = Some(owner);
-                
-                self.phase = 4;
-                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Puzzle2dSnapshot>(), retained_capacity_bytes: 0, released_bytes: 0 }))
+                let state=&mut *self.state;
+                let step=cursor_take(&mut state.snapshot_clone,&mut state.candidate,effect)?;
+                if state.candidate.is_some(){state.phase=4;}
+                Ok(close_progress(step))
             }
             4 => {
                 let step=cursor_retire(&mut self.snapshot_clone,effect)?;
@@ -96,13 +91,25 @@ impl Puzzle2dMoveNodeCandidateCursor {
 
     pub fn begin_close(&mut self) { self.closing = true; self.preparation.begin_close();  }
 
+    #[cfg(feature = "testkit")]
+    #[doc(hidden)]
+    pub fn advance_test_demand(&self,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,body:usize)->Result<Option<RetirementDemand>,ValueError>{
+        Ok(match self.phase {
+            2=>Some(self.snapshot_clone.advance_demands(source,body,u64::MAX)?),
+            3=>Some(self.snapshot_clone.take_demand()?),
+            4=>Some(crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::cursor_retire_demand::<Puzzle2dSnapshot,_>(&self.snapshot_clone,body)?),
+            _=>None,
+        })
+    }
+
     fn close_demand(&self,axis:Puzzle2dCloseAxis)->Result<usize,ValueError>{
         if !self.preparation.terminal_is_empty(){return match axis {Puzzle2dCloseAxis::Copy=>self.preparation.next_close_copy_byte_demand(),Puzzle2dCloseAxis::Capacity(body)=>self.preparation.next_close_capacity_byte_demand(body),Puzzle2dCloseAxis::Release=>self.preparation.next_close_release_byte_demand(),Puzzle2dCloseAxis::Depth=>self.preparation.next_close_depth_demand()}}
         if !self.snapshot_clone.terminal_is_empty(){return axis.retained::<Puzzle2dSnapshot,_>(&self.snapshot_clone)}
-        if let Some(owner)=self.candidate_close.as_ref(){return axis.retirement(owner)}
-        if self.candidate.is_some(){return axis.inline::<Puzzle2dSnapshot>()}
+        if self.candidate.is_some()||!self.candidate_close.is_empty(){
+            return axis.owned::<Puzzle2dSnapshot>(&self.candidate_close,self.candidate.is_some());
+        }
         if self.plan.is_some(){return axis.inline::<Option<Puzzle2dMoveNodePlan>>()}
-        axis.binding(if self.source.is_some(){&self.source}else{&self.mutation})
+        Ok(axis.select(if self.source.is_empty(){self.mutation.close_demand()}else{self.source.close_demand()}))
     }
 
     pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{self.close_demand(Puzzle2dCloseAxis::Copy)}
@@ -117,27 +124,25 @@ impl Puzzle2dMoveNodeCandidateCursor {
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.preparation.terminal_is_empty() { return RetirementPollExit::resume(self.preparation.close_step(effect)).map(close_progress); }
         if !self.snapshot_clone.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(cursor_retire(&mut self.snapshot_clone,effect)?.progress())); }
-        if let Some(owner) = self.candidate_close.as_mut() {
-            let step = controlled_step(owner,effect)?;
-            if owner.terminal_is_empty() { self.candidate_close = None; }
-            return Ok(RetainedCloneStep::Progress(step.progress()));
+        if !self.candidate_close.is_empty() {
+            return RetirementPollExit::resume(self.candidate_close.step_granted(grant.maximum_copy_bytes,effect)).map(close_progress);
         }
         if self.candidate.is_some() {
-            if grant.maximum_copy_bytes < size_of::<Puzzle2dSnapshot>()||!pay(effect)? { return Ok(RetainedCloneStep::Progress(Default::default())); }
-            match ControlledRetirement::new(self.candidate.take().unwrap()) { Ok(owner) => self.candidate_close = Some(owner), Err((error, owner)) => { self.candidate = Some(owner); return Err(error.into()); } }
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Puzzle2dSnapshot>(), retained_capacity_bytes: 0, released_bytes: 0 }));
+            let state=&mut *self.state;
+            let step=state.candidate_close.begin_granted(&mut state.candidate,effect).result?;
+            return Ok(RetainedCloneStep::Progress(step.map(|step|step.progress()).unwrap_or_default()));
         }
         if self.plan.is_some() {let bytes=size_of::<Option<Puzzle2dMoveNodePlan>>();if grant.maximum_copy_bytes<bytes||!pay(effect)?{return Ok(RetainedCloneStep::Progress(Default::default()));}self.plan=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:bytes,..Default::default()}));}
-        let step = RetirementPollExit::resume(RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation},grant.maximum_copy_bytes,effect))?;
-        Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{close_progress(step)})
+        let progress=if self.source.is_empty(){self.mutation.close(effect)?}else{self.source.close(effect)?};
+        Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
     }
 
-    pub fn terminal_is_empty(&self) -> bool { self.closing && self.preparation.terminal_is_empty() && self.snapshot_clone.terminal_is_empty() && self.plan.is_none() && self.candidate.is_none() && self.candidate_close.is_none() && self.source.is_none() && self.mutation.is_none() }
+    pub fn terminal_is_empty(&self) -> bool { self.closing && self.preparation.terminal_is_empty() && self.snapshot_clone.terminal_is_empty() && self.plan.is_none() && self.candidate.is_none() && self.candidate_close.is_empty() && self.source.is_empty() && self.mutation.is_empty() }
 }
 
 impl Drop for Puzzle2dMoveNodeCandidateCursor { fn drop(&mut self) { let empty = self.terminal_is_empty(); assert!(std::thread::panicking() || empty, "move candidate abandoned before controlled closure"); if empty { unsafe { ManuallyDrop::drop(&mut self.state); } } } }
 
 fn close_progress(step: RetainedCloneStep) -> RetainedCloneStep { RetainedCloneStep::Progress(step.progress()) }
-fn refusal(message: &str) -> ValueError { ValueError::new(ValueRefusalKind::InvariantViolated, message) }
+fn refusal(message: &'static str) -> ValueError { ValueError::invariant(message) }
 
 

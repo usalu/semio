@@ -217,12 +217,12 @@ async fn transient_root_is_o1_and_retains_the_exact_pre_reset_value() {
 
 fn publish_original_interaction(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, value: i32) {
     let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
- let g=physical_test_close_grant();let grant=ArtifactStoreOneItemGrant{maximum_items:g.maximum_items,maximum_copy_bytes:g.maximum_copy_bytes,maximum_capacity_bytes:g.maximum_capacity_bytes,maximum_release_bytes:g.maximum_release_bytes,maximum_depth:g.maximum_depth};
- let(actor,p)=store.local_actor_id().0.admit_clone(g).result.unwrap();assert!(p.fits(g));
+ let g=RetainedCloneGrant{maximum_copy_bytes:1<<16,..physical_test_close_grant()};let grant=ArtifactStoreOneItemGrant{maximum_items:g.maximum_items,maximum_copy_bytes:g.maximum_copy_bytes,maximum_capacity_bytes:g.maximum_capacity_bytes,maximum_release_bytes:g.maximum_release_bytes,maximum_depth:g.maximum_depth};
+ let(actor,p)=pump_turn(g,|effect|store.local_actor_id().0.admit_clone(effect)).unwrap().result.unwrap();assert!(p.fits(g));
  let mut actor=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(actor).ok().unwrap());let mut inputs=vec![DemoMutation::SetN(SetN{n:value})];let mut transaction=None;
  let(mut publication,p)=store.admit_apply_batch(semio_framework_job::allocate_operation_id(),store.generation(),store.content_revision_now(),&mut actor,&mut inputs,HistoryLane::Interaction,store.owners.one_item_preparation_factory.as_ref(),&mut transaction,None,None,false,g).unwrap().expect("original fixture admits retained interaction");assert!(p.fits(g));
- let before=store.generation();let denied=ArtifactStoreOneItemGrant{maximum_items:0,..grant};assert!(matches!(receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, physical_test_close_grant().maximum_copy_bytes,denied,receiving)).unwrap(),ArtifactStoreOneItemAdvance::Blocked));assert_eq!(store.generation(),before);let mut published=false;for _ in 0..262_144{match receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, physical_test_close_grant().maximum_copy_bytes,grant,receiving)).unwrap(){ArtifactStoreOneItemAdvance::PreparationProgress(_,p)=>assert!(p.fits(g)),ArtifactStoreOneItemAdvance::Published(_,p)=>{assert!(p.fits(g));published=true;break;},_=>{}}}assert!(published);assert!(publication.acknowledge());
- for _ in 0..262_144{if publication.terminal_is_empty(){break;}assert!(publication.close_step(g).unwrap().progress().fits(g));}assert!(publication.terminal_is_empty());
+ let before=store.generation();let denied=ArtifactStoreOneItemGrant{maximum_items:0,..grant};assert!(matches!(receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, physical_test_close_grant().maximum_copy_bytes,denied,receiving)).unwrap(),ArtifactStoreOneItemAdvance::Blocked));assert_eq!(store.generation(),before);let mut published=false;for _ in 0..262_144{match receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication, physical_test_close_grant().maximum_copy_bytes,grant,receiving)).unwrap(){ArtifactStoreOneItemAdvance::PreparationProgress(_,p)=>assert!(p.fits(g)),ArtifactStoreOneItemAdvance::Published(_,p)=>{assert!(p.fits(g));published=true;break;},other=>{static N:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);if N.fetch_add(1,std::sync::atomic::Ordering::SeqCst)<8{eprintln!("[DEBUG] adv {other:?} fault {:?}",publication.fault())}}}}assert!(published);assert!(publication.acknowledge());
+ for _ in 0..262_144{if publication.terminal_is_empty(){break;}assert!(envelope_close_turn(g,|effect|{let step=publication.close_step(effect);semio_framework_value::RetirementPollExit::settle(effect,step)}).result.unwrap().progress().fits(g));}assert!(publication.terminal_is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -254,12 +254,12 @@ fn original_side_lane_comparison_uses_granted_utf8_chunks(){
 #[semio_framework_async_macros::async_test]
 async fn apply_batch_publication_keeps_denied_inputs_and_binds_one_exact_issuer(){
  let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
- let g=physical_test_close_grant();
+ let g=RetainedCloneGrant{maximum_copy_bytes:1<<16,..physical_test_close_grant()};
  let genesis=&semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer;
  let mut store=ArtifactStore::bare(create_document_envelope("demo/v1","native-command",DemoSnapshot{n:Some(0)},None,genesis)).await;store.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));store.closes_on_drop();
  let mut foreign=ArtifactStore::bare(create_document_envelope("demo/v1","native-command",DemoSnapshot{n:Some(0)},None,genesis)).await;foreign.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("{error}"));foreign.closes_on_drop();
  let operation=semio_framework_job::allocate_operation_id();let generation=store.generation();let revision=store.content_revision_now();
- let(actor,p)=store.local_actor_id().0.admit_clone(g).result.unwrap();assert!(p.fits(g));let mut actor=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(actor).ok().unwrap());
+ let(actor,p)=pump_turn(g,|effect|store.local_actor_id().0.admit_clone(effect)).unwrap().result.unwrap();assert!(p.fits(g));let mut actor=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(actor).ok().unwrap());
  let mut inputs=vec![DemoMutation::SetN(SetN{n:7})];let pointer=inputs.as_ptr();let mut transaction=None;
  for denied in[RetainedCloneGrant{maximum_items:0,..g},RetainedCloneGrant{maximum_copy_bytes:0,..g},RetainedCloneGrant{maximum_capacity_bytes:0,..g},RetainedCloneGrant{maximum_depth:0,..g}]{
   let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store.admit_apply_batch(operation,generation,revision,&mut actor,&mut inputs,HistoryLane::Interaction,store.owners.one_item_preparation_factory.as_ref(),&mut transaction,None,None,false,denied).unwrap());
@@ -274,5 +274,5 @@ async fn apply_batch_publication_keeps_denied_inputs_and_binds_one_exact_issuer(
  let mut published=false;for _ in 0..262_144{let advance=receiving_fixture.receive(|receiving|store.advance_apply_batch(&mut publication,g.maximum_copy_bytes,grant,receiving)).unwrap();if let ArtifactStoreOneItemAdvance::Published(_,p)=advance{assert!(p.fits(g));published=true;break;}}
  assert!(published);assert_eq!(store.snapshot_ref().n,Some(7));assert_eq!(store.generation(),generation+1);
  assert!(publication.acknowledge());
- for _ in 0..262_144{if publication.terminal_is_empty(){break;}assert!(publication.close_step(g).unwrap().progress().fits(g));}assert!(publication.terminal_is_empty());
+ for _ in 0..262_144{if publication.terminal_is_empty(){break;}assert!(envelope_close_turn(g,|effect|{let step=publication.close_step(effect);semio_framework_value::RetirementPollExit::settle(effect,step)}).result.unwrap().progress().fits(g));}assert!(publication.terminal_is_empty());
 }

@@ -1,6 +1,6 @@
 // 🧰️ History acceptance, source laws and camera helper: the history edit acceptance law, the editor source reader, the cursorized cohort route laws and the rendered camera helper.
 
-semio_plugin::history_edit_acceptance_law!("puzzle", Puzzle2dPlayApp, puzzle2d_manifest_for_tests, "../..");
+semio_plugin::history_edit_acceptance_law!("puzzle", Puzzle2dPlayApp, puzzle2d_manifest_for_tests, "../../../../..");
 use crate::editor::puzzle2d::testkit::*;
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use crate::editor::puzzle2d::*;
@@ -16,6 +16,7 @@ pub(crate) fn editor_source() -> String {
     [
         fixture_text!("../../../../🕹️interaction/🦀️.rs"),
         fixture_text!("../../../../🧰️kit/🦀️.rs"),
+        fixture_text!("../../../../📸️snapshot/🔖️constants-examples-and-scene/🦀️.rs"),
         fixture_text!("../../../../🧵️retained/🦀️.rs"),
         fixture_text!("../../../../🧵️retained/🧱️board-event-limits-window-export-and-dispatch-work/🦀️.rs"),
         fixture_text!("../../../../🧵️retained/🕸️force-layout-work/🦀️.rs"),
@@ -31,9 +32,10 @@ pub(crate) fn editor_source() -> String {
 
 fn cohort_routes_are_cursorized(source: &str) -> bool {
     [
-        r#""forceLayout" => work!(|request| Puzzle2dForceLayoutWork::default())"#,
+        r#""forceLayout" => owned!(Puzzle2dForceLayoutWork,|scope| Puzzle2dForceLayoutWork::from_original_construction("forceLayout",scope))"#,
         r#""setActiveExample" => work!(|request| crate::retained_command::BoundedFirstStepCommandWork::new("setActiveExample", puzzle2d_active_example_reduce, puzzle2d_active_example_extent))"#,
-        "Effect::LoadDocument",
+        "puzzle2d_load_document_effect(set_active_example::target(id))",
+        "Effect::LoadDocument { pack, spr }",
         "Puzzle2dForceStage::Nodes",
         "Puzzle2dForceStage::Handles",
         "Puzzle2dForceStage::Edges",
@@ -41,7 +43,7 @@ fn cohort_routes_are_cursorized(source: &str) -> bool {
         "Puzzle2dForceStage::Springs",
         "Puzzle2dForceStage::Integrate",
         "Puzzle2dForceStage::Emit",
-        r#"matches!(command.action_id(), "addNode").then_some(1)"#,
+        r#"(command.action_id() == "addNode").then_some(1)"#,
     ]
     .into_iter()
     .all(|marker| source.contains(marker))
@@ -55,7 +57,7 @@ fn cohort_hostile_static_law_rejects_one_grant_complex_routes_and_missing_cursor
     let source = source.as_str();
     assert!(cohort_routes_are_cursorized(source));
     for (retained, direct) in [
-        (r#""forceLayout" => work!(|request| Puzzle2dForceLayoutWork::default())"#, r#""forceLayout" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle2d_retained_reduce, puzzle2d_retained_extent))"#),
+        (r#""forceLayout" => owned!(Puzzle2dForceLayoutWork,|scope| Puzzle2dForceLayoutWork::from_original_construction("forceLayout",scope))"#, r#""forceLayout" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle2d_retained_reduce, puzzle2d_retained_extent))"#),
         (r#"Effect::LoadDocument { pack, spr }"#, r#"Effect::LoadDocument { pack, spr }; Puzzle2dActiveExampleWork::default()"#),
     ] {
         assert!(!cohort_routes_are_cursorized(&source.replace(retained, direct)));
@@ -73,22 +75,4 @@ fn cohort_hostile_static_law_rejects_one_grant_complex_routes_and_missing_cursor
     }
 }
 
-/// 🎥️ Recovers the rendered pane camera `(x, y, zoom)` from a rendered `UiNode`'s embedded
-/// `Board2dScene.cameraJson` — the only externally observable surface for the runtime camera
-/// (the camera is never a document field, so it cannot be read back off `app.snapshot()`).
-fn rendered_camera(rendered: &str) -> (f64, f64, f64) {
-    fn find_camera_json(value: &Value) -> Option<String> {
-        if let Some(json) = value.get("cameraJson").and_then(Value::as_str) {
-            return Some(json.to_string());
-        }
-        match value {
-            Value::Object(map) => map.iter().find_map(|(_, value)| find_camera_json(value)),
-            Value::Array(items) => items.iter().find_map(find_camera_json),
-            _ => None,
-        }
-    }
-    let value: Value = semio_framework_pack_json::from_json_str(rendered, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rendered node parses");
-    let camera_json = find_camera_json(&value).expect("rendered scene must carry cameraJson");
-    let camera: Value = semio_framework_pack_json::from_json_str(&camera_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("cameraJson parses");
-    (camera.get("x").and_then(Value::as_f64).unwrap_or(f64::NAN), camera.get("y").and_then(Value::as_f64).unwrap_or(f64::NAN), camera.get("zoom").and_then(Value::as_f64).unwrap_or(f64::NAN))
-}
+use crate::editor::puzzle2d::testkit::rendered_camera;

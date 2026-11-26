@@ -2,7 +2,9 @@
  *
  * 🧱️ Child module of {@link ../🟦️.ts | loadPluginModule}: each function builds one group of the handle's closure state and helpers and returns them for the later groups. */
 import { activationReasonForAppId } from "@semio-tech/framework";
-import { AppChannelClient, type AppFrameValue, decodeDocumentArchiveBytes, decodePackValue, decodePackWire, encodeDocumentArchiveBytes, encodePackValue, faultDisplayMessage } from "@semio-tech/framework-os";
+import { AppChannelClient, faultDisplayMessage } from "@semio-tech/framework/app-channel";
+import { type AppFrameValue, decodeDocumentArchiveBytes, encodeDocumentArchiveBytes } from "@semio-tech/framework/wire-contracts";
+import { decodePackValue, decodePackWire, encodePackValue } from "@semio-tech/framework/packs";
 import { decodeCausalEnvelopeBatch } from "@semio-tech/framework-replication";
 import { operationCompletionPublication, performInvocation, stashOperationPublication, takeOperationPublications, wgpuEphemeralSnapshot, type WgpuPluginHandle } from "../../🧾️typed-operations-and-handle/🟦️.ts";
 import { declareWgpuBootSubphase, jsonEffects } from "../../🎛️contributions-and-effects/🟦️.ts";

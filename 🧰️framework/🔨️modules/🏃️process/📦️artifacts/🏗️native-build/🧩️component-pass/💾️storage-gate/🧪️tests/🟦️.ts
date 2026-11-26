@@ -127,7 +127,9 @@ test("a failed grow is stated and the pass is refused, the image is not assumed 
 
 test("with no grower the refusal still states why, and a pass the room holds is admitted at once without any wait line", async () => {
   const state = world({ headroom: 10 * GiB });
-  await expect(admitPassStorageV1(ports(state, { predictedBytes: 40 * GiB }))).rejects.toThrow(/no image grow is available here.*hier ist kein Wachsen des Images verfügbar/su);
+  const refusal = admitPassStorageV1(ports(state, { predictedBytes: 40 * GiB }));
+  await expect(refusal).rejects.toThrow(/no image grow is available here.*hier ist kein Wachsen des Images verfügbar/su);
+  await expect(refusal).rejects.toMatchObject({ minimumFreeBytes: 42 * GiB });
   const fits = world({ headroom: 50 * GiB });
   expect((await admitPassStorageV1(ports(fits, { predictedBytes: 40 * GiB }))).admitted).toBe(true);
   expect(fits.log).toEqual([]);

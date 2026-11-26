@@ -149,7 +149,11 @@ export function renderEditRestartV1(languages,edit,values){return languages.map(
 export function exitIfStaleImplementationV1(error,{write=text=>{try{writeSync(2,text);}catch{}},exit=code=>process.exit(code),sleepSync=pause,environment=process.env}={}){
  const stale=staleImplementationOfV1(error);
  if(!stale){const dangling=danglingDependencyStoreOfV1(error);if(dangling){write(new DanglingDependencyStoreErrorV1(dangling,formatStampLanguagesV1(environment)).message+"\n");exit(protocol.danglingStore.exitCode);}return;}
- if(stale.origin==="edit"){const attempt=Number.parseInt(environment[protocol.reexecutionEnvironment]??"0",10)||0,delays=protocol.editFailure.backoffMs,delay=delays[Math.min(attempt,delays.length-1)];write(renderEditRestartV1(formatStampLanguagesV1(environment),stale.edit,{delay,attempt:attempt+1,maximum:protocol.maximumReexecutions})+"\n");sleepSync(delay);}
+ if(stale.origin==="edit"){
+  const attempt=Number.parseInt(environment[protocol.reexecutionEnvironment]??"0",10)||0;
+  if(attempt>=protocol.maximumReexecutions){if(stale.message)write(stale.message+"\n");}
+  else{const delays=protocol.editFailure.backoffMs,delay=delays[Math.min(attempt,delays.length-1)];write(renderEditRestartV1(formatStampLanguagesV1(environment),stale.edit,{delay,attempt:attempt+1,maximum:protocol.maximumReexecutions})+"\n");sleepSync(delay);}
+ }
  else if(stale.origin!=="exit")write(stale.message+"\n");
  exit(protocol.exitCode);
 }

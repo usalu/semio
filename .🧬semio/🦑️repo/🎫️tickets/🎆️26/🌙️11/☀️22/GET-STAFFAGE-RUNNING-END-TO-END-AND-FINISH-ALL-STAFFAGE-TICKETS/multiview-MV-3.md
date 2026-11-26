@@ -1,4 +1,4 @@
-IN WORK (2026-11-26 02:40: every asset written and proven except the runs marked RUNNING in sections 1 and 3)
+FINAL (2026-11-26 05:25: 11 of 11 assets clean with all proofs, 0 failing matrix cells; `rowan` and `saucer-magnolia` of the batch list are with lane ML-3)
 
 # 🌲️ Multiview Fixer Report: Batch MV-3 (Ten Plants and `saguaro-cactus`)
 
@@ -8,20 +8,20 @@ Paths: `S` = `🎓️teaching/🏛️architecture/🧍️staffage`, `T` = `S/�
 
 ## 1. Result
 
-RESULT_LINE
+Eleven of eleven assets are clean with every proof of the brief: no hard finding in the scan, no `fail` cell in the matrix of any asset (11 × 252 cells, each run to its end on the file that is in the catalog now, 2026-11-25 23:46 to 2026-11-26 05:05), the real test files pass with the names of the eleven as filter. Nothing is open with a failing cell; what stays as a plain statement is in section 4.
 
 | Asset | Hard findings before | Scan now | Matrix of the asset on the file now in the catalog (252 cells) | State |
 | --- | --- | --- | --- | --- |
-| `rhododendron` | 8: `sync-bone-forward` 4, `sync-bone-lateral` 4 | 0 | M_rhododendron | clean |
-| `rosemary-bush` | 4: `sync-bone-forward` 1, `sync-bone-height` 1, `sync-forward` 2 | 0 | M_rosemary-bush | clean |
+| `rhododendron` | 8: `sync-bone-forward` 4, `sync-bone-lateral` 4 | 0 | 252 ok, 0 fail (04:30, 150 s) | clean |
+| `rosemary-bush` | 4: `sync-bone-forward` 1, `sync-bone-height` 1, `sync-forward` 2 | 0 | 196 ok, 56 reported, 0 fail (04:34, 274 s) | clean |
 | `scots-pine` | 13: `sync-bone-height` 13 | 0 | 252 ok, 0 fail (00:40, 371 s) | clean |
-| `small-leaved-lime` | 185: `anchor-landmark` 89, `sync-bone-lateral` 96 | 0 | M_small-leaved-lime | clean |
+| `small-leaved-lime` | 185: `anchor-landmark` 89, `sync-bone-lateral` 96 | 0 | 0 ok, 252 reported, 0 fail (05:05, 1300 s) | clean |
 | `stone-pine` | 22: `sync-bone-height` 22 | 0 | 252 ok, 0 fail (00:50, 566 s) | clean |
-| `sunflower` | 4: `sync-forward` 2, `sync-height` 2 | 0 | M_sunflower | clean |
+| `sunflower` | 4: `sync-forward` 2, `sync-height` 2 | 0 | 252 ok, 0 fail (04:36, 91 s) | clean |
 | `sycamore-maple` | 27: `anchor-landmark` 21, `sync-bone-forward` 3, `sync-bone-height` 3 | 0 | 252 ok, 0 fail (01:14, 1455 s) | clean |
-| `tulip-tree` | 0 | 0 | M_tulip-tree | clean, file not changed by the batch |
-| `weeping-willow` | 18 (scan of 2026-11-25 20:37; the batch list names 8 extent and 10 anchor findings) | 0 | M_weeping-willow | clean |
-| `wisteria-pergola` | 6: `sync-bone-forward` 6 | 0 | M_wisteria-pergola | clean |
+| `tulip-tree` | 0 | 0 | 0 ok, 252 reported, 0 fail (04:39, 184 s) | clean, file not changed by the batch |
+| `weeping-willow` | 18 (scan of 2026-11-25 20:37; the batch list names 8 extent and 10 anchor findings) | 0 | 0 ok, 252 reported, 0 fail (02:39, 2184 s) | clean |
+| `wisteria-pergola` | 6: `sync-bone-forward` 6 | 0 | 252 ok, 0 fail (04:44, 299 s) | clean |
 | `saguaro-cactus` | 0 (scan 17:25 and 00:30) | 0 | 252 ok, 0 fail (2026-11-25 23:46, 4283 s) | clean, file not changed by the batch |
 
 "Reported" is the soft tier `group-drift` of the matrix (a bone that draws several shapes in two views); it is no failing cell.
@@ -67,7 +67,7 @@ Whether the lineage of MV-L1's ellipsoid contour bug (A⁻¹n against Aᵀn) rea
 
 The eight curtains hang plumb at rest; their plan sheets are one sheet at one height, so in `storm` the plan was 1643 mm short of the elevation (`sync-forward`, 1:50) and an emitter stood 690 mm off its curtain. Prisms cost minutes per subject (request of the second fixer), depth plates failed the silhouette guard (526.6 mm at 1:200). The third fixer's `strands.ts` lays one tapering loft per tress under the plan sheets, cut from the sprays of the volume; nothing of a strand shows at rest. The fourth fixer added the last step of the tool: every scale is evaluated in the default pose and a strand of which more than a tenth of a square millimetre shows beside the union of the filled plan shapes is drawn in by 15 % (up to nine times). Without that step 5 to 15 strands per scale crossed a notch by 2 to 36 mm and the guard read 29.6 mm at 1:50 (limit 15); with it the guard reads what it read before the repair (plan 11.4, 22.8, 48.0, 93.8 mm at the four scales). The first write of 00:25 (without the step) was taken back at 01:32 and the file written again at 01:51.
 
-In `storm` the strands stream out of the plan as tapering bodies (`visible.ts --prefix mvt-`: worst sheet 1:50 plan `storm`, 11.75 % of the silhouette, no island). The thinning of staircase outlines the third fixer searched (`W/clean.ts`, result `W/clean/weeping-willow.search.json`) is not applied: no finding needs it, and the matrix of the plant ends in 41 minutes without it.
+In `storm` the strands stream out of the plan as tapering bodies (`visible.ts --prefix mvt-`: worst sheet 1:50 plan `storm`, 11.75 % of the silhouette, no island). The thinning of staircase outlines the third fixer searched (`W/clean.ts`, result `W/clean/weeping-willow.search.json`) is not applied: no finding needs it, and the matrix of the plant ends in 37 minutes without it.
 
 ### 2.3 Sheets looked at
 
@@ -85,11 +85,11 @@ Every run went through `repo capacity run` (grants of 700 to 2900 MB); the lines
 | Every authored scale prints (`W/suit.ts`) | prints | prints | prints | prints (02:36 to 03:02, lime 10:14) |
 | Second run of the chain | no byte changed | no byte changed | no chain | no byte changed (night) |
 | Check CLI `--asset <id>` | `✓` each | `✓` | `✓` | `✓` each (11:55 to 13:00) |
-| `🧊️catalog-silhouette` (name filter, 01:26 to 01:43) | 3 of the 10 passed | T_WILLOW_1 | 1 of the 10 passed | 6 of the 10 passed |
-| `🧊️three-views` | 20 passed for the ten | T_WILLOW_2 | in the 20 | in the 20 |
-| `🌡️catalog-physics` | 20 passed for the ten | T_WILLOW_3 | in the 20 | in the 20 |
-| `🫁️breathing-catalog` | 10 passed for the ten | T_WILLOW_4 | in the 10 | in the 10 |
-| `✅️asset-validation` | 10 passed | T_WILLOW_5 | same run | same run |
+| `🧊️catalog-silhouette` (name filter, 01:26 to 01:43) | 3 of the 10 passed | 1 passed (02:29 to 02:32) | 1 of the 10 passed | 6 of the 10 passed |
+| `🧊️three-views` | 20 passed for the ten | 2 passed | in the 20 | in the 20 |
+| `🌡️catalog-physics` | 20 passed for the ten | 2 passed | in the 20 | in the 20 |
+| `🫁️breathing-catalog` | 10 passed for the ten | 1 passed | in the 10 | in the 10 |
+| `✅️asset-validation` | 10 passed | 10 passed | same run | same run |
 | `⚡️asset-power` | no test of these names (24 skipped), as before | same | same | same |
 | Matrix `T/📊️matrix.ts --jobs 1 --fresh --assets <id>` | section 1 | section 1 | section 1 (a first run of 19:05 to 20:37 gave 252 ok cells too, but its record was of the file before the tags rewrite and the merge counted it as missing) | section 1 |
 
@@ -108,7 +108,7 @@ Nothing with a failing cell or a hard finding. Stated plainly:
 - `rowan`, `saucer-magnolia` (lane ML-3): the state the first fixer wrote and proved (matrix of 13:12 and 12:13, 0 fail) held until ML-3 took the files; `rowan` carries 142 depth plates of this batch that show in `gale` (5.74 % of the silhouette at 1:50 front). The body recipe with the numbers of a trial on `rowan` is filed in `U/requests.md` as "multiview MV-3 — note for ML-3: one real body per part in the place of depth plates"; trial ops `W/body/rowan.json` (to be made again on ML-3's final file).
 - `U/requests.md`, earlier: "multiview MV-3 — `evaluate`: an `extruded` solid whose profile has hundreds of points costs minutes per turned subject".
 - The small-hole rule of `🧊️catalog-silhouette` ("multiview MH-4 — …") is also what turned the willow's first strands red: a strand that crosses a notch of a few millimetres moves the measured boundary from 11.4 to 29.6 mm although no drawn point lies outside the former drawing (`W/outside.ts`: 0 of 52 shapes; `W/refdiff.ts`: 8 cells of 20 mm). Tools that lay bodies under a drawing must test polygons, not points.
-- Queue: measured peaks of this batch on the engine of 17:48: scan 1003 MB, gate 519 MB, `measure.ts` per scale 1550 MB at most (all scales of the willow at once: 4267 MB), `strands.ts` 1559 MB, matrix generator with its asset process 806 MB (`scots-pine`), 898 MB (`stone-pine`), 963 MB (`sycamore-maple`), 1041 MB (`weeping-willow`), 512 to 578 MB (`saguaro-cactus`), vitest with a name filter 2860 MB. A runtime restart at 21:03 killed every waiting and running request of the batch once.
+- Queue: measured peaks of this batch on the engine of 17:48: scan 1003 MB, gate 519 MB, `measure.ts` per scale 1550 MB at most (all scales of the willow at once: 4267 MB), `strands.ts` 1559 MB, matrix generator with its asset process 806 MB (`scots-pine`), 898 MB (`stone-pine`), 963 MB (`sycamore-maple`), 1041 to 1390 MB (`weeping-willow`), 1108 MB (`tulip-tree`), 1261 MB (`small-leaved-lime`), 512 to 578 MB (`saguaro-cactus`), vitest with a name filter 2860 MB. A runtime restart at 21:03 killed every waiting and running request of the batch once.
 
 ## 6. Files
 

@@ -4,7 +4,7 @@ pub use semio_s_artifact_stdio_pdf_model_object::octets;
 pub use semio_s_artifact_stdio_pdf_model_object::{ObjRef, PdfCcittParameters, PdfDecimal, PdfDictEntry, PdfIndirectObject, PdfMatrix, PdfObject, PdfPredictor, PdfRect, PdfStreamBytes, PdfStreamFilter, stream_bytes, PDF_IDENTITY_MATRIX, PDF_STREAM_MAXIMUM_BYTES};
 pub use semio_s_artifact_stdio_pdf_model_object::{PdfAction, PdfActionKind, PdfDestination, PdfDestinationFit, PdfFileSpecification, PdfNamedDestination, PdfOutlineItem, PdfPageLabelRange, PdfPageLabelStyle};
 pub use semio_s_artifact_stdio_pdf_model_object::{PdfDate, PdfEmbeddedFile, PdfEncryption, PdfEncryptionAlgorithm, PdfInfo, PdfMarkInfo, PdfOpenAction, PdfOptionalContent, PdfOptionalContentGroup, PdfOutputIntent, PdfPageLayout, PdfPageMode, PdfViewerPreferences};
-pub use semio_s_artifact_stdio_pdf_model_graphics::{PdfInlineImage, PdfLineCap, PdfLineJoin, PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString};
+pub use semio_s_artifact_stdio_pdf_model_graphics::{pdf_content, PdfContent, PdfProgram, PDF_CONTENT_MAXIMUM_OPERATORS, PdfInlineImage, PdfLineCap, PdfLineJoin, PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString};
 pub use semio_s_artifact_stdio_pdf_model_graphics::{PdfColorSpace, PdfExtGState, PdfFunction, PdfNamedColorSpace, PdfNamedProperties, PdfPattern, PdfPatternKind, PdfShading, PdfShadingKind, PdfSoftMask};
 pub use semio_s_artifact_stdio_pdf_model_graphics::{pack_samples, packed_sample_geometry, PdfFormXObject, PdfImage, PdfImageBody, PdfImageMask, PdfPackedSamples, PdfTransparencyGroup};
 pub use semio_s_artifact_stdio_pdf_model_font::{

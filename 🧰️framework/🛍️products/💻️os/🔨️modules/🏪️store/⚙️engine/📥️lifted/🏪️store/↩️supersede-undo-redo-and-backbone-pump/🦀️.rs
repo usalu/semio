@@ -380,6 +380,7 @@ where
                     let envelopes = semio_os_spr::decode_envelopes(&envelopes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
                     let op_ids: Vec<String> = envelopes.iter().map(|envelope| envelope.mutation_id.0.clone()).collect();
                     for envelope in envelopes {
+                        while self.owners.relieve_displaced_pressure()? {}
                         reports.push(self.ingest_remote(envelope).await?);
                     }
                     acked_op_ids.extend(op_ids);

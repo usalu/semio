@@ -56,7 +56,7 @@ test("a request is served by one graph read and answered; the next round finds t
   const answer=await readServedV1({client:requester,requester:"g1-m06"});
   expect(answer?.projects).toEqual(["a","b","c"]);expect(answer?.generation).toBe(9);expect(answer?.server).toBe("g1-server");
   expect(lines).toEqual([wantedTextV1("serving","en",{count:3,requester:"g1-m06"}),wantedTextV1("served","en",{count:3,requester:"g1-m06",seconds:12})]);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("no headroom or a critical pressure serves nobody and refreshes nothing; a failing read answers nothing complete and is held off for the quiet time",async()=>{
@@ -72,7 +72,7 @@ test("no headroom or a critical pressure serves nobody and refreshes nothing; a 
   expect(reads).toEqual(["request"]);
   expect((await readServedV1({client:requester,requester:"g1-m06"}))?.projects).toEqual([]);
   expect(lines.some(line=>line.startsWith("Graph-Server: das Lesen des Graphen endete nach 3 s mit Status 1: boom"))).toBe(true);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("a 16 GB machine with 6144 MB free serves a request that a refresh would still wait on",async()=>{
@@ -85,7 +85,7 @@ test("a 16 GB machine with 6144 MB free serves a request that a refresh would st
   expect(reads).toEqual([]);
   await runWantedServerV1({...base,headroom:async()=>({freeMegabytes:wantedServerPolicyV1.requestHeadroomMegabytes,pressure:"normal"})});
   expect(reads).toEqual(["request"]);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("the background refresh waits for a quiet worktree, has a maximum age against constant edits, needs headroom and is announced",async()=>{
@@ -96,7 +96,7 @@ test("the background refresh waits for a quiet worktree, has a maximum age again
   await runWantedServerV1({client:serving,owner:"g1-server",platform:PLATFORM,steerDirectory:temp("steer"),language:"en",requesters:async()=>[],headroom:roomy,infer:async reason=>{reads.push(reason);return ok(4);},quietMilliseconds:async()=>quiet,say:line=>lines.push(line),signal:new AbortController().signal,now:()=>time,sleep:async()=>{seen.push(reads.length);await Bun.sleep(0);steps[step++]?.();},rounds:5});
   expect(seen).toEqual([1,1,1,2,3]);
   expect(lines.filter(line=>line.includes("refreshed in 12 s"))).toHaveLength(3);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("a machine that does not get the refresh slot of the interval does not refresh",async()=>{
@@ -105,7 +105,7 @@ test("a machine that does not get the refresh slot of the interval does not refr
   const serving=client("serving"),reads:string[]=[];let slots=0;
   await runWantedServerV1({client:serving,owner:"g1-m02",platform:PLATFORM,steerDirectory:temp("steer"),language:"en",requesters:async()=>[],headroom:roomy,infer:async reason=>{reads.push(reason);return ok(4);},quietMilliseconds:async()=>10**9,mayRefresh:async()=>++slots>1,say:()=>{},signal:new AbortController().signal,now:()=>1_000_000_000,sleep:async()=>{},rounds:3});
   expect(slots).toBe(1);expect(reads).toEqual([]);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("Law: a read is watched by its progress, not by a budget: waves, in English or German and however the chunks are cut, keep it alive for hours; silence for the stall limit or the absolute maximum stops it",()=>{
@@ -181,7 +181,7 @@ test("a request that arrives while a read runs is seen in the next round, steers
   expect(lines).toContain(wantedTextV1("answering","en",{arrived:3,count:6,requester:"g1-m06"}));
   expect(lines.at(-1)).toBe(wantedTextV1("refreshed","en",{seconds:12}));
   expect(lines).toContain(wantedTextV1("served","en",{count:6,requester:"g1-m06",seconds:12}));
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("a refresh that cannot even start (an unset steering directory) is told once and backed off, never retried every round",async()=>{
@@ -190,7 +190,7 @@ test("a refresh that cannot even start (an unset steering directory) is told onc
   const lines:string[]=[],reads:string[]=[];let time=1_000_000_000;
   await runWantedServerV1({client:client("serving"),owner:"g1-server",platform:PLATFORM,steerDirectory:undefined as unknown as string,language:"en",requesters:async()=>[],headroom:roomy,infer:async reason=>{reads.push(reason);return ok(1);},quietMilliseconds:async()=>10**9,say:line=>lines.push(line),signal:new AbortController().signal,now:()=>time,sleep:async()=>{time+=5000;},rounds:6});
   expect(reads).toEqual([]);expect(lines.filter(line=>line.includes("ended with status 1"))).toHaveLength(1);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("a machine that may not serve claims no request: a capable machine still finds it and serves it",async()=>{
@@ -203,7 +203,7 @@ test("a machine that may not serve claims no request: a capable machine still fi
   await runWantedServerV1({client:serving,owner:"g1-server",platform:PLATFORM,steerDirectory:temp("steer"),language:"en",requesters:async()=>["g1-m06"],headroom:roomy,mayServe:async()=>true,infer:async reason=>{reads.push(reason);return ok(9);},quietMilliseconds:async()=>0,say:line=>lines.push(line),signal:controller.signal,sleep:async()=>{},rounds:1});
   expect(reads).toEqual(["request"]);
   expect((await readServedV1({client:requester,requester:"g1-m06"}))?.server).toBe("g1-server");
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("a server that finds nothing says that it is alive every aliveRounds rounds, with what it sees",async()=>{
@@ -212,7 +212,7 @@ test("a server that finds nothing says that it is alive every aliveRounds rounds
   const lines:string[]=[],p=wantedServerPolicyV1;let time=1_000_000_000;
   await runWantedServerV1({client:client("serving"),owner:"g1-server",platform:PLATFORM,steerDirectory:temp("steer"),language:"en",requesters:async()=>["g1-m03","g1-m06"],headroom:async()=>({freeMegabytes:0,pressure:"normal"}),infer:async()=>ok(1),quietMilliseconds:async()=>0,say:line=>lines.push(line),signal:new AbortController().signal,now:()=>time,sleep:async()=>{time+=p.roundMilliseconds;},rounds:p.aliveRounds*2});
   expect(lines).toEqual([wantedTextV1("alive","en",{requesters:2,held:0,cross:0,left:0,reading:"none"}),wantedTextV1("alive","en",{requesters:2,held:0,cross:0,left:0,reading:"none"})]);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 const range=(from:number,to:number)=>Array.from({length:to-from},(_,at)=>"p"+String(from+at).padStart(4,"0"));
@@ -235,7 +235,7 @@ test("Law: two requests overlapping by 400 projects are served by one read: the 
    expect(answer?.projects).toEqual(list);expect(answer?.generation).toBe(4);expect(answer?.total).toBe(600);expect(answer?.remainingMilliseconds).toBe(0);expect(answer?.progressAtMs).toBeGreaterThan(0);
   }
   expect(lines.filter(line=>line.startsWith("graph-server: serving"))).toEqual([wantedTextV1("serving","en",{count:600,requester:"g1-m06"}),wantedTextV1("serving","en",{count:600,requester:"g1-m07"})]);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("Law: a request is idempotent: the requester renews it (same creation time, later expiry, fewer projects) and it outlives its first expiry with its claim renewed; asking again as new work joins the held request instead of serving again, and the read is never started twice",async()=>{
@@ -264,7 +264,7 @@ test("Law: a request is idempotent: the requester renews it (same creation time,
   expect(lines).toContain(wantedTextV1("joined","en",{count:2,arrived:3,requester:"g1-m06"}));
   const last=await readServedV1({client:requester,requester:"g1-m06"});
   expect(last?.generation).toBe(7);expect(last?.total).toBe(2);expect(last?.projects).toEqual(["p0004","p0005"]);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("Law: the progress record is honest: it advances when a read starts or a wave publishes, stands still while the server only repeats its sign of life, and the estimate comes from the measured table until the read has finished projects",async()=>{
@@ -285,7 +285,7 @@ test("Law: the progress record is honest: it advances when a read starts or a wa
   expect(moved.progressAtMs).toBe(started+3*MINUTE);expect(moved.remaining).toBe(Math.round(3*(3*MINUTE)/3));
   const done=await readServedV1({client:requester,requester:"g1-m06"});
   expect(done?.generation).toBe(7);expect(done?.remainingMilliseconds).toBe(0);expect(done?.total).toBe(6);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 const ownersLine=(running:number,done:number,elapsed:number)=>`[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"build:graph-phase:owners:${done}:5101:${running}:${elapsed}:framework-os-kernel|language%3Acargo|${elapsed}|62,repo|project|${elapsed}|45:waiting|5608|1","mode":"shared","elapsedMs":${elapsed}}}\n`;

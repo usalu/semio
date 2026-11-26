@@ -61,7 +61,7 @@
     },
     "operationSource": {
       "const": {
-        "maximumItems": 64000,
+        "maximumItems": 128000,
         "maximumCopyBytes": 50331648,
         "maximumCapacityBytes": 73400320,
         "maximumReleaseBytes": 73400320,

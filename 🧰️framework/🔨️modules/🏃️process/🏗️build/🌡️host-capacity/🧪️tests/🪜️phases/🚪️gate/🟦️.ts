@@ -87,7 +87,7 @@ test("a lent owner replacement credits its resident memory exactly once and igno
   expect(grant.rebuildScope).toBeDefined();
   const expected=database.query("select case when ?1=0 then 'stale' when ?2>?3-?4 then 'never' when ?2-?5>?6-?4 then 'memory' else 'fits' end as reason").get(Number(row.current),row.requiredMegabytes,row.totalMegabytes,hostFloorMegabytesV1(strict,sample),row.observedMegabytes,row.availableMegabytes)as{reason:string};
   const result=evaluateHostCapacityV1(strict,withUnmanagedHostV1(sample,[grant]),[grant],[waiter],now),mine=result.decisions[0];
-  expect(expected.reason).toBe(row.expected);expect(mine?.reason??"stale").toBe(row.expected);if(row.expected==="fits")expect(mine?.reservedMegabytes).toBe(row.requiredMegabytes);
+  expect(expected.reason).toBe(row.expected);const reason:string=mine?.reason??"stale";expect(reason).toBe(row.expected);if(row.expected==="fits")expect(mine?.reservedMegabytes).toBe(row.requiredMegabytes);
  }}finally{database.close();}
 });
 

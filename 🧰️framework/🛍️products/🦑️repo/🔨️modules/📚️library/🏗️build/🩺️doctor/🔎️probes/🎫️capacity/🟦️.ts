@@ -2,7 +2,8 @@ import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/
 import {hostCapacityDirectoryV1,readHostCapacityStatusV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/📋️status/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1} from "../../../🌡️host-capacity/🎛️control/🟦️.ts";
 import {join} from "node:path";
-import type {DoctorPortsV1,DoctorProbeV1,DoctorRepairRunV1} from "../📋️contract/🟦️.ts";
+import type {DoctorPortsV1} from "../../🔌️ports/🟦️.ts";
+import type {DoctorProbeV1,DoctorRepairRunV1} from "../📋️contract/🟦️.ts";
 
 type GrantRow=Readonly<{id:string;label?:string;operation:string;pid:number;jobs:number;reservedMegabytes:number;observedMegabytes:number|null;admittedAtMs:number;lentSinceMs?:number}>;
 type WaiterRow=Readonly<{request:Readonly<{id:string;operation:string;fixedMegabytes:number;minimumJobs:number;perJobMegabytes:number}>;pid:number;arrivedAtMs:number}>;

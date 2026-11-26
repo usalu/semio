@@ -19,6 +19,7 @@ export type CasGuardPortsV1=Readonly<{
  partition?(root:string):CasPartitionV1|undefined;
  collect?(request:Readonly<{root:string;policy:CasPolicyV1;partition:CasPartitionV1|undefined;signal?:AbortSignal}>):Promise<CasCollectionV1>;
  usage?(root:string):Promise<number>;
+ relieve?(request:Readonly<{root:string;targetFreeBytes:number;freeBytes:number;signal?:AbortSignal}>):Promise<void>;
 }>;
 /** 🧯️ A write refused because the store stays over its cap after the bounded synchronous collection; the caller carries on without the cache. */
 export class CasCapRefusalV1 extends Error{
@@ -140,10 +141,10 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
   if(state.checking===undefined&&(state.checkedAt===undefined||at<state.checkedAt||at-state.checkedAt>=policy.touchGranularityMs)){
    state.checkedAt=at;state.scope=undefined;
    state.checking=readCasUsageHintV1(root).then(hint=>{
-    state.hint=hint;
+    const previous=state.hint;state.hint=hint;
     if(hint===undefined)return;
     const measuredAt=Math.min(hint.atMs,now());
-    if(state.hintAt===undefined||measuredAt>state.hintAt){state.hintAt=measuredAt;state.base=hint.bytes;state.admitted=0;}
+    if(state.hintAt===undefined||measuredAt>state.hintAt||measuredAt===state.hintAt&&previous?.atMs===hint.atMs&&previous.bytes!==hint.bytes){state.hintAt=measuredAt;state.base=hint.bytes;state.admitted=0;}
    }).finally(()=>{state.checking=undefined;});
   }
   if(state.checking!==undefined)await state.checking;
@@ -181,7 +182,7 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
  });
  const guard:CasGuardV1={
   async admit(incomingBytes,signal,transient=false){
-   let triedCap=false,triedCritical=false,waitedForOtherScope=false,fullTried=false,attempts=0;
+   let triedCap=false,triedCritical=false,waitedForOtherScope=false,fullTried=false,attempts=0;const admitted=now(),left=():number=>Math.max(0,admitted+policy.admissionBudgetMs-now());
    for(;;){
     signal?.throwIfAborted();
     let quote=decide(await storeBytes(),incomingBytes),covered=false;
@@ -191,15 +192,15 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
     const {decision,partition}=quote;
     const reserveBytes=partition===undefined?0:casReserveBytesV1(policy,partition),intoReserve=partition!==undefined&&partition.freeBytes-incomingBytes<reserveBytes;
     if(options.refuseOverCap===true&&(decision.reason==="cap-exceeded"&&(!transient||intoReserve)||intoReserve&&decision.reason==="partition-high")){
-     if(fullTried||attempts>=3||usableCompletion(quote,state.hint))throw new CasCapRefusalV1((bytes()??0)+incomingBytes,quote.effective.capBytes,intoReserve?{role:partition!.role??policy.sizing.defaultRole,reserveBytes,freeBytes:partition!.freeBytes}:undefined);
+     if(fullTried||attempts>=3||left()===0||usableCompletion(quote,state.hint))throw new CasCapRefusalV1((bytes()??0)+incomingBytes,quote.effective.capBytes,intoReserve?{role:partition!.role??policy.sizing.defaultRole,reserveBytes,freeBytes:partition!.freeBytes}:undefined);
      triedCap=true;attempts++;
      if(intoReserve&&options.collect===undefined){
-      const sweeping=state.sweeping??=guard.sweep(undefined,Number.POSITIVE_INFINITY).finally(()=>{state.sweeping=undefined;}),budget=delay(quote.effective.admissionBudgetMs);
+      const sweeping=state.sweeping??=guard.sweep(undefined,Number.POSITIVE_INFINITY).finally(()=>{state.sweeping=undefined;}),budget=delay(left());
       try{fullTried=await within(Promise.race([sweeping.then(()=>true),budget.done.then(()=>false)]),signal);}finally{budget.stop();}
       continue;
      }
      const flight=run(quote,undefined,false);fullTried=!flight.automatic;
-     const task=flight.task,budget=delay(quote.effective.admissionBudgetMs);
+     const task=flight.task,budget=delay(left());
      try{await within(Promise.race([task,budget.done]),signal);}finally{budget.stop();}
      continue;
     }
@@ -210,11 +211,11 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
      const running=state.running;
      if(running!==undefined&&(!running.automatic||!matches(running,quoteScope(quote)))){
       if(waitedForOtherScope)return critical?refuse(partition):afterCollection(quote,incomingBytes);
-      waitedForOtherScope=true;await running.task;continue;
+      waitedForOtherScope=true;{const budget=delay(left());try{await within(Promise.race([running.task,budget.done]),signal);}finally{budget.stop();}}continue;
      }
      if(critical)triedCritical=true;else triedCap=true;
      if(partition&&running===undefined)options.report?.({partition:partition.partition,usedFraction:casPartitionUsedFractionV1(partition,incomingBytes)});
-     await within(run(quote).task,signal);continue;
+     {const budget=delay(left());try{await within(Promise.race([run(quote).task,budget.done]),signal);}finally{budget.stop();}}continue;
     }
     if(decision.action==="collect-background"){
      if(triedCap||triedCritical||locallyCovered(quote))return afterCollection(quote,incomingBytes);
@@ -259,7 +260,12 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
 
 /** ⏱️ One tick of the service that keeps the host store inside its cap and its partition inside its watermarks: while the partition's free space is below the hard reserve it sweeps first, without a step bound and without the collection lock (the unreferenced pass never touches a held, pinned, leased or linked object), so a release build's writes never outrun it; it then measures the store itself only when no sweep left a usage hint within two sweep periods (a walk of the store is the most expensive read there is), then judges like a write of no bytes, so it collects (down to the low watermarks) only when the partition or the store is above its high watermark, measures a store without a usage hint, waits for what it started and honours the cancellation of the service. A partition that stays at its critical share after the collection raises the typed low-space refusal, which the service logs. Independent of every watermark it then sweeps (`guard.sweep`, every `sweepEveryMs`, at once again while a step freed its full `sweepStepBytes`): objects nobody references and expired transient inputs, older than the in-flight grace, go in bounded steps, never a held, pinned, leased or linked entry. */
 export async function casEnforceTickV1(options:Readonly<{root:string;policy?:CasPolicyV1;signal?:AbortSignal;sweep?:boolean}&CasGuardPortsV1>):Promise<void>{
- const guard=createCasGuardV1(options),partition=(options.partition??measureCasPartitionV1)(options.root);
+ const guard=createCasGuardV1(options),measure=():CasPartitionV1|undefined=>(options.partition??measureCasPartitionV1)(options.root);
+ let partition=measure();
+ if(options.relieve!==undefined&&partition!==undefined){
+  const full=requireCasPolicyV1(options.policy??CAS_POLICY_V1),target=Math.ceil(casReserveBytesV1(full,partition)*full.volumeReliefReserveFactor);
+  if(partition.freeBytes<target){await options.relieve({root:options.root,targetFreeBytes:target,freeBytes:partition.freeBytes,...options.signal===undefined?{}:{signal:options.signal}}).catch(error=>{if(options.signal?.aborted)throw error;});partition=measure();}
+ }
  if(options.sweep!==false&&partition!==undefined&&partition.freeBytes<casReserveBytesV1(requireCasPolicyV1(options.policy??CAS_POLICY_V1),partition)){await guard.sweep(options.signal,Number.POSITIVE_INFINITY);sweepState.set(options.root,{atMs:(options.now??Date.now)(),more:false});}
  const policy=requireCasPolicyV1(options.policy??CAS_POLICY_V1),at=(options.now??Date.now)(),last=sweptAt.get(options.root),hint=options.usage===undefined?await readCasUsageHintV1(options.root):undefined;
  if(hint===undefined||at<hint.atMs||at-hint.atMs>policy.sweepEveryMs*2)await guard.remeasure(options.signal);

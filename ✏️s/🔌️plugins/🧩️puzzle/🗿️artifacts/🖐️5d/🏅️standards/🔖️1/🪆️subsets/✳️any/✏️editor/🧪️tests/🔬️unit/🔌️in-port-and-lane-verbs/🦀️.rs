@@ -200,7 +200,8 @@ async fn mount_original_import(app: &mut Puzzle5dTestApp, port: &str, media: Med
     use semio_plugin::artifact_app_laws::{OriginalFixtureCaller, ensure_fixture_cancellation_issuer, fixture_mounted_policy, fixture_renew_turn, retain_original_ownership_receipts};
 
     let cx = app.1.cx();
-    let grant = cx.retained_grant();
+    semio_framework_job::testkit::issue_initiating_event(cx, OriginalFixtureCaller::event_stock()).expect("issue the mounted import event");
+    let grant = cx.original_turn_ceiling().0;
     ensure_fixture_cancellation_issuer(&mut app.0, cx).expect("mounted cancellation issuer");
     let action = meta("local");
     let mut media = Some(media);
@@ -234,7 +235,7 @@ async fn finish_original_import(
 
     let policy = fixture_mounted_policy();
     let fuel = OriginalFixtureCaller::turn_fuel();
-    let grant = app.1.cx().retained_grant();
+    let grant = app.1.cx().original_turn_ceiling().0;
     let mut receipts = Vec::new();
     let action = meta("local");
     for _ in 0..OriginalFixtureCaller::maximum_turns() {
@@ -246,6 +247,11 @@ async fn finish_original_import(
         semio_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(
             app.0.advance_typed_operation_publication(&mut identity, app.1.cx())
         )).expect("advance the mounted producer");
+        if let Some(mut page) = semio_plugin::artifact_app_laws::take_fixture_result_page(&mut app.0, action.instance_id, policy.preparation).expect("present the mounted import result") {
+            let token = semio_plugin::artifact_app_laws::close_fixture_result_page(&mut page, policy.close);
+            let mounted = progress.operation.expect("mounted import");
+            assert_eq!((token.receiver, token.operation), (action.instance_id, mounted.operation.0));
+        }
         retain_original_ownership_receipts(&mut app.0, policy, &mut receipts).expect("collect original publication receipts");
         fixture_renew_turn(app.1.cx(), fuel, grant).expect("renew the maintenance turn");
         app.0.maintenance_step(app.1.cx(), policy.maintenance).expect("maintain original publication");

@@ -38,7 +38,7 @@ test("what placement and the gate read from the cost folder follows the language
   for (const [index, row] of vectors.cases.entries()) {
     expect(expected[index], row.name).toEqual(row.expect);
     const root = materialize(row.state), unit = row.state.linked ? LINKED : PLAIN, read = readUnitExpenseV1(root, "subject", unit.types, unit.target);
-    expect({ expensive: read.expense.expensive, source: read.expense.source, peak: read.peak }, row.name).toEqual(row.expect);
+    expect<unknown>({ expensive: read.expense.expensive, source: read.expense.source, peak: read.peak }, row.name).toEqual(row.expect);
   }
 });
 test("the grid of every combination of its inputs agrees with the independent model", () => {
@@ -48,7 +48,7 @@ test("the grid of every combination of its inputs agrees with the independent mo
   expect(expected.length).toBe(states.length);
   for (const [index, state] of states.entries()) {
     const root = materialize(state), unit = state.linked ? LINKED : PLAIN, read = readUnitExpenseV1(root, "subject", unit.types, unit.target);
-    expect({ expensive: read.expense.expensive, source: read.expense.source, peak: read.peak }, JSON.stringify(state)).toEqual(expected[index]!);
+    expect<unknown>({ expensive: read.expense.expensive, source: read.expense.source, peak: read.peak }, JSON.stringify(state)).toEqual(expected[index]!);
   }
 }, 120000);
 

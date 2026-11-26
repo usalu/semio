@@ -35,7 +35,7 @@ test("parts are decided from row ids, each distinct row probed once and no part 
  try{
   const cold=harness(root);const first=await cold.settle();
   expect(first.failed).toBe(0);expect(cold.derived.length).toBe(CLOSURES);
-  await cold.settler.markIndexed({held:first.held});await cold.settler.release?.();
+  await cold.settler.markIndexed({held:first.held});
   const warm=harness(root);const second=await warm.settle();
   expect(second.failed).toBe(0);expect(warm.derived,"nothing is walked while every row holds").toEqual([]);
   expect(warm.reads,"no closure part record is read").toEqual([]);
@@ -55,7 +55,7 @@ test("a stale row stales exactly the closures that name it, with and without the
   const root=scratch();
   try{
    const cold=harness(root,indexed?{}:{partIds:false});const first=await cold.settle();
-   await cold.settler.markIndexed({held:first.held});await cold.settler.release?.();
+   await cold.settler.markIndexed({held:first.held});
    const warm=harness(root,{...indexed?{}:{partIds:false},stale});await warm.settle();
    runs.push([...warm.derived].sort());
   }finally{rmSync(root,{recursive:true,force:true});rmSync(root+"-ids",{recursive:true,force:true});}
@@ -68,7 +68,7 @@ test("the part decisions report decisions counters",async()=>{
  const root=scratch();
  try{
   const cold=harness(root);const first=await cold.settle();
-  await cold.settler.markIndexed({held:first.held});await cold.settler.release?.();
+  await cold.settler.markIndexed({held:first.held});
   const warm=harness(root);await warm.settle();
   const lines=warm.progress.filter(row=>row.phase==="decisions");
   expect(lines.length).toBeGreaterThan(0);
@@ -83,7 +83,7 @@ test("cancellation stops the part decisions",async()=>{
  const root=scratch();
  try{
   const cold=harness(root);const first=await cold.settle();
-  await cold.settler.markIndexed({held:first.held});await cold.settler.release?.();
+  await cold.settler.markIndexed({held:first.held});
   const controller=new AbortController(),warm=harness(root,{controller,abortAfterRows:distinctRows.size>>3});
   await expect(warm.settle()).rejects.toThrow();
   expect(warm.probes.size).toBeLessThan(distinctRows.size>>1);
@@ -95,7 +95,7 @@ test("every phase of a settle is accepted by the graph phase counters",async()=>
  const root=scratch();
  try{
   const cold=harness(root);const first=await cold.settle();
-  await cold.settler.markIndexed({held:first.held});await cold.settler.release?.();
+  await cold.settler.markIndexed({held:first.held});
   const warm=harness(root);await warm.settle();
   const stale=harness(root,{stale:new Set([text(rowAt(2*STEP+7)),text(rowAt(10*STEP+3))])});await stale.settle();
   const events=[...cold.progress,...warm.progress,...stale.progress],phases=new Set(events.map(row=>row.phase));

@@ -48,7 +48,7 @@ async fn compile_ops_decompile_ops_round_trip() {
             inverse: Vec::new(),
             meta: None, lane: None,
         }].into_iter().collect(),
-        transitions: vec![HistoryTransitionRecord { id: "transition-1".to_string(), actor: "actor-1".into(), hlt: (1, 1_700_000_000_000, 2), dependencies: vec!["e0".to_string()], observed: Some("peer-op".to_string()), payload: vec![0, 1, 3, 0xff] }],
+        transitions: vec![HistoryTransitionRecord { id: "transition-1".to_string(), actor: "actor-1".into(), hlt: (1, 1_700_000_000_000, 2), dependencies: vec!["e0".to_string()], observed: Some("peer-op".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&[0, 1, 3, 0xff]).unwrap() }],
         composition: None,
         conflicts: Vec::new(),
         viewer_line: None,

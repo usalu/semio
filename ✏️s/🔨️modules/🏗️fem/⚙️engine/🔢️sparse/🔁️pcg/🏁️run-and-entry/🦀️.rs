@@ -128,7 +128,7 @@ impl NumericalStep for PcgJob {
         }
         let run = match self.desk.take_pending() {
             Some(run) => run,
-            None => self.run(cx)?,
+            None => run_turn(cx, |cx| self.run(cx))?,
         };
         Ok(self.desk.admit(cx, run)?)
     }

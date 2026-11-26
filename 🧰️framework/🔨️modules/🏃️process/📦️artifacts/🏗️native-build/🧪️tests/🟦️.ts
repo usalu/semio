@@ -217,17 +217,24 @@ test("original Cargo publication oracle preserves private final outputs and shar
 
 test("actual Cargo retains the owned resolver lock while the live workspace lock changes during execution",async()=>{
  await withBuildStorageV1(new AbortController().signal,async(held,admission)=>{
-  const law=fixture.ownedResolverLock,root=mkdtempSync(join(held.root,"lp-")),cwd=join(root,"source"),peer=join(cwd,"peer");
+  const law=fixture.ownedResolverLock,root=mkdtempSync(join(held.root,"lp-")),cwd=join(root,"source"),peer=join(cwd,"peer"),owner=join(cwd,"o","t");
   mkdirSync(peer,{recursive:true});
-  const manifest=join(cwd,"Cargo.toml"),live=join(cwd,"Cargo.lock"),captureDirectory=join(root,"captures");
-  writeFileSync(manifest,`[workspace]\nmembers = ["peer"]\nresolver = "2"\n[profile.prototype]\ninherits = "dev"\n[package]\nname = "${law.tool}"\nversion = "${law.version}"\nedition = "2021"\n[[bin]]\nname = "${law.tool}"\npath = "main.rs"\n`);
+  mkdirSync(owner,{recursive:true});
+  const manifest=join(owner,"Cargo.toml"),live=join(cwd,"Cargo.lock"),unrelated=join(dirname(owner),"Cargo.lock"),captureDirectory=join(root,"captures");
+  const unrelatedLock=`version = 4\n\n[[package]]\nname = "${law.ancestorPackage}"\nversion = "${law.version}"\n`;
+  writeFileSync(join(cwd,"Cargo.toml"),`[workspace]\nmembers = ["o/t", "peer"]\nresolver = "2"\n[profile.prototype]\ninherits = "dev"\n`);
+  writeFileSync(manifest,`[package]\nworkspace = "../.."\nname = "${law.tool}"\nversion = "${law.version}"\nedition = "2021"\n[[bin]]\nname = "${law.tool}"\npath = "main.rs"\n`);
+  writeFileSync(unrelated,unrelatedLock);
   writeFileSync(join(peer,"Cargo.toml"),`[package]\nname = "${law.peer}"\nversion = "${law.version}"\nedition = "2021"\n[lib]\npath = "lib.rs"\n`);
   writeFileSync(join(peer,"lib.rs"),"");
-  writeFileSync(join(cwd,"main.rs"),`fn main(){ print!("{}", ${JSON.stringify(law.stdout)}); }\n`);
-  writeFileSync(join(cwd,"build.rs"),`use std::io::Write; fn main(){ let mut lock=std::fs::OpenOptions::new().append(true).open("Cargo.lock").unwrap(); writeln!(lock,"{}", ${JSON.stringify(law.edit)}).unwrap(); }\n`);
+  writeFileSync(join(owner,"main.rs"),`fn main(){ print!("{}", ${JSON.stringify(law.stdout)}); }\n`);
+  writeFileSync(join(owner,"build.rs"),`use std::io::Write; fn main(){ let mut lock=std::fs::OpenOptions::new().append(true).open("../../Cargo.lock").unwrap(); writeln!(lock,"{}", ${JSON.stringify(law.edit)}).unwrap(); }\n`);
   const environment={...process.env,RUSTC:"rustc",RUSTC_WRAPPER:"",RUSTC_WORKSPACE_WRAPPER:""};
   const cargo=registeredToolExecutableV1("cargo");
   expect(spawnSync(cargo,["generate-lockfile","--offline","--manifest-path",manifest],{cwd,env:environment,encoding:"utf8"}).status).toBe(0);
+  const metadata=spawnSync(cargo,["metadata","--offline","--locked","--no-deps","--format-version","1","--manifest-path",manifest],{cwd,env:environment,encoding:"utf8"});
+  expect(metadata.status).toBe(0);
+  expect(JSON.parse(metadata.stdout).workspace_root).toBe(cwd);
   const original=readFileSync(live),digest=Buffer.from(await crypto.subtle.digest("SHA-256",new Uint8Array(original))).toString("hex");
   const policy={version:1 as const,mode:"prototype" as const,cwd,buildDirectory:join(root,"build"),leaseDirectory:fixtureLeaseDirectory,captureDirectory,budgetMs:120000};
   let path="",consumed=false;
@@ -241,14 +248,18 @@ test("actual Cargo retains the owned resolver lock while the live workspace lock
     expect(path).not.toBe(live);
     expect(receipt.invocationInputs.find(row=>row.path===path)?.sha256).toBe(digest);
     expect(receipt.invocationInputs.some(row=>row.path===live)).toBe(false);
+    expect(receipt.invocationInputs.some(row=>row.path===unrelated)).toBe(false);
     const stored=required(index.files.find((row:{source:string})=>row.source===path));
     expect(readFileSync(compilation.files.get(stored.path)!.path)).toEqual(original);
     const binary=required(artifact.files.get(law.tool+(process.platform==="win32"?".exe":"")));
     expect(spawnSync(binary,[],{encoding:"utf8"}).stdout).toBe(law.stdout);
+    writeFileSync(unrelated,unrelatedLock+law.ancestorEdit+"\n");
+    await compilation.recheck();
     consumed=true;
    })),
   }));
   expect(consumed).toBe(true);
+  expect(readFileSync(unrelated,"utf8")).toContain(law.ancestorEdit);
   expect(existsSync(path)).toBe(false);
   let refusedPath="";
   await expect(withCargoResolverLockV1(cwd,captureDirectory,[law.tool],held.storage,admission,async snapshot=>{
@@ -342,6 +353,16 @@ test("a build with declared deliverables stages exactly those files and none of 
   expect(observed).toEqual([spec.component]);
   expect(readdirSync(join(source, "dist/components/prototype")).filter((name) => !name.startsWith("."))).toEqual([spec.component]);
 }); });
+
+test("compiler failures retain the original diagnostic even when source churn triggers a retry", () => {
+  for (const row of fixture.compilerFailureReasons) {
+    for (const live of [0, 10]) {
+      const diagnostics = new BoundedDiagnosticsV1(null, () => {}, live, 1);
+      for (const line of row.lines) diagnostics.line(line);
+      expect(diagnostics.failureReason ?? null).toEqual(row.expected);
+    }
+  }
+});
 
 test("compiler diagnostics stay inside their line budget while the complete stream and the newest failure lines survive", () => {
   const spec = fixture.diagnostics, directory = mkdtempSync(join(directFixtureOutput(), "g-")), path = join(directory, "cargo.log");

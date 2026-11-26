@@ -11,9 +11,9 @@ import type { DirectorySpaceRole } from "@semio-tech/framework/directory/schema"
 import type { PluginCatalog } from "@semio-tech/framework";
 import type { PluginCatalogAdmissionV1, PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
 
-/** 🌎️ How plugin modules reach this page: the route the extension store answers on, and the hub-backed source a device with the needed browser capabilities installs from. */
+/** 🌎️ How plugin modules reach this page: an available local extension installation route and the hub-backed source a device with the needed browser capabilities installs from. */
 export type PluginDistributionPortV1 = Readonly<{
-  extensionRoute: string;
+  extensionRoute?: string;
   hubPluginSource(options: Readonly<{ onNotice: (notice: HubPluginSourceNoticeV1) => void }>): HubPluginSourceV1 | null;
 }>;
 

@@ -23,7 +23,7 @@ const fixture=()=>{
  const launch=(stage:string,signal=new AbortController().signal,lines:string[]=[])=>runReadyStageV1({root,home,environment:{},stage:{...stages.find(row=>row.name===stage)!,timeoutMilliseconds:12000},signal,jobs:1,onLine:line=>lines.push(line)});
  const seen=(expected:readonly string[])=>{
   const oracle=spawnSync("python3",["-I",fileURLToPath(new URL("./🐍️.py",import.meta.url)),starts],{encoding:"utf8"});
-  expect(oracle.status).toBe(0);expect(readFileSync(starts,"utf8").trimEnd().split("\n")).toEqual(expected);expect(JSON.parse(oracle.stdout)).toEqual(expected);
+  expect(oracle.status).toBe(0);expect<readonly string[]>(readFileSync(starts,"utf8").trimEnd().split("\n")).toEqual(expected);expect(JSON.parse(oracle.stdout)).toEqual(expected);
  };
  return{base,root,ready,starts,write,launch,seen,close:()=>rmSync(base,{recursive:true,force:true})};
 };

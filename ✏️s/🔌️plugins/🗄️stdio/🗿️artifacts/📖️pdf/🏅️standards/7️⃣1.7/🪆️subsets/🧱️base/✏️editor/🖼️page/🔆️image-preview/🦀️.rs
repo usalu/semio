@@ -15,7 +15,7 @@ const MAX_PREVIEW_EDGE: f64 = 256.0;
 const SMOOTH_UPSCALE_LIMIT: f64 = 4.0;
 const MAX_DCT_WORKING_BYTES: usize = 96 * 1024 * 1024;
 
-pub fn image_layer(snapshot: &PdfSnapshot, content: &[PdfOp], item: &Placed) -> Option<Value> {
+pub fn image_layer(snapshot: &PdfSnapshot, content: &dyn PdfProgram, item: &Placed) -> Option<Value> {
     let page = &snapshot.pages[item.object.page];
     let resources = NativePdfArtifactResources::from_objects(&snapshot.objects);
     let resolve = |reference: &ArtifactRef, size, channels| semio_s_artifact_stdio_pdf_editor_document::graph_png_preview(&resources, reference, size, channels)

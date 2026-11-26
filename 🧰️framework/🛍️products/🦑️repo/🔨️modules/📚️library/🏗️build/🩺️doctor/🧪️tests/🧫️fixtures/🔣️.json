@@ -4489,6 +4489,134 @@
      "info": 0
     }
    }
+  },
+  {
+   "name": "typecheck: product errors warn, the largest areas are named",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "typecheck": {
+     "errors": 12,
+     "product": 2,
+     "tests": 10,
+     "ageSeconds": 60,
+     "areas": [
+      {
+       "area": "build/🕸️graph",
+       "errors": 9,
+       "product": 0
+      },
+      {
+       "area": "process/🎛️owned-execution",
+       "errors": 2,
+       "product": 2
+      },
+      {
+       "area": "build/🏡️resident",
+       "errors": 1,
+       "product": 0
+      }
+     ]
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "typecheck.product-errors",
+      "warn",
+      "library"
+     ],
+     [
+      "typecheck.errors",
+      "info",
+      "library"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "degraded",
+    "counts": {
+     "error": 0,
+     "warn": 1,
+     "info": 1
+    }
+   }
+  },
+  {
+   "name": "typecheck: only test errors and an old report stay informational",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "typecheck": {
+     "errors": 3,
+     "product": 0,
+     "tests": 3,
+     "ageSeconds": 90000,
+     "areas": [
+      {
+       "area": "build/🕸️graph",
+       "errors": 3,
+       "product": 0
+      }
+     ]
+    }
+   },
+   "expect": {
+    "findings": [
+     [
+      "typecheck.errors",
+      "info",
+      "library"
+     ],
+     [
+      "typecheck.stale",
+      "info",
+      "library"
+     ]
+    ],
+    "waits": [],
+    "processes": [],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 2
+    }
+   }
+  },
+  {
+   "name": "typecheck: a clean fresh report says nothing",
+   "ordered": false,
+   "facts": {
+    "version": 1,
+    "atMs": 1792545600000,
+    "platform": "darwin",
+    "probes": [],
+    "typecheck": {
+     "errors": 0,
+     "product": 0,
+     "tests": 0,
+     "ageSeconds": 86399,
+     "areas": []
+    }
+   },
+   "expect": {
+    "findings": [],
+    "waits": [],
+    "processes": [],
+    "verdict": "ok",
+    "counts": {
+     "error": 0,
+     "warn": 0,
+     "info": 0
+    }
+   }
   }
  ]
 }

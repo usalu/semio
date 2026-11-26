@@ -2,69 +2,9 @@
 
 use super::*;
 
-//#region ⏱️TurnExecution
-/// ⏱️ One turn's EXECUTING microseconds — wall time spent inside the guest's own `Future::poll`
-/// calls, with every `Pending` gap excluded. The strict lifecycle authority
-/// ([`semio_framework_trace::GUEST_LIFECYCLE_TURN_CEILING_US`]) must bound the guest's own work; a
-/// plain `now_us() - started_us` also bills the guest for time it is not running at all — a JSPI
-/// suspension parked on a host import, a hidden browser tab whose timer/microtask continuation is
-/// throttled, or an OS deschedule of a loaded box. Measured 2026-09-10: generation3d's whole
-/// `InstanceOpen` turn executes in 13.9 ms natively, yet its browser first step was killed at the
-/// 5 s ceiling, because the wall clock kept running across the descheduled continuations.
-#[derive(Clone, Copy)]
-pub(super) struct TurnExecution {
-    pub accumulated_us: u64,
-    poll_started_us: Option<u64>,
-    clock_lost: bool,
-}
-
-pub(super) const TURN_EXECUTION_IDLE: TurnExecution = TurnExecution { accumulated_us: 0, poll_started_us: None, clock_lost: false };
-
-/// ⏱️ Executing microseconds of the turn in flight, including the poll currently on the stack.
-/// `None` means the host clock was missing or ran backward, which the lifecycle authority retains
-/// its receipt for exactly like an overrun.
-#[doc(hidden)]
-pub fn guest_turn_executing_us() -> Option<u64> {
-    let execution = TURN_EXECUTION.with(Cell::get);
-    if execution.clock_lost {
-        return None;
-    }
-    let Some(poll_started_us) = execution.poll_started_us else { return Some(execution.accumulated_us) };
-    Some(execution.accumulated_us.saturating_add(semio_framework_job::default_now_us()?.checked_sub(poll_started_us)?))
-}
-
-/// ⏱️ Runs one turn under [`TURN_EXECUTION`] accounting; the gaps between polls never accrue.
-///
-/// 📏️ Takes the turn future ALREADY PINNED, by pointer. Taking it `impl Future` by value cost an
-/// exact duplicate of the largest generator in the guest: a parameter owns a coroutine slot from
-/// `Unresumed` onward, `pin!` then moved it into a second local that lives across the `.await`, and
-/// the moved-from parameter slot is never reused — `with_turn_execution` measured 243 184 B around
-/// a 121 584 B `poll_kernel_turn`. `Pin<&mut …>` is 8 bytes and the caller owns the one slot. See
-/// `📓️poll-task-leak-2026-09-10.md` §3.1.
-#[doc(hidden)]
-pub async fn with_turn_execution<T>(mut future: std::pin::Pin<&mut (impl std::future::Future<Output = T> + ?Sized)>) -> T {
-    TURN_EXECUTION.with(|execution| execution.set(TURN_EXECUTION_IDLE));
-    std::future::poll_fn(move |context| {
-        TURN_EXECUTION.with(|execution| {
-            let mut current = execution.get();
-            current.poll_started_us = semio_framework_job::default_now_us();
-            current.clock_lost = current.clock_lost || current.poll_started_us.is_none();
-            execution.set(current);
-        });
-        let polled = future.as_mut().poll(context);
-        TURN_EXECUTION.with(|execution| {
-            let mut current = execution.get();
-            match current.poll_started_us.take().zip(semio_framework_job::default_now_us()).map(|(started_us, now_us)| now_us.checked_sub(started_us)) {
-                Some(Some(spent_us)) => current.accumulated_us = current.accumulated_us.saturating_add(spent_us),
-                _ => current.clock_lost = true,
-            }
-            execution.set(current);
-        });
-        polled
-    })
-    .await
-}
-//#endregion ⏱️TurnExecution
+#[path="⏱️execution.rs"]
+mod execution;
+pub use execution::{guest_turn_executing_us,with_turn_execution,with_turn_execution_clock};
 
 /// 🧠️ Repository-owned actor ABI entrypoint. The component-model wrapper above and the native
 /// interpreter both call this exact kernel reducer, so WIT lifting is no longer the production
@@ -89,10 +29,11 @@ pub async fn poll_kernel_owned<PA: semio_plugin_reactor_app::PluginApp + 'static
     command_page: &mut Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
     cold_pair_page: Option<&semio_framework::kernel::ColdDocumentPairPage>,
     budget: semio_framework::kernel::Budget,
+    execution_clock: fn() -> Option<u64>,
     identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     cx: &mut semio_framework_job::StepContext<'_>,
 ) -> Result<semio_framework::kernel::TurnResult, semio_framework_job::OriginalTurnFailure> {
-    with_turn_execution(std::pin::pin!(poll_kernel_turn(runtime, events, command_page, cold_pair_page, budget, OpeningPacing::Metered, |_| Ok(()), |result, ()| result, identity, cx))).await
+    with_turn_execution_clock(std::pin::pin!(poll_kernel_turn(runtime, events, command_page, cold_pair_page, budget, OpeningPacing::Metered, |_| Ok(()), |result, ()| result, identity, cx)), execution_clock).await
 }
 
 /// 🧠️ One interactive guest turn under [`with_turn_execution`] accounting.

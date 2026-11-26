@@ -67,6 +67,19 @@
   "elapsedSlackMs": 120000,
   "extensions": [".ts", ".tsx", ".mts", ".js", ".mjs"],
   "pythonHints": ["python", "🐍️"],
+  "oracle": {
+    "id": "python",
+    "owner": "test-file",
+    "route": "test-file-oracle",
+    "budgetMs": 900000,
+    "extensions": [".py"],
+    "command": "check",
+    "usage": "<(?:path to |S>/)?(🧫️fixtures[^>\\s`]*)>?",
+    "environment": {
+      "PYTHONIOENCODING": "utf-8",
+      "PYTHONUTF8": "1"
+    }
+  },
   "limits": {
     "tailCharacters": 8000,
     "errorCharacters": 400,

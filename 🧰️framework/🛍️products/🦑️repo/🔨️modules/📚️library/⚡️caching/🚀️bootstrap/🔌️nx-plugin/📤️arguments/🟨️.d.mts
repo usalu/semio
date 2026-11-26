@@ -1,11 +1,3 @@
-import type { NativeOwnerCapabilities } from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-
-/** 📤️ Encodes the closed language-neutral literal argument envelope. */
-export function encodeOwnerArgumentsV1(arguments_: readonly string[]): string;
-/** 📥️ Returns genuine original arguments and a private-key-free mutable environment. */
-export function consumeOwnerArgumentsV1(environment: Readonly<Record<string, string | undefined>>): { arguments: string[]; environment: Record<string, string | undefined> };
-/** 📜️ Admits the literal discovered native command behind repository-owned authority. */
-export function declaredNativeOwnerCommandV1(manifest: string, workingDirectory: string, command: string): NativeOwnerCapabilities["command"];
 /** 🔐️ Issues the native child role with its original caller envelope. */
 export function issueNativeOwnerInvocationV1(options: Readonly<Record<string, unknown>>, context: Readonly<Record<string, unknown>>, environment: Readonly<Record<string, string | undefined>>, now: number): Promise<Readonly<Record<string, unknown>>>;
 /** 🎯️ Delegates the original task using the closed private argument transport. */
@@ -17,3 +9,6 @@ export default function executor(options: Readonly<Record<string, unknown>>, con
 
 /** 🧭️ Projects the original reachable orchestration child envelope after its retained graph task finishes. */
 export function issueNxBuildOrchestrationV1(options:Readonly<Record<string,unknown>>,context:Readonly<Record<string,unknown>>,environment:Readonly<Record<string,string|undefined>>,now:number):Promise<(import("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptProcessEnvelope&Readonly<{capabilities:import("../../../../🏗️build/📥️caller/🟦️.ts").NativeBuildCallerCapabilitiesV1}>)|undefined>;
+
+/** 🔏️ Refuses executor code or delegation contracts changed after actual module evaluation. */
+export function nxTaskArgumentsSourceIdentityV1(): string;

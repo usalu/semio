@@ -70,7 +70,7 @@ impl ActualWorkContext for ActualWorkTurn<'_,'_,'_>{
   NativeAllocationEvent::Admit(request)=>{if request.owned_bytes.checked_add(request.bytes)!=Some(request.next_owned_bytes)||request.next_owned_bytes>request.maximum_bytes{return Err(refusal("original native decoder allocation coordinates are invalid"))}Ok(())}
   NativeAllocationEvent::Quote(request)=>{
    if ledger.pending.is_some(){return Err(refusal("original native decoder already has a pending allocation"))}
-   if paused(actual,closing)||(!closing&&actual.is_cancelled()){return Err(ValueError::literal(ValueRefusalKind::Canceled,"original native decode caller yielded"))}
+   if !closing&&actual.is_cancelled(){return Err(ValueError::literal(ValueRefusalKind::Canceled,"original native decode caller canceled before allocation"))}
    if request.owned_bytes as u128!=ledger.actual||request.owned_bytes.checked_add(request.bytes)!=Some(request.next_owned_bytes)||request.next_owned_bytes>request.maximum_bytes{return Err(refusal("original native decoder allocation coordinates are invalid"))}
    if reserved.checked_add(request.bytes as u128).is_none_or(|bytes|bytes>actual.retained_grant().maximum_capacity_bytes as u128){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original native allocation exceeds the actual turn capacity"))}
    ledger.pending=Some(request);Ok(())
@@ -81,7 +81,7 @@ impl ActualWorkContext for ActualWorkTurn<'_,'_,'_>{
    if ledger.pending!=Some(request){return Err(refusal("original native allocation post does not match its reservation"))}
    ledger.pending=None;
    if born>request.bytes||*reserved>actual.retained_grant().maximum_capacity_bytes as u128{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original native allocation exceeded its reservation"))}
-   if paused(actual,closing)||(!closing&&actual.is_cancelled()){return Err(ValueError::literal(ValueRefusalKind::Canceled,"original native allocation post was refused"))}Ok(())
+   if !closing&&actual.is_cancelled(){return Err(ValueError::literal(ValueRefusalKind::Canceled,"original native allocation post was refused"))}Ok(())
   }
   NativeAllocationEvent::Cancel(request)=>{if ledger.pending!=Some(request){return Err(refusal("original native allocation cancellation does not match its reservation"))}ledger.pending=None;Ok(())}
  }).and_then(|answer|answer)}
@@ -129,7 +129,7 @@ impl OriginalNativeDecodeSource{
   self.source.as_ref().ok_or_else(||refusal("original native decoder has no admitted source"))?.validate_context(cx)?;if !self.issuer_admitted||!self.work_admitted||!self.construction_admitted{return Err(refusal("original native decoder issuers have not been accepted").into())}
   let grant=cx.retained_grant();let turn_identity=cx.original_source_turn_identity();let source_turn=cx.original_source_turn().ok().map(std::ptr::from_ref);
   let borrowed=ActualTurn::new(&mut *cx);
-  let mut progress=|_|borrowed.with(|actual,_|!paused(actual,closing)&&(closing||!actual.is_cancelled())).unwrap_or(false);
+  let mut progress=|_|borrowed.with(|actual,_|closing||!actual.is_cancelled()).unwrap_or(false);
   let allocation=self.allocation_authority.as_mut().ok_or_else(||refusal("original native decoder has no allocation authority"))?;
   let original_recipient=self.original_recipient.as_mut().ok_or_else(||refusal("original native decoder has no admitted recipient"))?;
   let authority=self.work_authority.as_mut().ok_or_else(||refusal("original native decoder has no admitted work authority"))?;

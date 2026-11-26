@@ -61,7 +61,7 @@ registerBuildTestLawV1("fleet owner seed reports actual graph publication", "sdk
     try{
      const value=await observeProjectInferenceV1({cachePath,key:row.id,owner:row.id,fleet:row.id},()=>{computed++;return "local";});
      const actual={stored:Number(stored),seeded:Number(seeded),lookups:observationLookupClockV1().count-before,computed,value};
-     const oracle=db.query("select ?1 stored,?1 seeded,1+?1 lookups,1-?1 computed,case ?1 when 1 then 'remote' else 'local' end value").get(Number(row.funded));
+     const oracle=db.query<{stored:number;seeded:number;lookups:number;computed:number;value:string},[number]>("select ?1 stored,?1 seeded,1+?1 lookups,1-?1 computed,case ?1 when 1 then 'remote' else 'local' end value").get(Number(row.funded))!;
      expect(requested).toBe(1);
      expect(actual).toEqual(row.expected);
      expect(actual).toEqual(oracle);
@@ -185,7 +185,7 @@ registerBuildTestLawV1("inventory body operations reach the owned slice receipt"
     expect(Object.values(operations).every(op=>op.active===0)).toBe(true);
     expect(Object.values(operations).reduce((sum,op)=>sum+op.milliseconds,0)).toBeLessThanOrEqual(presence.timings.body.milliseconds);
     const counts=Object.fromEntries(Object.entries(row.expected).map(([key])=>[key,(operations[key]?.started??0)-(previous[key]??0)]));
-    const oracle=db.query("SELECT 2 + ?1 AS storeRecheck, ?1 AS continuation, 3 + (1 - ?1) AS fileChecks, 1 - ?1 AS recordRead, 1 AS implementationCheck").get(Number(!row.present));
+    const oracle=db.query<Record<string,number>,[number]>("SELECT 2 + ?1 AS storeRecheck, ?1 AS continuation, 3 + (1 - ?1) AS fileChecks, 1 - ?1 AS recordRead, 1 AS implementationCheck").get(Number(!row.present))!;
     expect(counts).toEqual(row.expected);
     expect(counts).toEqual(oracle);
     previous=Object.fromEntries(Object.entries(operations).map(([key,op])=>[key,op.started]));

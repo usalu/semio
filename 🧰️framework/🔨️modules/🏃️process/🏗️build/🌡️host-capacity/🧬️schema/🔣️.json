@@ -90,6 +90,7 @@
         "startCacheMilliseconds": 10000,
         "maximumWaitMarkers": 64,
         "upgradeSuffix": ".upgrade",
+        "needSuffix": ".need",
         "upgradePollMilliseconds": 100,
         "maximumUpgradeBytes": 1024,
         "coresEnvironment": "SEMIO_HOST_CAPACITY_CORES",
@@ -526,7 +527,7 @@
               "type": "integer",
               "minimum": 1000,
               "maximum": 86400000,
-              "description": "How long a request can wait without a fitting reservation or while a hard stop holds before it is refused as starved."
+              "description": "How long a request that can never be served on this host (its least need exceeds the memory above the floor within the budget) waits through a hard stop or without a fitting reservation before it is refused as starved; a request that fits the host is never refused: it keeps waiting with progress reports and, once it has waited bypassMilliseconds, holds the memory freed by finishing grants against later requests."
             }
           }
         },
@@ -767,6 +768,10 @@
         "quiet": {
           "type": "boolean"
         },
+        "retainReservation": {
+          "type": "boolean",
+          "description": "Keeps the grant's admitted memory through its full lifetime."
+        },
         "elastic": {
           "type": "boolean"
         },
@@ -863,6 +868,17 @@
         }
       }
     },
+    "GrantOwner": {
+      "description": "Stable owner identity of a grant row. Other fields are opaque here and can never grant admission.",
+      "type": "object",
+      "required": ["pid", "admittedAtMs", "bootAtMs"],
+      "properties": {
+        "pid": {"$ref": "#/definitions/Grant/properties/pid"},
+        "startMs": {"$ref": "#/definitions/Grant/properties/startMs"},
+        "admittedAtMs": {"$ref": "#/definitions/Grant/properties/admittedAtMs"},
+        "bootAtMs": {"$ref": "#/definitions/Grant/properties/bootAtMs"}
+      }
+    },
     "Grant": {
       "type": "object",
       "additionalProperties": false,
@@ -948,6 +964,10 @@
         },
         "rampSlot": {
           "type": "boolean"
+        },
+        "retainReservation": {
+          "type": "boolean",
+          "description": "The admitted reservation remains charged after the observed ramp."
         },
         "rebuildScope": {
           "type": "string",
@@ -1345,6 +1365,7 @@
             "grantIdentifierRequired",
             "queueFull",
             "definitionRequired",
+            "unrecognizedGrant",
             "floorOrder",
             "pressureOrder",
             "planJobs",
@@ -1370,6 +1391,9 @@
               "type": "string"
             },
             "definitionRequired": {
+              "type": "string"
+            },
+            "unrecognizedGrant": {
               "type": "string"
             },
             "floorOrder": {
@@ -1555,6 +1579,7 @@
             "grantIdentifierRequired": "Closed inherited host capacity grant identifier required",
             "queueFull": "Host capacity queue is full",
             "definitionRequired": "Closed host capacity {definition} required: {detail}",
+            "unrecognizedGrant": "Unrecognized host capacity grant {id} may still hold memory. Admission is blocked until the grant retires or this reader can verify it.",
             "floorOrder": "Host capacity floor minimum exceeds its maximum",
             "pressureOrder": "Host capacity pressure thresholds must rise from warn to critical",
             "planJobs": "Host capacity plan needs jobs between the request bounds",
@@ -1562,7 +1587,7 @@
             "platformUnsupported": "Host capacity does not support {platform}",
             "inheritedIdentifier": "Closed inherited host capacity grant identifier required",
             "quietUpgradeRequired": "a quiet request needs the full request it may grow into, under the same id",
-            "exactGrantRequired": "An explicit capacity command requires a live reservation of at least {minimum} MB and {cores} core(s); the current grant supplies {reserved} MB and {availablecores} core(s). Run it outside the enclosing grant or enable capacity admission.",
+            "exactGrantRequired": "An explicit capacity command requires a live reservation of at least {minimum} MB and {cores} core(s) held for the full command. The current grant supplies {reserved} MB and {availablecores} core(s). Run it outside the enclosing grant or enable capacity admission.",
             "memoryNeverFits": "{operation} needs at least {minimum} MB of memory, but this machine has {total} MB of which {floor} MB stay reserved, so at most {capacity} MB can ever be given out. It cannot run here: use a machine with more memory (at least {needed} MB), or take the result from the fleet cache instead of computing it here.",
             "memoryStarved": "{operation} needs at least {minimum} MB of free memory, but after {seconds} s only {spare} MB are free above the {floor} MB floor of this machine ({total} MB) and nothing of ours is running, so waiting longer cannot help. Close other applications (or stop the resident graph service with `repo service host stop`, which can hold more than 1 GB) until {minimum} MB are free, then run the command again.",
             "memoryWaitedOut": "{operation} needs at least {minimum} MB of free memory, but after {seconds} s only {spare} MB are free above the {floor} MB floor of this machine ({total} MB); it is held by {holders}. The wait ends here instead of going on for ever: run the command again once those finish, or stop them."
@@ -1642,6 +1667,7 @@
             "grantIdentifierRequired": "Geschlossene Kennung der geerbten Kapazitätszusage des Rechners erforderlich",
             "queueFull": "Die Warteschlange der Rechnerkapazität ist voll",
             "definitionRequired": "Geschlossene Kapazitätsdefinition {definition} des Rechners erforderlich: {detail}",
+            "unrecognizedGrant": "Die unbekannte Kapazitätszusage {id} kann noch Speicher belegen. Die Zulassung bleibt gesperrt, bis die Zusage endet oder geprüft werden kann.",
             "floorOrder": "Die Untergrenze der Rechnerkapazität überschreitet ihre Obergrenze",
             "pressureOrder": "Die Schwellen des Speicherdrucks müssen von Warnung zu kritisch steigen",
             "planJobs": "Der Kapazitätsplan braucht Jobs zwischen den Grenzen der Anfrage",
@@ -1649,7 +1675,7 @@
             "platformUnsupported": "Die Rechnerkapazität unterstützt {platform} nicht",
             "inheritedIdentifier": "Eine gültige Kennung der geerbten Rechner-Kapazitätszusage ist erforderlich",
             "quietUpgradeRequired": "eine ruhige Anfrage braucht die volle Anfrage, in die sie wachsen darf, unter derselben Kennung",
-            "exactGrantRequired": "Ein Befehl mit expliziter Kapazitätsangabe benötigt eine aktive Reservierung von mindestens {minimum} MB und {cores} Kern(en). Die aktuelle Zusage stellt {reserved} MB und {availablecores} Kern(e) bereit. Den Befehl außerhalb der umgebenden Zusage ausführen oder die Kapazitätszulassung aktivieren.",
+            "exactGrantRequired": "Ein Befehl mit expliziter Kapazitätsangabe benötigt für seine gesamte Ausführung eine aktive Reservierung von mindestens {minimum} MB und {cores} Kern(en). Die aktuelle Zusage stellt {reserved} MB und {availablecores} Kern(e) bereit. Den Befehl außerhalb der umgebenden Zusage ausführen oder die Kapazitätszulassung aktivieren.",
             "memoryNeverFits": "{operation} braucht mindestens {minimum} MB Speicher, dieser Rechner hat aber {total} MB, von denen {floor} MB reserviert bleiben, also können höchstens {capacity} MB vergeben werden. Es kann hier nicht laufen: einen Rechner mit mehr Speicher verwenden (mindestens {needed} MB) oder das Ergebnis aus dem Flottencache holen, statt es hier zu berechnen.",
             "memoryStarved": "{operation} braucht mindestens {minimum} MB freien Speicher, aber nach {seconds} s sind nur {spare} MB über der Untergrenze von {floor} MB dieses Rechners ({total} MB) frei, und nichts von uns läuft; längeres Warten hilft nicht. Andere Anwendungen schließen (oder den residenten Graphdienst mit `repo service host stop` beenden, er kann über 1 GB halten), bis {minimum} MB frei sind, und den Befehl dann erneut ausführen.",
             "memoryWaitedOut": "{operation} braucht mindestens {minimum} MB freien Speicher, aber nach {seconds} s sind nur {spare} MB über der Untergrenze von {floor} MB dieses Rechners ({total} MB) frei; belegt von {holders}. Das Warten endet hier, statt ewig weiterzugehen: den Befehl erneut ausführen, sobald diese fertig sind, oder sie beenden."
@@ -2291,7 +2317,8 @@
         "reservedMegabytes": {
           "type": "integer",
           "minimum": 0
-        }
+        },
+        "retainReservation": {"type": "boolean"}
       }
     },
     "Unmanaged": {

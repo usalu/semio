@@ -15,6 +15,15 @@ use crate::standards::v1::subsets::any::schema::preparation::text_inverse::*;
 use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
 use semio_framework_test_fixtures::repo_text;
 fn grant(turn:usize)->RetainedCloneGrant{match turn%3{0=>RetainedCloneGrant::one_capacity_turn(4096,128),1=>RetainedCloneGrant::one_payload_turn(4096,128),_=>RetainedCloneGrant::one_release_turn(4096,128)}}
+fn exact_grant(demand:semio_framework_value::RetirementDemand)->RetainedCloneGrant{
+ assert!(demand.copy_bytes+demand.capacity_bytes+demand.release_bytes<=4096,"native inverse demand exceeds the turn bound: {demand:?}");
+ RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}
+}
+fn advance_grant<T:Puzzle2dTextInverse>(cursor:&Puzzle2dTextInverseCursor<T>,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,turn:usize)->RetainedCloneGrant{
+ let axis=turn%4;
+ if axis<3{return grant(axis)}
+ cursor.advance_diagnostic(source,4096).1.map_or_else(||grant(1),exact_grant)
+}
 fn observed(step:Result<RetainedCloneStep,ValueError>,heap:semio_framework_trace::HeapAllocationObservation,grant:RetainedCloneGrant)->RetainedCloneStep{
  let step=step.unwrap();let progress=step.progress();assert!(progress.fits(grant));assert!(!heap.overflowed);assert!(heap.requested_bytes<=progress.retained_capacity_bytes);assert!(heap.released_bytes<=progress.released_bytes);assert!(progress.copied_bytes+progress.retained_capacity_bytes+progress.released_bytes<=4096);step
 }
@@ -32,11 +41,36 @@ fn law<T: 'static + Puzzle2dTextInverse+Clone>(snapshot:&Puzzle2dSnapshot,payloa
  let original=serde_json::to_value(snapshot).unwrap();let mut source=test_source_custody::admit();let mut mutation=test_source_custody::admit();
  let(mut cursor,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(Puzzle2dTextInverseCursor::<T>::default);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||test_source_custody::run(RetainedCloneGrant::default(), |effect| cursor.advance(source.borrow(snapshot),mutation.borrow(&payload), 4096, effect)));assert_eq!(step.unwrap(),RetainedCloneStep::Progress(Default::default()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
- let mut complete=false;for turn in 0..100000{let g=grant(turn);let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||test_source_custody::run(g, |effect| cursor.advance(source.borrow(snapshot),mutation.borrow(&payload), 4096, effect)));if matches!(observed(step,heap,g),RetainedCloneStep::Complete(_)){complete=true;break}}
- assert!(complete,"optional text inverse did not complete");let inverse=cursor.take().unwrap();assert_eq!(inverse.len(),expected.as_array().unwrap().len());
+ let mut complete=false;for turn in 0..100000{let original=source.borrow(snapshot);let g=advance_grant(&cursor,original,turn);let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||test_source_custody::run(g, |effect| cursor.advance(original,mutation.borrow(&payload), 4096, effect)));if matches!(observed(step,heap,g),RetainedCloneStep::Complete(_)){complete=true;break}}
+ assert!(complete,"optional text inverse did not complete: {:?}",cursor.advance_diagnostic(source.borrow(snapshot),4096));let inverse=cursor.take().unwrap();assert_eq!(inverse.len(),expected.as_array().unwrap().len());
  if let Some(operation)=inverse.first(){let(id,previous)=match operation{Puzzle2dMutation::ChangeNodeIcon(value)=>(&value.id,&value.new_icon_kind),Puzzle2dMutation::EditTargetRegionLabel(value)=>(&value.id,&value.new_label),_=>panic!("wrong optional setter")};assert_eq!(serde_json::to_value(id).unwrap(),expected[0]["id"]);assert_eq!(serde_json::to_value(previous).unwrap(),expected[0]["previous"])}
- close(&mut cursor);let mut owner=ControlledRetirement::new(inverse).map_err(|(error,_)|error).unwrap();for turn in 0..100000{if owner.terminal_is_empty(){break}let g=grant(turn);let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||test_source_custody::close_turn(g, |effect| owner.step(4096, effect)));observed(step,heap,g);}assert!(owner.terminal_is_empty());
- for pause in [0,1,3,7,17]{let mut cursor=Puzzle2dTextInverseCursor::<T>::default();for turn in 0..pause{let g=grant(turn);let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||test_source_custody::run(g, |effect| cursor.advance(source.borrow(snapshot),mutation.borrow(&payload), 4096, effect)));if matches!(observed(step,heap,g),RetainedCloneStep::Complete(_)){break}}close(&mut cursor)}let mut fenced=Puzzle2dTextInverseCursor::<T>::default();test_source_custody::run(grant(1), |effect| fenced.advance(source.borrow(snapshot),mutation.borrow(&payload), 4096, effect)).unwrap();let swapped=payload.clone();assert!(test_source_custody::run(grant(1), |effect| fenced.advance(source.borrow(snapshot),mutation.borrow(&swapped), 4096, effect)).is_err());close(&mut fenced);let mut fenced=Puzzle2dTextInverseCursor::<T>::default();test_source_custody::run(grant(1), |effect| fenced.advance(source.borrow(snapshot),mutation.borrow(&payload), 4096, effect)).unwrap();let swapped=snapshot.clone();assert!(test_source_custody::run(grant(1), |effect| fenced.advance(source.borrow(&swapped),mutation.borrow(&payload), 4096, effect)).is_err());close(&mut fenced);assert_eq!(serde_json::to_value(snapshot).unwrap(),original);test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
+ close(&mut cursor);let mut owner=ControlledRetirement::new(inverse).map_err(|(error,_)|error).unwrap();for _ in 0..100000{if owner.terminal_is_empty(){break}let g=exact_grant(owner.selected_demand(4096).unwrap());let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||test_source_custody::close_turn(g, |effect| owner.step(4096, effect)));observed(step,heap,g);}assert!(owner.terminal_is_empty());
+ for pause in [0,1,3,7,17] {
+  let mut cursor=Puzzle2dTextInverseCursor::<T>::default();
+  for turn in 0..pause {
+   let original=source.borrow(snapshot);
+   let grant=advance_grant(&cursor,original,turn);
+   let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||test_source_custody::run(grant,|effect|cursor.advance(original,mutation.borrow(&payload),4096,effect)));
+   if matches!(observed(step,heap,grant),RetainedCloneStep::Complete(_)){break}
+  }
+  close(&mut cursor);
+ }
+ for replace_source in [false,true] {
+  let mut cursor=Puzzle2dTextInverseCursor::<T>::default();
+  for _ in 0..2 {
+   let step=test_source_custody::run(grant(1),|effect|cursor.advance(source.borrow(snapshot),mutation.borrow(&payload),4096,effect)).unwrap();
+   assert_eq!(step.progress().copied_items,1);
+  }
+  let swapped_source=snapshot.clone();
+  let swapped_mutation=payload.clone();
+  let actual_source=if replace_source{&swapped_source}else{snapshot};
+  let actual_payload=if replace_source{&payload}else{&swapped_mutation};
+  assert!(test_source_custody::run(grant(1),|effect|cursor.advance(source.borrow(actual_source),mutation.borrow(actual_payload),4096,effect)).is_err());
+  close(&mut cursor);
+ }
+ assert_eq!(serde_json::to_value(snapshot).unwrap(),original);
+ test_source_custody::close(&mut source);
+ test_source_custody::close(&mut mutation);
 }
 #[test]
 fn history_edit_puzzle2d_optional_text_inverse_clones_only_original_paged_id_and_value_with_exact_cancel(){
@@ -56,11 +90,11 @@ async fn the_prepared_family_inverse_sums_to_the_negative_diff() {
         };
     }
     for (before, mutation) in [
-    vector!("🎨change-node-icon", "🎨️swaps-a-capsule-icon"),
-    vector!("🎨change-node-icon", "🎨️swaps-node-a-icon"),
-    vector!("🖋️edit-target-region-label", "🖋️renames"),
-    vector!("✏️edit-node-text", "✏️recodes"),
-    vector!("✏️edit-node-text", "✏️retitles-node-a"),
+    vector!("🟢️node/🎨change-node-icon", "🎨️swaps-a-capsule-icon"),
+    vector!("🟢️node/🎨change-node-icon", "🎨️swaps-node-a-icon"),
+    vector!("🌍️region/🖋️edit-target-region-label", "🖋️renames"),
+    vector!("🟢️node/✏️edit-node-text", "✏️recodes"),
+    vector!("🟢️node/✏️edit-node-text", "✏️retitles-node-a"),
     ] {
         let before: crate::Puzzle2dSnapshot = semio_framework_pack_json::from_json_str(before, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
         let mutation: crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation = semio_framework_pack_json::from_json_str(mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes");

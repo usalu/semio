@@ -1,5 +1,6 @@
 /** 🛰️ The agent bridge rendezvous of the dev server: the rendezvous directory, the live offer lookup and the Vite plugin that answers offers. */
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import {processPidExistsV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 import { join } from "node:path";
 import { AGENT_BRIDGE_OFFER_ENDPOINT, AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION, agentBridgeOfferAnswerV1, parseAgentBridgeOfferRecordV2, parseAgentBridgeOfferScopeV1, selectAgentBridgeOfferV1, type AgentBridgeOfferRecordV2, type AgentBridgeOfferScopeV1 } from "@semio-tech/framework-os/modules/renderer/engine/elements/AgentBridge/offer";
 
@@ -32,8 +33,7 @@ export function liveAgentBridgeOfferFor(scope: AgentBridgeOfferScopeV1, root: st
       try {
         const offer = parseAgentBridgeOfferRecordV2(JSON.parse(readFileSync(join(directory, name), "utf8")));
         if (offer === null) return [];
-        process.kill(offer.pid, 0);
-        return [offer];
+        return processPidExistsV1(offer.pid) ? [offer] : [];
       } catch {
         return [];
       }

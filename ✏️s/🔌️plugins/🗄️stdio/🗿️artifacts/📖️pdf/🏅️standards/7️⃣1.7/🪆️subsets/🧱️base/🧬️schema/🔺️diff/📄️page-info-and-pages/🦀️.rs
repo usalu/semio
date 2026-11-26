@@ -58,7 +58,7 @@ pub(super) fn apply_page_diff(mut page: PdfPage, diff: &PdfPageDiff) -> PdfPage 
     }
     apply_tri(&mut page.user_unit, &diff.user_unit);
     if let Some(content) = &diff.content {
-        page.content = content.apply(&page.content);
+        page.content = content.apply_owned(std::mem::take(&mut page.content).into_iter().collect()).into_iter().collect();
     }
     if let Some(annotations) = &diff.annotations {
         page.annotations = annotations.apply(&page.annotations);
@@ -137,7 +137,7 @@ pub(super) fn inverse_page_diff(diff: &PdfPageDiff, page: &PdfPage) -> PdfPageDi
         art_box: diff.art_box.as_ref().map(|_| PdfSet::from_option(&page.art_box)),
         rotate: diff.rotate.map(|_| page.rotate),
         user_unit: diff.user_unit.as_ref().map(|_| PdfSet::from_option(&page.user_unit)),
-        content: diff.content.as_ref().map(|content| content.inverse(&page.content)),
+        content: diff.content.as_ref().map(|content| content.inverse_by(page.content.len(), |index| page.content.get(index))),
         annotations: diff.annotations.as_ref().map(|annotations| annotations.inverse(&page.annotations)),
         group: diff.group.as_ref().map(|_| PdfSet::from_option(&page.group)),
         thumbnail: diff.thumbnail.as_ref().map(|_| PdfSet::from_option(&page.thumbnail)),

@@ -31,6 +31,7 @@ for(const item of cases.runs)test(`cargo run: ${item.name}`,async()=>{
  try{
   await withBuildCapacityV1(item.args,environment,async granted=>{
    jobs=granted.handle!.jobs;parallelism=granted.args.find(argument=>argument.startsWith("--parallelism="))!;
+   expect(readLiveHostCapacityReservationV1(environment,policy)?.retainReservation).toBeUndefined();
    await withBuildCapacityV1(granted.args,environment,async nested=>{
     expect(nested.handle?.id).toBe(granted.handle?.id);
     expect(nested.handle?.inherited).toBe(true);
@@ -62,10 +63,10 @@ for (const item of cases.fleetRuns) test(`cargo with published fleet execution $
  };
  await withBuildCapacityV1(args, environment, async grant => {
   const reservation = readLiveHostCapacityReservationV1(environment, policy);
-  expect(reservation?.reservedMegabytes).toBe(cases.fleetControlMegabytes);
+  expect(reservation).toMatchObject({reservedMegabytes:cases.fleetControlMegabytes,retainReservation:true});
   expect(grant.handle?.plan).toMatchObject({memoryMegabytes:0,fixedMegabytes:cases.fleetControlMegabytes});
   expect(grant.args).toEqual(args);
-  expect(readRepositoryCargoLaunchV1(extractOffloadFlagV1(grant.args).args.slice(1), environment).parallelism).toBe(item.localParallelism);
+  expect<unknown>(readRepositoryCargoLaunchV1(extractOffloadFlagV1(grant.args).args.slice(1), environment).parallelism).toBe(item.localParallelism);
   expect(await readCompileUnitsHostV1({environment,probe:testHostProbeV1("quiet-no-swap",true)})).toMatchObject({grantedJobs:null,grantedMegabytes:null});
   await withBuildCapacityV1(grant.args,environment,async nested=>{
    expect(nested.handle?.id).toBe(reservation?.id);
@@ -150,10 +151,10 @@ for(const row of cases.fleetRefusals)test(`fleet headroom does not bypass ${row.
  expect(readdirSync(join(directory,"grants"))).toEqual([]);
 });
 
-test("fleet orchestration reuses a sufficiently funded parent and refuses a smaller parent",async()=>{
+test("fleet orchestration requires a sufficient retained parent grant",async()=>{
  const directory=fresh(),environment=fleetEnvironment(directory),control=controlOf(AbortSignal.timeout(3000)),ports={directory,policy,strip,sample,write:()=>undefined,control};
- for(const memory of [cases.fleetControlMegabytes,cases.fleetControlMegabytes-1]){
-  const request={id:newHostCapacityIdV1(),operation:"command",priority:"batch" as const,minimumJobs:1,preferredJobs:1,fixedMegabytes:memory,minimumMegabytes:memory,perJobMegabytes:0,cpuPerJob:1};
+ for(const row of cases.fleetParentGrants){
+  const request={id:newHostCapacityIdV1(),operation:"command",priority:"batch" as const,minimumJobs:1,preferredJobs:1,fixedMegabytes:row.megabytes,minimumMegabytes:row.megabytes,perJobMegabytes:0,cpuPerJob:1,...row.retained?{retainReservation:true}:{}};
   await withHostCapacityV1({...ports,environment,request},async parent=>{
    const scoped={...environment,...parent.environment};
    const nested=withBuildCapacityV1(pinned,scoped,async active=>{
@@ -163,9 +164,9 @@ test("fleet orchestration reuses a sufficiently funded parent and refuses a smal
     expect(readdirSync(join(directory,"grants")).filter(path=>path.endsWith(".json"))).toEqual([`${parent.id}.json`]);
     return parent.id;
    },ports);
-   if(memory===cases.fleetControlMegabytes)expect(await nested).toBe(parent.id);
+   if(row.admitted)expect(await nested).toBe(parent.id);
    else await expect(nested).rejects.toMatchObject({key:"capacity.cargo-orchestration-grant"});
-   expect(readLiveHostCapacityReservationV1(scoped,policy)?.reservedMegabytes).toBe(memory);
+   expect(readLiveHostCapacityReservationV1(scoped,policy)?.reservedMegabytes).toBe(row.megabytes);
   });
  }
  expect(readdirSync(join(directory,"grants"))).toEqual([]);
@@ -183,7 +184,7 @@ test("fleet orchestration keeps its grant while the cancelled body drains",async
  try{
   await Promise.race([entered,running]);
   controller.abort(reason);
-  expect(readLiveHostCapacityReservationV1(environment,policy)?.reservedMegabytes).toBe(cases.fleetControlMegabytes);
+  expect(readLiveHostCapacityReservationV1(environment,policy)).toMatchObject({reservedMegabytes:cases.fleetControlMegabytes,retainReservation:true});
  }finally{release();}
  await expect(running).rejects.toBe(reason);
  expect(readLiveHostCapacityReservationV1(environment,policy)).toBeUndefined();

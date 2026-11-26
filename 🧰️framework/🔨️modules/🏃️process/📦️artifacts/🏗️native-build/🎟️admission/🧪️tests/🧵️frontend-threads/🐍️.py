@@ -5,9 +5,17 @@ import json, re, sys
 def bounded(args, tokens):
     granted = bool(tokens and tokens > 0)
     tokens = tokens if granted else 1
-    serial = False
-    if "--crate-type=cdylib" in args or any(a == "--crate-type" and i + 1 < len(args) and args[i + 1] == "cdylib" for i, a in enumerate(args)):
-        serial = granted or any(value.startswith("-Z") for value in args)
+    def option(name):
+        for i, arg in enumerate(args):
+            if arg.startswith(name + "="):
+                return arg[len(name) + 1:]
+            if arg == name and i + 1 < len(args):
+                return args[i + 1]
+        return ""
+    bounded_decoder = (option("--crate-name"), option("--target")) == ("semio_plugin_actor_input_decoder", "wasm32-wasip2")
+    single = "cdylib" in option("--crate-type").split(",") or bounded_decoder
+    serial = granted and tokens == 1 or single and (granted or any(value.startswith("-Z") for value in args))
+    if single:
         tokens = 1
     def fix(value):
         return str(tokens) if re.fullmatch(r"[0-9]+", value) and (int(value) == 0 or int(value) > tokens) else value

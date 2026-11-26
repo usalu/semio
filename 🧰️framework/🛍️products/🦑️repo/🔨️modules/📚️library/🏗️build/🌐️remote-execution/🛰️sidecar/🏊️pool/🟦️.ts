@@ -6,13 +6,22 @@ import{acquireOwnerPoolGuardV1}from"../../../🕸️graph/📥️inference/📦�
 import{createOwnerPoolStatusV1}from"../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/📊️status/🟦️.ts";
 import{OWNER_POOL_POLICY_V1 as P,ownerPoolIdleCoresV1,ownerPoolSizingV1,type OwnerPoolHostV1,type OwnerPoolTargetV1}from"../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🟦️.ts";
 import{hostAskClaimV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🙋️asks/🟦️.ts";
+import{retainsHostReservationV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
 import{readRemoteExecutionHostViewV1,remoteExecutionOriginV1,type RemoteExecutionHostViewV1}from"../../🌡️load/🟦️.ts";
 import type{RemoteExecutionSidecarContextV1}from"../🧰️shared/🟦️.ts";
 
-/** 🏠️ What the host capacity gate says in the words of the pool: the machine's cores, memory, pressure, load and swap, and its own work (the grants of the gate, none of which is a pool child): the cores they book, the part of their reservations they have not touched yet (a farmed owner of the fleet, which is the same work the pool does and whose memory is never measured, counts at `farmUnrealizedShareBasisPoints` of it) whether anything waits and how long the oldest request of the machine's own work (not a farm worker) has waited, so the pool can yield to it. The pool children are processes of their own and appear in the load and the available memory, never in the grants. */
+/** 🏠️ Maps the host ledger into core and memory claims for pool sizing. Active retained grants contribute their full unspent commitment. Forecasts use the authored farm share, and work funded inside a retained parent contributes no separate memory claim. */
 export function ownerPoolHostOfV1(view:RemoteExecutionHostViewV1,nowMs:number=Date.now()):OwnerPoolHostV1{
  const claim=hostAskClaimV1(view.asks??[]),host=view.host,active=view.grants.filter(grant=>grant.lentSinceMs===undefined),own=view.waiters.filter(waiter=>waiter.request.label!=="graph-farm"&&waiter.request.priority!=="lent");
- return{cores:Math.max(1,host.cores),totalMegabytes:host.totalMegabytes,availableMegabytes:host.availableMegabytes,pressure:host.pressure as OwnerPoolHostV1["pressure"],load:host.load,swapOutMegabytesPerSecond:host.swapOutMegabytesPerSecond,foreground:{cpu:active.reduce((sum,grant)=>sum+grant.cpu,0),unrealizedMegabytes:Math.floor(active.reduce((sum,grant)=>sum+Math.max(0,grant.reservedMegabytes-(grant.observedMegabytes??0))*(grant.label==="graph-farm"?P.farmUnrealizedShareBasisPoints/10000:1),0)),waiters:view.waiters.length,waitingMegabytes:Math.ceil(view.waiters.reduce((sum,waiter)=>sum+(waiter.request.minimumMegabytes??waiter.request.fixedMegabytes+waiter.request.minimumJobs*waiter.request.perJobMegabytes),0)),oldestWaitMilliseconds:own.length===0?0:Math.max(0,nowMs-Math.min(...own.map(waiter=>waiter.arrivedAtMs))),...(claim===undefined?{}:{ask:claim})}};
+ const retained=new Set(active.filter(retainsHostReservationV1).map(grant=>grant.id));
+ let forecastMegabytes=0,retainedMegabytes=0;
+ for(const grant of active){
+  if(grant.holder!==undefined&&retained.has(grant.holder))continue;
+  const unspent=Math.max(0,grant.reservedMegabytes-(grant.observedMegabytes??0));
+  if(retained.has(grant.id))retainedMegabytes+=unspent;
+  else forecastMegabytes+=unspent*(grant.label==="graph-farm"?P.farmUnrealizedShareBasisPoints/10000:1);
+ }
+ return{cores:Math.max(1,host.cores),totalMegabytes:host.totalMegabytes,availableMegabytes:host.availableMegabytes,pressure:host.pressure as OwnerPoolHostV1["pressure"],load:host.load,swapOutMegabytesPerSecond:host.swapOutMegabytesPerSecond,foreground:{cpu:active.reduce((sum,grant)=>sum+grant.cpu,0),unrealizedMegabytes:Math.floor(forecastMegabytes),...retainedMegabytes>0?{retainedUnrealizedMegabytes:retainedMegabytes}:{},waiters:view.waiters.length,waitingMegabytes:Math.ceil(view.waiters.reduce((sum,waiter)=>sum+(waiter.request.minimumMegabytes??waiter.request.fixedMegabytes+waiter.request.minimumJobs*waiter.request.perJobMegabytes),0)),oldestWaitMilliseconds:own.length===0?0:Math.max(0,nowMs-Math.min(...own.map(waiter=>waiter.arrivedAtMs))),...(claim===undefined?{}:{ask:claim})}};
 }
 
 /** 🏊️ Runs the owner puller of this machine until the signal aborts: one pool process per machine (a pid file; an old process that is still alive is waited for and, when it stays, this one does not pull), at a low priority, with the cache the fleet announces (the explicit overrides of the cache are dropped, as for the graph server), as the supervisor of child processes: it runs as many children (one process, one owner at a time) as the cores and the free memory of the machine allow after its own work (`ownerPoolTargetV1` on the host view of the capacity gate: its grants book cores and untouched reservations, a waiting request keeps a share of the cores free, one child always runs unless the pressure is critical), and a child returns its memory to the system by ending itself when it passed its limit. Joins every wave of the owner pool that another machine publishes. */
@@ -40,6 +49,6 @@ let sampled=cpus();
   void graph.inferGraphReadV1({command:graph.graphServerCommandV1(readEnvironment),cwd:context.root,environment:readEnvironment,reason:"refresh",signal:context.signal,language:"en",directory:steerDirectory,steerDirectory,say:context.write}).catch(()=>undefined);
  }):undefined;
  try{
-  await(runOwnerPoolV1 as (input:Record<string,unknown>)=>Promise<void>)({root:context.root,environment,signal:context.signal,say:context.write,work:context.work,capacity,siblings:guard.sibling===undefined?0:1,status,revision,starved});
+  await runOwnerPoolV1({root:context.root,environment,signal:context.signal,say:context.write,work:context.work,capacity,siblings:guard.sibling===undefined?0:1,status,revision,starved});
  }finally{guard.release();}
 }

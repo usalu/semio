@@ -2,6 +2,11 @@
  "host": {"totalMegabytes": 16384, "availableMegabytes": 7000, "cores": 10},
  "fleetControlMegabytes": 1536,
  "fleetAvailableMegabytes": 3800,
+ "fleetParentGrants": [
+  {"megabytes":1536,"retained":true,"admitted":true},
+  {"megabytes":1536,"retained":false,"admitted":false},
+  {"megabytes":1535,"retained":true,"admitted":false}
+ ],
  "fleetRefusals": [
   {"name":"critical pressure","pressure":"critical","availableMegabytes":7000,"swapOutMegabytesPerSecond":0},
   {"name":"active swap","pressure":"normal","availableMegabytes":7000,"swapOutMegabytesPerSecond":10000},

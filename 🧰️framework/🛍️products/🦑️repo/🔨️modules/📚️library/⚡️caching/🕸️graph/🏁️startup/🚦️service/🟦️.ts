@@ -129,7 +129,7 @@ export function withNxDaemonServiceBirthV1<T>(original:ScriptInvocation,phaseCon
    const compiler = process.platform === "linux" ? toolForCommandV1("cc") : undefined, registered = compiler ? resolveRegisteredToolV1(compiler, root, { env: environment }) : undefined;
    const startup = registered ? nodeNativeLinkerEnvironmentV1(environment, { ...registered, suffix: registered.suffix ?? [] }) : environment;
    checkResourceLeaseControl(usePhase);const watchEnvironment={...environment,SEMIO_TOOL_REPO_WATCH:undefined},expected=join(repositoryCachePartitionRootV1(root,"tools"),"repo-watch",workspaceWatchPin.sources[0]!.sha256.slice(0,16),process.platform==="win32"?"semio-repo-watch.exe":"semio-repo-watch");
-   const watchTool=toolForCommandV1("semio-repo-watch");if(!watchTool)throw Error("Registered workspace watcher required");const watchBinary=resolveRegisteredToolV1(watchTool,root,{env:watchEnvironment});checkResourceLeaseControl(usePhase);if(resolve(watchBinary.command)!==expected)throw Error("Exact original workspace watcher tool required");
+   const watchTool=toolForCommandV1("semio-repo-watch");if(!watchTool)throw Error("Registered workspace watcher required");const watchBinary=resolveRegisteredToolV1(watchTool,root,{env:watchEnvironment});checkResourceLeaseControl(usePhase);if(watchBinary.command===null||resolve(watchBinary.command)!==expected)throw Error("Exact original workspace watcher tool required");
    return body(Object.freeze({...startup,...namespace.environment,[NX_DAEMON_SERVICE_BIRTH_ENV_V1]:JSON.stringify({birth,witness})}),usePhase);
   });
  }));

@@ -1,4 +1,4 @@
-import {lstatSync,readFileSync,readdirSync,rmSync,rmdirSync} from "node:fs";
+import {lstatSync,type Stats,readFileSync,readdirSync,rmSync,rmdirSync} from "node:fs";
 import {join} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
@@ -49,7 +49,7 @@ export function temporariesHoldersV1(live:string,alive:(holder:Readonly<{pid:num
 }
 
 const turn=()=>new Promise<void>(done=>setImmediate(done));
-const allocated=(info:ReturnType<typeof lstatSync>):number=>Math.round((info.blocks??Math.ceil(info.size/512))*512/Math.max(1,info.nlink));
+const allocated=(info:Stats):number=>Math.round((info.blocks??Math.ceil(info.size/512))*512/Math.max(1,info.nlink));
 
 /** 🔭️ Reads every lane's holders and temporary files below a cache root, read-only, yielding between bounded batches of entries. */
 export async function measureTemporariesV1(root:string,options:CargoGcControlV1&Readonly<{alive?:(holder:Readonly<{pid:number;startMs:number}>)=>boolean}>={}):Promise<TemporariesLaneV1[]>{

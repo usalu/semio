@@ -1,4 +1,4 @@
-/** 📉️ Contract: a request that can run smaller than it asks is admitted with what the machine can give instead of waiting for memory that a 16 GB host never has; a request that can never fit is refused at once and one that is starved (nothing of ours runs, not even its minimum is free) after the override time, both with the numbers and what to do in English and German; a request without a minimum still waits as before; a request that fits is admitted in full as soon as free memory minus the floor equals it.
+/** 📉️ Contract: a request that can run smaller than it asks is admitted with what the machine can give instead of waiting for memory that a 16 GB host never has; a request that can never fit is refused at once and one without a minimum that needs more than the host can ever give is refused as starved after the starvation time, both with the numbers and what to do in English and German; a request that fits the host but finds nothing free keeps waiting with progress lines until it is cancelled; a request without a minimum still waits as before; a request that fits is admitted in full as soon as free memory minus the floor equals it.
  * @see ./🐍️oracle/🐍️.py */
 import {afterAll,expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
@@ -25,17 +25,18 @@ const cases=[
  {total:16384,available:12000,fixed:6627,minimum:2048,waited:0},{total:16384,available:3000,fixed:6627,minimum:2048,waited:0},{total:16384,available:3000,fixed:6627,minimum:2048,waited:200000},
  {total:4096,available:3000,fixed:6627,minimum:3072,waited:0},{total:16384,available:8675,fixed:6627,minimum:2048,waited:0},{total:16384,available:8674,fixed:6627,minimum:2048,waited:0},
  {total:16384,available:7830,fixed:6627,waited:0},{total:32768,available:30000,fixed:8192,minimum:2048,waited:0},{total:8192,available:5000,fixed:4096,minimum:2048,waited:0},{total:8192,available:2500,fixed:4096,minimum:2048,waited:0},
+ {total:4096,available:3000,fixed:6627,waited:200000},{total:4096,available:3000,fixed:6627,waited:2000000},{total:16384,available:3000,fixed:6627,waited:2000000},
 ];
 const oracle=()=>{
- const run=spawnSync("python3",["-I",fileURLToPath(new URL("./🐍️oracle/🐍️.py",import.meta.url))],{input:JSON.stringify({policy:{...policy.memory,overrideAfterMilliseconds:policy.load.overrideAfterMilliseconds},cases}),encoding:"utf8"});
+ const run=spawnSync("python3",["-I",fileURLToPath(new URL("./🐍️oracle/🐍️.py",import.meta.url))],{input:JSON.stringify({policy:{...policy.memory,starvedMilliseconds:policy.wait.starvedMilliseconds},cases}),encoding:"utf8"});
  expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout) as [string,number,string][];
 };
 
 test("the decision equals an independent Python oracle on 16 GB, 8 GB, 4 GB and 32 GB hosts, and grants as soon as free memory above the floor equals the request",()=>{
  const expected=oracle();
- cases.forEach((item,index)=>expect(decide(item.total,item.available,item.fixed,item.minimum,item.waited),JSON.stringify(item)).toEqual(expected[index]!));
+ cases.forEach((item,index)=>expect<unknown>(decide(item.total,item.available,item.fixed,item.minimum,item.waited),JSON.stringify(item)).toEqual(expected[index]!));
  expect(expected[0]).toEqual(["admit",5782,"shrunk"]);expect(expected[7]).toEqual(["admit",6627,"fits"]);expect(expected[8]).toEqual(["admit",6626,"shrunk"]);
- expect(expected[6]).toEqual(["wait",0,"never"]);expect(expected[5]).toEqual(["wait",0,"starved"]);expect(expected[9]).toEqual(["wait",0,"memory"]);
+ expect(expected[6]).toEqual(["wait",0,"never"]);expect(expected[5]).toEqual(["wait",0,"memory"]);expect(expected[9]).toEqual(["wait",0,"memory"]);expect(expected[13]).toEqual(["wait",0,"memory"]);expect(expected[14]).toEqual(["wait",0,"starved"]);expect(expected[15]).toEqual(["wait",0,"memory"]);
 });
 
 const control=()=>({signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined});
@@ -55,11 +56,18 @@ test("a request whose minimum can never fit is refused at once in English and Ge
  expect(english).toContain("fleet cache");expect(english).toContain("more memory");expect(german).toContain("Speicher");expect(german).toContain("Flottencache");
 },60000);
 
-test("a request that nothing of ours can free memory for is refused after the override time with the free numbers and what to close, in both languages",async()=>{
- const started=Date.now(),english=await gate(fresh(),request(6627,2048),host(16384,3000),[]).then(()=>"",error=>String(error.message)),german=await gate(fresh(),request(6627,2048),host(16384,3000),[],"de_DE.UTF-8").then(()=>"",error=>String(error.message));
- expect(Date.now()-started).toBeGreaterThanOrEqual(200);expect(Date.now()-started).toBeLessThan(5000);
- for(const text of [english,german]){expect(text).toContain("2048");expect(text).toContain("952");expect(text).toContain("2048");expect(text).toContain("16384");}
- expect(english).toContain("repo service host stop");expect(german).toContain("Anwendungen schließen");
+test("a request that fits this host but finds nothing free waits on past the override time with the free numbers, in both languages, until it is cancelled, and is never refused as starved",async()=>{
+ const waitedOn=async(language:string)=>{
+  const lines:string[]=[],abort=new AbortController(),origin=Date.now();let clock=origin;
+  const outcome=await withHostCapacityV1({directory:fresh(),policy:fast,request:request(6627,2048),control:{...control(),signal:abort.signal},environment:{LANG:language,LC_ALL:language},now:()=>clock,write:line=>{lines.push(line);},sample:async()=>{clock+=1000;if(clock-origin>=5*fast.load.overrideAfterMilliseconds)abort.abort();return{host:{...host(16384,3000),atMs:clock},swappedOutMegabytes:0};}},async handle=>handle.reservedMegabytes).then(()=>"granted",error=>abort.signal.aborted&&String(error?.name??error).length>0?"cancelled":String(error.message));
+  return{outcome,lines};
+ };
+ for(const language of ["en_US.UTF-8","de_DE.UTF-8"]){
+  const{outcome,lines}=await waitedOn(language),text=lines.join("\n");
+  expect(outcome,text).toBe("cancelled");
+  expect(lines.some(line=>line.includes("6627")&&line.includes("952")&&line.includes("2048")),text).toBe(true);
+  expect(text).not.toContain("repo service host stop");
+ }
 },60000);
 
 test("the plan reservation of the graph step carries the minimum and answers the megabytes it was granted",async()=>{

@@ -1,7 +1,7 @@
 /** 🔎️ Contract: a question whose answer is determined by one project reads that project's closure alone (a selected read with scope {project}), while a question about every project stays a whole read that is answered from the sealed generation under the policy current; the runtime command takes both from the selection function, not from a literal. */
 import {expect,test} from "bun:test";
 import fixture from "../🔣️.json" with {type:"json"};
-import runtimeSource from "../../../../⌨️command/⚙️runtime/🟦️.ts" with {type:"text"};
+const runtimeSource=await Bun.file(new URL("../../../../⌨️command/⚙️runtime/🟦️.ts",import.meta.url)).text();
 import {buildInvocationGraphSelectionV1,buildGraphScopeKeyV1,readBuildOwnerRegistryV1} from "../../🟦️.ts";
 
 test("show project <p> plans a selected read with scope {p}, the same scope as exec --projects=<p>",()=>{
@@ -9,7 +9,7 @@ test("show project <p> plans a selected read with scope {p}, the same scope as e
  for(const name of ["app","registry","@semio-tech/repo-mcp"]){
   const selection=buildInvocationGraphSelectionV1(["show","project",name]);
   expect(selection).toEqual({kind:"owners",projects:[name],exclude:[]});
-  expect(buildGraphScopeKeyV1(selection,registry)).toBe(buildGraphScopeKeyV1(buildInvocationGraphSelectionV1(["exec","--projects="+name,"--","true"]),registry));
+  expect(buildGraphScopeKeyV1(selection)).toBe(buildGraphScopeKeyV1(buildInvocationGraphSelectionV1(["exec","--projects="+name,"--","true"])));
  }
 });
 

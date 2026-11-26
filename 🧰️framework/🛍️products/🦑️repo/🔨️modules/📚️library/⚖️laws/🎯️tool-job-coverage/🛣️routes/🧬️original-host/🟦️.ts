@@ -49,7 +49,10 @@ export function toolJobOriginalReservedHostEvidence(raw:string):Record<string,bo
   workerBudget:worker.includes("letgrant=cx.retained_grant()")
    &&worker.includes("cx.fuel_remaining().min(contract.max_work_units_per_step)")
    &&worker.includes("u64::from(contract.max_step_micros)")
-   &&worker.includes("cx.with_retained_loan(grant,|loaned|loaned.with_original_work_loan(step_fuel,step_deadline_us,|same|session.pump_one_for_interactive_turn(same)))"),
+   &&worker.includes("letproducer=RetainedCloneGrant{maximum_items:cx.retained_grant().maximum_items,..grant}")
+   &&worker.includes("cx.with_retained_loan(producer,|loaned|loaned.with_original_work_loan(step_fuel,step_deadline_us,|same|session.pump_one_for_interactive_turn(same)))")
+   &&worker.includes("!progress.fits(issued)||!progress.fits(producer)")
+   &&["items","copy_bytes","capacity_bytes","release_bytes","depth"].every(axis=>worker.includes(`issued.maximum_${axis}>producer.maximum_${axis}`)),
   pendingCustody:worker.includes("rejected.admit_pending(config,&mutself.session,cx)")&&worker.includes("rejected.close_step(cx)"),
   outcomeAck:worker.includes("session.acknowledge_checked_out_outcome(cx)?{self.worker_outcome_pending=false;self.worker_resume_pending=true;}")&&worker.includes("session.resume()"),
   terminalClose:worker.includes("session.close_step(cx)")&&worker.includes("progress.fits(grant)&&session.terminal_is_empty()"),

@@ -473,7 +473,7 @@ fn subspace_job_resume_and_scheduling_are_deterministic() {
         }
     };
 
-    let mut interrupted = SubspaceIterationJob::new(operation, factor, mass, n, 4, 30);
+    let mut interrupted = SubspaceIterationJob::new(operation, factor, mass, n, 4, 30).with_publication_floor(1);
     let checkpoint = loop {
         match step_job(&mut original, &mut interrupted, 1, u64::MAX) {
             Seen::Checkpoint(pages) => break pages,
@@ -559,7 +559,7 @@ mod long {
             original.close(&mut refused);
         }
 
-        let mut publishing = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 1);
+        let mut publishing = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 1).with_publication_floor(1);
         for _ in 0..200_000 {
             let _ = step_job(&mut original, &mut publishing, 1, u64::MAX);
             if publishing.preview_writer.is_some() {
@@ -578,6 +578,7 @@ mod long {
             }
             seen.insert(job.state.work.stage as u8);
             job.state.checkpoint_due = true;
+            job.state.pace = Default::default();
             let checkpoint = next_checkpoint(&mut original, &mut job);
             let mut cancelled = restore_pages(&mut original, operation, &checkpoint).expect("stage retained checkpoint");
             let before = cancelled.state.clone();

@@ -147,6 +147,17 @@ fn validate_native_openable_projection(receipts: &[NativeCodecFactoryReceipt], f
 
 pub const NATIVE_ARTIFACT_CATALOG_TOPIC: &str = "stdio.artifact-catalog.v1";
 
+/// 🏠️ The catalog topic one runtime host publishes for the artifacts whose complete runtime it hosts.
+pub fn hosted_artifact_catalog_topic(host_plugin_id: &str) -> String {
+    format!("stdio.artifact-catalog.{host_plugin_id}")
+}
+
+/// 🪪️ The plugin and component package one catalog commitment is published under.
+pub struct CatalogIdentity<'a> {
+    pub plugin_id: &'a str,
+    pub package_id: &'a str,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, value_derive::FromValue, value_derive::ToValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct NativeArtifactCatalogV1 {
@@ -265,13 +276,13 @@ impl ProjectionDefinition<'_> {
     }
 }
 
-fn preflight_native_catalog_projection(definitions: &[ProjectionDefinition<'_>], codecs: &[NativeCatalogCodecV1]) -> Result<NativeCatalogProjectionBudget, PluginAssemblyError> {
+fn preflight_native_catalog_projection(identity: &CatalogIdentity<'_>, definitions: &[ProjectionDefinition<'_>], codecs: &[NativeCatalogCodecV1]) -> Result<NativeCatalogProjectionBudget, PluginAssemblyError> {
     if definitions.is_empty() || definitions.len() > 4096 || codecs.len() > 4096 {
         return Err(failure("native catalog projection exceeds its bounds"));
     }
     let mut budget = NativeCatalogProjectionBudget::new();
     budget.object(&["schema", "pluginId", "packageId", "packageVersion", "definitions", "codecs"])?;
-    for value in ["semio.stdio.artifact-catalog/v1", "stdio", component_package_id()?, env!("CARGO_PKG_VERSION")] {
+    for value in ["semio.stdio.artifact-catalog/v1", identity.plugin_id, identity.package_id, env!("CARGO_PKG_VERSION")] {
         budget.string(&[value], 16384)?;
     }
     budget.array(definitions.len())?;
@@ -326,8 +337,8 @@ fn preflight_native_catalog_projection(definitions: &[ProjectionDefinition<'_>],
 #[path = "../🧪️tests/🔬️catalog-projection-budget/🦀️.rs"]
 mod catalog_projection_budget_tests;
 
-fn native_artifact_catalog(projected: &[ProjectionDefinition<'_>], mut codecs: Vec<NativeCatalogCodecV1>) -> Result<NativeArtifactCatalogV1, PluginAssemblyError> {
-    preflight_native_catalog_projection(projected, &codecs)?;
+fn native_artifact_catalog(identity: &CatalogIdentity<'_>, projected: &[ProjectionDefinition<'_>], mut codecs: Vec<NativeCatalogCodecV1>) -> Result<NativeArtifactCatalogV1, PluginAssemblyError> {
+    preflight_native_catalog_projection(identity, projected, &codecs)?;
     let mut definitions = Vec::with_capacity(projected.len());
     for owner in projected {
         let definition = owner.definition;
@@ -347,7 +358,7 @@ fn native_artifact_catalog(projected: &[ProjectionDefinition<'_>], mut codecs: V
         return Err(failure("native catalog definition and codec ownership is incomplete"));
     }
     codecs.sort_by(|left, right| left.factory_id.cmp(&right.factory_id));
-    Ok(NativeArtifactCatalogV1 { schema: "semio.stdio.artifact-catalog/v1".into(), plugin_id: "stdio".into(), package_id: component_package_id()?.into(), package_version: env!("CARGO_PKG_VERSION").into(), definitions, codecs })
+    Ok(NativeArtifactCatalogV1 { schema: "semio.stdio.artifact-catalog/v1".into(), plugin_id: identity.plugin_id.into(), package_id: identity.package_id.into(), package_version: env!("CARGO_PKG_VERSION").into(), definitions, codecs })
 }
 
 /// 🧩 Commits the exact authored selection and verifies its native receipt closure.
@@ -359,7 +370,11 @@ pub fn artifact_catalog_contribution_for(registry: &ContributionRegistry, assemb
     }
     let receipts = native_codec_factory_receipts_for(registry, assemblies)?;
     let factories = registry.native_codec_factories();
-    let definitions = assemblies.iter().map(|assembly| ProjectionDefinition { definition: assembly.definition(), authored_executables: None }).collect::<Vec<_>>();
+    let authored = assemblies.iter().map(|assembly| match registry.runtime_host_of(assembly.definition().identity().as_str().trim_start_matches("s.stdio.")) {
+        Some(_) => registry.contributions().iter().find(|contribution| format!("s.stdio.{}", contribution.identity) == assembly.definition().identity().as_str()).map(|contribution| catalog_definition_from_schema(contribution.schema).map(|authored| authored.executable_ids)).transpose(),
+        None => Ok(None),
+    }).collect::<Result<Vec<_>, _>>()?;
+    let definitions = assemblies.iter().zip(&authored).map(|(assembly, authored)| ProjectionDefinition { definition: assembly.definition(), authored_executables: authored.as_ref() }).collect::<Vec<_>>();
     let codecs = receipts.into_iter().map(|receipt| {
         let factory = factories.iter().find(|factory| factory.id == receipt.factory_id).ok_or_else(|| failure("native catalog codec has no private artifact owner"))?;
         Ok(NativeCatalogCodecV1 {
@@ -373,7 +388,14 @@ pub fn artifact_catalog_contribution_for(registry: &ContributionRegistry, assemb
             pack_schema_hash: catalog_hex(&receipt.pack_schema_hash),
         })
     }).collect::<Result<_, PluginAssemblyError>>()?;
-    catalog_contribution(native_artifact_catalog(&definitions, codecs)?)
+    catalog_contribution(NATIVE_ARTIFACT_CATALOG_TOPIC, native_artifact_catalog(&CatalogIdentity { plugin_id: "stdio", package_id: component_package_id()? }, &definitions, codecs)?)
+}
+
+/// 🏠️ Commits the runtime catalog of the artifacts one host plugin runs while the catalog owner assembles only their definitions.
+pub fn hosted_artifact_catalog_contribution_for(host_plugin_id: &str, host_package_id: &str, hosted: &[semio_s_artifact_stdio_contract_assembly::ArtifactContribution]) -> Result<semio_framework::TopicContribution, PluginAssemblyError> {
+    let authored = hosted.iter().map(|contribution| catalog_definition_from_schema(contribution.schema)).collect::<Result<Vec<_>, _>>()?;
+    let definitions = authored.iter().map(|authored| ProjectionDefinition { definition: &authored.definition, authored_executables: Some(&authored.executable_ids) }).collect::<Vec<_>>();
+    catalog_contribution(&hosted_artifact_catalog_topic(host_plugin_id), native_artifact_catalog(&CatalogIdentity { plugin_id: host_plugin_id, package_id: host_package_id }, &definitions, Vec::new())?)
 }
 
 /// 📜 Projects the composition's bounded schema bundle and verifies its authored native codec receipts.
@@ -434,15 +456,15 @@ fn catalog_from_schema_bundle(bundle: NativeCatalogBundleV1) -> Result<semio_fra
         return Err(failure("native codec receipt projection includes an unselected or repeated factory"));
     }
     let definitions = definitions.iter().map(|authored| ProjectionDefinition { definition: &authored.definition, authored_executables: Some(&authored.executable_ids) }).collect::<Vec<_>>();
-    catalog_contribution(native_artifact_catalog(&definitions, codecs)?)
+    catalog_contribution(NATIVE_ARTIFACT_CATALOG_TOPIC, native_artifact_catalog(&CatalogIdentity { plugin_id: "stdio", package_id: component_package_id()? }, &definitions, codecs)?)
 }
 
-fn catalog_contribution(catalog: NativeArtifactCatalogV1) -> Result<semio_framework::TopicContribution, PluginAssemblyError> {
+fn catalog_contribution(topic: &str, catalog: NativeArtifactCatalogV1) -> Result<semio_framework::TopicContribution, PluginAssemblyError> {
     let payload = semio_framework_value::ToValue::to_value(&catalog);
     if semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&payload)).len() > 2 * 1024 * 1024 {
         return Err(failure("native catalog semantic commitment exceeds 2 MiB"));
     }
-    Ok(semio_framework::TopicContribution::new(NATIVE_ARTIFACT_CATALOG_TOPIC, payload))
+    Ok(semio_framework::TopicContribution::new(topic, payload))
 }
 
 /// 🔗️ Binds consumers to the exact version of their statically linked Stdio catalog.

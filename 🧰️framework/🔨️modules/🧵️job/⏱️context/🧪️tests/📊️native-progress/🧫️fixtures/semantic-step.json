@@ -1,0 +1,12 @@
+{
+  "physicalFuel": 20,
+  "stepFuel": 12,
+  "completed": 8,
+  "limit": 9,
+  "nestedFuel": 7,
+  "physicalSpend": 3,
+  "laterCompleted": 11,
+  "earlierCompleted": 4,
+  "narrowerLimit": 5,
+  "physicalFuelAfter": 17
+}

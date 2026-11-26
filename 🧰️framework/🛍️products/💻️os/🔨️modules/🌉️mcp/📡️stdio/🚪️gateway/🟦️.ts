@@ -54,7 +54,7 @@ const REFRESH: Readonly<{ failedPrefix: string; droppedFrame: string; replacedEx
 
 const SUPERVISION: Readonly<{ maximumRestarts: number; windowMilliseconds: number; restartingPrefix: string; exhaustedPrefix: string; recoveredLine: string; message: string; cause: string; summary: { en: string; de: string } }> = policy.definitions.Supervision.const;
 
-const MODELS: Readonly<{ preparingPrefix: string; readyPrefix: string; unchangedPrefix: string; failedPrefix: string }> = policy.definitions.Models.const;
+const MODELS: Readonly<{ preparingPrefix: string; readyPrefix: string; unchangedPrefix: string; failedPrefix: string; failedCause: string; maximumReasonCharacters: number; failedSummary: { en: string; de: string } }> = policy.definitions.Models.const;
 
 const HANDSHAKE: Readonly<{ candidateMilliseconds: number }> = policy.definitions.Handshake.const;
 
@@ -77,6 +77,7 @@ export class WarmMcpGateway {
   private restarting = false;
   private restarts: number[] = [];
   private readonly models = new Set<string>();
+  private readonly failures = new Map<string, string>();
   private modelQueue: Promise<void> = Promise.resolve();
   private readonly stopping = new AbortController();
   private closed = false;
@@ -187,8 +188,9 @@ export class WarmMcpGateway {
       if (!isResponse(frame)) return this.relayInitiated(child, frame);
       if (typeof frame.id === "string" && frame.id.startsWith(REPLAY_PREFIX)) return;
       child.pending.delete(frame.id);
-      this.ports.toClient(frame);
-      return this.noteMissingModel(frame);
+      const missing = readMissingMcpModelV1(frame);
+      this.ports.toClient(missing === undefined ? frame : this.truthful(frame, missing));
+      return missing === undefined ? undefined : this.noteMissingModel(missing);
     }
     if (this.state !== "handshaking" || frame.id !== WARM_MCP_HANDSHAKE_ID) return this.ports.log(`[semio-os-mcp] dropped a frame received before the handshake finished`);
     if (frame.error !== undefined) return this.fail(`the server refused the handshake: ${JSON.stringify(frame.error)}`);
@@ -304,9 +306,25 @@ export class WarmMcpGateway {
     return { jsonrpc: "2.0", id: WARM_MCP_HANDSHAKE_ID, method: "initialize", params: this.initialize!.params };
   }
 
-  private noteMissingModel(frame: WarmMcpFrame): void {
-    const missing = readMissingMcpModelV1(frame);
-    if (missing === undefined || this.ports.prepareModel === undefined || this.closed || this.models.has(missing.pluginId)) return;
+  /** 🩺 Replaces the promise that the launcher is preparing a model by the failure of its last build, so a client never waits for a build that already failed. */
+  private truthful(frame: WarmMcpFrame, missing: MissingMcpModelV1): WarmMcpFrame {
+    const failure = this.failures.get(missing.pluginId);
+    if (failure === undefined) return frame;
+    const reason = failure.length > MODELS.maximumReasonCharacters ? `${failure.slice(0, MODELS.maximumReasonCharacters)}...` : failure;
+    const fill = (text: string): string => text.replaceAll("{pluginId}", missing.pluginId).replaceAll("{reason}", () => reason);
+    const summary = { en: fill(MODELS.failedSummary.en), de: fill(MODELS.failedSummary.de) };
+    const amend = (details: object): object => ({ ...details, cause: MODELS.failedCause, summary, reason });
+    const result = frame.result as { isError?: unknown; content?: { text?: unknown }[]; structuredContent?: { code?: string; details?: object } } | undefined;
+    if (result?.isError === true) {
+      const prefixed = typeof result.content?.[0]?.text === "string" && result.content[0].text.startsWith(`${result.structuredContent?.code}: `);
+      return { ...frame, result: { ...result, content: [{ type: "text", text: prefixed ? `${result.structuredContent!.code}: ${summary.en}` : summary.en }], structuredContent: { ...result.structuredContent, message: summary.en, details: amend(result.structuredContent?.details ?? {}) } } };
+    }
+    const error = frame.error as { data?: { details?: object } };
+    return { ...frame, error: { ...error, message: summary.en, data: { ...error.data, details: amend(error.data?.details ?? {}) } } };
+  }
+
+  private noteMissingModel(missing: MissingMcpModelV1): void {
+    if (this.ports.prepareModel === undefined || this.closed || this.models.has(missing.pluginId)) return;
     const build = this.ports.prepareModel;
     this.models.add(missing.pluginId);
     this.modelQueue = this.modelQueue.then(async () => {
@@ -317,9 +335,11 @@ export class WarmMcpGateway {
         changed = await build(missing, this.stopping.signal);
       } catch (error) {
         this.models.delete(missing.pluginId);
+        this.failures.set(missing.pluginId, error instanceof Error ? error.message : String(error));
         if (!this.closed) this.ports.log(`${MODELS.failedPrefix} ${missing.pluginId}: ${error instanceof Error ? error.message : String(error)}`);
         return;
       }
+      this.failures.delete(missing.pluginId);
       if (this.closed) return;
       this.ports.log(`${changed ? MODELS.readyPrefix : MODELS.unchangedPrefix} ${missing.pluginId}`);
       if (changed) this.swap(true);

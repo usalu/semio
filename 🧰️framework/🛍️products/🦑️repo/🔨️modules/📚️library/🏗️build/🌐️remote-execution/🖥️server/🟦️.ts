@@ -4,7 +4,7 @@ import {decodeProtobufV1,encodeProtobufV1,REAPI_V1,type ProtobufMessageV1} from 
 import {GRPC_CODES_V1,GrpcErrorV1,startGrpcServerV1,type GrpcCallEventV1,type GrpcServerV1} from "../📡️wire/🚪️grpc/🟦️.ts";
 import {RemoteExecutionContentErrorV1,type RemoteExecutionContentV1} from "../🗄️content/🟦️.ts";
 import {RemoteExecutionSchedulerV1,type RemoteExecutionSchedulerEventV1,type RemoteExecutionSchedulerOptionsV1,type RemoteExecutionSnapshotV1} from "../🗓️scheduler/🟦️.ts";
-import {remoteExecutionDigestV1,requireRemoteExecutionShapeV1,type RemoteExecutionDigestV1} from "../🟦️.ts";
+import {remoteExecutionDigestV1,requireRemoteExecutionShapeV1,type RemoteExecutionDigestV1,type RemoteExecutionWorkerRegistrationV1} from "../🟦️.ts";
 import {runtimeServeV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌍️serve/🟦️.ts";
 import {FLEET_CONTENT_HEADER_V1} from "../../🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
 import {createFleetGateV1,type FleetAccessV1,type FleetGateV1} from "../../🌐️remote-cache/🛰️fleet/🪪️identity/🛂️gate/🟦️.ts";
@@ -203,7 +203,7 @@ export async function startRemoteExecutionServerV1(options:RemoteExecutionServer
  const cacheUrl=options.cacheUrl;
  let workerUrl="";
  const scheduler=new RemoteExecutionSchedulerV1({...options.scheduler,content:options.content,cache:options.scheduler.cache??(cacheUrl?{url:cacheUrl,relative:LOOPBACK.has(new URL(cacheUrl).hostname)||WILDCARD.has(new URL(cacheUrl).hostname)}:{url:"",relative:false}),language:options.scheduler.language??"none",...(options.onEvent?{onEvent:options.onEvent}:{})});
- const authorize=async(call:{method:string;metadata:Readonly<Record<string,string>>;peer:string}):Promise<void|Readonly<{principal:string}>>=>{
+ const authorize=async(call:{method:string;metadata:Readonly<Record<string,string>>;peer:string}):Promise<void|Readonly<{principal:string;content?:string}>>=>{
   if(!gate.network(call.peer))throw new GrpcErrorV1(GRPC_CODES_V1.PERMISSION_DENIED,"Forbidden");
   const verdict=await gate.check({method:"POST",target:"/"+call.method,authorization:call.metadata.authorization,content:call.metadata[FLEET_CONTENT_HEADER_V1],peer:call.peer,roles:["submit","admin"],tokens:READ_ONLY.has(call.method)?["read","write"]:["write"],...(READ_ONLY.has(call.method)?{}:{refused:["read"]})});
   if(!verdict.ok)throw new GrpcErrorV1(verdict.status===403?GRPC_CODES_V1.PERMISSION_DENIED:GRPC_CODES_V1.UNAUTHENTICATED,verdict.status===403?"Forbidden":"Unauthorized");
@@ -239,7 +239,18 @@ export async function startRemoteExecutionServerV1(options:RemoteExecutionServer
    try{
     if(path==="/healthz")return Response.json({status:"ok"});
     if(path==="/status"&&method==="GET"){const guard=await allowed(request,peer,"status");return "denied" in guard?guard.denied:Response.json(await status());}
-    if(path==="/v1/fleet/idle"&&method==="GET"){const guard=await allowed(request,peer,"status");if("denied" in guard)return guard.denied;const origin=new URL(request.url).searchParams.get("origin");const peak=Number(new URL(request.url).searchParams.get("peak")??0);return origin===null||origin===""?new Response("origin required\n",{status:400}):Response.json(scheduler.idleFor(origin,Number.isFinite(peak)&&peak>0?Math.min(Math.ceil(peak),1048576):0));}
+    if(path==="/v1/fleet/idle"&&method==="GET"){
+     const guard=await allowed(request,peer,"status");if("denied" in guard)return guard.denied;
+     const search=new URL(request.url).searchParams,origin=search.get("origin"),peak=Number(search.get("peak")??0);
+     if(!origin)return new Response("origin required\n",{status:400});
+     const amount=Number.isFinite(peak)&&peak>0?Math.min(Math.ceil(peak),1048576):0,target=search.get("target"),linker=search.get("linker");
+     if(target===null&&linker===null)return Response.json(scheduler.idleFor(origin,amount));
+     if(amount===0||target===null||linker===null)return new Response("linked idle requires a positive peak, target and linker\n",{status:400});
+     const link={target,linker};
+     try{requireRemoteExecutionShapeV1("LinkedFinal",link,"Closed linked final required");}
+     catch{return new Response("invalid linked final\n",{status:400});}
+     return Response.json({...scheduler.idleFor(origin,amount,link),link});
+    }
     const cancelling=/^\/v1\/operations\/([A-Za-z0-9-]{1,64})\/cancel$/u.exec(path);
     if(cancelling&&method==="POST"){const guard=await allowed(request,peer,"operator");return "denied" in guard?guard.denied:Response.json({cancelled:scheduler.abort(cancelling[1]!)});}
     if(path==="/v1/fleet/load"&&method==="GET"){const guard=await allowed(request,peer,"status");if("denied" in guard)return guard.denied;const document=scheduler.fleetLoad();requireRemoteExecutionShapeV1("FleetLoad",document,"Closed fleet load required");return Response.json(document);}
@@ -262,7 +273,7 @@ export async function startRemoteExecutionServerV1(options:RemoteExecutionServer
      const live=new Set(scheduler.status().workers.map(row=>String(row.id)));
      for(const known of[...owners.keys()])if(!live.has(known))owners.delete(known);
      if(owners.size>=maximumWorkers)return text(503,"Too many workers");
-     const registered=scheduler.register(body);
+     const registered=scheduler.register(body as RemoteExecutionWorkerRegistrationV1);
      if(access!==undefined&&access.role!=="static")owners.set(registered.id,access.origin);
      return Response.json(registered);
     }

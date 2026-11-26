@@ -1,0 +1,14 @@
+{
+  "action": "exportModel",
+  "arguments": { "format": "gbxml" },
+  "requiredMimeType": "application/xml",
+  "requiredExtension": ".gbxml",
+  "outputPageBytes": 4096,
+  "maximumOutputBytes": 33554432,
+  "canonicalFiles": ["🏠️box", "🏘️zoning", "🧱️stack", "🏠️house"],
+  "scenarios": [
+    { "name": "exactCommittedRevision", "revisionByte": 7, "cancelAfterWritingTurns": null, "result": "download" },
+    { "name": "cancelDuringWriting", "revisionByte": 7, "cancelAfterWritingTurns": 3, "result": "canceled" },
+    { "name": "differentCommittedRevision", "revisionByte": 8, "cancelAfterWritingTurns": null, "result": "unsupportedOwner" }
+  ]
+}

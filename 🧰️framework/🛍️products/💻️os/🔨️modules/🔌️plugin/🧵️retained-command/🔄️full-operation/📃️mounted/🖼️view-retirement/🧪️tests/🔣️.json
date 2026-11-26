@@ -1,0 +1,13 @@
+{
+  "view": {
+    "activeModeId": "edit",
+    "activeToolId": "select",
+    "locale": "en",
+    "terminology": "native",
+    "sessionIdentity": { "userId": "author", "displayName": "Author" },
+    "treeWindows": [{ "bodyKey": "selection", "nodeKey": "selected", "offset": 0, "rows": 2 }],
+    "windowId": "perspective",
+    "windowInstances": [{ "id": "perspective", "windowKindId": "viewport" }]
+  },
+  "expected": { "items": 1, "allocationBytes": 0, "work": 20 }
+}

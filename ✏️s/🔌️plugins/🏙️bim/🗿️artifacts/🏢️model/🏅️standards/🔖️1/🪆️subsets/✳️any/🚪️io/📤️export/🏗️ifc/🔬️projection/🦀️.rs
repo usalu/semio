@@ -9,11 +9,11 @@ use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Pa
 use std::collections::BTreeMap;
 
 /// 📊️ The classes whose instances are counted (CamelCase as IfcOpenShell names them).
-pub const COUNTED: [&str; 62] = [
+pub const COUNTED: [&str; 63] = [
     "IfcProject", "IfcSite", "IfcBuilding", "IfcBuildingStorey", "IfcWallStandardCase", "IfcWall", "IfcOpeningElement", "IfcWindow", "IfcDoor", "IfcSlab", "IfcRoof", "IfcColumn", "IfcBeam", "IfcStair", "IfcStairFlight", "IfcRailing", "IfcCurtainWall", "IfcMember", "IfcPlate", "IfcSpace", "IfcGrid",
     "IfcRelVoidsElement", "IfcRelFillsElement", "IfcRelAggregates", "IfcRelContainedInSpatialStructure", "IfcRelDefinesByType", "IfcRelAssociatesMaterial", "IfcRelAssociatesClassification", "IfcMaterialLayerSet", "IfcMaterialLayerSetUsage", "IfcWallType", "IfcSlabType", "IfcBuildingElementProxyType", "IfcColumnType",
     "IfcBeamType", "IfcWindowStyle", "IfcDoorStyle", "IfcFacetedBrep", "IfcClassification", "IfcClassificationReference", "IfcAnnotation", "IfcTextLiteralWithExtent", "IfcPolyline", "IfcPlanarExtent", "IfcCovering", "IfcCoveringType", "IfcRamp", "IfcRampFlight", "IfcRelConnectsElements",
-    "IfcFurnishingElement", "IfcFurnitureType", "IfcFlowTerminal", "IfcFlowTerminalType", "IfcSanitaryTerminalType", "IfcLightFixtureType", "IfcBuildingElementProxy", "IfcFlowSegment", "IfcDuctSegmentType", "IfcPipeSegmentType",
+    "IfcFurnishingElement", "IfcFurnitureType", "IfcFlowTerminal", "IfcAirTerminalType", "IfcElectricApplianceType", "IfcSanitaryTerminalType", "IfcLightFixtureType", "IfcBuildingElementProxy", "IfcFlowSegment", "IfcDuctSegmentType", "IfcPipeSegmentType",
     "IfcCableCarrierSegmentType", "IfcSystem", "IfcRelAssignsToGroup",
 ];
 
@@ -43,7 +43,7 @@ pub fn schema_of(document: &Part21Document) -> Schema {
 }
 
 /// 📐️ The classes whose volume the kernel measures.
-pub const MEASURED: [&str; 10] = ["IfcWallStandardCase", "IfcWall", "IfcColumn", "IfcBeam", "IfcSlab", "IfcCovering", "IfcFurnishingElement", "IfcFlowTerminal", "IfcBuildingElementProxy", "IfcFlowSegment"];
+pub const MEASURED: [&str; 18] = ["IfcWallStandardCase", "IfcWall", "IfcColumn", "IfcBeam", "IfcSlab", "IfcCovering", "IfcFurnishingElement", "IfcFlowTerminal", "IfcBuildingElementProxy", "IfcFlowSegment", "IfcFurniture", "IfcSanitaryTerminal", "IfcLightFixture", "IfcAirTerminal", "IfcElectricAppliance", "IfcDuctSegment", "IfcPipeSegment", "IfcCableCarrierSegment"];
 
 /// 🪧️ What the oracle reads of one `IfcAnnotation`: its kind (`ObjectType`), its printed text (`Description`), the curves and the sorted text literals of its representation and the written total of a dimension.
 #[derive(Clone, Debug, PartialEq)]
@@ -301,8 +301,8 @@ pub fn report(model: &ModelSnapshot, document: &Part21Document) -> Projection {
         "IfcCovering" => model.ceilings.get(tag).is_some_and(|ceiling| ceiling.slope.is_none() && ceiling.boundary.iter().chain(ceiling.holes.iter().flatten()).all(|vertex| vertex.bulge == 0.0)),
         "IfcColumn" => model.columns.get(tag).and_then(|column| model.column_types.get(&column.column_type)).is_some_and(|kind| !matches!(kind.profile, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Profile::Circle { .. })),
         "IfcBeam" => model.beams.get(tag).and_then(|beam| model.beam_types.get(&beam.beam_type)).is_some_and(|kind| !matches!(kind.profile, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Profile::Circle { .. })),
-        "IfcFurnishingElement" | "IfcFlowTerminal" | "IfcBuildingElementProxy" => model.components.contains_key(tag),
-        "IfcFlowSegment" => model.mep_elements.get(tag).is_some_and(|element| !matches!(element.shape, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MepShape::Pipe { .. })),
+        "IfcFurnishingElement" | "IfcFlowTerminal" | "IfcBuildingElementProxy" | "IfcFurniture" | "IfcSanitaryTerminal" | "IfcLightFixture" | "IfcAirTerminal" | "IfcElectricAppliance" => model.components.contains_key(tag),
+        "IfcFlowSegment" | "IfcDuctSegment" | "IfcPipeSegment" | "IfcCableCarrierSegment" => model.mep_elements.get(tag).is_some_and(|element| !matches!(element.shape, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MepShape::Pipe { .. })),
         _ => true,
     })
 }

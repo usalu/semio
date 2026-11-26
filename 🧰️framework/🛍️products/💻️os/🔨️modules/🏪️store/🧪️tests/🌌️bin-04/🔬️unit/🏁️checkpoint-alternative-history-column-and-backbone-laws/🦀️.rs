@@ -88,7 +88,8 @@ async fn create_alternative_appends_commits_to_its_own_checkpoint_chain() {
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("branch commit".into()), authors: Vec::new() }).await.expect("commit on branch");
     assert_eq!(store.envelope().vcs.alternatives.last().expect("the branched alternative").checkpoint_ids.len(), 2);
-    assert_eq!(store.envelope().vcs.alternatives.first().expect("the trunk").checkpoint_ids.len(), 1, "the branch commit never grows the trunk");
+    let branch_owned: std::collections::HashSet<&str> = store.envelope().vcs.alternatives.iter().flat_map(|alternative| alternative.checkpoint_ids.iter().skip(1)).map(String::as_str).collect();
+    assert_eq!(store.envelope().vcs.checkpoints.iter().filter(|checkpoint| !branch_owned.contains(checkpoint.id.as_str())).count(), 1, "the branch commit never grows the implicit trunk line");
     assert_eq!(store.envelope().vcs.checkpoints.len(), 2);
 }
 
@@ -223,32 +224,29 @@ async fn memory_backbone_pair_propagates_edits_bidirectionally() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn backbone_retirement_blocks_for_live_peer_then_drains_one_owned_message_or_byte_grant() {
+async fn backbone_retirement_releases_each_pair_end_while_its_peer_lives_then_drains_one_owned_message_or_byte_grant() {
     let (mut local, peer) = MemoryBackbone::pair("close-local", "close-peer").await;
     local.send(BackboneMessage::Genesis { pack: vec![1; 64 * 1024] }).await.expect("seed deep close queue");
     let mut retirement = ArtifactStoreBackboneRetirement::new(Backbones::Memory(local));
-    let mut observed_blocked = false;
+    let mut released_while_peer_lives = false;
     for _ in 0..32 {
         let grant = RetainedCloneGrant { maximum_copy_bytes: 17, maximum_capacity_bytes: 0, ..physical_test_close_grant() };
         assert!(retirement.next_release_byte_demand().expect("original backing release demand") <= grant.maximum_release_bytes);
         assert!(retirement.next_depth_demand().expect("original backing depth demand") <= grant.maximum_depth);
-        match retirement.close_step(grant).result.expect("bounded pre-peer close") {
-            semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => {
-                observed_blocked = true;
-                break;
-            }
+        match envelope_close_turn(grant, |effect| retirement.close_step(grant.maximum_copy_bytes, effect)).result.expect("bounded live-peer close") {
+            semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => panic!("a live peer never blocks the retirement of its pair end"),
             semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant)),
-            semio_framework_value::retained_clone::RetainedCloneStep::Complete(_) => panic!("a live peer still retains both exact queue authorities"),
+            semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => { assert!(progress.fits(grant)); released_while_peer_lives = true; break; }
         }
     }
-    assert!(observed_blocked);
-    drop(peer);
+    assert!(released_while_peer_lives && retirement.terminal_is_empty(), "each pair end releases its alias of the shared queues while its peer lives");
+    let mut retirement = ArtifactStoreBackboneRetirement::new(Backbones::Memory(peer));
     let mut turns = 0;
     while !retirement.terminal_is_empty() {
         let grant = RetainedCloneGrant { maximum_copy_bytes: 17, maximum_capacity_bytes: 0, ..physical_test_close_grant() };
         assert!(retirement.next_release_byte_demand().expect("original backing release demand") <= grant.maximum_release_bytes);
         assert!(retirement.next_depth_demand().expect("original backing depth demand") <= grant.maximum_depth);
-        match retirement.close_step(grant).result.expect("bounded post-peer close") {
+        match envelope_close_turn(grant, |effect| retirement.close_step(grant.maximum_copy_bytes, effect)).result.expect("bounded post-peer close") {
             semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => { assert!(progress.fits(grant)); assert!(progress != RetainedCloneProgress::default(), "no external queue owner remains after peer close"); },
             semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(retirement.terminal_is_empty()); },
         }

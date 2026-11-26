@@ -84,7 +84,7 @@ test("two workspaces writing the same objects concurrently keep one stored copy"
  expect(readdirSync(join(root,"v1","t"))).toEqual([]);
  expect(await first.has([left[0]!.hash,sha("absent")])).toEqual([true,false]);
  expect(Buffer.from((await second.read(left[3]!.hash))!).equals(blobs[3]!)).toBe(true);
- const destination=join(scratch("link"),"deep","copy.bin");expect(["reflink","copy"]).toContain(await first.link(left[1]!.hash,destination));expect(readFileSync(destination).equals(blobs[1]!)).toBe(true);
+ const destination=join(scratch("link"),"deep","copy.bin");expect(["reflink","copy"]).toContain((await first.link(left[1]!.hash,destination))!);expect(readFileSync(destination).equals(blobs[1]!)).toBe(true);
  expect(await first.link(sha("absent"),destination+"2")).toBeUndefined();
 });
 
@@ -391,7 +391,7 @@ test("the admission rule gives the authored verdicts and the partition need the 
  const python=enforcementOracle();
  enforcement.cases.forEach((row,index)=>{
   const decision=decideCasEnforcementV1({policy:watermarks,storeBytes:row.storeBytes??undefined,incomingBytes:row.incomingBytes,partition:row.partition??undefined,collected:row.collected});
-  expect([decision.action,decision.reason],row.name).toEqual([row.action,row.reason]);expect(python.decisions[index]!,row.name).toEqual([row.action,row.reason]);
+  expect<unknown>([decision.action,decision.reason],row.name).toEqual([row.action,row.reason]);expect(python.decisions[index]!,row.name).toEqual([row.action,row.reason]);
  });
  enforcement.needs.forEach((row,index)=>{expect(casPartitionNeedBytesV1(row,watermarks),row.name).toBe(row.need);expect(python.needs[index],row.name).toBe(row.need);});
  expect(casPartitionNeedBytesV1(undefined,watermarks)).toBe(0);
@@ -631,7 +631,7 @@ test("CAS admission only trusts a completed collection of its actual scope",asyn
  for(const row of rows){
   const root=hinted(scratch("scoped-local"),0),home=scratch("scoped-local-home");let pressure=row.origin,calls=0;
   const partition=()=>pressure==="critical"?critical:{...critical,freeBytes:80*MIB};
-  const collect=()=>{
+  const collect=():Promise<CasCollectionV1>=>{
    calls++;
    if(row.result==="throw")throw Error("collector failed before it returned");
    return Promise.resolve({...stub,status:row.result==="locked"?"locked":"collected",partial:row.result==="partial",dryRun:row.result==="dry",...row.result==="lockless"?{lockless:true as const}:{}});
@@ -650,7 +650,7 @@ test("CAS admission only trusts a completed collection of its actual scope",asyn
 
 test("critical admission waits for a different in-flight scope, then coalesces the needed relief",async()=>{
  const root=hinted(scratch("critical-flight"),0);
- let pressure=80*MIB,release=()=>undefined,overlap=0,active=0;
+ let pressure=80*MIB,release:()=>void=()=>undefined,overlap=0,active=0;
  const stop=new Promise<void>(resolve=>{release=resolve;});
  const measured:number[]=[];
  const guard=createCasGuardV1({root,partition:()=>({...critical,freeBytes:pressure}),collect:async request=>{
@@ -686,7 +686,7 @@ test("a native critical collection's local scope replaces an earlier high-pressu
 test("direct CAS relief is applied at the current pressure after an unrelated automatic scan",async()=>{
  for(const mode of ["explicit","disk-full"] as const){
   const root=hinted(scratch(mode),0);
-  let freeBytes=80*MIB,release=()=>undefined;
+  let freeBytes=80*MIB,release:()=>void=()=>undefined;
   const blocked=new Promise<void>(resolve=>{release=resolve;}),scans:number[]=[];
   const guard=createCasGuardV1({root,partition:()=>({...critical,freeBytes}),collect:async request=>{
    scans.push(request.partition!.freeBytes);if(scans.length===1)await blocked;return stub;
@@ -709,6 +709,26 @@ test("the cap in force is sized per role from the partition: share, floor, free 
  expect(at("cache-host",926,33,41.6)).toBeLessThan(60);expect(at("cache-host",926,5,36.3)).toBeLessThanOrEqual(Math.ceil(36.3));
  expect(casEffectiveCapBytesV1(CAS_POLICY_V1,{totalBytes:926*GiB,freeBytes:175*GiB})).toBe(casEffectiveCapBytesV1(CAS_POLICY_V1,{totalBytes:926*GiB,freeBytes:175*GiB,role:"builder"}));
  expect(at("cache-host",926,175)*0.5).toBeGreaterThanOrEqual(CAS_POLICY_V1.sizing.serverBytes/GiB);
+});
+
+test("operator collection enforces the role capacity from the independent capacity vectors",async()=>{
+ const {runCasCommandV1}=await import("../⌨️command/🟦️.ts");
+ const vectors=JSON.parse(readFileSync(new URL("./📋️capacity/🔣️.json",import.meta.url),"utf8")) as {rows:{role:CasRoleV1;total:number;free:number;store:number|null}[];expected:number[]};
+ const index=vectors.rows.findIndex(row=>row.role==="worker"&&row.free>row.total/3&&row.store===0),row=vectors.rows[index]!;
+ const root=hinted(scratch("cmd-cap"),0),externalBytes=48*2**30,lines:string[]=[];
+ const context={home:scratch("cmd-home"),workspace:scratch("cmd-workspace"),environment:{SEMIO_CAS_ROOT:root},externalBytes,partition:()=>({role:row.role,partition:"/volume",totalBytes:row.total,freeBytes:row.free}),write:(line:string)=>lines.push(line)};
+ await runCasCommandV1(["gc","--dry-run","--json"],context,{signal:new AbortController().signal,progress:async()=>undefined});
+ expect(JSON.parse(lines.at(-1)!).totals.needBytes).toBe(externalBytes-vectors.expected[index]!*CAS_POLICY_V1.lowWatermark);
+});
+
+test("operator sizing sees a newer collection when held eviction left an older object census",async()=>{
+ const {runCasCommandV1}=await import("../⌨️command/🟦️.ts");
+ const root=scratch("cmd-newer-usage"),home=scratch("cmd-newer-home"),lines:string[]=[],gib=2**30;
+ await collectCasV1({root,now:()=>1000});
+ writeFileSync(casUsageHintPathV1(root),JSON.stringify({version:1,bytes:42*gib,atMs:2000}));
+ const partition={role:"cache-host" as const,partition:"/volume",totalBytes:256*gib,freeBytes:80*gib};
+ await runCasCommandV1(["status","--json"],{workspace:home,home,environment:{SEMIO_CAS_ROOT:root},partition:()=>partition,write:line=>lines.push(line)},{signal:new AbortController().signal,progress:async()=>undefined});
+ expect(JSON.parse(lines.at(-1)!).effectiveCapBytes).toBe(casEffectiveCapBytesV1(CAS_POLICY_V1,partition,42*gib));
 });
 
 test("a machine's role is declared by the environment or by a live record the fleet cache server renews, the strongest live role wins, and a record expires",()=>{
@@ -762,7 +782,7 @@ const readCasPinsOf=async(root:string):Promise<Map<string,string>>=>(await impor
 test("a store of a cache server refuses a write that stays over its cap after one bounded collection, lets it go on when the collection relieved it, and an ordinary store never refuses",async()=>{
  resetCasGuardsV1();
  const policy:CasPolicyV1={...CAS_POLICY_V1,capBytes:100*MIB,minAgeMs:0,admissionBudgetMs:250};let collects=0,mode:"relieve"|"keep"|"hang"="relieve",hung=false;let used=150*MIB;
- const root=scratch("refuse-cap"),over=()=>{mkdirSync(join(root,"v1"),{recursive:true});writeFileSync(casUsageHintPathV1(root),JSON.stringify({version:1,bytes:used,atMs:Date.now()}));};
+ const atMs=Date.now(),root=scratch("refuse-cap"),over=()=>{mkdirSync(join(root,"v1"),{recursive:true});writeFileSync(casUsageHintPathV1(root),JSON.stringify({version:1,bytes:used,atMs}));};
  const ports=(refuseOverCap:boolean)=>({root,policy,refuseOverCap,partition:()=>({partition:"/v",totalBytes:100000*MIB,freeBytes:50000*MIB}),usage:async()=>used,
   collect:async()=>{collects++;if(mode==="hang"){await new Promise(done=>setTimeout(done,3000));hung=true;}if(mode==="relieve")used=60*MIB;over();return stub;}});
  over();
@@ -777,6 +797,21 @@ test("a store of a cache server refuses a write that stays over its cap after on
  await hanging.settle();
  resetCasGuardsV1();used=150*MIB;over();mode="keep";
  const ordinary=createCasGuardV1(ports(false));await expect(ordinary.admit(MIB)).resolves.toBeDefined();
+});
+
+test("a write on a critical partition is refused within one admission budget in all, even while the collection hangs, so the refusal reaches the client before its put deadline",async()=>{
+ resetCasGuardsV1();
+ const policy:CasPolicyV1={...CAS_POLICY_V1,capBytes:100*MIB,minAgeMs:0,admissionBudgetMs:250};let hung=false;
+ const root=scratch("critical-hang");mkdirSync(join(root,"v1"),{recursive:true});writeFileSync(casUsageHintPathV1(root),JSON.stringify({version:1,bytes:50*MIB,atMs:Date.now()}));
+ const guard=createCasGuardV1({root,policy,refuseOverCap:true,partition:()=>critical,usage:async()=>50*MIB,collect:async()=>{await new Promise(done=>setTimeout(done,3000));hung=true;return stub;}});
+ const started=Date.now(),refused=await refusal(guard.admit(MIB));
+ expect(refused).toBeDefined();expect(hung,"refused before the hanging collection ended").toBe(false);expect(Date.now()-started).toBeLessThan(1500);
+ await guard.settle();
+});
+
+test("the admission budget of the store ends before the put deadline of the graph exchange client, so a refusal always arrives as an answer and never as silence",async()=>{
+ const {GRAPH_STATE_POLICY_V1}=await import("../../🪪️graph-state/🟦️.ts");
+ expect(CAS_POLICY_V1.admissionBudgetMs).toBeLessThan(GRAPH_STATE_POLICY_V1.timeouts.blobMilliseconds);
 });
 
 test("a transient input write is admitted over the cap while the partition has room, an ordinary write of the same store is refused, and a critical partition still refuses both",async()=>{

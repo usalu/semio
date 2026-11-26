@@ -18,7 +18,7 @@ import type { BuildScriptRunV1 } from "../../📈️telemetry/🟦️.ts";
 import { acquireNativeStorageV1, nativeStorageRetirementPortV1, type NativeStorageReservationV1 } from "../../💾️storage/🟦️.ts";
 import { withNativePlatformImageStorageV1 } from "../../💾️storage/🌐️platform/🟦️.ts";
 import { withRepositoryCompilerRuntimeEntriesV1 } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts";
-import type { ScriptInvocation } from "../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import type { ScriptInvocation } from "../../../../🧭️routing/📥️invocation/🟦️.ts";
 import type { NativeFixedPlatformOptionsV1 } from "../../💾️storage/🔌️port/🟦️.ts";
 import type { NativeImageStorageV1 } from "../../💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import type { CargoSourceBoundaryPolicyV1 } from "../../📥️source/🎟️admission/🟦️.ts";

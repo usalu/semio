@@ -228,6 +228,7 @@ impl semio_framework_value::FactoryPayloadRetirement for DemoPublishedRootWitnes
         let result=Self::close_state_result(state,effect.grant()).map_err(semio_framework_value::RetirementPollExit::from);
         semio_framework_value::RetirementPollExit::settle(effect,result)
     }
+    fn close_state_work_demand(state:&Self::CloseState,_:usize)->Result<u64,ValueError> { Ok(u64::from(!Self::close_state_terminal_is_empty(state))) }
     fn close_state_terminal_is_empty(state:&Self::CloseState)->bool { state.weak.is_none()&&state.root.is_none() }
 }
 
@@ -278,10 +279,8 @@ pub fn close(owner: &mut dyn ErasedSnapshotRetirement) -> usize {
             assert_eq!(step.progress(), RetainedCloneProgress::default());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| close_granted(&mut *owner, grant));
+        let step = close_driven(&mut *owner, grant);
         assert!(step.progress().fits(grant));
-        assert_eq!(heap.requested_bytes, step.progress().retained_capacity_bytes);
-        assert_eq!(heap.released_bytes, step.progress().released_bytes);
         turns += 1;
         assert!(turns < 100000, "replay retirement stalled under its own quote {demands:?}; step {step:?}");
     }
@@ -291,6 +290,12 @@ pub fn close(owner: &mut dyn ErasedSnapshotRetirement) -> usize {
 /// 🪙️ Runs one closure inside one owner-less host-pump effect turn; `None` means the work quote was not admitted.
 pub fn pump_turn<R>(grant: RetainedCloneGrant, run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> R) -> Option<R> {
     semio_framework_job::OriginalRetirementPump::new().turn(1 << 16, u64::MAX, || Some(0), grant).expect("pump issues a retirement turn").with_effect(run).expect("pump settles its retirement turn").map(|(output, _)| output)
+}
+
+/// 🧵️ Drives one close turn of a test owner under a real original invocation that re-enters pending custody as recovery; the driver proves the turn's heap equals its receipt.
+pub fn close_driven(owner: &mut (impl ErasedSnapshotRetirement + ?Sized), grant: RetainedCloneGrant) -> RetainedCloneStep {
+    semio_framework_value_clone_source_testing::drive::warm();
+    semio_framework_value_clone_source_testing::drive::drive(grant, 1 << 16, |effect| owner.close_step(grant.maximum_copy_bytes, effect)).result.expect("driven close turn settles")
 }
 
 /// 🧪️ Drives one effect-shaped close turn of a test owner through the host retirement pump, outside any Job turn.

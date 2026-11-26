@@ -1406,5 +1406,89 @@
         "de": "Für einen Lock unterhalb der Wurzel --manifest-path <Verzeichnis des Locks>/Cargo.toml ergänzen; Lock und Manifest bleiben im Gleichklang."
       }
     }
+  },
+  "typecheck.product-errors": {
+    "area": "typecheck",
+    "owner": "typecheck",
+    "severities": [
+      "warn"
+    ],
+    "data": [
+      "areas",
+      "errors",
+      "product"
+    ],
+    "title": {
+      "en": "{product} type error(s) in product code of the library",
+      "de": "{product} Typfehler im Produktcode der Bibliothek"
+    },
+    "detail": {
+      "en": "The last whole-library type check found {errors} errors in total, {product} of them outside test files; by area: {areas}. The check only reports, it never blocks a build.",
+      "de": "Die letzte Typprüfung der ganzen Bibliothek fand insgesamt {errors} Fehler, davon {product} außerhalb von Testdateien; je Bereich: {areas}. Die Prüfung berichtet nur und blockiert nie einen Build."
+    },
+    "fix": {
+      "kind": "command",
+      "command": "repo typecheck --declarations",
+      "note": {
+        "en": "Check the declarations first, then the named files with repo typecheck <path>.",
+        "de": "Zuerst die Deklarationen prüfen, dann die genannten Dateien mit repo typecheck <Pfad>."
+      }
+    }
+  },
+  "typecheck.errors": {
+    "area": "typecheck",
+    "owner": "typecheck",
+    "severities": [
+      "info"
+    ],
+    "data": [
+      "ageSeconds",
+      "areas",
+      "errors",
+      "product",
+      "tests"
+    ],
+    "title": {
+      "en": "{errors} type error(s) in the library ({tests} in tests)",
+      "de": "{errors} Typfehler in der Bibliothek ({tests} in Tests)"
+    },
+    "detail": {
+      "en": "{product} in product code, {tests} in tests, measured {ageSeconds} s ago; largest areas: {areas}.",
+      "de": "{product} im Produktcode, {tests} in Tests, gemessen vor {ageSeconds} s; größte Bereiche: {areas}."
+    },
+    "fix": {
+      "kind": "command",
+      "command": "repo doctor --only=typecheck",
+      "note": {
+        "en": "Measures the whole library again (takes minutes).",
+        "de": "Misst die ganze Bibliothek neu (dauert Minuten)."
+      }
+    }
+  },
+  "typecheck.stale": {
+    "area": "typecheck",
+    "owner": "typecheck",
+    "severities": [
+      "info"
+    ],
+    "data": [
+      "ageSeconds"
+    ],
+    "title": {
+      "en": "The type check report of the library is old",
+      "de": "Der Typprüfungsbericht der Bibliothek ist alt"
+    },
+    "detail": {
+      "en": "The report was measured {ageSeconds} s ago, so regressions since then are not visible.",
+      "de": "Der Bericht wurde vor {ageSeconds} s gemessen, Rückschritte seitdem sind nicht sichtbar."
+    },
+    "fix": {
+      "kind": "command",
+      "command": "repo doctor --only=typecheck",
+      "note": {
+        "en": "Measures the whole library again (takes minutes).",
+        "de": "Misst die ganze Bibliothek neu (dauert Minuten)."
+      }
+    }
   }
 }

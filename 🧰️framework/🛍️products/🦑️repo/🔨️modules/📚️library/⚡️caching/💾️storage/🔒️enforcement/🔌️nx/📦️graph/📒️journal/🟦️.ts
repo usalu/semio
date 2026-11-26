@@ -1,3 +1,5 @@
+import{descriptorProtocolV1,descriptorRefusalV1}from"../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧷️descriptor/🟦️.ts";
+import{concurrentEditV1,isConcurrentEditV1}from"../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {AsyncLocalStorage} from "node:async_hooks";
 import {createHash} from "node:crypto";
 import {constants,closeSync,existsSync,fstatSync,lstatSync,openSync,readSync,type BigIntStats} from "node:fs";
@@ -16,7 +18,20 @@ interface Journal{version:1;generation:string;phase:"preparing"|"publishing"|"co
 const digest=(bytes:Uint8Array)=>createHash("sha256").update(bytes).digest("hex"),identity=(stat:Pick<BigIntStats,"dev"|"ino">)=>String(stat.dev)+":"+String(stat.ino),stamp=(stat:BigIntStats)=>[stat.dev,stat.ino,stat.size,stat.nlink,stat.mtimeNs,stat.ctimeNs].join(":");
 function regular(path:string,maximum:number,links:number|bigint=1){const stat=lstatSync(path,{bigint:true});if(!stat.isFile()||stat.isSymbolicLink()||stat.nlink!==BigInt(links)||stat.size>BigInt(maximum))throw Error("Closed graph publication file required");return stat;}
 function descriptor<T>(fd:number,body:()=>T):T{let failed=false,primary:unknown;try{return body();}catch(error){failed=true;primary=error;throw error;}finally{try{closeSync(fd);}catch(error){if(!failed)throw error;if(primary instanceof Error)try{Object.defineProperty(primary,"graphPublicationCloseErrors",{value:[error]});}catch{}}}}
-function bytes(path:string,maximum:number,links:number|bigint=1){check();const before=regular(path,maximum,links),fd=openSync(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0));return descriptor(fd,()=>{if(stamp(fstatSync(fd,{bigint:true}))!==stamp(before))throw Error("Graph publication file changed");const value=Buffer.alloc(Number(before.size));for(let offset=0;offset<value.length;){check();const count=readSync(fd,value,offset,Math.min(1048576,value.length-offset),offset);if(!count)throw Error("Graph publication file truncated");offset+=count;}check();if(stamp(fstatSync(fd,{bigint:true}))!==stamp(before)||stamp(lstatSync(path,{bigint:true}))!==stamp(before))throw Error("Graph publication file changed");return value;});}
+/** 🧷️ Reads one graph publication file that is replaced atomically by rename (class `renamed` of the descriptor protocol): a file replaced between the name and the descriptor is opened by name again, bounded by the declared pauses, and only a file that keeps being replaced is refused as a concurrent edit in both languages. */
+function bytes(path:string,maximum:number,links:number|bigint=1){
+  const pauses=descriptorProtocolV1().pausesMilliseconds;
+  for(let attempt=0;;attempt++){
+    try{return bytesOnce(path,maximum,links);}
+    catch(error){
+      if(!isConcurrentEditV1(error))throw error;
+      if(attempt>=pauses.length)throw descriptorRefusalV1("renamed",path,{en:"Graph publication",de:"Graph-Veröffentlichung"});
+      Atomics.wait(publicationPause,0,0,pauses[attempt]!);
+    }
+  }
+}
+const publicationPause=new Int32Array(new SharedArrayBuffer(4));
+function bytesOnce(path:string,maximum:number,links:number|bigint=1){check();const before=regular(path,maximum,links),fd=openSync(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0));return descriptor(fd,()=>{if(stamp(fstatSync(fd,{bigint:true}))!==stamp(before))throw concurrentEditV1("descriptor",path,"Graph publication file changed");const value=Buffer.alloc(Number(before.size));for(let offset=0;offset<value.length;){check();const count=readSync(fd,value,offset,Math.min(1048576,value.length-offset),offset);if(!count)throw Error("Graph publication file truncated");offset+=count;}check();if(stamp(fstatSync(fd,{bigint:true}))!==stamp(before)||stamp(lstatSync(path,{bigint:true}))!==stamp(before))throw concurrentEditV1("descriptor",path,"Graph publication file changed");return value;});}
 function journalValue(value:unknown):Journal{if(contract.validate(value).length)throw Error("Closed graph publication journal required");const journal=value as Journal,rows=journal.files;if(new Set(rows.map(row=>row.name)).size!==rows.length||!rows.some(row=>row.name==="project-graph.json")||!rows.some(row=>row.name==="source-maps.json")||journal.phase!=="preparing"&&rows.some(row=>row.next.identity===null))throw Error("Complete graph publication journal required");return journal;}
 function journalRead(directory:string){const path=join(directory,"publication.json");if(!existsSync(path))return undefined;const raw=bytes(path,policy.journalMaximumBytes);return {raw,journal:journalValue(JSON.parse(raw.toString()))};}
 function paths(directory:string,journal:Journal,row:Row){const file=join(directory,row.name);return{file,prior:file+"~"+journal.generation+".prior",next:file+"~"+journal.generation+".next"};}

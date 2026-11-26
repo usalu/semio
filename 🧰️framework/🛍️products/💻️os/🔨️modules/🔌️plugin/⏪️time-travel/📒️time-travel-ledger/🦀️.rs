@@ -35,6 +35,21 @@ pub struct TimeTravelLedger<A: ArtifactApp> {
     pub authoring: Option<SupersedeAuthoring<A::Snapshot, A::Mutation>>,
     pub history_unavailable: bool,
     pub turn_clock: fn() -> Option<u64>,
+    pub queued: QueuedTimeTravelEffects,
+}
+
+/// ⏳️ The effects the driver could not admit yet because the live owner of their kind is still settling: at most one per owner kind, a newer one supersedes an older one, admitted on the next paid maintenance turn once the owner closed. See [`TimeTravelLedger`].
+#[doc(hidden)]
+#[derive(Default)]
+pub struct QueuedTimeTravelEffects {
+    pub preview: Option<(MutationId, protocol::InputReplacement)>,
+    pub replay: Option<(Vec<protocol::SupersededInput>, MutationId)>,
+}
+
+impl QueuedTimeTravelEffects {
+    pub fn is_empty(&self) -> bool {
+        self.preview.is_none() && self.replay.is_none()
+    }
 }
 
 /// ✍️ The undo or redo of a finalize being authored resumably: the Report replay of its inputs over the applied history,
@@ -86,6 +101,7 @@ impl<A: ArtifactApp> Default for TimeTravelLedger<A> {
             authoring: None,
             history_unavailable: false,
             turn_clock: semio_framework_job::default_now_us,
+            queued: QueuedTimeTravelEffects::default(),
         }
     }
 }
@@ -94,7 +110,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
 
 
     /// 🧾️ The document's field inventory is flattened into the ledger's retained cursor.
-    pub const INITIAL_FIELDS: usize = 26 + TimeTravelStoreState::<A::Snapshot, A::Mutation>::INITIAL_FIELDS;
+    pub const INITIAL_FIELDS: usize = 27 + TimeTravelStoreState::<A::Snapshot, A::Mutation>::INITIAL_FIELDS;
 
     /// 📏️ The same caller pays each selected field or absent-value byte page.
     pub fn initial_field_demands(field: usize, byte: usize, body: usize) -> Result<RetirementDemand, ValueError> {
@@ -130,6 +146,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
             23 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<SupersedeAuthoring<A::Snapshot, A::Mutation>>(), byte, body.max(1))?,
             24 => 2 * size_of::<bool>(),
             25 => 2 * size_of::<fn() -> Option<u64>>(),
+            26 => 2 * size_of::<QueuedTimeTravelEffects>(),
             _ => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial ledger field cursor exceeds its inventory")),
         };
         Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() })
@@ -172,6 +189,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
             23 => semio_framework_value::initialization::initialize_absent_field_at::<SupersedeAuthoring<A::Snapshot, A::Mutation>>(std::ptr::addr_of_mut!((*target).authoring), byte, count),
             24 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).history_unavailable).write(false); Ok(true) },
             25 => { if byte != 0 || count < 2 * size_of::<fn() -> Option<u64>>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).turn_clock).write(semio_framework_job::default_now_us); Ok(true) },
+            26 => { if byte != 0 || count < 2 * size_of::<QueuedTimeTravelEffects>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).queued).write(QueuedTimeTravelEffects::default()); Ok(true) },
             _ => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial ledger field cursor exceeds its inventory")),
         } }
     }
@@ -197,6 +215,23 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
     pub fn has_command_receipt(&self)->bool{self.command_receipt.is_some()}
     #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn original_close_diagnostic(&self)->String{format!("closing={} sessionRetired={} sessionOwner={} sessionUntouched={} sessionEmpty={} sessionDemand={:?} commandReceipt={} pendingCommand={} discardCursor={} documentEmpty={} member={} authoring={} patch={} commandRetirementsEmpty={}",self.closing,self.session_retired,self.session_retirement.is_some(),self.session_retirement.as_ref().is_some_and(|owner|owner.original_is_untouched()),self.session_retirement.as_ref().is_none_or(|owner|owner.terminal_is_empty()),self.session_retirement_demands(32768),self.command_receipt.is_some(),self.pending_command.is_some(),self.discard_cursor.is_some(),self.document.terminal_is_empty(),self.member.is_some(),self.authoring.is_some(),self.patch.is_some(),self.command_retirements.terminal_is_empty())+&format!(" documentFrontier aliases={} snapshotClose={} issuers={} issuerClose={} discardedLen={} discardedCap={} discardedPending={} discardedActive={} discardedFactory={} discardedFactoryClose={} effects={} staged={} kind={} preview={} previewJob={} previewInput={} replay={} finished={} head={}",self.document.snapshot_aliases.iter().filter(|slot|slot.is_some()).count(),self.document.snapshot_close.is_some(),self.document.snapshot_issuers.is_some(),self.document.snapshot_issuer_close.iter().filter(|slot|slot.is_some()).count(),self.document.discarded.len(),self.document.discarded.capacity(),self.document.discarded_pending.is_some(),self.document.discarded_active.is_some(),self.document.discarded_factory.is_some(),self.document.discarded_factory_close.is_some(),self.document.discard_effects.is_some(),self.document.staged.is_some(),self.document.kind.is_some(),self.document.preview.is_some(),self.document.preview_job.is_some(),self.document.preview_input.is_some(),self.document.replay.is_some(),self.document.finished.is_some(),self.document.head.is_some())}
+
+    /// 🔭️ Exposes the original replay and finalization frontiers to mounted tests.
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub fn original_history_diagnostic(&self) -> String {
+        let preview = self.document.preview_job.as_ref().map(|owner| {
+            let replacement=owner.replacement.operation.map(|_|(owner.replacement.receiving.retains_source(),owner.replacement.receiving.ready()));
+            (owner.cursor,owner.operation,owner.progress(),owner.operation_adopted,owner.history_input.is_some(),replacement)
+        });
+        let replay = self.document.replay.as_ref().map(|owner| {
+            let plan = owner.plan.as_ref().map(|plan| (plan.native_phase, plan.native_row, plan.cursor));
+            let fold = owner.replay.as_ref().map(|fold| (fold.cursor, fold.operation, fold.original_preparation_ready(), fold.prepared_operation.is_some(), fold.progress()));
+            (plan, fold, owner.history_operation, owner.history_input.is_some(), owner.target_operation, owner.replacement_phase, owner.replacement.retains_source(), owner.replacement.ready(), owner.operation_preparation_progress())
+        });
+        let publisher=self.document.original_publication_phase();
+        let refusal=&self.document.commit_failure;
+        format!("preview={preview:?} replay={replay:?} publisher={publisher:?} refusal={refusal:?} finalizeStage={} finalizeClosing={} finalizeActive={} finalizeOutcome={}", self.document.commit_stage, self.document.commit_closing, self.document.finalizing(), self.finalize_outcome.is_some())
+    }
 
     /// ✏️ The draft editor while a mutation is being edited.
     pub fn editor(&self) -> Option<&TimeTravelEditor> {
@@ -268,6 +303,14 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
         }
     }
 
+    /// 🧷️ Whether the store the session edits still holds a preview owner that has not settled.
+    pub fn preview_live(&self) -> bool {
+        match self.member.as_ref() {
+            None => TimeTravelOwners::preview_live(&self.document),
+            Some(member) => member.owners.as_deref().is_some_and(TimeTravelOwners::preview_live),
+        }
+    }
+
     pub fn preview_progress(&self) -> Option<store::os_store::replay::ReplayProgress> {
         match self.member.as_ref() {
             None => self.document.preview_progress(),
@@ -298,7 +341,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
     pub fn has_pending_work(&self) -> bool {
         if self.finalize_outcome.is_some(){return true}
         let replaying = self.session.stage == TimeTravelStage::Replaying && self.owners().any(TimeTravelOwners::replaying);
-        self.member.as_ref().is_some_and(|_|self.closing||self.session.stage==TimeTravelStage::Inactive) || self.review_children_pending() || self.command_receipt.is_some() || self.pending_command.is_some() || self.discard_cursor.is_some() || !self.command_retirements.terminal_is_empty() || replaying || self.authoring.is_some() || self.owners().any(TimeTravelOwners::has_pending_work) || self.is_ui_dirty() || self.patch_due || self.patch.is_some()
+        self.member.as_ref().is_some_and(|_|self.closing||self.session.stage==TimeTravelStage::Inactive) || self.review_children_pending() || self.command_receipt.is_some() || self.pending_command.is_some() || self.discard_cursor.is_some() || !self.command_retirements.terminal_is_empty() || replaying || self.authoring.is_some() || self.owners().any(TimeTravelOwners::has_pending_work) || !self.queued.is_empty() || self.is_ui_dirty() || self.patch_due || self.patch.is_some()
     }
 
     pub fn review_children_pending(&self)->bool{

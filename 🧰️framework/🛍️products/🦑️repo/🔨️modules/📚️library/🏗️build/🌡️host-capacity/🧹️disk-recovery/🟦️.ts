@@ -17,8 +17,8 @@ export function diskTextV1(key:string,language:DiskLanguageV1,values:Record<stri
  return language==="both"?handleTextV1(DISK_RECOVERY_TEXTS_V1,key,"en",values)+" / "+handleTextV1(DISK_RECOVERY_TEXTS_V1,key,"de",values):handleTextV1(DISK_RECOVERY_TEXTS_V1,key,language,values);
 }
 
-/** 🗂️ One registered writer: who fills which root, how it is bounded, who collects it and in which order the gate frees it (`priority` ascending), whether freeing it returns bytes to the host volume at once (`relief`), and the exact command that frees it by hand. */
-export type DiskWriterRowV1=Readonly<{id:string;priority:number;inodeRank?:number;class:"derivable"|"recoverable"|"content"|"store"|"image";relief:"host"|"image"|"none";root:string;collector:"ledger"|"cas-lru"|"staging-sweep"|"image-sweep"|"age-prune"|"log-rotate"|"native-shards"|"image-reset"|"store-compaction"|"manual";command:string;bound:Readonly<{en:string;de:string}>}>;
+/** 🗂️ One registered writer: who fills which root, how it is bounded, who collects it and in which order the gate frees it (`priority` ascending), whether freeing it returns bytes to the host volume at once (`relief`), and the exact command that frees it by hand; `floor` marks a derivable class outside the content stores that the volume floor frees, oldest first, before the cache store's free-space reserve is breached. */
+export type DiskWriterRowV1=Readonly<{id:string;priority:number;inodeRank?:number;floor?:true;class:"derivable"|"recoverable"|"content"|"store"|"image";relief:"host"|"image"|"none";root:string;collector:"ledger"|"cas-lru"|"staging-sweep"|"image-sweep"|"age-prune"|"log-rotate"|"native-shards"|"image-reset"|"store-compaction"|"manual";command:string;bound:Readonly<{en:string;de:string}>}>;
 export const DISK_WRITERS_V1:readonly DiskWriterRowV1[]=Object.freeze(JSON.parse(JSON.stringify(schema.definitions.Writers.const)));
 
 /** 🔌️ A registered writer bound to its collector: what it holds now and how to free it; `collect` answers the bytes it claims to have freed (the recovery trusts the volume, not the claim). */
@@ -154,4 +154,15 @@ export async function consumersOfV1(writers:readonly DiskWriterV1[],signal?:Abor
 export function refuseDiskRecoveryV1(outcome:DiskRecoveryV1,partition:DiskFactsV1):RepoErrorV1{
  const budget=casPartitionBudgetV1(partition.totalBytes),consumers=outcome.consumers.map(row=>`${row.root} (${formatDiskBytesV1(row.bytes)}): \`${row.command}\``).join("; ")||"-";
  return repoErrorV1(DISK_RECOVERY_TEXTS_V1,"refused","low-space-consumers",{partition:partition.partition,free:formatDiskBytesV1(partition.freeBytes),usedPercent:Math.round((1-partition.freeBytes/Math.max(1,partition.totalBytes))*1000)/10,must:formatDiskBytesV1(outcome.mustFreeBytes),need:formatDiskBytesV1(outcome.needBytes),cushion:formatDiskBytesV1(budget.cushionBytes),consumers});
+}
+
+/** 🌊️ Defends the free space of the volume itself, not only the cache store's: runs the collectors of the rows marked `floor` (derivable classes that no cache store accounts for, such as the compiled Wasmtime cache and the staging directories of the shared store) by priority, each oldest first inside its own bound, until `targetFreeBytes` are free on the volume; the volume is read again after each one, a failing collector never stops the next, and the signal cancels between collectors. Never runs a content, store or image collector. Answers the steps with the bytes the volume gained.
+ * @see ./🧬️schema/🔣️.json */
+export async function relieveVolumeFloorV1(input:Readonly<{facts():DiskFactsV1|undefined;targetFreeBytes:number;writers:readonly DiskWriterV1[];language:DiskLanguageV1;report?(line:string):void;signal?:AbortSignal;budgetMilliseconds?:number}>):Promise<Readonly<{reached:boolean;freedBytes:number;steps:readonly Readonly<{id:string;freedBytes:number;freeBytes:number;failure?:string}>[]}>>{
+ const current=input.facts(),steps:Array<{id:string;freedBytes:number;freeBytes:number;failure?:string}>=[];
+ if(current===undefined)return{reached:false,freedBytes:0,steps};
+ if(current.freeBytes>=input.targetFreeBytes)return{reached:true,freedBytes:0,steps};
+ const writers=input.writers.filter(writer=>writer.row.floor===true&&writer.row.relief==="host");
+ const last=await collectInOrderV1({facts:input.facts,current,targetFreeBytes:input.targetFreeBytes,writers,language:input.language,report:input.report,signal:input.signal,budgetMilliseconds:input.budgetMilliseconds,steps});
+ return{reached:last.freeBytes>=input.targetFreeBytes,freedBytes:Math.max(0,last.freeBytes-current.freeBytes),steps};
 }

@@ -585,6 +585,7 @@ impl host_async_bindings::semio::framework::pure::Host for AsyncActorHostState {
     }
 
     fn operation_clock_us(&mut self,_clock_binding:u64)->Option<u64>{None}
+    fn actor_execution_clock_us(&mut self,_clock_binding:u64)->Option<u64>{None}
 
     fn now_ms(&mut self) -> i64 {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as i64)

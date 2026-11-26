@@ -74,7 +74,7 @@ test("shaping a compute result claims the same rows from log-backed owners as fr
   const shapedArrays=shapeComputeResultV1({workspaceRoot:"/w",part:part(own) as never,stubs:{}}),shapedLazy=shapeComputeResultV1({workspaceRoot:"/w",part:part(log.append(own)) as never,stubs:{}});
   expect(shapedLazy.owners.map(owner=>[...(owner.rows as Iterable<Row>)].map(keyOf).sort())).toEqual(shapedArrays.owners.map(owner=>[...(owner.rows as Iterable<Row>)].map(keyOf).sort()));
   expect(shapedLazy.env.rows.map(keyOf)).toEqual(shapedArrays.env.rows.map(keyOf));
-  expect((shapedLazy.owners[0]!.rows as Iterable<Row>)&&shapedLazy.owners[0]!.rows.length).toBe(inside.length);
+  expect((shapedLazy.owners[0]!.rows as Iterable<Row>)&&shapedLazy.owners[0]!.rows!.length).toBe(inside.length);
  }finally{log.close();rmSync(directory,{recursive:true,force:true});}
 });
 

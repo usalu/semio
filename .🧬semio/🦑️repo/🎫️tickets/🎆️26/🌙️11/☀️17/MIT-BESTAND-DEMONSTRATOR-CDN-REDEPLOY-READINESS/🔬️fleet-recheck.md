@@ -17,3 +17,7 @@ November 21, 07:54 PST. Current official cache status returned three unreachable
 November 21, 10:40 PST. Remote execution still had no configured scheduler. All three cache probes reported unreachable. Both native slots remained in use.
 
 November 21, 11:44 PST. The execution contract remained unconfigured and all three remote cache probes were unreachable. The local queue continued running both requested module roots.
+
+November 25 at 17:57 Pacific. Fleet facts generation 13 supplied the Darwin ARM64 execution contract and scheduler. The live gRPC capability probe failed with ERR_HTTP2_STREAM_CANCEL. All three remote cache protocol probes also remained unreachable. Native compilation continued.
+
+November 25, 18:32 Pacific. The configured generation-13 runner still returned ERR_HTTP2_STREAM_CANCEL to the gRPC capability probe. All cache services remained unreachable and status provided no server. The local compiler continued. The separately detached fleet cache uploader still held an active spool of 8,341 queued files, so it was left to its owner.

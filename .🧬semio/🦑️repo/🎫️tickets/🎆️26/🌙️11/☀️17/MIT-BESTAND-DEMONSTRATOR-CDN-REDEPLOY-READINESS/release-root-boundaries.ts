@@ -14,7 +14,7 @@ type Unit = {
 const root = resolve(import.meta.dirname, "../../../../../../..");
 const generated = join(import.meta.dirname, "🗑️generated");
 const readJson = (path: string) => JSON.parse(readFileSync(path, "utf8"));
-const graph = readJson(join(generated, "all-main-root-units.json")) as { units: Unit[]; roots: number[] };
+const graph = readJson(join(generated, process.argv[2] ?? "all-canonical-roots-units.json")) as { units: Unit[]; roots: number[] };
 const policy = readJson(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json")).storage.sourceBoundary;
 const cfgByPlatform = new Map(["host", "proc-macro", "wasm32-wasip2"].map(target => [target, readFileSync(join(generated, "boundary-" + target + ".cfg"), "utf8").trim().split("\n")]));
 const analysis = createRustSourceAnalysisV1();
@@ -88,5 +88,5 @@ const headings = [
   "The same compiled-entry census before the two repairs found BREP Engine at 4,006 active lines and Solid Transaction at 4,074 active lines and 33 files. Both exceeded the original limits. FEM/GIS has no dependency on either repaired closure.",
   "",
 ];
-writeFileSync(join(import.meta.dirname, "🔬️release-root-boundaries-1125.md"), headings.join("\n"));
+writeFileSync(join(import.meta.dirname, process.argv[3] ?? "🔬️release-root-boundaries-1125.md"), headings.join("\n"));
 console.log(`${observed} closures, ${rows.filter(row => row.level === 3).length} over limit, ${rows.filter(row => row.level === 2).length} unresolved, ${rows.filter(row => row.level === 1).length} near.`);

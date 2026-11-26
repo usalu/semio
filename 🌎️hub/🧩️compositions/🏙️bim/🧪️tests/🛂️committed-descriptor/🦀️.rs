@@ -8,7 +8,7 @@ fn test_repo_root() -> PathBuf {
     semio_framework_test_fixtures::repo_root!()
 }
 
-/// 🧪️ Loads the committed BIM descriptor with the staged component, or the component selected by `SEMIO_BIM_GUEST_COMPONENT`.
+/// 🧪️ Loads the committed BIM descriptor with the component supplied by the package test target.
 #[semio_framework_async_macros::async_test]
 async fn bim_plugin_manifest_loads_from_its_committed_descriptor() {
     let repo_root = test_repo_root();
@@ -17,13 +17,8 @@ async fn bim_plugin_manifest_loads_from_its_committed_descriptor() {
     assert!(descriptor_path.is_file(), "committed bim descriptor missing at {}", descriptor_path.display());
 
     let plugin_id = contract["pluginId"].as_str().expect("plugin identity");
-    let mode = std::env::var("SEMIO_BUILD_MODE").unwrap_or_else(|_| "prototype".to_owned());
-    let staged = || repo_root.join(contract["componentDirectory"].as_str().expect("component directory"))
-        .join(contract["deliverables"][mode.as_str()].as_str().expect("component build mode"))
-        .join(contract["componentName"].as_str().expect("component name"));
-    let override_path = std::env::var_os("SEMIO_BIM_GUEST_COMPONENT").map(PathBuf::from);
-    assert!(override_path.as_ref().is_none_or(|path| path.is_absolute()), "SEMIO_BIM_GUEST_COMPONENT must be absolute");
-    let wasm_path = override_path.unwrap_or_else(staged);
+    let wasm_path = PathBuf::from(std::env::var_os("SEMIO_BIM_GUEST_COMPONENT").expect("the BIM package test target must supply its guest component"));
+    assert!(wasm_path.is_absolute(), "SEMIO_BIM_GUEST_COMPONENT must be absolute");
     assert!(wasm_path.is_file(), "BIM guest component missing at {}", wasm_path.display());
 
     let plugin_paths = HashMap::from([(plugin_id.to_owned(), wasm_path)]);

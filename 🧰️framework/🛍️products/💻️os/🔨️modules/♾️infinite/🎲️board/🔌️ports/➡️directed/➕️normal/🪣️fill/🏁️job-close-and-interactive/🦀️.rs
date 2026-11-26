@@ -4,6 +4,19 @@ use super::*;
 
 // #region board_host
 //#region 🪣️Fill
+impl BoardFillJobState {
+    fn ready_to_release(&self) -> bool {
+        self.pending_placement.is_none() && self.accept_handle_template.is_none() && self.accept_handle_id.is_none()
+            && self.accept_handle_pending_virtual.is_none() && self.accept_handle_pending_placement.is_none()
+            && self.accept_pending_virtual_node.is_none() && self.source_capture.is_none() && self.compatibility_candidate.is_none()
+            && self.current_preview.is_none() && self.candidate_event.is_none() && self.rejection.is_none()
+            && self.virtual_handles.terminal_is_empty() && self.virtual_nodes.terminal_is_empty()
+            && self.candidates.terminal_is_empty() && self.sources.terminal_is_empty()
+            && self.snapshot.rules.terminal_is_empty() && self.snapshot.handles.terminal_is_empty()
+            && self.snapshot.nodes.terminal_is_empty() && self.snapshot.kinds.terminal_is_empty()
+    }
+}
+
 impl BoardFillJob {
     fn close_granted(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,work:&mut u128)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         let grant=effect.grant();let maximum_items=grant.maximum_items;
@@ -125,23 +138,37 @@ impl BoardFillJob {
         retire_page!(state.snapshot.handles);
         retire_page!(state.snapshot.nodes);
         retire_page!(state.snapshot.kinds);
+        let released_bytes = size_of::<BoardFillJobState>();
+        let copied_bytes = size_of::<Option<Box<BoardFillJobState>>>();
+        if maximum_bytes < released_bytes || grant.maximum_copy_bytes < copied_bytes {
+            return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() });
+        }
         self.state = None;
-        Ok(semio_framework_job::InteractiveJobCloseStep::Complete {progress:semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}})
+        Ok(semio_framework_job::InteractiveJobCloseStep::Complete {progress:semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes,released_bytes,..Default::default()}})
     
     }
 }
 
 impl BoardFillJob {
+    /// 🧭️ Advances one funded search transition for an enclosing tool that publishes its own candidate trace.
+    pub fn advance_search(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<BoardFillTransition, semio_framework_job::OriginalTurnFailure> {
+        self.validate_original_source(context)?;
+        if self.offer.get().is_some() {
+            return Err(semio_framework_value::ValueError::invariant("board search still has an independently offered job result").into());
+        }
+        Ok(self.next_offer(context, false))
+    }
+
     fn step_original<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         self.validate_original_source(context)?;
         if self.admitted.get() || self.offer.get().is_none() {
             self.admitted.set(false);
-            let offer = self.next_offer(context);
+            let offer = self.next_offer(context, true);
             self.lent = match offer {
-                BoardFillOffer::Preview => Some(semio_framework_job_payload::RetainedJobPayload::empty(semio_framework_job_payload::JobPayloadStream::Preview)),
-                BoardFillOffer::Checkpoint(_) => Some(semio_framework_job_payload::RetainedJobPayload::empty(semio_framework_job_payload::JobPayloadStream::CheckpointState)),
-                BoardFillOffer::Fault => Some(semio_framework_job_payload::RetainedJobPayload::empty(semio_framework_job_payload::JobPayloadStream::Fault)),
-                BoardFillOffer::Yield | BoardFillOffer::Complete | BoardFillOffer::Cancelled => None,
+                BoardFillTransition::Advanced => Some(semio_framework_job_payload::RetainedJobPayload::empty(semio_framework_job_payload::JobPayloadStream::Preview)),
+                BoardFillTransition::Checkpoint(_) => Some(semio_framework_job_payload::RetainedJobPayload::empty(semio_framework_job_payload::JobPayloadStream::CheckpointState)),
+                BoardFillTransition::Fault => Some(semio_framework_job_payload::RetainedJobPayload::empty(semio_framework_job_payload::JobPayloadStream::Fault)),
+                BoardFillTransition::Yield | BoardFillTransition::Complete | BoardFillTransition::Cancelled => None,
             };
             self.offer.set(Some(offer));
         }
@@ -184,7 +211,11 @@ if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseSt
     fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{
         if self.state.is_none()&&self.checkpoint.is_some()||self.commit_encoder.is_some(){return Ok(0);}
         if let Some(payload)=self.lent.as_ref().or(self.commit_output.as_ref()).filter(|_|self.commit_writer.is_none()){return payload.retirement_demands().map(|demand|demand.copy_bytes);}
-        self.commit_writer.as_ref().map_or(Ok(0),|writer|writer.retirement_demands().map(|demand|demand.copy_bytes))
+        if let Some(writer)=self.commit_writer.as_ref(){return writer.retirement_demands().map(|demand|demand.copy_bytes)}
+        if self.state.as_ref().is_some_and(|state| state.ready_to_release()) && self.preview.is_none() && self.fault.is_none() {
+            return Ok(size_of::<Option<Box<BoardFillJobState>>>());
+        }
+        Ok(0)
     }
 
     fn next_close_capacity_byte_demand(&self,_:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
@@ -207,7 +238,7 @@ if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseSt
         if let Some(kind)=state.snapshot.kinds.len.checked_sub(1).and_then(|index|state.snapshot.kinds.get(index)){if !kind.handles.terminal_is_empty(){return Ok(kind.handles.next_release_bytes());}}
         if !state.snapshot.kinds.is_empty()||!state.virtual_handles.is_empty()||!state.virtual_nodes.is_empty()||!state.candidates.is_empty()||!state.sources.is_empty()||!state.snapshot.rules.is_empty()||!state.snapshot.handles.is_empty()||!state.snapshot.nodes.is_empty(){return Ok(0);}
         for bytes in [state.virtual_handles.next_release_bytes(),state.virtual_nodes.next_release_bytes(),state.candidates.next_release_bytes(),state.sources.next_release_bytes(),state.snapshot.rules.next_release_bytes(),state.snapshot.handles.next_release_bytes(),state.snapshot.nodes.next_release_bytes(),state.snapshot.kinds.next_release_bytes()]{if bytes!=0{return Ok(bytes);}}
-        Ok(0)
+        Ok(size_of::<BoardFillJobState>())
     }
 
     fn terminal_is_empty(&self) -> bool {

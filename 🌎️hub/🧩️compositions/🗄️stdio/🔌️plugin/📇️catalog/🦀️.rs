@@ -14,7 +14,7 @@ use semio_s_artifact_stdio_contract::registry::ContributionRegistry;
 use semio_s_artifact_stdio_contract::{ArtifactContribution, NativeCodecFactory};
 pub use semio_s_artifact_stdio_contract::{ArtifactAssembly, CapabilityCounts, CapabilityLedger, NativeCodecFactoryReceipt};
 use semio_hub_stdio_catalog_projection::{NativeArtifactCatalogV1, NATIVE_ARTIFACT_CATALOG_TOPIC};
-pub use semio_hub_stdio_catalog_projection::{artifact_catalog_contribution_for, component_package_id, native_artifact_catalog_dependency, validate_native_artifact_catalog_dependency};
+pub use semio_hub_stdio_catalog_projection::{artifact_catalog_contribution_for, hosted_artifact_catalog_contribution_for, hosted_artifact_catalog_topic, component_package_id, native_artifact_catalog_dependency, validate_native_artifact_catalog_dependency};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 📚️ Schema exports authored by this concrete deployment owner.
@@ -30,7 +30,7 @@ fn failure(message: impl Into<String>) -> PluginAssemblyError {
 include!("../../🤖️generated/🧩️composition/🦀️.rs");
 
 pub fn selected_registry() -> Result<ContributionRegistry, PluginAssemblyError> {
-    let registry = ContributionRegistry::new(selected_contributions())?;
+    let registry = ContributionRegistry::new(selected_contributions())?.with_runtime_hosts(selected_runtime_hosts())?;
     if let Some(contribution) = registry.contributions().iter().find(|contribution| contribution.identity == "txt") {
         let formats = (contribution.formats)().map_err(PluginAssemblyError::definition)?;
         if !formats.iter().any(|format| format.mimes.iter().any(|mime| mime == "text/plain")) {
@@ -38,6 +38,49 @@ pub fn selected_registry() -> Result<ContributionRegistry, PluginAssemblyError> 
         }
     }
     Ok(registry)
+}
+
+/// 🏃 The complete runtime roster: every artifact with the runtime its host links, including those the catalog owner assembles as definitions only.
+pub fn runtime_registry() -> Result<ContributionRegistry, PluginAssemblyError> {
+    ContributionRegistry::new(selected_runtime_contributions())
+}
+
+/// 🏃 Assembles every artifact with its complete runtime declaration, whichever composition owner hosts it.
+pub fn runtime_artifact_assemblies() -> Result<Vec<ArtifactAssembly>, PluginAssemblyError> {
+    runtime_registry()?.artifact_assemblies()
+}
+
+/// 🏠️ Lists the composition owners hosting the runtime of artifacts this catalog assembles as definitions only.
+pub fn runtime_host_plugin_ids() -> Result<Vec<&'static str>, PluginAssemblyError> {
+    Ok(selected_registry()?.runtime_host_ids())
+}
+
+fn hosted_package_id(host_plugin_id: &str) -> String {
+    format!("semio:{host_plugin_id}")
+}
+
+/// 🏠️ Commits what one runtime host's guest must publish: the authored runtime rows of every artifact it hosts.
+pub fn expected_hosted_artifact_catalog_contribution(host_plugin_id: &str) -> Result<semio_framework::TopicContribution, PluginAssemblyError> {
+    let hosted = selected_registry()?.hosted_by(host_plugin_id);
+    if hosted.is_empty() {
+        return Err(failure(format!("{host_plugin_id} hosts no selected artifact runtime")));
+    }
+    hosted_artifact_catalog_contribution_for(host_plugin_id, &hosted_package_id(host_plugin_id), &hosted)
+}
+
+/// 🔐️ Admits only the exact runtime catalog a host guest commits for the artifacts it hosts, under its own topic.
+pub fn validate_hosted_artifact_catalog_contributions(host_plugin_id: &str, contributions: &[semio_framework::TopicContribution]) -> Result<(), PluginAssemblyError> {
+    let topic = hosted_artifact_catalog_topic(host_plugin_id);
+    let mut matches = contributions.iter().filter(|contribution| contribution.topic.starts_with("stdio.artifact-catalog"));
+    let actual = matches.next().ok_or_else(|| failure("decoded host descriptor omits its hosted runtime catalog commitment"))?;
+    if matches.next().is_some() || actual.topic != topic {
+        return Err(failure("decoded host descriptor repeats or replaces its hosted runtime catalog topic"));
+    }
+    let expected = expected_hosted_artifact_catalog_contribution(host_plugin_id)?;
+    if !catalog_value_matches(&expected.payload, &actual.payload) {
+        return Err(failure("decoded host descriptor differs from its hosted artifact runtime semantics"));
+    }
+    Ok(())
 }
 
 /// 📊 Returns the selected artifact schemas' validated ledger.

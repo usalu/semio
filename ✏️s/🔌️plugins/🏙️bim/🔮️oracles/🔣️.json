@@ -49,6 +49,18 @@
       "package": "pypdf",
       "version": "6.14.2",
       "module": "pypdf"
+    },
+    {
+      "implementation": "python",
+      "package": "numpy",
+      "version": "2.5.0",
+      "module": "numpy"
+    },
+    {
+      "implementation": "python",
+      "package": "sympy",
+      "version": "1.14.0",
+      "module": "sympy"
     }
   ]
 }

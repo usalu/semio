@@ -22,7 +22,7 @@ impl CoreInputRetirementAuthority{
  }
 }
 /// 🧱️ Holds the actual partial instance and initiating source until its resource opening or paid closure completes.
-pub struct CoreInstanceOpening{core:ManuallyDrop<Option<CoreInstance>>,source:ManuallyDrop<Option<OriginalCallerSourceLoan>>,epoch:u64,prepared:Option<u64>,phase:Phase,invocation_complete:bool,returning_frame:bool,control:Option<original_invocation::OriginalControlPlan>,memory_work:Option<original_invocation::OriginalMemoryWork>,host_call:Option<original_invocation::OriginalHostCall>,input_retirement_authority:Option<NonZeroUsize>,input_retirement_epoch:Option<u64>,ledger:RetainedLedger}
+pub struct CoreInstanceOpening{core:ManuallyDrop<Option<CoreInstance>>,source:ManuallyDrop<Option<OriginalCallerSourceLoan>>,epoch:u64,prepared:Option<u64>,phase:Phase,invocation_complete:bool,returning_frame:bool,control:Option<original_invocation::OriginalControlPlan>,memory_work:Option<original_invocation::OriginalMemoryWork>,host_call:Option<original_invocation::OriginalHostCall>,input_retirement_authority:Option<NonZeroUsize>,input_retirement_epoch:Option<u64>,actor_execution:Option<std::time::Duration>,ledger:RetainedLedger}
 impl CoreInstanceOpening{
  /// 📒️ This instance's retained ledger counters, copied without formatting.
  pub fn retained_ledger_snapshot(&self)->[u64;20]{self.ledger.snapshot()}
@@ -44,7 +44,7 @@ impl CoreInstanceOpening{
   let ledger=RetainedLedger::default();let scope=LedgerScope::enter(&ledger);
   if !charge(cx,size_of::<Self>(),0,0)?{return Ok(None)}
   let parent=cx.original_source_parent()?;let mut loan=None;if !parent.admit_loan(&mut loan,cx)?{return Ok(None)}let Some(source)=loan else{return Ok(None)};
-  Ok(Some(Self{core:ManuallyDrop::new(Some(CoreInstance{module:Arc::clone(module),memories:Vec::new(),tables:Vec::new(),globals:Vec::new(),data:Vec::new(),elements:Vec::new(),machine:None,pool:FramePool::default(),next_host_call:1,preparation_storage:None})),source:ManuallyDrop::new(Some(source)),epoch,prepared:prepared.map(|image|image.identity),phase:Phase::Vectors(0),invocation_complete:false,returning_frame:false,control:None,memory_work:None,host_call:None,input_retirement_authority:input_retirement.map(|authority|authority.0),input_retirement_epoch:None,ledger:{drop(scope);ledger}}))
+  Ok(Some(Self{core:ManuallyDrop::new(Some(CoreInstance{module:Arc::clone(module),memories:Vec::new(),tables:Vec::new(),globals:Vec::new(),data:Vec::new(),elements:Vec::new(),machine:None,pool:FramePool::default(),next_host_call:1,preparation_storage:None})),source:ManuallyDrop::new(Some(source)),epoch,prepared:prepared.map(|image|image.identity),phase:Phase::Vectors(0),invocation_complete:false,returning_frame:false,control:None,memory_work:None,host_call:None,input_retirement_authority:input_retirement.map(|authority|authority.0),input_retirement_epoch:None,actor_execution:None,ledger:{drop(scope);ledger}}))
  }
  fn validate(&self,module:&Arc<CoreModule>,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{
   self.source.as_ref().ok_or_else(||refused("Core opening source has already returned"))?.validate_context(cx)?;

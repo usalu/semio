@@ -37,7 +37,8 @@ describe("🧷️ shared borders", () => {
     const { container } = render(<Button>Alone</Button>);
     const button = container.querySelector("button")!;
     expect(button.hasAttribute("data-shared-border-cell")).toBe(false);
-    expect(tokens(button)).not.toContain("border-0");
+    expect(button.hasAttribute("data-shared-border-frame")).toBe(true);
+    expect(button.hasAttribute("data-shared-border-edges")).toBe(false);
   });
 
   it("draws a segmented choice as a shared border group", () => {

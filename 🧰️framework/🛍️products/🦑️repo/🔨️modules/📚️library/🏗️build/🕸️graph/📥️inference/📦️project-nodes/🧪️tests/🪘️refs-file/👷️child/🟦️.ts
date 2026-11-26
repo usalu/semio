@@ -10,3 +10,4 @@ for await(const line of console){
  const refs=await SI.withClosurePassV1(()=>OB.observeInferenceSnapshotV1(()=>PN.resolveOwnerRefsV1({workspaceRoot:root,scripts},job,headerDigest)),{verdicts:dir});
  process.stdout.write(JSON.stringify({refs:refs??null,pid:process.pid})+"\n");
 }
+export{};

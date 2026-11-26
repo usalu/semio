@@ -79,7 +79,7 @@ test("stopping the warm lane retires its active worker and removes its queued jo
    expect(await farm.prepare({name,root:name,json:{},native:false,pipeline:false,nativeRoot:name,selectedInputs:[],head:[],cacheKey:"0".repeat(24)})).toBe(true);
    expect(counters).toMatchObject({failed:0,done:1,durable:1});
    const count=(event:string)=>events.filter(value=>value===event).length;
-   expect({startedWarm:count("warm"),cancelledWorkers:workers.filter(worker=>worker.killed).length,startedObserve:count("observe"),startedInfer:count("infer"),durable:readWarmIndexV1(directory).size}).toEqual(expected.get({$blocked:row.blocked}));
+   expect<unknown>({startedWarm:count("warm"),cancelledWorkers:workers.filter(worker=>worker.killed).length,startedObserve:count("observe"),startedInfer:count("infer"),durable:readWarmIndexV1(directory).size}).toEqual(expected.get({$blocked:row.blocked}));
    expect(wave.signal.aborted).toBe(false);
   }finally{
    required.resolve();

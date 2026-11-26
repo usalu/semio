@@ -3,7 +3,7 @@ import {requireCargoSelectedPathEnvelopeV1,requireCargoSelectedPathEnvelopeContr
 import {processPidExistsV1} from "../../🔖️identity/🟦️.ts";
 import type {ResourceLeaseControl} from "../../🔒️leases/🟦️.ts";
 import {captureCargoArtifactPlanFactsV1,cargoArtifactPlanIdentityV1,cargoArtifactPlanDifferenceV1,cargoArtifactPlanningDifferenceV1,cargoSourceDigestMismatchV1,type CargoArtifactPlanFactsV1} from "./📋️plan/🟦️.ts";
-import {announcedCargoSourceChecksumsV1,CargoSourceWitnessV1} from "./🧾️receipt/📎️source-witness/🟦️.ts";
+import {CargoSourceAttemptV1,CargoSourceWitnessV1} from "./🧾️receipt/📎️source-witness/🟦️.ts";
 import {captureAdmittedCargoSourcesV1,deferCargoSourceDriftV1} from "./📥️source/📎️retained/🟦️.ts";
 import {CargoCompilationSnapshotPoolV1,type CargoCompilationRetentionContextV1,type PendingCargoCompilationSnapshotV1,type CompletedCargoCompilationViewV1} from "./🧾️receipt/📦️retention/📥️snapshot/🟦️.ts";
 import { ensureCargoLockCurrentV1 } from "../../🦀️cargo-workspace/🟦️.ts";
@@ -35,7 +35,7 @@ import {acquireCargoTargetRecipeV1,cargoTargetRecipeEnvironmentV1,type CargoTarg
 import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "./💾️storage/🟦️.ts";
 import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1,type CargoCompilerPlanningPortV1} from "./🕸️units/📥️capture/🟦️.ts";
 import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1,type CargoSourceBoundaryPolicyV1,type CargoSourceAdmissionPortV1,type CargoSourceAdmissionMemoV1} from "./📥️source/🎟️admission/🟦️.ts";
-import {publishCargoSourceDriftV1,watchCargoSourceDriftV1,type CargoAdmittedSourceV1} from "./📥️source/👁️drift/🟦️.ts";
+import {publishCargoSourceDriftV1,watchCargoSourceDriftV1,type CargoAdmittedSourceV1,type CargoSourceDriftV1} from "./📥️source/👁️drift/🟦️.ts";
 import {requireNativeStoragePathV1} from "./💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import { chmodSync, closeSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, readlinkSync, rmSync, unlinkSync, writeFileSync, writeSync } from "node:fs";
 import { basename, dirname, join, relative, resolve, sep, isAbsolute, normalize } from "node:path";
@@ -278,8 +278,9 @@ async function withCompletedCargoArtifactCaptureV1(owner:string,files:ReadonlyMa
 /** 🧭️ Observes the original compiler recipe while leaving source freshness validation to every Cargo run. */
 async function cargoArtifactTargetRecipeV1(manifest:string,args:readonly string[],policy:CargoArtifactBuildPolicyV1,options:CargoArtifactBuildOptionsV1,resolverLock?:CargoResolverLockV1):Promise<Readonly<{recipe:CargoTargetRecipeV1;recheck:()=>Promise<void>}>>{
  const control=options.control,environment=options.environment??process.env,port=options.commandPort,compilerIdentity=port?.compilerIdentity??await captureOwnedCommandV1("cargo",["--version","--verbose"],policy.cwd,{control,env:environment}),toolchainIdentity=port?.toolchainIdentity??await captureOwnedCommandV1("rustc",["--version","--verbose"],policy.cwd,{control,env:environment}),physical=new CurrentPhysicalOwnerV1(policy.cwd,cargoProvenancePhysicalControlV1({cancelled:()=>control.signal.aborted,remainingMs:()=>checkResourceLeaseControl(control),onProgress:cargoProvenanceProgressSinkV1(cargoProvenanceConsoleSinkV1("recipe",environment,line=>writeCargoArtifactDiagnosticV1(options,line)))})),paths=new Set<string>([manifest]);
- if(policy.compilerConfiguration)paths.add(policy.compilerConfiguration);for(let root of[policy.cwd,dirname(manifest)])for(;;){for(const name of["Cargo.toml","Cargo.lock",".cargo/config.toml",".cargo/config","rust-toolchain.toml","rust-toolchain"])paths.add(join(root,name));const parent=dirname(root);if(parent===root)break;root=parent;}const cargoHome=resolve(environment.CARGO_HOME??join(homedir(),".cargo"));for(const name of["config.toml","config"])paths.add(join(cargoHome,name));
- if(resolverLock)paths.delete(cargoResolverLockViewV1(resolverLock,control).source);
+ const ancestorInputs=["Cargo.toml",".cargo/config.toml",".cargo/config","rust-toolchain.toml","rust-toolchain"];
+ if(!resolverLock)ancestorInputs.push("Cargo.lock");
+ if(policy.compilerConfiguration)paths.add(policy.compilerConfiguration);for(let root of[policy.cwd,dirname(manifest)])for(;;){for(const name of ancestorInputs)paths.add(join(root,name));const parent=dirname(root);if(parent===root)break;root=parent;}const cargoHome=resolve(environment.CARGO_HOME??join(homedir(),".cargo"));for(const name of["config.toml","config"])paths.add(join(cargoHome,name));
  checkResourceLeaseControl(control);let manifestText:string|null=null;try{manifestText=readFileSync(manifest,"utf8");}catch{}
  const observed=await cargoRecipeInputsV1([...paths].sort(),cargoLockRootsV1(manifestText,args),physical,async()=>{await control.publish({resource:"cargo-target-recipe-inputs",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();checkResourceLeaseControl(control);}),inputs=observed.inputs,declared=cargoTargetRecipeEnvironmentV1(environment);
  return{recipe:{version:1,cwd:policy.cwd,manifest,command:port?.command??"cargo",args:[...(port?.args??[]),options.command??"build","--locked","--manifest-path",manifest,...args],buildDirectory:policy.buildDirectory,compilerIdentity:compilerIdentity.trim(),toolchainIdentity:toolchainIdentity.trim(),inputs,environment:declared},async recheck(){await observed.recheck();if(resolverLock)await recheckCargoResolverLockV1(resolverLock,control);}};
@@ -423,6 +424,9 @@ export class BoundedDiagnosticsV1 {
   private logged = 0;
   private logFailed = false;
   private readonly newest: string[] = [];
+  private compilerError?: string;
+  private wardenCancellation?: string;
+  get failureReason(): string | undefined { return this.wardenCancellation ?? this.compilerError; }
   private firstErrorLine = 0;
   private readonly firstError: string[] = [];
   private readonly log: number | null;
@@ -432,11 +436,15 @@ export class BoundedDiagnosticsV1 {
   private readonly logLimitBytes: number;
   constructor(log: number | null, forward: (line: string) => void, liveLines = 200, newestLines = 200, logLimitBytes = 128 * 1024 * 1024) { this.log = log; this.forward = forward; this.liveLines = liveLines; this.newestLines = newestLines; this.logLimitBytes = logLimitBytes; }
   line(text: string): void {
+    const plain = text.replace(/\x1b\[[0-9;]*m/gu, "");
+    const compilerError = /^error(?:\[[A-Z][A-Z0-9]*\])?:/u.test(plain);
+    if (compilerError) this.compilerError ??= plain.slice(0, 1024);
+    if (plain.startsWith("[unit-cache] [warden] cancelled ")) this.wardenCancellation ??= plain.slice(0, 1024);
     this.lines++;
     if (this.log !== null && !this.logFailed && this.logged < this.logLimitBytes) try { this.logged += writeSync(this.log, `${text}\n`); } catch { this.logFailed = true; }
     if (this.lines <= this.liveLines) { this.forward(text); return; }
     this.suppressed++;
-    if (!this.firstErrorLine && /^error(?:\[[A-Z][A-Z0-9]*\])?:/u.test(text.replace(/\x1b\[[0-9;]*m/gu, ""))) {
+    if (!this.firstErrorLine && compilerError) {
       this.firstErrorLine = this.lines;
     }
     if (this.firstErrorLine && this.lines - this.firstErrorLine === this.firstError.length
@@ -567,8 +575,10 @@ export class CargoProvenanceSessionV1 {
 
   private readonly custody: CargoProvenanceCustodyV1;
   private readonly sourceWitness: CargoSourceWitnessV1 | undefined;
-  constructor(custody: CargoProvenanceCustodyV1,retention?:CargoCompilationRetentionContextV1,sourceWitness?:CargoSourceWitnessV1,private readonly resolverLock?:CargoResolverLockV1) {
+  private readonly resolverLock: CargoResolverLockV1 | undefined;
+  constructor(custody: CargoProvenanceCustodyV1,retention?:CargoCompilationRetentionContextV1,sourceWitness?:CargoSourceWitnessV1,resolverLock?:CargoResolverLockV1) {
     this.custody = custody;
+    this.resolverLock = resolverLock;
     this.sourceWitness = sourceWitness;
     if (!custody || typeof custody.invocation !== "function" || typeof custody.recheck !== "function") throw Error("Complete current physical provenance authority required");
     if(retention){if(!sharedProvenanceFilesV1.has(custody))throw Error("Actual shared provenance file custody required for retained outputs");this.retention=new CargoCompilationSnapshotPoolV1(retention);}
@@ -1001,12 +1011,14 @@ export class CargoProvenanceSessionV1 {
       }
       const manifests = new Set<string>([invocation.manifest, ...witnessed.map((unit) => unit.message.manifest_path).filter((value): value is string => typeof value === "string")]);
       const inputPaths = new Set<string>(manifests);
+      const ancestorInputs = ["Cargo.toml", ".cargo/config.toml", ".cargo/config", "rust-toolchain.toml", "rust-toolchain"];
+      if (!this.resolverLock) ancestorInputs.push("Cargo.lock");
       const visited = new Set<string>();
       for (let file of [invocation.cwd, ...[...manifests].map((value) => dirname(value))])
         for (;;) {
           if (visited.has(file)) break;
           visited.add(file);
-          for (const name of ["Cargo.toml", "Cargo.lock", ".cargo/config.toml", ".cargo/config", "rust-toolchain.toml", "rust-toolchain"]) inputPaths.add(join(file, name));
+          for (const name of ancestorInputs) inputPaths.add(join(file, name));
           const parent = dirname(file);
           if (parent === file) break;
           file = parent;
@@ -1017,7 +1029,6 @@ export class CargoProvenanceSessionV1 {
         if(!control)throw Error("Owned Cargo resolver lock provenance requires its original control");
         const selected=cargoResolverLockViewV1(this.resolverLock,control);
         if(lockPath!==selected.path||await observe.sha256(selected.path)!==selected.digest)throw Error("Actual consumed Cargo resolver lock differs from its admitted snapshot");
-        inputPaths.delete(selected.source);
         inputPaths.add(selected.path);
       }else if(lockPath)throw Error("Cargo resolver lock provenance requires an original owned snapshot");
       const invocationInputs: CargoInvocationInputV1[] = [];
@@ -1170,6 +1181,7 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
   const units: any[] = [], buildScripts: any[] = [], stagedNames = new Map<string, string>();
   let sourceWitness:CargoSourceWitnessV1|undefined;
   const admittedDigests=new Map<string,string>(),announcedEqualSources=new Set<string>(),deferredSourceChanges=new Set<string>();
+  const sourceAttempt=new CargoSourceAttemptV1(admittedDigests);
   let primaryExecutable: string | undefined,observationAttempted=false,primaryFailed=false,primaryFailure:unknown,completedCompilation:CompletedCargoCompilationViewV1|undefined;
   let cancelled = false;
   let sourceDrift:ConcurrentEditErrorV1|undefined,failedPlanEdit:ConcurrentEditErrorV1|undefined,completedPlanEdit:ConcurrentEditErrorV1|void=undefined;
@@ -1198,7 +1210,7 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
   report("leased",{granted:facts.parallelism,seconds:Math.round((performance.now()-waitStarted)/1000)});
   const environment:Record<string,string|undefined>={...captureOptions.environment,SEMIO_COMPILER_PARALLELISM:String(facts.parallelism)};delete environment.SEMIO_COMPILER_CAPACITY_HELD;const options={...captureOptions,control,environment};compilerAdmissionBudgetV1(control);
   if(!environment.MAKEFLAGS&&!environment.CARGO_MAKEFLAGS)environment.CARGO_BUILD_JOBS=String(facts.parallelism);
-  await measureV1("lock-current",()=>resolverLock?recheckCargoResolverLockV1(resolverLock,control):ensureCargoLockCurrentV1({ workspaceRoot: policy.cwd, cwd: policy.cwd, program: commandPort.command, prefix: commandPort.args, args: [options.command ?? "build", "--manifest-path", path], environment, control, force: false }));
+  await measureV1<unknown>("lock-current",()=>resolverLock?recheckCargoResolverLockV1(resolverLock,control):ensureCargoLockCurrentV1({ workspaceRoot: policy.cwd, cwd: policy.cwd, program: commandPort.command, prefix: commandPort.args, args: [options.command ?? "build", "--manifest-path", path], environment, control, force: false }));
   checkResourceLeaseControl(control);
   const physical=()=>cargoProvenancePhysicalControlV1({cancelled:()=>control.signal.aborted,remainingMs:()=>checkResourceLeaseControl(control),onProgress:()=>checkResourceLeaseControl(control)});
   const witness=sourceWitness;
@@ -1263,9 +1275,22 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
           if (message.reason !== "compiler-artifact" || message.target?.kind?.includes("custom-build")) continue;
           if(sourceWitness&&typeof message.package_id==="string"&&message.package_id.startsWith("path+file:")&&Array.isArray(message.filenames)&&message.filenames.every((file:unknown)=>typeof file==="string")){
             const executable=typeof message.executable==="string"&&isAbsolute(message.executable)?resolve(message.executable):undefined;
-            for await(const claim of announcedCargoSourceChecksumsV1(message.filenames,[policy.buildDirectory,targetDirectory],physical(),control,executable)){
+            const unit=JSON.stringify([...message.filenames].sort()),witness=sourceWitness;
+            const source=message.target?.src_path,announcement=message.fresh===false&&typeof source==="string"&&isAbsolute(source)?{cargoWorkspace:policy.cwd,targetSource:resolve(source),sinceMs:cargoStartedMs}:undefined;
+            let mismatch:CargoSourceDriftV1|undefined;
+            const conflict=await sourceAttempt.recordArtifact(unit,message.filenames,[policy.buildDirectory,targetDirectory],physical(),control,claim=>{
               const digest=admittedDigests.get(claim.path);
-              if(digest!==undefined&&sourceWitness.matchesAdmitted(claim,digest))announcedEqualSources.add(claim.path);
+              if(digest===undefined)return;
+              if(witness.matchesAdmitted(claim,digest))announcedEqualSources.add(claim.path);
+              else if(announcement)mismatch??=witness.admittedDrift(claim,digest);
+            },executable,announcement);
+            const rejected=conflict??mismatch;
+            if(rejected&&!sourceDrift&&!cancelled){
+              const detail=conflict?"Cargo units consumed incompatible source checksums: ":"Completed Cargo unit consumed bytes that differ from admission: ";
+              sourceDrift=concurrentEditV1("bytes",rejected.path,detail+JSON.stringify(rejected),"build");
+              driftDiagnostic=publishCargoSourceDriftV1(options.control,rejected);
+              cancel();
+              break;
             }
           }
           const packageUrl = message.package_id?.split("#")[0]?.replace(/^path\+/, "");
@@ -1313,7 +1338,7 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
       for (const row of diagnostics.finish(compilerStatus !== 0 || cancelled, diagnosticsPath)) process.stderr.write(`${row}\n`);
       if (compilerStatus === 0 && !cancelled && diagnostics.suppressed === 0) rmSync(diagnosticsPath, { force: true });
       if (compilerStatus !== 0 || cancelled) {
-        const failure=new Error(`Cargo artifact build ${cancelled ? "cancelled" : "failed"}: ${owner}`);
+        const failure=new Error(`Cargo artifact build ${cancelled ? "cancelled" : "failed"}: ${owner}${diagnostics.failureReason ? "\n" + diagnostics.failureReason : ""}`);
         if(!cancelled&&!launchFailed&&exitCode!==null)return failure;
         throw failure;
       }
@@ -1333,6 +1358,7 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
     if(compilerFailure instanceof ConcurrentEditErrorV1){failedPlanEdit=compilerFailure;throw compilerFailure;}
     if(compilerFailure){
       if(!options.control.signal.aborted)try{await recheck();}catch(error){failedPlanEdit=concurrentEditErrorOfV1(error);}
+      if(failedPlanEdit)writeCargoArtifactDiagnosticV1(options,"[cargo-build-failure] "+JSON.stringify({manifest:path,compiler:compilerFailure.message,drift:failedPlanEdit.message}));
       throw compilerFailure;
     }
     if (files.size === 0) throw new Error(`Cargo emitted no final artifacts for ${owner}`);

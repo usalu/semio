@@ -25,7 +25,7 @@ export const UI_PREFERENCE_VOCABULARY_V1: UiPreferenceVocabularyV1 = Object.free
 const CATALOG_ADMISSION_PORT_V1: CatalogAdmissionPortV1 = Object.freeze({ admit: admitPluginCatalogV1, catalogOf: pluginCatalogV1 });
 
 const PLUGIN_DISTRIBUTION_PORT_V1: PluginDistributionPortV1 = Object.freeze({
-  extensionRoute: MODULE_EXTENSION_ROUTE,
+  ...(import.meta.env?.DEV === true ? { extensionRoute: MODULE_EXTENSION_ROUTE } : {}),
   hubPluginSource: ({ onNotice }) =>
     typeof navigator !== "undefined" && "serviceWorker" in navigator && typeof caches !== "undefined" && "locks" in navigator
       ? createHubPluginSource({

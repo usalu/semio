@@ -77,7 +77,7 @@ fn observe_post_capture_maintenance(
                 }
                 assert!(!contended, "the captured fixture instance has no concurrent crossing");
                 assert!(step.is_some(), "mounted maintenance must run after capture");
-                assert!(matches!(runtime_live_cleanup_nonterminal_status(contended, step, &cell.maintenance_stalled_steps), RuntimeMaintenanceStatus::Ready), "initial cleanup exhausted its zero-progress credit");
+                assert!(matches!(runtime_live_cleanup_nonterminal_status(contended, step, &cell.maintenance_stalled_steps, &cell.maintenance_stall_since_us, semio_framework_job::default_now_us(), cell.instance_progress_epoch.load(std::sync::atomic::Ordering::SeqCst), &cell.maintenance_seen_progress_epoch).0, RuntimeMaintenanceStatus::Ready), "initial cleanup exhausted its zero-progress credit");
                 Ok(step.unwrap())
             })
         });

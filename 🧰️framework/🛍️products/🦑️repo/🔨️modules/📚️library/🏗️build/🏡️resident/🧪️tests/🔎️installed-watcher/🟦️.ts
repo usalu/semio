@@ -11,7 +11,7 @@ describe("the installed resident watcher is found before any compiler is opened"
   expect(await findInstalledWatcherV1({sourcePath:SOURCE,pinPath:PIN,locate:()=>undefined})).toBeUndefined();
   const found=await findInstalledWatcherV1({sourcePath:SOURCE,pinPath:PIN,locate:async()=>"/installed/semio-repo-watch"});
   const ensured=await ensureWatcherV1({sourcePath:SOURCE,pinPath:PIN,outputRoot:"/nowhere",locate:()=>"/installed/semio-repo-watch",compile:async()=>{throw Error("compiled");}});
-  expect(found).toEqual(ensured);expect(found).toMatchObject({path:"/installed/semio-repo-watch",built:false});
+  expect<unknown>(found).toEqual(ensured);expect(found).toMatchObject({path:"/installed/semio-repo-watch",built:false});
  });
  test("a stale pin is refused here as it is there",async()=>{
   const directory=realpathSync(mkdtempSync(join(tmpdir(),"slw-w161-")));

@@ -41,6 +41,7 @@ actions!{
     ShowTasks => "show-tasks",
     ShowSettings => "show-settings",
     ShowDiagnostics => "show-diagnostics",
+    ShowFleet => "show-fleet",
     ShowHelp => "show-help",
     ShowHiddenTasks => "show-hidden-tasks",
     SearchOutput => "search-output",
@@ -85,7 +86,7 @@ actions!{
 enum Class { Files, Document, Launcher, Pane, Terminal }
 
 fn class_of(body: &Body) -> Class {
-    match body { Body::Files(_) => Class::Files, Body::Document(_) => Class::Document, Body::Launcher(_) => Class::Launcher, Body::Overview | Body::Settings | Body::Help | Body::Diagnostics | Body::KeymapEditor(_) => Class::Pane, Body::Output { .. } => Class::Terminal }
+    match body { Body::Files(_) => Class::Files, Body::Document(_) => Class::Document, Body::Launcher(_) => Class::Launcher, Body::Overview | Body::Settings | Body::Help | Body::Diagnostics | Body::KeymapEditor(_) | Body::Fleet(_) => Class::Pane, Body::Output { .. } => Class::Terminal }
 }
 
 /// 🚦️ Whether the dashboard goes on.
@@ -281,6 +282,7 @@ impl Dashboard {
     fn pane_input(&mut self, tui: &mut Tui, index: usize, input: Input) {
         let page = self.windows[index].pane.page.max(1) as isize;
         let overview = matches!(self.windows[index].body, Body::Overview);
+        if matches!(self.windows[index].body, Body::Fleet(_)) && self.fleet_input(tui, index, &input) { self.refresh_pane(tui, index); return; }
         match input {
             Input::Up => self.windows[index].pane.select(-1),
             Input::Down => self.windows[index].pane.select(1),
@@ -444,7 +446,7 @@ impl Dashboard {
 // #region 🔖️Actions
 impl Dashboard {
     fn show(&mut self, tui: &mut Tui, kind: Kind) {
-        let existing = self.windows.iter().position(|window| matches!((&window.body, kind), (Body::Overview, Kind::Overview) | (Body::Settings, Kind::Settings) | (Body::Help, Kind::Help) | (Body::Diagnostics, Kind::Diagnostics)));
+        let existing = self.windows.iter().position(|window| matches!((&window.body, kind), (Body::Overview, Kind::Overview) | (Body::Settings, Kind::Settings) | (Body::Help, Kind::Help) | (Body::Diagnostics, Kind::Diagnostics) | (Body::Fleet(_), Kind::Fleet)));
         let index = existing.unwrap_or_else(|| self.create_window(tui, kind, Place::Preference));
         self.focus_window(tui, index);
     }
@@ -474,6 +476,7 @@ impl Dashboard {
             Action::ShowTasks => self.show(tui, Kind::Overview),
             Action::ShowSettings => self.show(tui, Kind::Settings),
             Action::ShowDiagnostics => self.show(tui,Kind::Diagnostics),
+            Action::ShowFleet => self.show(tui, Kind::Fleet),
             Action::ShowHelp => self.show(tui, Kind::Help),
             Action::ShowHiddenTasks => {
                 self.hidden.clear();
@@ -561,6 +564,7 @@ impl Dashboard {
             if let Some(WidgetState::Terminal(terminal)) = tui.scene.node_mut(window.list).widget() { terminal.set_passthrough(input && index == focused); }
         }
         for message in self.sync_sizes(tui) { let _ = self.send(&message); }
+        self.sync_fleet(tui);
         self.refresh_panes(tui);
         self.refresh_documents(tui);
         for index in 0..self.windows.len() { self.paint_launcher(tui, index); }

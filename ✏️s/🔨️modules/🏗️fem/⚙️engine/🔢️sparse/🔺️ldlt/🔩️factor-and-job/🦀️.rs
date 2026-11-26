@@ -118,6 +118,10 @@ pub struct LdltCheckpoint {
     pub(super) reserve_lane: u8,
     pub(super) reserve_cursor: usize,
     pub(super) checkpoint_due: bool,
+    /// 📏️ Factor entries already covered by the last checkpoint; the next one waits until the factor doubles, so checkpoint pages stay amortized against column work instead of rewriting the whole factor after every column.
+    pub(super) checkpoint_entries: usize,
+    /// 🪜️ Fewest factor entries before the first checkpoint; production keeps [`LDLT_CHECKPOINT_MINIMUM_ENTRIES`], a resume law lowers it to checkpoint after the first column.
+    pub(super) checkpoint_floor: usize,
     pub(super) publication_stage: u8,
     pub(super) publication_outer: usize,
     pub(super) publication_inner: usize,
@@ -165,6 +169,8 @@ pub(super) struct LdltColumnWorkspace {
 }
 
 pub(super) const LDLT_MAXIMUM_ORDER: usize = u32::MAX as usize;
+/// 🪙️ Fewest factor entries a checkpoint waits for, so small factors finish without intermediate checkpoints.
+pub(super) const LDLT_CHECKPOINT_MINIMUM_ENTRIES: usize = 4096;
 
 pub struct LdltJob {
     pub(super) operation: Operation,
@@ -187,8 +193,7 @@ pub(super) fn close_ldlt_checkpoint_step(state: &mut LdltCheckpoint, maximum_byt
 }
 
 impl LdltJob {
-    pub fn new(operation: Operation, a: CscSym, columns_per_step: usize) -> Self {
-        assert!(columns_per_step > 0, "ldlt batch must contain work");
+    pub fn new(operation: Operation, a: CscSym) -> Self {
         let n = a.n;
         let admission_fault = n > LDLT_MAXIMUM_ORDER || a.colptr.len() != n.saturating_add(1) || a.rowind.len() != a.vals.len() || a.colptr.get(0).copied() != Some(0) || a.colptr.get(n).copied().map(|value| value as usize) != Some(a.vals.len());
         let workspace = LdltColumnWorkspace { values: PagedList::empty(), marks: PagedList::empty(), generation: 0, touched: PagedList::empty(), candidate: PagedList::empty(), sort: HeapSortCursor::new(0) };
@@ -222,6 +227,8 @@ impl LdltJob {
                 reserve_lane: 0,
                 reserve_cursor: 0,
                 checkpoint_due: false,
+                checkpoint_entries: 0,
+                checkpoint_floor: LDLT_CHECKPOINT_MINIMUM_ENTRIES,
                 publication_stage: 0,
                 publication_outer: 0,
                 publication_inner: 0,
@@ -233,6 +240,9 @@ impl LdltJob {
             terminal_published: false, desk: NumericalOutcomeDesk::default(),
         }
     }
+
+    /// 🪜️ Checkpoints once the factor holds `entries` entries (and again whenever it doubles), instead of the production floor.
+    pub fn with_checkpoint_floor(mut self, entries: usize) -> Self { self.state.checkpoint_floor = entries.max(1); self }
 
     pub fn preview(&self) -> LdltPreview {
         LdltPreview { completed_columns: self.state.column, total_columns: self.state.a.n, negative_pivots: self.state.d.iter().take(self.state.column).filter(|&&value| value < 0.0).count() }
@@ -516,7 +526,7 @@ impl LdltJob {
                 } else if Self::admit_work(context, 1, 16)? {
                     self.state.column += 1;
                     self.state.cursor.stage = LdltColumnStage::ReserveColumn;
-                    self.state.checkpoint_due = self.state.column < self.state.a.n;
+                    self.state.checkpoint_due = self.state.column < self.state.a.n && self.state.columns.entries.len() >= self.state.checkpoint_entries.saturating_mul(2).max(self.state.checkpoint_floor);
                 }
             }
         }

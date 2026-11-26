@@ -6,8 +6,8 @@ const root=process.cwd(), native=process.env.RUSTC!, area=join(import.meta.dir,"
 const policy=await import(pathToFileURL(resolve("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🟦️.ts")).href);
 const spec={version:1,mode:"prototype",target:"wasm32-wasip2",producer:"artifact",operation:"build",compositions:["semio-hub-procedural-component"]};
 const config=policy.renderCargoProfileConfigurationV1(spec,"🌎️hub/Cargo.toml","repository");
-const args=policy.appendCargoProfileSelectorsV1(["build","--offline","--locked","--manifest-path","🌎️hub/🧩️compositions/🌀️procedural/🧩️component/📦️packages/🦀️rust/Cargo.toml","--target",spec.target,"--profile",spec.mode,"-j","2"],config);
+const args=policy.appendCargoProfileSelectorsV1(["build","--offline","--locked","--manifest-path","🌎️hub/🧩️compositions/🌀️procedural/🧩️component/📦️packages/🦀️rust/Cargo.toml","--target",spec.target,"--profile",spec.mode,"-j","1"],config);
 const fd=openSync(join(area,"build.log"),"w");
-const result=spawnSync(join(native,"../cargo"),args,{stdio:["ignore",fd,fd],env:{...process.env,RUSTC_WRAPPER:"",RUSTC_WORKSPACE_WRAPPER:"",CARGO_HOME:join(root,".cache/b/r/m/cargo/home"),CARGO_TARGET_DIR:area,CARGO_BUILD_BUILD_DIR:join(root,".cache/b/r/m/tmp/g3d-lean-n26")}});
+const result=spawnSync(join(native,"../cargo"),args,{stdio:["ignore",fd,fd],env:{...process.env,RUSTC_WRAPPER:join(area,"../retry-compiler"),RUSTC_WORKSPACE_WRAPPER:"",CARGO_HOME:join(root,".cache/b/r/m/cargo/home"),CARGO_TARGET_DIR:area,CARGO_BUILD_BUILD_DIR:join(root,".cache/b/r/m/tmp/g3d-lean-n26")}});
 if(result.error)throw result.error;
 process.exit(result.status??1);

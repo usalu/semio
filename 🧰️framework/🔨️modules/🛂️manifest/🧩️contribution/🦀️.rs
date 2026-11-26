@@ -463,6 +463,11 @@ pub struct InferenceArtifactBinding {
 /// cannot read.
 pub const INFERENCE_ARTIFACT_PACK_BASE64: &str = "artifact-pack-base64";
 
+/// 🧱️ The encoding for a guest that reads the artifact's canonical `pack` bytes as its WHOLE request body (no JSON
+/// envelope): the binding's `field` is empty, the host writes `pack` verbatim and refuses any caller body.
+/// Results that are pack wire values are projected to JSON by the gateway.
+pub const INFERENCE_ARTIFACT_PACK_BYTES: &str = "artifact-pack-bytes";
+
 /// 🎁️ Everything one plugin contributes onto one artifact kind it depends on — see the registration
 /// gates in contract freeze §4 (accepted only when `artifact_kind`'s owner is a direct
 /// `PluginManifest.dependencies` entry).

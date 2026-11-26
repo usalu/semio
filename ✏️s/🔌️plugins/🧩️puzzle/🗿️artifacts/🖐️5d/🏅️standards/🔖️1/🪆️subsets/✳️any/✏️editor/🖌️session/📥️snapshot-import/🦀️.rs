@@ -16,7 +16,7 @@ use semio_framework_pack_json::{parse, Value};
 use crate::editor::puzzle5d::session::support::{puzzle5d_import_checkpoint, puzzle5d_job_fault, puzzle5d_step_envelope};
 use crate::editor::puzzle5d::Puzzle5dPlayApp;
 use crate::editor::puzzle5d::entities::{PUZZLE5D_IMPORT_DECODED_ITEMS, PUZZLE5D_IMPORT_MEDIA_BYTES, PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE, PUZZLE5D_IMPORT_MUTATION_ITEMS, PUZZLE5D_IMPORT_MUTATION_PAGES, PUZZLE5D_IMPORT_SEMANTIC_ITEMS, PUZZLE5D_RESERVED_PAGE_BYTES, puzzle5d_editor_projection};
-use crate::puzzle5d_rewriting::{QueryExecution, prepare_puzzle5d_effects, start_puzzle5d_rewrite};
+use semio_s_artifact_puzzle_5d_rewriting::{QueryExecution, prepare_puzzle5d_effects, start_puzzle5d_rewrite};
 use semio_framework_job::{InteractiveJobCloseStep, StepContext};
 use semio_framework_value::{DslValue, bounded_clone::DSL_VALUE_CLONE_MAXIMUM_DEPTH};
 use semio_s_artifact_puzzle_5d_kind_catalogs::standards::v1::subsets::any::schema::kind_catalogs::kind_catalogs_of;

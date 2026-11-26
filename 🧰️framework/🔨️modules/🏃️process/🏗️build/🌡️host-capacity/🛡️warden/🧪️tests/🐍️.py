@@ -47,9 +47,14 @@ def ceiling_of(command, policy=None):
     return out
 
 
+def heavy(subject):
+    ceiling = subject.get("ceiling")
+    return ceiling is not None and ceiling["kind"] == "final" and ceiling["listed"]
+
+
 def order_key(subject):
     from fractions import Fraction
-    return (1 if subject.get("capCritical") else 0, Fraction(subject["elapsedSeconds"], max(1, subject["megabytes"])), subject["rank"], subject["pid"])
+    return (1 if subject.get("capCritical") else 0, 1 if heavy(subject) else 0, Fraction(subject["elapsedSeconds"], max(1, subject["megabytes"])), subject["rank"], subject["pid"])
 
 
 def swap_depth(policy, host):
@@ -143,6 +148,11 @@ def decide(policy, host, subjects, previous):
         else:
             trigger = "swap"
     quiet = pressure < 2 and avail >= guard and not (headroom is not None and headroom < head_guard) and not swap_worked
+    if level == "calm":
+        calm_ticks = (previous["calmTicks"] if previous["level"] == "calm" or previous["calmTicks"] > 0 else 0) + 1
+    else:
+        calm_ticks = previous["calmTicks"] + 1 if quiet and not crossed and avail >= resume else 0
+    quiet_ready = quiet and calm_ticks >= policy["calmTicks"] and avail >= resume
     held = policy["pressureDeficitMegabytes"] if (acute or (not severe and (pressure >= 1 or comp >= 1))) else 0
     target = resume if depth >= 1 else guard
     deficit_all = max(target - avail, 0 if headroom is None else head_guard - headroom, held, overage, 1)
@@ -180,18 +190,30 @@ def decide(policy, host, subjects, previous):
     def count(name):
         return sum(1 for a in actions if a["action"] == name and a["reason"] not in ("cap", "ceiling"))
 
-    overdue = sorted([s for s in subjects if s["suspended"] and s["suspendedSeconds"] >= policy["suspendMaximumSeconds"] and s["id"] not in acted], key=order_key)
+    overdue = sorted([s for s in subjects if s["suspended"] and s["suspendedSeconds"] >= (policy["heavySuspendMaximumSeconds"] if heavy(s) else policy["suspendMaximumSeconds"]) and s["id"] not in acted], key=order_key)
     cancelled = []
-    if level != "calm" and not quiet:
-        for s in overdue:
-            if s["canCancel"] and (not s.get("capCritical") or severe) and count("cancel") < policy["maximumCancelsPerTick"]:
-                actions.append({"action": "cancel", "id": s["id"], "reason": "overdue"})
-                acted.add(s["id"])
-                cancelled.append(s)
+    initial_room = avail - guard if quiet and avail >= resume else 0
+    used_room = 0
+    def page_in(s):
+        measured = s.get("nonresidentMegabytes", 0)
+        if measured is not None:
+            return measured
+        return s.get("stoppedFootprintMegabytes", s["megabytes"]) if level == "calm" and pressure == 0 else float("inf")
+
     for s in overdue:
-        if not s["canCancel"] or (level != "calm" and quiet) or (s.get("capCritical") and not severe):
+        shortage = page_in(s) > initial_room
+        pressure_cancel = level != "calm" and not quiet and (not s.get("capCritical") or severe)
+        if s["canCancel"] and (shortage or pressure_cancel) and count("cancel") < policy["maximumCancelsPerTick"]:
+            actions.append({"action": "cancel", "id": s["id"], "reason": "overdue"})
+            acted.add(s["id"])
+            cancelled.append(s)
+    for s in overdue:
+        cost = page_in(s)
+        fits = s["id"] not in acted and used_room + cost <= initial_room
+        if fits and (not quiet or quiet_ready or level == "calm") and (not s["canCancel"] or (level != "calm" and quiet) or (s.get("capCritical") and not severe)):
             actions.append({"action": "resume", "id": s["id"], "reason": "overdue"})
             acted.add(s["id"])
+            used_room += cost
 
     if level == "danger" and severe and not quiet:
         deficit = deficit_all
@@ -199,7 +221,7 @@ def decide(policy, host, subjects, previous):
         def paused(s):
             return s["suspended"] and s["suspendedSeconds"] >= policy["pauseDeadlineSeconds"]
 
-        pausing_failed = all(paused(s) for s in subjects if s["canSuspend"])
+        pausing_failed = all(paused(s) for s in subjects if s["canSuspend"] and s["canCancel"])
         candidates = [s for s in subjects if s["canCancel"] and s["id"] not in acted and (paused(s) if s["canSuspend"] else pausing_failed)]
         candidates.sort(key=lambda s: (0 if s["suspended"] else 1,) + order_key(s))
         for s in candidates:
@@ -218,22 +240,14 @@ def decide(policy, host, subjects, previous):
         for s in [r for r in every_running if r["id"] not in acted]:
             if covered >= deficit or count("suspend") == policy["maximumSuspendsPerTick"]:
                 break
-            if s["id"] in kept or not s["canSuspend"] or damped(s):
+            if s["id"] in kept or not s["canSuspend"] or not s["canCancel"] or damped(s):
                 continue
             actions.append({"action": "suspend", "id": s["id"], "reason": level})
             acted.add(s["id"])
             covered += s["megabytes"]
 
-    if level == "calm":
-        calm_ticks = (previous["calmTicks"] if previous["level"] == "calm" else 0) + 1
-    else:
-        calm_ticks = 0
-    if level != "calm" and quiet and not crossed:
-        waiting = sorted([s for s in subjects if s["suspended"] and s["id"] not in acted], key=order_key)
-        if waiting:
-            actions.append({"action": "resume", "id": waiting[-1]["id"], "reason": "calm"})
-    if level == "calm" and calm_ticks >= policy["calmTicks"] and avail >= resume:
-        waiting = sorted([s for s in subjects if s["suspended"] and s["id"] not in acted], key=order_key)
+    if (quiet_ready and not crossed) or (level == "calm" and calm_ticks >= policy["calmTicks"] and avail >= resume):
+        waiting = sorted([s for s in subjects if s["suspended"] and s["id"] not in acted and page_in(s) <= initial_room - used_room], key=order_key)
         if waiting:
             actions.append({"action": "resume", "id": waiting[-1]["id"], "reason": "calm"})
 

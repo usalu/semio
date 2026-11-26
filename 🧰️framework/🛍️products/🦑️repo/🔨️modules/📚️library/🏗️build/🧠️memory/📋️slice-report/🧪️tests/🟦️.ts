@@ -40,10 +40,11 @@ test("mixed observation scopes report the largest map and the entry count of the
   const apply=async(index:number):Promise<void>=>{
    if(index<collectionFixture.length){
     const {entries,width,spilled}=collectionFixture[index]!;
-    await captureObservedSourceInputsV1(async()=>{
+    const body=async():Promise<void>=>{
      for(let row=0;row<entries;row++)recordClosureFactV1("fixture/"+index+"/"+row,"a".repeat(width));
      await apply(index+1);
-    },undefined,false,spilled?spill:undefined);
+    };
+    if(spilled)await captureObservedSourceInputsV1(body,undefined,false,spill);else await captureObservedSourceInputsV1(body,undefined,false);
     return;
    }
    const row=scopes()!;

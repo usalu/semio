@@ -15,7 +15,7 @@ const base={HOME:live,PATH:`${live}/.cargo/bin:/opt/homebrew/bin:/usr/bin:${live
 describe("slice lab home",()=>{
  test("the tools of a slice follow the declared kinds of its owners, never more",()=>{
   expect(sliceLabToolsForKindsV1(["go"])).toEqual(["bun","go"]);
-  expect(sliceLabToolsForKindsV1(["go"]).some(id=>/rust|cargo/u.test(id))).toBe(false);
+  expect(Array.from(sliceLabToolsForKindsV1(["go"])).some(id=>/rust|cargo/u.test(id))).toBe(false);
   expect(sliceLabToolsForKindsV1(["typescript","rust","go"])).toEqual(["bun","node","rustup","rust","cargo-nextest","cargo-llvm-cov","go"]);
   expect(sliceLabToolsForKindsV1(undefined)).toBe("all");
   expect(()=>sliceLabToolsForKindsV1(["cobol"])).toThrow(/unknown toolchain kind cobol[\s\S]*unbekannte Werkzeugart cobol/u);

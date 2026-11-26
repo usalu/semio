@@ -58,7 +58,7 @@ test("large warm rosters score each owner key once and preserve the independent 
 
 test("parts: a row is durable once written, a torn last line, an old row and an absent record never count, rows are held as strings only",()=>{
  const directory=scratch();const fresh=Date.now();
- const row=(n:string,extra={})=>({v:1,n,k:warmDigestV1(n),d:"10:1",o:"settled",t:fresh,...extra});
+ const row=(n:string,extra:{o?:"settled"|"other"|"absent";t?:number}={})=>({v:1 as const,n,k:warmDigestV1(n),d:"10:1",o:"settled" as "settled"|"other"|"absent",t:fresh,...extra});
  appendWarmRowV1(directory,row("a"),1);appendWarmRowV1(directory,row("b",{o:"absent"}),1);appendWarmRowV1(directory,row("old",{t:fresh-WARM_POLICY_V1.maximumAgeMilliseconds-1}),2);
  appendFileSync(join(directory,"2.part"),'{"v":1,"n":"torn","k":"abc');
  const index=readWarmIndexV1(directory,{now:()=>fresh});

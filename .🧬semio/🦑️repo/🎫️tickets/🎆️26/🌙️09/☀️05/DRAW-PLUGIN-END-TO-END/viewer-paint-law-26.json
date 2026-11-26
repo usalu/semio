@@ -1,0 +1,9 @@
+{
+  "before": {"bitmap":[1600,971],"pixels":81493,"left":374,"top":244,"width":141,"height":650},
+  "cases": [
+    {"name":"zoom","bitmap":[1600,971],"pixels":99174,"left":331,"top":220,"width":156,"height":715,"zoom":true},
+    {"name":"translated","bitmap":[1600,971],"pixels":81493,"left":331,"top":220,"width":141,"height":650,"zoom":false},
+    {"name":"resized","bitmap":[1800,1100],"pixels":99174,"left":331,"top":220,"width":156,"height":715,"zoom":false},
+    {"name":"isolated colored overlay","bitmap":[1600,971],"pixels":81497,"left":331,"top":220,"width":156,"height":715,"zoom":false}
+  ]
+}

@@ -10,7 +10,7 @@ async fn replica(fixture: &Value, uri: &str, actor: &str, seed: bool, mounted_po
     assert_eq!(app.stores.store.local_actor_id(), &protocol::ActorId(actor.into()));
     if seed {
         for op in fixture["seed"].as_array().expect("seed") {
-            app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![seed_op(op)], transaction: None }, identity).await.expect("seed edit applies");
+            app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![seed_op(op)], transaction: None }, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("seed edit applies");
         }
     }
     app.render_ctx().refresh_cache().await.expect("the command log backfills");
@@ -48,6 +48,7 @@ async fn history_verb(app: &mut ToyApp, actor: &str, action: &str, args: Option<
     let meta = ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(actor) };
     let admitted = dispatch(app, action, args, &meta, mounted_policy, identity, cx).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
     semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await.unwrap_or_else(|failure| panic!("{action} settles: {failure:?}"));
+    pump_until(app, "the history verb lands", |app| !app.time_travel.authoring_pending(), mounted_policy, identity, cx).await;
     app.render_ctx().refresh_cache().await.expect("history refresh");
 }
 
@@ -83,7 +84,7 @@ async fn a_history_edit_is_its_own_row_locally_remotely_and_after_reload() {
     let (mut remote, mut remote_probe) = replica(&fixture, "history-edit-row-remote", "remote", false, mounted_policy, &mut identity).await;
     relay(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity, cx).await;
     assert_eq!(head(&remote), (5, "a".to_string()), "the remote replica holds the seed");
-    commit_scenario(&mut local, &fixture, "overwrite-supersedes-in-place", mounted_policy, &mut identity).await;
+    commit_scenario(&mut local, &fixture, "overwrite-supersedes-in-place", mounted_policy, &mut identity, cx).await;
     relay(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity, cx).await;
     let mut reloaded = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.clone().into()), mounted_policy, &mut identity).await;
     assert_eq!(reloaded.stores.store.local_actor_id(), &protocol::ActorId(actor.clone().into()));
@@ -132,7 +133,7 @@ async fn undo_and_redo_of_a_finalize_author_restoring_supersedes_on_both_replica
     let (mut local, mut local_probe) = replica(&fixture, "history-edit-undo-local", &actor, true, mounted_policy, &mut identity).await;
     let (mut remote, mut remote_probe) = replica(&fixture, "history-edit-undo-remote", "remote", false, mounted_policy, &mut identity).await;
     relay_adopted(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity).await;
-    commit_scenario(&mut local, &fixture, "overwrite-supersedes-in-place", mounted_policy, &mut identity).await;
+    commit_scenario(&mut local, &fixture, "overwrite-supersedes-in-place", mounted_policy, &mut identity, cx).await;
     relay_adopted(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity).await;
     let edits = local.stores.store.envelope().vcs.edits.len();
 
@@ -156,7 +157,7 @@ async fn undo_and_redo_of_a_finalize_author_restoring_supersedes_on_both_replica
     relay_adopted(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity).await;
     assert_eq!(head(&remote), (5, "b".to_string()));
 
-    local.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: 7 }.into()], transaction: None }, &mut identity).await.expect("a newer document edit");
+    local.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: 7 }.into()], transaction: None }, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("a newer document edit");
     local.render_ctx().refresh_cache().await.expect("the newer edit is logged");
     history_verb(&mut local, &actor, "undo", None, mounted_policy, &mut identity, cx).await;
     assert_eq!(head(&local), (5, "b".to_string()), "the newer own document edit is undone first");
@@ -201,7 +202,7 @@ async fn an_alternative_history_edit_is_undone_within_its_alternative() {
     let fixture = fixture();
     let actor = text(&fixture["actor"]).to_string();
     let (mut app, probe) = replica(&fixture, "history-edit-alternative", &actor, true, mounted_policy, &mut identity).await;
-    commit_scenario(&mut app, &fixture, "a-new-alternative-keeps-the-original", mounted_policy, &mut identity).await;
+    commit_scenario(&mut app, &fixture, "a-new-alternative-keeps-the-original", mounted_policy, &mut identity, cx).await;
     let variant = app.stores.store.envelope().active_alternative_id.clone().expect("the new alternative is active");
     assert_eq!(english(&history_edit_rows(&mut app).await), ["History edited — alternative Variant: 1 mutation"]);
     history_verb(&mut app, &actor, "undo", None, mounted_policy, &mut identity, cx).await;

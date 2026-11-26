@@ -22,7 +22,7 @@ test("the project of a root renamed by an edit replaces the owner of the old nam
   await applyOps(dir,[{op:"write",path:"pkg/p2/project.json",content:JSON.stringify({name:"p2-renamed",package:"@syn/p2",uses:[]})}]);
   const warm=await world.refresh();
   expect(warm.published).toBe(true);
-  const names=Object.keys(warm.current.manifest.owners).sort();
+  const names=Object.keys(warm.current.manifest!.owners).sort();
   expect(names).toContain("p2-renamed");expect(names).not.toContain("p2");
   expect(await world.graph(warm.current)).toEqual(normalized((({generation:_g,membership:_m,...rest}:any)=>rest)(pythonGraph(dir))));
  }finally{rmSync(dir,{recursive:true,force:true});}
@@ -33,13 +33,13 @@ test("a crate that only had a manifest and gets a project.json after the generat
  try{
   await seed(dir,{...ringFiles(5),"pkg/crate/Cargo.toml":'[package]\nname = "crate-original"\n'});
   const world=createWorld(dir),cold=await world.refresh();
-  expect(Object.keys(cold.current.manifest.owners)).toContain("crate-original");
+  expect(Object.keys(cold.current.manifest!.owners)).toContain("crate-original");
   await applyOps(dir,[{op:"write",path:"pkg/crate/project.json",content:JSON.stringify({name:"@syn/crate-rs",uses:[]})}]);
   const warm=await world.refresh();
   expect(warm.published).toBe(true);
-  const names=Object.keys(warm.current.manifest.owners).sort();
+  const names=Object.keys(warm.current.manifest!.owners).sort();
   expect(names).toContain("@syn/crate-rs");expect(names).not.toContain("crate-original");
-  for(const row of Object.values(warm.current.manifest.owners))expect((row as {edgesEnv:string}).edgesEnv).toBe(warm.current.manifest.env);
+  for(const row of Object.values(warm.current.manifest!.owners))expect((row as {edgesEnv:string}).edgesEnv).toBe(warm.current.manifest!.env);
   expect(await world.graph(warm.current)).toEqual(normalized((({generation:_g,membership:_m,...rest}:any)=>rest)(pythonGraph(dir))));
  }finally{rmSync(dir,{recursive:true,force:true});}
 },60000);

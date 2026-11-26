@@ -5,6 +5,8 @@ fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_fr
 include!("🌱️turns.rs");
 #[path="../📃️policy/📥️operation/🪙️guest/🧪️tests/core-width.rs"]
 mod core_width;
+#[path="../📃️policy/📥️operation/🧪️tests/reserve-runtime.rs"]
+mod reserve_runtime;
 
 #[test]
 fn original_host_production_driver_keeps_same_finite_treasury_across_all_wake_returns(){

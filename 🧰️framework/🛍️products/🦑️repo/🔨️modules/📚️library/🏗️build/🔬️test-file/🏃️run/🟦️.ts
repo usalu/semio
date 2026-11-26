@@ -1,4 +1,5 @@
-import {relative,resolve,sep} from "node:path";
+import {readFileSync} from "node:fs";
+import {dirname,relative,resolve,sep} from "node:path";
 import policy from "../🔣️.json" with {type:"json"};
 import {createScriptProcessEnvelope,withScriptProcessEnvelope,advanceScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {processTestCheckoutV1,runProcessTestSuiteV1,withProcessTestOutputV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🏃️run/🟦️.ts";
@@ -8,8 +9,8 @@ import {describeClampedBudgetV1,stretchedBudgetV1} from "../../../../../../../�
 import {genuineBirthLaunchersV1} from "../../../🧪️testing/🌱️genuine-birth/🚀️launchers/🟦️.ts";
 import {createBuildBootstrapCapabilitiesV1} from "../../📥️caller/📤️child/🟦️.ts";
 import {workspaceTestPythonEnvironmentV1} from "../../🗂️suites/🐍️python/🟦️.ts";
-import {readTestFileTablesV1,testFileBunCountsV1,testFileEnvelopeArgumentsV1,testFileNarrowedSuiteV1,testFileResultV1,testFileTailV1,type TestFilePolicyV1,type TestFileResultV1,type TestFileRouteV1,type TestFileRowV1} from "../🟦️.ts";
-import {testFileTextV1,type TestFileLanguageV1} from "../📖️texts/🟦️.ts";
+import {readTestFileTablesV1,testFileBunCountsV1,testFileOracleArgumentsV1,testFileEnvelopeArgumentsV1,testFileNarrowedSuiteV1,testFileResultV1,testFileTailV1,type TestFilePolicyV1,type TestFileResultV1,type TestFileRouteV1,type TestFileRowV1} from "../🟦️.ts";
+import {refuseTestFileV1,testFileTextV1,type TestFileLanguageV1} from "../📖️texts/🟦️.ts";
 
 /** 🎛️ What a run touches besides the checkout: the clock, the notices, the policy, the suite tables and the host warden ensure (a test run bypasses the capacity gate, so each route makes sure the warden runs); tests replace them. */
 export type TestFileRunPortsV1=Readonly<{now?:()=>number;notice?:(line:string)=>void;policy?:TestFilePolicyV1;tables?:ReadonlyMap<string,ProcessTestTableV1>;ensureWarden?:()=>void}>;
@@ -48,6 +49,16 @@ async function runProvidedFileV1(provider:TestFilePolicyV1["providers"][number][
  await runRepositoryCommand(invocation,runtimeExecutableV1(),runtimeTestArgumentsV1([resolve(checkout,file)]),checkout,"test-file-"+provider,{version:1,maximumElapsedMilliseconds:budgetMs,output:{maximumBytes:134217728,maximumLines:65536}},{stdout:"stderr",env:{...repoTestArtifactEnvironment(checkout,"test-file-"+provider,environment),...pinnedRustToolchainV1(undefined,environment).environment,...await providedTestEnvironmentV1(provider,checkout)}});
 }
 
+/** 🔮️ Runs one Python oracle as a child of the admitted Script envelope under the interpreter of the locked workspace environment that `repo dependencies ensure` synchronizes, found through the toolchain plan and never by path: with the check arguments its own usage declares, else bare, the exit code being the verdict.
+ * @see ../🧬️schema/🔣️.json */
+async function runOracleV1(invocation:Parameters<typeof runProcessTestSuiteV1>[0]["invocation"],checkout:string,file:string,environment:NodeJS.ProcessEnv,budgetMs:number,rules:TestFilePolicyV1):Promise<void>{
+ const {provisionedPythonV1}=await import("../../../../../../../🔨️modules/🏃️process/🏗️build/🧰️toolchains/🟦️.ts"),interpreter=provisionedPythonV1(checkout);
+ if(interpreter===null)throw refuseTestFileV1("failed","run.oracle-environment",{file});
+ const path=resolve(checkout,file),args=testFileOracleArgumentsV1(checkout,file,readFileSync(path,"utf8"),rules);
+ const {runRepositoryCommand}=await import("../../../🏃️process/🎛️owned-execution/🟦️.ts"),{repoTestArtifactEnvironment}=await import("../../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts");
+ await runRepositoryCommand(invocation,interpreter,[path,...args],dirname(path),rules.oracle.route,{version:1,maximumElapsedMilliseconds:budgetMs,output:{maximumBytes:134217728,maximumLines:65536}},{stdout:"stderr",env:{...repoTestArtifactEnvironment(checkout,rules.oracle.route,environment),...rules.oracle.environment}});
+}
+
 function messageV1(error:unknown,language:TestFileLanguageV1,limit:number):string{
  const text=isRepoErrorV1(error)?renderRepoErrorV1(error,language):String(error instanceof Error?error.message:error);
  return text.split("\n",1)[0]!.slice(0,limit);
@@ -64,7 +75,7 @@ export async function runTestFileRoutesV1(root:string,routes:readonly TestFileRo
    if(!route.runsOnHost){rows.push({...identity,status:"skipped",seconds:0});continue;}
    (ports.ensureWarden??ensureWardenV1)();
    const owner=route.table===null?undefined:rules.tables.find(row=>row.id===route.table),declared=owner===undefined?undefined:tables.get(owner.id)?.suites.find(suite=>suite.id===route.suite),tableRoot=owner===undefined?resolve(root,route.file,".."):resolve(root,owner.root),module=posix(relative(tableRoot,resolve(root,route.file)));
-   const row:ProcessTestSuiteV1=declared===undefined?{id:rules.plain.id,budgetMs:rules.plain.budgetMs,typecheck:"none",files:[module]}:testFileNarrowedSuiteV1(declared,module);
+   const unowned=route.mode==="oracle"?rules.oracle:rules.plain,row:ProcessTestSuiteV1=declared===undefined?{id:unowned.id,budgetMs:unowned.budgetMs,typecheck:"none",files:[module]}:testFileNarrowedSuiteV1(declared,module);
    const table:ProcessTestTableV1={version:1,suites:[row],codeSuites:[],helpers:[]},checkout=processTestCheckoutV1(tableRoot,root),environment={...base,SEMIO_WORKSPACE_ROOT:checkout};
    const project=owner?.project??rules.plain.project,launchers=owner?.launchers?genuineBirthLaunchersV1(resolve(root,rules.launcherScript),checkout):undefined;
    notice(testFileTextV1(options.language,"run.start",{index:index+1,total:routes.length,file:route.file,mode:route.mode,suite:route.suite}));
@@ -77,6 +88,7 @@ export async function runTestFileRoutesV1(root:string,routes:readonly TestFileRo
     await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"test-file",maximumElapsedMilliseconds:funded.milliseconds+rules.elapsedSlackMs},capabilities,Date.now()),async invocation=>{
      cancelled=invocation.control.signal;
      await advanceScriptInvocation(invocation,"test-file:"+route.file,"running");
+     if(route.mode==="oracle"){await runOracleV1(invocation,checkout,route.file,environment,funded.milliseconds,rules);return;}
      let environmentForRun:NodeJS.ProcessEnv=environment;
      if(route.python)try{environmentForRun=await workspaceTestPythonEnvironmentV1(checkout,environment,invocation.control.signal);}catch(error){if(route.mode==="suite"||invocation.control.signal.aborted)throw error;notice(testFileTextV1(options.language,"run.python-unavailable",{reason:messageV1(error,options.language,rules.limits.errorCharacters)}));}
      const provider=route.mode==="plain"?rules.providers.find(row=>route.file.startsWith(row.root+"/"))?.provider:undefined;

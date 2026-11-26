@@ -29,7 +29,7 @@ test("the action of a move equals an independent SQL oracle",()=>{
  const database=new Database(":memory:");
  try{for(const row of fixture.cases){
   const oracle=database.query("SELECT CASE WHEN json_array_length(?1)=0 THEN 'keep' WHEN EXISTS(SELECT 1 FROM json_each(?1) WHERE value LIKE '%.json') THEN 'restart' ELSE 'adopt' END action").get(JSON.stringify(row.changes))as{action:string};
-  expect(oracle.action,row.name).toBe(row.action);expect(projectionAdmissionActionV1(row.changes),row.name).toBe(row.action);
+  expect(oracle.action,row.name).toBe(row.action);expect<string>(projectionAdmissionActionV1(row.changes),row.name).toBe(row.action);
  }}finally{database.close();}
 });
 

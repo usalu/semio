@@ -8,9 +8,10 @@ pub(crate) struct GuestInferenceRun {
     pub payload: Option<Vec<u8>>,
 }
 
-/// 🔎️ Projects guest-owned bytes as structured JSON where possible.
+/// 🔎️ Projects guest-owned bytes as structured JSON where possible: JSON text as is, otherwise a pack wire value through its JSON form.
 pub(crate) fn inference_run_result_value(payload: &[u8]) -> Option<serde_json::Value> {
-    std::str::from_utf8(payload).ok().and_then(|text| serde_json::from_str(text).ok())
+    let text = std::str::from_utf8(payload).ok().and_then(|text| serde_json::from_str(text).ok());
+    text.or_else(|| semio_os_kernel::pack_rt::decode_wire_value(payload).ok().and_then(|value| serde_json::from_str(&semio_framework_pack_json::to_json_string(&value)).ok()))
 }
 
 pub(super) fn completed_guest_run(outcome: InferenceOutcome) -> Result<GuestInferenceRun, GatewayError> {

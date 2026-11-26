@@ -53,7 +53,7 @@ use semio_os_store_projection::retire_shared_projection;
 #[path = "📖️derived-snapshots-replays-and-history-read-plan/🦀️.rs"]
 mod derived_snapshots_replays_and_history_read_plan;
 pub use derived_snapshots_replays_and_history_read_plan::{
-    retain_completed_history_plan, ArtifactCheckpointSelection, ArtifactCheckpointReadSource, ArtifactDerivedHistoryPreview, ArtifactDerivedReplay,
+    retain_completed_history_plan, ArtifactCheckpointSelection, ArtifactCheckpointReadSource, ArtifactDerivedHistoryPreview, ArtifactDerivedReplay, ArtifactReplacementOwner,
     ArtifactDerivedSnapshot, ArtifactHistoryReadRetirement, HistoryReadPlan,
 };
 

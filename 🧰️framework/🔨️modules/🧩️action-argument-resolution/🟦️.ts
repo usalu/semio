@@ -7,15 +7,17 @@ import type { DialogChoice } from "@semio-tech/framework-manifest/definitions-ac
  * declared, editable form field) through untouched: declared `defs` still resolve staged-then-default
  * as before, but any `seed` key that is not a declared arg id survives into the result unmodified, and
  * a `seed` value for a declared id that the form hasn't staged yet acts as that field's initial value.
- * A dialog with zero declared `defs` (a plain confirm/cancel) passes `seed`+`staged` through wholesale. */
+ * A dialog with zero declared `defs` (a plain confirm/cancel) passes `seed`+`staged` through wholesale.
+ * A non-nullable boolean (a toggle) with neither a staged, seeded nor declared default resolves to `false`: a toggle is never unset. */
 export function effectiveActionArgs(defs: readonly ActionArgDef[], staged: Readonly<Record<string, unknown>>, seed?: Readonly<Record<string, unknown>>): Record<string, unknown> {
   if (defs.length === 0) return { ...seed, ...staged };
   const effective: Record<string, unknown> = seed ? { ...seed } : {};
   for (const def of defs) {
     if (Object.prototype.hasOwnProperty.call(staged, def.id)) {
       effective[def.id] = staged[def.id];
-    } else if (!Object.prototype.hasOwnProperty.call(effective, def.id) && def.default !== undefined && def.default !== null) {
-      effective[def.id] = def.default;
+    } else if (!Object.prototype.hasOwnProperty.call(effective, def.id)) {
+      if (def.default !== undefined && def.default !== null) effective[def.id] = def.default;
+      else if (def.schema.kind === "boolean" && !def.nullable) effective[def.id] = false;
     }
   }
   return effective;
@@ -48,6 +50,15 @@ export function invalidActionChoiceArgs(defs: readonly ActionArgDef[], effective
 export function unresolvedActionArgs(defs: readonly ActionArgDef[], effective: Readonly<Record<string, unknown>>): string[] {
   const unresolved = new Set([...missingRequiredArgs(defs, effective), ...invalidActionChoiceArgs(defs, effective)]);
   return defs.filter(def => unresolved.has(def.id)).map(def => def.id);
+}
+
+/** 🧯️ Why a staged argument blocks submission: `missing` (a required value is blank) or `invalidChoice` (a closed choice outside its current options). */
+export type UnresolvedActionArgReason = "missing" | "invalidChoice";
+
+/** 🧯️ Maps every unresolved argument id to its {@link UnresolvedActionArgReason}, in declaration order — the per-field twin of {@link unresolvedActionArgs}. */
+export function unresolvedActionArgReasons(defs: readonly ActionArgDef[], effective: Readonly<Record<string, unknown>>): Record<string, UnresolvedActionArgReason> {
+  const missing = new Set(missingRequiredArgs(defs, effective));
+  return Object.fromEntries(unresolvedActionArgs(defs, effective).map(id => [id, missing.has(id) ? "missing" as const : "invalidChoice" as const]));
 }
 
 /** 🚧️ The args a dialog `choice` requires that are still unresolved in `effective` — the choice is enabled exactly when this is empty, whatever the submit's own required args; the twin of Rust `DialogChoice::unresolved_args`. */

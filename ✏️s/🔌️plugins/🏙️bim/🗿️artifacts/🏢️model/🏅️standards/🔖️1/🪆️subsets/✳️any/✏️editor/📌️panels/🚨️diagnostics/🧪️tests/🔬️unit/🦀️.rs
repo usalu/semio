@@ -42,6 +42,7 @@ fn model(text: &str) -> (ModelSnapshot, ModelInference) {
 }
 
 fn text_with(snapshot: &ModelSnapshot, inference: &ModelInference, view: &ViewModel) -> String {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let node = render(snapshot, inference, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(view), &TreeWindows::for_body(view, BODY_KEY)).expect("the panel renders");
     semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("projects")
 }

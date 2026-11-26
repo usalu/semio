@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {"line": "> nx run framework-rs:generate:prototype  [local cache]", "outcome": "local"},
+    {"line": "> nx run ui-styling-tokens:generate:prototype  [existing outputs match the cache, left as is]", "outcome": "local"},
+    {"line": "> nx run os:build  [remote cache]", "outcome": "remote"},
+    {"line": "> nx run os:build", "outcome": "executed"},
+    {"line": "\u001b[2m> nx run \u001b[22m\u001b[36mos:build\u001b[39m  \u001b[2m[local cache]\u001b[22m", "outcome": "local"},
+    {"line": "   > nx run print:render  [local cache]  ", "outcome": "local"},
+    {"line": "> nx run-many -t build", "outcome": null},
+    {"line": "Nx read the output from the cache instead of running the command for 5 out of 8 tasks.", "outcome": null},
+    {"line": "cargo: compiling nx run in a string > nx run x", "outcome": null},
+    {"line": "", "outcome": null}
+  ]
+}

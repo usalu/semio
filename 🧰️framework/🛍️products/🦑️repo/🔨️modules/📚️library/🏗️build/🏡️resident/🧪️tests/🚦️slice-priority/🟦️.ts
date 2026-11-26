@@ -18,7 +18,7 @@ test("the slice pool serves waiting loads by urgency and keeps arrival order wit
   const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,heartbeatMilliseconds:20,graceMilliseconds:50,hostMegabytes:16384,elasticity,unlearnedMegabytes:2048,
    reaper:{reap:async()=>0,killNow:()=>undefined},
    reserve:async({megabytes}:{megabytes:number})=>({megabytes,attach:()=>undefined,release:()=>undefined}),
-   createWorker:(_url:URL,data:{name:string})=>{const listeners:Record<string,(value:unknown)=>void>={};started.push(data.name);finish.set(data.name,()=>listeners.message?.({type:"done",graph:{}}));return{pid:undefined,on:(event:string,listener:(value:unknown)=>void)=>{listeners[event]=listener;},terminate:async()=>0};}});
+   createWorker:(_url:URL,data)=>{const name=String(data.name);const listeners:Record<string,(value:unknown)=>void>={};started.push(name);finish.set(name,()=>listeners.message?.({type:"done",graph:{}}));return{pid:undefined,on:(event:string,listener:(value:unknown)=>void)=>{listeners[event]=listener;},terminate:async()=>0};}});
   const ask=(name:string,priority:number|null)=>pool.run({root:"/tmp/"+name,name,arguments:[name],...priority===null?{}:{priority}}),runs:Promise<unknown>[]=[ask("busy",0)];
   await until(()=>started.length===1);
   for(const waiting of row.waiting)runs.push(ask(waiting.name,waiting.priority));

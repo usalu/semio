@@ -1,0 +1,3 @@
+#!/bin/zsh
+# 🪶️ The light proofs of several trial copies one after the other inside one grant: lights.sh <id>…
+for a in "$@"; do zsh "${0:A:h}/light.sh" "$a"; done

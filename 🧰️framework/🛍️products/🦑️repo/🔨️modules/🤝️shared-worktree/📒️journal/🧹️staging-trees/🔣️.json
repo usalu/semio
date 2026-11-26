@@ -1,0 +1,18 @@
+{
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "semio:shared-worktree:journal:staging-trees:v1",
+    "title": "How the staging directories of the shared store are owned and retired",
+    "description": "A process that stages a directory tree below `<store>/v1/tmp` (cold unit copies, guest build trees) creates it with `createStagingTreeV1`: the name `<originId>.<label>.<pid>.<startMs>.<hex16>` carries the owner as the shared process identity (pid together with the creation time of the process, `🏃️process/🔖️identity`), because a pid alone does not name a process. The sweep keeps every directory whose owner is proven alive, whatever its age. A directory without a proven live owner (a dead owner, a pid reused by another process, another machine's origin, or a name that registers no owner) is retired once no entry below it was modified for `graceMilliseconds`; a tree with more than `maximumEntries` entries is kept because its newest write cannot be proven. Loose files go after `fileGraceMilliseconds`. Never a link, never a `.nfs` placeholder.",
+    "type": "object",
+    "required": ["version", "graceMilliseconds", "fileGraceMilliseconds", "maximumEntries"],
+    "additionalProperties": false,
+    "properties": {
+      "version": {"const": 1},
+      "graceMilliseconds": {"type": "integer", "minimum": 60000},
+      "fileGraceMilliseconds": {"type": "integer", "minimum": 60000},
+      "maximumEntries": {"type": "integer", "minimum": 1}
+    }
+  },
+  "policy": {"version": 1, "graceMilliseconds": 3600000, "fileGraceMilliseconds": 21600000, "maximumEntries": 1000000}
+}

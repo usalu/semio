@@ -32,7 +32,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 self.time_travel.reprojection_fault = None;
                 self.time_travel.reprojection_paused = false;
                 if self.stores.store.generation() != generation {
-                    self.history.cache = None;
+                    self.history.invalidate_cache();
                     self.as_dispatch().queue_base_moved();
                     self.as_render().revalidate_interaction_on_document_change(identity).await?;
                 }
@@ -44,7 +44,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     false => error.into_fault().code.0,
                 };
                 self.time_travel.reprojection_fault = Some((code, if local { HistoryReprojectionKind::Step } else { HistoryReprojectionKind::Remote }));
-                self.history.cache = None;
+                self.history.invalidate_cache();
                 self.note_time_travel_changed(true, true);
             }
         }

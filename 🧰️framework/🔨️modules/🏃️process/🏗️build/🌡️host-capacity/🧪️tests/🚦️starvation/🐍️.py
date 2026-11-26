@@ -32,4 +32,46 @@ def run():
     return {"admittedAtSecond": None}
 
 
-print(json.dumps(run()))
+def run_foreign():
+    total = FIX["totalMegabytes"]
+    floor = min(total, max(POLICY["floorMinimumMegabytes"], min(POLICY["floorMaximumMegabytes"], total * POLICY["floorBasisPoints"] // 10000)))
+    mem = FIX["memory"]
+    reserve = min(total, max(mem["interactiveReserveMinimumMegabytes"], min(mem["interactiveReserveMaximumMegabytes"], total * mem["interactiveReserveBasisPoints"] // 10000)))
+    share = (total - floor) - reserve
+    wait = json.load(open(os.path.join(HERE, "..", "🧫️fixtures", "🔣️.json"), encoding="utf-8"))["policy"]["wait"]
+    cfg = FIX["foreign"]
+    big, small = cfg["bigMegabytes"], cfg["smallMegabytes"]
+    live = [(end, -1) for end in cfg["initialEndSeconds"]]
+    queue = []
+    for t in range(0, FIX["horizonSeconds"], FIX["stepSeconds"]):
+        live = [row for row in live if row[0] > t]
+        if t % cfg["arrivalEverySeconds"] == 0:
+            queue.append(t)
+        foreign = cfg["lowMegabytes"] if t % cfg["periodSeconds"] == cfg["lowAtSecond"] else cfg["highMegabytes"]
+        used = small * len(live)
+        if big <= total - foreign - floor - used and big <= share - used:
+            return {"admittedAtSecond": t}
+        since = len([row for row in live if row[1] >= 0])
+        drains = big <= total - foreign - floor and big <= share
+        patient = t * 1000 >= wait["bypassMilliseconds"] or since >= wait["maximumBypasses"]
+        blocked = patient and drains
+        reserved = patient and not drains
+        bypasses = since
+        admitted = 0
+        while queue:
+            if blocked or (reserved and (len(live) > 0 or admitted > 0)):
+                break
+            used = small * len(live)
+            if small > total - foreign - floor - used or small > share - used:
+                break
+            queue.pop(0)
+            live.append((t + cfg["runSeconds"], t))
+            admitted += 1
+            if not patient and drains:
+                bypasses += 1
+                if bypasses >= wait["maximumBypasses"]:
+                    blocked = True
+    return {"admittedAtSecond": None}
+
+
+print(json.dumps({**run(), "foreignAdmittedAtSecond": run_foreign()["admittedAtSecond"]}))

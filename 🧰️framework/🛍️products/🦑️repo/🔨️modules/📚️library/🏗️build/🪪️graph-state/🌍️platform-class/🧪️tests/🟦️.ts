@@ -48,5 +48,5 @@ test("the Python oracle derives the same verdicts from the schema",()=>{
  expect(oracle.cases.map(row=>[row.record,row.class])).toEqual(fixture.cases.map(row=>[recordPlatformV1(row.keyText,row.platform),platformClassV1(row.platform)]));
  expect(oracle.serves.map(row=>row.serves)).toEqual(fixture.serves.map(row=>servesPlatformV1(row.server,row.requester)));
  const split=oracle as unknown as {splits:{served:string[];left:string[]}[]};
- expect(split.splits.map(row=>[row.served,row.left])).toEqual(fixture.splits.map(row=>{const found=splitRequestV1(row.projects,row.server,row.requester);return[found.served,found.left];}));
+ expect<unknown>(split.splits.map(row=>[row.served,row.left])).toEqual(fixture.splits.map(row=>{const found=splitRequestV1(row.projects,row.server,row.requester);return[found.served,found.left];}));
 });

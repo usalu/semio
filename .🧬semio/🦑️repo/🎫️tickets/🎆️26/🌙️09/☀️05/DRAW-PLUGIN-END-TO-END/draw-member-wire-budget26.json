@@ -3,6 +3,16 @@
   "profile": "prototype",
   "role": "lib",
   "maximumMegabytes": 1536,
-  "unsplit": ["semio-s-artifact-draw-drawing-editor-member-wire"],
-  "split": ["semio-s-artifact-draw-drawing-editor-member-wire", "semio-draw-member-decode"]
+  "unsplit": [
+    "semio-s-artifact-draw-drawing-editor-member-wire"
+  ],
+  "split": [
+    "semio-s-artifact-draw-drawing-editor-member-wire",
+    "semio-draw-member-decode"
+  ],
+  "hub": [
+    "semio-hub-draw-editor-app",
+    "semio-hub-draw-viewer-app",
+    "semio-hub-draw"
+  ]
 }

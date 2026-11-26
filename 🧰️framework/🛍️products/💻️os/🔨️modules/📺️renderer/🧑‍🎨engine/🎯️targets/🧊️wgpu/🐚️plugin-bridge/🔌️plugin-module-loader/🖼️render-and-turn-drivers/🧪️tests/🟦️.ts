@@ -1,19 +1,10 @@
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
-import { readFileSync } from "node:fs";
-import ts from "typescript";
 import { drainTypedOperationBatches, scanTypedOperationPages, TYPED_OPERATION_PAGE_MAGIC, wireTurnStatusTag } from "../../../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
 import fixture from "./🔣️.json";
+import { loadProductFunctionsSyncV1 } from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 
-function definition(path: string, name: string): string {
-  const tree = ts.createSourceFile(path, readFileSync(new URL(path,import.meta.url),"utf8"), ts.ScriptTarget.Latest, true);
-  return tree.statements.find(row => (ts.isFunctionDeclaration(row) || ts.isClassDeclaration(row)) && row.name?.text === name)!.getText(tree).replace(/^export /u, "");
-}
-
-const program = ts.transpileModule([
-  definition("../../../🧾️typed-operations-and-handle/🟦️.ts", "WgpuTypedOperationDrive"),
-  definition("../🟦️.ts", "createTurnDrivers"),
-].join("\n"), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+const factory = (path: string, name: string, ports: Record<string, unknown>) => loadProductFunctionsSyncV1(new URL(path, import.meta.url), [name], { ...ports, WgpuTypedOperationDrive: loadProductFunctionsSyncV1(new URL("../../../🧾️typed-operations-and-handle/🟦️.ts", import.meta.url), ["WgpuTypedOperationDrive"], ports).WgpuTypedOperationDrive })[name];
 
 type Turn = typeof fixture.cases[number]["turns"][number];
 function typedPage() {
@@ -52,7 +43,7 @@ for (const sample of fixture.cases) test(sample.name, async () => {
       return {turn, status:"idle", uiPatches:[], effects:turn.owesAck?[typedPage()]:[], deferredEvents:turn.deferred, commandIngress:turn.ingress?{tag:turn.ingress}:undefined};
     },
   };
-  const create=new Function(...Object.keys(ports),program+";return createTurnDrivers;")(...Object.values(ports));
+  const create=factory("../🟦️.ts","createTurnDrivers",ports);
   const route={lifecycle:{activation},accept:async(result:{turn:Turn})=>{
     observed+=1+(result.turn.followUps??0);
     if(result.turn.revoke)released=true;
@@ -67,7 +58,6 @@ for (const sample of fixture.cases) test(sample.name, async () => {
 });
 
 test("extension completion hands an owed page acknowledgement to its background drain", async () => {
-  const source = ts.transpileModule([definition("../../../🧾️typed-operations-and-handle/🟦️.ts", "WgpuTypedOperationDrive"), definition("../../📞️extension-and-request-actors/🟦️.ts", "createExtensionCompletion")].join("\n"), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
   let handoff: readonly unknown[] | undefined;
   const ports = {
     scanTypedOperationPages, wireTurnStatusTag, WGPU_TYPED_OPERATION_SETTLE_LIMIT: 0,
@@ -76,7 +66,7 @@ test("extension completion hands an owed page acknowledgement to its background 
     serializeWgpuActorCall: (_actor: string, work: () => Promise<unknown>) => work(),
     submitTurn: async () => ({ status: "more-work", deferredEvents: 0, uiPatches: [], effects: [typedPage()] }),
   };
-  const create = new Function(...Object.keys(ports), source + ";return createExtensionCompletion;")(...Object.values(ports));
+  const create = factory("../../📞️extension-and-request-actors/🟦️.ts","createExtensionCompletion",ports);
   const completion = create({ requireActorId: () => "actor", requireUiRoute: () => ({ accept: async () => [] }), executeFor: () => undefined, drainSpawnedJobs: async () => ({ frames: [] }), turnOutcomes: { push() {} }, drainTypedOperations: (_id: number, acknowledgements: readonly unknown[]) => { handoff = acknowledgements; } });
   await completion.captureExtensionCompletion(7, 1n).complete({ ok: Uint8Array.of(1) });
   expect(handoff).toHaveLength(1);
@@ -94,7 +84,7 @@ test("background drain submits a handed-off acknowledgement once", async () => {
     pendingTurnEffects: new Map(), stashLeftoverHostEffects: () => {},
     submitTurn: async (_actor: string, events: unknown[]) => { submitted.push(events); return { status: "idle", uiPatches: [], effects: [], deferredEvents: 0 }; },
   };
-  const create = new Function(...Object.keys(ports), program + ";return createTurnDrivers;")(...Object.values(ports));
+  const create = factory("../🟦️.ts","createTurnDrivers",ports);
   const driver = create({ requireUiRoute: () => ({ lifecycle: { activation: {} }, accept: async () => [] }), requireActorId: () => "actor", executeFor: () => undefined, state: {}, closingInstances: new Set(), actorIdByInstance: new Map([[7, "actor"]]), pluginId: "fixture" });
   await driver.drainTypedOperations(7, [ack]);
   expect(submitted).toEqual([[ack]]);

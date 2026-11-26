@@ -23,7 +23,7 @@ test("owner admission matches a sweep oracle through dependency, task and provid
  expect(result.status,result.stderr).toBe(0);
  const expected=JSON.parse(result.stdout);
  for(const row of fixture.cases){
-  const rows=row.rows as Record<string,Facts>,calls:unknown[]=[],controller=new AbortController();
+  const rows:Record<string,Facts>=JSON.parse(JSON.stringify(row.rows)),calls:unknown[]=[],controller=new AbortController();
   let admission,error;
   try{
    admission=await closeBuildOwnerAdmissionV1(readBuildGraphSelectionV1(row.selection),registry(Object.keys(rows),row.providers),async(owner,targets,inputs)=>{

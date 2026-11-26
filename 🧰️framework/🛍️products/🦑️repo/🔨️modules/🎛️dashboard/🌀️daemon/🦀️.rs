@@ -14,6 +14,9 @@ pub mod clients;
 #[path = "🧩️groups/🦀️.rs"]
 pub mod groups;
 
+#[path = "📊️fleet/🦀️.rs"]
+pub mod fleet;
+
 #[path = "🧠️supervisor/🦀️.rs"]
 pub mod supervisor;
 

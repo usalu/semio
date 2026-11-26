@@ -92,3 +92,53 @@ fn original_tessellation_waiter_retries_without_spending_or_stealing_owner() {
         for caller in callers { caller.retire(stock()); }
     }
 }
+
+#[test]
+fn original_browser_stock_tessellates_a_fillet_through_answer_retirement() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️curved-mesh.json")).unwrap();
+    let session = Session::new();
+    let sizes: [f64; 3] = serde_json::from_value(fixture["box"].clone()).unwrap();
+    let handle = session.with_kernel(|kernel| {
+        let result = kernel.box_prim_sync(sizes[0], sizes[1], sizes[2]).and_then(|shape| kernel.fillet_sync(&shape, fixture["radius"].as_f64().unwrap()));
+        result.map_err(|error| semio_s_spatial_kernel_semio_session::map_kernel_error(&error))
+    }).unwrap();
+    let input = serde_json::to_vec(&serde_json::json!({"handle":handle.as_str(),"tolerance":fixture["tolerance"],"nodeHash":7,"windowId":"preview","windowKindId":"preview"})).unwrap();
+    let capture = session.capture();
+    let resources = TessellationResources::new();
+    let grant = RetainedCloneGrant { maximum_depth: fixture["maximumDepth"].as_u64().unwrap() as usize, ..stock() };
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(8720), Generation(1), grant, || Some(1000), 1500, 50_000_000);
+    let mut idle = 0;
+    let mut batched = false;
+    for _ in 0..5_000_000 {
+        let step = turn(&resources, &capture, &input, &mut caller, grant, false);
+        assert!(step.refusal.is_none(), "{:?}", step.refusal);
+        batched |= step.retained_progress.copied_items > 1;
+        if let Some(payload) = step.payload {
+            assert!(batched, "a funded tessellation should advance multiple original steps per guest poll");
+            let answer = pack::record::decode_value_record_body_exact(&payload, 1, &pack::PackLimits::default()).unwrap();
+            let mesh = answer.get("mesh").unwrap();
+            let positions = mesh.get("positions").unwrap().as_array().unwrap();
+            let indices = mesh.get("indices").unwrap().as_array().unwrap();
+            assert_eq!(positions.len() % 3, 0);
+            let tolerance = fixture["tolerance"].as_f64().unwrap();
+            for axis in 0..3 {
+                let coordinates = positions.iter().skip(axis).step_by(3).map(|value| value.as_f64().unwrap());
+                let (low, high) = coordinates.fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), v| (lo.min(v), hi.max(v)));
+                assert!(low.abs() <= tolerance && (high - sizes[axis]).abs() <= tolerance);
+            }
+            assert_eq!(indices.len() % 3, 0);
+            assert!(indices.len() / 3 >= fixture["minimumTriangles"].as_u64().unwrap() as usize);
+            assert!(indices.iter().all(|index| index.as_u64().unwrap() < (positions.len() / 3) as u64));
+            assert!(resources.terminal_is_empty());
+            caller.retire(grant);
+            return;
+        }
+        idle = if step.retained_progress == Default::default() { idle + 1 } else { 0 };
+        if idle == 4096 {
+            let slot = resources.cursor.lock().unwrap();
+            let cursor = slot.as_ref().unwrap();
+            panic!("fillet stopped: query={} query_complete={} wire={:?} completed={} mesh={} closing={} fault={} active={} query_units={} demand={:?}",cursor.query_active,cursor.query_complete,cursor.wire.as_ref().map(|w| w.phase()),cursor.completed.is_some(),cursor.mesh.is_some(),cursor.closing,cursor.fault.is_some(),cursor.active.is_some(),cursor.units,cursor.retirement_demands(grant.maximum_copy_bytes));
+        }
+    }
+    panic!("fillet exceeded the bounded original-step fixture");
+}

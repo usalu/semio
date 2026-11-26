@@ -112,7 +112,7 @@ test("the fleet carries the table of the serving machine: published, read, damag
   const table=recordOwnerCostV1(emptyOwnerCostTableV1(),sample("@semio-tech/s-dev-composition",13976,5));
   expect(await publishOwnerCostsV1({client,server:"g1-server",table})).toBe(true);
   expect(await readOwnerCostsV1({client})).toEqual(table);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("the recorder keeps only notable owners, writes merged and rarely, and flushes at once when an owner was stopped",()=>{

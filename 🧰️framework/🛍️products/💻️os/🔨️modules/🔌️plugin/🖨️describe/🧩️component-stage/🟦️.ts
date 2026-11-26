@@ -116,7 +116,7 @@ export async function describeComponentStageV1(repoRoot: string, target: Compone
     const packBytes = await readArtifactBytesV1(join(output, DESCRIPTOR_PACK_FILENAME),CATALOG_DESCRIPTOR_MAX_BYTES,control.compiler.signal), jsonBytes = await readArtifactBytesV1(join(output, DESCRIPTOR_JSON_FILENAME),CATALOG_DESCRIPTOR_MAX_BYTES,control.compiler.signal), pair = verifySemanticDescriptorPairBytesV1(jsonBytes, packBytes);
     if (pair.pluginId !== target.pluginId || pair.packageId !== target.packageId || pair.role !== target.role) throw new Error(`${target.pluginId}: the component describes ${pair.pluginId} (${pair.packageId}, ${pair.role})`);
     const actorImage = control.prepareActor ? await readOptionalActorImageV1(join(output, actorPreparationPolicyV1.image), control.compiler.signal) : undefined;
-    return Object.freeze({ pluginId: pair.pluginId, packageId: pair.packageId, role: pair.role, version: pair.version, componentSha256: component, jsonBytes, packBytes, semanticSha256: pair.semanticSha256, ...(actorImage ? {actorImage} : {}) });
+    return Object.freeze({ pluginId: pair.pluginId, packageId: pair.packageId, role: pair.role, version: pair.version, componentSha256: component, jsonBytes, packBytes, semanticSha256: pair.semanticSha256, ...(actualTool.pin ? {emitterPin:actualTool.pin} : {}), ...(actorImage ? {actorImage} : {}) });
   } catch(error){primaryFailed=true;throw error;}
   finally {try{rmSync(output,{recursive:true,force:true});}catch(error){if(!primaryFailed)throw error;}}
  });

@@ -1,0 +1,13 @@
+{
+  "pin": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "cases": [
+    { "request": ["bim", "react", "prototype"], "suffix": [], "profile": "prototype", "pinned": false },
+    { "request": ["bim", "react", "prototype"], "suffix": ["--published-emitter", "{pin}"], "profile": "prototype", "pinned": true },
+    { "request": ["bim", "react", "release"], "suffix": ["--published-emitter", "{pin}"], "profile": null, "pinned": false },
+    { "request": ["bim", "wgpu", "prototype"], "suffix": ["--published-emitter", "{pin}"], "profile": null, "pinned": false },
+    { "request": ["bim", "react", "prototype"], "suffix": ["--published-emitter", "invalid"], "profile": null, "pinned": false },
+    { "request": ["bim", "react", "prototype"], "suffix": ["--published-emitter"], "profile": null, "pinned": false },
+    { "request": ["bim", "react", "prototype"], "suffix": ["--anything", "{pin}"], "profile": null, "pinned": false },
+    { "request": ["bim", "react", "prototype"], "suffix": ["--published-emitter", "{pin}", "extra"], "profile": null, "pinned": false }
+  ]
+}

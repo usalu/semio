@@ -3,10 +3,10 @@ import {join} from "node:path";
 import {UNIT_CACHE_POLICY_V1} from "../../../🔏️key/🟦️.ts";
 import {sleepV1,tryClaimV1} from "../../../🔒️lock/🟦️.ts";
 import {enterLaneV1,lanePathsV1,type LaneOwnerV1} from "../../🟦️.ts";
-import {laneHoldersV1,poolBoundsV1,readPoolV1,trimPoolV1,type PoolReportV1,type PoolTrimContextV1} from "../🟦️.ts";
+import {boundedPoolV1,laneHoldersV1,poolBoundsV1,readPoolV1,trimPoolV1,type PoolReportV1,type PoolTrimContextV1} from "../🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1.pool,layout=UNIT_CACHE_POLICY_V1.layout;
-/** 🎯️ A stable product workspace remains exclusively held by its current caller, never by a waiter's authority. */
+/** 🎯️ A stable product workspace remains exclusively held by its current caller, never by a waiter's authority. A retained product lane (idle, inside its retention window) is never a trim victim, so it is not counted against the live bound either (`boundedPoolV1`): counting it let thirty-two retained products fill the pool for twelve hours and every later product wait here for ever without a word (the artifact-plan receiver stalled its whole loan in `cargo.product.claim`); a pool full of lanes that are really live now says so once (`poolBusy`) and keeps waiting, cancellable. */
 export async function acquireProductLaneV1(root:string,request:Readonly<{key:string;crates:readonly string[];quotaBytes:number;owner:LaneOwnerV1;flavour?:string}>,options:Readonly<{signal:AbortSignal;report?:PoolReportV1;volume?:PoolTrimContextV1["volume"]}>):Promise<Readonly<{paths:ReturnType<typeof lanePathsV1>;release():void}>>{
  if(!/^[a-f0-9]{64}$/u.test(request.key))throw Error("Full Cargo product namespace identity required");
  const id=policy.product.prefix+request.key.slice(0,policy.product.digestDigits),paths=lanePathsV1(root,id),locks=join(root,layout.locks),bounds=poolBoundsV1(request.quotaBytes),trimContext:PoolTrimContextV1={requested:[id],...request.flavour===undefined?{}:{flavour:request.flavour},...options.volume===undefined?{}:{volume:options.volume}};let poll=policy.pollMilliseconds,reported=false;
@@ -16,7 +16,7 @@ export async function acquireProductLaneV1(root:string,request:Readonly<{key:str
   if(!catalog){await sleepV1(poll,options.signal);continue;}
   const acquired=(()=>{try{
   let lanes=readPoolV1(root,Date.now());
-  if(!lanes.some(lane=>lane.id===id)&&lanes.length>=bounds.maximumLiveLanes){trimPoolV1(root,bounds,Date.now(),options.report,trimContext);lanes=readPoolV1(root,Date.now());if(lanes.length>=bounds.maximumLiveLanes)return undefined;}
+  if(!lanes.some(lane=>lane.id===id)&&boundedPoolV1(lanes).length>=bounds.maximumLiveLanes){trimPoolV1(root,bounds,Date.now(),options.report,trimContext);lanes=readPoolV1(root,Date.now());const bounded=boundedPoolV1(lanes);if(bounded.length>=bounds.maximumLiveLanes){if(!reported){reported=true;options.report?.("poolBusy",{live:bounded.length,maximum:bounds.maximumLiveLanes,holders:laneHoldersV1(root,bounded.map(lane=>lane.id),Date.now())});}return undefined;}}
   const claim=tryClaimV1(locks,"lane-"+id);
   if(!claim){if(!reported){reported=true;options.report?.("productLaneHeld",{lane:id,live:lanes.filter(row=>row.claimed).length,maximum:bounds.maximumLiveLanes,holders:laneHoldersV1(root,[id],Date.now())});}return undefined;}
   try{

@@ -15,6 +15,7 @@ fn progress(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{cop
 struct Fields{output:Option<Vec<FlowMutation>>,id:Option<String>,entries:Option<Vec<FlowLayoutEntry>>,error:Option<FlowCoreError>}
 pub(super) struct RemoveWork{construction:Construction,fields:ManuallyDrop<Fields>,text:Option<FundedText>,compare:TextCompare,retirement:RetainedCloneClose,remove_widget:bool,phase:u8,scan:usize,count:usize,matched:Option<bool>,layout:bool,closing:bool}
 impl RemoveWork{
+ pub(super) fn disconnect_only(&mut self){self.remove_widget=false}
  pub(super) fn new(remove_widget:bool)->Self{Self{construction:Default::default(),fields:ManuallyDrop::new(Fields{output:None,id:None,entries:None,error:None}),text:None,compare:TextCompare::new(),retirement:Default::default(),remove_widget,phase:0,scan:0,count:0,matched:None,layout:false,closing:false}}
  fn paid(cx:&mut StepContext<'_>,bytes:usize)->Result<bool,OriginalTurnFailure>{let d=fixed(bytes);if cx.should_yield()||!retained_clone_grant_admits(cx.retained_grant(),d){return Ok(false)}cx.consume_retained(progress(d))?;cx.consume_fuel(1);Ok(true)}
  fn copy_id(&mut self,id:&str,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
@@ -72,3 +73,4 @@ impl RemoveWork{
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.text.is_none()&&self.retirement.is_empty()&&self.fields.output.is_none()&&self.fields.id.is_none()&&self.fields.entries.is_none()&&self.fields.error.is_none()}
 }
 impl Drop for RemoveWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original deletion authoring must close its text and leaf custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+

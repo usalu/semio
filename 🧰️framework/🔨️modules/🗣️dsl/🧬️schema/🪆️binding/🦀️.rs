@@ -210,6 +210,11 @@ impl DslField for semio_framework_value::SharedUtf8 {
 mod shared_utf8_tests;
 
 impl<const N: usize> DslField for semio_framework_value::paged::PagedUtf8<N> {
+    fn projection_view(&self, path: &[usize]) -> Result<native_encoding::FieldProjectionView<'_>, ValueError> {
+        if !path.is_empty() { return Err(native_encoding::projection_path_error()); }
+        let view = semio_framework_value_paged_text::paged_text::TextReadView::from_chunks(self.retained_chunks(), self.len());
+        Ok(native_encoding::FieldProjectionView::TextSource(view))
+    }
     fn shape() -> Shape { Shape::Text }
     fn shape_controlled<C: NativeSchemaControl>(control: &mut C) -> Result<Shape, ValueError> { control.checkpoint()?; Ok(Shape::Text) }
     fn to_value(&self) -> FieldValue { FieldValue::Text(self.to_string_owner()) }
@@ -229,6 +234,10 @@ impl<T: DslField, const N: usize> DslField for semio_framework_value_persistent:
     fn projection_key(&self, path: &[usize], index: usize) -> Result<&str, ValueError> { let (row, rest) = path.split_first().ok_or_else(native_encoding::projection_path_error)?; self.get(*row).ok_or_else(native_encoding::projection_path_error)?.projection_key(rest, index) }
     fn retire_decoded(self) { for value in self { T::retire_decoded(value); } }
 }
+
+#[cfg(test)]
+#[path = "📋️persistent/🧪️tests/🦀️.rs"]
+mod paged_list_projection_tests;
 
 impl<T: DslField, const N: usize> DslField for semio_framework_value::paged::PagedMap<T, N> {
     fn shape() -> Shape { Shape::Map(Box::new(T::shape())) }

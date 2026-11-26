@@ -53,7 +53,7 @@ test("a requester that cannot reach the scheduler for longer than its ride-throu
 const boot=async(extra:Record<string,string>={},workers=1)=>{
  const root=mkdtempSync(join(tmpdir(),"sched-ride-"));scratch.push(root);
  const [cachePort,grpcPort,workerPort]=[await free(),await free(),await free()];
- const environment={CACHE_DIRECTORY:join(root,"cache"),CACHE_PORT:String(cachePort),GRPC_PORT:String(grpcPort),WORKER_PORT:String(workerPort),WITH_CACHE:"1",...extra};
+ const environment:Record<string,string>={CACHE_DIRECTORY:join(root,"cache"),CACHE_PORT:String(cachePort),GRPC_PORT:String(grpcPort),WORKER_PORT:String(workerPort),WITH_CACHE:"1",...extra};
  const abort=new AbortController();aborts.push(abort);const events:string[]=[];
  const agents=Array.from({length:workers},(_,index)=>runRemoteExecutionWorkerV1({scheduler:`http://127.0.0.1:${workerPort}`,token:undefined,cacheToken:undefined,concurrency:2,directory:join(root,`worker${index}`),sandbox:"auto",actions:"any",unconfinedForTests:true,materialize:"clone",maximumBlobBytes:1<<30,inlineOutputBytes:4096,signal:abort.signal,name:`w${index}`,onEvent:event=>{events.push(`${event.stage} ${event.detail}`);}}));
  return {root,environment,abort,events,agents,grpcPort,workerPort,endpoint:`http://127.0.0.1:${grpcPort}`};

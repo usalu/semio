@@ -52,6 +52,23 @@ fn observe_publication_stall(streak: &mut u64, attempted: bool, changed: bool, p
 }
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
+    /// 🎟️ Batches the selected command's paid admission steps within the current host turn.
+    pub async fn advance_typed_operation_publication_turn(&mut self, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        let selected = self.tools.latest_wins_order.items.front().copied();
+        let started = cx.now_us();
+        for _ in 0..TYPED_OPERATION_PUBLICATION_PUMPS {
+            let before = cx.retained_progress();
+            self.advance_typed_operation_publication_unit(identity, cx).await?;
+            if selected.is_none() || !self.tools.tool_operations.is_empty()
+                || self.tools.latest_wins_order.items.front().copied() != selected
+                || cx.retained_progress() == before || cx.should_yield() || cx.fuel_exhausted()
+                || cx.now_us().zip(started).is_none_or(|(now, start)| now.saturating_sub(start) >= INTERACTIVE_TURN_WORKER_WALL_US) {
+                break;
+            }
+        }
+        Ok(())
+    }
+
     pub async fn advance_typed_operation_publication_one(&mut self,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         self.advance_typed_operation_publication_unit(identity,cx).await
     }
@@ -69,6 +86,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let retained=cx.retained_grant();if cx.fuel_exhausted(){return Ok(())}
         if !cx.should_yield() && !self.tools.latest_wins_commands.is_empty() && (self.tools.latest_wins_turn || self.tools.tool_operations.is_empty()) {
             self.tools.latest_wins_turn = false;
+            record_typed_operation_unit(TypedOperationUnitKind::LatestWins);
             return self.advance_latest_wins_command_one(retained, cx).await.map_err(Into::into);
         }
         self.tools.latest_wins_turn = true;

@@ -1,0 +1,131 @@
+{
+  "atMs": 1800000305000,
+  "range": "1h",
+  "columns": 16,
+  "fromMs": 1799996850000,
+  "toMs": 1800000450000,
+  "store": "available",
+  "rows": [
+    {
+      "origin": "g1-m01",
+      "freshness": "live",
+      "ready": {
+        "state": "ready",
+        "ready": true,
+        "stage": null,
+        "stageIndex": 0,
+        "stageCount": 5,
+        "updatedMs": 1800000295000,
+        "beatMs": 120000,
+        "platform": "macos"
+      },
+      "hostName": "ok",
+      "duplicates": 0,
+      "metricsMs": 1800000300000,
+      "cpu": 60.5,
+      "memory": 73.209,
+      "disk": 60.03,
+      "unitsPerMinute": 42.9,
+      "localHit": 1221.0,
+      "localMiss": 305.0,
+      "remoteHit": 610.0,
+      "remoteMiss": 61.0,
+      "offloadOut": 16.0,
+      "cpuSeries": [
+        [
+          1800000000000.0,
+          225000.0,
+          10.0,
+          70.0,
+          41.852,
+          10.5
+        ],
+        [
+          1800000225000.0,
+          225000.0,
+          11.0,
+          70.0,
+          47.77,
+          60.5
+        ]
+      ],
+      "unitsSeries": [
+        [
+          1800000000000.0,
+          225000.0,
+          12.0,
+          60.0,
+          43.6,
+          48.0
+        ],
+        [
+          1800000225000.0,
+          225000.0,
+          0.0,
+          180.0,
+          40.8,
+          0.0
+        ]
+      ]
+    },
+    {
+      "origin": "g1-m02",
+      "freshness": "stale",
+      "ready": {
+        "state": "running",
+        "ready": false,
+        "stage": "workspace",
+        "stageIndex": 3,
+        "stageCount": 5,
+        "updatedMs": 1800000060000,
+        "beatMs": 30000,
+        "platform": "linux"
+      },
+      "hostName": "warning",
+      "duplicates": 1,
+      "metricsMs": 1800000060000,
+      "cpu": 22.75,
+      "memory": 67.32,
+      "disk": 60.006,
+      "unitsPerMinute": 44.0,
+      "localHit": 240.0,
+      "localMiss": 60.0,
+      "remoteHit": 120.0,
+      "remoteMiss": 12.0,
+      "offloadOut": 4.0,
+      "cpuSeries": [
+        [
+          1800000000000.0,
+          225000.0,
+          20.0,
+          35.0,
+          29.938,
+          22.75
+        ]
+      ],
+      "unitsSeries": [
+        [
+          1800000000000.0,
+          225000.0,
+          0.0,
+          180.0,
+          44.0,
+          0.0
+        ]
+      ]
+    },
+    {
+      "origin": "g1-m03",
+      "freshness": "missing",
+      "hostName": "ok",
+      "duplicates": 0
+    }
+  ],
+  "fleet": {
+    "offloadIn": 6.0,
+    "queueRunning": 5.0,
+    "queueQueued": 0.0,
+    "remoteEntries": 1299.0,
+    "remoteBytes": 5299000.0
+  }
+}

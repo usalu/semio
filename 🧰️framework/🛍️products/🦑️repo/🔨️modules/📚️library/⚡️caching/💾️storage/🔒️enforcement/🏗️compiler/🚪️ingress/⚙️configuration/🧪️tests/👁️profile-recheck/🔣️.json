@@ -1,6 +1,18 @@
 {
   "version": 1,
   "original": "Café",
+  "loadedPolicy": {
+    "initial": "{\"version\":1,\"opt\":3}",
+    "replacement": "{\"version\":1,\"opt\":\"s\"}",
+    "cases": [
+      { "id": "same descriptor Original retains captured policy", "producer": "descriptor-emitter", "pinned": true, "loaded": "initial", "edit": "after", "result": "accepted" },
+      { "id": "descriptor edit precedes initial capture", "producer": "descriptor-emitter", "pinned": true, "loaded": "initial", "edit": "before", "result": "stale" },
+      { "id": "unpin refuses subsequent edit", "producer": "descriptor-emitter", "pinned": false, "loaded": "initial", "edit": "after", "result": "drift" },
+      { "id": "another pinned producer still checks its capture", "producer": "artifact", "pinned": true, "loaded": "initial", "edit": "after", "result": "drift" },
+      { "id": "fresh request refuses stale load", "producer": "descriptor-emitter", "pinned": false, "loaded": "initial", "edit": "before", "result": "stale" },
+      { "id": "fresh request admits updated policy", "producer": "descriptor-emitter", "pinned": false, "loaded": "replacement", "edit": "before", "result": "accepted" }
+    ]
+  },
   "observations": [
     {
       "value": "Café",

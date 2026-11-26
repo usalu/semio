@@ -907,7 +907,7 @@
       "downloadMilliseconds": 120000,
       "actionSeconds": 1200,
       "probeMilliseconds": 4000,
-      "requestMilliseconds": 20000,
+      "requestMilliseconds": 50000,
       "rideThroughMilliseconds": 60000,
       "queueSaturatedMilliseconds": 120000,
       "pinQueueMilliseconds": 3600000

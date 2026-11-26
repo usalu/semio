@@ -1,0 +1,27 @@
+import { bootFrameworkOsDev } from "@semio-tech/framework-os-dev";
+import { composeSpecificOsCatalogV1 } from "@semio-tech/s-dev-catalog-ts";
+import { S_FORMAT_CATALOG_V1 } from "../../../🚀️entry/🧭️format-catalog/🟦️.ts";
+
+const variant = import.meta.env.VITE_SEMIO_PLUGIN;
+if (variant !== "bim") throw Error("BIM Dev entry requires the BIM variant");
+const operation = new AbortController();
+window.addEventListener("pagehide", () => operation.abort(), { once: true });
+const admission = {
+  maxBytes: 2097152,
+  maxRows: 512,
+  maxEdges: 4096,
+  maxWork: 65536,
+  deadlineMs: performance.now() + 30000,
+  now: () => performance.now(),
+  cancelled: () => operation.signal.aborted,
+  progress: (event: { readonly completed: number; readonly total: number; readonly work: number }) => window.dispatchEvent(new CustomEvent("semio:catalog-progress", { detail: event })),
+};
+const mounted = await bootFrameworkOsDev({
+  catalogRows: composeSpecificOsCatalogV1(window.location.href, admission).rows,
+  formatCatalog: S_FORMAT_CATALOG_V1,
+  variant,
+  admission,
+  brands: [],
+});
+if (import.meta.hot) import.meta.hot.dispose(() => mounted.dispose());
+window.addEventListener("pagehide", () => mounted.dispose(), { once: true });

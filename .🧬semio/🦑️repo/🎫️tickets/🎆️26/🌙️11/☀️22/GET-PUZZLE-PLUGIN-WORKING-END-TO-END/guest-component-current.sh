@@ -21,12 +21,19 @@ export TMPDIR="$output/guest-tmp" ZIG_GLOBAL_CACHE_DIR="$output/guest-zig" ZIG_L
 mkdir -p "$TMPDIR" "$ZIG_GLOBAL_CACHE_DIR" "$ZIG_LOCAL_CACHE_DIR"
 
 cd "$root"
-mapfile -t selectors < <("${bun[0]}" "$ticket/p5-profile.ts")
-test "${#selectors[@]}" -gt 0
 profile=()
-for selector in "${selectors[@]}"; do
+selectors="$("${bun[0]}" "$ticket/p5-profile.ts")"
+test -n "$selectors"
+while IFS= read -r selector; do
   profile+=(--config "$selector")
-done
+done <<< "$selectors"
 
 cd '🌎️hub/🧩️compositions/🧩️puzzle/🧩️component/📦️packages/🦀️rust'
-exec cargo build --offline --locked --lib --profile prototype --target wasm32-wasip2 --jobs 1 "${profile[@]}" --config profile.prototype.lto=false
+target=(--offline --locked --lib --profile prototype --target wasm32-wasip2 --jobs "${PUZZLE_COMPONENT_JOBS:-1}" "${profile[@]}" --config profile.prototype.lto=false)
+if [[ -n "${PUZZLE_HUB_CODEGEN_UNITS:-}" ]]; then
+  target+=(--config "profile.prototype.package.semio-hub-puzzle.codegen-units=$PUZZLE_HUB_CODEGEN_UNITS")
+fi
+if [[ "${PUZZLE_COMPONENT_RELINK:-0}" == 1 ]]; then
+  exec cargo rustc "${target[@]}" -- -C link-arg=--max-memory=536870912 -C link-arg=-zstack-size=8388608
+fi
+exec cargo build "${target[@]}"

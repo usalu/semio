@@ -31,7 +31,7 @@ test("after eight generations of twenty slots the store holds what the last gene
   for(let generation=0;generation<8;generation++)for(let slot=0;slot<20;slot++)await store.save("id-"+slot+"-g"+generation,{recipe:recipe(slot),value:["v",slot,generation],rows:[],layers:[[{kind:"file",path:"/l/"+slot+"/"+generation,fact:{size:generation}}]]});
   expect(names(directory,"l").length).toBe(160);expect(names(directory,"e").length).toBe(160);
   const dry=await collectClosureStoreV1({directory,graceMilliseconds:GRACE,now:Date.now()+10*GRACE,dryRun:true});
-  expect(dry.removed.entries).toBe(140);expect(names(directory,"e").length).toBe(160);
+  expect(dry.removed?.entries).toBe(140);expect(names(directory,"e").length).toBe(160);
   const done=await collectClosureStoreV1({directory,graceMilliseconds:GRACE,now:Date.now()+10*GRACE});
   expect(done.kept).toEqual({entries:20,layers:20,values:20});expect(done.removed).toEqual({entries:140,layers:140,values:140});
   for(let slot=0;slot<20;slot++)expect(await store.load("id-"+slot+"-g7")).toBeDefined();
@@ -45,14 +45,14 @@ test("an entry overwritten in place orphans its layers, which go after the grace
   await store.save("same",{recipe:recipe(1),value:[1],rows:[],layers:[layer(1)]});
   await store.save("same",{recipe:recipe(1),value:[2],rows:[],layers:[layer(2)]});
   expect(names(directory,"l").length).toBe(2);
-  expect((await collectClosureStoreV1({directory,graceMilliseconds:GRACE})).removed.layers).toBe(0);
+  expect((await collectClosureStoreV1({directory,graceMilliseconds:GRACE})).removed?.layers).toBe(0);
   const later=Date.now()+10*GRACE;
   expect((await collectClosureStoreV1({directory,graceMilliseconds:GRACE,now:later})).removed).toEqual({entries:0,layers:1,values:1});
   const left=names(directory,"l");expect(left.length).toBe(1);
   const old=new Date(Date.now()-10*GRACE);utimesSync(join(directory,"l",left[0]!),old,old);
   const fresh=createClosureStoreV1({directory,limits});await fresh.save("other",{recipe:recipe(2),value:[3],rows:[],layers:[layer(2)]});
   expect(Date.now()-require("node:fs").statSync(join(directory,"l",left[0]!)).mtimeMs).toBeLessThan(GRACE);
-  expect((await collectClosureStoreV1({directory,graceMilliseconds:GRACE,now:Date.now()+GRACE/2})).removed.layers).toBe(0);
+  expect((await collectClosureStoreV1({directory,graceMilliseconds:GRACE,now:Date.now()+GRACE/2})).removed?.layers).toBe(0);
  }finally{rmSync(directory,{recursive:true,force:true});}
 });
 

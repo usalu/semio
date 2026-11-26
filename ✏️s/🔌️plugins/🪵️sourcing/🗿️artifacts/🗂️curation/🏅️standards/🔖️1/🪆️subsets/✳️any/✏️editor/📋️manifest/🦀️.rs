@@ -92,6 +92,8 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             .window_kind_interactions(curated::SOURCING_CURATION_WINDOW_CURATED, vec![InteractionRef::new("rows")])
             .window_kind_interactions(grid::SOURCING_CURATION_WINDOW_GRID, vec![InteractionRef::new("rows")])
             .window_kind_interactions(preview::SOURCING_CURATION_WINDOW_PREVIEW, vec![InteractionRef::new("rows")])
+            .utility(semio_plugin::UtilityDefinition::new(crate::editor::sourcing::editor_vocabulary::SOURCING_UTILITY_SELECT, LocalizedLabel::native("Select", "Auswählen"), "mouse-pointer"))
+            .window_kind_utilities(grid::SOURCING_CURATION_WINDOW_GRID, vec![crate::editor::sourcing::editor_vocabulary::SOURCING_UTILITY_SELECT.into()])
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .mutation("stockFromCatalogue", LocalizedLabel::native("Stock From Catalogue", "Bestand aus Katalog"))

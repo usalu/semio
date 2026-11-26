@@ -42,6 +42,8 @@ pub const SOURCING_ROWS_DOMAIN: &str = "rows";
 /// 🕹️ The granularity a stock kind is picked under in [`SOURCING_ROWS_DOMAIN`].
 pub const SOURCING_OBJECT_GRANULARITY: &str = "object";
 pub const DEMO_STOCK_EXAMPLE_ID: &str = crate::examples::demo::ID;
+/// 🖱️ The id of the Grid's selection utility: while it is active a plain drag on the canvas draws the selection rectangle instead of orbiting.
+pub const SOURCING_UTILITY_SELECT: &str = "select";
 /// 🫙️ The shell's "no example" selection.
 pub const EMPTY_EXAMPLE_ID: &str = "";
 

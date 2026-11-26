@@ -104,7 +104,8 @@ await mkdir(generated, { recursive: true });
 const selected = [pins.inferencePluginId, pins.pluginId];
 const only = flags.find(row => row.startsWith("--emit-only="))?.slice("--emit-only=".length);
 const probe = flags.find(row => row.startsWith("--probe-model="))?.slice("--probe-model=".length);
-const noteReplay = flags.find(row => row.startsWith("--note-replay="))?.slice("--note-replay=".length);
+const noteReplay = flags.find(row => row.startsWith("--note-replay="))?.slice("--note-replay=".length)
+  ?? (probe === pins.inferencePluginId ? undefined : join(generated, "note-wasi-run", "_run.js"));
 const one = only ?? probe;
 if (one && !selected.includes(one)) throw Error("A pinned plugin is required for a single-model run");
 const reuse = flags.find(row => row.startsWith("--verified-models="))?.slice("--verified-models=".length);

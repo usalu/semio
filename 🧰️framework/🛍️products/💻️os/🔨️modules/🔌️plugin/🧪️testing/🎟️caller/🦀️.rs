@@ -4,7 +4,7 @@ use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError}
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
-struct CallerPolicy{source_kind:String,operation:u64,generation:u64,fuel:u64,turn_fuel:u64,clock_us:u64,deadline_us:u64,maximum_turns:usize,maximum_close_turns:usize,maximum_idle_turns:usize,grant:RetainedCloneGrant,retirement_loan:RetainedCloneGrant}
+struct CallerPolicy{source_kind:String,operation:u64,generation:u64,fuel:u64,turn_fuel:u64,clock_us:u64,deadline_us:u64,maximum_turns:usize,maximum_window_restore_turns:usize,maximum_close_turns:usize,maximum_idle_turns:usize,grant:RetainedCloneGrant,retirement_loan:RetainedCloneGrant}
 
 thread_local!{static FIXTURE_DEADLINE_AFTER_READS:std::cell::Cell<Option<(u64,u64)>>=const{std::cell::Cell::new(None)};}
 fn fixture_now_us()->Option<u64>{FIXTURE_DEADLINE_AFTER_READS.with(|armed|match armed.get(){Some((0,deadline))=>Some(deadline),Some((reads,deadline))=>{armed.set(Some((reads-1,deadline)));Some(1000)},None=>Some(1000)})}
@@ -28,6 +28,8 @@ impl OriginalFixtureCaller{
  pub fn maximum_idle_turns()->usize{serde_json::from_str::<CallerPolicy>(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap().maximum_idle_turns}
  /// 📏️ Bounds caller loops without deriving finance from an owner's descriptive demand.
  pub fn maximum_turns()->usize{serde_json::from_str::<CallerPolicy>(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap().maximum_turns}
+ /// 🪟️ Bounds complete native Window Pack replay and store hydration on the fixture's original event.
+ pub fn maximum_window_restore_turns()->usize{serde_json::from_str::<CallerPolicy>(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap().maximum_window_restore_turns}
  /// 🛟️ Bounds app retirement separately from action settlement under the same original stock.
  pub fn maximum_close_turns()->usize{serde_json::from_str::<CallerPolicy>(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap().maximum_close_turns}
  /// 🛬️ Retires the body decoder against the same already-issued caller stock before its three parent roots close.

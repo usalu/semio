@@ -9,5 +9,8 @@ pub(crate) fn step(poll: OriginalRetirementPoll) -> RetainedCloneStep {
 }
 
 pub(crate) fn funded<R>(grant: RetainedCloneGrant, operation: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> R) -> R {
-    AuthoringWallet::new(grant, 1 << 20).run(grant, 64, operation).unwrap().expect("quote admitted").output
+    AuthoringWallet::new(grant, 1 << 20).run_invoked(grant, 64, |outer| {
+        let mut effect = outer.reborrow(grant, 64).expect("exact fixture operation grant");
+        operation(&mut effect)
+    }).unwrap().expect("quote admitted").output
 }

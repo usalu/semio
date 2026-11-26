@@ -20,6 +20,9 @@ pub mod surface_ops;
 #[path="🧮️rational-preview/🦀️.rs"]
 mod rational_preview;
 
+#[path = "🔀️curved-boolean/🦀️.rs"]
+pub mod curved_boolean;
+
 // #endregion 🔖️Submodules
 
 use semio_framework_3d_brep_curve::bspline::{basis_function_derivatives, surface_derivatives_rational, KnotVector};

@@ -1,12 +1,74 @@
 {
   "cases": [
     {
-      "pageAlreadyGranted": true,
-      "staged": false
+      "id": "prior-grant-blocks-all-three-phases",
+      "turns": [
+        {
+          "grant": "used",
+          "advance": false,
+          "held": false,
+          "staged": false
+        },
+        {
+          "grant": "full",
+          "advance": true,
+          "held": false,
+          "staged": false
+        },
+        {
+          "grant": "used",
+          "advance": false,
+          "held": false,
+          "staged": false
+        },
+        {
+          "grant": "full",
+          "advance": true,
+          "held": true,
+          "staged": false
+        },
+        {
+          "grant": "used",
+          "advance": false,
+          "held": true,
+          "staged": false
+        },
+        {
+          "grant": "full",
+          "advance": true,
+          "held": true,
+          "staged": true
+        }
+      ]
     },
     {
-      "pageAlreadyGranted": false,
-      "staged": true
+      "id": "short-backing-keeps-the-original-charge",
+      "turns": [
+        {
+          "grant": "full",
+          "advance": true,
+          "held": false,
+          "staged": false
+        },
+        {
+          "grant": "full",
+          "advance": true,
+          "held": true,
+          "staged": false
+        },
+        {
+          "grant": "short-capacity",
+          "advance": false,
+          "held": true,
+          "staged": false
+        },
+        {
+          "grant": "full",
+          "advance": true,
+          "held": true,
+          "staged": true
+        }
+      ]
     }
   ]
 }

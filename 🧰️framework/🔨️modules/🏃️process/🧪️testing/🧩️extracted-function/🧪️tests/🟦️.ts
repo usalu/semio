@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import ceiling from "./🔣️.json" with { type: "json" };
 import schema from "./schema.json" with { type: "json" };
-import { evaluateExtractedFunctionV1, loadProductFunctionsSyncV1, loadProductFunctionsV1 } from "../🟦️.ts";
+import { evaluateExtractedFunctionV1, evaluateGeneratedSourceV1, loadProductFunctionsSyncV1, loadProductFunctionsV1, productClosureCodeV1 } from "../🟦️.ts";
 
 const source = "async function law(a, b) { const sum = add(a, b); const wrapped = await phase('x', () => sum * factor); return { wrapped, missing: unknownPort(1), length: Math.max(a, b) }; }";
 
@@ -17,6 +17,11 @@ test("explicit ports win, globals resolve, and an unknown dependency is a pass-t
 test("a stub passes the last function argument through, so an unported wrapper still runs its body", async () => {
   const law = evaluateExtractedFunctionV1("function run() { return wrapUnknown('label', () => 7); }", "run", {});
   expect(law()).toBe(7);
+});
+
+test("generated source text yields its named binding and sees only the given ports", () => {
+  expect(evaluateGeneratedSourceV1("class Box { constructor(v) { this.v = v + offset; } }", "Box", { offset: 2 }).prototype.constructor.length).toBe(1);
+  expect(new (evaluateGeneratedSourceV1("class Box { constructor(v) { this.v = v + offset; } }", "Box", { offset: 2 }))(1).v).toBe(3);
 });
 
 test("the named function must be defined by the evaluated code", () => {
@@ -33,6 +38,14 @@ test("a loaded product function reaches its module-level helpers and imports tra
   expect(loaded.evaluateExtractedFunctionV1("function f() { return 3; }", "f", {})()).toBe(3);
   const ported = await loadProductFunctionsV1(new URL("../🟦️.ts", import.meta.url), ["evaluateExtractedFunctionV1"], { refuseProcessV1: () => new Error("ported") });
   expect(() => ported.evaluateExtractedFunctionV1("const other = 1;", "f", {})).toThrow("ported");
+});
+
+test("a closure text carries module-level let state and leaves ported names out", () => {
+  const url = new URL("./🧫️fixtures/📜️multi-declarator.ts", import.meta.url);
+  const code = productClosureCodeV1(url, ["sumV1"], ["second"]);
+  expect(code).toContain("sumV1");
+  expect(code).not.toMatch(/\bsecond\s*=/u);
+  expect(evaluateExtractedFunctionV1(code, "sumV1", { second: 2000 })()).toBe(2301);
 });
 
 test("a function missing from the product module is refused at load", async () => {

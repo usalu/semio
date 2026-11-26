@@ -10,7 +10,7 @@ impl BoardFillJob {
                         original_source: Some(original_source),
 operation,
             naming: snapshot.naming,
-            state: Some(BoardFillJobState {
+            state: Some(Box::new(BoardFillJobState {
                 snapshot,
                 stage: if max_count == 0 { BoardFillStage::Complete } else { BoardFillStage::PrepareSources },
                 max_count,
@@ -49,7 +49,7 @@ operation,
                 search_count: 0,
                 preview_sequence: 0,
                 candidate_event: None,
-            }),
+            })),
             checkpoint: None,
             preview: None,
             commit_encoder: None,

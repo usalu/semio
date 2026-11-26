@@ -59,6 +59,7 @@
         },
         "anchor": {
           "type": "string",
+          "default": "fixed",
           "enum": [
             "fixed",
             "derived"

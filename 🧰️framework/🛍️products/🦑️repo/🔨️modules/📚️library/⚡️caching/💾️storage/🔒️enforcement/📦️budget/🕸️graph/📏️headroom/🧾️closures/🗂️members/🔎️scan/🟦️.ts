@@ -1,3 +1,4 @@
+import {processPidExistsV1} from "../../../../../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import{closeSync,fstatSync,lstatSync,openSync,readFileSync,readSync,readdirSync,renameSync,unlinkSync,writeFileSync,writeSync,type BigIntStats}from"node:fs";
 import{join,relative,sep}from"node:path";
 import{createHash}from"node:crypto";
@@ -299,7 +300,7 @@ type OptionalLeafV1=Readonly<{name:string;path:string;bytes:number;rank:number;m
 const optionalLeafPatternV1=new RegExp(graphStorageSchema.definitions.OptionalQuota.definitions.OptionalPath.const,"u");
 /** 📌️ The optional units a read still needs resident: the owner record headers (`np/<24 hex>.json`) of the owners of the newest sealed generation, or of its parent while the pointer is a quarantine, and every unit written since a live builder began (`sinceMs`, the oldest holder of the generation custody whose process still runs). No retirement removes a pinned unit, so a read that takes hours never loses the records it wrote or the base it resumes from. */
 export type OptionalPinsV1=Readonly<{keys:ReadonlySet<string>;sinceMs:number|undefined}>;
-const processAliveV1=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return(error as NodeJS.ErrnoException).code==="EPERM";}};
+
 /** 📌️ Reads the pins of an image root from its generation store (`<root>/generations`): nothing pinned when the store is absent or unreadable. */
 export function pinnedOptionalUnitsV1(root:string):OptionalPinsV1{
  const keys=new Set<string>(),base=join(root,"generations");let sinceMs:number|undefined;
@@ -315,7 +316,7 @@ export function pinnedOptionalUnitsV1(root:string):OptionalPinsV1{
    if(!/^[0-9a-f]{24}\.json$/u.test(name))continue;
    try{
     const custody=JSON.parse(readFileSync(join(base,"s",name),"utf8")) as {state?:string;holder?:{pid?:number;startedMs?:number}},holder=custody.holder;
-    if(custody.state==="held"&&holder&&Number.isSafeInteger(holder.pid)&&Number.isFinite(holder.startedMs)&&processAliveV1(holder.pid!))sinceMs=Math.min(sinceMs??Infinity,holder.startedMs!);
+    if(custody.state==="held"&&holder&&typeof holder.pid==="number"&&Number.isSafeInteger(holder.pid)&&typeof holder.startedMs==="number"&&Number.isFinite(holder.startedMs)&&processPidExistsV1(holder.pid))sinceMs=Math.min(sinceMs??Infinity,holder.startedMs);
    }catch{}
   }
  }catch{}

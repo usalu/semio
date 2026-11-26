@@ -1,1 +1,49 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,"required":["version","mode","platform"],"properties":{"version":{"const":1},"mode":{"enum":["prototype","release"]},"platform":{"enum":["darwin","linux","win32"]}},"definitions":{"Protocol":{"const":{"namespace":"descriptor-emitter","binary":"semio-plugin-describe","observation":"compilation/receipt.json","compilation":"compilation"}},"Capabilities":{"const":{"version":1,"prepareActor":true}}}}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "mode", "platform"],
+  "properties": {
+    "version": { "const": 1 },
+    "mode": { "enum": ["prototype", "release"] },
+    "platform": { "enum": ["darwin", "linux", "win32"] }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "namespace": "descriptor-emitter",
+        "binary": "semio-plugin-describe",
+        "observation": "compilation/receipt.json",
+        "compilation": "compilation",
+        "pinBinding": "emitter.json",
+        "maximumPinBindingBytes": 1024
+      }
+    },
+    "Capabilities": { "const": { "version": 1, "prepareActor": true } },
+    "Digest": { "type": "string", "pattern": "^[a-f0-9]{64}$(?![\\s\\S])" },
+    "PublishedPin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "mode", "platform", "binarySha256", "receiptSha256", "indexSha256"],
+      "properties": {
+        "version": { "const": 1 },
+        "mode": { "const": "prototype" },
+        "platform": { "enum": ["darwin", "linux", "win32"] },
+        "binarySha256": { "$ref": "#/definitions/Digest" },
+        "receiptSha256": { "$ref": "#/definitions/Digest" },
+        "indexSha256": { "$ref": "#/definitions/Digest" }
+      }
+    },
+    "ComponentBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "componentSha256", "semanticSha256", "emitter"],
+      "properties": {
+        "version": { "const": 1 },
+        "componentSha256": { "$ref": "#/definitions/Digest" },
+        "semanticSha256": { "$ref": "#/definitions/Digest" },
+        "emitter": { "$ref": "#/definitions/PublishedPin" }
+      }
+    }
+  }
+}

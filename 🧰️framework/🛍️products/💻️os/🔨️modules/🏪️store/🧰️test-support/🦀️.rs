@@ -177,19 +177,15 @@ impl semio_os_vcs::io::binary::entity_identity::control::IdentityWorkLender for 
 
 fn original_caller_clock() -> Option<u64> { Some(0) }
 
-/// 🧪️ Dispatches one command inside a funded original turn of an original job fixture caller, whose lent Work authorizes every authored identity hop exactly like production, then settles the caller turn by turn and returns the original cumulative receipt.
-pub async fn dispatch_test_command<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, command: ArtifactCommand<Mutation>) -> Result<CommandReceipt, VcsError>
-where
-        P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
-        Mutation: semio_os_spr::StoreMutationFor<P>,
-{
+/// 🧪️ Runs one operation inside a funded original turn of an original job fixture caller, lending its Work to the authoring identity exactly like production, then settles the caller and returns the operation result.
+pub fn with_original_identity<R>(operation: impl FnOnce(&mut EntityIdentityAuthority<'_>) -> R) -> R {
     const CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     const DEADLINE_US: u64 = 1 << 40;
     const FUEL: u64 = 1 << 40;
-    let stock = RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 32, maximum_release_bytes: 1 << 32, maximum_depth: 256 };
+    let stock = RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 31, maximum_release_bytes: 1 << 31, maximum_depth: 256 };
     let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), stock, original_caller_clock, DEADLINE_US, FUEL);
-    let mut command = Some(command);
-    let mut dispatched = None;
+    let mut operation = Some(operation);
+    let mut output = None;
     let turn = caller.turn(stock, |cx| {
         let (fuel, deadline) = (cx.fuel_remaining().min(FUEL), cx.original_absolute_deadline_us());
         cx.with_original_work_loan(fuel, deadline, |loaned| {
@@ -200,19 +196,29 @@ where
             };
             let observer: &mut semio_os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer;
             let mut identity: EntityIdentityAuthority<'_> = EntityIdentityAuthority::new(CEILING, observer).expect("declared fixture identity authority").with_work_lender(Box::new(CallerIdentityWork(&mut work)));
-            let command = command.take().expect("one command per original turn");
-            dispatched = Some(block_on_original_turn(store.dispatch(command, &mut identity)));
+            let operation = operation.take().expect("one operation per original turn");
+            output = Some(operation(&mut identity));
             drop(identity.pause().expect("original cumulative fixture identity receipt"));
             loaned.consume_fuel(work.performed());
             Ok(())
         })
     });
-    turn.expect("the command runs inside its funded original turn");
+    turn.expect("the operation runs inside its funded original turn");
     caller.retire(stock);
-    dispatched.expect("the dispatch ran inside its original caller loan")
+    output.expect("the operation ran inside its original caller loan")
 }
 
-fn block_on_original_turn<F: std::future::Future>(future: F) -> F::Output {
+/// 🧪️ Dispatches one command inside a funded original turn of an original job fixture caller and returns the original cumulative receipt.
+pub async fn dispatch_test_command<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, command: ArtifactCommand<Mutation>) -> Result<CommandReceipt, VcsError>
+where
+        P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+        Mutation: semio_os_spr::StoreMutationFor<P>,
+{
+    with_original_identity(|identity| block_on_original_turn(store.dispatch(command, identity)))
+}
+
+/// 🧪️ Polls one future to completion on the calling thread inside the surrounding original turn.
+pub fn block_on_original_turn<F: std::future::Future>(future: F) -> F::Output {
     let mut future = Box::pin(future);
     let mut context = std::task::Context::from_waker(std::task::Waker::noop());
     loop {
@@ -640,17 +646,28 @@ where
 }
 
 impl<P: Send + Sync + 'static> SnapshotRetirementFactory<P> for RoundTripValueRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &SharedOriginalStorage<P>) -> usize { size_of::<RoundTripValueRetirement<SharedOriginalStorage<P>>>() }
+    fn retirement_birth_bytes(&self, _snapshot: &SharedOriginalStorage<P>) -> usize { size_of::<RoundTripValueRetirement<RoundTripAlias<P>>>() }
 
-    fn retire_demands(&self, _snapshot: &SharedOriginalStorage<P>) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(semio_framework_value::RetirementDemand { capacity_bytes: size_of::<RoundTripValueRetirement<SharedOriginalStorage<P>>>(), depth: 1, ..Default::default() }) }
+    fn retire_demands(&self, _snapshot: &SharedOriginalStorage<P>) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(semio_framework_value::RetirementDemand { capacity_bytes: size_of::<RoundTripValueRetirement<RoundTripAlias<P>>>(), depth: 1, ..Default::default() }) }
 
     fn retire_work_demand(&self, _snapshot: &SharedOriginalStorage<P>) -> Result<u64, ValueError> { Ok(1) }
 
     fn retire<'reply>(&self, snapshot: &mut Option<SharedOriginalStorage<P>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply:semio_framework_value::FactoryProducerReply<'reply,dyn ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure> {
-        semio_framework_value::factory_retire_framed(snapshot, effect, reply, |snapshot| RoundTripValueRetirement(Some(snapshot)))
+        semio_framework_value::factory_retire_framed(snapshot, effect, reply, |snapshot| RoundTripValueRetirement(Some(RoundTripAlias(Some(snapshot)))))
     }
 
     fn recover_retire<'reply>(&self, _: &mut Option<SharedOriginalStorage<P>>, _: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply:semio_framework_value::FactoryProducerReply<'reply,dyn ErasedSnapshotRetirement,semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply,semio_framework_value::OriginalRetirementFailure> { reply.pending() }
+}
+
+/// 🪪️ A frozen root alias that releases through its own counted-alias contract instead of a bare drop.
+struct RoundTripAlias<P: Send + Sync + 'static>(Option<SharedOriginalStorage<P>>);
+
+impl<P: Send + Sync + 'static> Drop for RoundTripAlias<P> {
+    fn drop(&mut self) {
+        if let Some(root) = self.0.take() {
+            if let semio_framework_value::retirement::arc_custody::original::SharedOriginalRelease::Original(mut original) = root.retire() { drop(original.take_value()); }
+        }
+    }
 }
 
 /// 🧹️ One-value retirement used only by [`retire_parsed_document`] — a parsed comparison

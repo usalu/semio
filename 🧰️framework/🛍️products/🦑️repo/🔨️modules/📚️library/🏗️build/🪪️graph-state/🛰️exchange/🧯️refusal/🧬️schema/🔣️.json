@@ -31,7 +31,7 @@
     "Policy": {
       "const": {
         "version": 1,
-        "bodyCharacters": 160,
+        "bodyCharacters": 640,
         "rows": [
           {"code": "no-answer", "when": {"answer": "timeout"}, "transient": true, "deterministic": false, "stored": false, "en": "the fleet cache did not answer in time", "de": "der Flottenspeicher antwortete nicht rechtzeitig"},
           {"code": "unreachable", "when": {"answer": "network"}, "transient": true, "deterministic": false, "stored": false, "en": "the fleet cache could not be reached", "de": "der Flottenspeicher war nicht erreichbar"},

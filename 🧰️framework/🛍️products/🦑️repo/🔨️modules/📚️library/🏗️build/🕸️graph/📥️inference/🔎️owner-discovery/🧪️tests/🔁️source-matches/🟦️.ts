@@ -57,7 +57,7 @@ test("identical source glob questions retain each target's matches and avoid rep
 test("a recursive source walk shares visited nested roots in DFS order",async()=>{
  expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
  const {directories,symlink,opaque,scans,reads}=fixture.nested;
- const entries=new Map(Object.entries(directories)),actualReads:string[]=[],typeReads:string[]=[],matchedCandidates=new Map<string,string[]>();
+ const entries=new Map<string,string[]>(Object.entries(directories)),actualReads:string[]=[],typeReads:string[]=[],matchedCandidates=new Map<string,string[]>();
  const workspace="/fixture",local=(path:string)=>posix.relative(workspace,path);
  const execute=sourceMatcher({
   join:posix.join,dirname:posix.dirname,buildPath:(path:string)=>path,POLICY:{generatedDirectories:[]},EXAMPLE_COLLECTIONS:[],WORKSPACE_OWNERSHIP:{collections:{moduleMember:"member"}},

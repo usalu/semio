@@ -59,7 +59,9 @@ async fn renders_fem3d_results_scene() {
 #[semio_framework_async_macros::async_test]
 async fn results_window_surfaces_solver_error_without_panicking_3d() {
     let mut app = fem3d_empty_app().await;
-    let json = render_body(&mut app, FEM3D_BODY_RESULTS);
+    let mut drivers = HashMap::new();
+    let json = pump_until_settled(&mut app, &mut drivers).await;
+    drain_results(&mut drivers);
     assert!(json.contains("No load case defined"), "an empty document names its missing case: {json}");
     assert!(json.contains("world-3d"), "the structure stays visible under the fault caption: {json}");
 }
@@ -113,7 +115,7 @@ async fn playback_phase_moves_the_deformed_scene() {
     config.animation.phase = 0.42;
     let node = render(&snapshot, &config, &interaction, None, None, &semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::Fem3dMountedLive, &Fem3dLabels::NATIVE_EN, semio_plugin::Locale::En).expect("running frame");
     let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("fixture projection");
-    assert!(json.contains("phase 0.42"), "a running window carries its transport read-out: {json}");
+    assert!(json.contains("Phase 0.42") && json.contains("▶"),"a running window carries its transport read-out: {json}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -166,11 +168,14 @@ async fn results_scene_includes_solid_vertex_colors_3d() {
 async fn results_scene_captions_name_mode_and_factor_3d() {
     let mut app = app_with_example().await;
     dispatch(&mut app, Fem3dCommand::SetResultDisplay(semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_result_display::SetResultDisplay { source_id: None, mode: "modal".into(), mode_index: 0, field: None, value: None, window_id: None })).await;
-    let json_modal = render_body(&mut app, FEM3D_BODY_RESULTS);
+    let mut drivers = HashMap::new();
+    let json_modal = pump_until_settled(&mut app, &mut drivers).await;
+    drain_results(&mut drivers);
     assert!(json_modal.contains("Hz"), "expected a frequency caption: {json_modal}");
 
     dispatch(&mut app, Fem3dCommand::SetResultDisplay(semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_result_display::SetResultDisplay { source_id: Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").unwrap()), mode: "buckling".into(), mode_index: 0, field: None, value: None, window_id: None })).await;
-    let json_buckling = render_body(&mut app, FEM3D_BODY_RESULTS);
+    let json_buckling = pump_until_settled(&mut app, &mut drivers).await;
+    drain_results(&mut drivers);
     assert!(json_buckling.contains("Factor"), "expected a load-factor caption: {json_buckling}");
 }
 
@@ -222,8 +227,9 @@ fn progress_stage_labels_are_monolingual_per_locale() {
 /// 🔁️ Drives the mounted results jobs the way the host does: spawns, cancels and steps each registry job between renders.
 async fn pump_results(app: &mut Fem3dApp, drivers: &mut HashMap<u64, semio_plugin::reactor::jobs::registry_driver::RegistryJobDriver>, rounds: usize) -> String {
     use semio_plugin::reactor::jobs::registry_driver::RegistryJobDriver;
-    for _ in 0..rounds {
+    for round in 0..rounds {
         let _ = render_body(app, FEM3D_BODY_RESULTS);
+        if round % 20 == 0 { let json = render_body(app, FEM3D_BODY_RESULTS); eprintln!("[DEBUG] round {round} drivers {} caption {:?}", drivers.len(), json.split("\"type\":\"text\",\"value\":\"").nth(1).and_then(|rest| rest.split('"').next())); }
         let view = crate::context::view(FEM3D_WINDOW_RESULTS);
         let grant = app.1.cx().retained_grant();
         semio_plugin::artifact_app_laws::fixture_renew_turn(app.1.cx(), semio_plugin::artifact_app_laws::OriginalFixtureCaller::turn_fuel(), grant).expect("renew turn");
@@ -306,4 +312,44 @@ async fn add_solid_settles_the_results_3d() {
     dispatch(&mut app, Fem3dCommand::AddSolid(solid)).await;
     let json = pump_results(&mut app, &mut drivers, 600).await;
     assert!(!json.contains("Preparing") && !json.contains("queued") && !json.contains("Solving") && !json.contains("Generating") && !json.contains("Assembling"), "results settle after the solid: {json}");
+}
+
+#[path = "../🎵️mode-wiring/🦀️.rs"]
+mod mode_wiring;
+
+/// 🧹️ Cancels every still-running registry job and steps each to its bounded close, so an assertion that fails on a pending caption reports that caption instead of aborting the harness on a retained job.
+fn drain_results(drivers: &mut HashMap<u64, semio_plugin::reactor::jobs::registry_driver::RegistryJobDriver>) {
+    for driver in drivers.values_mut() {
+        let _ = driver.cancel();
+    }
+    for _ in 0..4096 {
+        let ended: Vec<u64> = drivers.iter_mut().filter_map(|(job, driver)| (!matches!(driver.step(), Ok(semio_plugin::reactor::jobs::JobStep::Running(_)))).then_some(*job)).collect();
+        for job in ended {
+            drivers.remove(&job);
+        }
+        if drivers.is_empty() {
+            break;
+        }
+    }
+}
+
+/// 🔁️ Pumps the mounted results jobs in chunks of 200 rounds until the caption leaves every pending stage; bounded by 1 000 chunks (200 000 rounds) or a 20 minute wall clock, and a stall reports how many chunks each caption held instead of only the last one.
+async fn pump_until_settled(app: &mut Fem3dApp, drivers: &mut HashMap<u64, semio_plugin::reactor::jobs::registry_driver::RegistryJobDriver>) -> String {
+    let pending = ["Preparing", "queued", "Solving", "Generating", "Assembling", "Computing"];
+    let caption = |json: &str| json.split("\"type\":\"text\",\"value\":\"").nth(1).and_then(|rest| rest.split('"').next()).unwrap_or_default().to_owned();
+    let started = std::time::Instant::now();
+    let mut stages: Vec<(String, usize)> = Vec::new();
+    let mut json = String::new();
+    for _ in 0..1000 {
+        json = pump_results(app, drivers, 200).await;
+        let current = caption(&json);
+        match stages.last_mut() {
+            Some((stage, chunks)) if *stage == current => *chunks += 1,
+            _ => stages.push((current.clone(), 1)),
+        }
+        if !pending.iter().any(|stage| current.contains(stage)) || started.elapsed() > std::time::Duration::from_secs(1200) {
+            break;
+        }
+    }
+    format!("{json}\nresults stages (caption, 200-round chunks): {stages:?} after {:?}", started.elapsed())
 }

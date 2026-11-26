@@ -103,7 +103,7 @@ test("The profile shrinks the reservation of a large envelope to the share a sma
  const reserved:Record<string,number>={};
  for(const [name,environment] of [["host",{LANG:"en_US.UTF-8"}],["8g",{SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES:"8192"}]] as const){
   const directory=fresh();
-  await withBuildCapacityV1(["run","@x/y:test-e2e","--parallel=1"],{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory,...environment},async granted=>{reserved[name]=granted.handle!.reservedMegabytes;},ports(directory,{tool:"nx"}));
+  await withBuildCapacityV1(["run","@x/y:test-e2e","--parallel=1"],{SEMIO_HOST_CAPACITY_DIRECTORY:directory,...environment},async granted=>{reserved[name]=granted.handle!.reservedMegabytes;},ports(directory,{tool:"nx"}));
  }
  expect(reserved["8g"]!,"the 8 GB profile reserves at most half of what is above its floor").toBeLessThan(reserved["host"]!);
 });
@@ -129,7 +129,7 @@ test("g5 replay: once the class kept enough absolute peaks the full request foll
 });
 
 import g13 from "./🧫️fixtures/📼️g13.json";
-const classCopy=(store:object,shiftMs=0)=>{const classes=JSON.parse(JSON.stringify((store as {classes:object}).classes)) as Record<string,{samples:{atMs:number;peakMegabytes?:number}[]}>;for(const row of Object.values(classes))for(const item of row.samples)item.atMs+=shiftMs;return {version:1 as const,classes};};
+const classCopy=(store:object,shiftMs=0)=>{const classes=JSON.parse(JSON.stringify((store as {classes:object}).classes)) as Record<string,{samples:{atMs:number;ratioBasisPoints:number;activeMilliseconds:number;peakAtMilliseconds?:number;peakMegabytes?:number}[]}>;for(const row of Object.values(classes))for(const item of row.samples)item.atMs+=shiftMs;return {version:1 as const,classes};};
 const sizedAs=(over:HostCapacityPolicyV1,store:object,asked:readonly string[],total:number,which:"ratioBasisPoints"|"growRatioBasisPoints"="growRatioBasisPoints",nowMs:number=g13.nowMs)=>{
  const ask=buildCapacityAskV1(strip(asked),{},over)!,base=sizeHostRequestV1(over,{id:"aaaaaaaa1",operation:ask.operation,preferredJobs:ask.preferredJobs,kinds:ask.kinds,targets:ask.targets})!;
  const estimate=estimateHostPhasesV1(over,store as never,ask.lineage,base,nowMs),scaled=scaleHostRequestV1(over,base,estimate[which],total-hostFloorMegabytesV1(over,{totalMegabytes:total}),estimate.floorMegabytes);

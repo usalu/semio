@@ -516,12 +516,6 @@ pub fn create_bim_viewer() -> semio_plugin::AppDefinition {
 }
 //#endregion 🔖️Manifest
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
-
 //#region 🧩️Modules
 
 //#endregion 🧩️Modules

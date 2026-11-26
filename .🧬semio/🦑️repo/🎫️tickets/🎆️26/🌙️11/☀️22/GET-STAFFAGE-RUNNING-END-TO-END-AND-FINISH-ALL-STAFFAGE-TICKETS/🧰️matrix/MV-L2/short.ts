@@ -1,4 +1,4 @@
-/** 📏️ Whether the foliage lofts of a plant reach as far as the ellipsoids they stand for: `bun short.ts <id|file.json> [--scales 100,200] [--views front,plan]` evaluates every pose at every authored scale and compares, per bone that draws `loft` shapes in a view, the box the engine draws for those lofts with the exact box of the ellipsoids of that bone in `volumes.<scale>.body` under the evaluated frame of the bone (centre plus or minus the root of the squared projections of the three half axes). It prints per scale and view the largest shortfall (the loft box inside the ellipsoid box) and overshoot with bone and pose, and every bone short by more than 10 mm (the `LOST` threshold of `../MV-L1/loft.ts`).
+/** 📏️ Whether the foliage lofts of a plant reach as far as the ellipsoids they stand for: `bun short.ts <id|file.json> [--scales 100,200] [--views front,plan]` evaluates every pose at every authored scale and compares, per bone that draws `loft` shapes in a view (the hidden bodies `mvb-*` of `../MV-3/body.ts` aside), the box the engine draws for those lofts with the exact box of the ellipsoids of that bone in `volumes.<scale>.body` under the evaluated frame of the bone (centre plus or minus the root of the squared projections of the three half axes). It prints per scale and view the largest shortfall (the loft box inside the ellipsoid box) and overshoot with bone and pose, and every bone short by more than 10 mm (the `LOST` threshold of `../MV-L1/loft.ts`).
  * @see ../MV-L1/loft.ts — the tool whose first version took the contour of an ellipsoid across Aᵀn instead of A⁻¹n */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -35,7 +35,7 @@ for (const key of authored) {
     for (const pose of poses) {
       const state = evaluate(asset, { kind: "pose", pose }, engine.scaleSelector(Number(key)));
       const drawn = new Map<string, { x: number; y: number }[]>();
-      for (const entry of state.shapes[view]) if (entry.shape.kind === "loft") drawn.set(entry.shape.bone, [...(drawn.get(entry.shape.bone) ?? []), ...entry.rings.flat()]);
+      for (const entry of state.shapes[view]) if (entry.shape.kind === "loft" && !String(entry.shape.id).startsWith("mvb-")) drawn.set(entry.shape.bone, [...(drawn.get(entry.shape.bone) ?? []), ...entry.rings.flat()]);
       if (pose === poses[0]) bones = drawn.size;
       for (const [bone, points] of drawn) {
         const own = solids.filter((solid) => solid.bone === bone);

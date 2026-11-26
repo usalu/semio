@@ -90,7 +90,7 @@ fn fresh(document: &Arc<Puzzle2dPlaySnapshot>, run: u64, requested: u64) -> Puzz
 struct RunLog {
     finals: Vec<(u64, ToolRunVerdict, u16, ToolRunTraceSubject)>,
     tick_finals: Vec<usize>,
-    /// 🪣️ Final `Success` verdicts per tick — a PLACEMENT, which is what one unit of fuel buys.
+    /// 🪣️ Final `Success` verdicts per tick, each corresponding to a placement.
     tick_placements: Vec<usize>,
     testing: Vec<u64>,
     retired: Vec<u64>,
@@ -232,10 +232,19 @@ fn summary(log: &RunLog, prefix: usize) -> Value {
 fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
     let snapshot = snapshot();
     let prefix = number(&snapshot["verdictPrefix"]) as usize;
-    for case in snapshot["cases"].as_array().expect("cases") {
+    let oracle: serde_json::Value = serde_json::from_str(*FILL_RUN_FIXTURE).expect("fill case fixture is JSON");
+    let cases = snapshot["cases"].as_array().expect("cases");
+    let oracle_cases = oracle["cases"].as_array().expect("authored cases");
+    assert_eq!(cases.len(), oracle_cases.len());
+    for (case, oracle_case) in cases.iter().zip(oracle_cases) {
         let document = example(&case["document"]);
         let log = run(&document, number(&case["run"]), number(&case["requested"]));
-        assert_eq!(summary(&log, prefix), case["expected"], "{}", text(&case["id"]));
+        let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&summary(&log, prefix))).expect("fill case summary is JSON");
+        assert_eq!(oracle_case["id"].as_str(), case["id"].as_str());
+        assert_eq!(actual, oracle_case["expected"], "{}", text(&case["id"]));
+        if let Some(maximum) = oracle_case["maximumPreviewPages"].as_u64() {
+            assert!(log.tick_finals.len() as u64 <= maximum, "{} previews for {} candidate decisions", log.tick_finals.len(), log.finals.len());
+        }
         let counters = log.counters();
         assert_eq!(log.ops.len() as u64, counters[1] * number(&snapshot["opsPerPlacement"]));
         assert_eq!(log.entities.len() as u64, counters[1]);
@@ -394,30 +403,49 @@ fn fill_run_job_collision_verdicts_agree_with_the_geo_oracle() {
     assert!(collisions > 0 && fits > 0 && decisive > ambiguous, "the oracle run must decide both collisions and fits ({decisive} decisive, {ambiguous} ambiguous)");
 }
 
-/// 👣️ With one unit of fuel per step every tick carries at most one PLACEMENT, and exactly one tick per
-/// placement carries it — and single-stepping still decides exactly what a free run decides.
-///
-/// 🐛️ This law used to demand at most one final VERDICT per tick. `Puzzle2dFillRunJob::decide` has
-/// deliberately spent no fuel since 2026-09-17 (its own docstring: this run's unit IS a placement, and
-/// charging a unit per decided candidate made `Step` burn its single paused-grant unit on a
-/// `host-collision` rejection — "atPause=29 after=29 waitedMs=30131"); only `accept` calls
-/// `context.consume_fuel(1)`. So a one-unit tick legitimately REJECTS dozens of candidates — observed
-/// `[81, 107, 142, …]` — while accepting at most one. Counting verdicts was counting the thing the
-/// engine stopped charging for; counting placements is the contract fuel actually buys, and the
-/// free-run equality below is what the law really proves.
+/// 👣️ Each new fill checkpoint publishes exactly one placement, with the same ordered decisions as a free run.
 #[test]
-fn fill_run_job_step_with_one_unit_of_fuel_reaches_exactly_one_candidate_verdict() {
-    let document = example(&snapshot()["resume"]["document"]);
-    let mut job = fresh(&document, 1, 6);
+fn fill_run_job_single_step_reaches_one_placement_checkpoint() {
+    let fixture = snapshot();
+    let law = &fixture["singleStep"];
+    let document = example(&law["document"]);
+    let (run_id, requested) = (number(&law["run"]), number(&law["requested"]));
+    let placements_per_step = number(&law["placementsPerStep"]) as usize;
+    let stock = crate::puzzle_job::testing::fixture_stock();
+    let mut original = crate::puzzle_job::testing::OriginalFixture::new(OperationId(1), Generation(1), stock, fill_run_monotonic_zero, u64::MAX, 1 << 32);
+    let mut job = fresh(&document, run_id, requested);
+    for _ in 0..128 {
+        let outcome = original.step_job(&mut job, StepBudget::new(1, u64::MAX, stock)).expect("a short original work loan yields");
+        assert!(outcome.is_none_or(|(turn, output)| matches!(turn, JobTurn::Yield | JobTurn::Prepare(_)) && output.is_none()), "one unit of original work cannot publish a placement from a cold fill");
+    }
+
     let mut log = RunLog::default();
-    run_to_complete(&mut job, 1, &mut log);
-    let tested = log.counters()[0];
-    assert!(tested > 0);
-    let placements: usize = log.tick_placements.iter().sum();
-    assert!(placements > 0, "a one-unit run still places: {:?}", log.tick_placements);
-    assert!(log.tick_placements.iter().all(|placed| *placed <= 1), "a single unit of fuel placed more than one candidate: {:?}", log.tick_placements);
-    assert_eq!(log.tick_placements.iter().filter(|placed| **placed == 1).count(), placements, "exactly one tick per placement carries it: {:?}", log.tick_placements);
-    assert_eq!(log.verdicts(), run(&document, 1, 6).verdicts(), "single-stepping decides exactly what a free run decides");
+    let budget = StepBudget::new(INTERACTIVE_LANE_FUEL, u64::MAX, stock);
+    let (mut prior_placements, mut prior_decisions, mut prior_tick) = (0, 0, 0);
+    let mut maximum_refusals = 0;
+    for _ in 0..1 << 16 {
+        let checkpoints = log.checkpoints.len();
+        step_job(&mut original, &mut job, budget, &mut log);
+        assert!(log.entities.len() <= prior_placements + placements_per_step, "a step published more than its placement quota");
+        if log.checkpoints.len() > checkpoints {
+            let checkpoint = FillRunCheckpoint::decode(log.checkpoints.last().unwrap()).expect("placement checkpoint decodes");
+            assert_eq!(checkpoint.placements.len(), prior_placements + placements_per_step);
+            assert_eq!(log.entities.len(), checkpoint.placements.len());
+            assert_eq!(log.tick_placements[prior_tick..].iter().filter(|placed| **placed == placements_per_step).count(), 1);
+            let refusals = log.finals[prior_decisions..].iter().filter(|(_, verdict, ..)| *verdict != ToolRunVerdict::Success).count();
+            maximum_refusals = maximum_refusals.max(refusals);
+            (prior_placements, prior_decisions, prior_tick) = (log.entities.len(), log.finals.len(), log.tick_placements.len());
+        }
+        if log.complete { break; }
+    }
+    close_job(&mut original, &mut job);
+    original.finish();
+    assert!(log.complete);
+    assert_eq!(prior_placements as u64, requested);
+    assert!(maximum_refusals >= number(&law["minimumRefusalsBetweenPlacements"]) as usize);
+    let direct = run(&document, run_id, requested);
+    assert_eq!(log.finals, direct.finals, "single-stepping preserves the order of every candidate verdict");
+    assert_eq!(log.ops, direct.ops);
 }
 
 /// ⏩️ A job rebuilt from a run's checkpoint and provisional ops with a raised count continues the same sequence (ops,
@@ -509,7 +537,7 @@ fn replay_clock() -> Option<u64> {
             }
             Some(cursor) => {
                 clock.1 = Some(cursor + 1);
-                clock.0.get(cursor).copied().or_else(|| clock.0.last().copied())
+                Some(*clock.0.get(cursor).expect("each replay uses the cold run clock readings"))
             }
         }
     })
@@ -522,18 +550,32 @@ fn replay_clock() -> Option<u64> {
 fn fill_run_job_drive_step_stays_below_the_interactive_ceiling_for_nakagin() {
     let law = &snapshot()["interactive"];
     let document = example(&law["document"]);
-    let mut best: Vec<u128> = Vec::new();
+    let mut best = Vec::new();
     for cold in 0..number(&law["coldRuns"]) {
         REPLAY_CLOCK.with(|clock| clock.borrow_mut().1 = (cold > 0).then_some(0));
         let mut job = fresh(&document, number(&law["run"]), number(&law["requested"]));
         let (mut log, mut turn) = (RunLog::default(), 0);
-        let mut original = crate::puzzle_job::testing::OriginalFixture::new(OperationId(1), Generation(1), crate::puzzle_job::testing::fixture_stock(), replay_clock, u64::MAX, 1 << 32);
+        let per_turn = crate::puzzle_job::testing::fixture_stock();
+        let requested = usize::try_from(number(&law["requested"])).expect("placement count");
+        let lifetime = semio_framework_value::RetainedCloneGrant {
+            maximum_items: per_turn.maximum_items.saturating_mul(requested),
+            maximum_copy_bytes: per_turn.maximum_copy_bytes.saturating_mul(requested),
+            maximum_capacity_bytes: per_turn.maximum_capacity_bytes.saturating_mul(requested),
+            maximum_release_bytes: per_turn.maximum_release_bytes.saturating_mul(requested),
+            ..per_turn
+        };
+        let mut original = crate::puzzle_job::testing::OriginalFixture::new(OperationId(1), Generation(1), lifetime, replay_clock, u64::MAX, (1u64 << 32).saturating_mul(requested as u64));
+        let mut last_outcome = 0;
         while !log.complete {
+            assert!(turn - last_outcome < 1_000_000, "no fill outcome within a million funded turns");
             let start = replay_clock().expect("clock");
-            let budget = StepBudget::from_duration(INTERACTIVE_LANE_FUEL, start, INTERACTIVE_LANE_WALL_US, crate::puzzle_job::testing::fixture_stock()).expect("budget");
+            let budget = StepBudget::from_duration(INTERACTIVE_LANE_FUEL, start, INTERACTIVE_LANE_WALL_US, per_turn).expect("budget");
             let began = std::time::Instant::now();
-            let outcome = crate::puzzle_job::testing::drive(&mut job, budget, &mut original);
+            let outcome = original.step_job(&mut job, budget).expect("one funded fill turn").map_or(JobTurn::Yield, |(turn, _)| turn);
             let elapsed = began.elapsed().as_micros();
+            if !matches!(outcome, JobTurn::Yield) {
+                last_outcome = turn;
+            }
             let failure = match &outcome {
                 JobTurn::Preview(bytes) => ToolRunTick::decode(bytes).map(|tick| log.apply(tick)).err().map(|error| format!("{error:?}")),
                 JobTurn::Complete => {
@@ -547,10 +589,12 @@ fn fill_run_job_drive_step_stays_below_the_interactive_ceiling_for_nakagin() {
                 close_job(&mut original, &mut job);
                 panic!("interactive fill run failed: {failure}");
             }
+            let preview_bytes = match &outcome { JobTurn::Preview(bytes) => bytes.len(), _ => 0 };
+            let sample = (elapsed, preview_bytes);
             if cold == 0 {
-                best.push(elapsed);
+                best.push(sample);
             } else if let Some(slot) = best.get_mut(turn) {
-                *slot = (*slot).min(elapsed);
+                if elapsed < slot.0 { *slot = sample; }
             }
             turn += 1;
         }
@@ -558,9 +602,9 @@ fn fill_run_job_drive_step_stays_below_the_interactive_ceiling_for_nakagin() {
         original.finish();
         assert_eq!(turn, best.len(), "cold run {cold} sliced the job differently");
     }
-    let worst = best.iter().copied().max().unwrap_or(0);
+    let (turn, &(worst, preview_bytes)) = best.iter().enumerate().max_by_key(|(_, sample)| sample.0).expect("timed fill turn");
     assert!(best.len() as u64 >= number(&law["minimumTurns"]), "only {} turns", best.len());
-    assert!(worst < u128::from(number(&law["budgetUs"])), "worst drive_step {worst} µs");
+    assert!(worst < u128::from(number(&law["budgetUs"])), "turn {turn}, preview {preview_bytes} bytes: worst drive_step {worst} µs");
 }
 
 fn tool_run_args(entries: &[(&str, DslValue)]) -> DslValue {
@@ -579,14 +623,40 @@ fn run_state(app: &Puzzle2dApp) -> Option<&'static str> {
 fn pump_until(app: &mut Puzzle2dApp, what: &str, done: impl Fn(&Puzzle2dApp) -> bool) {
     use semio_plugin::artifact_app_laws::{close_fixture_result_page, fixture_mounted_policy, take_fixture_result_turn};
 
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
+    let stalled = std::time::Duration::from_secs(120);
+    let mut deadline = std::time::Instant::now() + stalled;
+    let mut progress = None;
     let policy = fixture_mounted_policy();
+    let fuel = semio_plugin::artifact_app_laws::OriginalFixtureCaller::turn_fuel();
+    let (caller_grant, _) = app.1.cx().original_turn_ceiling();
+    let mut receipts = Vec::new();
+    let mut release_by_lane = [0_usize; 3];
     while std::time::Instant::now() < deadline {
+        let current = app.tool_run_presence().map(|run| (run.state, run.stage, run.completed));
+        if current != progress {
+            progress = current;
+            deadline = std::time::Instant::now() + stalled;
+        }
+        semio_plugin::artifact_app_laws::retain_original_ownership_receipts(&mut app.0, policy, &mut receipts).expect("return the fill job receipts");
+        receipts.clear();
         if done(app) {
+            semio_plugin::artifact_app_laws::fixture_renew_turn(app.1.cx(), fuel, caller_grant).expect("restore caller authority after fill publication");
             return;
         }
-        app.maintain(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
-        ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+        semio_plugin::artifact_app_laws::fixture_renew_turn(app.1.cx(), fuel, policy.maintenance).expect("fund fill maintenance");
+        let before_maintenance = app.1.cx().retained_progress().released_bytes;
+        let phase = app.0.mounted_owner_maintenance_phase().expect("current fill maintenance phase");
+        let cx = app.1.cx();
+        let identity = semio_plugin::MountedOwnerIdentityV1 { instance_id: 1, operation: cx.operation(), generation: cx.generation() };
+        if let Some(mut turn) = semio_plugin::MountedOwnerTurnV1::admit(1, identity, phase, policy, cx).expect("admit the mounted fill turn") {
+            app.0.mounted_owner_maintenance_step(&mut turn).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
+        }
+        let after_maintenance = app.1.cx().retained_progress().released_bytes;
+        release_by_lane[0] += after_maintenance.saturating_sub(before_maintenance);
+        semio_plugin::artifact_app_laws::fixture_renew_turn(app.1.cx(), fuel, policy.maintenance).expect("fund fill publication");
+        let receiving = app.tool_runs.entries.iter().any(|entry| entry.native.has_pending_tick());
+        ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).unwrap_or_else(|fault| panic!("{what} at {current:?}, release bytes by maintenance, publication and pending tick {release_by_lane:?}: driver turn faulted: {fault:?}"));
+        release_by_lane[1 + usize::from(receiving)] += app.1.cx().retained_progress().released_bytes.saturating_sub(after_maintenance);
         if let Some(mut page) = take_fixture_result_turn(&mut app.0, 1, policy.maintenance).expect("take typed operation result page").0 {
             assert_ne!(page.lane, semio_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));
             let token = close_fixture_result_page(&mut page, policy.close);
@@ -597,7 +667,11 @@ fn pump_until(app: &mut Puzzle2dApp, what: &str, done: impl Fn(&Puzzle2dApp) -> 
         let _ = ::semio_framework_async::poll::resolve_ready(app.take_typed_operation_completion()).expect("completion");
         let _ = app.take_typed_operation_ui_scope();
     }
-    panic!("{what} never settled; state {:?}", run_state(app));
+    let credit = app.1.cx().retained_grant();
+    let paid = app.1.cx().retained_progress();
+    let runs: Vec<_> = app.tool_runs.entries.iter().map(|entry| (&entry.tool_id, entry.slot.state, entry.operations.len(), entry.step_sequence, entry.sequence, entry.pending_step, entry.job.is_some(), entry.native.has_pending_tick(), entry.refold.is_some())).collect();
+    let demand = app.0.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, semio_plugin::artifact_app_laws::FIXTURE_EFFECT_WORK);
+    panic!("{what} never settled; presence {:?}, runs {runs:?}, credit {credit:?}, paid {paid:?}, maintenance {demand:?}, publication {}", app.tool_run_presence(), app.0.typed_operation_diagnostic());
 }
 
 fn history_len(app: &mut Puzzle2dApp) -> usize {
@@ -608,15 +682,12 @@ fn document_pack(app: &Puzzle2dApp) -> store::os_store::serialization::ArtifactP
     ::semio_framework_async::poll::resolve_ready(app.document_pack()).expect("document pack")
 }
 
-/// 🧰️ An app holding the snapshot `document` spec's example reduced to its first `keepNodes` nodes — the removed
-/// nodes deleted by ordinary local `delete-node` edits — with the fill count set in config.
+/// 🧰️ Loads the exact reduced board used by the fill oracle into a fresh registered editor.
 fn fill_app(spec: &Value, requested: u64) -> Puzzle2dApp {
+    let document = example(spec);
     let mut app = app_with_registry();
-    load_example(&mut app, text(&spec["example"]));
-    let keep = number(&spec["keepNodes"]) as usize;
-    let deletes: Vec<String> = board_snapshot_nodes(&fixture_of(&app)).iter().skip(keep).filter_map(|node| node["id"].as_str()).map(|id| protocol::OpText::print_op(&crate::standards::v1::subsets::any::schema::mutations::delete_node::<Puzzle2dMutation>(id.into()))).collect();
-    ::semio_framework_async::poll::resolve_ready(app.ingest_operations_text(&deletes.join("\n"), &mut semio_plugin::artifact_app_laws::fixture_identity())).expect("delete the nodes past keepNodes");
-    assert_eq!(fixture_of(&app), example(spec).value().clone(), "the app commits exactly the snapshot document");
+    import_board(&mut app, document.value());
+    assert_eq!(&fixture_of(&app), document.value(), "the registered editor loads the oracle's board");
     dispatch(&mut app, "setFillCount", Some(&json!({ "count": requested })), None).expect("set fill count");
     app
 }

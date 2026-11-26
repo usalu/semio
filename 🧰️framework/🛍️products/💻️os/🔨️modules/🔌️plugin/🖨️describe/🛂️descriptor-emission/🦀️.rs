@@ -58,6 +58,7 @@ impl actor_bindings::semio::framework::pure::Host for DescribeHostState {
     }
 
     fn operation_clock_us(&mut self,_clock_binding:u64)->Option<u64>{None}
+    fn actor_execution_clock_us(&mut self,_clock_binding:u64)->Option<u64>{None}
 
     fn now_ms(&mut self) -> i64 {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_millis() as i64).unwrap_or(0)

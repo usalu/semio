@@ -119,7 +119,7 @@ test("a machine with less memory than a whole read wants lets the larger machine
 test("a funded loser gives its reservation back before waiting on an existing claim",async()=>{
  const row=capacityCases.contestedClaim,fleet=makeFleet(),winner=await gate(fleet,row.first,async()=>none),client=fleet.client(row.next),db=new Database(":memory:"),events:string[]=[];
  let awaiting!:()=>void,bookings=0,held=0;
- const entered=new Promise<void>(done=>awaiting=done),count=[];
+ const entered=new Promise<void>(done=>awaiting=done),count:number[]=[];
  const follow=wholeReadGateV1({client:{...client,await:(...args:Parameters<typeof client.await>)=>{
   events.push("await");count.push(held);awaiting();return client.await(...args);
  }},owner:row.next,language:"en",identity,platform,look:async()=>none,...quick,fund:async()=>{

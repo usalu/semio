@@ -31,16 +31,18 @@ for path in (*root.glob("debug/build/*/*/out/*.rlib"), *root.glob("*/debug/build
     if stat.st_nlink == 1 and stat.st_size >= 512*1024 and time.time() - stat.st_mtime > 1800:
         candidates.append((stat.st_size,path,stat))
 for size, path, old in sorted(candidates,reverse=True):
-    if shutil.disk_usage(root).free > 9*2**30: break
+    if shutil.disk_usage(root).free > 15*2**30: break
     lock_path = path.parent.parent / ".lock"
     if not lock_path.is_file(): continue
     with lock_path.open("rb") as lock:
         try: fcntl.flock(lock,(fcntl.LOCK_SH if allow_readers else fcntl.LOCK_EX)|fcntl.LOCK_NB)
         except BlockingIOError: continue
         if path.is_symlink() or not path.exists() or path.stat().st_mtime_ns != old.st_mtime_ns: continue
-        remote = destination / path.name
-        if not remote.exists(): shutil.copy2(path,remote)
         check=digest(path)
+        remote = destination / path.name
+        if remote.exists() and digest(remote) != check:
+            remote = destination / (check.hex()[:16]+"-"+path.name)
+        if not remote.exists(): shutil.copy2(path,remote)
         if check != digest(remote): raise ValueError(path)
         pending=path.with_suffix(".ticket-offload")
         os.symlink(remote,pending)

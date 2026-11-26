@@ -1,6 +1,6 @@
 //! 🎟️ The original caller incrementally admits numerical metadata before the exact job authority birth.
 use super::*;
-use semio_framework_job::{OriginalConstructionDemand, OriginalConstructionStatus, OriginalSourceBinding};
+use semio_framework_job::{OriginalConstructionDemand, OriginalSourceBinding};
 use semio_framework_value::{RetainedCloneStep,ValueRefusalKind};
 use semio_framework_value::retained_clone::RetainedCloneClose;
 use std::mem::{ManuallyDrop,size_of};
@@ -18,14 +18,14 @@ pub struct EnergyJobAdmission {
     retirement: RetainedCloneClose,
     construction: semio_framework_job::OriginalConstructionAdmission,
     admitted: Option<()>,
-    construction_ready: bool,
+    construction_settled: bool,
     closing: bool,
 }
 impl EnergyJobAdmission{
  pub fn birth_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>()+size_of::<Model>()+size_of::<SimulationConfig>(),depth:1,..Default::default()}}
  /// 🫴️ Moves both original input headers only when their unchanged caller funds the complete transfer.
  pub fn begin(operation:Operation,bounds:EnergyNumericalBounds,model:&mut Option<Model>,config:&mut Option<SimulationConfig>,output:&mut Option<Self>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  if output.is_some()||model.is_none()||config.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Energy admission requires empty output and both original inputs").into())}if operation.operation!=cx.operation()||operation.generation!=cx.generation(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Energy admission requires its original operation and generation").into())}if cx.should_yield()||cx.is_cancelled(){return Ok(false)}let source=OriginalSourceBinding::borrow(cx);let d=Self::birth_demand();let mut admitted=false;crate::retirement::energy_retained_step(cx,d,|_|{*output=Some(Self{source,operation,bounds,model:ManuallyDrop::new(model.take()),config:ManuallyDrop::new(config.take()),observer:Default::default(),census:None,rejection:None,job:ManuallyDrop::new(None),retirement:Default::default(),construction:Default::default(),admitted:None,construction_ready:false,closing:false});admitted=true;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;Ok(admitted)
+  if output.is_some()||model.is_none()||config.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Energy admission requires empty output and both original inputs").into())}if operation.operation!=cx.operation()||operation.generation!=cx.generation(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Energy admission requires its original operation and generation").into())}if cx.should_yield()||cx.is_cancelled(){return Ok(false)}let source=OriginalSourceBinding::borrow(cx);let d=Self::birth_demand();let mut admitted=false;crate::retirement::energy_retained_step(cx,d,|_|{*output=Some(Self{source,operation,bounds,model:ManuallyDrop::new(model.take()),config:ManuallyDrop::new(config.take()),observer:Default::default(),census:None,rejection:None,job:ManuallyDrop::new(None),retirement:Default::default(),construction:Default::default(),admitted:None,construction_settled:false,closing:false});admitted=true;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;Ok(admitted)
  }
  fn validate(&self,cx:&StepContext<'_>)->Result<(),ValueError>{if self.source.matches(cx){Ok(())}else{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Energy admission requires the same original source and clock"))}}
  pub fn rejection(&self) -> Option<EnergyNumericalDimension> {
@@ -39,7 +39,7 @@ impl EnergyJobAdmission{
      if self.ready() || self.rejection().is_some() {
          return Ok(RetirementDemand { copy_bytes: size_of::<Option<EnergyJob>>(), depth: 1, ..Default::default() });
      }
-     if self.construction_ready { return Ok(self.construction.close_demand()); }
+     if self.construction_settled { return Ok(self.construction.close_demand()); }
      if !self.observer.complete() { return Ok(self.observer.demand()); }
      if self.census.is_none() {
          return Ok(RetirementDemand { copy_bytes: size_of::<EnergyNumericalCensus>(), depth: 1, ..Default::default() });
@@ -51,20 +51,26 @@ impl EnergyJobAdmission{
          ..Default::default()
      })
  }
+ /// 🎟️ Quotes the complete business grant, including the constructor's retained control.
+ pub fn step_grant(&self) -> Result<RetainedCloneGrant, ValueError> {
+     let physical = self.demands()?;
+     let mut quote = OriginalConstructionDemand { items: 1, copy_bytes: physical.copy_bytes, capacity_bytes: physical.capacity_bytes, release_bytes: physical.release_bytes, depth: physical.depth.max(1) };
+     if self.census.is_some() && !self.closing && !self.construction_settled && self.rejection().is_none() && !self.ready() {
+         quote = semio_framework_job::original_construction_settled_quote::<()>(quote, 1)?.0;
+     }
+     Ok(RetainedCloneGrant { maximum_items: quote.items, maximum_copy_bytes: quote.copy_bytes, maximum_capacity_bytes: quote.capacity_bytes, maximum_release_bytes: quote.release_bytes, maximum_depth: quote.depth })
+ }
  /// 🔎️ Visits one bounded original metadata row, then separately admits the actual authority allocation.
  pub fn step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(cx)?;
   if self.closing || cx.should_yield() || cx.is_cancelled() { return Ok(false); }
   if self.ready() || self.rejection().is_some() { return Ok(true); }
-  if self.construction_ready {
-      self.construction.retire_step(cx)?;
-      return Ok(self.ready() || self.rejection().is_some());
-  }
+  if self.construction_settled { return Ok(self.construction.close_step(cx)?); }
   let d=self.demands()?;
   if !self.observer.complete(){crate::retirement::energy_retained_step(cx,d,|g|Ok(RetainedCloneStep::Progress(self.observer.advance(self.model.as_ref().unwrap(),self.config.as_ref().unwrap(),g))))?;return Ok(false)}
   if self.census.is_none(){crate::retirement::energy_retained_step(cx,d,|_|{match self.observer.census(){Some(census)=>{self.rejection=census.first_exceeded(self.bounds.0);self.census=Some(census);},None=>{self.census=Some(Default::default());self.rejection=Some(EnergyNumericalDimension::ArithmeticOverflow);}}Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;return Ok(self.rejection.is_some())}
   let demand = OriginalConstructionDemand { items: 1, copy_bytes: d.copy_bytes, capacity_bytes: d.capacity_bytes, release_bytes: 0, depth: d.depth };
-  let status = semio_framework_job::admit_original_construction(cx, &mut self.admitted, &mut self.construction, demand, 1, |_, actual| {
+  let settled = semio_framework_job::admit_original_construction_settled(cx, &mut self.construction, &mut self.admitted, demand, 1, |_, actual| {
       let capacity = match EnergyJob::from_observed(self.operation, self.model.take().unwrap(), self.config.take().unwrap(), self.census.unwrap()) {
           Ok(job) => {
               *self.job = Some(job);
@@ -83,12 +89,8 @@ impl EnergyJobAdmission{
           work: 1
       }
   })?;
-  match status {
-      OriginalConstructionStatus::Ready => self.construction_ready = true,
-      OriginalConstructionStatus::Pending => {}
-      OriginalConstructionStatus::Failed => return Err(ValueError::invariant("Energy numerical construction failed").into()),
-  }
-  Ok(false)
+  self.construction_settled = settled;
+  Ok(settled && (self.ready() || self.rejection().is_some()))
  }
  /// 📤️ The admitted job moves once into the same original caller's retained slot.
  pub fn take(&mut self,output:&mut Option<EnergyJob>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Energy admitted job output slot is occupied").into())}if !self.ready()||cx.is_cancelled()||cx.should_yield(){return Ok(false)}let d=RetirementDemand{copy_bytes:size_of::<Option<EnergyJob>>(),depth:1,..Default::default()};let mut moved=false;crate::retirement::energy_retained_step(cx,d,|_|{*output=self.job.take();self.closing=true;moved=true;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;Ok(moved)}

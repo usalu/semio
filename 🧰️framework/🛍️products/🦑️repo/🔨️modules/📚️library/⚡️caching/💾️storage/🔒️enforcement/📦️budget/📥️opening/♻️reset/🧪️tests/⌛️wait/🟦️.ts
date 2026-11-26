@@ -134,7 +134,7 @@ test("the Rust wait uses the real fair writer, requalifies after release and iss
     expect(notices[1]).toEndWith("Private cleanup detach failed");
     expect(notices[2]).toEndWith("Private lease release failed");
    }
-   expect({granted:Number(granted),reclaimed:Number(reclaimed),reason:row.reason},row.fault).toEqual(expected.get({$fault:row.fault}));
+   expect<unknown>({granted:Number(granted),reclaimed:Number(reclaimed),reason:row.reason},row.fault).toEqual(expected.get({$fault:row.fault}));
    expect({granted,reclaimed},row.fault).toEqual({granted:row.granted,reclaimed:row.reclaimed});
    if(row.fault==="cancel")expect(String("error"in result?result.error:"")).toContain("private reclaim cancellation");
    else {

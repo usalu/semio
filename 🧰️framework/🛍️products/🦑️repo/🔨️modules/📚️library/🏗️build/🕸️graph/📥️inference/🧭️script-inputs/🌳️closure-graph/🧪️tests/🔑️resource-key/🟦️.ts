@@ -20,7 +20,7 @@ test("a question with a resource a module imports by URL is answered from the st
     const key = (name: string, resource = "") => JSON.stringify(["{workspaceRoot}/" + name, 1, 1, resource, null]);
     expect(pass.graph.has(key("loader.ts", "{workspaceRoot}/engine.wasm"))).toBe(true);
     const fact = await closureGraphAnswerV1(fresh(), root, question);
-    expect(fact.digest).toBe(pass.digests[0]);
+    expect(fact.digest).toBe(pass.digests[0]!);
     expect([...new Set(pass.graph.reach([key("entry.ts")], { redirect: new Map([[key("loader.ts"), key("loader.ts", "{workspaceRoot}/engine.wasm")]]) }).names as string[])].sort()).toEqual(fixture.reached);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });

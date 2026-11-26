@@ -5,7 +5,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, parse } from "node:path";
 import protocol from "../🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import corpus from "./🧫️fixtures/🔣️.json" with { type: "json" };
@@ -17,6 +17,7 @@ import {
 } from "../🟦️.ts";
 
 const fixtureBaseV1=():string=>safeTemporaryDirectoryV1()??tmpdir();
+const shortParentV1=(prefix:string):string=>{const first=join(dirname(testSandboxParentV1()),prefix);if(first.length+6<=56)return mkdtempSync(first);const base=process.platform==="win32"?join(parse(tmpdir()).root,"tmp"):"/tmp";mkdirSync(base,{recursive:true});return mkdtempSync(join(realpathSync(base),prefix))};
 process.env.SEMIO_AGENT_SESSION_DIRECTORY = mkdtempSync(join(tmpdir(), "sb-sessions-"));
 delete process.env.SEMIO_AGENT_SESSION;
 const declared = protocol as unknown as TestSandboxProtocolV1, law = compileLawV1(declared), root = join(import.meta.dir, "..");
@@ -220,7 +221,7 @@ describe("per-run sandbox", () => {
     expect(existsSync(sandbox.root)).toBe(false);
   }, 60000);
   test.skipIf(process.platform !== "darwin")("a killed run leaves an attached image behind and the next reclaim detaches it and removes the sandbox", async () => {
-    const parent = mkdtempSync(join(tmpdir(), "sb-kill-")), modulePath = join(root, "🟦️.ts");
+    const parent = shortParentV1("sb-k-"), modulePath = join(root, "🟦️.ts");
     const program = `import {createTestSandboxV1} from ${JSON.stringify(modulePath)};import {spawnSync} from "node:child_process";import {mkdirSync} from "node:fs";import {join} from "node:path";const s=createTestSandboxV1({route:"killed",parent:${JSON.stringify(parent)},reclaim:false});const image=join(s.images,"leak.dmg"),mount=join(s.images,"mnt");spawnSync("/usr/bin/hdiutil",["create","-size","4m","-fs","APFS","-volname","sbleak",image]);mkdirSync(mount);spawnSync("/usr/bin/hdiutil",["attach","-nobrowse","-mountpoint",mount,image]);console.log(JSON.stringify({root:s.root,image}));setInterval(()=>{},1000);`;
     const child = spawn(process.execPath, ["-e", program], { stdio: ["ignore", "pipe", "inherit"] });
     try {
@@ -296,7 +297,7 @@ describe("per-run sandbox", () => {
     } finally { first.dispose(); second.dispose(); }
   });
   test("sandboxes live below the root of their agent session, the owner row names the session, and a gone session releases its root unless a live sandbox is left", () => {
-    const parent = mkdtempSync(join(dirname(testSandboxParentV1()), "sb-session-")), base = join(parent, declared.layout.parent), dead = spawnSync(process.execPath, ["-e", "0"]).pid!;
+    const parent = shortParentV1("sb-s-"), base = join(parent, declared.layout.parent), dead = spawnSync(process.execPath, ["-e", "0"]).pid!;
     const session = { id: "a1", worktree: "0123456789ab", resources: { tests: { root: "a1" } } }, other = { id: "b2", worktree: "0123456789ab", resources: { tests: { root: "b2" } } };
     try {
       const mine = createTestSandboxV1({ route: "s", parent, reclaim: false, session }), theirs = createTestSandboxV1({ route: "s", parent, reclaim: false, session: other });

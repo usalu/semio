@@ -8,11 +8,7 @@ import { wireRespondAnswer } from "../🟦️.ts";
 // #endregion 🔌️Imports
 
 //#region 📥️InboundRequest
-/** ⏱️ How many guest turns ONE inbound `request` may take to produce its `respond` — the ABI's own
- * "answered … within a bounded number of turns, or by spawning a job" (`🔌️plugin/🧬️schema/📜️.wit`'s
- * `request-event`). A capability handler is a pure synchronous function, so the answer lands on turn
- * 1; the budget exists so a guest that parks a request instead of answering it fails loudly at the
- * caller rather than leaving an outstanding completion forever. */
+/** ⏱️ Maximum consecutive turns a guest request may spend without advancing its original paid work. */
 export const INBOUND_REQUEST_TURN_BUDGET = 64;
 
 /** 📞️ One inbound call, as this side of the ABI states it. `originInstanceId` becomes the request's
@@ -35,7 +31,19 @@ export type InboundRequestDrive = {
 
 /** 🍕️ The slice of one turn result {@link driveInboundRequest} reads: the effects it scans for a
  * matching `respond`, and the status that says whether the guest has work left to drain. */
-export type InboundRequestTurn = { readonly effects: readonly WireVariant[]; readonly status?: unknown };
+export type InboundRequestTurn = { readonly effects: readonly WireVariant[]; readonly status?: unknown; readonly original?: object };
+
+type PaidTurn = { operation: bigint; generation: bigint; remaining: bigint };
+
+function paidTurn(turn: InboundRequestTurn): PaidTurn | undefined {
+  const raw = turn.original as { retainedReceipt?: { input?: { operation?: bigint; generation?: bigint }; remainingFuel?: bigint; workUnitsSpent?: bigint; spent?: { copiedItems?: bigint } } } | undefined;
+  const receipt = raw?.retainedReceipt;
+  if (typeof receipt?.input?.operation !== "bigint" || typeof receipt.input.generation !== "bigint" ||
+      typeof receipt.remainingFuel !== "bigint" || receipt.remainingFuel < 0n ||
+      typeof receipt.workUnitsSpent !== "bigint" || receipt.workUnitsSpent <= 0n ||
+      typeof receipt.spent?.copiedItems !== "bigint" || receipt.spent.copiedItems <= 0n) return undefined;
+  return { operation: receipt.input.operation, generation: receipt.input.generation, remaining: receipt.remainingFuel };
+}
 
 export type InboundRequestAnswer =
   | { readonly status: "answered"; readonly turns: number; readonly result: { readonly ok: Uint8Array } | { readonly fault: Uint8Array } }
@@ -55,7 +63,8 @@ export type InboundRequestAnswer =
  * maps `cancelled`/`unanswered` onto its own typed refusal.
  */
 export async function driveInboundRequest(drive: InboundRequestDrive): Promise<InboundRequestAnswer> {
-  const budget = drive.turnBudget ?? INBOUND_REQUEST_TURN_BUDGET;
+  let budget = drive.turnBudget ?? INBOUND_REQUEST_TURN_BUDGET;
+  let previous: PaidTurn | undefined;
   const answerFor = (turn: InboundRequestTurn): { readonly ok: Uint8Array } | { readonly fault: Uint8Array } | null => {
     for (const effect of turn.effects) {
       if (effect.tag !== "respond") continue;
@@ -73,6 +82,13 @@ export async function driveInboundRequest(drive: InboundRequestDrive): Promise<I
     const result = answerFor(turn);
     if (result) return { status: "answered", turns, result };
     if (cancelled()) return { status: "cancelled", turns };
+    if (drive.turnBudget === undefined) {
+      const paid = paidTurn(turn);
+      if (paid && (!previous || (paid.operation === previous.operation && paid.generation === previous.generation && paid.remaining < previous.remaining))) {
+        previous = paid;
+        budget = turns + INBOUND_REQUEST_TURN_BUDGET;
+      }
+    }
     drive.onProgress?.({ capability: drive.capability, turns, budget });
     if (cancelled()) return { status: "cancelled", turns };
     if (turns === budget || wireTurnStatusTag(turn.status) !== "more-work") return { status: "unanswered", turns };

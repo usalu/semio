@@ -1,15 +1,27 @@
 /** 🧭️ The real Playwright collector loads every registered suite through one testing-framework identity. */
 import { expect, test } from "vitest";
 import { execFileSync } from "node:child_process";
-import { relative, resolve } from "node:path";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import fixture from "../🧫️fixtures/🌐️browser-discovery/🔣️.json";
 
 test("bounded browser discovery preserves all authored suites", () => {
   const root = fileURLToPath(new URL("../../../", import.meta.url));
-  const output = execFileSync("repo", ["tools", "exec", "--light", "bun", "--", "x", "--bun", "playwright", "test", "--config", ".storybook/🧪️tests/🧪️browser-runner/🟦️.ts", "--list", "--reporter=json"], { cwd: root, encoding: "utf8", timeout: 30000 });
   type Suite = { file?: string; specs?: { file: string }[]; suites?: Suite[] };
-  const report = JSON.parse(output) as { config: { rootDir: string }; suites: Suite[]; errors: unknown[] };
+  type Report = { config: { rootDir: string }; suites: Suite[]; errors: unknown[] };
+  const directory = mkdtempSync(join(tmpdir(), "storybook-discovery-"));
+  let report: Report;
+  try {
+    const file = join(directory, "suites.json");
+    execFileSync("repo", ["tools", "exec", "--light", "bun", "--", "x", "--bun", "playwright", "test", "--config", ".storybook/🧪️tests/🧪️browser-runner/🟦️.ts", "--list", "--reporter=json"], {
+      cwd: root, stdio: "inherit", timeout: 30000, env: { ...process.env, PLAYWRIGHT_JSON_OUTPUT_FILE: file },
+    });
+    report = JSON.parse(readFileSync(file, "utf8")) as Report;
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
   const files = new Set<string>();
   let tests = 0;
   const visit = (suite: Suite): void => {

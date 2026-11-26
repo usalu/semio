@@ -1,6 +1,8 @@
-use super::*;
-use crate::modes::edit::windows::canvas::transient::DrawingCanvasWindowTransient;
-use crate::editor::drawing::modes::edit::windows::canvas::transient::{DrawingCanvasWindowTransientMutation, DrawingCanvasWindowTransientOwner};
+use semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas::{
+    DRAWING_PLAY_BODY_COMPOSITE,
+    config::{DrawingCanvasWindowConfig, DrawingCanvasWindowConfigMutation, DrawingCanvasWindowConfigOwner, DrawingCanvasWindowConfigSet, addressed},
+    transient::{DrawingCanvasWindowTransient, DrawingCanvasWindowTransientMutation, DrawingCanvasWindowTransientOwner},
+};
 use protocol::{ColdMutation, Mutation, OpBinary, OpText};
 
 fn block_on_drawing_windows<F: std::future::Future>(future: F) -> F::Output {
@@ -24,7 +26,6 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
             use semio_s_artifact_draw_drawing_editor_commands::{engagement_input, set_camera};
             use semio_s_artifact_draw_drawing::editor_manifest::create_drawing_app;
             use semio_s_artifact_draw_drawing_editor::{DrawingCommand, DrawingPlayApp};
-            use crate::modes::edit::windows::canvas::DRAWING_PLAY_BODY_COMPOSITE;
             use semio_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
             async fn dispatch(app: &mut VcsArtifactApp<EditorApp<DrawingPlayApp>>, command: DrawingCommand, view: &ViewModel, cx: &mut semio_plugin::StepContext<'_>) -> Result<(usize, usize), String> {

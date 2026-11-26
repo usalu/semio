@@ -1,0 +1,8 @@
+{
+  "runs": [
+    {"name":"a refused run that needed more than it held teaches that need and stays failed","peak":400,"status":"failed","need":3757,"result":{"peakMegabytes":3757,"status":"failed","limited":true,"learnable":true}},
+    {"name":"a cancelled run keeps its cancellation but still teaches what it declared","peak":400,"status":"cancelled","need":3757,"result":{"peakMegabytes":3757,"status":"cancelled","limited":true,"learnable":true}},
+    {"name":"a completed run that held more than it declared stays as measured","peak":5000,"status":"ok","need":3757,"result":{"peakMegabytes":5000,"status":"ok","limited":false,"learnable":true}},
+    {"name":"a failed run without a declaration teaches nothing","peak":400,"status":"failed","result":{"peakMegabytes":400,"status":"failed","limited":false,"learnable":false}}
+  ]
+}

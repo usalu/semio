@@ -174,7 +174,7 @@ impl Puzzle3dApp {
 
     /// 🪪️ The addressed window's host projection already bound to a local-actor `ActionMeta`, retired together with its view.
     pub fn window_meta(&self, window_id: &str) -> WindowMeta {
-        WindowMeta(Some(ActionMeta { view_state: Some(std::sync::Arc::new(self.window_view(window_id).into_inner())), ..self.meta("local") }))
+        WindowMeta(Some(ActionMeta { view_state: Some(std::sync::Arc::new(self.window_view(window_id).into_inner())), ..self.meta(self.stores.store.local_actor_id().0.as_str()) }))
     }
 
     /// 🛠️🧰️ The shell's own activation branches (`🏛️ShellHost/🟦️.tsx`'s `SET_ACTIVE_TOOL_ACTION_ID`
@@ -363,9 +363,14 @@ fn puzzle3d_action_registry() -> semio_plugin::AppActionRegistry {
 }
 
 pub async fn app() -> Puzzle3dApp {
+    app_for_actor(semio_os_kernel::LOCAL_ACTOR_ID).await
+}
+
+/// 👥️ Mounts a scene with an independent document author.
+pub async fn app_for_actor(actor: &str) -> Puzzle3dApp {
     let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let registry = puzzle3d_action_registry();
-    let mut app = semio_plugin::with_authoring_identity!(|identity| VcsArtifactApp::with_registry(EditorApp::<Puzzle3dPlayApp>::default(), registry, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), artifact_app_laws::fixture_mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
+    let mut app = semio_plugin::with_authoring_identity!(|identity| VcsArtifactApp::with_registry(EditorApp::<Puzzle3dPlayApp>::default(), registry, semio_os_kernel::ActorId(actor.into()), artifact_app_laws::fixture_mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
     let instance_id = next_fixture_instance_id();
     app.bind_instance_id(instance_id).await;
     artifact_app_laws::settle_store_constructor(&mut app, artifact_app_laws::fixture_mounted_policy());
@@ -455,7 +460,10 @@ pub async fn host_turn(app: &mut Puzzle3dApp, maximum_items: usize, settled: &mu
     let instance_id = app.instance_id;
     let (raw, cx) = app.parts();
     artifact_app_laws::fixture_renew_turn(cx, artifact_app_laws::OriginalFixtureCaller::turn_fuel(), publication_grant).expect("renew the fixture turn for publication after maintenance");
-    raw.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("advance one typed operation publication unit");
+    if let Err(failure) = raw.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await {
+        let runs = raw.tool_runs.entries.iter().map(|entry| (&entry.tool_id, entry.slot.state, entry.operations.len(), entry.job.as_ref().and_then(|job| job.origin.outcome()).map(|outcome| outcome.kind()))).collect::<Vec<_>>();
+        panic!("publication failed on host turn {} at {}, tool runs {runs:?}: {failure:?}", settled.turns, raw.typed_operation_diagnostic());
+    }
     semio_plugin::artifact_app_laws::retain_original_ownership_receipts(raw, semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut Vec::new()).expect("post the ownership receipts to the fixture caller like the host's exchange output");
     artifact_app_laws::fixture_renew_turn(cx, artifact_app_laws::OriginalFixtureCaller::turn_fuel(), caller_grant).expect("restore the fixture caller grant after publication");
     while let Some(mut page) = semio_plugin::artifact_app_laws::take_fixture_result_page(raw, instance_id, policy.preparation).expect("take one typed operation result page") {

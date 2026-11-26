@@ -49,7 +49,7 @@ const PACKAGE_IDS: [&str; 10] = ["stdio", "stdio-image", "stdio-media", "stdio-c
 /// 🎁️ Assembles and describes one stdio package by id.
 fn shipped(id: &'static str) -> ShippedPackage {
     let (manifest, descriptor) = match id {
-        "stdio" => (include_str!("../../🧩️component/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio::plugin())),
+        "stdio" => (include_str!("../../🧩️component/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_router::plugin())),
         "stdio-image" => (include_str!("../../🧩️extensions/🖼️image/🧩️component/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_image::plugin())),
         "stdio-media" => (include_str!("../../🧩️extensions/🎵️media/🧩️component/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_media::plugin())),
         "stdio-cad" => (include_str!("../../🧩️extensions/🛠️cad/🧩️component/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_cad::plugin())),
@@ -232,7 +232,7 @@ fn package_runtime_probe() {
     let id = std::env::var(PROBE_PACKAGE).expect("the parent law names one package");
     let package = shipped(PACKAGE_IDS.into_iter().find(|candidate| *candidate == id).expect("a stdio package id"));
     assert_eq!(package.descriptor.package_id, format!("semio:{id}"), "{id} assembles alone");
-    let assemblies = semio_hub_stdio_catalog::artifact_assemblies().expect("the stdio artifact assemblies");
+    let assemblies = semio_hub_stdio_catalog::runtime_artifact_assemblies().expect("the stdio artifact assemblies");
     let mut unmet = Vec::new();
     for kind in activated_kinds(&package.descriptor) {
         let declaration = assemblies.iter().find_map(|assembly| match assembly {
@@ -321,7 +321,7 @@ fn package_contract_probe() {
 /// explicitly; the owner `stdio` hosts nothing.
 #[test]
 fn every_family_descriptor_hosts_exactly_its_owners_codecs_for_the_kinds_it_opens() {
-    let assemblies = semio_hub_stdio_catalog::artifact_assemblies().expect("the stdio artifact assemblies");
+    let assemblies = semio_hub_stdio_catalog::runtime_artifact_assemblies().expect("the stdio artifact assemblies");
     let owner_codecs = assemblies
         .iter()
         .filter_map(|assembly| match assembly {
@@ -347,6 +347,24 @@ fn every_family_descriptor_hosts_exactly_its_owners_codecs_for_the_kinds_it_open
     }
 }
 
+/// 🏠️ LAW (runtime host catalogs): every package hosting the runtime of an artifact the catalog owner assembles as a definition only
+/// commits exactly that runtime under its own `stdio.artifact-catalog.<plugin>` topic, and every other family package commits none.
+#[test]
+fn every_runtime_host_descriptor_commits_exactly_its_hosted_runtime_catalog() {
+    let hosts = semio_hub_stdio_catalog::runtime_host_plugin_ids().expect("the runtime hosts");
+    assert!(!hosts.is_empty());
+    for package in packages() {
+        let topics = &package.descriptor.manifest.topic_contributions;
+        if hosts.contains(&package.id) {
+            semio_hub_stdio_catalog::validate_hosted_artifact_catalog_contributions(package.id, topics).unwrap_or_else(|error| panic!("{} hosted runtime catalog: {error}", package.id));
+        } else if package.id == "stdio" {
+            semio_hub_stdio_catalog::validate_native_artifact_catalog_contributions(topics).expect("the owner's complete definition catalog");
+        } else {
+            assert!(topics.is_empty(), "{} hosts no catalog owner runtime and commits no catalog topic", package.id);
+        }
+    }
+}
+
 /// 🪶️ Every selected Runtime Snapshot schema requires its actual installed semantic SQLite owner.
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_primary_declared_owner_census() {
@@ -355,7 +373,7 @@ async fn sqlite_snapshot_primary_declared_owner_census() {
     let expected = expected_rows.iter().map(|kind| kind.as_str().unwrap().to_string()).collect::<BTreeSet<_>>();
     assert_eq!(expected_rows.len(), expected.len(), "no duplicate authored artifact kinds");
     let definitions = semio_hub_stdio_catalog::artifact_definitions().expect("actual selected definitions");
-    let assemblies = semio_hub_stdio_catalog::artifact_assemblies().expect("actual selected assemblies");
+    let assemblies = semio_hub_stdio_catalog::runtime_artifact_assemblies().expect("actual selected assemblies");
     assert_eq!(definitions.iter().map(|definition| definition.identity().as_str().to_string()).collect::<BTreeSet<_>>(), expected);
     assert_eq!(assemblies.iter().map(|assembly| assembly.definition().identity().as_str().to_string()).collect::<BTreeSet<_>>(), expected);
     assert_eq!(definitions.len(), expected.len());
@@ -401,7 +419,7 @@ async fn sqlite_snapshot_primary_declared_binding_census() {
     let expected_rows = law["dialectBindings"].as_array().unwrap();
     let expected = expected_rows.iter().map(|row| (row["kind"].as_str().unwrap().to_string(), row["standard"].as_str().unwrap().to_string(), row["subset"].as_str().unwrap().to_string(), row["schema"].as_str().unwrap().to_string())).collect::<BTreeSet<_>>();
     assert_eq!(expected_rows.len(), expected.len(), "no duplicate authored dialect bindings");
-    let assemblies = semio_hub_stdio_catalog::artifact_assemblies().expect("selected assemblies");
+    let assemblies = semio_hub_stdio_catalog::runtime_artifact_assemblies().expect("selected assemblies");
     let bindings = assemblies.iter().filter_map(|assembly| match assembly { ArtifactAssembly::Runtime(declaration) => Some(declaration.document_codec_bindings()), ArtifactAssembly::Definition(_) => None }).flatten().collect::<Vec<_>>();
     let actual = bindings.iter().map(|(dialect, codec)| (dialect.artifact_kind.to_string(), dialect.standard.0.to_string(), dialect.subset.0.to_string(), codec.schema.clone())).collect::<BTreeSet<_>>();
     assert_eq!(actual, expected, "authored dialect membership is independent of installed entries and editor membership");

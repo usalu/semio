@@ -1,4 +1,18 @@
 /// 📜️ Edit retirement, message ledger and displaced owner laws: the interrupted and rejected edit retirement, the history metadata retirement, the fixed edit message ledger, the unit owned retirement and the displaced owner reservations.
+use semio_framework_value_clone_source_testing::drive;
+
+/// 🎞️ Runs one poll-shaped close turn under a real original Work action funded exactly by `grant` and settles it.
+fn settled_turn(grant: RetainedCloneGrant, call: impl FnMut(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
+    drive::warm();
+    drive::drive(grant, effect_tests::CPU, call)
+}
+
+/// 🧮️ Settles one close turn like `settled_turn` and reports the heap that its receipt proves; the original driver itself asserts the physical heap equals that receipt.
+fn observed_turn(grant: RetainedCloneGrant, call: impl FnMut(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll) -> (semio_framework_value::RetainedWorkOutcome<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>, usize, usize) {
+    let turn = settled_turn(grant, call);
+    let receipt = match &turn.result { Ok(step) => step.progress(), Err(error) => error.retained_progress() };
+    (turn, receipt.retained_capacity_bytes, receipt.released_bytes)
+}
 
 #[test]
 fn artifact_store_edit_retirement_is_interruptible_and_terminal_empty_after_deep_strings() {
@@ -26,13 +40,13 @@ fn artifact_store_edit_retirement_is_interruptible_and_terminal_empty_after_deep
         let demand = retirement.demands(copy).unwrap();
         let grant = RetainedCloneGrant { maximum_copy_bytes: copy.max(demand.copy_bytes), ..physical_test_close_grant() };
         assert!(demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth);
-        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| retirement.close_step(RetainedCloneGrant { maximum_items: 0, ..grant }).result.unwrap());
+        let (step, allocated, released) = observed_turn(RetainedCloneGrant { maximum_items: 0, ..grant }, |effect| retirement.close_step(effect.grant().maximum_copy_bytes, effect)); let step = step.result.unwrap();
         assert_eq!((allocated, released), (0, 0)); assert_eq!(step.progress(), RetainedCloneProgress::default()); assert_eq!(retirement.demands(copy).unwrap(), demand);
         if demand.release_bytes != 0 {
-            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| retirement.close_step(RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }).result.unwrap());
+            let (step, allocated, released) = observed_turn(RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }, |effect| retirement.close_step(effect.grant().maximum_copy_bytes, effect)); let step = step.result.unwrap();
             assert_eq!((allocated, released), (0, 0)); assert_eq!(step.progress(), RetainedCloneProgress::default()); assert_eq!(retirement.demands(copy).unwrap(), demand);
         }
-        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| retirement.close_step(grant).result.unwrap());
+        let (step, allocated, released) = observed_turn(grant, |effect| retirement.close_step(effect.grant().maximum_copy_bytes, effect)); let step = step.result.unwrap();
         assert!(step.progress().fits(grant)); assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes)); physical_release += released;
     }
     panic!("original edit retirement must make finite progress across interruptions");
@@ -79,10 +93,10 @@ fn artifact_store_history_metadata_retirement_cursors_authors_pins_and_ids_under
         if retirement.terminal_is_empty() { return; }
         let demand=retirement.next_release_byte_demand().unwrap();
         if demand>11 {
-            let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||retirement.close_step(RetainedCloneGrant { maximum_release_bytes:11,..grant }).result.unwrap());
+            let (step, allocated, released) = observed_turn(RetainedCloneGrant { maximum_release_bytes:11,..grant }, |effect| retirement.close_step(effect.grant().maximum_copy_bytes, effect)); let step = step.result.unwrap();
             assert_eq!((allocated,released),(0,0));assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(retirement.next_release_byte_demand().unwrap(),demand);
         }
-        let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||retirement.close_step(grant).result.unwrap());
+        let (step, allocated, released) = observed_turn(grant, |effect| retirement.close_step(effect.grant().maximum_copy_bytes, effect)); let step = step.result.unwrap();
         assert!(step.progress().fits(grant));assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
         assert!(retirement.terminal_is_empty() || step.progress()!=RetainedCloneProgress::default(),"funded owned metadata makes genuine progress without an external wait");
     }
@@ -122,7 +136,7 @@ fn fixed_edit_message_ledger_resolves_probe_collisions_without_a_parallel_runtim
 fn drain_rejected_edit_message_ledger(mut rejected: ArtifactEditMessageLedgerRejected) {
     let grant=physical_test_close_grant();
     for _ in 0..ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY*32 {
-        let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||rejected.close_step(grant).result.expect("rejected ledger declared close"));
+        let (step, allocated, released) = observed_turn(grant, |effect| rejected.close_step(effect.grant().maximum_copy_bytes, effect)); let step = step.result.expect("rejected ledger declared close");
         assert!(step.progress().fits(grant));assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
         match step {
             RetainedCloneStep::Complete(_) => { assert!(rejected.terminal_is_empty());return; }
@@ -198,8 +212,18 @@ struct UnitOwnedRetirement {
 }
 
 impl ErasedSnapshotRetirement for UnitOwnedRetirement {
+    fn native_header_release(&self) -> Option<semio_framework_value::RetirementHeaderRelease> { self.terminal_is_empty().then(|| unsafe { semio_framework_value::RetirementHeaderRelease::native(self, 0, 0) }) }
+    fn close_into<'reply>(&mut self, body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: semio_framework_value::retained_clone::OriginalEffectReply<'reply, RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>) -> Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'reply, RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>, ValueError> {
+        match self.close_step(body, effect) {
+            semio_framework_value::RetainedWorkPoll::Complete(turn) => Ok(reply.complete(turn.result)),
+            semio_framework_value::RetainedWorkPoll::Pending { .. } => Err(ValueError::invariant("unit owned retirement never stays pending")),
+        }
+    }
+    fn recover_close_into<'reply>(&mut self, body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: semio_framework_value::retained_clone::OriginalEffectReply<'reply, RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>) -> Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'reply, RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>, ValueError> {
+        self.close_into(body, effect, reply)
+    }
         fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand { depth: usize::from(self.value.is_some()), ..Default::default() })}
-fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
+fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items==0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if grant.maximum_depth==0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original unit payload requires supplied depth").into()); }
@@ -218,10 +242,11 @@ struct UnitOwnedRetirementFactory;
 
 impl ArtifactOwnedValueRetirementFactory<()> for UnitOwnedRetirementFactory {fn retire_owned_work_demand(&self,_:&())->Result<u64,semio_framework_value::ValueError>{Ok(1)}
     fn retirement_birth_bytes(&self,_:&())->usize { std::mem::size_of::<UnitOwnedRetirement>() }
-    fn retire_owned(&self, value: (), grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,())> {
-        let result = admit_artifact_retirement(value,grant,|original|UnitOwnedRetirement { value: Some(original) });
-        semio_framework_value::RetainedWorkOutcome { result: result.map_err(|(error,value)|(error.into(),value)), work: 1 }
+    fn retire_owned_demands(&self,_:&())->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand { capacity_bytes: std::mem::size_of::<UnitOwnedRetirement>(), depth: 1, ..Default::default() })}
+    fn retire_owned<'reply>(&self, value: &mut Option<()>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: semio_framework_value::FactoryProducerReply<'reply, dyn ErasedSnapshotRetirement, semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply, semio_framework_value::OriginalRetirementFailure> {
+        semio_framework_value::factory_retire_framed(value, effect, reply, |original| UnitOwnedRetirement { value: Some(original) })
     }
+    fn recover_retire_owned<'reply>(&self, _: &mut Option<()>, _: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: semio_framework_value::FactoryProducerReply<'reply, dyn ErasedSnapshotRetirement, semio_framework_value::OriginalRetirementFailure>) -> semio_framework_value::FactoryProducerReplyComplete<'reply, semio_framework_value::OriginalRetirementFailure> { reply.pending() }
 }
 
 #[test]
@@ -232,18 +257,18 @@ fn displaced_owner_reservations_preserve_capacity_generation_and_interrupted_clo
     assert!(retirements.reserve_owner_slots(1).is_err(), "capacity +1 cannot consume an owner");
     retirements.release_owner_slots(large).expect("unused large reservation returns atomically");
     let grant=physical_test_close_grant();
-    let(owner,birth)=UnitOwnedRetirementFactory.retire_owned((),grant).result.expect("original unit cursor admission is funded");
+    let mut unit=Some(());let(owner,birth)=effect_tests::settled(effect_tests::with_effect(grant,effect_tests::CPU,|effect|semio_framework_value::factory_retire_owned(&UnitOwnedRetirementFactory,&mut unit,effect)).0).result.expect("original unit cursor admission is funded");
     assert_eq!(birth.retained_capacity_bytes,std::mem::size_of::<UnitOwnedRetirement>());
     retirements.push_owner_reserved(&mut final_slot, owner).unwrap_or_else(|_| panic!("the exact final-slot reservation retains its owner"));
     retirements.release_owner_slots(final_slot).expect("consumed reservation has no live credit");
-    assert_eq!(retirements.close_step(RetainedCloneGrant { maximum_items: 0,..grant }).unwrap().progress(),RetainedCloneProgress::default());
-    let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||retirements.close_step(grant).unwrap());
+    assert_eq!(settled_turn(RetainedCloneGrant { maximum_items: 0,..grant },|effect|retirements.close_step(effect.grant().maximum_copy_bytes,effect)).result.unwrap().progress(),RetainedCloneProgress::default());
+    let(step,allocated,released)=observed_turn(grant,|effect|retirements.close_step(effect.grant().maximum_copy_bytes,effect));let step=step.result.unwrap();
     assert_eq!((allocated,released),(0,0));assert_eq!(step.progress(),RetainedCloneProgress { copied_items: 1,..Default::default() });
-    let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||retirements.close_step(RetainedCloneGrant { maximum_release_bytes: 0,..grant }).unwrap());
+    let(step,allocated,released)=observed_turn(RetainedCloneGrant { maximum_release_bytes: 0,..grant },|effect|retirements.close_step(effect.grant().maximum_copy_bytes,effect));let step=step.result.unwrap();
     assert_eq!((allocated,released),(0,0));assert_eq!(step.progress(),RetainedCloneProgress::default());
-    let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||retirements.close_step(grant).unwrap());
+    let(step,allocated,released)=observed_turn(grant,|effect|retirements.close_step(effect.grant().maximum_copy_bytes,effect));let step=step.result.unwrap();
     assert_eq!((allocated,released),(0,std::mem::size_of::<UnitOwnedRetirement>()));assert_eq!(step.progress(),RetainedCloneProgress { copied_items: 1,released_bytes: released,..Default::default() });
-    assert_eq!(retirements.close_step(grant).unwrap(),RetainedCloneStep::Complete(Default::default()));
+    assert_eq!(settled_turn(grant,|effect|retirements.close_step(effect.grant().maximum_copy_bytes,effect)).result.unwrap(),RetainedCloneStep::Complete(Default::default()));
     assert!(retirements.terminal_is_empty());
     let expected=retirements.backing_release_byte_demand().unwrap();
     let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||retirements.release_empty_backing_step(grant).unwrap());

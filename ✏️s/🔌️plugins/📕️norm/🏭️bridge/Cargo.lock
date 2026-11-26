@@ -9805,7 +9805,6 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-plugin",
  "semio-framework-schema",
- "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-framework-test-fixtures",
  "semio-ui-locale",
@@ -9823,30 +9822,9 @@ dependencies = [
  "semio-s-artifact-norm-en1995-mut-members",
  "semio-s-artifact-norm-en1995-mut-plates",
  "semio-s-artifact-norm-en1995-mut-stability",
- "semio-s-artifact-norm-en1995-mutations-graphql",
- "semio-s-artifact-norm-en1995-mutations-json-schema",
- "semio-s-artifact-norm-en1995-mutations-proto",
- "semio-s-artifact-norm-en1995-mutations-typescript",
- "semio-s-plugin-norm-app-surface",
  "semio-s-plugin-norm-compliance",
  "serde",
 ]
-
-[[package]]
-name = "semio-s-artifact-norm-en1995-mutations-graphql"
-version = "0.1.0"
-
-[[package]]
-name = "semio-s-artifact-norm-en1995-mutations-json-schema"
-version = "0.1.0"
-
-[[package]]
-name = "semio-s-artifact-norm-en1995-mutations-proto"
-version = "0.1.0"
-
-[[package]]
-name = "semio-s-artifact-norm-en1995-mutations-typescript"
-version = "0.1.0"
 
 [[package]]
 name = "semio-s-artifact-norm-en1996-diff"

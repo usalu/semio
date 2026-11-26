@@ -6,7 +6,7 @@ export interface DirtyIndexV1{size:number;has(path:string):boolean}
 export interface FrontierChangeV1{path:string;kind:"added"|"removed"|"changed";directory:boolean;config?:boolean;pending?:boolean}
 export interface FrontierPortsV1{list(directory:string):Promise<{name:string;kind:"directory"|"file"|"other"}[]|undefined>;stat(path:string):Promise<{directory:boolean;file:boolean;mtimeMs:number;ino:number;mode:number}|undefined>;descend(name:string,path:string,parent:string):boolean;member(path:string):boolean}
 export type FrontierAdvanceV1={unchanged:true;checked:number}|{directories:[string,number,number][];members:[string,number][];changes:FrontierChangeV1[];checked:number;capturedAt:number};
-export const GRAPH_HOOKS_POLICY_V1:Readonly<{version:1;maximumCursors:number;cursorFile:string;trustedKinds:readonly string[];fileRowKinds:readonly string[];texts:Record<string,Record<string,string>>;resolveKind:string;maximumCarry:number;maximumCarriedCursors:number;installStore:string;lockfile:string}>;
+export const GRAPH_HOOKS_POLICY_V1:Readonly<{version:1;maximumCursors:number;cursorFile:string;trustedKinds:readonly string[];fileRowKinds:readonly string[];texts:Record<string,Record<string,string>>;resolveKind:string;maximumCarry:number;levelMemoEntries:number;maximumCarriedCursors:number;installStore:string;lockfile:string}>;
 export function dirtySetFromRowsV1(rows:readonly JournalRowV1[],cursor:JournalCursorV1,options?:{overflow?:boolean}):DirtySetV1;
 export function dirtyIndexV1(set:Pick<DirtySetV1,"exact"|"subtrees">):DirtyIndexV1;
 export function advanceFrontierByDirtySetV1(options:FrontierPortsV1&{frontier:FrontierRowsV1;set:DirtySetV1;signal?:AbortSignal;now?:number;concurrency?:number}):Promise<FrontierAdvanceV1|undefined>;

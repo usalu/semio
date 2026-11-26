@@ -16,6 +16,52 @@
       }
     },
     "Kind": { "enum": ["neutral", "posix", "host"] },
+    "Host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "arch"],
+      "properties": {
+        "platform": { "type": "string" },
+        "arch": { "type": "string" },
+        "libc": { "enum": ["gnu", "musl"] }
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["classes", "keys"],
+      "properties": {
+        "classes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "kind", "host", "tag"],
+            "properties": {
+              "name": { "type": "string" },
+              "kind": { "$ref": "#/definitions/Kind" },
+              "host": { "$ref": "#/definitions/Host" },
+              "tag": { "anyOf": [{ "type": "string" }, { "type": "null" }] }
+            }
+          }
+        },
+        "keys": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["task", "inputs", "kind", "roots", "host"],
+            "properties": {
+              "task": { "type": "string" },
+              "inputs": { "type": "object", "additionalProperties": { "type": "string" } },
+              "kind": { "$ref": "#/definitions/Kind" },
+              "roots": { "type": "array", "items": { "type": "string" } },
+              "host": { "$ref": "#/definitions/Host" }
+            }
+          }
+        }
+      }
+    },
     "Sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
     "CargoTools": {
       "description": "The executables `cargo install --locked <crate>` leaves in `<cargo home>/bin`, per crate. Windows adds `.exe`.",

@@ -6,7 +6,8 @@ import {BUILD_HOST_CAPACITY_POLICY_V1} from "../../../🌡️host-capacity/🎛�
 import {buildRemoteExecutionLoadReportV1,evaluateRemoteExecutionAdmissionV1,remoteExecutionPressureGateV1,REMOTE_EXECUTION_ADMISSION_POLICY_V1 as A,type RemoteExecutionHeldUnitV1,type RemoteExecutionHostViewV1} from "../../🌡️load/🟦️.ts";
 import {withReadyStageV1,type ReadyStageClaimV1} from "../../🌡️load/🪑️stage-claim/🟦️.ts";
 import {offloadFamilyPeakMegabytesV1,offloadKilledPeakMegabytesV1,offloadLearnPeakMegabytesV1,offloadUnitPeakMegabytesV1} from "../../🚀️offload/📐️policy/🟦️.ts";
-import {offloadDeclaredThreadsV1,offloadPeakAtThreadsMegabytesV1,readFamilyPeakV1,readUnitPeakV1,readUnitPeaksV1,writeUnitPeakV1} from "../../🚀️offload/🚦️admission/🟦️.ts";
+import {localFinalPeakMegabytesV1,offloadDeclaredThreadsV1,offloadPeakAtThreadsMegabytesV1,readFamilyPeakV1,readUnitPeakV1,readUnitPeaksV1,writeUnitPeakV1} from "../../🚀️offload/🚦️admission/🟦️.ts";
+import {UNIT_CEILING_POLICY_V1,unitBeyondHostV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🏔️ceiling/🟦️.ts";
 import {readRemoteExecutionPolicyV1} from "../../🟦️.ts";
 import {placementHasHeadroomV1} from "../../🗓️scheduler/⚖️placement/🟦️.ts";
 import fixture from "./🔣️.json";
@@ -150,4 +151,22 @@ test("A running unit is charged once by the worker: the part of its peak it has 
  expect(one([{megabytes:5000,usedMegabytes:1000}],3900).admission,"7952 - 4000 = 3952 fits 3900").toEqual({admit:true});
  expect(one([{megabytes:5000,usedMegabytes:5000}],5000).admission,"a unit at its peak holds what the sample shows, nothing more (the interactive reserve of the policy leaves 5240 of the budget)").toEqual({admit:true});
  expect(one([{megabytes:5000,usedMegabytes:1000}],256).spareMegabytes).toBe(10000-2048-4000);
+});
+
+test("The host uses the managed serial compiler's measured peak and preserves the independent fleet estimate",()=>{
+ for(const row of fixture.localFinals){
+  const samples=row.samples as Record<string,number>,peak=localFinalPeakMegabytesV1(samples,row.managed);
+  expect(peak??null).toBe(row.localPeak);
+  expect(offloadPeakAtThreadsMegabytesV1(samples,F,EXTRA)??null).toBe(row.fleetPeak);
+  expect(unitBeyondHostV1(UNIT_CEILING_POLICY_V1,{crate:"semio_hub_draw_component",target:"wasm32-wasip2"},peak,16384)).toBe(row.beyond16g);
+ }
+});
+
+test("A remote action is charged once: the retained reservation of this worker leaves the host grants, the grants of other owners and operations stay",()=>{
+ const now=Date.now(),base=view(16384,12000),grant=(operation:string,pid:number,id:string)=>({id,operation,jobs:1,cpu:1,reservedMegabytes:512,admittedAtMs:now,observedMegabytes:0,pid,bootAtMs:0}),one={...base,host:{...base.host,atMs:now},grants:[grant("remote-execution",4242,"own"),grant("remote-execution",77,"peer"),grant("build",4242,"build")]} as unknown as RemoteExecutionHostViewV1;
+ const report=(owner?:number)=>buildRemoteExecutionLoadReportV1({origin:"g1-m03",identity:{key:"macos-arm64-none",os:"macos",arch:"arm64",toolchain:null,target:null},view:one,worker:{state:"busy",concurrency:4,running:1,sandbox:"isolated-root",confinement:"none",network:"unenforced"},counters:{unit:{localHit:0,remoteHit:0,miss:0,stored:0},offload:{out:0,refused:0,fellBack:0}},nowMs:now,...owner===undefined?{}:{reservationOwner:owner}});
+ expect(report().running,"without an owner every grant counts beside the running action").toBe(4);
+ expect(report(4242).running,"the worker's own remote reservation counts once, through the running action").toBe(3);
+ expect(report(1).running,"an owner without a reservation removes nothing").toBe(4);
+ expect(report(4242).freeMegabytes,"the reservation is not charged against the spare a second time").toBeGreaterThanOrEqual(report().freeMegabytes);
 });

@@ -1,11 +1,11 @@
 //! 📦️ Portable paged carrier laws checked against independent Serde values.
 use super::*;
 use crate::{FromValue,ToValue};
-use semio_framework_value_paged_list::list::PagedList;
+const CORPUS: &str = include_str!("../🧫️fixtures/🔣️.json");
 
 #[test]
 fn paged_native_serde_and_sequence_ownership_match_neutral_shapes() {
-    let corpus: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(CORPUS).unwrap();
     for row in corpus["vectors"].as_array().unwrap() {
         let input = row["input"].clone();
         match row["kind"].as_str().unwrap() {
@@ -30,7 +30,7 @@ fn paged_native_serde_and_sequence_ownership_match_neutral_shapes() {
 
 #[test]
 fn portable_paged_carriers_match_independent_serde() {
-    let corpus: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(CORPUS).unwrap();
     for row in corpus["vectors"].as_array().unwrap() {
         let input = row["input"].clone();
         let (actual, oracle) = match row["kind"].as_str().unwrap() {
@@ -99,7 +99,7 @@ fn paged_owners_construct_and_encode_under_one_admitted_control() {
         let mut closed = |_| false;
         assert!(T::from_value_controlled(&source, &mut crate::NativeDecodeControl::new(1 << 20, &mut closed)).is_err());
     }
-    let corpus: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(CORPUS).unwrap();
     for row in corpus["vectors"].as_array().unwrap() {
         let (input, accepted) = (&row["input"], row["accepted"].as_bool().unwrap());
         match row["kind"].as_str().unwrap() {
@@ -107,6 +107,25 @@ fn paged_owners_construct_and_encode_under_one_admitted_control() {
             "list" => law::<PagedList<u64, 8>>(input, accepted),
             "map" => law::<PagedMap<u64, 4>>(input, accepted),
             _ => {}
+        }
+    }
+}
+
+#[test]
+fn known_utf8_length_bounds_the_chunk_header_backing() {
+    let corpus: serde_json::Value = serde_json::from_str(CORPUS).unwrap();
+    for case in corpus["textBacking"].as_array().unwrap() {
+        let input = "a".repeat(case[0].as_u64().unwrap() as usize);
+        let headers = case[1].as_u64().unwrap() as usize;
+        let wire = serde_json::to_string(&input).unwrap();
+        let value: PagedUtf8<{usize::MAX}> = serde_json::from_str(&wire).unwrap();
+        let mut progress = |_| true;
+        let mut control = crate::NativeDecodeControl::new(1 << 20, &mut progress);
+        let controlled = PagedUtf8::try_from_str_controlled(&input, &mut control).unwrap();
+        for text in [&value, &value.clone(), &controlled] {
+            assert_eq!(text.chunks.capacity(), headers);
+            assert!(text.eq_str(&input));
+            assert_eq!(serde_json::to_string(text).unwrap(), wire);
         }
     }
 }

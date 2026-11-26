@@ -29,10 +29,9 @@ test("the refusal carries folder, reference and log, keeps the retry advice of t
 });
 
 test("the text exists in English and German with the same placeholders and names the settings, the identity and the alternative",()=>{
-  const texts=schema.$defs?.Texts ?? (schema as any).definitions?.Texts;
   const all=JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json",import.meta.url),"utf8"));
   const find=(node:any):any=>node&&typeof node==="object"?(node.en&&node.de&&node.en["access-denied"]?node:Object.values(node).map(find).find(Boolean)):undefined;
-  const table=find(all) ?? find(texts);
+  const table=find(all);
   const holes=(value:string)=>[...value.matchAll(/\{([a-z]+)\}/gu)].map(match=>match[1]).sort();
   expect(holes(table.de["access-denied"])).toEqual(holes(table.en["access-denied"]));
   expect(table.en["access-denied"]).toContain("Files & Folders");
@@ -104,7 +103,7 @@ test("a failure whose stack lost its message is logged with its name, message, c
   const lost=Object.assign(new Error("Observation leaf changed before delivery"),{code:"BUILD_INFERENCE_LEAF_CHANGED",semioProject:"libs/alpha",stack:"Error\n    at leafChangedV1 (x.mjs:1:1)"}),lines:string[]=[];
   const detail=failureDetailV1(lost);
   expect(detail.split("\n")[0]).toBe("Error: Observation leaf changed before delivery code=BUILD_INFERENCE_LEAF_CHANGED project=libs/alpha");expect(detail).toContain("at leafChangedV1");
-  const intact=new Error("plain");expect(failureDetailV1(intact)).toBe(intact.stack);expect(failureDetailV1("text")).toBe("text");
+  const intact=new Error("plain");expect<string|undefined>(failureDetailV1(intact)).toBe(intact.stack);expect(failureDetailV1("text")).toBe("text");
   failureRefusalV1(lost,{log:(event,line)=>{lines.push(event+" "+line);},logPath:"/log"});
   expect(lines[0]).toContain("BUILD_INFERENCE_LEAF_CHANGED");expect(lines[0]).toContain("project=libs/alpha");
 });
@@ -204,7 +203,7 @@ test("no store or origin in the environment writes nothing, an origin that is a 
 test("a read refused by the lease order is a typed refusal in both languages that names what was wanted, what was held, how long and who held it, not an unexpected failure",()=>{
   const row:LeaseViolationV1={version:1,kind:"hold-and-wait",held:"repository-graph-facts:/Users/ueli/Documents/semio:shard:53",heldMode:"exclusive",heldRank:4,heldClass:"graph",requested:"native-storage-mapping:5874ac7a",requestedMode:"shared",requestedRank:7,requestedClass:"image-mapping",waitedMilliseconds:17000,blockerPid:4242,blockerHeldSeconds:61,blockerCommand:"repo cache gc",atMs:1,pid:7,enforced:true};
   const error=new LeaseOrderErrorV1("Refusing to wait: x",row),fields={requested:row.requested,mode:"shared",held:row.held,seconds:"17",kind:"hold-and-wait",holderPid:"4242",holderCommand:"repo cache gc",holderSeconds:"61",bound:"-"};
-  expect(leaseRefusalOfV1(error)).toEqual(fields);expect(leaseRefusalOfV1(new Error("outer",{cause:error}))).toEqual(fields);expect(leaseRefusalOfV1(new Error("secret"))).toBeUndefined();
+  expect<unknown>(leaseRefusalOfV1(error)).toEqual(fields);expect<unknown>(leaseRefusalOfV1(new Error("outer",{cause:error}))).toEqual(fields);expect(leaseRefusalOfV1(new Error("secret"))).toBeUndefined();
   const shown=refuse(error,{root:"/Users/Shared/semio"});
   expect(shown).toEqual({code:"unserved",key:"host-lease-refused",fields,retry:"later"});
   const unregistered=refuse(new LeaseOrderErrorV1("x",{...row,blockerPid:undefined,blockerCommand:undefined,blockerHeldSeconds:undefined}),{root:"/Users/Shared/semio"});
@@ -218,7 +217,7 @@ test("a read refused by the lease order is a typed refusal in both languages tha
 test("a lease wait that ran out, of any lease class, is a typed refusal in both languages that names the resource, the mode, the seconds and the holder, not an unexpected failure",()=>{
   const error=new ResourceLeaseTimeoutErrorV1({directory:"/nowhere/leases",resource:"native-storage:ab12",mode:"exclusive"},62000);
   const fields={requested:"native-storage:ab12",mode:"exclusive",seconds:"62",holderPid:"?",holderCommand:"?",holderSeconds:"?"};
-  expect(leaseTimeoutRefusalOfV1(error)).toEqual(fields);expect(leaseTimeoutRefusalOfV1(new Error("outer",{cause:error}))).toEqual(fields);expect(leaseTimeoutRefusalOfV1(new Error("secret"))).toBeUndefined();
+  expect<unknown>(leaseTimeoutRefusalOfV1(error)).toEqual(fields);expect<unknown>(leaseTimeoutRefusalOfV1(new Error("outer",{cause:error}))).toEqual(fields);expect(leaseTimeoutRefusalOfV1(new Error("secret"))).toBeUndefined();
   expect(refuse(error,{root:"/Users/Shared/semio"})).toEqual({code:"unserved",key:"host-lease-timeout-unregistered",fields,retry:"later"});
   const named={code:"SEMIO_LEASE_TIMEOUT",resource:"native-storage:ab12",mode:"shared",waitedMilliseconds:84000,holder:{pid:12936,command:"bun script.ts component",heldSeconds:610}};
   expect(leaseTimeoutRefusalOfV1(named)).toMatchObject({holderPid:"12936",holderCommand:"bun script.ts component",holderSeconds:"610"});

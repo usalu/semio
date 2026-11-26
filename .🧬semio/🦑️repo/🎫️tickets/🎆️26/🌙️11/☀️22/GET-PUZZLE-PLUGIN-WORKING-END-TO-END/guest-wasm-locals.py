@@ -42,6 +42,8 @@ def scan(data, start, end):
                 largest = max(largest, (total, index, length))
             assert body == position
             print(f"module offset={start} functions={count} max_locals={largest[0]} code_index={largest[1]} body_bytes={largest[2]}")
+            if len(argv) == 3:
+                assert largest[0] <= int(argv[2])
 
 
 with open(argv[1], "rb") as source, mmap(source.fileno(), 0, access=ACCESS_READ) as data:

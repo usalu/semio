@@ -13,4 +13,9 @@ capture=$(mktemp "$T/🗑️generated/native-site-verify.XXXXXX")
 NATIVE_SITE_RUN_LOG="$capture" MEM="${MEM:-3000}" bash "$T/native-wasm.sh" site
 OUT="$(repo tools exec --light python -- -I "$T/captured-site.py" "$ROOT" "$capture")"
 echo "SITE $OUT"
+repo tools exec --light node -- "$T/verify-flow-browser.mjs" --site "$OUT" "$ROOT/.cache/b/p/m/browser/release/flow"
+support=$(mktemp "$generated/renderer-current.XXXXXX")
+repo tools exec --light bun -- "$T/renderer-diagnostic-assets.ts" --inventory > "$support"
+repo tools exec --light python -- -IB "$T/verify-renderer-http.py" "$OUT" "$support"
 repo tools exec --light python -- -I "$T/accept-site.py" "$OUT"
+repo tools exec --light python -- -I "$T/package-site.py" "$OUT" "$ROOT/.cache/deploy" "$generated/static-accepted.sha256"

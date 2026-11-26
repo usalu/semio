@@ -74,7 +74,9 @@ fn history_edit_puzzle2d_scalar_move_preparation_preserves_inverse_and_refusal_w
         assert_eq!(serde_json::to_value(&snapshot).unwrap(), original);
         assert_eq!([payload.new_x.to_bits(), payload.new_y.to_bits()], bits);
         let mut cancelled = Puzzle2dMoveNodePreparationCursor::default();
-        test_source_custody::run(grant, |effect| cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), effect)).unwrap();
+        for _ in 0..2 {
+            assert!(matches!(test_source_custody::run(grant, |effect| cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), effect)).unwrap(), Puzzle2dMoveNodePreparationStep::Pending(progress) if progress.copied_items == 1));
+        }
         let swapped = payload.clone();
         assert!(test_source_custody::run(grant, |effect| cancelled.advance(source.borrow(&snapshot), mutation.borrow(&swapped), effect)).is_err());
         close(&mut cancelled);

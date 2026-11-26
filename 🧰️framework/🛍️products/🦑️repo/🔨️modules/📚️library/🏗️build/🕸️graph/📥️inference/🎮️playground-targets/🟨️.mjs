@@ -1,4 +1,4 @@
-import {isOpaqueSourcePathV1,opaqueSourceInputExclusionsV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import{isOpaqueSourcePathV1,opaqueSourceInputExclusionsV1}from"../../../📥️inputs/👻️opaque-source/🟨️.mjs";
 /** 🎮️ Projects playground catalog rows into session, preparation, activation, serving and site targets. */
 import { advanceScriptInvocation, checkScriptInvocation, requireIssuedResourceControlInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";

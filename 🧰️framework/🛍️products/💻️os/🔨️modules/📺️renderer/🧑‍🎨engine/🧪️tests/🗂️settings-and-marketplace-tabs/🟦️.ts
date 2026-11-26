@@ -134,9 +134,7 @@ describe("createFrameworkMarketplacePanelTab", () => {
     installPlugin: () => {},
     uninstallPlugin: () => {},
     reloadPlugin: () => {},
-    installExtensionFromUrl: () => {},
-    installExtensionFromFile: () => {},
-    uninstallExtension: () => {},
+    extensionManagement: { installFromUrl: () => {}, installFromFile: () => {}, remove: () => {} },
     setExtensionEnabled: () => {},
     ...overrides,
   });

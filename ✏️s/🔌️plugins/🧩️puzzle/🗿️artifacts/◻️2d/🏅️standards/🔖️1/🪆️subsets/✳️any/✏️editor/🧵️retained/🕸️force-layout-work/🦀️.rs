@@ -86,9 +86,9 @@ pub(super) struct Puzzle2dForceLayoutWorkOwners {
     pub(super) forces: Vec<[f64; 2]>,
     pub(super) radii: Vec<f64>,
     pub(super) id_to_index: ScratchHashMap<String, usize>,
-    pub(super) handle_to_node: ScratchHashMap<String, String>,
+    pub(super) handle_to_node: ScratchHashMap<String, usize>,
     pub edges: Vec<(usize, usize)>,
-    pub(super) edge_set: ScratchHashSet<(usize, usize)>,
+    pub(super) edge_set: ScratchHashSet<(u16, u16)>,
     pub mutations: Vec<Puzzle2dMutation>,
 }
 
@@ -115,9 +115,9 @@ pub struct Puzzle2dForceLayoutWork {
     pub(super) forces: Vec<[f64; 2]>,
     pub(super) radii: Vec<f64>,
     pub(super) id_to_index: ScratchHashMap<String, usize>,
-    pub(super) handle_to_node: ScratchHashMap<String, String>,
+    pub(super) handle_to_node: ScratchHashMap<String, usize>,
     pub edges: Vec<(usize, usize)>,
-    pub(super) edge_set: ScratchHashSet<(usize, usize)>,
+    pub(super) edge_set: ScratchHashSet<(u16, u16)>,
     pub mutations: Vec<Puzzle2dMutation>,
     pub retained_bytes: usize,
     pub(super) close_owners: crate::puzzle_job::WorkClosing<Puzzle2dForceLayoutWorkOwners>,
@@ -292,13 +292,13 @@ impl Puzzle2dForceLayoutWork {
             return Ok(());
         }
         let Some(handle_id) = handle_object.get("id").and_then(Value::as_str) else { return Ok(()) };
-        let node_id = object.get("id").and_then(Value::as_str).ok_or_else(|| Fault::from("puzzle2d-force-node-id-owner-lost"))?;
-        let added_bytes = handle_id.len().saturating_add(node_id.len());
+        let node_index = self.node_ids.len().checked_sub(1).ok_or_else(|| Fault::from("puzzle2d-force-node-id-owner-lost"))?;
+        let added_bytes = handle_id.len();
         if self.handle_to_node.len() >= PUZZLE2D_FORCE_MAX_HANDLES || self.retained_bytes.checked_add(added_bytes).is_none_or(|bytes| bytes > crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES) {
             return Err(Fault::from("puzzle2d-force-handle-capacity"));
         }
         self.retained_bytes += added_bytes;
-        self.handle_to_node.insert(handle_id.to_string(), node_id.to_string());
+        self.handle_to_node.insert(handle_id.to_string(), node_index);
         Ok(())
     }
 
@@ -315,13 +315,13 @@ impl Puzzle2dForceLayoutWork {
         let (Some(source), Some(target)) = (object.get("source").and_then(Value::as_str), object.get("target").and_then(Value::as_str)) else {
             return Ok(());
         };
-        let source_node = self.handle_to_node.get(source).map_or(source, String::as_str);
-        let target_node = self.handle_to_node.get(target).map_or(target, String::as_str);
-        let (Some(&a), Some(&b)) = (self.id_to_index.get(source_node), self.id_to_index.get(target_node)) else {
+        let node_index = |endpoint: &str| self.handle_to_node.get(endpoint).or_else(|| self.id_to_index.get(endpoint)).copied();
+        let (Some(a), Some(b)) = (node_index(source), node_index(target)) else {
             return Ok(());
         };
         let pair = (a.min(b), a.max(b));
-        if a != b && self.edge_set.insert(pair) {
+        const { assert!(PUZZLE2D_FORCE_MAX_NODES <= u16::MAX as usize); }
+        if a != b && self.edge_set.insert((pair.0 as u16, pair.1 as u16)) {
             if self.edges.len() >= PUZZLE2D_FORCE_MAX_EDGES {
                 return Err(Fault::from("puzzle2d-force-edge-capacity"));
             }
@@ -459,8 +459,8 @@ impl Puzzle2dForceLayoutWork{
  /// 📏️ Every typed buffer and initialized scratch vacancy has a concrete native construction quote.
  pub fn original_birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
   let id_to_index=ScratchHashMap::<String,usize>::allocation_demands(PUZZLE2D_FORCE_MAX_NODES)?;
-let handle_to_node=ScratchHashMap::<String,String>::allocation_demands(PUZZLE2D_FORCE_MAX_HANDLES)?;
-let edge_set=ScratchHashSet::<(usize,usize)>::allocation_demands(PUZZLE2D_FORCE_MAX_EDGES)?;
+let handle_to_node=ScratchHashMap::<String,usize>::allocation_demands(PUZZLE2D_FORCE_MAX_HANDLES)?;
+let edge_set=ScratchHashSet::<(u16,u16)>::allocation_demands(PUZZLE2D_FORCE_MAX_EDGES)?;
 
   Ok(semio_framework_value::RetirementDemand{copy_bytes:id_to_index.copy_bytes + handle_to_node.copy_bytes + edge_set.copy_bytes,capacity_bytes:(PUZZLE2D_FORCE_MAX_NODES as usize)*size_of::<String>() + (PUZZLE2D_FORCE_MAX_NODES as usize)*size_of::<usize>() + (PUZZLE2D_FORCE_MAX_NODES as usize)*size_of::<Option<[f64;2]>>() + (PUZZLE2D_FORCE_MAX_NODES as usize)*size_of::<[f64;2]>() + (PUZZLE2D_FORCE_MAX_NODES as usize)*size_of::<[f64;2]>() + (PUZZLE2D_FORCE_MAX_NODES as usize)*size_of::<[f64;2]>() + (PUZZLE2D_FORCE_MAX_NODES as usize)*size_of::<f64>() + (PUZZLE2D_FORCE_MAX_EDGES as usize)*size_of::<(usize,usize)>() + (PUZZLE2D_FORCE_MAX_NODES as usize)*size_of::<Puzzle2dMutation>()+id_to_index.capacity_bytes + handle_to_node.capacity_bytes + edge_set.capacity_bytes,depth:1,..Default::default()})
  }

@@ -12,7 +12,7 @@ import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/�
 import {acquireQueuedResourceLease,acquireResourceLease} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {createFormatStampsV1,exitIfStaleImplementationV1,formatStampLanguagesV1,formatStampProtocolV1,formatStampTextV1,formatStampsV1,registerFormatStampGuardV1,renderStaleImplementationV1,staleImplementationOfV1,StaleImplementationErrorV1} from "../🟨️.mjs";
 import {runWithStaleReexecV1} from "../🔄️reexec/🟨️.mjs";
-import {staleImplementationV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import {concurrentEditV1,staleImplementationV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 
 const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️.py"),schemaPath=join(here,"..","🧬️schema","🔣️.json");
 const library=resolve(here,"../../.."),protocol=formatStampProtocolV1(),scratches:string[]=[];
@@ -240,6 +240,20 @@ test("a reader whose own source changed on disk after it loaded it is a stale im
  expect(calls[0]!.environment.SEMIO_STALE_REEXEC).toBe("1");expect(written.join("")).toContain("Stale loaded Source revision reader; restart required");expect(written.join("")).toContain("(1 of "+protocol.maximumReexecutions+")");
  expect(await runWithStaleReexecV1(async()=>{throw error;},{...options,environment:{SEMIO_LANGUAGE:"en",SEMIO_STALE_REEXEC:String(protocol.maximumReexecutions)}})).toEqual({status:"exhausted",code:75});
  expect(calls.length).toBe(1);
+});
+
+test("an owned child with exhausted edit retries yields without announcing or waiting for another retry",()=>{
+ const edit=concurrentEditV1("length","./Cargo.toml","Cargo workspace Source length changed","build");
+ const writes:string[]=[],delays:number[]=[],statuses:number[]=[];
+ const report={write:(text:string)=>writes.push(text),sleepSync:(delay:number)=>delays.push(delay),exit:(status:number)=>statuses.push(status)};
+ exitIfStaleImplementationV1(edit,{...report,environment:{SEMIO_LANGUAGE:"en",[protocol.reexecutionEnvironment]:String(protocol.maximumReexecutions-1)}});
+ expect(writes.join("")).toContain(`(${protocol.maximumReexecutions} of ${protocol.maximumReexecutions})`);
+ expect<unknown>(delays).toEqual([protocol.editFailure.backoffMs.at(-1)]);
+ writes.length=0;
+ exitIfStaleImplementationV1(edit,{...report,environment:{SEMIO_LANGUAGE:"en",[protocol.reexecutionEnvironment]:String(protocol.maximumReexecutions)}});
+ expect(writes).toEqual(["Cargo workspace Source length changed: ./Cargo.toml\n"]);
+ expect(delays).toHaveLength(1);
+ expect(statuses).toEqual([protocol.exitCode,protocol.exitCode]);
 });
 
 test("a restart that finds the stamps moved to other values than before followed a moving tree and does not count; the same values again are bounded; the patience is bounded",async()=>{

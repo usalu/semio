@@ -1,9 +1,11 @@
 /** 🔁️ The host effects that continue program work: re-dispatch, media frame requests and extension invocation.
  *
  * 🧱️ Child module of {@link ../🟦️.ts | useApplyHostEffects}: each function is one effect arm of the `applyHostEffects` pass, moved verbatim. */
-import type { Effect } from "@semio-tech/framework";
+import { SemioFaultError, resolveWindowActions, type Effect } from "@semio-tech/framework";
+import { DOCUMENT_LOADING_CODE_V1, dispatchAfterDocumentLoadV1 } from "../../⏳️document-load-gate/🟦️.ts";
+import { TIME_TRAVEL_VERBS } from "../../../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
-import { makeEffectDispatchOne, type EffectInvocationSink } from "../../../🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
+import { makeEffectDispatchOne, ownedEffectInvocationV1, type EffectInvocationSink } from "../../../🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
 import { requestMediaFramesSourceV1, runMediaFramesV1, scheduleDispatchAction } from "../../../🛠️ShellHelpers/🎞️media-import/🟦️.ts";
 import { parsePanelState } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { isPluginInstanceRetiredV1 } from "../../../🔌️PluginRuntime/🟦️.tsx";
@@ -11,7 +13,7 @@ import { dispatchInvokeExtensionEffect } from "../../🔌️extension-runtime/�
 import type { ShellCoreAfterSpawnedSession } from "../../🛫️spawned-session/🟦️.ts";
 
 /** 🔂️ Schedules the program's self re-dispatch through the host continuation scheduler. */
-export function applyDispatchActionEffect({ loadedPluginsRef, isCurrentEffectOwner, resolvedTargetViewState, effect, baseSession, applyDeferredResponse, effectOwner }: Pick<ShellCoreAfterSpawnedSession, "loadedPluginsRef" | "isCurrentEffectOwner" | "resolvedTargetViewState"> & {
+export function applyDispatchActionEffect({ loadedPluginsRef, documentLoadGateRef, isCurrentEffectOwner, resolvedTargetViewState, effect, baseSession, applyDeferredResponse, effectOwner }: Pick<ShellCoreAfterSpawnedSession, "loadedPluginsRef" | "documentLoadGateRef" | "isCurrentEffectOwner" | "resolvedTargetViewState"> & {
   readonly effect: Extract<Effect, Readonly<Record<"dispatchAction", unknown>>>;
   readonly baseSession: ActiveSession;
   readonly applyDeferredResponse: EffectInvocationSink;
@@ -23,7 +25,24 @@ export function applyDispatchActionEffect({ loadedPluginsRef, isCurrentEffectOwn
     console.error(`[os-shell] dispatchAction "${dispatchActionId}" dropped: no loaded program for "${baseSession.pluginId}" (loaded: ${loadedPluginsRef.current.map((entry) => entry.handle.pluginId).join(", ") || "none"})`);
     return;
   }
-  scheduleDispatchAction(dispatchActionId, dispatchArgs as Record<string, unknown> | undefined, delayMs, makeEffectDispatchOne(pluginEntry, baseSession, applyDeferredResponse, () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null }));
+  const current = () => isCurrentEffectOwner(effectOwner);
+  const dispatch = makeEffectDispatchOne(pluginEntry, baseSession, applyDeferredResponse, current, resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null });
+  scheduleDispatchAction(dispatchActionId, dispatchArgs as Record<string, unknown> | undefined, delayMs, async (action, args) => {
+    if (!current()) return;
+    const gate = documentLoadGateRef.current;
+    if (gate.loading(baseSession.pluginId, baseSession.instanceId)) {
+      if (action === TIME_TRAVEL_VERBS.cancelReplay) return dispatch(action, args);
+      const { app } = baseSession;
+      const { address } = ownedEffectInvocationV1({ ...baseSession, viewState: resolvedTargetViewState(baseSession) }, action, args);
+      const windowKind = "windowKindId" in address ? app.windowKinds.find(window => window.id === address.windowKindId) : undefined;
+      const kind = windowKind === undefined
+        ? app.commands?.find(command => command.id === action)?.kind
+        : resolveWindowActions(app, windowKind).find(entry => entry.id === action)?.kind;
+      if (kind === "view" || kind === "interaction") return dispatch(action, args);
+    }
+    await dispatchAfterDocumentLoadV1(gate, baseSession.pluginId, baseSession.instanceId, current, () => dispatch(action, args),
+      error => error instanceof SemioFaultError && error.fault.origin === "framework" && error.fault.retryable === true && error.fault.code === DOCUMENT_LOADING_CODE_V1);
+  });
 }
 
 /** 🎥️ Answers a media frame request through the program's media transport. */

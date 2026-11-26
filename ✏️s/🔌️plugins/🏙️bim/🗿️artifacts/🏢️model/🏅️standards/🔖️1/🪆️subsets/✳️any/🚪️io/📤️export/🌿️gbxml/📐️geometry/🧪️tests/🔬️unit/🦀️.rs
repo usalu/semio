@@ -1,5 +1,5 @@
 use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
-use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::io::export::gbxml::geometry::{P3, round9, turned, area_vector, area, Frame, rect_in, offset_in};
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::io::export::gbxml::geometry::{P3, round9, turned, area_vector, area, Frame, PolygonProjection, rect_in, offset_in};
 
 fn near(left: f64, right: f64) -> bool {
     (left - right).abs() < 1e-9
@@ -82,4 +82,32 @@ fn a_triangle_has_a_bounding_rectangle_larger_than_its_area() {
     let frame = Frame::of(&triangle).expect("frame");
     let rect = rect_in(&frame, &triangle);
     assert!(near(rect.width * rect.height, 12.0) && near(area(&triangle), 6.0));
+}
+
+#[test]
+fn a_large_ring_projects_in_bounded_slices_without_revisiting_finished_points() {
+    let polygon: Vec<P3> = (0..2817).map(|index| {
+        let angle = index as f64 * std::f64::consts::TAU / 2817.0;
+        [round9(angle.cos()), round9(angle.sin()), 3.0]
+    }).collect();
+    let frame = Frame::of(&polygon).expect("closed circle");
+    let rect = rect_in(&frame, &polygon);
+    let mut cursor = PolygonProjection::new(polygon.len());
+    let mut requested = 0;
+    loop {
+        let before = requested;
+        let step = cursor.advance(17, |index| {
+            requested += 1;
+            polygon[index]
+        });
+        assert!(requested - before <= 35);
+        if let Some(result) = step {
+            let result = result.expect("nondegenerate polygon");
+            assert_eq!(result.frame, frame);
+            assert_eq!(result.rect, rect);
+            assert_eq!(result.area, area(&polygon));
+            break;
+        }
+    }
+    assert_eq!(requested, 3 * polygon.len() + 1);
 }

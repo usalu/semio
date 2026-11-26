@@ -8,13 +8,13 @@ import{spawnSync}from"node:child_process";
 import fixture from"./🔣️.json";
 
 const spawned:ReturnType<typeof Bun.spawn>[]=[];
-const spawnV1=(...args:Parameters<typeof Bun.spawn>)=>{const child=Bun.spawn(...args);spawned.push(child);return child;};
+const spawnV1=(command:string[],options:{env:Record<string,string|undefined>})=>{const child=Bun.spawn(command,{...options,stdout:"ignore",stderr:"pipe"});spawned.push(child);return child;};
 const aliveV1=(pid:number)=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
 afterEach(async()=>{const children=spawned.splice(0);for(const child of children)if(child.exitCode===null)child.kill("SIGKILL");await Promise.all(children.map(child=>child.exited));expect(children.filter(child=>aliveV1(child.pid))).toEqual([]);});
 const worker=join(dirname(fileURLToPath(import.meta.url)),"📥️worker/🟦️.ts");
 type Row={name:string;pid:number;event:string;owners?:string[];computed?:number;served?:boolean};
 const rows=(log:string):Row[]=>readFileSync(log,"utf8").split("\n").filter(Boolean).map(line=>JSON.parse(line));
-const launch=(dir:string,log:string,name:string,wanted:string[],extra:Record<string,string>={})=>spawnV1([process.execPath,worker],{env:{...process.env,CLAIMS_DIR:dir,CLAIMS_LOG:log,CLAIMS_NAME:name,CLAIMS_WANTED:JSON.stringify(wanted),...extra},stdout:"ignore",stderr:"pipe"});
+const launch=(dir:string,log:string,name:string,wanted:string[],extra:Record<string,string>={})=>spawnV1([process.execPath,worker],{env:{...process.env,CLAIMS_DIR:dir,CLAIMS_LOG:log,CLAIMS_NAME:name,CLAIMS_WANTED:JSON.stringify(wanted),...extra}});
 const until=async(check:()=>boolean,milliseconds:number)=>{const end=Date.now()+milliseconds;while(Date.now()<end){if(check())return true;await new Promise(resolve=>setTimeout(resolve,25));}return false;};
 
 for(const lease of["file","queued"])test("three real processes with overlapping stale owners compute every owner exactly once ("+lease+" leases)",async()=>{
@@ -62,7 +62,7 @@ for(const lease of["file","queued"])test("a process with stale owners nobody els
 },60000);
 
 const holder=join(dirname(fileURLToPath(import.meta.url)),"📥️holder/🟦️.ts");
-const hold=(dir:string,log:string,name:string,cohort:boolean)=>spawnV1([process.execPath,holder],{env:{...process.env,HOLD_DIR:dir,HOLD_LOG:log,HOLD_NAME:name,HOLD_RESOURCE:"repository-graph-facts:/w:shard:7",HOLD_COHORT:cohort?"1":"0",HOLD_MS:"1200"},stdout:"ignore",stderr:"pipe"});
+const hold=(dir:string,log:string,name:string,cohort:boolean)=>spawnV1([process.execPath,holder],{env:{...process.env,HOLD_DIR:dir,HOLD_LOG:log,HOLD_NAME:name,HOLD_RESOURCE:"repository-graph-facts:/w:shard:7",HOLD_COHORT:cohort?"1":"0",HOLD_MS:"1200"}});
 const events=(log:string)=>readFileSync(log,"utf8").split("\n").filter(Boolean).map(line=>JSON.parse(line) as{name:string;event:string;at:number});
 
 test("shared cohort holders of the namespace writer coexist and keep an exclusive sweep away, plain shared tickets queue behind each other",async()=>{
@@ -88,7 +88,7 @@ test("a fresh exclusive lease held by another process refuses both the nonwaitin
  const dir=mkdtempSync(join(tmpdir(),"claims-fresh-")),log=join(dir,"log.jsonl"),request=()=>({directory:dir,resource:"fresh-held",mode:"exclusive" as const,owner:"probe",signal:new AbortController().signal});
  writeFileSync(log,"");
  try{
-  const child=spawnV1([process.execPath,holder],{env:{...process.env,HOLD_DIR:dir,HOLD_LOG:log,HOLD_NAME:"F",HOLD_RESOURCE:"fresh-held",HOLD_FRESH:"1",HOLD_MS:"4000"},stdout:"ignore",stderr:"pipe"});
+  const child=spawnV1([process.execPath,holder],{env:{...process.env,HOLD_DIR:dir,HOLD_LOG:log,HOLD_NAME:"F",HOLD_RESOURCE:"fresh-held",HOLD_FRESH:"1",HOLD_MS:"4000"}});
   expect(await until(()=>readFileSync(log,"utf8").includes("held"),30000)).toBe(true);
   await expect(acquireResourceLease({...request(),timeoutMs:0})).rejects.toThrow("Resource lease timed out: fresh-held");
   await expect(acquireFreshResourceLeaseV1(request())).rejects.toThrow("Resource lease timed out: fresh-held");

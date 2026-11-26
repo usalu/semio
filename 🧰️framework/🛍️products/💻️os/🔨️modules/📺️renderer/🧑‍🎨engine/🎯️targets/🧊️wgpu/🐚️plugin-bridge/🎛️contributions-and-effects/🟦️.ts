@@ -1,5 +1,6 @@
 import { type Effect, fetchDescriptorManifest, type HostEffectDispatchScope, type PluginManifest, scopeContributionsJson } from "@semio-tech/framework";
-import { decodeAppFrame, decodePackWire, encodePackValue, viewContextWireValue } from "@semio-tech/framework-os";
+import { decodeAppFrame } from "@semio-tech/framework/app-channel";
+import { decodePackWire, encodePackValue, viewContextWireValue } from "@semio-tech/framework/packs";
 import { wireEffectToFriendly, wireSpawnJob } from "@semio-tech/framework-actor/wire-turn";
 import { coerceWireBytes, shellFrameBytes, type WireTurnResult, type WireVariant } from "../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
 

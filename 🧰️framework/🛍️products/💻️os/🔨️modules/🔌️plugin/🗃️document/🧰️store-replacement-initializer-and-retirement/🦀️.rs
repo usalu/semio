@@ -4,6 +4,39 @@ use super::*;
 use semio_plugin_ownership::bounded_ownership::EmptyBacking as _;
 use super::store_replacement_vocabulary::StoreInitializerOutcome;
 
+/// ⏱️ Real time the initializer's worker may answer `Idle` without producing one outcome before the replacement faults instead of waiting.
+#[doc(hidden)]
+pub const STORE_INITIALIZER_WORKER_IDLE_CEILING_US: u64 = 30_000_000;
+
+/// 🪦️ Whether an unbroken run of `Idle` worker polls has outlasted [`STORE_INITIALIZER_WORKER_IDLE_CEILING_US`]. A running worker is an external wait the live pump must not count as a stall, so this is the bound that still faults a dead one; a lost clock never faults.
+#[doc(hidden)]
+pub fn store_initializer_worker_idle_is_dead(idle_since_us: &mut Option<u64>, now_us: Option<u64>) -> bool {
+    let Some(now_us) = now_us else { return false };
+    let since_us = *idle_since_us.get_or_insert(now_us);
+    now_us.saturating_sub(since_us) >= STORE_INITIALIZER_WORKER_IDLE_CEILING_US
+}
+
+#[cfg(test)]
+mod worker_idle_laws {
+    use super::{store_initializer_worker_idle_is_dead, STORE_INITIALIZER_WORKER_IDLE_CEILING_US};
+
+    /// 🪦️ LAW: a worker that stays `Idle` is waited for, never faulted, until its ceiling of real time; one outcome (the run resets to `None`) restarts the clock, and a lost clock never faults.
+    #[test]
+    fn an_idle_worker_is_waited_for_until_its_ceiling_and_then_declared_dead() {
+        let mut since = None;
+        for tick in 0..1_024u64 {
+            assert!(!store_initializer_worker_idle_is_dead(&mut since, Some(1 + tick * 1_000)));
+        }
+        assert!(!store_initializer_worker_idle_is_dead(&mut since, Some(STORE_INITIALIZER_WORKER_IDLE_CEILING_US)));
+        assert!(store_initializer_worker_idle_is_dead(&mut since, Some(1 + STORE_INITIALIZER_WORKER_IDLE_CEILING_US)));
+        since = None;
+        assert!(!store_initializer_worker_idle_is_dead(&mut since, Some(10 * STORE_INITIALIZER_WORKER_IDLE_CEILING_US)));
+        let mut lost = None;
+        assert!(!store_initializer_worker_idle_is_dead(&mut lost, None));
+        assert_eq!(lost, None);
+    }
+}
+
 impl<P, Mutation, M> ActiveArtifactStoreReplacement<P, Mutation, M>
 where
     P: store::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_os_kernel::StoreState,
@@ -223,7 +256,9 @@ where
         let before = cx.retained_progress();
         let current = self.replacement_identity();
         let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "store initializer lost its retained session before terminal recovery"))?;
-        match cx.with_replacement_current(current, |cx| session.pump_one_for_interactive_turn(cx)) {
+        let polled = cx.with_replacement_current(current, |cx| session.pump_one_for_interactive_turn(cx));
+        if !matches!(polled, Ok(semio_framework_job_worker::WorkerJobPoll::Idle)) { self.worker_idle_since_us = None; }
+        match polled {
             Ok(semio_framework_job_worker::WorkerJobPoll::Outcome | semio_framework_job_worker::WorkerJobPoll::Terminal) => {
                 let Some((issued, progress)) = session.take_checked_out_retained_step_receipt() else { return Ok(PluginLifecycleStep::Blocked { reason: "store initializer original receipt awaits its sole recipient" }) };
                 if !progress.fits(issued) || !progress.fits(grant) {
@@ -244,7 +279,13 @@ where
                 self.outcome_pending = true;
                 Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
             }
-            Ok(semio_framework_job_worker::WorkerJobPoll::Submitted | semio_framework_job_worker::WorkerJobPoll::Idle) => Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?)),
+            Ok(semio_framework_job_worker::WorkerJobPoll::Submitted) => Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?)),
+            Ok(semio_framework_job_worker::WorkerJobPoll::Idle) => {
+                if store_initializer_worker_idle_is_dead(&mut self.worker_idle_since_us, cx.now_us()) {
+                    return Err(plugin_sdk_fault("store initializer worker produced no outcome within its idle ceiling").into());
+                }
+                Ok(PluginLifecycleStep::AwaitingInput { reason: "store initializer step runs on its worker" })
+            }
             Ok(_) => Ok(PluginLifecycleStep::AwaitingInput { reason: "store initializer awaits its mounted wake" }),
             Err(failure) => Err(failure.into()),
         }

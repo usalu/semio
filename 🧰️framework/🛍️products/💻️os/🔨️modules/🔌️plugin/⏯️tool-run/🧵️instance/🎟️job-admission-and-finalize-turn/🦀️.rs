@@ -17,23 +17,27 @@ fn advance_tool_run_trace(
     if recent.capacity()<TOOL_RUN_PANEL_TRACE_ROWS{
         return Err(ValueError::invariant("the mounted trace panel requires its reserved recent rows").into())
     }
-    let mut demand=store.next_funded_apply_demand(cursor,pages)?;
-    let panel_bytes=size_of::<VecDeque<u64>>()+(recent.len()+2)*size_of::<u64>();
-    demand.copy_bytes=demand.copy_bytes.checked_add(panel_bytes)
-        .ok_or_else(||ValueError::invariant("the mounted trace panel copy quote overflowed"))?;
-    if cx.should_yield()||!cx.retained_work_can_enter(demand){return Ok(false)}
-    let Some((result,performed))=cx.with_original_source_effect(cx.retained_grant(),|_,effect|{
-        let mut step=store.step_funded_apply(cursor,pages,effect)?;
-        if let Some(op)=step.applied{
-            semio_plugin_tool_run::record_tool_run_trace_op(keys,recent,op);
-            step.progress.copied_bytes+=panel_bytes;
-        }
-        Ok::<_,ValueError>(step)
-    })?else{return Ok(false)};
-    let progress=match &result{Ok(step)=>step.progress,Err(error)=>error.retained_progress()};
-    cx.consume_retained(progress)?;
-    cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
-    Ok(result?.complete)
+    for _ in 0..cx.retained_grant().maximum_items {
+        let mut demand=store.next_funded_apply_demand(cursor,pages)?;
+        let panel_bytes=size_of::<VecDeque<u64>>()+(recent.len()+2)*size_of::<u64>();
+        demand.copy_bytes=demand.copy_bytes.checked_add(panel_bytes)
+            .ok_or_else(||ValueError::invariant("the mounted trace panel copy quote overflowed"))?;
+        if cx.should_yield()||!cx.retained_work_can_enter(demand){return Ok(false)}
+        let Some((result,performed))=cx.with_original_source_effect(cx.retained_grant(),|_,effect|{
+            let mut step=store.step_funded_apply(cursor,pages,effect)?;
+            if let Some(op)=step.applied{
+                semio_plugin_tool_run::record_tool_run_trace_op(keys,recent,op);
+                step.progress.copied_bytes+=panel_bytes;
+            }
+            Ok::<_,ValueError>(step)
+        })?else{return Ok(false)};
+        let progress=match &result{Ok(step)=>step.progress,Err(error)=>error.retained_progress()};
+        cx.consume_retained(progress)?;
+        cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+        if result?.complete { return Ok(true); }
+        if progress == RetainedCloneProgress::default() { break; }
+    }
+    Ok(false)
 }
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunCtx<'ctx, A, M, X> {
@@ -75,12 +79,20 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let Some(job)=entry.job.as_mut()else{return Ok(())};
         if job.original_failure.is_some()||job.origin.continuation().is_some(){return Ok(())}
         if let Some(descriptor)=job.origin.outcome(){
-            if job.outcome_received{
-                job.origin.acknowledge_outcome(cx)?;
-                if job.origin.outcome().is_none(){job.outcome_received=false;}
-                return Ok(())
+            let kind = descriptor.kind();
+            if job.outcome_received {
+                if job.origin.acknowledge_outcome(cx)? {
+                    job.outcome_received = false;
+                    if kind == semio_framework_job::JobOutcomeKind::Complete {
+                        if job.purpose == ToolRunJobPurpose::Revalidate {
+                            self.complete_tool_run_revalidation();
+                        } else {
+                            self.complete_tool_run_job(run, generation);
+                        }
+                    }
+                }
+                return Ok(());
             }
-            let kind=descriptor.kind();
             let interactive:&dyn semio_framework_job::InteractiveJob=match &job.job{ToolRunJobHandle::Plain(job)=>job.as_ref(),ToolRunJobHandle::Retargetable(job)=>job.as_ref()};
             match interactive.borrow_outcome(descriptor)?{
                 semio_framework_job::JobOutcomeView::PreviewReady{payload,..}=>{
@@ -93,23 +105,35 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         advance_tool_run_trace(&mut entry.trace,&entry.trace_keys,&mut entry.recent_trace,pages,cursor,cx)
                     },cx)?;
                     if ready&&entry.native.acknowledge_received(&mut job.outcome_received,cx)?{
+                        if single && !interactive.checkpoint_follows_preview() && entry.native.borrowed_view(entry.identity,entry.slot.state).is_some_and(|view| view.progress.completed > entry.step_start) {
+                            entry.pending_step=false;
+                        }
                         self.mark_tool_run_ui_dirty();
                     }
                     return Ok(())
                 }
-                semio_framework_job::JobOutcomeView::CheckpointReady{..}=>return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original checkpoint requires its retained checkpoint publication owner").into()),
+                semio_framework_job::JobOutcomeView::CheckpointReady{state,applied_progress,..}=>{
+                    entry.checkpoint.receive(job.operation.0,state,&mut job.outcome_received,cx)?;
+                    if single && job.outcome_received && applied_progress > entry.step_start {
+                        entry.pending_step=false;
+                    }
+                    return Ok(())
+                }
                 semio_framework_job::JobOutcomeView::Fault{..}=>return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original fault requires its retained diagnostic receiving owner").into()),
                 semio_framework_job::JobOutcomeView::Complete{state,output,..}if state.is_some()||output.is_some()=>{},
                 _=>{},
             }
             if !cx.retained_work_can_enter(RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()}){return Ok(())}
-            job.outcome_received=true;let purpose=job.purpose;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()})?;cx.consume_fuel(1);
-            match kind{semio_framework_job::JobOutcomeKind::Complete=>{if purpose==ToolRunJobPurpose::Revalidate{self.complete_tool_run_revalidation()}else{self.complete_tool_run_job(run,generation)}},semio_framework_job::JobOutcomeKind::Cancelled|semio_framework_job::JobOutcomeKind::Fault=>self.fault_tool_run(run,generation),_=>{}}
+            job.outcome_received=true;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()})?;cx.consume_fuel(1);
+            if matches!(kind, semio_framework_job::JobOutcomeKind::Cancelled | semio_framework_job::JobOutcomeKind::Fault) { self.fault_tool_run(run,generation); }
             return Ok(())
         }
-        let fuel=if single{1}else{semio_framework_job::INTERACTIVE_LANE_FUEL};let deadline=cx.deadline_us();
-        let stepped=cx.with_original_work_loan(fuel,deadline,|cx|job.drive(cx));
-        if single&&job.outcome().is_some_and(|outcome|!matches!(outcome.kind(),semio_framework_job::JobOutcomeKind::Yield|semio_framework_job::JobOutcomeKind::CheckpointReady{..})){entry.pending_step=false;}
+        let fuel=semio_framework_job::INTERACTIVE_LANE_FUEL;let deadline=cx.deadline_us();
+        let stepped = if single {
+            cx.with_original_work_loan_for_step(fuel, deadline, entry.step_start, |cx| job.drive(cx))
+        } else {
+            cx.with_original_work_loan(fuel, deadline, |cx| job.drive(cx))
+        };
         let continued=job.origin.continuation().is_some();
         if let Err(failure)=stepped{*job.original_failure=Some(failure);self.fault_tool_run(run,generation);}else if continued{self.fault_tool_run(run,generation);}
         Ok(())

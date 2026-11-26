@@ -136,7 +136,7 @@ async fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_
     assert_eq!(encode_pdf(&protocol::apply_diff_cold(&empty, &original).unwrap()).expect("self-diff logical export"), canonical);
     timing("self diff");
 
-    let mutation = PdfMutation::AppendPageContent(AppendPageContent { index: 0, content: vec![PdfOp::NextLineShowText { text: PdfTextString::text("dirty") }] });
+    let mutation = PdfMutation::AppendPageContent(AppendPageContent { index: 0, content: vec![PdfOp::NextLineShowText { text: PdfTextString::text("dirty") }].into() });
     let mutation_frame = mutation.encode_op().expect("encode structural mutation");
     timing("mutation encode");
     let restored_mutation = PdfMutation::decode_op(&mutation_frame).expect("decode structural mutation");

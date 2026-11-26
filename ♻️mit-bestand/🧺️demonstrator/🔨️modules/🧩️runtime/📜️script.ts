@@ -5,12 +5,15 @@ import { repositoryCachePartitionRootV1 } from "../../../../🧰️framework/�
 import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { isDeepStrictEqual } from "node:util";
+import { specificCatalogPublicationV1 } from "@semio-tech/s-dev-catalog-ts/publication";
+import { readGeneratedCatalogProjection } from "@semio-tech/plugin-registry/catalog-view";
+import { withPlaygroundSessionV1 } from "@semio-tech/plugin-registry/playground/session/reading";
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { DEMONSTRATOR_RUNTIME_TARGETS, demonstratorRuntimeModuleLayout } from "./🟦️.ts";
 import { serveVite, closeServiceSession, openServiceSession, publishServiceReady, readServiceSession } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import { readDemonstratorActivation } from "./♻️activation/🟦️.ts";
-import { builtPluginModulesRootIn, playgroundSessionsRootV1, playgroundSessionStagedOutputPath } from "@semio-tech/framework-os-dev/activation";
+import { builtPluginModulesRootIn } from "@semio-tech/framework-os-dev/activation";
 import { DEMONSTRATOR_E2E_OWNER, demonstratorE2eInvocationPid, demonstratorE2eSessionRoot } from "./🧪️e2e/🟦️.ts";
 import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { MODULE_SHARD_DIRECTORY, MODULE_VENDOR_DIRECTORY } from "@semio-tech/plugin-registry/deployment";
@@ -20,19 +23,23 @@ class PreparationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Preparation mode belongs to the build tool's prototype or release configuration");
     const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), profile = mode;
-    const moduleRoot = builtPluginModulesRootIn(this.repoRoot, profile), sessionsRoot = playgroundSessionsRootV1(this.repoRoot, profile);
+    const moduleRoot = builtPluginModulesRootIn(this.repoRoot, profile);
     const { pluginModuleDirNames, extensionModuleDirNames } = demonstratorRuntimeModuleLayout(DEMONSTRATOR_RUNTIME_TARGETS.map(row => row.pluginId));
+    const catalog = specificCatalogPublicationV1(path => readFileSync(join(this.repoRoot, path), "utf8"));
+    const current = readGeneratedCatalogProjection(join(this.repoRoot, catalog.outputRoot));
+    for (const target of DEMONSTRATOR_RUNTIME_TARGETS) {
+      await withPlaygroundSessionV1(this.repoRoot, this.invocation, target.variant, async (session, projection) => {
+        if (session.registryPluginId !== target.pluginId || !isDeepStrictEqual(projection, current)) {
+          throw new Error(`Mismatched Demonstrator session: ${target.variant}`);
+        }
+      });
+    }
     const support = new Set([MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY]);
     for (const name of [...pluginModuleDirNames.filter(name => !support.has(name)), ...extensionModuleDirNames]) {
       const directory = join(moduleRoot, name), markerFile = join(directory, ".semio-artifact.json");
       if (!existsSync(markerFile)) throw new Error(`Missing Demonstrator runtime component: ${name}`);
       const marker = JSON.parse(readFileSync(markerFile, "utf8"));
       if (!Array.isArray(marker.files) || !marker.files.includes("🌉️bridge.js") || !marker.files.includes("🔣️.json") || marker.files.some((file: string) => !existsSync(join(directory, file)))) throw new Error(`Incomplete Demonstrator runtime component: ${name}`);
-    }
-    for (const target of DEMONSTRATOR_RUNTIME_TARGETS) {
-      const file = playgroundSessionStagedOutputPath(sessionsRoot, target.variant);
-      const session = (await import(pathToFileURL(file).href)).PLAYGROUND_SESSION;
-      if (session.variant !== target.variant || session.registryPluginId !== target.pluginId) throw new Error(`Mismatched Demonstrator session: ${target.variant}`);
     }
     console.log(`Prepared Demonstrator ${mode}: ${DEMONSTRATOR_RUNTIME_TARGETS.length} runtime variants`);
   }

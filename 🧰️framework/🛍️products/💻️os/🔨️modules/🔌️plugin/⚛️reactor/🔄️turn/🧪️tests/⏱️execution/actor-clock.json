@@ -1,0 +1,9 @@
+{
+  "strictCeilingUs": 5000000,
+  "cases": [
+    {"name":"parked interpreter","activeUs":[900,3100],"parkedUs":5100000,"expectedActiveUs":4000,"refused":false},
+    {"name":"under ceiling","activeUs":[1720000,3279999],"parkedUs":5100000,"expectedActiveUs":4999999,"refused":false},
+    {"name":"exact ceiling","activeUs":[1720000,3280000],"parkedUs":900,"expectedActiveUs":5000000,"refused":true},
+    {"name":"active guest work","activeUs":[2600000,2500000],"parkedUs":100,"expectedActiveUs":5100000,"refused":true}
+  ]
+}

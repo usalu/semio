@@ -108,9 +108,10 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         Some(document_store_owners::bounded_artifact_store_owners_with_semantic_preparations(grant, puzzle2d_document_semantic_birth(), || {
             (Arc::new(Puzzle2dArtifactStorePreparationFactory), Arc::new(Puzzle2dHistoryPreparation::default()))
         }).map(|(mut owners, progress)| {
-            owners.operation_wire = owners.operation_wire
-                .with_original_target(Self::Mutation::original_conflict_target)
-                .with_original_pack_value_receiving();
+            owners.operation_wire.source = semio_s_artifact_puzzle_2d_mut_any_10::standards::v1::subsets::any::io::binary::mutations::prepared_operation_wire_source;
+            owners.operation_wire = store::os_store::original_edit::with_original_edit_message(
+                owners.operation_wire.with_original_target(Self::Mutation::original_conflict_target).with_original_binary_receiving(),
+            );
             (owners, progress)
         }))
     }
@@ -211,7 +212,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         }
         let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
         let window_transient = Puzzle2dWindowTransient::default();
-        let window_kind = view_state.and_then(window::kind_for_view).unwrap_or(semio_s_artifact_puzzle_2d_inferences::viewer::puzzle2d::modes::view::windows::board::WINDOW_KIND_ID);
+        let window_kind = view_state.and_then(window::kind_for_view).unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
         let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
         let revision = doc.operation_optional().map(|operation| puzzle2d_revision_hex(&operation.canonical_base_revision));
         let base_revision = revision.as_ref().map_or("", |hex| std::str::from_utf8(hex).expect("lowercase hexadecimal is ASCII"));
@@ -409,7 +410,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
         let window_transient = window::transient_from_view(transient);
-        let window_kind = window::kind_for_view(view_state).unwrap_or(semio_s_artifact_puzzle_2d_inferences::viewer::puzzle2d::modes::view::windows::board::WINDOW_KIND_ID);
+        let window_kind = window::kind_for_view(view_state).unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
         let envelope = puzzle2d_scene_for(doc.snapshot.value().clone(), window::runtime(cfg.snapshot, &window_config, &window_transient, Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
         HashMap::from([(window_id.to_string(), edit::canvas::puzzle2d_engagement(&envelope, &puzzle_board_host(), window_kind, puzzle2d_labels(view_state)))])
     }
@@ -418,11 +419,11 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         let labels = puzzle2d_labels(view_state);
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
-        let window_kind = window::kind_for_view(view_state).unwrap_or(semio_s_artifact_puzzle_2d_inferences::viewer::puzzle2d::modes::view::windows::board::WINDOW_KIND_ID);
+        let window_kind = window::kind_for_view(view_state).unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
         let envelope = puzzle2d_scene_for(doc.snapshot.value().clone(), window::runtime(cfg.snapshot, &window_config, &Puzzle2dWindowTransient::default(), Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
         let measures = match window_kind {
-            semio_s_artifact_puzzle_2d_inferences::viewer::puzzle2d::modes::view::windows::board::WINDOW_KIND_ID => detail::window_measures(&envelope, labels),
-            semio_s_artifact_puzzle_2d_inferences::viewer::puzzle2d::modes::view::windows::board::WINDOW_KIND_ID => selection::window_measures(&envelope, labels),
+            crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID => detail::window_measures(&envelope, labels),
+            crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID => selection::window_measures(&envelope, labels),
             _ => overview::window_measures(&envelope, labels),
         };
         HashMap::from([(window_id.to_string(), measures)])
@@ -430,7 +431,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
 
     fn tool_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
-        let window_kind = window::kind_for_view(view_state).unwrap_or(semio_s_artifact_puzzle_2d_inferences::viewer::puzzle2d::modes::view::windows::board::WINDOW_KIND_ID);
+        let window_kind = window::kind_for_view(view_state).unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
         let envelope = puzzle2d_scene_for(doc.snapshot.value().clone(), window::runtime(cfg.snapshot, &window_config, &Puzzle2dWindowTransient::default(), Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
         let labels = puzzle2d_labels(view_state);
         HashMap::from([(fill::TOOL_ID.to_string(), vec![fill::measures(&envelope, labels)])])

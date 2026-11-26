@@ -37,7 +37,7 @@ export type RowPoolV1<Row extends{kind:string;path:string;fact:unknown}>=Readonl
 /** 🏗️ Creates the weak row pool. */
 export function createRowPoolV1<Row extends{kind:string;path:string;fact:unknown}=any>():RowPoolV1<Row>;
 
-type AuthorityObservationV1=Readonly<{kind:string;path:string;fact:unknown}>;
+type AuthorityObservationV1=Readonly<{kind:string;path:string;fact?:unknown}>;
 export function encodeAuthorityObservationsV1(observations:readonly AuthorityObservationV1[],maximumBytes:number,check?:()=>void):string;
 export function createAuthorityObservationReaderV1(kinds:readonly string[]):(entry:unknown)=>"root"|"record";
 export function decodeAuthorityObservationsV1(observations:unknown,kinds:readonly string[],check?:()=>void):AuthorityObservationV1[];

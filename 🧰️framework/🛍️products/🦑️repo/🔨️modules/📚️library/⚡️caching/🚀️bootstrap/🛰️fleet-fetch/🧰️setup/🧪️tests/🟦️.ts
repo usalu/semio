@@ -7,7 +7,10 @@ import {syncFleetIdentityV1} from "../../../../../🏗️build/🌐️remote-cac
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {FLEET_CARGO_TOOLS_V1,FLEET_SETUP_FAMILY_V1,fleetCargoToolV1,fleetSetupOutputV1,placeSetupRootV1,rustChannelV1,setupClassV1,setupHostV1,setupKeyPartsV1,setupTextV1,type SetupHostV1,type SetupKindV1,type SetupOutputV1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-import fixture from "./🔣️.json" with {type:"json"};
+import fixtureJson from "./🔣️.json" with {type:"json"};
+import {typedFixtureV1} from "../../../../../🧪️testing/🧾️typed-fixture/🟦️.ts";
+type SetupFixtureV1=Readonly<{classes:readonly Readonly<{name:string;kind:SetupKindV1;host:SetupHostV1;tag:string|null}>[];keys:readonly Readonly<{task:string;inputs:Readonly<Record<string,string>>;kind:SetupKindV1;roots:readonly string[];host:SetupHostV1}>[]}>;
+const fixture=typedFixtureV1<SetupFixtureV1>(fixtureJson,{$ref:"#/definitions/Fixture"},{root:schema,name:"fleet-fetch setup fixture"});
 
 const scratch:string[]=[];
 const directory=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`fleet-setup-${label}-`));scratch.push(path);return path;};
@@ -37,7 +40,7 @@ const tool=(name:string,body:string)=>async(home:string,built:Built)=>{mkdirSync
 test("the class of a machine equals an independent model written in Python from graph-state/platform-class",async()=>{
  const expected=JSON.parse(await python(join(here,"🐍️.py"),join(here,"🔣️.json"),join(here,"../🧬️schema/🔣️.json"),platformSchema)) as {classes:(string|null)[];keys:string[]};
  fixture.classes.forEach((row,index)=>{
-  const klass=setupClassV1(row.kind as SetupKindV1,row.host as SetupHostV1);
+  const klass=setupClassV1(row.kind,row.host);
   expect(klass?.tag??null,row.name).toBe(row.tag);
   expect(klass?.tag??null,row.name).toBe(expected.classes[index]!);
  });
@@ -49,8 +52,8 @@ test("the class of a machine equals an independent model written in Python from 
 test("a key is a function of the real inputs, the roots and the class and of nothing else; Python computes the same keys",async()=>{
  const expected=JSON.parse(await python(join(here,"🐍️.py"),join(here,"🔣️.json"),join(here,"../🧬️schema/🔣️.json"),platformSchema)) as {keys:string[]};
  fixture.keys.forEach((row,index)=>{
-  const klass=setupClassV1(row.kind as SetupKindV1,row.host as SetupHostV1)!;
-  expect(setupKeyPartsV1(row.task,row.inputs,row.kind as SetupKindV1,row.roots,klass).key,row.task).toBe(expected.keys[index]!);
+  const klass=setupClassV1(row.kind,row.host)!;
+  expect(setupKeyPartsV1(row.task,row.inputs,row.kind,row.roots,klass).key,row.task).toBe(expected.keys[index]!);
  });
  const base=fixture.keys[0]!,klass=setupClassV1("host",darwin)!,key=(inputs:Record<string,string>,roots=base.roots,k=klass)=>setupKeyPartsV1(base.task,inputs,"host",roots,k).key;
  expect(key({...base.inputs})).toBe(key({locked:"true",version:"0.21.14",crate:"trunk",channel:"nightly-2026-07-20"}));
@@ -110,7 +113,7 @@ test("kinds: neutral outputs are shared by every host, posix outputs by macOS an
   results[kind]=[];
   for(const [host,expected] of sequence){
    const m=machine(store),built:Built={count:0},outcome=await fleetSetupOutputV1(m.context,output(m,kind),buildTree(m,built),{host,say:()=>{}});
-   expect(outcome.source,`${kind} on ${host.platform}`).toBe(expected);
+   expect<unknown>(outcome.source,`${kind} on ${host.platform}`).toBe(expected);
    expect(built.count).toBe(expected==="built"?1:0);
    results[kind]!.push(outcome.source);
    expect(readFileSync(join(m.home,"tree","nested","deep","a.txt"),"utf8")).toBe("alpha\n".repeat(50));
@@ -216,14 +219,14 @@ test("texts exist in English and German with the same placeholders; the pinned c
  if(existsSync(live))expect(rustChannelV1(readFileSync(live,"utf8"))).toMatch(/^[a-z0-9.-]+$/u);
 });
 
-test("the three generate tasks of the closure are uncacheable on purpose and say why: no cache flag with undeclared outputs is left, and the family table agrees with their project files",async()=>{
+test("the three generate tasks of the closure are uncacheable on purpose and say why: no cache flag is left on a task whose outputs are the workspace files it mutates, and the family table agrees with their project files",async()=>{
  const root=[process.env.R11_LIVE??"",join(here,"../../../../../../../../../../")].find(path=>path!==""&&existsSync(join(path,"📋️project.json")));
  if(root===undefined)return;
- const files={"@semio-tech/framework-schema:generate":"🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json","@semio-tech/ui-styling-tokens:generate":"🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json","@semio-tech/framework-graph:generate":"🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json"};
+ const files:Record<string,Readonly<{file:string;outputs:readonly string[]}>>={"@semio-tech/framework-schema:generate":{file:"🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📋️project.json",outputs:["{projectRoot}/../../🤖️generated/🏷️entity-kinds/🦀️.rs","{projectRoot}/../../🤖️generated/🏷️entity-kinds/🟦️.ts"]},"@semio-tech/ui-styling-tokens:generate":{file:"🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📋️project.json",outputs:["{projectRoot}/../../🔤️tokens/🦀️.rs","{projectRoot}/../../🔤️tokens/🐍️.py"]},"@semio-tech/framework-graph:generate":{file:"🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/📋️project.json",outputs:[]}};
  const code="import json,sys\nt=json.load(open(sys.argv[1],encoding='utf8'))['targets']['generate']\nprint(json.dumps([t.get('cache'),t.get('outputs'),(t.get('metadata',{}).get('semio',{}).get('cache') or {})]))";
- for(const [task,file] of Object.entries(files)){
-  const [cache,outputs,decision]=JSON.parse(await python("-c",code,join(root,file))) as [unknown,unknown,{class?:string;reason?:string}];
-  expect(cache,task).toBe(false);expect(outputs,task).toEqual([]);expect(decision,task).toEqual({version:1,class:"side-effecting",reason:"mutates-workspace"});
+ for(const [task,{file,outputs:declared}] of Object.entries(files)){
+  const [cache,outputs,decision]=JSON.parse(await python("-c",code,join(root,file))) as [unknown,unknown,{version?:number;class?:string;reason?:string}];
+  expect(cache,task).toBe(false);expect(outputs,task).toEqual(declared);expect(decision,task).toEqual({version:1,class:"side-effecting",reason:"mutates-workspace"});
   const row=FLEET_SETUP_FAMILY_V1.find(item=>item.task===task)!;
   expect(row.cacheable,task).toBe("no");expect(row.lookup,task).toBe("none");expect(row.bound,task).toContain("mutates-workspace");
  }

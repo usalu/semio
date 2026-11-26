@@ -361,6 +361,96 @@ def joins(cases):
 # endregion 🔖️Joins
 
 
+# region 🔖️Handlers
+def committed_cases(ctx):
+    """🧫️ The committed modify cases the scenario names; only their inputs are read, every number answered below is recomputed."""
+    uri = next(uri for uri in ctx.step_input_uris() if uri.endswith("🧙️modify/🔣️.json"))
+    return json.loads(ctx.input_bytes(uri).decode("utf-8"))
+
+
+def answer(projection):
+    from semio_repo_test import Outcome
+
+    return Outcome(projection, raw=json.dumps(projection, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
+
+
+def index_of(ctx):
+    """🔢️ The case index a row id ends with (`rotate-1`, `3`)."""
+    return int(ctx.row().rsplit("-", 1)[-1])
+
+
+def unit(angle):
+    """🧭️ A direction as its unit vector, so that two angles a turn apart compare equal."""
+    return [math.cos(angle), math.sin(angle)]
+
+
+def grid(value, places):
+    """🧮️ Rounds every number of a nested value to a grid; sampled arcs meet only that far."""
+    if isinstance(value, dict):
+        return {key: grid(member, places) for key, member in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [grid(member, places) for member in value]
+    return round(value, places) if isinstance(value, float) else value
+
+
+def maps_handler(ctx):
+    family, _, _ = ctx.row().rpartition("-")
+    case = committed_cases(ctx)["maps"][family][index_of(ctx)]
+    done = maps({family: [case]})[family][0]
+    return answer({"images": done["images"], "turned": [unit(angle) for angle in done["turned"]]})
+
+
+def frames_handler(ctx):
+    done = frames([committed_cases(ctx)["frames"][index_of(ctx)]])[0]
+    return answer({"images": [{"position": row["position"], "rotation": unit(row["rotation"]), "mirrored": row["mirrored"]} for row in done["images"]]})
+
+
+def loops_handler(ctx):
+    done = loops([committed_cases(ctx)["loops"][index_of(ctx)]])[0]
+    return answer(grid({key: done[key] for key in ("area", "image_area", "centroid", "image_centroid", "image_counter_clockwise")}, 4))
+
+
+def offsets_handler(ctx):
+    return answer(grid(offsets([committed_cases(ctx)["offsets"][index_of(ctx)]])[0]["image"], 6))
+
+
+def trims_handler(ctx):
+    return answer({"point": trims([committed_cases(ctx)["trims"][index_of(ctx)]])[0]["point"]})
+
+
+def splits_handler(ctx):
+    done = splits([committed_cases(ctx)["splits"][index_of(ctx)]])[0]
+    return answer(grid({key: done[key] for key in ("left_area", "right_area", "left_centroid", "right_centroid")}, 6))
+
+
+def arrays_handler(ctx):
+    return answer({"images": arrays([committed_cases(ctx)["arrays"][index_of(ctx)]])[0]["images"]})
+
+
+def joins_handler(ctx):
+    return answer({"footprints": joins([committed_cases(ctx)["joins"][index_of(ctx)]])[0]["footprints"]})
+
+
+def adapter():
+    """🧭️ Registration in the ORACLE role only, by the feature's scenario id (an outline id serves every row)."""
+    from semio_repo_test import Adapter
+
+    return (
+        Adapter("python")
+        .oracle("modify-maps", maps_handler)
+        .oracle("modify-frames", frames_handler)
+        .oracle("modify-loops", loops_handler)
+        .oracle("modify-offsets", offsets_handler)
+        .oracle("modify-trims", trims_handler)
+        .oracle("modify-splits", splits_handler)
+        .oracle("modify-arrays", arrays_handler)
+        .oracle("modify-joins", joins_handler)
+    )
+
+
+# endregion 🔖️Handlers
+
+
 # region 🔖️Fixture
 def expectations(committed):
     return {

@@ -48,6 +48,6 @@ test("actual recovery commands use bounded domain owners with every authored pro
  for(const [group,name,definition]of [[protocol.maintenance,"repo-cache-retirement","MaintenanceOwner"],[protocol.reset,"repo-cache-reset","ResetOwner"]]as const){
   expect(group.project).toBe(name);const file=join(repositoryRootV1,group.owner,"📋️project.json"),bytes=readFileSync(file),owner=JSON.parse(bytes.toString("utf8"));
   expect(bytes.length).toBeLessThanOrEqual(protocol.maximumOwnerBytes);expect(lstatSync(file).nlink).toBe(1);expect(ajv.validate({$defs:schema.$defs,$ref:"#/$defs/"+definition},owner),JSON.stringify(ajv.errors)).toBe(true);
-  for(const [target,profile]of Object.entries(group.targets)){expect(owner.targets[target]).toBeDefined();expect(readNativeRepoRecoveryPlanV1(repositoryRootV1,["run",name+":"+target])?.target).toBe(profile);}
+  for(const [target,profile]of Object.entries(group.targets)){expect(owner.targets[target]).toBeDefined();expect<unknown>(readNativeRepoRecoveryPlanV1(repositoryRootV1,["run",name+":"+target])?.target).toBe(profile);}
  }
 });

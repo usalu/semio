@@ -75,8 +75,9 @@ pub mod editor {
             #[path = "../../../../../✏️editor/🎚️config/🧬️schema/🦀️.rs"]
             pub mod schema;
         }
-        #[path = "../../../../../✏️editor/🗣️terminology/🦀️.rs"]
-        pub mod terminology;
+        pub mod terminology {
+            pub use semio_s_artifact_playbook_playbook_examples::editor::playbook::terminology::*;
+        }
         #[path = "."]
         pub mod modes {
             #[path = "."]

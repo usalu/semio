@@ -8,7 +8,7 @@ use semio_framework_pack_json::{self as json, Value as JsonValue};
 use semio_os_kernel::pack_rt;
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_plugin::app::ArtifactContribution;
-use semio_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ExecutionMode, ExtensionBundle};
+use semio_plugin::{ArtifactInferencePayloadContract, ArtifactInferenceExecution, ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ExecutionMode, ExtensionBundle};
 use semio_s_artifact_cad_cad_mutations::CadMutation;
 use semio_s_artifact_cad_cad_model::{snapshot::CadSnapshot, snapshot::CAD_DOCUMENT_SCHEMA};
 use std::collections::BTreeMap;
@@ -128,6 +128,9 @@ struct BuildingStructureSummary {
     storey_count: u32,
 }
 
+/// 📜️ The published contract of the building summary: no caller payload, the named cad document's pack is the request, `BuildingStructureSummary` is the result.
+pub const BUILDING_STRUCTURE_SUMMARY_CONTRACT: ArtifactInferencePayloadContract = ArtifactInferencePayloadContract::pack_bound("s.cad-extension-aec-building.structure-summary.payload.v1", include_str!("🧬️schema/📤️building-structure-summary.json"), "document");
+
 // 🚫️async: E1 pure — `ArtifactInferenceService::new` is already `const fn`; the fn-pointer argument
 // `infer_building_structure_summary` is E4 (fn-pointer slot, see that fn's own tag) — see R9.
 fn building_structure_summary_service() -> ArtifactInferenceService {
@@ -141,7 +144,7 @@ fn building_structure_summary_service() -> ArtifactInferenceService {
             inference_schema_version: 1,
             algorithm_version: 1,
             policy_version: 1,
-            payload: None,
+            payload: Some(BUILDING_STRUCTURE_SUMMARY_CONTRACT),
         },
         infer_building_structure_summary,building_structure_summary_demands)
 }

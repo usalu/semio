@@ -1,5 +1,5 @@
 /** 📋️ The declared numbers of the slice memory report. */
-export const SLICE_REPORT_POLICY_V1:Readonly<{version:1;directory:string;name:string;fileBytes:number;intervalMilliseconds:number;topTypes:number;stopLines:number;progressMilliseconds:number;censusChildren:number;censusTimeoutMilliseconds:number}>;
+export const SLICE_REPORT_POLICY_V1:Readonly<{version:1;directory:string;name:string;fileBytes:number;collectionsTop:number;collectionsBytes:number;collectionSample:number;collectMinimumHeapMegabytes:number;intervalMilliseconds:number;topTypes:number;stopLines:number;progressMilliseconds:number;censusChildren:number;censusTimeoutMilliseconds:number}>;
 export function registerSliceReportSourceV1(name:string,read:()=>unknown):()=>void;
 export function readSliceReportSourceV1(name:string):unknown;
 export function readFinalSliceReportSourceV1(name:string):unknown;
@@ -28,3 +28,8 @@ export function sliceReadStepV1<T>(id:string,run:()=>Promise<T>|T,detail?:Readon
 export function describeSliceReadStepV1(now?:number):{id:string;phase:string;done:number;total:number}|undefined;
 export function sliceReadMovedAtV1():number;
 export function sliceReadActiveV1(now?:number):boolean;
+
+/** 🪢️ The values of one collection tracker. */
+export interface WeakCollectionTrackerV1<T extends object=object>extends Iterable<T>{track(value:T):void}
+/** 🪶️ Enumerates live diagnostic collections and releases their tracking entries even between reports. */
+export function createWeakCollectionTrackerV1<T extends object=object>(): WeakCollectionTrackerV1<T>;

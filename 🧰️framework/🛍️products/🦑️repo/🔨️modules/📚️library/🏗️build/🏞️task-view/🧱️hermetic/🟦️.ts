@@ -230,7 +230,7 @@ async function judge(request:HermeticRequestV1,context:HermeticContextV1,policy:
  if(ran.code!==0){
   const named=namedFiles(ran.stderr,context.root,workspace,declared,bounds.maximumNamedPaths);
   if(named.length>0)return refuse("undeclared-input","undeclaredInput",{paths:list(named,bounds.maximumNamedPaths)},named);
-  return{...refuse("failed","failed",{code:String(ran.code)}),paths:[ran.stderr.trim().split("\n").slice(-5).join("\n")]};
+  return refuse("failed","failed",{code:String(ran.code)},[ran.stderr.trim().split("\n").slice(-5).join("\n")]);
  }
  const extra=await sweepView(context.root,declared,bounds.maximumFiles);
  if(extra.length>0)return refuse("wrote-into-view","wroteIntoView",{paths:list(extra,bounds.maximumNamedPaths)},extra);

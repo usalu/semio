@@ -132,6 +132,8 @@ where
     edit_out:Option<ArtifactStoreInitializationEditAdmission>,
     checkpoint_out:Option<Option<String>>,
     unit_out:Option<()>,
+    unit_attempt:bool,
+    phase_attempt:bool,
     phase_out:Option<Phase>,
     commit_out:Option<bool>,
     digest:native_digest::NativeEditDigest,
@@ -190,7 +192,7 @@ where
         Self {
             producer:PhantomData,
             native:Default::default(),
-            supersession_native:Default::default(),construction:Default::default(),construction_failure:ManuallyDrop::new(None),edit_out:None,checkpoint_out:None,unit_out:None,phase_out:None,commit_out:None,digest:Default::default(),effective_digest:Default::default(),commit_ready:false,
+            supersession_native:Default::default(),construction:Default::default(),construction_failure:ManuallyDrop::new(None),edit_out:None,checkpoint_out:None,unit_out:None,unit_attempt:false,phase_attempt:false,phase_out:None,commit_out:None,digest:Default::default(),effective_digest:Default::default(),commit_ready:false,
             operation,
             generation,
             replacement: None,
@@ -505,13 +507,14 @@ where
 
     fn seed_history(&mut self, cx: &mut StepContext<'_>, edit: usize, lane: u8, index: usize) -> Turn {
         let runtime=self.runtime.as_mut().expect("original causal runtime");let dag=runtime.dag.as_mut().expect("original causal owner");let backing=dag.backing_admission_demands();let demand=if backing.capacity_bytes!=0{backing}else{dag.original_seed_page_demands()};
-        if self.unit_out.is_some() || demand.capacity_bytes != 0 {
+        if !self.phase_attempt && (self.unit_attempt || self.unit_out.is_some() || demand.capacity_bytes != 0) {
+            self.unit_attempt = true;
             let grant = cx.retained_grant();
             let construction = semio_framework_job::OriginalConstructionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: demand.release_bytes, depth: demand.depth };
             match built(cx, &mut self.construction, &mut self.construction_failure, &mut self.unit_out, construction, || Ok(((), if backing.capacity_bytes != 0 { dag.admit_backing_step(grant) } else { dag.admit_original_seed_page_step(grant) }))) {
-                Ok(true) => { self.unit_out.take(); }
+                Ok(true) => { self.unit_out.take(); self.unit_attempt = false; }
                 Ok(false) => {}
-                Err(error) => { self.original_failure = Some(error); self.phase = Phase::RetireFault; }
+                Err(error) => { self.unit_attempt = false; self.original_failure = Some(error); self.phase = Phase::RetireFault; }
             }
             return Turn::Yield;
         }
@@ -527,10 +530,11 @@ where
         let next=match lane{0=>Phase::SeedHistory{edit,lane:1,index:0},1 if index<entry.forwards.len()=>Phase::SeedHistory{edit,lane,index:index+1},1=>Phase::SeedHistory{edit,lane:2,index:0},2 if index<entry.mutation_meta.len()=>Phase::SeedHistory{edit,lane,index:index+1},_=>Phase::SeedHistory{edit:edit+1,lane:0,index:0}};
         let seeded=lane==0||(lane==1&&index<entry.forwards.len());let skipped=lane==1&&authored==Some(entry.id.as_str());
         let length=if seeded&&!skipped{authored.map_or(entry.id.len()+1+suffix.len(),str::len)}else{0};let copy=size_of::<Phase>()+size_of::<String>()+length*if authored.is_some(){1}else{2};let d=semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:length,release_bytes:0,depth:1};
+        self.phase_attempt=true;
         let result=built(cx,&mut self.construction,&mut self.construction_failure,&mut self.phase_out,d,||{
             if seeded&&!skipped{let mut bytes=[0u8;256];if length>bytes.len(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original causal identity exceeds its declared byte bound"))}let text=if let Some(authored)=authored{authored}else{bytes[..entry.id.len()].copy_from_slice(entry.id.as_bytes());bytes[entry.id.len()]=b'#';bytes[entry.id.len()+1..length].copy_from_slice(suffix.as_bytes());std::str::from_utf8(&bytes[..length]).unwrap()};let dag=runtime.dag.as_mut().unwrap();if dag.validate_seed(text).is_err(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original causal identity is duplicate or outside its declaration").with_retained_progress(RetainedCloneProgress{copied_items:1,copied_bytes:length,..Default::default()}))}dag.seed_applied(MutationId(text.to_owned())).unwrap_or_else(|_|unreachable!("original causal seed validated before insertion"));}
             if lane==0{runtime.observe_sequence(entry.sequence_number);}if lane==2&&index<entry.mutation_meta.len(){runtime.observe_timestamp(entry.mutation_meta[index].timestamp);}Ok((next,RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:length,..Default::default()}))});
-        match result{Ok(true)=>{if let Some(next)=self.phase_out.take(){self.phase=next;}},Ok(false)=>{},Err(error)=>{self.original_failure=Some(error);self.phase=Phase::RetireFault;}}Turn::Yield
+        match result{Ok(true)=>{self.phase_attempt=false;if let Some(next)=self.phase_out.take(){self.phase=next;}},Ok(false)=>{},Err(error)=>{self.phase_attempt=false;self.original_failure=Some(error);self.phase=Phase::RetireFault;}}Turn::Yield
     }
 
     pub fn fold(&mut self,cx:&mut StepContext<'_>,_grant:RetainedCloneGrant,position:usize,edit:usize,mutation:usize)->Turn{

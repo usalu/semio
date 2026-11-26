@@ -1,10 +1,10 @@
-use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::V;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{Schema, V};
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, int, list, opt_text, refs, rf, typed, unset};
 #[allow(unused_imports)]
 use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{BuildingRef, Export, Quantity, StoreyRef};
 use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::spatial::compound_angle;
-use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, real, rows, string, target};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, document_in, house, real, rows, string, target};
 
 #[test]
 fn the_compound_angle_splits_degrees_minutes_seconds_and_millionths_with_the_sign_on_every_part() {
@@ -29,6 +29,17 @@ fn the_project_carries_the_units_the_context_and_the_phases() {
     let units = target(&document, project, 8).and_then(|instance| instance.entity("IFCUNITASSIGNMENT")).expect("the unit assignment");
     let names: Vec<&str> = units[0].as_list().expect("units").iter().filter_map(|unit| document.resolve(unit)).filter_map(|unit| unit.entity("IFCSIUNIT")).filter_map(|args| args[3].as_enum()).collect();
     assert_eq!(names, ["METRE", "SQUARE_METRE", "CUBIC_METRE", "RADIAN"]);
+}
+
+#[test]
+fn an_unnamed_project_still_has_a_required_ifc_label() {
+    let mut model = house();
+    model.project.name.clear();
+    for schema in [Schema::Ifc2x3, Schema::Ifc4] {
+        let document = document_in(schema, &model);
+        let (_, project) = rows(&document, "IFCPROJECT").into_iter().next().expect("a project");
+        assert_eq!(string(project, 2).as_deref(), Some(""));
+    }
 }
 
 #[test]

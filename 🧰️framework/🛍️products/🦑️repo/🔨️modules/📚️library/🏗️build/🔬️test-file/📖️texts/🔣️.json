@@ -44,8 +44,8 @@
       "de": "Keine Testdatei: {file} ist ein deklarierter Helfer (Kindprogramm) der Suite-Tabelle {table}"
     },
     "file.not-test": {
-      "en": "Not a TypeScript or JavaScript test file (expected {extensions}): {file}",
-      "de": "Keine TypeScript- oder JavaScript-Testdatei (erwartet {extensions}): {file}"
+      "en": "Not a TypeScript, JavaScript or Python oracle test file (expected {extensions}): {file}",
+      "de": "Keine TypeScript-, JavaScript- oder Python-Orakel-Testdatei (erwartet {extensions}): {file}"
     },
     "table.invalid": {
       "en": "The suite table {table} is not readable: {reason}",
@@ -78,6 +78,18 @@
     "run.python-unavailable": {
       "en": "[test-file] managed Python is unavailable ({reason}); running without it",
       "de": "[test-file] Verwaltetes Python ist nicht verfügbar ({reason}); Lauf ohne es"
+    },
+    "run.oracle-environment": {
+      "en": "The locked Python environment is not synchronized: run `repo dependencies ensure` ({file})",
+      "de": "Die gesperrte Python-Umgebung ist nicht synchronisiert: `repo dependencies ensure` ausführen ({file})"
+    },
+    "oracle.fixtures-missing": {
+      "en": "The oracle {file} declares fixtures {fixtures} that exist nowhere above it",
+      "de": "Das Orakel {file} deklariert Fixtures {fixtures}, die oberhalb nirgends existieren"
+    },
+    "oracle.orphan": {
+      "en": "Not an oracle: {file} has no entry point and no oracle above it imports it",
+      "de": "Kein Orakel: {file} hat keinen Einstiegspunkt und kein Orakel darüber bindet es ein"
     },
     "row.passed": {
       "en": "passed  {file} ({suite}, {seconds} s{counts})",

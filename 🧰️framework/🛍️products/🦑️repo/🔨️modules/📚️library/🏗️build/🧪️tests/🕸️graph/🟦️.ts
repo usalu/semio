@@ -12,7 +12,7 @@ declareLibraryBuildTestEnvelopeV1({suite:"build-workspace-graph-laws",scratch:"c
 const library=resolve(import.meta.dirname,"../../.."),base=resolve(import.meta.dirname,"../../🗂️suites/🌐️workspace");
 test("workspace selection is closed and rejects duplicate, escaped and foreign leaves with Ajv parity",()=>{
  const validate=new Ajv({strict:true}).compile(schema);
- for(const[value,accepted]of[[selection,true],[{...selection,extra:true},false],[{...selection,files:[selection.files[0],selection.files[0]]},false],[{...selection,files:["../outside.ts"]},false]]as const){expect(validate(value)).toBe(accepted);if(accepted)expect(readWorkspaceBuildTestSelectionV1(value)).toEqual(selection);else expect(()=>readWorkspaceBuildTestSelectionV1(value)).toThrow();}
+ for(const[value,accepted]of[[selection,true],[{...selection,extra:true},false],[{...selection,files:[selection.files[0],selection.files[0]]},false],[{...selection,files:["../outside.ts"]},false]]as const){expect(validate(value)).toBe(accepted);if(accepted)expect<unknown>(readWorkspaceBuildTestSelectionV1(value)).toEqual(selection);else expect(()=>readWorkspaceBuildTestSelectionV1(value)).toThrow();}
 });
 test("all 27 former entries and 48 leaves remain selected with independent SQLite closure",async()=>{
  const python=testPythonV1()??Bun.which("python3");if(!python)throw Error("Independent Python SQLite oracle required");

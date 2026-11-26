@@ -3,7 +3,7 @@
 import{expect,test}from"bun:test";
 import{EventEmitter}from"node:events";
 import{createFarmV1,GRAPH_FARM_MESSAGES_V1}from"../../🏊️pool/🟨️.mjs";
-import farmSource from"../../🟨️.mjs"with{type:"text"};
+const farmSource=await Bun.file(new URL("../../🟨️.mjs",import.meta.url)).text();
 
 class Child extends EventEmitter{
  connected=true;exitCode:number|null=null;signalCode:string|null=null;

@@ -11,14 +11,14 @@ import{graphFleetSettingsV1}from"../../../🧶️nx/🟦️.ts";
 import{remoteCacheFetchV1}from"../../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
 import{bindClosureStoreV1,closureRecipeKeyV1,closureTravelV1}from"../../../../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs";
 import{createClosureStoreV1}from"../../../../🕸️graph/📥️inference/🧭️script-inputs/💾️entries/🟨️.mjs";
-import{PROVIDER_CLOSURE_POLICY_V1,providerReferenceV1}from"../../../../🕸️graph/📥️inference/🧭️script-inputs/🔌️provider-closures/🟨️.mjs";
+import{providerReferenceV1}from"../../../../🕸️graph/📥️inference/🧭️script-inputs/🔌️provider-closures/🟨️.mjs";
 
 /** 🗜️ Laws of the packed record form: an owner's record grows with the package and not with the closure of its tools, a closure entry is stored once for every owner that names it, a taker downloads only the documents it lacks, and the facts derived from the packed form equal those of the expanded form. */
 const scratch:string[]=[];
 const temp=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`packed-${label}-`));scratch.push(path);return path;};
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 const sha=(text:string)=>createHash("sha256").update(text).digest("hex");
-const view=Object.keys(PROVIDER_CLOSURE_POLICY_V1.views)[0]!;
+const view="scheduling";
 const recipeOf=(at:number)=>({fn:"script-provider",port:`link-${at}`,view});
 
 const populate=async(root:string,depth:number,layers:number)=>{
@@ -44,7 +44,7 @@ async function world(){
  return{server,environment};
 }
 const clientOf=(root:string,environment:Record<string,string>,fetched?:string[]):GraphFleetClientV1=>{
- const client=graphFleetClientV1(graphFleetSettingsV1(root,environment),{fetch:remoteCacheFetchV1(environment,{root})});
+ const client=graphFleetClientV1(graphFleetSettingsV1(root,environment)!,{fetch:remoteCacheFetchV1(environment,{root})});
  return fetched===undefined?client:{...client,settings:client.settings,usable:()=>client.usable(),claimsUsable:()=>client.claimsUsable(),getResult:key=>client.getResult(key),getBlob:async(hash,size)=>{fetched.push(hash);return client.getBlob(hash,size);},hasBlob:hash=>client.hasBlob(hash),putBlob:(hash,bytes)=>client.putBlob(hash,bytes),putResult:(key,bytes,slot,expect)=>client.putResult(key,bytes,slot,expect),claim:(...args)=>client.claim(...args),renew:(...args)=>client.renew(...args),release:(...args)=>client.release(...args),await:(...args)=>client.await(...args)};
 };
 const documentsOf=async(root:string,environment:Record<string,string>,name:string,depth:number,files:number)=>{

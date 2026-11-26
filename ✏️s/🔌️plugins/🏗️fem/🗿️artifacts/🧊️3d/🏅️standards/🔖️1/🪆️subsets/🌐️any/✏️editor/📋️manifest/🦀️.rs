@@ -91,7 +91,7 @@ pub fn create_fem3d_app() -> AppDefinition {
             .action_args("addMemberUdl", vec![
                 ActionArgDef::text("elementId", LocalizedLabel::native("Element", "Element")).required(),
                 ActionArgDef::number("wx", LocalizedLabel::native("Wx", "Wx")).default_value(&0.0),
-                ActionArgDef::number("wy", LocalizedLabel::native("Wy", "Wy")).required(),
+                ActionArgDef::number("wy", LocalizedLabel::native("Wy", "Wy")).default_value(&0.0),
                 ActionArgDef::number("wz", LocalizedLabel::native("Wz", "Wz")).default_value(&0.0),
                 ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall")),
             ])
@@ -127,7 +127,7 @@ pub fn create_fem3d_app() -> AppDefinition {
             .mutation("setSelfWeight", LocalizedLabel::native("Set Self Weight", "Eigengewicht festlegen"))
             .action_args("setSelfWeight", vec![
                 ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall")).required(),
-                ActionArgDef::toggle("enabled", LocalizedLabel::native("Enabled", "Aktiviert")).required(),
+                ActionArgDef::toggle("enabled", LocalizedLabel::native("Enabled", "Aktiviert")).default_value(&true),
             ])
             .mutation("setAnalysisSettings", LocalizedLabel::native("Set Analysis Settings", "Analyseeinstellungen festlegen"))
             .action_args("setAnalysisSettings", vec![

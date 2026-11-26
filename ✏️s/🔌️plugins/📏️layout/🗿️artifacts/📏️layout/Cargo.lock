@@ -2489,6 +2489,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
+name = "semio-draw-member-decode"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-draw-drawing-mutations",
+]
+
+[[package]]
 name = "semio-font-anta-latin-ext-regular"
 version = "0.1.0"
 
@@ -6157,7 +6167,8 @@ dependencies = [
  "semio-framework-value-native-owned",
  "semio-os-flow-operators",
  "semio-os-kernel-neural-engine",
- "semio-plugin",
+ "semio-plugin-extension",
+ "semio-plugin-ownership",
  "serde_json",
 ]
 
@@ -8723,7 +8734,9 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-job",
+ "semio-framework-job-native-decode",
  "semio-framework-kernel-identity",
+ "semio-framework-pack-json-output-receiving",
  "semio-framework-schema-composition",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -8752,6 +8765,31 @@ dependencies = [
 
 [[package]]
 name = "semio-plugin-actor-input"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-actor",
+ "semio-framework-job",
+ "semio-framework-job-native-decode",
+ "semio-framework-pack-json",
+ "semio-framework-pack-json-output-receiving",
+ "semio-framework-value",
+ "semio-plugin-abi",
+ "semio-plugin-actor-input-decoder",
+ "semio-plugin-actor-input-wire",
+]
+
+[[package]]
+name = "semio-plugin-actor-input-decoder"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-pack-json-output-receiving",
+ "semio-plugin-abi",
+]
+
+[[package]]
+name = "semio-plugin-actor-input-wire"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
@@ -9198,6 +9236,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-schema-registry",
  "semio-framework-value",
+ "semio-framework-value-control-contract",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-os-kernel",
@@ -9236,7 +9275,6 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-plugin-abi",
- "semio-plugin-actor-input",
  "semio-ui-contract",
  "serde",
  "serde_json",
@@ -10191,6 +10229,7 @@ dependencies = [
  "semio-framework-pack-json-output-receiving",
  "semio-framework-value",
  "semio-plugin-abi",
+ "semio-plugin-actor-input",
  "semio-plugin-decl-emission",
  "semio-plugin-extension",
  "semio-plugin-guest-contract",
@@ -10908,6 +10947,7 @@ dependencies = [
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
  "semio-plugin-runtime-exchange",
+ "semio-plugin-runtime-instances",
  "semio-plugin-runtime-ops",
  "semio-plugin-store-lifecycle",
  "semio-plugin-testing-caller",
@@ -11526,15 +11566,27 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-draw-drawing-editor-store-preparation"
+name = "semio-s-artifact-draw-drawing-editor-member-wire"
 version = "0.1.0"
 dependencies = [
+ "semio-draw-member-decode",
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-snapshot-read",
  "semio-os-kernel",
  "semio-os-spr",
+ "semio-s-artifact-draw-drawing-model",
+ "semio-s-artifact-draw-drawing-mutations",
+]
+
+[[package]]
+name = "semio-s-artifact-draw-drawing-editor-store-preparation"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-s-artifact-draw-drawing-editor-member-wire",
  "semio-s-artifact-draw-drawing-model",
  "semio-s-artifact-draw-drawing-mutations",
 ]
@@ -11906,7 +11958,6 @@ dependencies = [
  "semio-s-artifact-draw-drawing-model",
  "semio-s-artifact-draw-drawing-scene",
  "semio-s-artifact-draw-drawing-scene-paint",
- "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-drawing",
@@ -14816,7 +14867,6 @@ dependencies = [
  "semio-s-artifact-stdio-dxf-schema",
  "semio-s-artifact-stdio-dxf-snapshot",
  "semio-s-artifact-stdio-dxf-tests",
- "semio-s-artifact-stdio-txt",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -14847,7 +14897,6 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-dxf-diff-algebra",
  "semio-s-artifact-stdio-dxf-snapshot",
- "semio-s-artifact-stdio-txt",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -14885,7 +14934,7 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-dxf-diff",
  "semio-s-artifact-stdio-dxf-snapshot",
- "semio-s-artifact-stdio-txt",
+ "semio-s-artifact-stdio-txt-schema",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -14919,7 +14968,6 @@ dependencies = [
  "semio-s-artifact-stdio-dxf-diff",
  "semio-s-artifact-stdio-dxf-inferences",
  "semio-s-artifact-stdio-dxf-snapshot",
- "semio-s-artifact-stdio-txt",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -14949,7 +14997,6 @@ dependencies = [
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-dxf-snapshot",
- "semio-s-artifact-stdio-txt",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -14979,7 +15026,6 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -15013,7 +15059,6 @@ dependencies = [
  "semio-s-artifact-stdio-dxf-mutations",
  "semio-s-artifact-stdio-dxf-schema",
  "semio-s-artifact-stdio-dxf-snapshot",
- "semio-s-artifact-stdio-txt",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -15142,7 +15187,6 @@ dependencies = [
  "semio-s-artifact-stdio-json-schema",
  "semio-s-artifact-stdio-json-schema-2",
  "semio-s-artifact-stdio-json-tests",
- "semio-s-artifact-stdio-txt",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -15176,7 +15220,6 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-json-schema",
  "semio-s-artifact-stdio-json-schema-2",
- "semio-s-artifact-stdio-txt",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -15212,7 +15255,6 @@ dependencies = [
  "semio-s-artifact-stdio-json-number",
  "semio-s-artifact-stdio-json-schema",
  "semio-s-artifact-stdio-json-schema-2",
- "semio-s-artifact-stdio-txt",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -15241,7 +15283,6 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -15273,7 +15314,7 @@ dependencies = [
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-json-number",
- "semio-s-artifact-stdio-txt",
+ "semio-s-artifact-stdio-txt-schema",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -15305,7 +15346,6 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-json-number",
  "semio-s-artifact-stdio-json-schema",
- "semio-s-artifact-stdio-txt",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -15339,7 +15379,6 @@ dependencies = [
  "semio-s-artifact-stdio-json-number",
  "semio-s-artifact-stdio-json-schema",
  "semio-s-artifact-stdio-json-schema-2",
- "semio-s-artifact-stdio-txt",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -15911,6 +15950,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-persistent",
  "semio-s-artifact-stdio-pdf-model-content-values",
  "semio-s-artifact-stdio-pdf-model-object",
 ]
@@ -22872,7 +22912,6 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
  "semio-s-artifact-stdio-xml-inferences",
  "semio-s-artifact-stdio-xml-mutations",
  "semio-s-artifact-stdio-xml-schema",
@@ -22908,7 +22947,6 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
  "semio-s-artifact-stdio-xml-snapshot",
  "semio-ui-locale",
  "serde_json",
@@ -22939,7 +22977,7 @@ dependencies = [
  "semio-os-store-one-item",
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
+ "semio-s-artifact-stdio-txt-schema",
  "semio-s-artifact-stdio-xml-inferences",
  "semio-s-artifact-stdio-xml-schema",
  "semio-s-artifact-stdio-xml-snapshot",
@@ -22971,7 +23009,7 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
+ "semio-s-artifact-stdio-txt-schema",
  "semio-s-artifact-stdio-xml-snapshot",
  "semio-ui-locale",
  "serde_json",
@@ -23002,7 +23040,6 @@ dependencies = [
  "semio-os-store-one-item",
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
  "semio-s-artifact-stdio-xml-inferences",
  "semio-s-artifact-stdio-xml-mutations",
  "semio-s-artifact-stdio-xml-schema",
@@ -23037,7 +23074,6 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
  "semio-s-artifact-stdio-xml-snapshot-document",
  "semio-ui-locale",
  "serde_json",
@@ -23084,7 +23120,6 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
  "semio-s-artifact-stdio-xml-mutations",
  "semio-s-artifact-stdio-xml-schema",
  "semio-s-artifact-stdio-xml-snapshot",
@@ -23115,7 +23150,6 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
  "semio-s-artifact-stdio-xml-inferences",
  "semio-s-artifact-stdio-xml-mutations",
  "semio-s-artifact-stdio-xml-schema",
@@ -23148,7 +23182,6 @@ dependencies = [
  "semio-os-kernel",
  "semio-plugin",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
  "semio-s-artifact-stdio-xml-mutations",
  "semio-s-artifact-stdio-xml-schema",
  "semio-s-artifact-stdio-xml-schema-2",

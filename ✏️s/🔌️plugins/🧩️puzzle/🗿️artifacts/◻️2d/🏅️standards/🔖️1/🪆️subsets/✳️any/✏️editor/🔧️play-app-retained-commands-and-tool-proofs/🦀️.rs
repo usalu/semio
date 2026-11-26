@@ -31,7 +31,7 @@ impl Puzzle2dPlayApp {
         interaction: Puzzle2dInteractionSnapshot,
     ) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
-        let window_kind = window::kind_for_view(view_state).unwrap_or(semio_s_artifact_puzzle_2d_inferences::viewer::puzzle2d::modes::view::windows::board::WINDOW_KIND_ID);
+        let window_kind = window::kind_for_view(view_state).unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
         let runtime = window::runtime(cfg.snapshot, &window_config, window_transient, Some(window_kind));
         let active_utility = puzzle2d_active_utility(Some(view_state));
         let snapshot = doc.snapshot.value().clone();

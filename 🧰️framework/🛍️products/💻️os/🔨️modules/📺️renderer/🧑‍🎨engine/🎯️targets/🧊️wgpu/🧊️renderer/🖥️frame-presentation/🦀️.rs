@@ -4,7 +4,7 @@ use super::*;
 #[path = "🎞️present-state-and-engine-closers/🦀️.rs"]
 mod present_state_and_engine_closers;
 pub use present_state_and_engine_closers::{
-    note_present_stall_signature, AppPresentInputWait, AppPresentPhase, AppPresentProgress,
+    media_holds_input_barrier, media_input_step, MediaInputStep, note_present_stall_signature, AppPresentInputWait, AppPresentPhase, AppPresentProgress,
     AppPresentStallWatch, AppPresentStep, AppPresenter, APP_PRESENT_STALL_STEPS,
 };
 use present_state_and_engine_closers::{

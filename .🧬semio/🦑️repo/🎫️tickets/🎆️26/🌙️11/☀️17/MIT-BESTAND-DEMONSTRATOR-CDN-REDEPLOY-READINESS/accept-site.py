@@ -102,6 +102,8 @@ def verify_matrix(site, run, port, browser_memory=4096):
     if not (site / "index.html").is_file():
         raise FileNotFoundError(site / "index.html")
     sources = acceptance_snapshot(DEMONSTRATOR)
+    marketplace = TICKET / "probe-cdn-marketplace.cjs"
+    marketplace_digest = sha256(marketplace.read_bytes()).digest()
     static = runpy.run_path(str(TICKET / "static-origin.py"))
     origin_log = run / "origin.log"
     baseline_discovery = run / "baseline-roster.json"
@@ -142,6 +144,12 @@ def verify_matrix(site, run, port, browser_memory=4096):
                     cwd=DEMONSTRATOR,
                     env=dict(env, PLAYWRIGHT_JSON_OUTPUT_FILE=str(result)),
                 ))
+            with (run / "marketplace.log").open("w", encoding="utf-8") as output:
+                executions.append(subprocess.run(
+                    ["repo", "capacity", "run", f"--memory={min(browser_memory, 2048)}", "--",
+                     "repo", "tools", "exec", "--light", "node", "--", str(marketplace), address],
+                    cwd=DEMONSTRATOR, env=env, stdout=output, stderr=subprocess.STDOUT,
+                ))
         finally:
             server.shutdown()
             thread.join()
@@ -149,7 +157,7 @@ def verify_matrix(site, run, port, browser_memory=4096):
         execution.check_returncode()
     gates["verify_release"](rosters, json.loads(baseline_report.read_bytes()), json.loads(behaviour_report.read_bytes()),
                             origin_log.read_text(encoding="utf-8"))
-    if acceptance_snapshot(DEMONSTRATOR) != sources:
+    if acceptance_snapshot(DEMONSTRATOR) != sources or sha256(marketplace.read_bytes()).digest() != marketplace_digest:
         raise ValueError("Acceptance sources changed during the browser run")
 
 
@@ -170,6 +178,14 @@ def main():
     def verify(run):
         verify_site_entry(site)
         subprocess.run(receipts, check=True)
+        with (run / "actor-activation.log").open("w", encoding="utf-8") as log:
+            subprocess.run(["repo", "capacity", "run", "--memory=2048", "--", "repo", "tools", "exec",
+                            "--light", "node", "--", str(TICKET / "probe-release-actors.cjs"), str(site)],
+                           cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, check=True)
+        with (run / "flow-operators.log").open("w", encoding="utf-8") as log:
+            subprocess.run(["repo", "capacity", "run", "--memory=2048", "--jobs=1", "--", "repo", "tools", "exec",
+                            "--light", "bun", "--", str(TICKET / "probe-flow-addon-cases.ts"), str(site)],
+                           cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, check=True)
         verify_matrix(site, run, args.port)
         verify_site_entry(site)
         subprocess.run(receipts, check=True)

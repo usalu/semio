@@ -17,19 +17,20 @@ const RETRYABLE:ReadonlySet<OffloadReasonV1>=new Set(["infrastructure","no-idle-
 export async function awaitBeyondHostV1<T extends BeyondHostAttemptV1>(ports:BeyondHostPortsV1<T>):Promise<T|Readonly<{kind:"local";reason:OffloadReasonV1;detail:string}>>{
  const rules=OFFLOAD_POLICY_V1.beyondHost,now=ports.now??Date.now,timeout=ports.timeoutMilliseconds??rules.timeoutMilliseconds,progress=ports.progressMilliseconds??rules.progressMilliseconds,retry=ports.retryMilliseconds??rules.retryMilliseconds,sleep=ports.sleep??((milliseconds:number,signal?:AbortSignal)=>new Promise<void>(done=>{const timer=setTimeout(done,milliseconds);signal?.addEventListener("abort",()=>{clearTimeout(timer);done();},{once:true});}));
  const deadline=now()+timeout,remaining=():number=>Math.max(0,deadline-now());
+ const aborted=():boolean=>ports.signal?.aborted===true;
  const refuse=(reason:string)=>{ports.report(offloadTextsV1("beyondHost.refused",{crate:ports.crate,reason}));return{kind:"local" as const,reason:"beyond-host-refused" as const,detail:reason};};
  const say=async():Promise<void>=>{
   const queue=await ports.queue().catch(()=>undefined);
   ports.report(offloadTextsV1("beyondHost.waiting",{crate:ports.crate,queued:queue?.queued??"?",holders:queue?.holders===undefined||queue.holders.length===0?"?":queue.holders.join(", "),typical:queue?.typicalSeconds??"?",remaining:Math.ceil(remaining()/60000)}));
  };
  for(;;){
-  if(ports.signal?.aborted===true)return{kind:"local",reason:"cancelled",detail:""};
+  if(aborted())return{kind:"local",reason:"cancelled",detail:""};
   if(remaining()<=0)return refuse("queue-timeout");
   const timer=setInterval(()=>{void say();},progress);
   let outcome:T;
   try{outcome=await ports.attempt(remaining());}finally{clearInterval(timer);}
   if(outcome.kind==="done")return outcome;
-  if(outcome.reason==="cancelled"||ports.signal?.aborted===true)return{kind:"local",reason:"cancelled",detail:""};
+  if(outcome.reason==="cancelled"||aborted())return{kind:"local",reason:"cancelled",detail:""};
   if(!RETRYABLE.has(outcome.reason))return refuse(`${outcome.reason}${outcome.detail===""?"":` ${outcome.detail}`}`);
   if(remaining()<=retry)return refuse(`${outcome.reason}${outcome.detail===""?"":` ${outcome.detail}`}`);
   await say();

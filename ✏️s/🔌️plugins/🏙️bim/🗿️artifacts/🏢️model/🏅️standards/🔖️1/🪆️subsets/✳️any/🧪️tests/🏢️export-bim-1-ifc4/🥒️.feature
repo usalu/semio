@@ -7,7 +7,8 @@ Feature: Open the IFC4 export of the BIM model with IfcOpenShell, validate and m
   partitioning and operation, roof types, bodies as triangulated face sets, the property set templates and classification systems of the project library declared by the project, and the property sets named like a
   template related to it. The IfcOpenShell 0.8.4.post1 oracle never sees the subject's writer: it opens the committed file, requires the schema IFC4, validates every attribute type and every EXPRESS WHERE rule,
   counts the entities of each class, reads the spatial containment of every product, tessellates every straight wall, level slab, column, beam and covering with its own C++ geometry kernel and requires the
-  volume to equal the written base quantity, reads the operation of every door, the partitioning of every window, the classification chains and the type property sets. The subject reports the same table
+  volume to equal the written base quantity. It checks each ramp flight and landing for closed triangle edges and compares their total volume to the ramp quantity. It measures concrete furniture, terminal, duct and cable-carrier bodies.
+  It reads the operation of every door, the partitioning of every window, the classification chains and the type property sets. The subject reports the same table
   from its own document and its base quantities. A second scenario per model exports it, imports the file with the subject's own reader and exports the result again: the table of the second file is the table the
   oracle measured in the first.
 

@@ -23,7 +23,7 @@ test("component compiler requests and accepts one free slot without widening its
   const hostDecision = { ...row.hostDecision, reason: "memory" as const };
   const { decision, request } = componentCompileUnitsV1(hostDecision);
   expect(decision).toEqual({ ...hostDecision, minimum: 1 });
-  expect(request).toEqual(row.request);
+  expect<unknown>(request).toEqual(row.request);
   const oracle = new Ajv({ strict: true }).compile({ type: "integer", minimum: row.request.minimumParallelism, maximum: row.request.maximumParallelism });
   for (const { slots, admitted } of row.grants) {
     expect(oracle(slots)).toBe(admitted);
@@ -119,7 +119,7 @@ print(json.dumps([run(case) for case in data["cases"]]))
       expect(proof.conflict).toBeUndefined();
       proof.record("second",claim(source,after!));
       const drift=proof.conflict;
-      if(!drift){expect([attempt+1,attempt+1]).toEqual([scenario.attempts,scenario.staged]);break;}
+      if(!drift){expect<unknown>([attempt+1,attempt+1]).toEqual([scenario.attempts,scenario.staged]);break;}
       expect(drift).toMatchObject({path:source});
       const key=JSON.stringify(drift);
       if(seen.has(key)||seen.size===retryLimit){expect([attempt+1,null]).toEqual([scenario.attempts,scenario.staged]);break;}
@@ -195,7 +195,7 @@ test("a restartable job retains the bounded late tail when cancelled before the 
   );
   await expect(settled).rejects.toBe(reason);
   const { log, tail, stderr } = law.attempts[0]!;
-  expect(readdirSync(directory).sort()).toEqual([log, tail].sort());
+  expect<unknown>(readdirSync(directory).sort()).toEqual([log, tail].sort());
   expect(readFileSync(join(directory, log)).length).toBe(limit);
   const rows = readFileSync(join(directory, tail!), "utf8").trim().split("\n");
   expect(rows).toEqual([law.overflow.repeat(law.limits.tailLineChars), stderr]);

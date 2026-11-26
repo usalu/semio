@@ -25,8 +25,8 @@ test("a record that holds names no row, an edited input is named by kind and pat
  writeFileSync(file,"two, longer");
  const second=await observation.verifyStoredProjectRecordV1({cachePath,key:["edited"]});
  expect(second.verdict).toBe("stale");
- expect(second.staleRow.kind).toBe("file");expect(second.staleRow.path).toContain("input.txt");
- expect(second.staleRow.path.length).toBeLessThanOrEqual(203);expect(second.staleRow.fact.length).toBeLessThanOrEqual(163);
+ expect(second.staleRow?.kind).toBe("file");expect(second.staleRow?.path).toContain("input.txt");
+ expect(second.staleRow?.path.length).toBeLessThanOrEqual(203);expect(second.staleRow?.fact.length).toBeLessThanOrEqual(163);
  writeFileSync(file,"one");
 });
 
@@ -39,8 +39,8 @@ test("a closure row that the provider refuses is the named row of a stale record
  refused.add(path);
  const said=await observation.verifyStoredProjectRecordV1({cachePath,key:["closure"]});
  refused.clear();
- expect(said.verdict).toBe("stale");expect(said.staleRow.kind).toBe("closure");expect(said.staleRow.path).toContain("closure-a");
- expect(said.staleRow.why).toMatch(/^closure-value; judge /u);expect(verified).toEqual([2]);
+ expect(said.verdict).toBe("stale");expect(said.staleRow?.kind).toBe("closure");expect(said.staleRow?.path).toContain("closure-a");
+ expect(said.staleRow?.why).toMatch(/^closure-value; judge /u);expect(verified).toEqual([2]);
 });
 
 test("the look of the owner names the first moved row with recorded and current content digest, once, and a record that holds names none",async()=>{

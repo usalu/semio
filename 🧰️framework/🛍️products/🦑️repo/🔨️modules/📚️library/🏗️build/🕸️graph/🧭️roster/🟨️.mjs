@@ -1,6 +1,6 @@
 import cachePolicy from"../../../⚡️caching/🔣️policy.json"with{type:"json"};
 import ownershipPolicy from"../../../🗂️workspaces/🔣️policy.json"with{type:"json"};
-import{isOpaqueSourcePathV1}from"../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import{isOpaqueSourcePathV1}from"../../📥️inputs/👻️opaque-source/🟨️.mjs";
 
 /** 🧭️ The file name of an authored project configuration. */
 export const PROJECT_BASENAME_V1="📋️project.json";

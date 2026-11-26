@@ -147,7 +147,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             ToolRunState::Starting=>self.admit_tool_run_job().await.map_err(Into::into),
             ToolRunState::Running|ToolRunState::Paused=>{
                 let entry=selected_entry!(self.tool_runs).ok_or_else(||tool_run_slot_lost("drive"))?;
-                if state==ToolRunState::Paused&&!entry.pending_step{return Ok(())}
+                if state==ToolRunState::Paused&&!entry.pending_step&&!entry.job.as_ref().is_some_and(|job|job.outcome_received){return Ok(())}
                 if entry.job.is_none(){self.admit_tool_run_job().await.map_err(Into::into)}else{self.step_tool_run_job(cx)}
             }
             ToolRunState::Aborting=>{

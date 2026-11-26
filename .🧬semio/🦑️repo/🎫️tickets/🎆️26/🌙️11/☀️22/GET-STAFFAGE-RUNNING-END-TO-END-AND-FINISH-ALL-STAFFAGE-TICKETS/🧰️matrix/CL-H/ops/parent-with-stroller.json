@@ -1,0 +1,12 @@
+[
+ {
+  "insert": "volumes.200.structure",
+  "after": "child-tibia-l",
+  "from": "volumes.100.structure[child-foot-bones-l]"
+ },
+ {
+  "insert": "volumes.200.structure",
+  "after": "child-tibia-r",
+  "from": "volumes.100.structure[child-foot-bones-r]"
+ }
+]

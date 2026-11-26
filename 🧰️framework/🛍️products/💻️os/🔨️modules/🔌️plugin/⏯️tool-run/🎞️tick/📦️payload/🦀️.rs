@@ -11,15 +11,22 @@ use semio_framework_value::retained_clone::RetainedCloneProgress;
 #[path="🧪️tests/🦀️.rs"]
 pub mod tests;
 
+fn settle_payload_work(cx:&mut StepContext<'_>,turn:semio_framework_value::RetainedWorkOutcome)->Result<semio_framework_value::RetainedCloneStep,ValueError>{
+ cx.consume_work(turn.work);
+ let progress=turn.result.as_ref().map_or_else(|error|error.retained_progress(),|step|step.progress());
+ cx.consume_retained(progress)?;
+ turn.result
+}
+
 /// 🤝️ Borrows the original writer, cursor, preadmitted payload storage and append position throughout the turn.
 pub fn advance_original_tick_payload(writer:&ToolRunTickWriter,source:Option<&dyn ToolRunTickPayloadSource>,cursor:&mut ToolRunTickWireCursor,payload:&mut RetainedPayloadBuilder,position:&mut usize,cx:&mut StepContext<'_>)->Result<bool,ValueError>{
- if !payload.is_initialized(){let turn=payload.advance_initialization(cx);cx.consume_work(turn.work);turn.result?;return Ok(false);}
+ if !payload.is_initialized(){let turn=payload.advance_initialization(cx);settle_payload_work(cx,turn)?;return Ok(false);}
  if !cursor.chunk().is_empty(){
-  if *position<cursor.chunk().len(){let turn=payload.append_original(cx,cursor.chunk(),position);cx.consume_work(turn.work);turn.result?;return Ok(false);}
+  if *position<cursor.chunk().len(){let turn=payload.append_original(cx,cursor.chunk(),position);settle_payload_work(cx,turn)?;return Ok(false);}
   let receipt=cursor.acknowledge_chunk(cx.retained_grant());cx.consume_retained(receipt)?;if receipt.copied_items>0{*position=0;}return Ok(false);
  }
  if !cursor.is_complete(){let receipt=cursor.advance(writer,source,cx.retained_grant())?;cx.consume_retained(receipt)?;return Ok(false);}
- if payload.published().is_none(){let turn=payload.seal(cx);cx.consume_work(turn.work);return Ok(matches!(turn.result?,semio_framework_value::RetainedCloneStep::Complete(_)));}
+ if payload.published().is_none(){let turn=payload.seal(cx);return Ok(matches!(settle_payload_work(cx,turn)?,semio_framework_value::RetainedCloneStep::Complete(_)));}
  Ok(true)
 }
 

@@ -407,7 +407,7 @@ export function toolJobFrameworkReservedRoutesExact(raw: string): boolean {
  const mediaBuild=compact(mediaPreparation),donation=compact(mediaDonation),mediaMount=compact(mediaRoute);
  const originalImport=media.includes("ifA::ROLE==AppRole::Viewer")
   &&media.includes("self.advance_original_reserved_media(port,media,meta,&mutfinished,cx)")
-  &&mediaMount.includes("self.as_render().advance_reserved_media(port,media,meta,cx)")
+  &&mediaMount.includes("letmutrender=self.as_render();if!render.prepare_reserved_media_cache(cx).await?||!render.advance_reserved_media(port,media,meta,cx)?{returnOk(false);}")
   &&mediaMount.includes('self.advance_original_reserved_mount("import-media",meta,finished,cx).await')
   &&mediaBuild.includes("owner.validate(self.stores.store.content_revision(),cx)?")
   &&mediaBuild.includes("self.prepare_reserved_media_input(media,cx)")

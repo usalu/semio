@@ -220,26 +220,11 @@ impl AppPresenter {
     }
 
     pub fn holds_presented_input_publication(&self) -> bool {
-        self.pending.as_ref().is_some_and(|cursor| matches!(cursor.phase, AppPresentPhase::Render | AppPresentPhase::CloseGpu | AppPresentPhase::Acknowledge) || cursor.phase == AppPresentPhase::Media && !cursor.media_input_released)
+        self.pending.as_ref().is_some_and(|cursor| matches!(cursor.phase, AppPresentPhase::Render | AppPresentPhase::CloseGpu | AppPresentPhase::Acknowledge)||cursor.phase==AppPresentPhase::Media&&super::media_holds_input_barrier(cursor.media_input_released,cursor.media_collect.output_donated()))
     }
 
-    pub fn media_holds_input(&self) -> bool {
-        self.pending.as_ref().is_some_and(|cursor| cursor.phase == AppPresentPhase::Media)
-    }
-
-    pub fn release_media_for_input(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
-        let Some(cursor) = self.pending.as_mut().filter(|cursor| cursor.phase == AppPresentPhase::Media) else { return Ok(true) };
-        if cursor.media_input_released { return Ok(true) }
-        let donated = cursor.media_collect.output_donated();
-        if !semio_renderer_wgpu_ui_engine_dump::chrome_ledger::close_presented_media_slots(&mut cursor.media_collect, cx)? { return Ok(false) }
-        cursor.media_collect = Default::default();
-        if donated { cursor.phase = AppPresentPhase::ProgressAcknowledge; } else { cursor.media_input_released = true; }
-        Ok(true)
-    }
-
-    pub fn resume_media_after_input(&mut self) {
-        if let Some(cursor) = self.pending.as_mut().filter(|cursor| cursor.phase == AppPresentPhase::Media) { cursor.media_input_released = false; }
-    }
+    /// 🎞️ Hosts publish whether input is queued so the Media phase can return its tree loans on its own resident frame.
+    pub fn note_pending_input(&mut self,pending:bool){self.input_pending=pending}
 
     /// 🩺️ Which of the four owners is holding the presentation gate shut — the gate that decides
     /// whether `admit_next_frame` runs a frame build at all, and therefore whether the runtime mailbox
@@ -459,6 +444,15 @@ impl AppPresenter {
     pub fn present_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<AppPresentStep, semio_framework_job::OriginalTurnFailure> {
         if cx.should_yield(){return Ok(AppPresentStep::Pending)}
         if let Some(cursor)=self.pending.as_mut().filter(|cursor|cursor.phase==AppPresentPhase::Media){
+            use super::{media_input_step,MediaInputStep};
+            match media_input_step(self.input_pending,&mut cursor.media_input_released,cursor.media_collect.output_donated()){
+                MediaInputStep::Hold=>return Ok(AppPresentStep::Pending),
+                MediaInputStep::Release=>{
+                    if !semio_renderer_wgpu_ui_engine_dump::chrome_ledger::close_presented_media_slots(&mut cursor.media_collect,cx)?{return Ok(AppPresentStep::Pending)}
+                    cursor.media_collect=Default::default();cursor.media_input_released=true;return Ok(AppPresentStep::Pending)
+                }
+                MediaInputStep::Collect=>{}
+            }
             let Ok(runtime)=self.runtime.try_lock()else{return Ok(AppPresentStep::RetryRuntime)};let Some(interaction)=runtime.interaction.as_ref()else{return Ok(AppPresentStep::AwaitingRuntime)};if !interaction.shell.input.drive_presented_media_slots(&mut cursor.media_collect,&mut cursor.media_slots,cx)?{return Ok(AppPresentStep::Pending)}cursor.phase=AppPresentPhase::ProgressAcknowledge;return Ok(AppPresentStep::Pending)
         }
         if self.pending.as_ref().is_some_and(|cursor| matches!(cursor.phase, AppPresentPhase::Render | AppPresentPhase::Acknowledge)) {

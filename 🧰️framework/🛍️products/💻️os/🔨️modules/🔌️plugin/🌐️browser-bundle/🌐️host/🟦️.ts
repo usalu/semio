@@ -155,7 +155,7 @@ export function createBrowserHostActivation(identity: BrowserHostIdentity, port:
   };
   const call = (effect: string) => (params: unknown) => request(effect, params);
   const fire = (kind: string, payload: unknown) => post(nextSequence(), kind, payload);
-  const pure = Object.freeze({ log(level: string, message: string) { check(); port.log(level, message); }, nowMs() { check(); return port.nowMs(); }, operationClockUs() { check(); const original = originalClock.call(port); if (original !== undefined && (typeof original !== "bigint" || original < 0n || original > 0xffffffffffffffffn)) throw new Error("browser host: invalid original operation clock"); return original; }, traceSpan(name: string) { check(); port.traceSpan(name); } });
+  const pure = Object.freeze({ log(level: string, message: string) { check(); port.log(level, message); }, nowMs() { check(); return port.nowMs(); }, operationClockUs() { check(); const original = originalClock.call(port); if (original !== undefined && (typeof original !== "bigint" || original < 0n || original > 0xffffffffffffffffn)) throw new Error("browser host: invalid original operation clock"); return original; }, actorExecutionClockUs() { check(); return undefined; }, traceSpan(name: string) { check(); port.traceSpan(name); } });
   const hostAsync = Object.freeze({
     storageRead: call("storage-read"), storageWrite: call("storage-write"), storageDelete: call("storage-delete"),
     blobLoad: call("blob-load"), blobWrite: call("blob-write"), blobRead: (hash: string) => request("blob-read", { hash }, stream, true),

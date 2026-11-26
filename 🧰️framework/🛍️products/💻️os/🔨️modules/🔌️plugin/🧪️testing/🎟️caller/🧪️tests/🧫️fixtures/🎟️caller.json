@@ -6,6 +6,7 @@
   "clockUs": 1000,
   "deadlineUs": 3600000000,
   "maximumTurns": 32768,
+  "maximumWindowRestoreTurns": 131072,
   "maximumCloseTurns": 4194304,
   "maximumIdleTurns": 4096,
   "grant": {

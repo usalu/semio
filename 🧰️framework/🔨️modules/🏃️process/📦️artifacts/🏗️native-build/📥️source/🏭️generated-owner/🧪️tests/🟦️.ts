@@ -61,3 +61,30 @@ test("generate prerequisites stop when the caller cancels the scan", async () =>
     await expect(generatedPrerequisiteArgumentsV1(root, { signal: controller.signal })).rejects.toThrow();
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+test("the scan never enters the test scratch root and treats a directory that vanishes mid-walk as empty", async () => {
+  const root = workspace();
+  try {
+    write(root, ".test-scratch/st/x/🦀️.rs", '#[path = "absent-in-scratch.rs"] mod scratch;');
+    expect(await missingMountedModulesV1(root)).toHaveLength(3);
+    rmSync(join(root, "plain"), { recursive: true, force: true });
+    expect(await missingMountedModulesV1(root)).toHaveLength(2);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("repeated scans of one root follow every edit made between them", async () => {
+  const root = workspace();
+  try {
+    for (let round = 0; round < 3; round++) {
+      expect(await generatedPrerequisiteArgumentsV1(root)).toEqual([["run", "@t/assets:build"], ["run", "@t/tokens:generate"]]);
+      write(root, "assets/icons/🤖️generated/🪪️icon-name/🦀️.rs", "");
+      expect(await generatedPrerequisiteArgumentsV1(root)).toEqual([["run", "@t/tokens:generate"]]);
+      rmSync(join(root, "assets/icons/🤖️generated"), { recursive: true });
+      write(root, "ui/📦️packages/📋️project.json", JSON.stringify({ name: "@t/tokens", targets: { generate: { outputs: [`{projectRoot}/../styling/🤖️generated/tokens.rs`] }, other: {} } }));
+      write(root, "ui/styling/🤖️generated/tokens.rs", "");
+      expect(await generatedPrerequisiteArgumentsV1(root)).toEqual([["run", "@t/assets:build"]]);
+      rmSync(join(root, "ui/styling/🤖️generated"), { recursive: true });
+      write(root, "ui/📦️packages/📋️project.json", JSON.stringify({ name: "@t/tokens", targets: { generate: { outputs: [] } } }));
+    }
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});

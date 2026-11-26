@@ -1,17 +1,9 @@
-use semio_os_infinite_board_normal_fill::{BoardFillNodeCapture, BoardFillNodeSnapshot, BoardFillText, BoardFillCaptureStep};
 //! 🧪️ normal-fill tests (🔬️board-host): compiled against the `testkit` surface of the board crates.
+use semio_os_infinite_board_normal_fill::{BoardFillNodeCapture, BoardFillNodeSnapshot, BoardFillText, BoardFillCaptureStep};
 
 use semio_os_infinite_board_normal_fill::{BOARD_FILL_COMMIT_BYTES, BOARD_FILL_COMMIT_PAGE_COUNT, BOARD_FILL_KIND_HANDLE_CAPACITY, BOARD_FILL_PAGE_ITEMS, BOARD_FILL_PLACEMENT_CAPACITY, BOARD_FILL_SOURCE_CAPACITY, BoardFillCheckpoint, BoardFillCommitCandidate, BoardFillCommitEncoder, BoardFillCommitPlacement, BoardFillFixedPages, BoardFillJob, BoardFillJobState, BoardFillPlacement, BoardFillSnapshot, BoardFillSnapshotCapture, BoardFillSnapshotIngress, BoardFillSource, BoardFillVirtualHandle, NEUTRAL_BOARD_NAMING};
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-
-/// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
-
-#[cfg(test)]
-#[allow(non_snake_case)]
-fn BOARD_HOST_SOURCE() -> &'static str {
-    fixture_text!("../../🦀️.rs")
-}
 
 #[cfg(test)]
     #[test]
@@ -33,7 +25,7 @@ fn BOARD_HOST_SOURCE() -> &'static str {
         assert!(size_of::<BoardFillCommitEncoder>() <= 32 * 1_024);
         assert!(size_of::<BoardFillJobState>() <= 32 * 1_024);
         assert!(size_of::<BoardFillCheckpoint>() <= 32 * 1_024);
-        assert!(size_of::<BoardFillJob>() <= 32 * 1_024);
+        assert!(size_of::<BoardFillJob>() <= 32 * 1_024, "job {} state {} checkpoint {} encoder {} payload builder {} worker session {}", size_of::<BoardFillJob>(), size_of::<BoardFillJobState>(), size_of::<BoardFillCheckpoint>(), size_of::<BoardFillCommitEncoder>(), size_of::<semio_framework_job_payload::RetainedPayloadBuilder>(), size_of::<semio_framework_job_worker::MountedWorkerJobSession<BoardFillJob>>());
         assert!(size_of::<Result<BoardFillJob, BoardFillCheckpoint>>() <= 32 * 1_024);
         assert!(size_of::<semio_framework_job_worker::WorkerJobOutcome<BoardFillJob>>() <= 32 * 1_024);
         assert!(size_of::<semio_framework_job_worker::MountedWorkerJobSession<BoardFillJob>>() <= 32 * 1_024);
@@ -68,47 +60,39 @@ fn BOARD_HOST_SOURCE() -> &'static str {
     }
 
 #[cfg(test)]
-    fn fill_full_commit_candidate_contract(source: &str) -> bool {
-        let Some(start) = source.find("pub struct BoardFillResult") else { return false };
-        let Some(end) = source[start..].find("/// 🧵️ Persistent worker-owned fill search") else { return false };
-        let codec = &source[start..start + end];
-        let Some(job_start) = source.find("fn complete(&mut self, context: &mut semio_framework_job::StepContext") else { return false };
-        let Some(job_end) = source[job_start..].find("fn fault_outcome") else { return false };
-        let job = &source[job_start..job_start + job_end];
-        codec.contains("pub struct BoardFillCommitPlacement")
-            && codec.contains("pub edge_kind: BoardFillText")
-            && codec.contains("pub handles: [Option<BoardFillCommitHandle>; BOARD_FILL_KIND_HANDLE_CAPACITY]")
-            && codec.contains("pub placement: Option<BoardFillCommitPlacement>")
+    fn fill_full_commit_candidate_contract(records: &str, codec: &str, job: &str) -> bool {
+        records.contains("pub struct BoardFillCommitPlacement")
+            && records.contains("pub edge_kind: BoardFillText")
+            && records.contains("pub handles: [Option<BoardFillCommitHandle>; BOARD_FILL_KIND_HANDLE_CAPACITY]")
+            && records.contains("pub placement: Option<BoardFillCommitPlacement>")
             && codec.contains("struct BoardFillCommitPayload")
-            && codec.contains("BoardFillCommitPayload::new(&candidate.output)")
+            && codec.contains("BoardFillCommitPayload::new(output?)")
             && codec.contains("payload.page_count() == BOARD_FILL_COMMIT_PAGE_COUNT")
             && codec.contains("payload.page(page_index)")
             && codec.contains("text_byte: usize")
             && codec.contains("fn step_text")
             && codec.contains("self.bytes[offset + 2 + self.text_byte] = text.bytes[self.text_byte]")
-            && !codec.contains("String")
-            && !codec.contains("Vec<")
-            && !codec.contains("BTreeMap")
-            && !codec.contains("single_page()")
-            && !codec.contains("const BOARD_FILL_COMMIT_BYTES: usize = 13")
-            && !codec.contains("result.encode")
-            && job.contains("start.saturating_add(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)")
-            && job.contains("if end < BOARD_FILL_COMMIT_BYTES")
-            && job.contains("encoder.output_cursor = end")
+            && [records, codec].iter().all(|part| !part.contains("String") && !part.contains("Vec<") && !part.contains("BTreeMap"))
+            && !codec.contains("single_page()") && !codec.contains("result.encode")
+            && codec.contains("BOARD_FILL_COMMIT_HANDLE_OFFSET + BOARD_FILL_KIND_HANDLE_CAPACITY * BOARD_FILL_COMMIT_HANDLE_BYTES")
+            && job.contains("writer.append_original(context, &encoder.bytes, &mut encoder.output_cursor)")
+            && job.contains("encoder.output_cursor < BOARD_FILL_COMMIT_BYTES")
     }
 
 #[cfg(test)]
     #[test]
     fn fill_full_commit_candidate_mutations_are_rejected() {
-        let source = BOARD_HOST_SOURCE();
+        let records = fixture_text!("../../📍️placement-checkpoint-and-commit-records/🦀️.rs");
+        let codec = fixture_text!("../../🧬️commit-encoder-and-payload/🦀️.rs");
+        let job = fixture_text!("../../🚫️job-reject-preview-and-complete/🦀️.rs");
         assert_eq!(BOARD_FILL_COMMIT_BYTES, 10_406);
         assert_eq!(BOARD_FILL_COMMIT_PAGE_COUNT, 1);
         assert!(BOARD_FILL_COMMIT_BYTES <= semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES * BOARD_FILL_COMMIT_PAGE_COUNT);
-        assert!(fill_full_commit_candidate_contract(source));
-        let dynamic = source.replacen("pub struct BoardFillCommitPlacement {\n        pub node_id: BoardFillText,", "pub struct BoardFillCommitPlacement {\n        pub dynamic: String,\n        pub node_id: BoardFillText,", 1);
-        assert!(!fill_full_commit_candidate_contract(&dynamic));
-        let summary = source.replacen("const BOARD_FILL_COMMIT_BYTES: usize = BOARD_FILL_COMMIT_HANDLE_OFFSET + BOARD_FILL_KIND_HANDLE_CAPACITY * BOARD_FILL_COMMIT_HANDLE_BYTES;", "const BOARD_FILL_COMMIT_BYTES: usize = 13;", 1);
-        assert!(!fill_full_commit_candidate_contract(&summary));
+        assert!(fill_full_commit_candidate_contract(records, codec, job));
+        let dynamic = records.replacen("pub struct BoardFillCommitPlacement {", "pub struct BoardFillCommitPlacement { pub dynamic: String,", 1);
+        assert!(!fill_full_commit_candidate_contract(&dynamic, codec, job));
+        let summary = codec.replacen("BOARD_FILL_COMMIT_HANDLE_OFFSET + BOARD_FILL_KIND_HANDLE_CAPACITY * BOARD_FILL_COMMIT_HANDLE_BYTES", "13", 1);
+        assert!(!fill_full_commit_candidate_contract(records, &summary, job));
     }
 
 #[cfg(test)]
@@ -127,7 +111,7 @@ fn BOARD_HOST_SOURCE() -> &'static str {
         }
         ingress.begin_node().expect("open node stays unpublished");
         let source = ingress.snapshot.as_ref().expect("snapshot");
-        let backing: usize = source.nodes.pages.iter().flatten().map(|page| page.backing_bytes).sum::<usize>() + size_of_val(source.nodes.pages.as_ref()) + size_of_val(source.handles.pages.as_ref()) + size_of_val(source.kinds.pages.as_ref()) + size_of_val(source.rules.pages.as_ref());
+        let backing: usize = source.nodes.pages.iter().flatten().map(|page| page.backing_bytes).sum::<usize>() + BoardFillSnapshotIngress::admission_demands().unwrap().capacity_bytes;
         assert!(backing > 0);
         let mut released = 0usize;
         for turn in 0.. {
@@ -228,7 +212,7 @@ struct BoardFillOriginalFixture { caller: semio_framework_job::OriginalJobFixtur
 #[cfg(test)]
 impl BoardFillOriginalFixture {
     fn stock() -> semio_framework_value::RetainedCloneGrant { semio_framework_value::RetainedCloneGrant { maximum_items: 100_000, maximum_copy_bytes: 64 << 20, maximum_capacity_bytes: 64 << 20, maximum_release_bytes: 64 << 20, maximum_depth: 128 } }
-    fn new() -> Self { Self { caller: semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(11), semio_framework_job::Generation(3), Self::stock(), || Some(0), u64::MAX, 100_000), decoder: semio_framework_job::OriginalJobDecodeOwner::empty(), construction: Default::default() } }
+    fn new() -> Self { let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(11), semio_framework_job::Generation(3), Self::stock(), || Some(0), u64::MAX, 100_000); caller.birth_returns(Self::stock()); Self { caller, decoder: semio_framework_job::OriginalJobDecodeOwner::empty(), construction: Default::default() } }
     fn ingress(&mut self) -> BoardFillSnapshotIngress {
         let mut output = None;
         let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| self.caller.turn_with_decoder(Self::stock(), &mut self.decoder, |cx| BoardFillSnapshotIngress::admit_original(&mut self.construction, 0.0, &NEUTRAL_BOARD_NAMING, &mut output, cx)));
@@ -247,15 +231,15 @@ impl BoardFillOriginalFixture {
     fn close_job(&mut self, job: &mut BoardFillJob, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep { use semio_framework_job::InteractiveJob; self.caller.turn(grant, |cx| cx.with_original_retirement(|cx| job.close_step(cx))).unwrap() }
     fn close_ingress(&mut self, owner: &mut BoardFillSnapshotIngress, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         let demand = semio_framework_value::RetirementDemand { release_bytes: owner.next_close_release_byte_demand(), depth: 1, ..Default::default() };
-        self.caller.turn(grant, |cx| semio_framework_job::close_original_retained_step(cx, demand, |grant| Ok(semio_framework_value::RetainedCloneStep::Progress(owner.close_step(grant).progress())))).unwrap()
+        self.caller.turn(grant, |cx| semio_framework_job::close_original_retained_step(cx, demand, |grant| semio_framework_value::RetainedWorkOutcome { work: 1, result: Ok(semio_framework_value::RetainedCloneStep::Progress(owner.close_step(grant).progress())) })).unwrap()
     }
     fn close_capture(&mut self, owner: &mut BoardFillSnapshotCapture, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         let demand = semio_framework_value::RetirementDemand { release_bytes: owner.next_close_release_byte_demand(), depth: 1, ..Default::default() };
-        self.caller.turn(grant, |cx| semio_framework_job::close_original_retained_step(cx, demand, |grant| Ok(semio_framework_value::RetainedCloneStep::Progress(owner.close_step(grant).progress())))).unwrap()
+        self.caller.turn(grant, |cx| semio_framework_job::close_original_retained_step(cx, demand, |grant| semio_framework_value::RetainedWorkOutcome { work: 1, result: Ok(semio_framework_value::RetainedCloneStep::Progress(owner.close_step(grant).progress())) })).unwrap()
     }
     fn finish(mut self) {
         while !self.construction.terminal_is_empty() { self.caller.turn(Self::stock(), |cx| { self.construction.close_step(cx)?; Ok(()) }).unwrap(); }
-        while !self.decoder.terminal_is_empty() { self.caller.turn(Self::stock(), |cx| { let step = self.decoder.close_step(cx.retained_grant())?; cx.consume_retained(step.progress())?; cx.consume_fuel(step.progress().copied_items as u64); Ok(()) }).unwrap(); }
+        while !self.decoder.terminal_is_empty() { self.caller.turn(Self::stock(), |cx| { cx.with_original_retirement(|cx| self.decoder.close_on_source(cx))?; Ok(()) }).unwrap(); }
         self.caller.retire(Self::stock());
     }
 }
@@ -264,7 +248,7 @@ impl BoardFillOriginalFixture {
 #[test]
 fn board_fill_original_descriptors_keep_source_and_semantic_serial_separate() {
     use semio_framework_job::{InteractiveJob, Operation, OperationId, RevisionId, Generation};
-    let law: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🎟️admission/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../🗃️model/🧪️tests/🧫️fixtures/🎟️admission/🔣️.json")).unwrap();
     let mut original = BoardFillOriginalFixture::new();
     let mut decoder = semio_framework_job::OriginalJobDecodeOwner::empty();
     let mut denied = None;
@@ -279,9 +263,15 @@ fn board_fill_original_descriptors_keep_source_and_semantic_serial_separate() {
     let mut ingress = original.ingress();
     let snapshot = ingress.take_snapshot().expect("authentic original empty snapshot");
     let semantic = Operation::new(OperationId(law["semanticSerial"].as_u64().unwrap()), RevisionId(0), Generation(law["semanticGeneration"].as_u64().unwrap()), law["seed"].as_u64().unwrap());
-    let mut job = original.job(snapshot, 0, semantic);
-    assert_eq!(job.state.as_ref().unwrap().next_serial, semantic.operation.0);
+    let mut job = original.job(snapshot, 1, semantic);
+    assert_eq!(job.operation().operation.0, semantic.operation.0);
     let mut foreign = BoardFillOriginalFixture::new();
+    let denied = foreign.caller.turn(BoardFillOriginalFixture::stock(), |cx| job.advance_search(cx));
+    assert!(denied.is_err());
+    let transition = original.caller.turn(BoardFillOriginalFixture::stock(), |cx| job.advance_search(cx)).unwrap();
+    assert_eq!(transition, semio_os_infinite_board_normal_fill::BoardFillTransition::Advanced);
+    assert_eq!(job.operation().preview_sequence, semantic.preview_sequence);
+    assert!(job.take_preview().is_none());
     let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| foreign.caller.turn(BoardFillOriginalFixture::stock(), |cx| job.close_step(cx)));
     assert!(result.is_err()); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     while !job.terminal_is_empty() { let grant = original.caller.remaining_grant(); original.close_job(&mut job, grant); }
@@ -295,24 +285,23 @@ fn board_fill_original_descriptors_keep_source_and_semantic_serial_separate() {
 fn board_fill_capture_original_page_births_keep_pending_on_each_denied_axis() {
     let mut original = BoardFillOriginalFixture::new();
     let mut capture = original.capture();
-    let scene = semio_os_infinite_board_normal_scene::BoardSceneState::default();
-    let style = semio_os_infinite_board_normal_scene::BoardStyleState::default();
-    let brush = semio_os_infinite_board_normal_gestures::BoardBrushState::default();
+    let host = semio_os_infinite_board_normal_host::BoardHost::default();
+    let (scene, style, brush) = (&host.scene, &host.style, &host.brush);
     for index in 0..=BOARD_FILL_PAGE_ITEMS {
         capture.node = Some(BoardFillNodeCapture { id: BoardFillText::empty(), bounds: Some([0.0; 4]) });
-        let demand = capture.next_step_demands(&style).unwrap();
+        let demand = capture.next_step_demands(style).unwrap();
         assert_eq!(demand.capacity_bytes, if index % BOARD_FILL_PAGE_ITEMS == 0 { BOARD_FILL_PAGE_ITEMS * size_of::<BoardFillNodeSnapshot>() } else { 0 });
         for axis in 0..4 {
             let mut denied = BoardFillOriginalFixture::stock();
             match axis { 0 => denied.maximum_items = 0, 1 => denied.maximum_copy_bytes = demand.copy_bytes - 1, 2 if demand.capacity_bytes != 0 => denied.maximum_capacity_bytes = demand.capacity_bytes - 1, 2 => continue, _ => denied.maximum_depth = demand.depth - 1 }
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original.caller.turn_with_decoder(denied, &mut original.decoder, |cx| capture.step(&mut original.construction, &scene, &style, &brush, cx)));
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original.caller.turn_with_decoder(denied, &mut original.decoder, |cx| capture.step(&mut original.construction, scene, style, brush, cx)));
             assert!(matches!(step.unwrap(), BoardFillCaptureStep::Pending));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             assert_eq!(original.caller.receipt(), Default::default());
             assert!(capture.node.is_some());
             assert_eq!(capture.snapshot.as_ref().unwrap().nodes.len, index);
         }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original.caller.turn_with_decoder(BoardFillOriginalFixture::stock(), &mut original.decoder, |cx| capture.step(&mut original.construction, &scene, &style, &brush, cx)));
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original.caller.turn_with_decoder(BoardFillOriginalFixture::stock(), &mut original.decoder, |cx| capture.step(&mut original.construction, scene, style, brush, cx)));
         assert!(matches!(step.unwrap(), BoardFillCaptureStep::Pending));
         let receipt = original.caller.receipt();
         assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes));

@@ -1,7 +1,7 @@
 import opaqueRows from "./📥️opaque.json";
 import startupRows from "./📥️startup.json";
 import opaqueSchema from "./🔣️opaque.json";
-import{SOURCE_OPACITY_PROTOCOL_V1}from"../../../../../🔍️discovery/📂️source/🟦️.ts";
+import{SOURCE_OPACITY_PROTOCOL_V1}from"../../../../../../🏗️build/📥️inputs/👻️opaque-source/🟨️.mjs";
 import{repositoryFilesystemJournalPolicyV1}from"../../../../🔏️seal/📥️membership/📥️journal/🟦️.ts";
 import{expect,test}from"bun:test";
 import{mkdir,mkdtemp,rm,symlink}from"node:fs/promises";

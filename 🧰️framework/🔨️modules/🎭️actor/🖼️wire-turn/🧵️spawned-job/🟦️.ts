@@ -34,6 +34,7 @@ export type SpawnedJobDrive = {
   readonly input: Uint8Array;
   readonly port: SpawnedJobPort;
   readonly stepCeiling?: number;
+  readonly continueAfterAdmission?: () => Promise<void>;
   readonly signal?: AbortSignal;
   readonly onStep?: (step: { readonly job: bigint; readonly index: number; readonly status: SpawnedJobStep["status"] }) => void;
 };
@@ -58,7 +59,7 @@ export function wireJobStep(raw: unknown): SpawnedJobStep {
  * protocols (this module's own header: the "third divergent copy" hazard).
  *
  * The job is started once, then stepped with the kernel's STATIC admission budget until it reports a
- * terminal step or the ceiling is reached. The transcript — never this loop — decides what happened:
+ * terminal step or the current admission ends. An owner can renew after yielding. The transcript — never this loop — decides what happened:
  * `kernel::spawnedJobCompletion` owns that rule and its Rust twin answers identically.
  *
  * A host that skips this pump is not merely slow, it is silently broken: every framework reserved
@@ -72,22 +73,29 @@ export async function driveSpawnedJob(drive: SpawnedJobDrive): Promise<SpawnedJo
   const budget = { fuel: SPAWNED_JOB_FUEL, deadlineMs: SPAWNED_JOB_DEADLINE_MS } as const;
   await drive.port.startJob(drive.job, drive.kind, drive.input);
   const steps: SpawnedJobStep[] = [];
+  let observed = 0;
   let settled = false;
   try {
-    for (let index = 0; index < ceiling; index += 1) {
-      if (drive.signal?.aborted === true) break;
+    for (;;) {
+      drive.signal?.throwIfAborted();
       const step = wireJobStep(await drive.port.stepJob(drive.job, budget));
       steps.push(step);
-      drive.onStep?.({ job: drive.job, index, status: step.status });
+      drive.onStep?.({ job: drive.job, index: observed, status: step.status });
+      observed++;
       if (step.status !== "running") {
+        const completion = spawnedJobCompletion(steps);
         settled = true;
-        break;
+        return { steps: observed, outcome: completion.outcome };
+      }
+      if (steps.length === ceiling) {
+        if (!drive.continueAfterAdmission) return spawnedJobCompletion(steps);
+        await drive.continueAfterAdmission();
+        steps.length = 0;
       }
     }
   } finally {
     if (!settled) await drive.port.cancelJob?.(drive.job).catch(() => {});
   }
-  return spawnedJobCompletion(steps);
 }
 
 /** ✅️ The actor-boundary event a completed spawned job owes its guest — the WIT `job-completed-event`

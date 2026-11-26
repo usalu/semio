@@ -1,3 +1,4 @@
+import{descriptorRefusalV1}from"../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧷️descriptor/🟦️.ts";
 import {createHash} from "node:crypto";
 import {closeSync,constants,fstatSync,lstatSync,openSync,readFileSync,readSync,writeSync as writeNxAuthorizerReceiptDiagnosticV1,type BigIntStats} from "node:fs";
 import {dirname,join} from "node:path";
@@ -28,8 +29,8 @@ export function observeNxAuthorizerBundleV1(directory:string,check:()=>void=()=>
  try{
   check();if(authorizerFileStamp(fstatSync(fd,{bigint:true}))!==stamp)throw Error("Original authorizer descriptor required");
   const digest=createHash("sha256"),bytes=Buffer.allocUnsafe(Math.min(Number(before.size),65536));
-  for(let offset=0;offset<Number(before.size);){check();const count=readSync(fd,bytes,0,Math.min(bytes.length,Number(before.size)-offset),offset);if(count===0)throw Error("Original authorizer body changed");digest.update(bytes.subarray(0,count));offset+=count;}
-  check();if(authorizerFileStamp(fstatSync(fd,{bigint:true}))!==stamp||authorizerFileStamp(lstatSync(path,{bigint:true}))!==stamp)throw Error("Original authorizer body changed");return{sha256:digest.digest("hex"),stamp};
+  for(let offset=0;offset<Number(before.size);){check();const count=readSync(fd,bytes,0,Math.min(bytes.length,Number(before.size)-offset),offset);if(count===0)throw descriptorRefusalV1("immutable",path,{en:"Authorizer module",de:"Autorisierungsmodul"});digest.update(bytes.subarray(0,count));offset+=count;}
+  check();if(authorizerFileStamp(fstatSync(fd,{bigint:true}))!==stamp||authorizerFileStamp(lstatSync(path,{bigint:true}))!==stamp)throw descriptorRefusalV1("immutable",path,{en:"Authorizer module",de:"Autorisierungsmodul"});return{sha256:digest.digest("hex"),stamp};
  }finally{closeSync(fd);}
 }
 /** 🔍️ Reports only the first original boolean refusal without observing any additional protected bytes. */

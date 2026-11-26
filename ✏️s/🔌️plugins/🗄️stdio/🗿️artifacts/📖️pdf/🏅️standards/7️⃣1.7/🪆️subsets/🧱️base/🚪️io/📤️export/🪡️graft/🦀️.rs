@@ -231,8 +231,11 @@ impl<'a> Graft<'a> {
             return Ok(false);
         }
         let mut probe = typed.clone();
+        let appended = content && typed.content.len() > read.content.len() && typed.content.iter().zip(read.content.iter()).all(|(typed, read)| typed == read);
         if !content {
             probe.content.clear();
+        } else if appended {
+            probe.content = typed.content.iter().skip(read.content.len()).cloned().collect();
         }
         if !annotations {
             probe.annotations.clear();
@@ -268,12 +271,35 @@ impl<'a> Graft<'a> {
         let mut adopted = HashMap::new();
         for key in keys {
             let value = match (key, dict_get(&lowered, key)) {
+                ("Contents", Some(tail)) if appended => {
+                    let mut parts = match dict_get(&dict, "Contents") {
+                        Some(PdfObject::Array(items)) => items.clone(),
+                        Some(PdfObject::Ref(target)) => match self.value(*target) {
+                            Some(PdfObject::Array(items)) => items.clone(),
+                            _ => vec![PdfObject::Ref(*target)],
+                        },
+                        Some(other) => vec![other.clone()],
+                        None => Vec::new(),
+                    };
+                    parts.push(tail.clone());
+                    Some(PdfObject::Array(parts))
+                }
                 ("Rotate", None) => Some(PdfObject::Int(typed.rotate as i64)),
                 (_, value) => value.cloned(),
             };
             self.put(&mut dict, key, value, &scratch, &mut adopted);
         }
-        if content && !self.bind_resources(&mut dict, &typed.content, targets) {
+        let mut fresh = HashMap::new();
+        if content {
+            let missing = self.missing_resources(&typed.content, targets, &dict);
+            if !missing.fonts.is_empty() || !missing.images.is_empty() || !missing.forms.is_empty() || !missing.ext_g_states.is_empty() || !missing.shadings.is_empty() || !missing.patterns.is_empty() {
+                let first = scratch.keys().copied().max().unwrap_or(0).max(reference.num).max(self.next) + 1;
+                let (objects, refs) = lower_resources_standalone(&missing, &typed.content, first, LowerOptions::default())?;
+                scratch.extend(objects.into_iter().map(|object| (object.id.num, object.value)));
+                fresh = refs;
+            }
+        }
+        if content && !self.bind_resources(&mut dict, &typed.content, targets, &fresh, &scratch, &mut adopted) {
             return Ok(false);
         }
         self.set_dict(reference, dict);
@@ -296,6 +322,22 @@ impl<'a> Graft<'a> {
         Ok(true)
     }
 
+    /// 🆕 A snapshot holding only the typed resources `ops` name that neither the page's resources nor the graph's targets bind yet.
+    fn missing_resources<'o>(&self, ops: impl IntoIterator<Item = &'o PdfOp>, targets: &HashMap<(Category, String), ObjRef>, dict: &[PdfDictEntry]) -> PdfSnapshot {
+        let typed = self.typed;
+        let effective = self.effective_resources(dict);
+        let references = content_references(ops);
+        let unbound = |key: &str, category: Category, id: &String| !targets.contains_key(&(category, id.clone())) && dict_get(&effective, key).and_then(|value| self.resolve(value)).and_then(|value| value.as_dict().map(|section| dict_get(section, id).is_some())) != Some(true);
+        let mut missing = PdfSnapshot { objects: typed.objects.clone(), ..Default::default() };
+        missing.fonts = references.fonts.iter().filter(|id| unbound("Font", Category::Font, id)).filter_map(|id| typed.font(id).cloned()).collect();
+        missing.images = references.x_objects.iter().filter(|id| unbound("XObject", Category::XObject, id)).filter_map(|id| typed.image(id).cloned()).collect();
+        missing.forms = references.x_objects.iter().filter(|id| unbound("XObject", Category::XObject, id)).filter_map(|id| typed.form(id).cloned()).collect();
+        missing.ext_g_states = references.ext_g_states.iter().filter(|id| unbound("ExtGState", Category::ExtGState, id)).filter_map(|id| typed.ext_g_state(id).cloned()).collect();
+        missing.shadings = references.shadings.iter().filter(|id| unbound("Shading", Category::Shading, id)).filter_map(|id| typed.shading(id).cloned()).collect();
+        missing.patterns = references.patterns.iter().filter(|id| unbound("Pattern", Category::Pattern, id)).filter_map(|id| typed.pattern(id).cloned()).collect();
+        missing
+    }
+
     /// 🆔 Whether a typed resource collection defines `id` in `category`.
     fn defines(&self, category: Category, id: &str) -> bool {
         let typed = self.typed;
@@ -315,7 +357,7 @@ impl<'a> Graft<'a> {
     /// already sees (its own or inherited) are kept whole, and an id they do not bind to the
     /// graph's object for it is bound on a page-own copy. `false` when the content names a typed
     /// resource the graph holds no object for.
-    fn bind_resources(&mut self, dict: &mut Vec<PdfDictEntry>, ops: &[PdfOp], targets: &HashMap<(Category, String), ObjRef>) -> bool {
+    fn bind_resources<'o>(&mut self, dict: &mut Vec<PdfDictEntry>, ops: impl IntoIterator<Item = &'o PdfOp>, targets: &HashMap<(Category, String), ObjRef>, fresh: &HashMap<(Category, String), ObjRef>, scratch: &HashMap<u32, PdfObject>, adopted: &mut HashMap<u32, ObjRef>) -> bool {
         let effective = self.effective_resources(dict);
         let mut resources = effective.clone();
         for (key, category, ids) in resource_sections(&content_references(ops)) {
@@ -328,7 +370,12 @@ impl<'a> Graft<'a> {
                         section.push(PdfDictEntry::new(id, PdfObject::Ref(*target)));
                         bound = true;
                     }
-                    None if self.defines(category, &id) && dict_get(&section, &id).is_none() => return false,
+                    None if self.defines(category, &id) && dict_get(&section, &id).is_none() => {
+                        let Some(reference) = fresh.get(&(category, id.clone())) else { return false };
+                        let value = self.adopt(&PdfObject::Ref(*reference), scratch, adopted);
+                        section.push(PdfDictEntry::new(id, value));
+                        bound = true;
+                    }
                     _ => {}
                 }
             }

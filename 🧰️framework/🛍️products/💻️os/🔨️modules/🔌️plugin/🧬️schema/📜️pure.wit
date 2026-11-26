@@ -12,6 +12,8 @@ interface pure {
   now-ms: func() -> s64;
   /// ⏱️ Reads the actual original caller clock during a checked job loan.
   operation-clock-us: func(clock-binding: u64) -> option<u64>;
+  /// 🎛️ Reads elapsed execution of the currently executing owned actor Poll and its bound caller.
+  actor-execution-clock-us: func(clock-binding: u64) -> option<u64>;
   trace-span: func(name: string);
   /// 🎟️ Begins only a receiving operation already owned by the caller's original authority.
   operation-begin: async func() -> result<u64, u32>;

@@ -84,7 +84,7 @@ process.exit(v.finalExit);`);
     expect(failure).toBeInstanceOf(ConcurrentEditErrorV1);
     const message=String(failure);
     const bounds=message.match(/held ([0-9]+) bytes, replacement ([0-9]+) bytes, admissible (-?[0-9]+) bytes, available (-?[0-9]+) bytes, floor ([0-9]+) bytes/u);
-    expect(bounds?.slice(1,3).map(Number)).toEqual([correction.heldBytes,correction.replacementBytes]);
+    expect<unknown>(bounds?.slice(1,3).map(Number)).toEqual([correction.heldBytes,correction.replacementBytes]);
     const [,held,,admissible,available,floor]=bounds!;
     using independent=new Database(":memory:");
     const predicted=independent.query("select min(?1,?2-?3) admissible").get(Number(held),Number(available),Number(floor));
@@ -130,7 +130,7 @@ for(const scenario of [...fixture.mixedWarmDepInfo.cases,...fixture.mixedWarmDep
   writeFileSync(dependency!.manifest,readFileSync(dependency!.manifest,"utf8").replace('"cdylib"','"rlib"'));
   writeFileSync(join(dirname(dependency!.manifest),"lib.rs"),`include!("../${vector.application}/lib.rs");\n`);
   const source=join(dirname(application!.manifest),"lib.rs");
-  const initialRevision="initialRevision" in scenario?scenario.initialRevision:0;
+  const initialRevision="initialRevision" in scenario&&typeof scenario.initialRevision==="number"?scenario.initialRevision:0;
   const liveRevisions="liveRevisions" in scenario?scenario.liveRevisions:undefined;
   writeFileSync(source,vector.sourceRevisions[initialRevision]!);
   expect(spawnSync(registeredToolExecutableV1("cargo"),["generate-lockfile","--offline","--manifest-path",pass.manifest],{encoding:"utf8"}).status).toBe(0);

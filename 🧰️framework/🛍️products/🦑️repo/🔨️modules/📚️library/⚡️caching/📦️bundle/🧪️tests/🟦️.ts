@@ -1,4 +1,12 @@
 import {expect,test} from "bun:test";
+import {createHash} from "node:crypto";
+import {join} from "node:path";
+import {withBuildTestInvocationV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {scriptInvocationEnvironment} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {runOwnedCommand} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {createBunBundleStreamV1} from "../🟦️bun/📤️stream/🟦️.ts";
 import {readFileSync} from "node:fs";
 import {withCarriedOrCountedBunCapacity} from "../🟦️.ts";
 import {fixedCompilerCapacityRequestV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
@@ -32,3 +40,15 @@ test("every option of a JavaScript bundle is either declared by the bundle schem
  expect(keys.length).toBeGreaterThan(8);
  for(const key of keys)expect(key in schema.properties||withheld.includes(key),key).toBe(true);
 });
+
+/** 🏃️ The compile leaf only runs for the Original of the checkout that holds it (a private repository has no leaf of its own), so its success path is exercised here directly under the receiver Original: no store, no scratch, only the leaf's own request and stream. */
+test("the Bun compile leaf compiles a module request for the Original of its own checkout and streams the exact bytes",async()=>{
+ await withBuildTestInvocationV1(async original=>{
+  const authority=readNativeCallerAuthorityV1(original.capabilities),mode=authority.original.buildMode as"prototype"|"release",control=scriptCompilerAdmissionControlV1(original,"test:bun-leaf",120000),request={version:1,mode,kind:"module",entrypoint:import.meta.path,contents:"export const value=7;\n",external:[]},input=JSON.stringify(request),chunks=new Map<string,Buffer[]>(),stream=createBunBundleStreamV1(createHash("sha256").update(input).digest("hex"),event=>{if(event.type==="file")chunks.set(event.name,[]);else if(event.type==="chunk")chunks.get(event.name)!.push(Buffer.from(event.bytes));});
+  await runOwnedCommand(process.execPath,[join(import.meta.dirname,"../🟦️bun/📜️script.ts"),"compile"],authority.repositoryRoot,"javascript:bun-worker-test",0,{deadline:control,input,signal:control.signal,stdout:"ignore",output:{maximumBytes:Math.min(738197504,authority.transport.maximumBytes),maximumLines:authority.transport.maximumLines},outputConsumer:(bytes,source)=>{if(source==="stdout")stream.push(bytes);},env:scriptInvocationEnvironment(original,{...process.env,SEMIO_BUILD_MODE:mode,SEMIO_COMPILER_CAPACITY_HELD:undefined,SEMIO_BUILD_PROFILE_INPUTS:"0"})});
+  const records=stream.finish(),source=Buffer.concat(chunks.get("source.js")??[]);
+  expect(records.map(row=>row.name)).toContain("source.js");
+  expect(records.find(row=>row.name==="source.js")!.sha256).toBe(createHash("sha256").update(source).digest("hex"));
+  expect(source.toString("utf8")).toMatch(/value\s*=\s*7/u);
+ });
+},120000);

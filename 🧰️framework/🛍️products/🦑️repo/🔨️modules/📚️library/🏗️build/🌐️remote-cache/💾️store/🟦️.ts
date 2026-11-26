@@ -10,6 +10,7 @@ import {readRemoteCacheReferencesV1,removeRemoteCacheMetaV1,scanRemoteCacheMetaV
 import {protectedKindV1,requireSlotShapeV1,SLOT_GRACE_MILLISECONDS_V1,type DeclarationV1,type StaleCauseV1,type StalenessModeV1,type TombstoneV1} from "../../🪢️slots/🟦️.ts";
 import {stalenessOnArrivalV1,stalenessReportV1,type StalenessReasonV1,type StalenessVerdictV1,type TreeDigestsV1} from "../🏷️retention/🍂️staleness/🟦️.ts";
 import {reclaimCasObjectsV1} from "../../🗄️cas/🪦️reclaim/🟦️.ts";
+import {CasCapRefusalV1} from "../../🗄️cas/🚦️guard/🟦️.ts";
 import {remoteCacheFileBudgetOfMachineV1,remoteCacheWidthV1} from "../📏️fd-budget/🟦️.ts";
 import {ownProcessIdentityV1,processHolderAliveV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
@@ -20,7 +21,9 @@ export const REMOTE_CACHE_KINDS_V1={ac:"ac",cas:"cas",nx:"nx"} as const;
 export type RemoteCacheKindV1=typeof REMOTE_CACHE_KINDS_V1[keyof typeof REMOTE_CACHE_KINDS_V1];
 
 /** 📮️ Reports why one write ended: stored, replaced an older value, found an equal or protected value, or was refused. */
-export type RemoteCachePutOutcomeV1="created"|"replaced"|"exists"|"digest-mismatch"|"length-mismatch"|"too-large"|"capacity"|"aborted";
+export type RemoteCachePutOutcomeV1="created"|"replaced"|"exists"|"digest-mismatch"|"length-mismatch"|"too-large"|"capacity"|"unavailable"|"aborted";
+
+const hostPutFailureV1=(error:unknown):RemoteCachePutOutcomeV1=>{const row=error as {code?:unknown;key?:unknown}|null;return error instanceof CasCapRefusalV1||row?.code==="ENOSPC"||row?.code==="EDQUOT"||(typeof row?.key==="string"&&row.key.endsWith("disk.low-space"))?"capacity":"unavailable";};
 
 /** 📡️ Progress and housekeeping events of one store, published to the caller without any logging dependency. */
 export type RemoteCacheStoreEventV1=Readonly<{stage:"scan";entries:number;bytes:number}>|Readonly<{stage:"evict";entries:number;bytes:number}>|Readonly<{stage:"reclaim";entries:number;bytes:number}>|Readonly<{stage:"ready";entries:number;bytes:number}>;
@@ -283,7 +286,7 @@ export class RemoteCacheStoreV1{
    if(leaving.has(relative)||relative.split("/")[1]==="cas")continue;
    const refs=await this.entryRefs(relative),state=judged?.get(relative)?.state,stored=this.slots.get(relative)?.storedAt;
    for(const hash of refs)if(!sizes.has(hash))sizes.set(hash,await this.blobSize(hash));
-   const meta=this.slots.get(relative),slotted=protectedKindV1(meta?.declaration?.kind)&&meta!.slot!==undefined&&meta.storedAt!==undefined;
+   const meta=this.slots.get(relative),slotted=meta!==undefined&&protectedKindV1(meta.declaration?.kind)&&meta.slot!==undefined&&meta.storedAt!==undefined;
    rows.push({key:relative,accessed:row.accessed,refs,tier:state==="unreached"||(state==="stale"&&enforcing)?0:state===undefined||state==="undeclared"?1:2,guarded:claimed(relative)||now-(stored??this.born.get(relative)??0)<this.grace,...slotted?{graph:{slot:meta!.slot,storedAt:meta!.storedAt}}:{}});
   }
   const reserve=this.graphReserve(bound),result=planRemoteCacheBlobBoundV1(rows,hash=>sizes.get(hash)??0,bound,reserve===null?undefined:{budgetBytes:reserve,now,graceMilliseconds:this.options.graph!.supersedeGraceMilliseconds});
@@ -346,7 +349,7 @@ export class RemoteCacheStoreV1{
 
  private async publish(relative:string,slot:RemoteCachePutSlotV1,kind:RemoteCacheKindV1,refs:readonly string[]):Promise<void>{
   const previous=this.slots.get(relative),declaration=slot.declaration??previous?.declaration,meta:RemoteCacheMetaV1={version:1,slot:slot.slot,storedAt:this.stamp(),refs:slot.refs??refs,...declaration===undefined?{}:{declaration}};
-  if(protectedKindV1(previous?.declaration?.kind)&&this.options.graph!==undefined){const until=Date.now()+this.options.graph.supersedeGraceMilliseconds,next=new Set(meta.refs);for(const hash of previous.refs)if(!next.has(hash))this.superseded.set(hash,until);}
+  if(previous!==undefined&&protectedKindV1(previous.declaration?.kind)&&this.options.graph!==undefined){const until=Date.now()+this.options.graph.supersedeGraceMilliseconds,next=new Set(meta.refs);for(const hash of previous.refs)if(!next.has(hash))this.superseded.set(hash,until);}
   try{await writeRemoteCacheMetaV1(this.root,this.temporary,relative,meta);this.slots.set(relative,meta);}
   catch(error){if(this.options.signal?.aborted)throw error;}
  }
@@ -388,14 +391,14 @@ export class RemoteCacheStoreV1{
   }finally{if(slotted)this.inflight.delete(relative);}
  }
 
- private writeSignal():AbortSignal{return AbortSignal.any([...this.options.signal===undefined?[]:[this.options.signal],AbortSignal.timeout(this.options.writeBudgetMilliseconds??10000)]);}
+ private writeSignal():AbortSignal{return AbortSignal.any([...this.options.signal===undefined?[]:[this.options.signal],AbortSignal.timeout((this.options.writeBudgetMilliseconds??10000)+(this.options.host?.policy?.admissionBudgetMs??0))]);}
  private async store(namespace:string,kind:RemoteCacheKindV1,key:string,body:AsyncIterable<Uint8Array>|null,input:Readonly<{mode:RemoteCachePutModeV1;verify?:boolean;declaredLength?:number|undefined;transient?:boolean}>,relative:string):Promise<RemoteCachePutOutcomeV1>{
   const declared=input.declaredLength;
   if(kind==="cas"&&this.options.host){
    if(declared!==undefined&&declared>this.options.maximumEntryBytes)return "too-large";
    let result;
    try{result=await this.options.host.putChecked(body??[],{hash:key,maxBytes:this.options.maximumEntryBytes,...(declared===undefined?{}:{size:declared}),...(input.transient===true?{transient:true}:{})},this.writeSignal());}
-   catch(error){if(this.options.signal?.aborted)throw error;return "capacity";}
+   catch(error){if(this.options.signal?.aborted)throw error;return hostPutFailureV1(error);}
    if(result.outcome==="created"){this.admitted+=result.digest?.size??declared??0;this.sizeTrigger();}
    return result.outcome==="exists"?"exists":result.outcome;
   }
@@ -405,7 +408,7 @@ export class RemoteCacheStoreV1{
    if(declared!==undefined&&declared>this.options.maximumEntryBytes)return "too-large";
    let result;
    try{result=await this.options.host!.putChecked(body??[],{maxBytes:this.options.maximumEntryBytes,...(declared===undefined?{}:{size:declared})},this.writeSignal());}
-   catch(error){if(this.options.signal?.aborted)throw error;return "capacity";}
+   catch(error){if(this.options.signal?.aborted)throw error;return hostPutFailureV1(error);}
    if(!result.digest)return result.outcome as RemoteCachePutOutcomeV1;
    if(result.outcome==="created"){this.admitted+=result.digest.size;this.sizeTrigger();}
    const target=this.path(relative),temporary=join(this.temporary,randomUUID());

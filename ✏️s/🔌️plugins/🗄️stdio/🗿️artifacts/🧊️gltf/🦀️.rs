@@ -99,6 +99,9 @@ pub fn declaration(definition: semio_plugin::ArtifactDefinition) -> Result<semio
         .try_build()
 }
 
+/// 📜️ The one published contract of every glTF inference leaf: no caller payload, the named artifact's pack is the request, the leaf envelope is the JSON result.
+pub const GLTF_LEAF_INFERENCE_CONTRACT: semio_plugin::ArtifactInferencePayloadContract = semio_plugin::ArtifactInferencePayloadContract::pack_bound("s.stdio.gltf.inference.leaf.payload.v1", include_str!("📤️leaf-result.json"), "leaf");
+
 /// 🧠️ Independently executable glTF inference leaves.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn gltf_inference_services() -> Vec<ArtifactInferenceService> {
@@ -185,7 +188,7 @@ fn gltf_inference_leaf_service(inference_schema: &'static str, infer: ArtifactIn
             inference_schema_version: 1,
             algorithm_version: GLTF_INFERENCE_ALGORITHM_VERSION,
             policy_version: GLTF_INFERENCE_POLICY_VERSION,
-            payload: None,
+            payload: Some(GLTF_LEAF_INFERENCE_CONTRACT),
         },
         infer,gltf_inference_demands)
 }
@@ -214,7 +217,7 @@ fn infer_gltf_leaf_cold(id: &'static str, request: &ArtifactInferenceExecutionRe
         provenance,
         value,
     };
-    let canonical_payload = semio_s_artifact_stdio_gltf_inferences::standards::v2_0::subsets::any::io::binary::inferences::encode_gltf_inference_leaf_binary(&envelope).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.leaf-binary-encode", error.to_string()))?;
+    let canonical_payload = semio_s_artifact_stdio_gltf_inferences::standards::v2_0::subsets::any::io::text::inferences::canonical_json_bytes(&envelope).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.leaf-json-encode", error.to_string()))?;
     Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload:Some(canonical_payload), diagnostics: Vec::new(), validity, quality: envelope.quality, complete: true, actual_cache_mode: request.requested_cache_mode.clone() }.into_step(true))
 }
 

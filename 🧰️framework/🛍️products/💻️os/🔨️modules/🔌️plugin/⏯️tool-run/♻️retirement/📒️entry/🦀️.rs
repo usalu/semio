@@ -5,14 +5,14 @@ use semio_framework_value::RetirementPollExit;
 use semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage;
 use std::mem::size_of;
 
-struct Metadata{tool_id:String,actor:semio_framework_value::SharedUtf8,definition:ToolRunDefinition,settings_values:ToolRunSettingsValues,window:Option<(String,String)>,window_bodies:Vec<String>,payload:Option<SharedOriginalStorage<Vec<u8>>>,trace_keys:ToolRunTraceKeys,entity_marks:Vec<(u32,u64)>,entities:SharedOriginalStorage<BTreeSet<u64>>,trace:ToolRunTraceStore,recent_trace:std::collections::VecDeque<u64>,counters:Vec<ToolRunCounter>,steps:ToolRunStepRing,checkpoint:Option<Vec<u8>>,announced:Option<(ToolRunState,u64,String)>,port:ToolRunJobPort}
+struct Metadata{tool_id:String,actor:semio_framework_value::SharedUtf8,definition:ToolRunDefinition,settings_values:ToolRunSettingsValues,window:Option<(String,String)>,window_bodies:Vec<String>,payload:Option<SharedOriginalStorage<Vec<u8>>>,trace_keys:ToolRunTraceKeys,entity_marks:Vec<(u32,u64)>,entities:SharedOriginalStorage<BTreeSet<u64>>,trace:ToolRunTraceStore,recent_trace:std::collections::VecDeque<u64>,counters:Vec<ToolRunCounter>,steps:ToolRunStepRing,checkpoint:ToolRunCheckpoint,announced:Option<(ToolRunState,u64,String)>,port:ToolRunJobPort}
 semio_framework_value::artifact_retire_struct!(Metadata{tool_id,actor,definition,settings_values,window,window_bodies,payload,trace_keys,entity_marks,entities,trace,recent_trace,counters,steps,checkpoint,announced,port});
 pub(super) struct ToolRunEntryRetirement<A:ArtifactApp>{operations:semio_plugin_tool_run_operations::OriginalToolRunOperations<A::Snapshot,A::Mutation>,native:crate::original_native_tick::OriginalToolRunNativeState,job:Option<ToolRunJobSlot<A::Config>>,finalize:Option<ToolRunFinalize<A>>,aliases:[Option<Arc<A::Snapshot>>;2],displaced:Vec<Arc<A::Snapshot>>,running:Option<A::Snapshot>,provisional:Vec<A::Mutation>,operation:Option<A::Mutation>,member:Option<ToolRunMemberRun>,retirement:Option<Box<dyn store::ErasedSnapshotRetirement>>,metadata:Option<ControlledRetirement<Metadata>>}
 fn scalar<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
 impl<A:ArtifactApp> ToolRunEntryRetirement<A>{
  pub(super) fn capture_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>()+size_of::<ToolRunEntry<A>>(),capacity_bytes:size_of::<Self>(),release_bytes:size_of::<ToolRunEntry<A>>(),depth:1,..Default::default()}}
  pub(super) fn capture(entry:Box<ToolRunEntry<A>>)->Box<Self>{
-  let ToolRunEntry{retired_next,operations,native,tool_id,actor,definition,slot:_,identity:_,base,base_generation:_,settings_generation:_,settings_values,window,window_bodies,payload,trace_keys,provisional,entity_marks,entities,overlay,refold,trace,recent_trace,stage:_,completed:_,total:_,counters,steps,step_sequence:_,sequence:_,conflicts:_,rate_origin:_,units_per_second:_,job,checkpoint,pending_step:_,finalize,announced,port,displaced,member}=*entry;
+  let ToolRunEntry{retired_next,operations,native,tool_id,actor,definition,slot:_,identity:_,base,base_generation:_,settings_generation:_,settings_values,window,window_bodies,payload,trace_keys,provisional,entity_marks,entities,overlay,refold,trace,recent_trace,stage:_,completed:_,total:_,counters,steps,step_sequence:_,sequence:_,conflicts:_,rate_origin:_,units_per_second:_,job,checkpoint,pending_step:_,step_start:_,finalize,announced,port,displaced,member}=*entry;
   assert!(retired_next.is_none(),"original entry chain is detached before paid capture");
   let metadata=Metadata{tool_id,actor,definition,settings_values,window,window_bodies,payload,trace_keys,entity_marks,entities,trace,recent_trace,counters,steps,checkpoint,announced,port};
   Box::write(Box::new_uninit(),Self{operations,native,job,finalize,aliases:[Some(base),Some(overlay)],displaced,running:refold.and_then(|refold|refold.running),provisional,operation:None,member,retirement:None,metadata:Some(ControlledRetirement::new(metadata).unwrap_or_else(|_|unreachable!("native run metadata declares every retirement field")))})
@@ -20,7 +20,11 @@ impl<A:ArtifactApp> ToolRunEntryRetirement<A>{
  pub(super) fn demand(&self,store:&ArtifactStore<A::Snapshot,A::Mutation>,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.native.terminal_is_empty(){return self.native.next_close_demands(body)}
   if !self.operations.terminal_is_empty(){return self.operations.close_demands(store,body)}
-  if let Some(job)=self.job.as_ref(){return if job.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ToolRunJobSlot<A::Config>>>(),release_bytes:job.scaffold_release_bytes(),depth:1,..Default::default()})}else{job.next_demands(body)}}
+  if let Some(job)=self.job.as_ref(){
+   if !job.closing{return Ok(scalar::<bool>())}
+   if job.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<ToolRunJobSlot<A::Config>>>(),release_bytes:job.scaffold_release_bytes(),depth:1,..Default::default()})}
+   return job.next_demands(body)
+  }
   if let Some(finalize)=self.finalize.as_ref(){
    if let Some(publication)=finalize.publication.as_ref(){return if publication.terminal_is_empty(){Ok(scalar::<Option<store::os_store::one_item_publication::ArtifactStoreBatchPublication<A::Snapshot,A::Mutation>>>())}else{publication.retirement_demands(body)}}
    if !finalize.ingress.terminal_is_empty(){return finalize.ingress.close_demands(body)}
@@ -42,7 +46,15 @@ impl<A:ArtifactApp> ToolRunEntryRetirement<A>{
   let d=self.demand(store,cx.retained_grant().maximum_copy_bytes)?;
   if !self.native.terminal_is_empty(){return self.native.close_with(cx,d).map(|step|RetainedCloneStep::Progress(step.progress()))}
   if !self.operations.terminal_is_empty(){let before=cx.retained_progress();self.operations.close_step(store,cx)?;let after=cx.retained_progress();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}))}
-  if let Some(job)=self.job.as_mut().filter(|job|!job.terminal_is_empty()){job.begin_close();return job.close_step(cx)}
+  if let Some(job)=self.job.as_mut(){
+   if !job.closing{
+    return retired(cx,d,|_|->Result<RetainedCloneStep,RetirementPollExit>{
+     job.begin_close();
+     Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
+    }).map(|step|RetainedCloneStep::Progress(step.progress()))
+   }
+   if !job.terminal_is_empty(){return job.close_step(cx)}
+  }
   if let Some(finalize)=self.finalize.as_mut().filter(|f|f.publication.is_none()&&!f.ingress.terminal_is_empty()){return retired(cx,d,|effect|->Result<RetainedCloneStep,RetirementPollExit>{finalize.ingress.close_step(effect)}).map(|step|RetainedCloneStep::Progress(step.progress()))}
   if self.job.is_none()&&self.finalize.is_none()&&self.retirement.is_none(){if let Some(alias)=self.aliases.iter_mut().find(|alias|alias.is_some()){
    let step=semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx,|effect|store.retire_snapshot_alias(alias,effect).map(|result|match result{Some((owner,p))=>{self.retirement=Some(owner);RetainedCloneStep::Progress(p)},None=>RetainedCloneStep::Progress(Default::default())}))?;

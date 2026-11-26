@@ -134,7 +134,7 @@ test("a graph exchange probes the same cache after a transient restore transport
    observed.push(Number(look.state==="complete"&&look.candidate!==undefined));
   }
   const expected=oracle.query("select value >= ?1 as available from json_each(?2) order by key").values(transportCases.retryMilliseconds,JSON.stringify(transportCases.observations)).flat();
-  expect(observed).toEqual(expected);
+  expect<unknown>(observed).toEqual(expected);
   expect(requests-initial).toBe(1);
  }finally{await proxy.stop(true);}
 });
@@ -177,9 +177,9 @@ test("whole current fetch follows the independent policy model across head and c
    if(closure==="unknown")childLeaves.size=()=>{throw Error("closure store unavailable");};
    const exchange=remoteGenerationExchangeV1({environment:{SEMIO_REMOTE_CACHE_ENDPOINT:receiver.url.origin},workspace:child,identity:async()=>identity,platform,closures:childLeaves})!;
    Object.assign(reader.host,{exchange:{...exchange,async look(options:Parameters<typeof exchange.look>[0]){const found=await exchange.look(options);expect(found,row.name).toMatchObject({state:"complete",ahead:true});looked=true;return found;}},settleClosure:async()=>{effects.push("settle");return"re-derived";},fleetRead:async()=>{effects.push("fleet");}});
-   const result=await loadGenerationGraphV1(reader.host,{policy:"current",lean:true}).then(graph=>({status:"served",graph:graph.graph}),error=>({status:error.code,key:error.missingClosure}));
+   const result=await loadGenerationGraphV1(reader.host,{policy:"current",lean:true}).then((graph):{status:string;graph?:unknown;key?:unknown}=>({status:"served",graph:graph.graph}),(error):{status:string;graph?:unknown;key?:unknown}=>({status:error.code,key:error.missingClosure}));
    expect(effects,row.name).toEqual([]);expect(reader.log,row.name).toEqual([]);
-   expect({status:result.status,sealed:Number(existsSync(pointer))},row.name).toEqual(verdict.get({$head:selectedHead,$closure:closure}));
+   expect<unknown>({status:result.status,sealed:Number(existsSync(pointer))},row.name).toEqual(verdict.get({$head:selectedHead,$closure:closure}));
    if(result.status==="closure-missing")expect(result.key).toBe(one.key);
    if(result.status==="served")expect(Object.keys((result.graph as {projects:object}).projects).sort()).toEqual(["p0","p1","p2","p3","p4","p5","q0"]);
   }

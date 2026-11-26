@@ -4,6 +4,7 @@ import type {HostCapacityPortsV1} from "../../../../../../../🔨️modules/🏃
 import {hostCapacityDirectoryV1,readHostCapacityStatusV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/📖️status/🟦️.ts";
 import {readHostEstimateStoreV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1,createCapacityControlV1} from "../🎛️control/🟦️.ts";
+import {readUnitWaitsV1,unitWaitLinesV1} from "../⏳️unit-waits/🟦️.ts";
 import {writeDiagnosticLineV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/📤️output/🟦️.ts";
 import {terminateOwnedChildTreeGracefullyV1} from "../../../../../../../🔨️modules/🏃️process/🪓️termination/🟦️.ts";
 
@@ -27,13 +28,15 @@ async function status(head:readonly string[],context:CapacityCommandContextV1,po
  try{
   const now=context.now??Date.now,warden=readHostWardenStateV1(directory,now()),snapshot=await readHostCapacityStatusV1({...context,directory,policy,control:control.control});
   const sessions=agentSessionCapacityRowsV1(snapshot,agentSessionRegistryRootV1(context.environment),context.now===undefined?{}:{now:context.now()});
-  if(head.includes("--json")){context.write(JSON.stringify({...snapshot,warden,sessions,estimates:readHostEstimateStoreV1(directory)},null,2));return 0;}
+  const unitWaits=readUnitWaitsV1(directory,now());
+  if(head.includes("--json")){context.write(JSON.stringify({...snapshot,warden,sessions,unitWaits,estimates:readHostEstimateStoreV1(directory)},null,2));return 0;}
   const language=resolveHostCapacityLanguageV1(context.environment),host=snapshot.host;
   context.write(formatHostCapacityV1(language,"status",{available:host.availableMegabytes,total:host.totalMegabytes,floor:snapshot.evaluation.floorMegabytes,spare:snapshot.evaluation.headroomMegabytes,pressure:host.pressure,swap:host.swapUsedMegabytes??"n/a",load:host.load??"n/a",files:host.openFiles??"n/a",images:host.attachedImages??"n/a",grants:snapshot.grants.length,waiters:snapshot.waiters.length}));
   if(host.counters==="partial")context.write(formatHostCapacityV1(language,"countersPartial",{platform:host.platform,reason:language==="de"?"Probe fehlgeschlagen":"probe failed"}));
   for(const line of formatHostWardenStatusV1(language,warden))context.write(line);
   for(const grant of snapshot.grants)context.write(formatHostCapacityV1(language,grant.lentSinceMs!==undefined?"grantLent":grant.quiet===true?"grantQuiet":"grant",{id:grant.id,operation:grant.operation,jobs:grant.jobs,cpu:grant.cpu,reserved:grant.reservedMegabytes,observed:grant.observedMegabytes??"n/a",pid:grant.pid,seconds:Math.round((now()-(grant.lentSinceMs??grant.admittedAtMs))/1000)})+(grant.phase===undefined?"":` [${grant.phase}]`));
   for(const waiter of snapshot.waiters)context.write(formatHostCapacityV1(language,waiter.upgrade===true?"waiterUpgrade":"waiter",{id:waiter.request.id,operation:waiter.request.operation,jobs:waiter.request.preferredJobs,need:waiter.request.fixedMegabytes+waiter.request.minimumJobs*waiter.request.perJobMegabytes,pid:waiter.pid,seconds:Math.round((now()-waiter.arrivedAtMs)/1000)}));
+  for(const line of unitWaitLinesV1(language,unitWaits,now()))context.write(line);
   for(const line of renderAgentSessionCapacityV1(sessions,language))context.write(line);
   return 0;
  }finally{control.dispose();}
@@ -45,7 +48,7 @@ async function run(head:readonly string[],command:readonly string[],context:Capa
  const {agentSessionAddressV1,currentAgentSessionV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts");
  const {newHostCapacityIdV1,readLiveHostCapacityReservationV1,withHostCapacityV1}=await import("../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts");
  const memory=positive(flag(head,"memory"),"memory"),cpu=positive(flag(head,"cpu"),"cpu"),jobs=positive(flag(head,"jobs"),"jobs"),operation=flag(head,"operation")??"command";
- const sized:HostRequestV1|undefined=memory!==undefined?requireHostCapacityV1<HostRequestV1>("Request",{id:newHostCapacityIdV1(),operation:"command",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:0,minimumMegabytes:memory,perJobMegabytes:memory,cpuPerJob:cpu??1}):sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation,...jobs!==undefined?{preferredJobs:jobs}:{}});
+ const sized:HostRequestV1|undefined=memory!==undefined?requireHostCapacityV1<HostRequestV1>("Request",{id:newHostCapacityIdV1(),operation:"command",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:0,minimumMegabytes:memory,perJobMegabytes:memory,cpuPerJob:cpu??1,retainReservation:true}):sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation,...jobs!==undefined?{preferredJobs:jobs}:{}});
  if(!sized)throw Error(`Unknown capacity operation: ${operation}`);
  const waiting=createCapacityControlV1();
  try{
@@ -54,7 +57,7 @@ async function run(head:readonly string[],command:readonly string[],context:Capa
    const environment={...context.environment,...handle.environment,...handle.plan.jobs>0&&sized.perJobMegabytes>0?{SEMIO_BUILD_PARALLEL:String(handle.jobs)}:{}};
    if(memory!==undefined){
     const grant=handle.bypassed?undefined:readLiveHostCapacityReservationV1({...environment,SEMIO_HOST_CAPACITY_DIRECTORY:directory},policy);
-    if(grant?.id!==handle.id||grant.reservedMegabytes<memory||grant.cpu<sized.cpuPerJob){
+    if(grant?.id!==handle.id||grant.retainReservation!==true||grant.reservedMegabytes<memory||grant.cpu<sized.cpuPerJob){
      throw hostCapacityErrorV1("exactGrantRequired",{minimum:memory,cores:sized.cpuPerJob,reserved:grant?.reservedMegabytes??0,availablecores:grant?.cpu??0},environment);
     }
    }

@@ -58,6 +58,7 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {ensureRepositoryCargoLockV1} from "../../../🗂️workspaces/🦀️cargo/🔒️lock/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {CATALOG_LANGUAGES_V1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
+import {createCargoOverheadSamplerV1} from "./📈️overhead/🟦️.ts";
 const authored=schema.definitions.Configuration.const;
 
 /** 🧾️ One admitted ad-hoc Cargo command: its explicit store, build configuration, core share and closed subcommand class. */
@@ -244,7 +245,7 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
      try{
       const observations:UnitObservationV1[]=[];
       const physical=admissionMemoryBytesV1(),parentMemoryAllowanceBytes=parentCompilerMemoryAllowanceBytesV1(environment);
-      const broker=await startAdmissionBrokerV1({physicalBytes:admissionMemoryShareV1(physical,local,availableParallelism()),reserveBytes:admissionReserveBytesV1(physical),parentMemoryAllowanceBytes,growth:(await import("../../../🏗️build/🌡️host-capacity/🟦️.ts")).createGrantGrowthPortV1({environment}),history,localHistory,log:spaceReport,onVerifiedLocal(unit){
+      const broker=await startAdmissionBrokerV1({physicalBytes:admissionMemoryShareV1(physical,local,availableParallelism()),reserveBytes:admissionReserveBytesV1(physical),parentMemoryAllowanceBytes,growth:(await import("../../../🏗️build/🌡️host-capacity/🟦️.ts")).createGrantGrowthPortV1({environment}),onWaits:(await import("../../../🏗️build/🌡️host-capacity/⏳️unit-waits/🟦️.ts")).createUnitWaitPublisherV1(environment),history,localHistory,log:spaceReport,onVerifiedLocal(unit){
        const row=localUnitObservationV1(unit,artifact=>{
         const directory=dirname(artifact);
         return unitOutputBytesV1(artifact,readdirSync(directory),name=>statSync(join(directory,name)).size);
@@ -252,9 +253,9 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
        if(row)observations.push(row);
       }});let previous:Readonly<{atMs:number;bytes:number}>|undefined,sampler:ReturnType<typeof startTelemetrySamplerV1>|undefined;let executionFailed=false,executionFailure:unknown;
       try{
-      const ownerBytes=()=>parentMemoryAllowanceBytes===undefined?0:process.memoryUsage.rss();
-      broker.observe({nonRustcBytes:ownerBytes(),swapOutBytesPerSecond:null});
-      sampler=startTelemetrySamplerV1(cpuControl,async sampleControl=>{const counters=await memoryCountersV1(sampleControl),atMs=Date.now(),rate=previous&&counters.swappedOutBytes!==null?Math.max(0,(counters.swappedOutBytes-previous.bytes)*1000/Math.max(1,atMs-previous.atMs)):null;if(counters.swappedOutBytes!==null)previous={atMs,bytes:counters.swappedOutBytes};broker.observe({nonRustcBytes:ownerBytes(),swapOutBytesPerSecond:rate});},policy.swapSampleMilliseconds);
+      const overhead=parentMemoryAllowanceBytes===undefined?undefined:createCargoOverheadSamplerV1();
+      broker.observe({nonRustcBytes:overhead?process.memoryUsage.rss():0,swapOutBytesPerSecond:null});
+      sampler=startTelemetrySamplerV1(cpuControl,async sampleControl=>{const counters=await memoryCountersV1(sampleControl),atMs=Date.now(),rate=previous&&counters.swappedOutBytes!==null?Math.max(0,(counters.swappedOutBytes-previous.bytes)*1000/Math.max(1,atMs-previous.atMs)):null;if(counters.swappedOutBytes!==null)previous={atMs,bytes:counters.swappedOutBytes};broker.observe({nonRustcBytes:overhead?await overhead(broker.runningSchedulerPids()):0,swapOutBytesPerSecond:rate});},policy.swapSampleMilliseconds);
 
       broker.registerPass({id:policy.pass,profile:cargoRequestedProfileV1(compilerArgs)!,target:cargoTargetV1(compilerArgs)});for(const line of nativeBuildDiagnosticLinesV1(request.store==="shared"?"repoCargoAdmittedShared":"repoCargoAdmittedIsolated",{tokens:local,cores:availableParallelism(),budget:(broker.stats().budgetBytes/1024**3).toFixed(1)}))process.stderr.write(line+"\n");mark("scheduler","end");await profilePhaseV1("cargo.body.lock-check",()=>ensureRepositoryCargoLockV1({workspaceRoot:workspace,cwd,program:"cargo",prefix:[],args:compilerArgs,environment:env,control:cpuControl,force:false}));const runAttempt=()=>jobserver.withClient(inherited=>execute(compilerArgs,{...env,...inherited,RUSTC_WRAPPER:scheduler,...("lane"in selected&&selected.lane?unitCacheEnvironmentV1({cacheRoot:unitCacheRootV1(store.root),lane:selected.lane.id,laneRoot:selected.lane.root,scheduler,compiler:env.RUSTC??"rustc",toolchain:store.toolchain.digest,focus:focusFromCargoArgumentsV1(compilerArgs),...fleet&&fleet.remote>0?{slots:Number(env.SEMIO_UNIT_CACHE_SLOTS)||local,lightSlots:fleet.remote}:{},features:{buildScripts:true}}):{}),[ADMISSION_POLICY_V1.brokerEnvironment]:broker.endpoint,[ADMISSION_POLICY_V1.passEnvironment]:policy.pass,SEMIO_COMPILER_PARALLELISM:String(local),CARGO_BUILD_JOBS:String(tokens)},cpuControl));
        const compile=async()=>{

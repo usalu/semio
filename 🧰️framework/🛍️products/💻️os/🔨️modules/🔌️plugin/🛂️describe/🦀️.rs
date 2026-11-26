@@ -94,13 +94,14 @@ async fn plugin_panels(apps: &[AppDefinition]) -> Vec<PanelTabDefinition> {
 /// 💡️ This plugin's frozen first-party inference roster (`owner == plugin_id`), including
 /// metadata-only ActionBus cold routes that deliberately have no synchronous service facade.
 async fn plugin_inference_services<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, plugin_id: &str) -> Vec<ContributedInferenceMetadata> {
+    let runtime_hosted = io::runtime_hosted_artifact_kinds();
     let bytes = crate::extension_runtime_lift::plugin_wire_list_artifact_inference_services(runtime).await.unwrap_or_default();
     std::str::from_utf8(&bytes)
         .ok()
         .and_then(|text| semio_framework_pack_json::from_json_str::<Vec<semio_plugin_plugin_program::WireArtifactInferenceMetadata>>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok())
         .unwrap_or_default()
         .into_iter()
-        .filter(|metadata| metadata.owner == plugin_id)
+        .filter(|metadata| metadata.owner == plugin_id || runtime_hosted.contains(&metadata.artifact_kind))
         .map(|metadata| ContributedInferenceMetadata {
             owner: metadata.owner.clone(),
             artifact_kind: metadata.artifact_kind,
@@ -133,8 +134,9 @@ async fn plugin_inference_services<PA: semio_plugin_reactor_app::PluginApp>(runt
 async fn plugin_io_contributions(plugin_id: &str) -> (Vec<IoEntryDescriptor>, Vec<ComposerEntryDescriptor>) {
     let mut io_entries = Vec::new();
     let mut composer_entries = Vec::new();
+    let runtime_hosted = io::runtime_hosted_artifact_kinds();
     for (writes, reads) in io::list_composer_entries().await.unwrap_or_default() {
-        if !owns_artifact_kind(plugin_id, &writes.artifact_kind).await {
+        if !owns_artifact_kind(plugin_id, &writes.artifact_kind).await && !runtime_hosted.contains(&writes.artifact_kind) {
             continue;
         }
         for read in &reads {
@@ -143,7 +145,7 @@ async fn plugin_io_contributions(plugin_id: &str) -> (Vec<IoEntryDescriptor>, Ve
         composer_entries.push(ComposerEntryDescriptor { writes, reads });
     }
     for route in io::io_mechanism::io_native_routes() {
-        if !owns_artifact_kind(plugin_id, &route.native.artifact_kind).await {
+        if !owns_artifact_kind(plugin_id, &route.native.artifact_kind).await && !runtime_hosted.contains(&route.native.artifact_kind) {
             continue;
         }
         let direction = match route.direction {

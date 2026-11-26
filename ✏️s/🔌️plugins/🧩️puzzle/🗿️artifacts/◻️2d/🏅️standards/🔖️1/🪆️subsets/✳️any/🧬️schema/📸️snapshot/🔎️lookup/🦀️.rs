@@ -3,10 +3,13 @@
 use crate::Puzzle2dSnapshot;
 use semio_framework_value::paged::PagedUtf8;
 use semio_framework_value::paged::retained_clone::cursors::PagedUtf8BoundedOrdCursor;
-use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkPoll, RetirementPollExit, ValueError, ValueRefusalKind};
-use semio_framework_value::retained_clone::{OriginalEffectReply, OriginalEffectReplyComplete, RetainedCloneBinding, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, ordered_map::{BoundedOrdCursor, BoundedOrdGrant}};
+use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetirementPollExit, ValueError, ValueRefusalKind};
+use semio_framework_value::retained_clone::{RetainedCloneBinding, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, ordered_map::{BoundedOrdCursor, BoundedOrdGrant}};
 
 const COMPARE_BYTES: usize = 64;
+
+#[path = "🫳️borrowed/🦀️.rs"]
+pub mod borrowed;
 
 pub use semio_s_artifact_puzzle_2d_records::standards::v1::subsets::any::schema::preparation::native_preparation_child::{pay, replied, settled_step};
 
@@ -16,9 +19,13 @@ pub struct Puzzle2dIdentifierComparison { cursor: PagedUtf8BoundedOrdCursor<{usi
 
 impl Puzzle2dIdentifierComparison {
     pub fn compare(&mut self, left: RetainedCloneRef<'_, PagedUtf8<{usize::MAX}>>, right: RetainedCloneRef<'_, PagedUtf8<{usize::MAX}>>, effect: &mut RetainedAllocationEffect<'_>) -> Result<(Option<std::cmp::Ordering>, RetainedCloneProgress), ValueError> {
+        self.compare_with_limit(left, right, COMPARE_BYTES, effect)
+    }
+
+    fn compare_with_limit(&mut self, left: RetainedCloneRef<'_, PagedUtf8<{usize::MAX}>>, right: RetainedCloneRef<'_, PagedUtf8<{usize::MAX}>>, maximum_comparison_bytes: usize, effect: &mut RetainedAllocationEffect<'_>) -> Result<(Option<std::cmp::Ordering>, RetainedCloneProgress), ValueError> {
         let grant = effect.grant();
-        let window = BoundedOrdGrant { maximum_items: grant.maximum_items, maximum_bytes: grant.maximum_copy_bytes.min(COMPARE_BYTES) };
-        let step = replied(effect, |effect, reply, recover| if recover { self.cursor.recover_compare_into(left, right, window, COMPARE_BYTES, effect, reply) } else { self.cursor.compare_into(left, right, window, COMPARE_BYTES, effect, reply) })?;
+        let window = BoundedOrdGrant { maximum_items: grant.maximum_items, maximum_bytes: maximum_comparison_bytes.min(COMPARE_BYTES) };
+        let step = replied(effect, |effect, reply, recover| if recover { self.cursor.recover_compare_into(left, right, window, window.maximum_bytes, effect, reply) } else { self.cursor.compare_into(left, right, window, window.maximum_bytes, effect, reply) })?;
         Ok((self.cursor.ordering(), step.progress()))
     }
 
@@ -89,6 +96,11 @@ impl Puzzle2dLookupCursor {
     }
 
     pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, target: RetainedCloneRef<'_, PagedUtf8<{usize::MAX}>>, effect: &mut RetainedAllocationEffect<'_>) -> Result<Puzzle2dLookupStep, ValueError> {
+        self.advance_with_comparison_limit(source, target, COMPARE_BYTES, effect)
+    }
+
+    /// 🧮️ Limits paired identifier bytes compared in one turn independently of the effect's retained-state budget.
+    pub fn advance_with_comparison_limit(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, target: RetainedCloneRef<'_, PagedUtf8<{usize::MAX}>>, maximum_comparison_bytes: usize, effect: &mut RetainedAllocationEffect<'_>) -> Result<Puzzle2dLookupStep, ValueError> {
         if self.closing || self.spent { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "native lookup cursor is closing or spent")); }
         let grant = effect.grant();
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(Puzzle2dLookupStep::Pending(Default::default())); }
@@ -116,7 +128,7 @@ impl Puzzle2dLookupCursor {
         let scope = self.scope;
         let (outer, inner) = (self.outer, self.inner);
         let candidate = source.try_project(1, |snapshot| scope.identifier(snapshot, outer, inner).ok_or_else(|| ValueError::invariant("immutable native lookup candidate is absent")))?;
-        let (ordering, progress) = self.comparison.compare(candidate, target, effect)?;
+        let (ordering, progress) = self.comparison.compare_with_limit(candidate, target, maximum_comparison_bytes, effect)?;
         let Some(ordering) = ordering else { return Ok(Puzzle2dLookupStep::Pending(progress)) };
         if ordering == std::cmp::Ordering::Equal {
             let location = Some(Puzzle2dLookupLocation { outer, inner: (scope == Puzzle2dLookupScope::Handle).then_some(inner) });

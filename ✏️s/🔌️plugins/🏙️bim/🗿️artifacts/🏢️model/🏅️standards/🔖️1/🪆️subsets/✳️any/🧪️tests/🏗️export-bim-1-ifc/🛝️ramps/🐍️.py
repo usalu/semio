@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 import ifcopenshell.util.element
 
-from export_bim_ifc_kernel import TOLERANCE, identity, settings, kernel_volume, authored, quantities_of, close
+from export_bim_ifc_kernel import TOLERANCE, identity, settings, kernel_volume, closed_shell_problems, authored, quantities_of, close
 # endregion 🔖️Imports
 
 
@@ -64,9 +64,11 @@ def ramp_problems(model, snapshot, runs):
             if not (close(values.get("Length", -1), row["length"]) and close(values.get("Width", -1), run["width"])):
                 problems.append("%s: landing %s quantities %s, run %.12g x %.12g" % (ramp_id, part.Tag, values, row["length"], run["width"]))
         values = quantities_of(element, "Qto_RampBaseQuantities")
-        for name, want in (("Length", run["length"]), ("Width", run["width"]), ("Height", run["rise"]), ("GrossArea", run["width"] * run["length"])):
+        for name, want in (("Length", run["length"]), ("Width", run["width"]), ("Height", abs(run["rise"])), ("GrossArea", run["width"] * run["length"])):
             if name not in values or not close(values[name], want, 1e-9 if name != "GrossArea" else 1e-6):
                 problems.append("%s: Qto_RampBaseQuantities.%s is %s, the run says %.12g" % (ramp_id, name, values.get(name), want))
+        for part in flights + landings:
+            problems.extend(closed_shell_problems(part))
         volumes = [kernel_volume(kernel, part) for part in flights + landings]
         if any(volume is None for volume in volumes):
             problems.append("%s: the kernel has no geometry for a flight or a landing" % ramp_id)

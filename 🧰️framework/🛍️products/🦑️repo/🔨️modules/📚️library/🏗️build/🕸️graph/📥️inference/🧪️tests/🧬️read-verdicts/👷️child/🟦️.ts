@@ -8,3 +8,4 @@ const before=OB.observationProbeCountsV1().readdir;
 await SI.withClosurePassV1(()=>SI.primeSharedClosuresV1(root,{},{recipes}),dir===""?{}:{verdicts:dir});
 console.log("CHILD "+JSON.stringify({probes:OB.observationProbeCountsV1().readdir-before,layers:SI.layerVerdictCountsV1(),entries:SI.closureEntryCountsV1(),verdicts:SI.closureVerdictCountsV1?.()}));
 process.exit(0);
+export{};

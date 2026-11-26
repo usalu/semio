@@ -138,7 +138,7 @@ test("a seeded record is only a candidate: the seam looks it up again against th
 });
 
 test("a burst of offers is not dropped: every record reaches the cache although more than the pending limit is offered at once, and the progress line says how many were taken and inferred",async()=>{
- const {server,client:_c}=await world();
+ const {server}=await world();
  try{
   const root=temp("burst"),lines:string[]=[],port=createProjectFleetPortV1({root,environment:{...environment0(server),SEMIO_LANGUAGE:"de"},owner:"b:1",say:line=>lines.push(line)})!;
   mkdirSync(join(root,"np"),{recursive:true});

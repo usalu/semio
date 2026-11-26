@@ -14,13 +14,17 @@ import type{OwnerPoolStatusV1}from"../../📊️status/🟦️.ts";
 import{OWNER_POOL_CHILD_EXIT_V1}from"../../🧒️child/🟨️.mjs";
 import fixture from"../🧫️fixtures/🔣️.json"with{type:"json"};
 import{ownerPoolHostOfV1}from"../../../../../../🌐️remote-execution/🛰️sidecar/🏊️pool/🟦️.ts";
+import{readRemoteExecutionHostViewV1}from"../../../../../../🌐️remote-execution/🌡️load/🟦️.ts";
+import{Database}from"bun:sqlite";
+import{writeFileSync}from"node:fs";
+import retained from"./🔣️retained.json"with{type:"json"};
 
 const scratch:string[]=[];
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 const temp=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`owner-pool-budget-${label}-`));scratch.push(path);return path;};
 const sha=(text:string)=>createHash("sha256").update(text).digest("hex");
 const driverPath=join(import.meta.dir,"..","🧫️fixtures","🧮️driver.mjs");
-const host=(over:Partial<OwnerPoolHostV1>&{foreground?:Partial<OwnerPoolHostV1["foreground"]>}={}):OwnerPoolHostV1=>({cores:8,totalMegabytes:16384,availableMegabytes:9000,pressure:"normal",load:null,swapOutMegabytesPerSecond:null,idleCores:null,...over,foreground:{cpu:0,unrealizedMegabytes:0,waiters:0,...over.foreground}});
+const host=(over:Omit<Partial<OwnerPoolHostV1>,"foreground">&{foreground?:Partial<OwnerPoolHostV1["foreground"]>}={}):OwnerPoolHostV1=>({cores:8,totalMegabytes:16384,availableMegabytes:9000,pressure:"normal",load:null,swapOutMegabytesPerSecond:null,idleCores:null,...over,foreground:{cpu:0,unrealizedMegabytes:0,waiters:0,...over.foreground}});
 const serverAt0941:OwnerPoolHostV1={cores:10,totalMegabytes:32768,availableMegabytes:15851,pressure:"normal",load:43.45,swapOutMegabytesPerSecond:0,idleCores:0,foreground:{cpu:11,unrealizedMegabytes:9966,waiters:0,oldestWaitMilliseconds:0}};
 
 test("the server of 09:41: the read's untouched reservation no longer leaves the pool one child, and the share held back is stated",()=>{
@@ -96,6 +100,66 @@ async function world(){
  return{server,environment:{SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"w",SEMIO_REMOTE_CACHE_INSTANCE:"main"}};
 }
 const watch=(patches:Record<string,unknown>[])=>({update(patch:Record<string,unknown>){patches.push({...patch});},flush(){},current:()=>({})});
+
+const retainedView=(row:typeof retained.cases[number])=>({
+ host:{version:1,atMs:Date.now(),platform:"darwin",cores:8,totalMegabytes:retained.hostMegabytes,availableMegabytes:row.available,pressure:"normal",load:null,swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,openFiles:100,openFilesMaximum:100000,attachedImages:0},
+ ...row.grants===undefined?{}:{grants:row.grants.map(({reserved,observed,...grant})=>({...grant,jobs:1,cpu:1,reservedMegabytes:reserved,observedMegabytes:observed,admittedAtMs:1,pid:1,bootAtMs:0}))},
+ waiters:[]
+});
+
+test("retained ledger rows reach the pool as full unspent memory",async()=>{
+ const db=new Database(":memory:"),directory=temp("retained"),file=join(directory,"view.json");
+ const environment={SEMIO_REMOTE_EXECUTION_HOST_VIEW:file,SEMIO_HOST_CAPACITY_DIRECTORY:directory};
+ const oracle=db.query(`with grants as (
+   select json_extract(value,'$.id') id, json_extract(value,'$.holder') holder, json_extract(value,'$.label') label,
+     max(0,json_extract(value,'$.reserved')-coalesce(json_extract(value,'$.observed'),0)) remaining,
+     coalesce(json_extract(value,'$.quiet'),0)=0 and (json_extract(value,'$.operation')='graph-plan' or coalesce(json_extract(value,'$.retainReservation'),0)=1) retained
+   from json_each(?1) where json_extract(value,'$.lentSinceMs') is null
+ ), commitments as (
+   select coalesce(sum(case retained when 1 then remaining else 0 end),0) durable,
+     coalesce(sum(case retained when 0 then remaining*case label when 'graph-farm' then ?2/10000.0 else 1 end else 0 end),0) forecast
+   from grants where holder is null or holder not in (select id from grants where retained)
+ )
+ select durable, cast(forecast as int) forecast,
+   max(0,?6+floor((?3-?4-durable-min(cast(forecast as int),?5))*1.0/?7)) children
+ from commitments`);
+ try{
+  for(const row of retained.cases){
+   writeFileSync(file,JSON.stringify(retainedView(row)));
+   const host=ownerPoolHostOfV1(await readRemoteExecutionHostViewV1(environment));
+   const want=oracle.get(JSON.stringify(row.grants??[]),retained.farmShareBasisPoints,row.available,retained.floorMegabytes,
+    Math.floor(retained.hostMegabytes*retained.softShareBasisPoints/10000),row.children,retained.childMegabytes) as {durable:number;forecast:number;children:number};
+   expect(want.children,row.name).toBe(row.expected);
+   expect(host.foreground.unrealizedMegabytes,row.name).toBe(want.forecast);
+   expect(host.foreground.retainedUnrealizedMegabytes??0,row.name).toBe(want.durable);
+   expect(ownerPoolSizingV1({host,children:row.children,childMegabytes:retained.childMegabytes}).children,row.name).toBe(want.children);
+  }
+ }finally{db.close();}
+});
+
+test("the owner runner starts a child only after it fits beside the retained graph reservation",async()=>{
+ const {server,environment}=await world(),root=temp("retained-runner");
+ const file=join(root,"view.json"),env={...environment,SEMIO_REMOTE_EXECUTION_HOST_VIEW:file,SEMIO_HOST_CAPACITY_DIRECTORY:root};
+ const client=graphFleetClientV1(graphFleetSettingsV1(root,environment)!,{fetch:remoteCacheFetchV1(environment,{root})});
+ const blocked=retained.cases[1]!,fitting=retained.cases[2]!,controller=new AbortController(),entered=Error("fixture spawn");
+ let seenBlocked=false,launches=0;
+ try{
+  writeFileSync(file,JSON.stringify(retainedView(blocked)));
+  expect(await publishOwnerPoolV1({client,owner:"o",manifest:manifestOf(unitsOf(1),"retained",{revision:"revision-a"})})).toBe(true);
+  const capacity=async(input:{children:number;childMegabytes:number})=>ownerPoolSizingV1({host:ownerPoolHostOfV1(await readRemoteExecutionHostViewV1(env)),...input});
+  const status={update(patch:Partial<OwnerPoolStatusV1>){
+   if(patch.target===0&&patch.reason==="nothing-fits"&&!seenBlocked){
+    seenBlocked=true;writeFileSync(file,JSON.stringify(retainedView(fitting)));
+   }
+  }};
+  const running=runOwnerPoolV1({root,environment:env,totalMegabytes:retained.hostMegabytes,signal:AbortSignal.any([controller.signal,AbortSignal.timeout(5000)]),
+   capacity,spawn:()=>{launches++;throw entered;},revision:"revision-a",targetPollMilliseconds:20,status,
+  });
+  await expect(running).rejects.toBe(entered);
+  expect(seenBlocked).toBe(true);
+  expect(launches).toBe(1);
+ }finally{controller.abort();await server.stop();}
+},15000);
 
 test("a pool with claimable work that waits states the exact numbers in English and German: what the next child needs, what is free above the floor, what the machine's own work holds, who runs",async()=>{
  const {server,environment}=await world();

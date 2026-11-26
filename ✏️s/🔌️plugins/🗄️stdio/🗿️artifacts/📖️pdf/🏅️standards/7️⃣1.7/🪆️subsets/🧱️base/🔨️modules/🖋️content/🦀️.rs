@@ -644,7 +644,7 @@ fn push_string(out: &mut Vec<u8>, bytes: &[u8]) {
 
 /// 🖨️ Prints typed operators as a content stream (one operator per line).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn print_content(ops: &[PdfOp], fonts: &dyn FontTable) -> PResult<Vec<u8>> {
+pub fn print_content<'a>(ops: impl IntoIterator<Item = &'a PdfOp>, fonts: &dyn FontTable) -> PResult<Vec<u8>> {
     let mut out = Vec::new();
     let mut current_font: Option<String> = None;
     let mut font_stack: Vec<Option<String>> = Vec::new();
@@ -978,7 +978,7 @@ fn push_properties(out: &mut Vec<u8>, properties: &PdfPropertyList) {
 /// 🔤 The Unicode text `ops` show, decoding raw codes through `fonts` where possible; runs are
 /// separated by newlines where the stream starts a new line.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn extract_text(ops: &[PdfOp], fonts: &dyn FontTable) -> String {
+pub fn extract_text<'a>(ops: impl IntoIterator<Item = &'a PdfOp>, fonts: &dyn FontTable) -> String {
     let mut out = String::new();
     let mut current: Option<String> = None;
     let mut stack: Vec<Option<String>> = Vec::new();
@@ -1056,7 +1056,7 @@ fn push_unique(list: &mut Vec<String>, name: &str) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn content_references(ops: &[PdfOp]) -> ContentReferences {
+pub fn content_references<'a>(ops: impl IntoIterator<Item = &'a PdfOp>) -> ContentReferences {
     let mut refs = ContentReferences::default();
     for op in ops {
         match op {

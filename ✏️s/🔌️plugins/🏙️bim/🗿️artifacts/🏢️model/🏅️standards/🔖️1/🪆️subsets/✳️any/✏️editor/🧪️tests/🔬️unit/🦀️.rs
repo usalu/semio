@@ -1,5 +1,17 @@
 use semio_plugin::{ArtifactEditor, DslValue, ViewModel};
-use semio_s_artifact_bim_model_bim::editor::bim::{BIM_TOOL_IDS, BimCommand, BimModelApp, command_actions, create_bim_app};
+use semio_s_artifact_bim_model_bim::editor::bim::{BIM_TOOL_IDS, BimCommand, BimModelApp, bim_fault_notices, create_bim_app};
+
+#[test]
+fn model_export_declares_the_segmented_output_allowance() {
+    use semio_plugin::{ArtifactEditor, app::ArtifactOutputChunks};
+    let proofs = BimModelApp::bounded_first_step_tool_proofs();
+    let export = proofs.iter().find(|proof| proof.tool_id() == "exportModel").expect("model export proof");
+    assert_eq!(export.contract.max_output_bytes, ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES);
+    assert_eq!(export.contract.max_work_units_per_step, export_model::MOUNTED_WORK_UNITS);
+    assert!(proofs.iter().filter(|proof| proof.tool_id() != "exportModel").all(|proof| {
+        proof.contract.max_output_bytes == 262_144 && proof.contract.max_work_units_per_step == 1
+    }));
+}
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::{BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
 use semio_s_artifact_bim_model_bim::editor::bim::commands::{analyse_model, canvas_double_click, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, export_model};
 use semio_s_artifact_bim_model_move_storey::editor::bim::commands::{apply_template, conditions, edit_classification, edit_template, place_elements, place_grid_columns, remove_classification, remove_property, search_classification, select_findings, set_classification, set_property, split_wall};
@@ -171,8 +183,9 @@ async fn every_command_round_trips_through_text_and_binary() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_command_row_declares_a_manifest_action_with_a_description() {
-    let actions = command_actions();
-    assert_eq!(actions.iter().map(|action| action.id.as_str()).collect::<Vec<_>>(), BIM_TOOL_IDS);
+    let manifest = create_bim_app();
+    let actions = manifest.actions.iter().filter(|action| BIM_TOOL_IDS.contains(&action.id.as_str()));
+    assert_eq!(actions.map(|action| action.id.as_str()).collect::<Vec<_>>(), BIM_TOOL_IDS);
 }
 //#endregion 🔖️CommandSurface
 
@@ -434,6 +447,6 @@ async fn every_refusal_code_the_commands_raise_has_an_english_and_a_german_notic
 semio_plugin::history_edit_acceptance_law!(
     "bim",
     semio_s_artifact_bim_model_bim::editor::bim::BimModelApp,
-    context::bim_app_manifest_for_tests,
+    semio_s_artifact_bim_model_bim::editor::bim::fixture::context::bim_app_manifest_for_tests,
     "../../🏅️standards/🔖️1/🪆️subsets/✳️any"
 );

@@ -3,7 +3,7 @@
 import{expect,test}from"bun:test";
 import Ajv from"ajv";
 import schema from"../../🧬️schema/🔣️.json"with{type:"json"};
-import source from"../../../🟨️.mjs"with{type:"text"};
+const source=await Bun.file(new URL("../../../🟨️.mjs",import.meta.url)).text();
 const{createTakeLedgerV1,createAdoptCountersV1,staleRowEventV1}=await import("../../🟨️.mjs") as any;
 
 const row={kind:"file",path:"/r/a.ts",fact:"{}",recorded:"aaaaaaaaaaaa",current:"bbbbbbbbbbbb"};

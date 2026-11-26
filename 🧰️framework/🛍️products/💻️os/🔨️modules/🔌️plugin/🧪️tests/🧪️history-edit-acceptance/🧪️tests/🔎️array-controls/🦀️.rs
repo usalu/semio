@@ -51,3 +51,22 @@ fn history_edit_acceptance_array_slots_retain_all_five_primitive_controls_and_ex
         assert!(acceptance_change_buckets(&[hidden], before).iter().all(Vec::is_empty));
     }
 }
+
+#[test]
+fn history_edit_acceptance_option_uses_the_default_only_when_omitted() {
+    let corpus = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(include_str!("🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
+    let fixture = corpus.get("optionDefaults").unwrap();
+    let pointer = fixture.get("pointer").and_then(DslValue::as_str).unwrap();
+    let label = LocalizedLabel::native("Anchor", "Anker");
+    let mut schema = item_schema("option");
+    let ArgSchema::String { options, .. } = &mut schema else { unreachable!() };
+    *options = fixture.get("options").and_then(DslValue::as_array).unwrap()
+        .iter().map(|value| semio_framework::ActionArgOption { value: value.as_str().unwrap().into(), label: label.clone() }).collect();
+    let input = ActionArgDef { default: fixture.get("default").cloned(), nullable: true, ..ActionArgDef::with_schema(pointer, label, schema) };
+    for case in fixture.get("cases").and_then(DslValue::as_array).unwrap() {
+        let changes = acceptance_change_buckets(std::slice::from_ref(&input), case.get("before").unwrap());
+        assert!(changes.iter().enumerate().all(|(index, bucket)| index == 2 || bucket.is_empty()));
+        assert!(changes[2].iter().all(|(path, _)| path == pointer));
+        assert_eq!(changes[2].iter().map(|(_, value)| value.clone()).collect::<Vec<_>>(), case.get("expected").and_then(DslValue::as_array).unwrap());
+    }
+}

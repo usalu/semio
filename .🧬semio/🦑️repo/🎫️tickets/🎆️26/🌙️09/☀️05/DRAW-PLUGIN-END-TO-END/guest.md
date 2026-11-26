@@ -171,3 +171,58 @@ The cache-only Wasmtime 47.0.3 harness loaded the same fcc8 AOT file with the se
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧪️tests/🔬️quick/🦀️.rs`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧪️tests/🔬️quick/🏁️child-heads-hub-commit-and-probe-pack/🦀️.rs`
 - `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/guest.md`
+
+## November 26 final compiler placement and composition split
+
+The [CAS and final-placement report](draw-final-cas.md) records the active sealed run, single-endpoint 507, measured serial peak, managed declaration, paid parent and physical floor. Its offload owner passed 13 tests. The native parent, growth and replay owners passed 18 tests. The insufficient physical sample reproduced early execution before the floor repair.
+
+The [hub split report](hub-app-carve.md) records the role cut, WASI object attribution, and successful independent projected source check. The applied locale-independent role package boundaries preserve the Draw composition behavior. The parent owns the currently running actual WASI measurement and publication.
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🧪️tests/🏋️unit-admission/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🧪️tests/🏋️unit-admission/🐍️.py`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🧪️tests/🏋️unit-admission/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🪆️parent/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🪆️parent/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/♻️replay/🟦️.ts`
+- `🌎️hub/🧩️compositions/🖍️draw/🗃️apps/✏️editor/📦️packages/🦀️rust/Cargo.toml`
+- `🌎️hub/🧩️compositions/🖍️draw/🗃️apps/✏️editor/🦀️.rs`
+- `🌎️hub/🧩️compositions/🖍️draw/🗃️apps/👁️viewer/📦️packages/🦀️rust/Cargo.toml`
+- `🌎️hub/🧩️compositions/🖍️draw/🗃️apps/👁️viewer/🦀️.rs`
+- `🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust/Cargo.toml`
+- `🌎️hub/🧩️compositions/🖍️draw/🦀️.rs`
+- `🌎️hub/Cargo.toml`
+- `🌎️hub/Cargo.lock`
+- `📋️build-owners.json`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/draw-final-cas.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/hub-app-carve.md`
+
+## Viewer and descriptor witness
+
+The [Viewer report](viewer-26.md) documents the playthrough invocation and the pinned component checks. The runner has passed syntax, the independent language-neutral paint oracle, archived screenshot validation and rejection of a stale pin. Fresh publication is required for its two browser contexts.
+
+The [descriptor emitter retry report](descriptor-emitter-source-retry-26.md) records the actual checksum disagreement and mounted regression. The final source-witness owner passed 4 tests and 76 assertions, and an issued probe over the actual compiled dep-info recovered the normalized reactor path.
+
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📎️source-witness/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📎️source-witness/🧪️tests/🟦️.ts`
+- `attest-draw-journeys-26.ts`, `viewer-journey-26.mjs`, `viewer-paint-26.mjs`, `viewer-paint-law-26.json`, `viewer-paint-law-26.py`, `viewer-26.md` and `descriptor-emitter-source-retry-26.md` under this ticket.
+
+## Direct Cargo paid overhead
+
+The [direct Cargo memory report](direct-cargo-memory-26.md) records the registered whole-tree samples, the 6,144 MiB recommendation, and the distinction between parent payment and the independent physical reserve. The direct launcher now charges Cargo, wrapper, scheduler and other non-rustc descendants. The focused 11-test broker and sampler run passed, and a controlled live child exercised the macOS process table.
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/📈️overhead/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/📈️overhead/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/📈️overhead/🧪️tests/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🪆️parent/🟦️.ts`
+- `direct-cargo-memory-26.md` under this ticket.
+
+## STDIO converter schema dependencies
+
+The [STDIO converter report](stdio-txt-schema-26.md) lists the two JSON imports, eight JSON Cargo manifests, and all 85 shared Cargo locks reconciled with the editor's XML, DXF and Draw edges. The graph law projects the old Draw component graph from 923 to 919 reachable units. The two converters preserve the published TxtSnapshot type. The report records the tested workspace receipts separately from fresh WASI execution.

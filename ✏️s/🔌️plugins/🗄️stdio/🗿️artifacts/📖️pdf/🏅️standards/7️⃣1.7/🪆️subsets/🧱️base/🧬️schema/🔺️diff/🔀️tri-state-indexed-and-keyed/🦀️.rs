@@ -114,7 +114,11 @@ impl<T: Clone + PartialEq> PdfIndexedDiff<T> {
     }
 
     pub fn apply(&self, base: &[T]) -> Vec<T> {
-        let mut next: Vec<T> = base.to_vec();
+        self.apply_owned(base.to_vec())
+    }
+
+    /// 🧩️ Applies the triple to a base the caller already owns, so a paged owner hands its items over without a second copy.
+    pub fn apply_owned(&self, mut next: Vec<T>) -> Vec<T> {
         for item in &self.modified {
             if let Some(slot) = next.get_mut(item.index) {
                 *slot = item.value.clone();
@@ -231,13 +235,21 @@ impl<T: Clone + PartialEq> PdfIndexedDiff<T> {
     /// ↩️ The negative triple over `base`: it removes what this one added, restores every modified item to its base value at
     /// the position the item holds in the final state, and re-adds every removed base item at its base index.
     pub fn inverse(&self, base: &[T]) -> Self {
+        self.inverse_by(base.len(), |index| base.get(index))
+    }
+
+    /// ↩️ The negative triple over a base of `base_len` items read through `get`, so a paged owner needs no contiguous view.
+    pub fn inverse_by<'a>(&self, base_len: usize, get: impl Fn(usize) -> Option<&'a T>) -> Self
+    where
+        T: 'a,
+    {
         let added: Vec<usize> = self.added.iter().map(|item| item.index).collect();
         let mut inverse = Self::default();
-        for (position, origin) in triple_layout(base.len(), &self.removed, &added).into_iter().enumerate() {
+        for (position, origin) in triple_layout(base_len, &self.removed, &added).into_iter().enumerate() {
             match origin {
                 Origin::Added => inverse.removed.push(position),
                 Origin::Base(index) if self.modified.iter().any(|item| item.index == index) => {
-                    if let Some(previous) = base.get(index) {
+                    if let Some(previous) = get(index) {
                         inverse.modified.push(PdfIndexedItem { index: position, value: previous.clone() });
                     }
                 }
@@ -248,7 +260,7 @@ impl<T: Clone + PartialEq> PdfIndexedDiff<T> {
         removed.sort_unstable();
         removed.dedup();
         for index in removed {
-            if let Some(previous) = base.get(index) {
+            if let Some(previous) = get(index) {
                 inverse.added.push(PdfIndexedItem { index, value: previous.clone() });
             }
         }

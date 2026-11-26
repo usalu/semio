@@ -60,3 +60,18 @@ fn opening_reuses_the_slice_only_while_the_same_pending_owner_makes_paid_progres
         assert_eq!(serde_json::json!([attempts, paid, captures]), case["outcome"], "{}", case["name"]);
     }
 }
+
+#[test]
+fn live_archive_burst_requires_a_funded_owner_and_a_quiet_execution_slice() {
+    for row in contract()["archiveMaintenance"].as_array().unwrap() {
+        let mut queries = 0;
+        let result = archive_maintenance_slice_open(
+            row["idleIngress"].as_bool().unwrap(), row["cancelled"].as_bool().unwrap(),
+            row["yielding"].as_bool().unwrap(), row["startedUs"].as_u64(), row["currentUs"].as_u64(),
+            || { queries += 1; Ok::<_, ()>(row["funded"].as_bool().unwrap()) },
+        ).unwrap();
+        assert_eq!(queries, row["queries"].as_u64().unwrap(), "{}", row["name"]);
+        assert_eq!(result, row["open"].as_bool().unwrap(), "{}", row["name"]);
+    }
+    assert_eq!(archive_maintenance_slice_open(true, false, false, Some(0), Some(1), || Err("quote rejected")), Err("quote rejected"));
+}

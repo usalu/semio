@@ -1,0 +1,132 @@
+[
+ {
+  "set": "volumes.50.thermal[th-toddler-nose-breath].transform.translation",
+  "was": [
+   -0.002,
+   -0.091,
+   0
+  ],
+  "value": [
+   -0.004,
+   -0.092,
+   0
+  ]
+ },
+ {
+  "set": "volumes.50.thermal[th-toddler-mouth-breath].transform.translation",
+  "was": [
+   -0.019,
+   -0.078,
+   0
+  ],
+  "value": [
+   -0.019,
+   -0.08,
+   0
+  ]
+ },
+ {
+  "set": "volumes.100.thermal[th-toddler-nose-breath].transform.translation",
+  "was": [
+   -0.002,
+   -0.091,
+   0
+  ],
+  "value": [
+   -0.004,
+   -0.092,
+   0
+  ]
+ },
+ {
+  "set": "volumes.100.thermal[th-toddler-mouth-breath].transform.translation",
+  "was": [
+   -0.019,
+   -0.078,
+   0
+  ],
+  "value": [
+   -0.019,
+   -0.08,
+   0
+  ]
+ },
+ {
+  "set": "volumes.200.thermal[th-toddler-nose-breath].transform.translation",
+  "was": [
+   -0.002,
+   -0.081,
+   0
+  ],
+  "value": [
+   -0.004,
+   -0.092,
+   0
+  ]
+ },
+ {
+  "set": "volumes.200.thermal[th-toddler-mouth-breath].transform.translation",
+  "was": [
+   -0.019,
+   -0.078,
+   0
+  ],
+  "value": [
+   -0.019,
+   -0.08,
+   0
+  ]
+ },
+ {
+  "set": "volumes.500.thermal[th-toddler-nose-breath].transform.translation",
+  "was": [
+   -0.002,
+   -0.081,
+   0
+  ],
+  "value": [
+   -0.004,
+   -0.092,
+   0
+  ]
+ },
+ {
+  "set": "volumes.500.thermal[th-toddler-mouth-breath].transform.translation",
+  "was": [
+   -0.019,
+   -0.078,
+   0
+  ],
+  "value": [
+   -0.019,
+   -0.08,
+   0
+  ]
+ },
+ {
+  "set": "volumes.200.thermal[th-toddler-nose-breath].radii",
+  "was": [
+   0.00165,
+   0.0022,
+   0.00275
+  ],
+  "value": [
+   0.0156,
+   0.0156,
+   0.0156
+  ]
+ },
+ {
+  "set": "volumes.500.thermal[th-toddler-nose-breath].radii",
+  "was": [
+   0.00165,
+   0.0022,
+   0.00275
+  ],
+  "value": [
+   0.039,
+   0.039,
+   0.039
+  ]
+ }
+]

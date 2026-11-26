@@ -14,7 +14,10 @@ export function wire(registry) {
   ({ buildPath } = registry.coordinates);
 }
 
-/** 🧶️ Models Bun's locked package locations without merging distinct dependency contexts. */
+/** 🧶️ Models Bun's locked package locations without merging distinct dependency contexts.
+ * @param {Readonly<Record<string, unknown>>} lock
+ * @param {Readonly<Record<string, Uint8Array | string>>} [patches]
+ * @returns {import("../🟨️.d.mts").BunLockGraphV1} */
 export function bunLockGraph(lock, patches = {}) {
   if (![1, 2, 3].includes(lock.lockfileVersion)) throw new Error(`Unsupported Bun lockfile version ${lock.lockfileVersion}`);
   const object = (value) => value && typeof value === "object" && !Array.isArray(value);

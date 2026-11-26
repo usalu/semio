@@ -8,6 +8,20 @@ use super::*;
 fn replace_indexed<T: Clone + PartialEq>(held: &[T], target: &[T]) -> Option<PdfIndexedDiff<T>> {
     (held != target).then(|| PdfIndexedDiff { removed: (0..held.len()).collect(), modified: Vec::new(), added: target.iter().cloned().enumerate().map(|(index, value)| PdfIndexedItem { index, value }).collect() })
 }
+/// 🔁️ The replacement rows of a page program: the common prefix and suffix stay, every other held operator is removed and every other new one added at its final index; nothing when both agree, and an append carries only the appended operators.
+fn replace_content(held: &PdfContent, target: &PdfContent) -> Option<PdfIndexedDiff<PdfOp>> {
+    let prefix = held.iter().zip(target.iter()).take_while(|(held, target)| held == target).count();
+    if prefix == held.len() && prefix == target.len() {
+        return None;
+    }
+    let rest = held.len().min(target.len()) - prefix;
+    let suffix = held.iter().rev().zip(target.iter().rev()).take(rest).take_while(|(held, target)| held == target).count();
+    Some(PdfIndexedDiff {
+        removed: (prefix..held.len() - suffix).collect(),
+        modified: Vec::new(),
+        added: target.iter().enumerate().skip(prefix).take(target.len() - prefix - suffix).map(|(index, value)| PdfIndexedItem { index, value: value.clone() }).collect(),
+    })
+}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn page_patch(index: usize, diff: PdfPageDiff) -> PdfDiff {
     PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index, diff }], ..Default::default() }), ..Default::default() }
@@ -33,7 +47,7 @@ pub fn diff_replace_page(base: &PdfSnapshot, index: usize, page: &PdfPage) -> Pd
         art_box: tri(&held.art_box, &page.art_box),
         rotate: (held.rotate != page.rotate).then_some(page.rotate),
         user_unit: tri(&held.user_unit, &page.user_unit),
-        content: replace_indexed(&held.content, &page.content),
+        content: replace_content(&held.content, &page.content),
         annotations: replace_indexed(&held.annotations, &page.annotations),
         group: tri(&held.group, &page.group),
         thumbnail: tri(&held.thumbnail, &page.thumbnail),
@@ -85,22 +99,21 @@ pub fn diff_set_page_user_unit(index: usize, user_unit: Option<f64>) -> PdfDiff 
 }
 /// ✏️️ Replaces page `index`'s whole content: every held operator is removed and the new ones are added in order.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_page_content(base: &PdfSnapshot, index: usize, content: &[PdfOp]) -> PdfDiff {
-    let current: &[PdfOp] = base.pages.get(index).map(|page| page.content.as_slice()).unwrap_or(&[]);
-    match replace_indexed(current, content) {
+pub fn diff_set_page_content(base: &PdfSnapshot, index: usize, content: &PdfContent) -> PdfDiff {
+    match replace_content(base.pages.get(index).map_or(&PdfContent::default(), |page| &page.content), content) {
         Some(content) => page_patch(index, PdfPageDiff { content: Some(content), ..Default::default() }),
         None => PdfDiff::default(),
     }
 }
 /// ➕️ Appends operators to page `index`'s content.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_append_page_content(base: &PdfSnapshot, index: usize, content: &[PdfOp]) -> PdfDiff {
+pub fn diff_append_page_content(base: &PdfSnapshot, index: usize, content: &PdfContent) -> PdfDiff {
     let start = base.pages.get(index).map(|page| page.content.len()).unwrap_or(0);
     page_patch(index, PdfPageDiff { content: Some(PdfIndexedDiff { added: content.iter().enumerate().map(|(offset, op)| PdfIndexedItem { index: start + offset, value: op.clone() }).collect(), ..Default::default() }), ..Default::default() })
 }
 /// ➕️ Inserts operators at position `at` of page `index`'s content.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_insert_content(index: usize, at: usize, content: &[PdfOp]) -> PdfDiff {
+pub fn diff_insert_content(index: usize, at: usize, content: &PdfContent) -> PdfDiff {
     page_patch(index, PdfPageDiff { content: Some(PdfIndexedDiff { added: content.iter().enumerate().map(|(offset, op)| PdfIndexedItem { index: at + offset, value: op.clone() }).collect(), ..Default::default() }), ..Default::default() })
 }
 /// 🗑️ Removes `count` operators from position `at` of page `index`'s content.

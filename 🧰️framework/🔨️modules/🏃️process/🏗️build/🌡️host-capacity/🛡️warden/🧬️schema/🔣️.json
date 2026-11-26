@@ -4,8 +4,8 @@
   "title": "Host warden: the one process per machine that acts on the memory of processes that already run (suspend, resume, cancel), from the same host sample and the same ladder the admission gates read.",
   "definitions": {
     "Policy": {
-      "description": "The authored numbers of the ladder and of the loop. Shares are basis points of the physical memory, bounded by a minimum and a maximum in megabytes, so a 4 GB host and a 128 GB host both get a usable line. Headroom is the memory the host can still give out before the OS halts applications: the available memory plus the swap room, and the swap room is the free swap plus the swap that can still grow, which is the free space of the swap volume minus swapDiskReserveMegabytes (never below 0; 0 where the swap volume is unknown or cannot grow), the sum bounded by swapRoomMaximumBasisPoints of the physical memory; a host that reports no swap has no headroom and keeps the available-memory law. Headroom below the headroomGuard line is guard, below the headroomDanger line is danger. defaultMode is the mode of a machine without a valid mode file: observe decides and alarms without signalling, enforce acts; the whole fleet is switched by changing this one value, every warden restarts itself on the changed source digest. ensureMilliseconds is the time a process trusts its own earlier ensure before it looks at the warden again.",
-      "descriptionDe": "Die festgelegten Zahlen der Leiter und der Schleife. Die Reserve (headroom) ist der Speicher, den der Host noch vergeben kann, bevor das Betriebssystem Anwendungen anhaelt: der verfuegbare Speicher plus der Swap-Spielraum; der Spielraum ist der freie Swap plus der noch wachsende Swap, also der freie Platz des Swap-Volumes abzueglich swapDiskReserveMegabytes (nie unter 0; 0 wo das Swap-Volume unbekannt ist oder nicht wachsen kann), die Summe begrenzt auf swapRoomMaximumBasisPoints des physischen Speichers; ein Host ohne Swap hat keine Reserve und behaelt das Gesetz des verfuegbaren Speichers. Reserve unter der Linie headroomGuard ist guard, unter der Linie headroomDanger ist danger. defaultMode ist der Modus einer Maschine ohne gueltige mode-Datei: observe entscheidet und alarmiert ohne Signale, enforce handelt; die ganze Flotte wird durch diesen einen Wert umgeschaltet, jeder Waechter startet sich beim geaenderten Quelltext-Digest selbst neu. ensureMilliseconds ist die Zeit, in der ein Prozess seinem eigenen frueheren Ensure vertraut, bevor er wieder nach dem Waechter sieht.",
+      "description": "The authored numbers of the ladder and of the loop. Shares are basis points of the physical memory, bounded by a minimum and a maximum in megabytes, so a 4 GB host and a 128 GB host both get a usable line. Headroom is the memory the host can still give out before the OS halts applications: the available memory plus the swap room, and the swap room is the free swap plus the swap that can still grow, which is the free space of the swap volume minus swapDiskReserveMegabytes (never below 0; 0 where the swap volume is unknown or cannot grow), the sum bounded by swapRoomMaximumBasisPoints of the physical memory; a host that reports no swap has no headroom and keeps the available-memory law. Headroom below the headroomGuard line is guard, below the headroomDanger line is danger. defaultMode is the mode of a machine without a valid mode file: observe decides and alarms without signalling, enforce acts; the whole fleet is switched by changing this one value, every warden restarts itself on the changed source digest. ensureMilliseconds is the time a process trusts its own earlier ensure before it looks at the warden again. heavySuspendMaximumSeconds is the longer suspend maximum of a declared final link (a compile unit of the final kind on the carving list of the admission policy): such a unit is also the dearest to lose among the compile units, so it is suspended last and kept running first; the danger-line cancel is unchanged.",
+      "descriptionDe": "Die festgelegten Zahlen der Leiter und der Schleife. Die Reserve (headroom) ist der Speicher, den der Host noch vergeben kann, bevor das Betriebssystem Anwendungen anhaelt: der verfuegbare Speicher plus der Swap-Spielraum; der Spielraum ist der freie Swap plus der noch wachsende Swap, also der freie Platz des Swap-Volumes abzueglich swapDiskReserveMegabytes (nie unter 0; 0 wo das Swap-Volume unbekannt ist oder nicht wachsen kann), die Summe begrenzt auf swapRoomMaximumBasisPoints des physischen Speichers; ein Host ohne Swap hat keine Reserve und behaelt das Gesetz des verfuegbaren Speichers. Reserve unter der Linie headroomGuard ist guard, unter der Linie headroomDanger ist danger. defaultMode ist der Modus einer Maschine ohne gueltige mode-Datei: observe entscheidet und alarmiert ohne Signale, enforce handelt; die ganze Flotte wird durch diesen einen Wert umgeschaltet, jeder Waechter startet sich beim geaenderten Quelltext-Digest selbst neu. ensureMilliseconds ist die Zeit, in der ein Prozess seinem eigenen frueheren Ensure vertraut, bevor er wieder nach dem Waechter sieht. heavySuspendMaximumSeconds ist das längere Anhaltemaximum eines deklarierten Final-Links (eine Kompilationseinheit der Art final auf der Carving-Liste der Admission-Richtlinie): eine solche Einheit ist unter den Kompilationseinheiten auch die teuerste zu verlieren, wird also zuletzt angehalten und zuerst weiterlaufen gelassen; der Abbruch an der Gefahrenlinie bleibt unverändert.",
       "const": {
         "guardBasisPoints": 1000,
         "guardMinimumMegabytes": 1024,
@@ -25,13 +25,14 @@
         "headroomDangerMaximumMegabytes": 4096,
         "calmTicks": 3,
         "suspendMaximumSeconds": 120,
+        "heavySuspendMaximumSeconds": 600,
         "pauseDeadlineSeconds": 10,
         "maximumSuspendsPerTick": 4,
         "maximumCancelsPerTick": 2,
         "keepRunning": 1,
         "calmMilliseconds": 2000,
         "tightMilliseconds": 500,
-        "idleMilliseconds": 600000,
+        "idleMilliseconds": 600000, "cpuYoungSlackSeconds": 5,
         "codeCheckMilliseconds": 60000,
         "staleMilliseconds": 30000,
         "commandMilliseconds": 5000,
@@ -136,11 +137,11 @@
       "const": {"enforce": ["darwin", "linux"], "observeOnly": ["win32"]}
     },
     "Table": {
-      "description": "The command that reads the process table on unix, with the locale each platform needs to print non-ASCII command lines (ps escapes them otherwise). The full form prints every column; the loop reads the cheap columns every tick (pid, parent, group, resident, state, elapsed, start) and the expensive command line only of processes it has not seen yet (key: pid and start text), one `-p` list, or the whole table from commandAllMinimum new processes on (a process younger than commandSettledSeconds, or one still printed as `(name)`, may not have executed its program yet, so its command line is read again on the next tick instead of kept): the command line column costs about three times the rest of the table together. `chargeMinimumKilobytes` is the resident size from which Linux reads `smaps_rollup` for a process (the table prints the resident set; macOS reads every process natively).",
+      "description": "The command that reads the process table on unix, with the locale each platform needs to print non-ASCII command lines (ps escapes them otherwise). The full form prints every column; the loop reads the cheap columns every tick (pid, parent, group, resident, state, elapsed, CPU time, start) and the expensive command line only of processes it has not seen yet (key: pid and start text), one `-p` list, or the whole table from commandAllMinimum new processes on (a process younger than commandSettledSeconds, or one still printed as `(name)`, may not have executed its program yet, so its command line is read again on the next tick instead of kept): the command line column costs about three times the rest of the table together. `chargeMinimumKilobytes` is the resident size from which Linux reads `smaps_rollup` for a process (the table prints the resident set; macOS reads every process natively).",
       "const": {
         "command": "ps",
-        "arguments": ["-A", "-ww", "-o", "pid=,ppid=,pgid=,rss=,state=,etime=,lstart=,args="],
-        "quickArguments": ["-A", "-o", "pid=,ppid=,pgid=,rss=,state=,etime=,lstart="],
+        "arguments": ["-A", "-ww", "-o", "pid=,ppid=,pgid=,rss=,state=,etime=,time=,lstart=,args="],
+        "quickArguments": ["-A", "-o", "pid=,ppid=,pgid=,rss=,state=,etime=,time=,lstart="],
         "commandArguments": ["-ww", "-o", "pid=,args="],
         "commandAllMinimum": 64,
         "chargeMinimumKilobytes": 32768,
@@ -181,7 +182,7 @@
       }
     },
     "ProcessRow": {
-      "description": "One process of the table. `memoryKilobytes` is what the kernel charges the process (macOS phys_footprint through proc_pid_rusage, Linux proportional plus swapped proportional set size of the processes that are resident enough to matter, Windows the private usage), never the resident set that `ps` prints: macOS counts the pages an allocator freed but kept mapped (MADV_FREE_REUSABLE) as resident, which read a 3 GB browser tree as 5 GB. A process the kernel does not let us read keeps the resident set `ps` printed.",
+      "description": "One process of the table. `memoryKilobytes` is what the kernel charges the process (macOS phys_footprint through proc_pid_rusage, Linux proportional plus swapped proportional set size of the processes that are resident enough to matter, Windows the private usage; `cpuSeconds`, present when the table has the CPU time column, is the CPU time the process has used so far), never the resident set that `ps` prints: macOS counts the pages an allocator freed but kept mapped (MADV_FREE_REUSABLE) as resident, which read a 3 GB browser tree as 5 GB. A process the kernel does not let us read keeps the resident set `ps` printed.",
       "type": "object",
       "additionalProperties": false,
       "required": ["pid", "parent", "group", "memoryKilobytes", "stopped", "elapsedSeconds", "start", "command"],
@@ -190,8 +191,10 @@
         "parent": {"type": "integer", "minimum": 0},
         "group": {"type": "integer", "minimum": 0},
         "memoryKilobytes": {"type": "integer", "minimum": 0},
+        "nonresidentKilobytes": {"type": "integer", "minimum": 0, "description": "Estimated process charge outside the resident set. Linux uses SwapPss. macOS uses positive physical footprint minus RSS."},
         "stopped": {"type": "boolean"},
         "elapsedSeconds": {"type": "integer", "minimum": 0},
+        "cpuSeconds": {"type": "number", "minimum": 0},
         "start": {"type": "string"},
         "command": {"type": "string"}
       }
@@ -207,6 +210,8 @@
         "rank": {"type": "integer", "minimum": 0},
         "elapsedSeconds": {"type": "integer", "minimum": 0},
         "megabytes": {"type": "integer", "minimum": 0},
+        "nonresidentMegabytes": {"type": ["integer", "null"], "minimum": 0, "description": "Estimated nonresident memory for all stopped processes in this subject's signal scope. Null means that one or more stopped processes could not be measured."},
+        "stoppedFootprintMegabytes": {"type": "integer", "minimum": 0, "description": "Total charge from the process table for stopped members of this signal scope when the nonresident portion is unknown."},
         "suspended": {"type": "boolean"},
         "suspendedSeconds": {"type": "integer", "minimum": 0},
         "canSuspend": {"type": "boolean"},
@@ -401,6 +406,7 @@
           "properties": {
             "count": {"type": "integer", "minimum": 0},
             "megabytes": {"type": "integer", "minimum": 0},
+            "cpuSeconds": {"type": "number", "minimum": 0},
             "byKind": {"type": "object", "additionalProperties": {"$ref": "#/definitions/KindTotal"}}
           }
         },

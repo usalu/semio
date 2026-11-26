@@ -42,3 +42,17 @@ fn original_host_configuration_cancellation_keeps_all_accepted_source_owners_unt
         for _ in 0..cut{if source.as_ref().unwrap().ready(){break}turn(&mut caller,&mut decoder,g,|cx|source.as_mut().unwrap().advance(cx));}caller.cancel().cancel_now();close(source,None,caller,&mut decoder,g);
     }
 }
+#[test]
+fn a_large_pack_settles_within_its_operation_lifetime_fuel(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap().iter().filter(|case|case["maximumWorkUnits"].is_u64()){
+        let declaration=&PROCESS;let lifetime=fixture["lifetimeFuel"].as_u64().unwrap();let text=case["input"].as_str().unwrap();
+        let g=grant(declaration,text.len());let mut caller=caller();caller.renew_each_turn(fixture["turnFuel"].as_u64().unwrap(),lifetime);let mut decoder=caller.admitted_decoder();let mut args=Some(DslValue::object([("json".to_owned(),DslValue::String(text.to_owned()))]));let mut source=None;let mut admission=Default::default();
+        for _ in 0..1000000{if turn(&mut caller,&mut decoder,g,|cx|OriginalHostConfiguration::admit(declaration,&mut args,cx,&mut admission,&mut source)){break}}
+        let mut turns=0usize;for _ in 0..1000000{if source.as_ref().unwrap().ready(){break}turns+=1;turn(&mut caller,&mut decoder,g,|cx|source.as_mut().unwrap().advance(cx));}
+        let spent=lifetime-caller.lifetime_fuel_remaining().unwrap();eprintln!("[DEBUG] {} turns {turns} work {spent}",case["name"]);
+        assert!(spent<=case["maximumWorkUnits"].as_u64().unwrap(),"{} spent {spent} work units over {}",case["name"],case["maximumWorkUnits"]);
+        let mut output=None;turn(&mut caller,&mut decoder,g,|cx|{assert!(source.as_mut().unwrap().take_into(&mut output,cx)?);Ok(())});assert_eq!(output.as_deref(),case["expected"].as_str());
+        close(source,output,caller,&mut decoder,g);
+    }
+}

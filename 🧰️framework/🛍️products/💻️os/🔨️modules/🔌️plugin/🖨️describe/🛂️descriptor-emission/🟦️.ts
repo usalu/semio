@@ -1,4 +1,5 @@
 import {withDescriptorEmitterV1,withDescriptorEmitterTaskV1,type DescriptorEmitterV1} from "../🛠️emitter/🟦️.ts";
+import type {DescriptorEmitterPinV1} from "../🛠️emitter/📋️contract/🟦️.ts";
 import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readArtifactBytesV1} from "../../🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 import { checkResourceLeaseControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
@@ -30,6 +31,7 @@ export type SemanticDescriptorEmissionV1 = Readonly<{
   jsonBytes: Uint8Array;
   packBytes: Uint8Array;
   semanticSha256: string;
+  emitterPin?: DescriptorEmitterPinV1;
   actorImage?: Uint8Array;
 }>;
 

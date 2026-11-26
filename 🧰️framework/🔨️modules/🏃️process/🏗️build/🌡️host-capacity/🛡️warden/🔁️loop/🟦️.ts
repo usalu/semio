@@ -36,7 +36,7 @@ export function wardenProcessStartV1(pid:number,platform:NodeJS.Platform=process
 /** 🧬️ The digest of the sources of the warden (its pure module, its loop, its entry, its schema, and the compile-memory policy and law of the admission it enforces as runtime ceilings): a running warden whose digest differs from the code on disk ends itself, the next caller starts the new code. */
 export function hostWardenCodeDigestV1():string{
  const hash=createHash("sha256");
- for(const path of["../🟦️.ts","🟦️.ts","../⌨️main/🟦️.ts","../🧬️schema/🔣️.json","../../../../📦️artifacts/🏗️native-build/🎟️admission/🏔️ceiling/🟦️.ts","../../../../📦️artifacts/🏗️native-build/🎟️admission/🧬️schema/🔣️.json"])hash.update(readFileSync(fileURLToPath(new URL(path,import.meta.url))));
+ for(const path of["../🟦️.ts","🟦️.ts","../⌨️main/🟦️.ts","../🧬️schema/🔣️.json","../../📡️sampling/🟦️.ts","../../../../📦️artifacts/🏗️native-build/🎟️admission/🏔️ceiling/🟦️.ts","../../../../📦️artifacts/🏗️native-build/🎟️admission/🧬️schema/🔣️.json"])hash.update(readFileSync(fileURLToPath(new URL(path,import.meta.url))));
  return hash.digest("hex").slice(0,16);
 }
 
@@ -114,11 +114,20 @@ export async function chargeWardenRowsV1(platform:NodeJS.Platform,rows:readonly 
  if(platform==="darwin"){
   const port=ports.darwin===undefined?systemDarwinFootprintPortV1(platform):ports.darwin;
   if(port===null)return rows;
-  return rows.map(row=>{const bytes=port.footprint(row.pid);return bytes===null?row:{...row,memoryKilobytes:Math.floor(bytes/1024)};});
+  return rows.map(row=>{
+   const bytes=port.footprint(row.pid);
+   if(bytes===null)return row;
+   const memoryKilobytes=Math.floor(bytes/1024);
+   return {...row,memoryKilobytes,nonresidentKilobytes:Math.max(0,memoryKilobytes-row.memoryKilobytes)};
+  });
  }
  if(platform==="linux"){
-  const minimum=ports.minimumKilobytes??HOST_WARDEN_TABLE_V1.chargeMinimumKilobytes,charged=await readLinuxChargesV1(rows.filter(row=>row.memoryKilobytes>=minimum).map(row=>row.pid),ports.read??readHostTextV1);
-  return rows.map(row=>{const kilobytes=charged.get(row.pid);return kilobytes===undefined?row:{...row,memoryKilobytes:kilobytes};});
+  const minimum=ports.minimumKilobytes??HOST_WARDEN_TABLE_V1.chargeMinimumKilobytes,charged=await readLinuxChargesV1(rows.filter(row=>row.stopped||row.memoryKilobytes>=minimum).map(row=>row.pid),ports.read??readHostTextV1);
+  return rows.map(row=>{
+   const charge=charged.get(row.pid);
+   if(charge===undefined)return row;
+   return {...row,memoryKilobytes:charge.resident+(charge.swapped??0),...charge.swapped===undefined?{}:{nonresidentKilobytes:charge.swapped}};
+  });
  }
  return rows;
 }
@@ -212,12 +221,23 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
   ports.write(alarm.text.en);ports.write(alarm.text.de);
  };
  let others:readonly HostWardenOtherV1[]=[];
+ const repoCpu:{known:boolean;total:number;at?:number;seen:ReadonlyMap<string,number>}={known:false,total:0,seen:new Map()};
  let last:{host:HostWardenHostV1;decision:ReturnType<typeof decideHostWardenV1>;subjects:readonly HostWardenSubjectV1[]}|undefined;
+ const accountCpu=(owned:ReadonlyMap<string,Readonly<{cpuSeconds:number;elapsedSeconds:number}>>,now:number):void=>{
+  if(owned.size>0)repoCpu.known=true;
+  const span=repoCpu.at===undefined?0:(now-repoCpu.at)/1000+policy.cpuYoungSlackSeconds;
+  for(const [key,row] of owned){
+   const before=repoCpu.seen.get(key);
+   if(before!==undefined)repoCpu.total+=Math.max(0,row.cpuSeconds-before);
+   else if(repoCpu.at!==undefined&&row.elapsedSeconds<=span)repoCpu.total+=row.cpuSeconds;
+  }
+  repoCpu.seen=new Map([...owned].map(([key,row])=>[key,row.cpuSeconds]));repoCpu.at=now;
+ };
  const writeState=(host:HostWardenHostV1,decision:Pick<ReturnType<typeof decideHostWardenV1>,"trigger"|"guardMegabytes"|"dangerMegabytes"|"resumeMegabytes"|"hold"|"swapRoomMegabytes"|"headroomMegabytes"|"headroomGuardMegabytes"|"headroomDangerMegabytes">,subjects:readonly HostWardenSubjectV1[]):void=>{
   const byKind:Record<string,{count:number;megabytes:number}>={};
   for(const subject of subjects){const row=byKind[subject.kind]??={count:0,megabytes:0};row.count++;row.megabytes+=subject.megabytes;}
   const wall=marks.length>1?marks.at(-1)!.wall-marks[0]!.wall:0,cpu=marks.length>1?marks.at(-1)!.cpu-marks[0]!.cpu:0;
-  const state={version:1,atMs:ports.now(),pid:process.pid,mode:mode(),code,host,level,hold:decision.hold,trigger:decision.trigger,others,guardMegabytes:decision.guardMegabytes,dangerMegabytes:decision.dangerMegabytes,resumeMegabytes:decision.resumeMegabytes,swapRoomMegabytes:decision.swapRoomMegabytes,headroomMegabytes:decision.headroomMegabytes,headroomGuardMegabytes:decision.headroomGuardMegabytes,headroomDangerMegabytes:decision.headroomDangerMegabytes,subjects:{count:subjects.length,megabytes:subjects.reduce((sum,subject)=>sum+subject.megabytes,0),byKind},suspended:[...suspended.values()],counters:{suspended:counters.suspended,resumed:counters.resumed,cancelled:counters.cancelled,ticks:counters.ticks},lastAlarms:[...lastAlarms],overhead:{tickMillisecondsP50:round(percentile(durations,0.5)),tickMillisecondsP95:round(percentile(durations,0.95)),cpuBasisPoints:wall>0?round(cpu/wall*10000):0,residentMegabytes:round(process.memoryUsage().rss/MEGABYTE)}};
+  const state={version:1,atMs:ports.now(),pid:process.pid,mode:mode(),code,host,level,hold:decision.hold,trigger:decision.trigger,others,guardMegabytes:decision.guardMegabytes,dangerMegabytes:decision.dangerMegabytes,resumeMegabytes:decision.resumeMegabytes,swapRoomMegabytes:decision.swapRoomMegabytes,headroomMegabytes:decision.headroomMegabytes,headroomGuardMegabytes:decision.headroomGuardMegabytes,headroomDangerMegabytes:decision.headroomDangerMegabytes,subjects:{count:subjects.length,megabytes:subjects.reduce((sum,subject)=>sum+subject.megabytes,0),...repoCpu.known?{cpuSeconds:Math.round(repoCpu.total*100)/100}:{},byKind},suspended:[...suspended.values()],counters:{suspended:counters.suspended,resumed:counters.resumed,cancelled:counters.cancelled,ticks:counters.ticks},lastAlarms:[...lastAlarms],overhead:{tickMillisecondsP50:round(percentile(durations,0.5)),tickMillisecondsP95:round(percentile(durations,0.95)),cpuBasisPoints:wall>0?round(cpu/wall*10000):0,residentMegabytes:round(process.memoryUsage().rss/MEGABYTE)}};
   if(!isHostWardenV1("State",state)){ports.write(`[warden] state invalid / Zustand ungültig: ${JSON.stringify(state).slice(0,200)}`);return;}
   try{writeAtomic(stateFile,JSON.stringify(state));}catch{}
  };
@@ -278,7 +298,20 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
    const began=performance.now();
    try{
     const[host,rows]=await Promise.all([ports.sample(),ports.table()]),now=ports.now();
-    const protect=protectList(),found=classifyWardenSubjectsV1(rows,tables,{protect,workspaces:discoverWardenWorkspacesV1(rows,workspaces),...options.within===undefined?{}:{within:options.within},prefixes:options.prefixes??[],nowMs:now,suspendedSince:since,...options.ceilings===undefined?{}:{ceilings:options.ceilings}}),subjects=withHistory(await measure(found,now),now);
+    const owned=new Map<string,Readonly<{cpuSeconds:number;elapsedSeconds:number}>>(),protect=protectList(),found=classifyWardenSubjectsV1(rows,tables,{owned,protect,workspaces:discoverWardenWorkspacesV1(rows,workspaces),...options.within===undefined?{}:{within:options.within},prefixes:options.prefixes??[],nowMs:now,suspendedSince:since,...options.ceilings===undefined?{}:{ceilings:options.ceilings}});
+    const stopped=new Map(rows.filter(row=>row.stopped).map(row=>[row.pid,row]));
+    const excluded=stopped.size>0?exclusion(rows):undefined;
+    const subjects=withHistory(await measure(found,now),now).map(subject=>{
+     if(!subject.suspended||excluded===undefined)return subject;
+     const members=planWardenSignalsV1(rows,{pid:subject.pid,scope:subject.scope??"tree"},tables,excluded).flatMap(pid=>stopped.get(pid)??[]);
+     if(members.some(row=>row.nonresidentKilobytes===undefined)){
+      const footprint=members.reduce((sum,row)=>sum+row.memoryKilobytes,0);
+      return {...subject,nonresidentMegabytes:null,stoppedFootprintMegabytes:Math.ceil(footprint/1024)};
+     }
+     const kilobytes=members.reduce((sum,row)=>sum+row.nonresidentKilobytes!,0);
+     return {...subject,nonresidentMegabytes:Math.ceil(kilobytes/1024)};
+    });
+    accountCpu(owned,now);
     const ids=new Set(subjects.map(subject=>subject.id));
     nearCeiling=subjects.some(subject=>subject.ceiling!==undefined&&subject.megabytes*10000>=subject.ceiling.megabytes*policy.ceilingNearBasisPoints);
     for(const subject of subjects){if(subject.suspended){if(!since.has(subject.id))since.set(subject.id,suspended.get(subject.id)?.sinceMs??now);}else since.delete(subject.id);}
@@ -307,7 +340,8 @@ export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promi
        const command=rows.find(row=>row.pid===subject.pid)?.command??"",buildScriptOutput=buildScriptOutputDirectoryV1(command);
        const record:HostWardenCancelV1={version:1,pid:subject.pid,start,kind:subject.kind,owner:subject.owner??"",command:command.slice(0,512),megabytes:subject.megabytes,atMs:now,reason:action.reason,ancestors:ancestorsOf(rows,subject.pid),...buildScriptOutput&&buildScriptOutput.length<=256?{buildScriptOutput}:{},...action.capMegabytes===undefined?{}:{capMegabytes:action.capMegabytes},...action.reason==="ceiling"&&subject.ceiling!==undefined?{ceiling:subject.ceiling}:{}};
        writeAtomic(join(cancelled,`${subject.pid}.${createHash("sha256").update(start).digest("hex").slice(0,8)}.json`),JSON.stringify(record));
-       signalTree(rows,{pid:subject.pid,scope},["SIGCONT"]);signalTree(rows,{pid:subject.pid,scope},[subject.signal??"SIGKILL"]);
+       const signal=subject.signal??"SIGKILL";
+       signalTree(rows,{pid:subject.pid,scope},signal==="SIGTERM"?[signal,"SIGCONT"]:[signal]);
        suspended.delete(subject.id);since.delete(subject.id);counters.cancelled++;writeState(host,decision,subjects);
       }
      }

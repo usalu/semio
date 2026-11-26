@@ -9,3 +9,17 @@ test("generic history acceptance arrays retain primitive item controls and exact
  for(const row of corpus.cases){for(const change of row.expected){const before=structuredClone(row.before),previous=getValueByPointer(before,change.pointer),after=applyPatch(before,[{op:"replace",path:change.pointer,value:change.value}],true).newDocument;expect(getValueByPointer(after,change.pointer)).toEqual(change.value);expect(previous).not.toEqual(change.value);expect(applyPatch(after,[{op:"replace",path:change.pointer,value:previous}],true).newDocument).toEqual(row.before);}expect(row.before.values.length===0).toBe(row.expected.length===0)}
  const source=readModuleTreeSource(new URL("../../🦀️.rs",import.meta.url)),owner=source.slice(source.indexOf("pub fn acceptance_change_buckets"),source.indexOf("fn acceptance_meta"));expect(owner).toContain("ArgSchema::Array { items");expect(owner).toContain("ACCEPTANCE_CHANGES_PER_LEAF");
 });
+
+test("history option alternatives respect omitted defaults and explicit nulls", () => {
+ const fixture = corpus.optionDefaults;
+ for (const row of fixture.cases) {
+  const previous = getValueByPointer(row.before, fixture.pointer);
+  const selected = previous === undefined ? fixture.default : previous;
+  expect(fixture.options.filter((option) => option !== selected)).toEqual(row.expected);
+  for (const value of row.expected) {
+   const operation = previous === undefined ? "add" : "replace";
+   const {newDocument} = applyPatch(structuredClone(row.before), [{op: operation, path: fixture.pointer, value}], true);
+   expect(getValueByPointer(newDocument, fixture.pointer)).toBe(value);
+  }
+ }
+});

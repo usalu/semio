@@ -36,7 +36,6 @@ semio-ui-locale = { path = "../../../../../../../../../../../../../../🧰️fra
 semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
-semio-s-artifact-stdio-txt = { workspace = true }
 semio-s-artifact-stdio-xml-mutations = { path = "../../../../🧬️mutations/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-xml-schema = { path = "../../../../📦️packages/🦀️rust" }
 semio-s-artifact-stdio-xml-schema-2 = { path = "../../../../../../✅️valid/🧬️schema/📦️packages/🦀️rust" }

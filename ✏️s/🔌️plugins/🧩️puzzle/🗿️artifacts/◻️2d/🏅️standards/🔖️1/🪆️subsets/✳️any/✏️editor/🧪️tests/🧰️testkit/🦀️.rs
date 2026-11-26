@@ -36,6 +36,115 @@ impl std::ops::DerefMut for Puzzle2dApp {
     }
 }
 
+/// 🔌️ Attaches the real actor port and keeps the host's endpoint for fixture delivery.
+pub async fn attach_fixture_actor_backbone(
+    app: &mut Puzzle2dApp,
+    uri: &str,
+) -> store::os_store::backbone::ActorBackboneChannelOwner {
+    use store::os_store::backbone::{ActorBackboneChannelOwner, Backbones, PortBackbone};
+    let (channel, owner) = ActorBackboneChannelOwner::pair(uri);
+    app.attach_hot_backbone(Backbones::Port(PortBackbone::with_channel(uri, channel).await))
+        .await.expect("attach the original actor backbone");
+    owner
+}
+
+/// 📤️ Drives the mounted author and transfers every paid original actor frame to its host.
+pub fn drain_fixture_actor_outbound(
+    app: &mut Puzzle2dApp,
+    owner: &store::os_store::backbone::ActorBackboneChannelOwner,
+) -> Vec<Vec<u8>> {
+    let mut delivery = None;
+    let mut frames = Vec::new();
+    for _ in 0..4096 {
+        while let Some(frame) = owner.take_outbound().expect("take the paid actor frame") {
+            frames.push(frame);
+        }
+        if delivery.is_none() && !app.0.original_atomic_outbound_pending() {
+            return frames;
+        }
+        let cx = app.1.cx();
+        let grant = cx.original_turn_ceiling().0;
+        semio_plugin::artifact_app_laws::fixture_renew_turn(cx, semio_plugin::artifact_app_laws::OriginalFixtureCaller::turn_fuel(), grant)
+            .expect("renew the actor output turn");
+        app.0.advance_original_atomic_outbound(&mut delivery, [1; 32], cx).expect("drive the original actor outbox");
+    }
+    panic!("the original actor outbox never settled")
+}
+
+/// 👥️ Verifies the mounted board, camera publication and peer departure through their original transports.
+pub async fn assert_camera_presence_round_trip() {
+    use semio_framework_value::FromValue;
+    use semio_plugin::artifact_app_laws::{fixture_mounted_policy, publish_fixture_presence_roster};
+    use semio_plugin::PluginApp;
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("portable shared presence fixture");
+    let expected = protocol::PresenceWindowView::from_value(semio_framework_pack_json::to_dsl_value(&fixture["admission"][0]["value"])).expect("admitted shared camera");
+    let protocol::PresenceViewKind::Canvas { x, y, zoom } = expected.kind else { panic!("portable canvas pose") };
+    let actor = fixture["isolation"]["actorA"].as_str().expect("source actor");
+    let mut source = app_for_actor(actor);
+    let mut peer = app_for_actor(fixture["isolation"]["actorB"].as_str().expect("peer actor"));
+    let channel = attach_fixture_actor_backbone(&mut source, "actor://puzzle2d-presence").await;
+    dispatch(&mut source, "addNode", Some(&json!({"kind": "node"})), Some(&expected.window_id)).expect("source publishes a node");
+    let before = source.document_pack().await.expect("source document before presence");
+    dispatch(&mut source, "setCamera", Some(&json!({"camera": {"x": x, "y": y, "zoom": zoom}})), Some(&expected.window_id)).expect("shared camera publication");
+    assert_eq!(source.document_pack().await.expect("source document after presence"), before);
+    let camera = rendered_camera(&render_window(&mut source, overview::BODY_KEY, &expected.window_id));
+    assert_eq!(camera, (x, y, zoom));
+    let selected = first_node_id(&source);
+    select_id(&mut source, snapshot::PUZZLE2D_GRANULARITY_NODE, &selected).expect("select the shared node");
+    let lane = source.ephemeral_snapshot().await;
+    let interaction = protocol::decode_presence_interaction(&lane.interaction, &mut 0).await.expect("decode the editor's selected node");
+    assert!(interaction.domains.iter().any(|row| row.domain == PUZZLE2D_INTERACTION_DOMAIN && row.selected.contains(&selected)));
+    let remote = protocol::PresencePeer {
+        actor: actor.into(), connected_at_ms: 1, label: None, user_id: None, role: None, drag_ghost_json: None,
+        presence_pack: Some(lane.presence), interaction: Some(interaction), color: Some(1), surface: None,
+        views: vec![protocol::PresenceWindowView {
+            kind: protocol::PresenceViewKind::Canvas { x: camera.0, y: camera.1, zoom: camera.2 },
+            ..expected.clone()
+        }], ui: None, tool_run: lane.tool_run, principal_kind: None, active_tool: None, history_edit: lane.history_edit, typing: Vec::new(),
+    };
+    let bytes = protocol::encode_presence_peer(&remote).await;
+    let arrived = protocol::decode_presence_peer(&bytes).await.expect("decode the published peer");
+    assert_eq!(arrived.views, vec![expected]);
+    let peer_before = peer.document_pack().await.expect("peer document before presence");
+    let grant = fixture_mounted_policy().maintenance;
+    assert!(publish_fixture_presence_roster(&mut peer.0, 1, Some(9), std::slice::from_ref(&arrived), 1000, peer.1.cx(), grant).await.is_none());
+    {
+        let roster = peer.roster.peer_presence_root();
+        let (remote_actor, presence) = roster.iter().next().expect("the source reached the peer");
+        assert_eq!(remote_actor, actor);
+        assert_eq!(presence.interaction, remote.interaction);
+    }
+    assert!(publish_fixture_presence_roster(&mut peer.0, 2, Some(9), &[], 2000, peer.1.cx(), grant).await.is_none());
+    assert_eq!(peer.roster.peer_presence_root().len, 0);
+    assert_eq!(peer.document_pack().await.expect("peer document after departure"), peer_before);
+    assert_eq!(source.document_pack().await.expect("source document after selection"), before);
+    let frames = drain_fixture_actor_outbound(&mut source, &channel);
+    assert_eq!(ingest_fixture_actor_frames(&mut peer, &frames).await, 1);
+    assert_eq!(fixture_of(&source), fixture_of(&peer), "original source events converge after ephemeral interaction");
+    channel.begin_retire().expect("retire the original actor port");
+    source.detach_backbone().await.expect("detach the actor port");
+    close_app(&mut peer);
+    close_app(&mut source);
+}
+
+/// 📥️ Delivers the exact ordinary actor messages through the mounted causal operation ingress.
+pub async fn ingest_fixture_actor_frames(app: &mut Puzzle2dApp, frames: &[Vec<u8>]) -> usize {
+    use store::os_store::backbone::{BackboneMessage, decode_hot_backbone_message_exact};
+    let mut reports = 0;
+    for frame in frames {
+        let BackboneMessage::Mutations { envelopes } = decode_hot_backbone_message_exact(frame).expect("decode the original actor message") else {
+            panic!("the actor carries a mutation batch");
+        };
+        let cx = app.1.cx();
+        let grant = cx.original_turn_ceiling().0;
+        semio_plugin::artifact_app_laws::fixture_renew_turn(cx, semio_plugin::artifact_app_laws::OriginalFixtureCaller::turn_fuel(), grant)
+            .expect("renew the actor input turn");
+        reports += app.0.ingest_operations(&envelopes.to_vec_owner(), &mut semio_plugin::artifact_app_laws::fixture_identity(), cx)
+            .await.expect("ingest the authored actor mutations").len();
+    }
+    reports
+}
+
 /// 🧯️ Projects a fixture dispatch failure onto the diagnostic `Fault` the drivers' callers assert on: the original fault when that is the primary, else the complete debug form.
 fn fault_of(failure: semio_framework_job::OriginalTurnFailure) -> Fault {
     failure.primary_fault().cloned().unwrap_or_else(|| Fault::from(format!("{failure:?}")))
@@ -85,8 +194,13 @@ pub fn puzzle2d_manifest_for_tests() -> App {
 /// 🧰️ A registry-backed app so kind discipline (View/Shell actions must emit no operations) and the
 /// utility contract are enforced exactly as in production.
 pub fn app_with_registry() -> Puzzle2dApp {
+    app_for_actor(semio_os_kernel::LOCAL_ACTOR_ID)
+}
+
+/// 👤️ Opens the registered overview for the specified document author.
+pub fn app_for_actor(actor: &str) -> Puzzle2dApp {
     let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = block_on(semio_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle2dPlayApp>>(puzzle2d_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity()));
+    let mut app = block_on(semio_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle2dPlayApp>>(puzzle2d_manifest_for_tests, semio_os_kernel::ActorId(actor.into()), semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity()));
     block_on(app.bind_instance_id(1));
     let overview = crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID;
     app.window_transient_generation(&window_view(overview, overview))
@@ -117,7 +231,7 @@ fn action_meta(app: &mut Puzzle2dApp, args: Option<&Value>, window_id: Option<&s
     let id = window_id.or(requested).unwrap_or(kind);
     let view = window_view(kind, id);
     let _ = app.window_transient_generation(&view)?;
-    Ok(ActionMeta { view_state: Some(std::sync::Arc::new(view)), ..meta("local") })
+    Ok(ActionMeta { view_state: Some(std::sync::Arc::new(view)), ..meta(app.stores.store.local_actor_id().0.as_str()) })
 }
 
 /// 📄️ Drains everything one settle turn can have left behind — presented pages, effects, events,
@@ -150,17 +264,13 @@ fn drain_settled(app: &mut Puzzle2dApp, result: &mut InvocationResult, fault: &m
     result.events.extend(app.take_typed_operation_event());
     while let Some(completion) = block_on(app.take_typed_operation_completion())? {
         result.ui_scope = completion.ui_scope;
-        if let Some(patch) = completion.history_patch {
-            result.history_patch = Some(match result.history_patch.take() {
-                Some(mut previous) => {
-                    previous.upserts.extend(patch.upserts);
-                    previous.cursor = patch.cursor;
-                    previous.can_undo = patch.can_undo;
-                    previous.can_redo = patch.can_redo;
-                    previous
-                }
-                None => patch,
-            });
+        if let Some(mut patch) = completion.history_patch {
+            if let Some(previous) = result.history_patch.take() {
+                let replaced: std::collections::HashSet<_> = patch.upserts.iter().map(|row| row.seq).collect();
+                patch.upserts.extend(previous.upserts.into_iter().filter(|row| !replaced.contains(&row.seq)));
+                patch.upserts.sort_by_key(|row| std::cmp::Reverse(row.seq));
+            }
+            result.history_patch = Some(patch);
         }
     }
     while let Some(progress) = app.take_typed_operation_ui_progress() {
@@ -175,6 +285,20 @@ fn drain_settled(app: &mut Puzzle2dApp, result: &mut InvocationResult, fault: &m
     Ok(())
 }
 
+/// 🧾️ Pays one mounted driver turn and returns its ownership receipts.
+pub fn drive_history_turn(app: &mut Puzzle2dApp, what: &str) {
+    use semio_plugin::artifact_app_laws;
+
+    let policy = artifact_app_laws::fixture_mounted_policy();
+    let fuel = artifact_app_laws::OriginalFixtureCaller::turn_fuel();
+    let grant = app.1.cx().original_turn_ceiling().0;
+    artifact_app_laws::fixture_renew_turn(app.1.cx(), fuel, grant).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
+    app.maintain(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
+    artifact_app_laws::fixture_renew_turn(app.1.cx(), fuel, grant).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
+    block_on(app.0.advance_typed_operation_publication(&mut artifact_app_laws::fixture_identity(), app.1.cx())).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
+    artifact_app_laws::retain_original_ownership_receipts(&mut app.0, policy, &mut Vec::new()).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
+}
+
 fn settle(app: &mut Puzzle2dApp, result: Result<InvocationResult, Fault>) -> Result<InvocationResult, Fault> {
     use semio_plugin::artifact_app_laws;
 
@@ -187,18 +311,20 @@ fn settle(app: &mut Puzzle2dApp, result: Result<InvocationResult, Fault>) -> Res
     for _ in 0..1_048_576 {
         artifact_app_laws::retain_original_ownership_receipts(&mut app.0, policy, &mut receipts)?;
         receipts.clear();
-        if !app.has_pending_typed_operations() {
+        if !app.has_pending_typed_operations() && !app.0.render_ref().tool_overlay_retirement_pending() {
             drain_settled(app, &mut result, &mut fault)?;
             return fault.map_or(Ok(result), Err);
         }
         artifact_app_laws::fixture_renew_turn(app.1.cx(), fuel, grant).map_err(|failure| Fault::from(format!("{failure:?}")))?;
-        app.maintain(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|failure| Fault::from(format!("{failure:?}")))?;
+        artifact_app_laws::ensure_fixture_cancellation_issuer(&mut app.0, app.1.cx()).map_err(|failure| Fault::from(format!("{failure:?}")))?;
+        let loan = app.1.cx().retained_grant();
+        app.0.maintenance_step(app.1.cx(), loan).map_err(|failure| Fault::from(format!("{failure:?}")))?;
         artifact_app_laws::fixture_renew_turn(app.1.cx(), fuel, grant).map_err(|failure| Fault::from(format!("{failure:?}")))?;
         block_on(app.0.advance_typed_operation_publication(&mut artifact_app_laws::fixture_identity(), app.1.cx())).map_err(|failure| Fault::from(format!("{failure:?}")))?;
         artifact_app_laws::retain_original_ownership_receipts(&mut app.0, policy, &mut receipts)?;
         drain_settled(app, &mut result, &mut fault)?;
     }
-    Err(Fault::from("puzzle2d test operation did not settle"))
+    Err(Fault::from(format!("Puzzle 2D operation did not settle: {}; reserved phase {:?}", app.0.typed_operation_diagnostic(), app.0.media.reserved_mount.as_ref().map(|owner| owner.phase))))
 }
 
 /// 🧪️ B1: test-only replacement for the deleted `VcsArtifactApp::handle_action` app-dispatch path
@@ -252,9 +378,22 @@ fn action_args(args: Option<&Value>, window_id: Option<&str>) -> Option<semio_fr
 /// such as the window's active utility.
 pub fn dispatch_in_view(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, window_id: Option<&str>, view_state: ViewModel) -> Result<InvocationResult, Fault> {
     let _ = app.window_transient_generation(&view_state)?;
-    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(view_state)), ..meta("local") };
+    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(view_state)), ..meta(app.stores.store.local_actor_id().0.as_str()) };
     let result = block_on(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, action_args(args, window_id), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::artifact_app_laws::fixture_mounted_policy().close)).map_err(fault_of);
     settle(app, result)
+}
+
+/// 🧾️ Returns the rows published for document edits appended by this command.
+pub fn dispatch_new_edit_rows(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
+    let before = app.stores.store.envelope().vcs.edits.len();
+    let mut result = dispatch(app, action, args, window_id)?;
+    let edits = &app.stores.store.envelope().vcs.edits;
+    let added: std::collections::HashSet<_> = edits.iter().skip(before).map(|edit| edit.id.as_str()).collect();
+    if let Some(patch) = result.history_patch.as_mut() {
+        patch.upserts.retain(|row| row.edit_id.as_deref().is_some_and(|id| added.contains(id)));
+    }
+    assert_eq!(committed_edits(&result), added.len(), "every appended edit publishes its history row");
+    Ok(result)
 }
 
 /// 🧾 How many DOCUMENT edits one dispatch actually committed. `InvocationResult.mutations` is
@@ -342,6 +481,26 @@ pub fn render_body_with_view(app: &mut Puzzle2dApp, body_key: &str, view_state: 
 
 /// 🪟️ `body_key` rendered as the window instance `window_id`. The instance travels in the view state
 /// the framework captures that window's partitions from; a `"{body}:{window}"` key is no body at all
+/// 🎥️ Recovers the rendered pane camera `(x, y, zoom)` from a rendered `UiNode`'s embedded
+/// `Board2dScene.cameraJson` — the only externally observable surface for the runtime camera
+/// (the camera is never a document field, so it cannot be read back off `app.snapshot()`).
+pub fn rendered_camera(rendered: &str) -> (f64, f64, f64) {
+    fn find_camera_json(value: &Value) -> Option<String> {
+        if let Some(json) = value.get("cameraJson").and_then(Value::as_str) {
+            return Some(json.to_string());
+        }
+        match value {
+            Value::Object(map) => map.iter().find_map(|(_, value)| find_camera_json(value)),
+            Value::Array(items) => items.iter().find_map(find_camera_json),
+            _ => None,
+        }
+    }
+    let value: Value = semio_framework_pack_json::from_json_str(rendered, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rendered node parses");
+    let camera_json = find_camera_json(&value).expect("rendered scene must carry cameraJson");
+    let camera: Value = semio_framework_pack_json::from_json_str(&camera_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("cameraJson parses");
+    (camera.get("x").and_then(Value::as_f64).unwrap_or(f64::NAN), camera.get("y").and_then(Value::as_f64).unwrap_or(f64::NAN), camera.get("zoom").and_then(Value::as_f64).unwrap_or(f64::NAN))
+}
+
 /// and rendered `Unknown body`.
 pub fn render_window(app: &mut Puzzle2dApp, body_key: &str, window_id: &str) -> String {
     let kind = body_window_kind(body_key).expect("render_window renders a canvas body");

@@ -47,6 +47,7 @@ use semio_plugin::ViewModel;
 use semio_ui_locale::{Locale, Terminology};
 
 fn text(snapshot: &ModelSnapshot, library: &[&str], locale: Locale) -> String {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let own: Vec<String> = library.iter().map(|id| id.to_string()).collect();
     let view = ViewModel::new(locale, Terminology::Native);
     let inference = ModelInference::infer(snapshot).expect("infers");

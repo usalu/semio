@@ -1,0 +1,26 @@
+/** 🧾 Publishes the native fallback component receipt from compiler-consumed source witnesses and verified physical linker products. */
+import {readFileSync,statSync} from "node:fs";
+import {dirname,join,resolve} from "node:path";
+import {createHash} from "node:crypto";
+import {execFileSync} from "node:child_process";
+import {componentProvenanceDigestsV1,componentReceiptFindingsV1,rustToolchainIdentityFromVersionV1,writeComponentReceiptV1,COMPONENT_RECEIPT_SCHEMA_ID,COMPONENT_TARGET,COMPONENT_RECEIPT_FILE} from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
+const root=process.cwd(),g=join(import.meta.dir,"🗑️generated/bridge-current"),area=join(g,"b4");
+const read=(name:string)=>JSON.parse(readFileSync(join(area,name),"utf8"));
+const verified=read("verified-deps.json"),link=read("link.json");
+if(verified.missing.length||verified.conflicts.length)throw Error("Incomplete source witness");
+const sums=new Map<string,string>(readFileSync(join(area,"linked-product-checksums.ndjson"),"utf8").trim().split("\n").map(line=>JSON.parse(line)));
+const product=(path:string)=>{const sha256=sums.get(path);if(!sha256)throw Error("Missing witnessed product "+path);return {path,sha256};};
+const original=(path:string)=>({...product(path),kind:"file" as const});
+const shape=join(area,"semio_hub_procedural_component.wasm"),raw=join(area,"proc.core.wasm"),first=join(area,"proc.fold1.wasm"),second=join(area,"proc.fold2.wasm");
+const objects=link.objects.map(({path,sha256}:{path:string;sha256:string})=>{const row=product(join(area,path));if(row.sha256!==sha256)throw Error("Linker capture changed "+path);return row;});
+const libraries=link.args.filter((arg:string)=>arg.endsWith(".rlib"));
+const units=verified.units.map(({inputs,library}:{inputs:any[];library:string})=>({inputs,artifacts:library===shape?objects:[product(library),...(sums.has(library.replace(/\.rlib$/,".rmeta"))?[product(library.replace(/\.rlib$/,".rmeta"))]:[])]}));
+units.push({inputs:[...libraries.map(original),...objects.map((row:any)=>({...row,kind:"file"}))],artifacts:[product(raw)]});
+for(const [from,to] of [[raw,first],[first,second],[second,shape]])units.push({inputs:[original(from)],artifacts:[product(to)]});
+const digests=componentProvenanceDigestsV1({units,buildResources:[]},{repository:root,build:join(root,".cache/b"),cargoHome:join(root,".cache/b/r/m/cargo/home")});
+const pkg=join(g,"preview-b4/modules/🌀️procedural"),semantic=readFileSync(join(pkg,"🛂️.descriptor.semio"));
+const receipt={schema:COMPONENT_RECEIPT_SCHEMA_ID,pluginId:"procedural",packageId:"semio:procedural",profile:"prototype" as const,target:COMPONENT_TARGET,wasmSha256:product(shape).sha256,wasmBytes:statSync(shape).size,semanticDescriptorSha256:createHash("sha256").update(semantic).digest("hex"),toolchain:rustToolchainIdentityFromVersionV1(execFileSync(link.compiler,["-vV"],{encoding:"utf8"})),...digests};
+const findings=componentReceiptFindingsV1(receipt,receipt,readFileSync(shape),semantic);
+if(findings.length)throw Error(findings.join("\n"));
+writeComponentReceiptV1(join(pkg,COMPONENT_RECEIPT_FILE),receipt);
+console.log("[DEBUG]",JSON.stringify(receipt),units.length,"witnessed units and native assembly steps");

@@ -429,10 +429,13 @@
             "semio-s-plugin-sourcing-windows-component"
           ],
           "release": [
+            "semio-hub-demonstrator-component",
             "semio-hub-fem-component",
             "semio-hub-gis-component",
             "semio-hub-procedural-component",
-            "semio-hub-sourcing-component"
+            "semio-hub-process-component",
+            "semio-hub-sourcing-component",
+            "semio-hub-stdio-component"
           ]
         },
         "evidence": {

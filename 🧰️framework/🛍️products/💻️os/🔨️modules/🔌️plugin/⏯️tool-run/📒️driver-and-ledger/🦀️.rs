@@ -302,12 +302,16 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     /// 👥️ Ephemeral-shared presence summary (§3.4), `completed ≤ total` by construction.
     pub fn presence(&self) -> Option<protocol::PresenceToolRun> {
         let entry = &self.entries[self.primary_index()?];
+        let (stage, completed, total) = entry.native.borrowed_view(entry.identity, entry.slot.state)
+            .map_or((entry.stage, entry.completed, entry.total), |view| {
+                (view.progress.stage, view.progress.completed, view.progress.total)
+            });
         Some(protocol::PresenceToolRun {
             tool_id: entry.tool_id.clone(),
             state: protocol::PresenceToolRunState::from_wire_name(entry.slot.state.as_str())?,
-            stage: entry.stage,
-            completed: entry.total.map_or(entry.completed, |total| entry.completed.min(total)),
-            total: entry.total,
+            stage,
+            completed: total.map_or(completed, |limit| completed.min(limit)),
+            total,
         })
     }
 
@@ -455,7 +459,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         }
         let overlay = Arc::clone(&entry.base);
         entry.replace_overlay(overlay);
-        entry.checkpoint = None;
+        entry.checkpoint.clear();
         if let Some(member) = entry.member.as_mut() {
             member.release();
         }

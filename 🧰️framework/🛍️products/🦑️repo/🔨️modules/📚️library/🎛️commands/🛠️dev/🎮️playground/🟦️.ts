@@ -8,7 +8,7 @@ import { readOwnedBuildInvocationV1 } from "../../../🏗️build/📥️caller/
 import { readBuildOwnerRegistryV1 } from "../../../🏗️build/🕸️graph/🚪️admission/🟦️.ts";
 import { issueRepositoryScriptProvidersV1 } from "../../../🏃️process/🔌️providers/🟦️.ts";
 import { loadCatalogBuildProvidersV1 } from "../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts";
-import { descriptorEmitterBinaryNameV1, descriptorEmitterRequestV1 } from "../../../../../../💻️os/🔨️modules/🔌️plugin/🖨️describe/🛠️emitter/📋️contract/🟦️.ts";
+import { descriptorEmitterBinaryNameV1, descriptorEmitterPinArgumentsV1, descriptorEmitterRequestV1, type DescriptorEmitterPinV1 } from "../../../../../../💻️os/🔨️modules/🔌️plugin/🖨️describe/🛠️emitter/📋️contract/🟦️.ts";
 import { GENERATED_PLAYGROUNDS_PROJECTION, GENERATED_PLUGINS_PROJECTION, readGeneratedCatalogProjection, runtimeCatalogProjectionRootV1 } from "../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { ACTIVATION_RECEIPT_FILE, builtPluginModulesRootIn, developmentRuntimeRoot, playgroundSessionsRootV1, preparedComponentVerdict, type PreparedComponentFacts } from "../../../../../../💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { frameworkOsEngineDeliveriesV1, frameworkOsEngineFacetV1 } from "../../../../../../💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
@@ -123,7 +123,7 @@ export async function ensurePlaygroundGeneratedInputsV1(workspace: string, invoc
   for (const args of requests) await runOwnedBuildChildInvocationV1(workspace, args, invocation, control);
 }
 
-async function preparePlaygroundModels(workspace: string, invocation: ScriptInvocation, missing: ReadonlySet<string>, mode: "prototype" | "release", facet: "browser" | "model", generated: readonly (readonly string[])[]): Promise<void> {
+async function preparePlaygroundModels(workspace: string, invocation: ScriptInvocation, missing: ReadonlySet<string>, mode: "prototype" | "release", facet: "browser" | "model", generated: readonly (readonly string[])[], emitterPin?: DescriptorEmitterPinV1): Promise<void> {
   if (missing.size === 0) return;
   await ensurePlaygroundGeneratedInputsV1(workspace, invocation, generated);
   const { buildComponentClosureV1 } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts");
@@ -132,27 +132,38 @@ async function preparePlaygroundModels(workspace: string, invocation: ScriptInvo
     await ensureNativeTranspileV1(workspace, invocation, scriptCompilerAdmissionControlV1(invocation, "playground:native-transpile", 0));
   }
   const products = repositoryCachePartitionRootDataV1(workspace, "products");
-  if (playgroundDescriptorEmitterMissingV1(products, mode, process.platform)) {
+  if (emitterPin === undefined && playgroundDescriptorEmitterMissingV1(products, mode, process.platform)) {
     const { buildDescriptorEmitterV1 } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/🖨️describe/🛠️emitter/🟦️.ts");
     await buildDescriptorEmitterV1(workspace, invocation,
       scriptCompilerAdmissionControlV1(invocation, "playground:descriptor-emitter", 0));
   }
   const { repositoryCargoNetworkV1 } = await import("../../../📦️packages/🟦️typescript/🦀️cargo/🟦️.ts");
-  await buildComponentClosureV1(workspace, missing, {
-    facet, invocation, prepareCargoOwners: true,
+  const control = scriptCompilerAdmissionControlV1(invocation, "playground:components", 0);
+  const compile = () => buildComponentClosureV1(workspace, missing, {
+    facet, invocation, prepareCargoOwners: true, ...(emitterPin === undefined ? {} : { emitterPin }),
     network: repositoryCargoNetworkV1(invocation, workspace),
-    control: scriptCompilerAdmissionControlV1(invocation, "playground:components", 0),
+    control,
   });
+  try {
+    await compile();
+  } catch (error) {
+    const { NativeBuildStorageShortfallV1 } = await import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/💾️storage-gate/🟦️.ts");
+    if (!(error instanceof NativeBuildStorageShortfallV1) || facet !== "browser" || mode !== "prototype") throw error;
+    const { recoverRepositoryRustPassStorageV1 } = await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts");
+    if (await recoverRepositoryRustPassStorageV1(invocation, control, error.minimumFreeBytes) !== true) throw error;
+    await compile();
+  }
 }
 
 /** 📦️ Builds missing browser boot components through their managed driver using the original launch. */
-async function ensureBootComponents(workspace: string, invocation: ScriptInvocation, variant: string, mode: "prototype" | "release", generated: readonly (readonly string[])[]): Promise<boolean> {
+async function ensureBootComponents(workspace: string, invocation: ScriptInvocation, variant: string, mode: "prototype" | "release", generated: readonly (readonly string[])[], emitterPin?: DescriptorEmitterPinV1): Promise<boolean> {
   const { playgroundComponentClosureV1 } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts");
   const { stagedComponentFacts } = await import("../../../../../../💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔍️freshness/🟦️.ts");
   const modules = builtPluginModulesRootIn(workspace, mode);
-  const missing = missingPlaygroundBootComponentsV1(playgroundComponentClosureV1(variant, "boot"), id => stagedComponentFacts(modules, id));
-  await preparePlaygroundModels(workspace, invocation, missing, mode, "browser", generated);
-  return missing.size > 0;
+  const boot = playgroundComponentClosureV1(variant, "boot");
+  const selected = emitterPin === undefined ? missingPlaygroundBootComponentsV1(boot, id => stagedComponentFacts(modules, id)) : boot;
+  await preparePlaygroundModels(workspace, invocation, selected, mode, "browser", generated, emitterPin);
+  return selected.size > 0;
 }
 
 const WGPU_RENDERER = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu";
@@ -270,7 +281,7 @@ async function runNativePlayground(workspace: string, invocation: ScriptInvocati
 /** 🎮️ Prepares and runs the publications required by the original playground request. */
 export async function serveRootPlaygroundV1(workspace: string, invocation: ScriptInvocation, argv: readonly string[]): Promise<void> {
   const request = rootDevPlaygroundRequestV1(argv);
-  if (!request) throw Error("usage: dev playground <variant> <react|wgpu|native> <prototype|release>");
+  if (!request) throw Error("usage: dev playground <variant> <react|wgpu|native> <prototype|release> [--published-emitter <binary:receipt:index> for React prototype]");
   const original = readOwnedBuildInvocationV1(workspace, invocation, argv);
   if (original.buildMode !== request.profile) throw Error("Playground profile must match the original native request");
   issueRepositoryScriptProvidersV1(process.env);
@@ -290,7 +301,9 @@ export async function serveRootPlaygroundV1(workspace: string, invocation: Scrip
       console.log(`Playground session ${request.variant}: ${session.plugins.length} plugins staged`);
     });
     const { generatedPrerequisiteArgumentsV1 } = await import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🏭️generated-owner/🟦️.ts");
+    const { generatedScanPortsV1 } = await import("../📡️scan-feed/🟦️.ts");
     const generated = await generatedPrerequisiteArgumentsV1(workspace, {
+      ...generatedScanPortsV1(workspace),
       signal: invocation.control.signal,
       report: stage => advanceScriptInvocation(invocation, "playground:generated-inputs", stage),
     });
@@ -301,7 +314,8 @@ export async function serveRootPlaygroundV1(workspace: string, invocation: Scrip
     }
     await ensureBrowserSupport(workspace, invocation, request.profile);
     if (request.renderer === "wgpu") await ensureWgpuRenderer(workspace, invocation, request.profile, generated);
-    const restaged = await ensureBootComponents(workspace, invocation, request.variant, request.profile, generated);
+    const emitterPin = request.publishedEmitter === undefined ? undefined : descriptorEmitterPinArgumentsV1(request.publishedEmitter, request.profile, process.platform);
+    const restaged = await ensureBootComponents(workspace, invocation, request.variant, request.profile, generated, emitterPin);
     const activationRequired = restaged || sessionRefreshed;
     if (request.renderer === "wgpu") {
       await serveWgpuPlayground(workspace, invocation, request.variant, request.profile, activationRequired);

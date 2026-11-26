@@ -4,6 +4,12 @@ import cachePolicy from"../../../⚡️caching/🔣️policy.json"with{type:"jso
 const rules=schema.$defs.rules.const,generated=new Set(cachePolicy[rules.generatedDirectories.field]),noise=new Set(rules.machineLocalFileNames),suffixes=rules.machineLocalFileSuffixes,local=new Set(rules.machineLocalDirectoryNames),pathKinds=new Set(rules.machineLocalPathKinds),directoryKinds=new Set(rules.machineLocalDirectoryKinds);
 
 /** 🧿️ The entries of a directory listing that belong to the source tree as the build sees it: operating-system noise never, a generated directory (the cache policy list) or a machine-local one (`machineLocalDirectoryNames`: git ignores it, a generator fills it on the machines that ran it) never where `isDirectory` says the entry is a directory or a link, a hollow directory (`isHollow`: nothing a repository can hold lies below it, so it is what a removed file leaves behind on one replica and never on another) never, everything else always. https://git-scm.com/docs/gitignore
+ * @template T
+ * @param {readonly T[]} entries
+ * @param {(entry:T)=>string} nameOf
+ * @param {(entry:T)=>boolean} isDirectory
+ * @param {(entry:T)=>boolean} [isHollow]
+ * @returns {T[]}
  * @see ./🧪️tests/🕳️hollow/🟦️.ts */
 export function sourceTreeFilterV1(entries,nameOf,isDirectory,isHollow){
  return entries.filter(entry=>{const name=nameOf(entry);return!noise.has(name)&&!suffixes.some(suffix=>name.endsWith(suffix))&&!((generated.has(name)||local.has(name))&&isDirectory(entry))&&!(isHollow!==undefined&&isHollow(entry));});

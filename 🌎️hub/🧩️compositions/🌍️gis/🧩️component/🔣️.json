@@ -19959,32 +19959,6 @@
                   "claims": [
                     {
                       "namespace": "schema",
-                      "value": "s.stdio.pdf.inference.outline.v1"
-                    }
-                  ],
-                  "descriptorSha256": "b7416a222fed5bce50c36cdf67f898cbbc15d20816448339ba39b09c6658c460",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.inference.outline.v1",
-                  "kind": "inference",
-                  "localizations": []
-                },
-                {
-                  "claims": [
-                    {
-                      "namespace": "schema",
-                      "value": "s.stdio.pdf.inference.pdf14-outline.v1"
-                    }
-                  ],
-                  "descriptorSha256": "105f407c3266b0eee03d35011a3e9e343f627d62a2167033735023cfdb39e860",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.inference.pdf14-outline.v1",
-                  "kind": "inference",
-                  "localizations": []
-                },
-                {
-                  "claims": [
-                    {
-                      "namespace": "schema",
                       "value": "s.stdio.pdf.1.7.inference"
                     }
                   ],
@@ -20032,534 +20006,6 @@
                       "text": "Portable Document Format\nPortable Document Format artifact definition."
                     }
                   ]
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "b4566fa7cab8a69eefe21ee2dcf6928d1cdffbd34de73035b8b442393041dd6e",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.append-page-content.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "63bbea8ed1646904c394f4152a505066511cb59eeaa8d27f4c0316f564ae805a",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.insert-annotation.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "a87d4b1db25bd95b5dce0a2bd83d639c24232030b82d63b4ae9f55671623955d",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.insert-content.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "424df388f5dcf4d3b0e8db1ea2ae4c66f272cef996b279d37c2b8841beaab61f",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.insert-object.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "36a32e71fc9fe85489117a577d9d21b76607ee872ac77d131fbf6108085ab855",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.insert-page.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "f9076007b9d3bf20505a55a35ca49533cfd46c1811169e3143e9a45d3ec0f392",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.move-page.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "76adf83584b5ba6a9c8f3098291e2cc9c3428cd80eaa410cb2ab40740dc37df6",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.pdf14-insert-page.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "f9f7fd44f0692ef1dc86329d73075d3aa52df573b80084f4b52857bb098234e6",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.pdf14-move-page.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "024263ef5afacd73c2dd1338c466de3a189fa348586b7a1aef78e5615c9388ca",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.pdf14-remove-page.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "5f2353f8045b9ebf5b9f6e350a963b3806554d5dcc783f37891c86d4db61f288",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.pdf14-replace-page-text.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "a5e81917445020e47716be0c6a587002d02954f1feb9d3e487d272a4fe1143b6",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.pdf14-resize-page.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "ab65abbe65c63f58e4b5fbd2d1725b2e98608a33c58cf4d4f09a66c655ca9d25",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-annotation.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "a5283e48fe2eacce7945462392408c3a519688d2a140d1b37ff3e399ad591dbe",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-catalog-entry.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "2b38612990cbb3c4e415225f0ca67b46b857186b43c44c3163728598d57c1717",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-color-space.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "0bb4f4d4a01117cdc97f0271c5681a989a41876dd8c1cdd4af427df44da49582",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-content.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "f5a4fd7a23452b39075dcc6081228938bb86eaac67eb82f314fd9138c4ab4533",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-dict-entry.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "70589e354cbb042c61d5dfac12bb2e34a58d2c82307cac4ce8b1692ce3c6cd3e",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-embedded-file.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "0dbb663db3f97f4836e4b55e8304c40ef5a65d104d8458a4fd21ebd35c5602b6",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-ext-g-state.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "e10b414b6d788375ccfe78456f5e588fb098357b1f61c9a82ba081047c5f3868",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-font.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "ec590bbae2d9356903fecd0b71045c887ea76f23875339b4bd4e4f3a03a56257",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-form.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "8ae826ead29c0c7c3322d74a42331370d6270af792f2c0f6fdc3e9cb61b01e60",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-image.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "28df9410d0a4df9fd4b59e7783c1430237d9af40fb29884dc4bda482edc47110",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-named-destination.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "72b6e203823568a18fe78d850b59e6ee89be28f9e561c494e58082431c5f81fa",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-object.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "45f1aaedc8f86e69b5963ca7c09ac0d23cd3e02cdd55afdba153be131a791e1c",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-page.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "1b63fdf34a03b0eacabe5701f9090be022894f4d3eee53bfb703ee567e46348e",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-pattern.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "6e9cfa6f66d16c5b7af9d816c2020d1e127a367af4be11e76ebce5df5c7f886c",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-properties.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "c44df605503293ffcc92d0a0751c937bf73148b59194174d907a1d8075ef74d4",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-shading.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "14cb867b10da2de5dfb476baf210239989d657dba1a9ac96a514501c643623a0",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-trailer-entry.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "455f7a5662b82b8048007f20d2070170e58686d468b767fd1f003ff931f68720",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.replace-content.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "19a92ce119fc140a4355da555fa718e69fc00b47c45a564b7568abe332d3ac03",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.replace-page.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "0929e0bdaab0b10a179fdd8feca478a11ed1067dc2e87a79804fbe653c73c545",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-acro-form.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "28eec04d875a274bac30cff3bfa1a95b6afa2fb55134d19af6b34feb34d9f875",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-annotation.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "4aad59630b95f61ab9517cf12265b68d2aef687af77c2be1b2d42d4fdefa1e55",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-catalog-entry.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "59dd75ffeadc76ad2da50d0503ede8e7735bc3de2d58578f42ecc2975efbe6a9",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-color-space.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "833e3eedcfb2d0f5b6250e7d0c7522d7541f4d216cb6bac9cf817b8be3df29a3",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-dict-entry.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "1caa585aa617274b0aace70730768d54a7b375d97885a3543743c50db9cc646e",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-document-id.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "f0cc57625a795fdf7c425b54a543bce80e01f4effe2be1b2caae7fa88670cbd6",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-embedded-file.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "fe32e4163f14ae78590593fe522db6d0e5ddb81030803a25c5950048e5344e2d",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-encryption.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "79206ead3b52740e51be8c32867be23a7b493ef2df64953706630afe4da0cf00",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-ext-g-state.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "7b434bc9bc6186bdbfe968640767b9195f4c4065836a6bc6fa1f3291d87868ee",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-font.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "cba5e127644ddfa2b1dc6835ae84e9207b2bbe1530d5ab289ae94652851a32e7",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-form.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "74e6f52b4863dd725cd10b72d2ec75af4b7f4f9d462950542be582c326ff82d1",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-image.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "3ab4adf7fad6251a3c74b9bf914628305de3a6251dcfa777c0f4668920425f62",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-info.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "2883d987bcc14a8bc0998be78c0252816984ecdbba553eaf7052e94995731105",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-language.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "cd2f46c16e5550591e62be79852b7fd94f009d916b3ceab75f648136388c7b51",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-mark-info.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "c5cc09ade7cd130401963bbbfe4ff2b11adb4771d1f0bf6b311d9f7df41d2c99",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-metadata.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "fa1ae031e8d9c52f713895730b7fbaf3280a63abea309e068158bb4b63caea9a",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-named-destination.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "431767fa94a70dd6cc6b4323b0a636d98e3fccd81fa56e3cd07032c9809e7891",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-object-value.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "56761f0e592d9671d3452cdb1094cfdb0e8741a23bfc87385305dbea08782a81",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-open-action.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "192b5a5e95133603add90270da423ebd4603fdd27f041ce09bcaa1a7cd34c13d",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-optional-content.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "9dcffbe734c54fb7fbda84fd94f61f1a3cc7e83b557ec60df8f889338bf61c08",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-outlines.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "c078002a4247a5dd67f58ead675fbc685320d70e57c209777455d771108f398e",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-output-intents.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "17ea708141f9fa490b9b588f63e1340592834b11d6fd02f7eedcf852a69cef15",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-box.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "82f4332b0135919faac3cb92adca43c2f5c428c37c341a2b6e453ec35d60188a",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-content.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "92a6218553ba2c946da7a4d87147a86f74e22a0002d3f69a3feec7bc742efaa4",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-crop-box.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "66a592e93c63edc9d0b3999d9c3f95d621cd19f3daa5bf206bce5c1e5b287984",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-labels.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "f8cdfae46d2d8c4a5f4c4fe65647c43e772830bfef4a458b278b906916f8d7fe",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-layout.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "99a9b0af615751c2d5772498ca8d25c9f300ce0fb15a15f363a8c050f06043ea",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-media-box.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "68a63a2e36ce8017ef9e06ab3984ccfb7e0a0f537e92b3a914874b9ae91f4d15",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-mode.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "c8d91ff443f234ed4f4eda6ffad29be636d8313cead113e4aabeb0da2dc99c19",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-rotation.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "fb25768b20cfa027f96d63f87950daeb10dbf5a66dd8e4bc683608d0906d7570",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-user-unit.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "f172bac3c7a1872429f2d4dbefc782fa943cb2fe05f4acc31b33b5584681df72",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-pattern.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "9d9c220c8f4482dcef0bd05fec7f901cb7b6d22e8acf0702e0061702b013fc91",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-properties.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "be64ed11336f64811ca2e2d0a59e2fbbf961e1d169a5a2e1b86340c790be9947",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-shading.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "3b9c35738d3cc9d493ccb79d5f2a429727abaf32c80e5c204482400975d849f0",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-trailer-entry.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "b6739c5a2054ff61d489bd85795c3460953dd66fca585dada0de8d99d072662c",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-viewer-preferences.v1",
-                  "kind": "mutation",
-                  "localizations": []
                 },
                 {
                   "claims": [],
@@ -20630,7 +20076,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "388e494ca1c9d44febbfb5b21f4462b18d9eb0edf6ea63ac96fc7603196a9207",
+                  "descriptorSha256": "6aa933d7b1ffb6fa3453e613720ee29e15a31d269b0a025e5c52b728ed63f212",
                   "executable": false,
                   "identity": "s.stdio.pdf.standard.1-4.dialect.source",
                   "kind": "source-dialect",
@@ -20638,7 +20084,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "b762ceffa86bab83ce1594477e1d08e71e236d8aad1922fde2a5d9f607ec41c8",
+                  "descriptorSha256": "d271da68d1317c51d1cfabab38042e11cac0116cba397a53de2bc3a9588f4d73",
                   "executable": false,
                   "identity": "s.stdio.pdf.standard.1-4.profile.any",
                   "kind": "profile",
@@ -20704,7 +20150,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "0eae31154f1c41e2a3a9bfc6ae69d0d59700e4025099295051a153ae2979c3e3",
+                  "descriptorSha256": "c15405fd9c6b8e3deeee04f4303390a8afeeb964b59debfd8b0d8120ae6a7934",
                   "executable": false,
                   "identity": "s.stdio.pdf.standard.1-7.dialect.source",
                   "kind": "source-dialect",
@@ -20712,7 +20158,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "2e537e05d8891d896a0e9234e711792bcb2c0e128ffbf690592935669967ff43",
+                  "descriptorSha256": "9f1302e784d3ff55f778f50c06da6fb5bcc44d9c5eaa01e816b5c2ef4779b178",
                   "executable": false,
                   "identity": "s.stdio.pdf.standard.1-7.profile.any",
                   "kind": "profile",
@@ -22335,10 +21781,10 @@
                     },
                     {
                       "namespace": "codec-extension",
-                      "value": "21:stdio.semio.animation:semio"
+                      "value": "23:s.stdio.semio.animation:semio"
                     }
                   ],
-                  "descriptorSha256": "5e467c8b4286d41df39a308bb2fb4129cf725696c76b6dcbfb4c5754158760fd",
+                  "descriptorSha256": "ed5ba851f683cda9061fc5771ea12d11b3c93a479f077bbf923cc71ca17365f6",
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-animation-extension-semio.v1",
                   "kind": "codec",
@@ -22352,10 +21798,10 @@
                     },
                     {
                       "namespace": "codec-extension",
-                      "value": "20:stdio.semio.document:semio"
+                      "value": "22:s.stdio.semio.document:semio"
                     }
                   ],
-                  "descriptorSha256": "f76953c901beccaa6ce1585a773a2afe8ffd3df7e061f852206ba9e86b2230a9",
+                  "descriptorSha256": "c558c515694db7ef2c1832cbb5d9196eebee1b5ad26ee2c1cf1dbc74dee380fa",
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-document-extension-semio.v1",
                   "kind": "codec",
@@ -22369,10 +21815,10 @@
                     },
                     {
                       "namespace": "codec-extension",
-                      "value": "17:stdio.semio.graph:semio"
+                      "value": "19:s.stdio.semio.graph:semio"
                     }
                   ],
-                  "descriptorSha256": "35d2854eff216f0fea5500d983821b5409f96fc1cfc408bc4a31e7b9cca00707",
+                  "descriptorSha256": "51ab19df4e775b1efaf3df73b738ff27e62d3edf785fd021881df76a9a250212",
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-graph-extension-semio.v1",
                   "kind": "codec",
@@ -22386,10 +21832,10 @@
                     },
                     {
                       "namespace": "codec-extension",
-                      "value": "17:stdio.semio.image:semio"
+                      "value": "19:s.stdio.semio.image:semio"
                     }
                   ],
-                  "descriptorSha256": "6dbb77214815595af1fc5cfcf6110fa6a208ad87656ae3b141cae2c9dfeaa7ff",
+                  "descriptorSha256": "9eab6209a305ec3b43a0a0ede3b3b9138aa885aabcc2e52c780ad89a1be88c40",
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-image-extension-semio.v1",
                   "kind": "codec",
@@ -22403,10 +21849,10 @@
                     },
                     {
                       "namespace": "codec-extension",
-                      "value": "24:stdio.semio.presentation:semio"
+                      "value": "26:s.stdio.semio.presentation:semio"
                     }
                   ],
-                  "descriptorSha256": "f119e0b9a24798c81ad4603c12fce5c4e7239f015c031cefddb5161e91f6b3c8",
+                  "descriptorSha256": "8695ff85f1fcf661c35995d0a72a4877791256a067071495592c8fbc1e92fb6e",
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-presentation-extension-semio.v1",
                   "kind": "codec",
@@ -22420,10 +21866,10 @@
                     },
                     {
                       "namespace": "codec-extension",
-                      "value": "17:stdio.semio.table:semio"
+                      "value": "19:s.stdio.semio.table:semio"
                     }
                   ],
-                  "descriptorSha256": "e686e291b7022f8fe5e62e39aa19e1bcd3fbd8b48c4bee34d8bbe96cc3bac568",
+                  "descriptorSha256": "51cc3548ae1654c25f93b272aaa284b80c87eec2d703b1de49ed9c0062ed35fb",
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-table-extension-semio.v1",
                   "kind": "codec",
@@ -22437,10 +21883,10 @@
                     },
                     {
                       "namespace": "codec-extension",
-                      "value": "16:stdio.semio.text:semio"
+                      "value": "18:s.stdio.semio.text:semio"
                     }
                   ],
-                  "descriptorSha256": "0abb3af4262948becf683d0b167fad82a56ed24c20fda135d853f236257e68b9",
+                  "descriptorSha256": "90e28cf84206a796f47b334d3572fe7b86affbd5bd8115c111f6d11f16c37f8e",
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-text-extension-semio.v1",
                   "kind": "codec",
@@ -24567,9 +24013,9 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "6ffd518ec3410c446e8093d1a3cefb799f2b09a1e3c191308ba0843b4132164e",
+                  "descriptorSha256": "f1c658c549c181995769a5a59315caace88f98a76fefa4410d413572453bdd94",
                   "executable": false,
-                  "identity": "s.stdio.xlsx.conformance-suite.calamine-oracle",
+                  "identity": "s.stdio.xlsx.conformance-suite.public-corpus",
                   "kind": "conformance-suite",
                   "localizations": []
                 },
@@ -24642,19 +24088,6 @@
                   "claims": [
                     {
                       "namespace": "schema",
-                      "value": "s.stdio.xlsx.inference.outline.v1"
-                    }
-                  ],
-                  "descriptorSha256": "3aa7d8caf3128e78827641d4047aaa1500309b3855d8fe02d5a38c82c0a1fd56",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.inference.outline.v1",
-                  "kind": "inference",
-                  "localizations": []
-                },
-                {
-                  "claims": [
-                    {
-                      "namespace": "schema",
                       "value": "s.stdio.xlsx.inference"
                     }
                   ],
@@ -24689,222 +24122,6 @@
                       "text": "Excel Workbook\nExcel Workbook artifact definition."
                     }
                   ]
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "15a4f4a4f7172738ecd654689ff4060791eaba38a8f5dee84386eb5e901f4553",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.insert-cell.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "b24a4fc8b8bad561801824808db9657001d6328cc41dfc59c5a620d94097eff7",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.insert-shared-string.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "a4bf8502cf133ba243ba3387a0d42372bb375fa053505d632790396ed6a07811",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.insert-sheet.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "69356c680af9693582524a871ee0b6cae379ad0d0b97d4633d590e244c278ee4",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.remove-cell.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "725ee2412175203afd130a82a7d04da6e4899834593d32cd2df8e6d7510a9fe0",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.remove-content-type.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "71740ca62b88b34b65dc909ccfeea6e33e2b341f5522521f21e9fa5d8e9726a8",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.remove-relationship.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "86bbf35ab95c2cf97053ca789f3902ba9146b06e5c7ea95f78f9f86207576a37",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.remove-shared-string.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "d13502e43fb6b3c4e8507a8858f7deec6b8d960cfd0819cf4b7c20751ea49d97",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.remove-sheet.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "f36165fc10efe18acef4e3ee02fa3c24fe687b1919edc2e7ec4525472fc28ca5",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.rename-sheet.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "c84aed3ec195639eb5be5fccf964770dcf5a4d3154f8739a405921c48eb7a324",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.set-cell.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "a7622ca3f4029bc3966fec0551a28217b159c19aeaefbb42c7c41bda5383d3ff",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.set-content-type.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "b91e1f168e55fb0709b67f78b487aa9cfc43097b826bf69b2216e4eb36395ca1",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.set-relationship.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "895babf9cd5ee0b52e05358ddeb6b4ef53bae5e5000a78bff715d11bb2bf7cd0",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.set-shared-string.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "6e33580ddb7f6c0e3ff39c457b6ec564493f8144b58a6f852e22fd346f9900c4",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.strict-insert-vml-part.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "55c18e15facdbe0cc51e07c93beaf3a47b970202d89261978314c52ba96935a3",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.strict-remove-conformance-attribute.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "6279356dd0a3350ab7a582419eb340c617404ae7bd16fdf54338097cf6a7fc62",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.strict-remove-vml-part.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "3deb7a665726380732c4a89202199000ce0a99c53035f4ddaad34028486312cc",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.strict-set-conformance-attribute.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "36d2935a1e2f182117eccb08290083c1b49148aa430ace693c43d4f615ba6fc7",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.strict-set-main-namespace.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "694a4a1756d8bdb197b364254b5c5bb1d28f7aea58a0d813e03984af1385e752",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.strict-set-relationship-base.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "f630e8762920243c900e657b8c6d81ab86d97bebcd827aea20ba356a2b70b465",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.strict-set-relationships-namespace.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "c8591454b322464b0dccdb37b0c24bb90824fa75abb781018f42c8d93fb3f043",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.strict-set-worksheet-content-type.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "b3ba1cc55ffe484ab3da5600447c5b0ee90013bf4713cafec73532fa621a22b3",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.transitional-remove-conformance-attribute.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "418f3a098c432feabcfba21a6dd73a6563dfda0e02912ba3e417470fcff29475",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.transitional-set-conformance-attribute.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "5bbf4422c915e0744221249c8e517f66f37df06a253ae46bd8072ab77e94f808",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.transitional-set-main-namespace.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "19b5a86c14da9ac9bbd855a139ae545b777eb57173792a0b93d4a47be68691b3",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.transitional-set-relationship-base.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "077c2dcc1841bd8f6c9e491bf63bf498291d496309c502426fdede6506b72f49",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.transitional-set-relationships-namespace.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "8aaf53078f88c9de1ca71afa451a2bcffc6dc8c914415c8dc22dc8302d6fa9d9",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.transitional-set-worksheet-content-type.v1",
-                  "kind": "mutation",
-                  "localizations": []
                 },
                 {
                   "claims": [],
@@ -24975,7 +24192,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "5e8fef79149d9de8732daf3bee6196990c9ee487319c42772b64262efdfb7106",
+                  "descriptorSha256": "3f3e813a14890037bb88ee196e6b2a3678fa60aef206384753369d89e3a7990a",
                   "executable": false,
                   "identity": "s.stdio.xlsx.standard.ecma-376.dialect.source",
                   "kind": "source-dialect",
@@ -24983,7 +24200,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "32b837094467a096fa126d4931e911254f69ae35b357778c4b2cdf1144b5dff8",
+                  "descriptorSha256": "1e9ed820dd1ae92d899a53ca7c956ffcdbbd28c645f1832fb012527b0450b8fc",
                   "executable": false,
                   "identity": "s.stdio.xlsx.standard.ecma-376.profile.any",
                   "kind": "profile",
@@ -24991,7 +24208,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "dd1651741bbb4a049d67e8c9211fec11acc29a12752d603b9bdce1cf1267cf88",
+                  "descriptorSha256": "9ad1a6452fa2b703a73d93c94bcc53181b78fa92d4cd520b00d6f7c7396cb36d",
                   "executable": false,
                   "identity": "s.stdio.xlsx.standard.ecma-376.representation.document",
                   "kind": "representation",
@@ -32599,32 +31816,6 @@
                   "claims": [
                     {
                       "namespace": "schema",
-                      "value": "s.stdio.pdf.inference.outline.v1"
-                    }
-                  ],
-                  "descriptorSha256": "b7416a222fed5bce50c36cdf67f898cbbc15d20816448339ba39b09c6658c460",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.inference.outline.v1",
-                  "kind": "inference",
-                  "localizations": []
-                },
-                {
-                  "claims": [
-                    {
-                      "namespace": "schema",
-                      "value": "s.stdio.pdf.inference.pdf14-outline.v1"
-                    }
-                  ],
-                  "descriptorSha256": "105f407c3266b0eee03d35011a3e9e343f627d62a2167033735023cfdb39e860",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.inference.pdf14-outline.v1",
-                  "kind": "inference",
-                  "localizations": []
-                },
-                {
-                  "claims": [
-                    {
-                      "namespace": "schema",
                       "value": "s.stdio.pdf.1.7.inference"
                     }
                   ],
@@ -32672,534 +31863,6 @@
                       "text": "Portable Document Format\nPortable Document Format artifact definition."
                     }
                   ]
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "b4566fa7cab8a69eefe21ee2dcf6928d1cdffbd34de73035b8b442393041dd6e",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.append-page-content.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "63bbea8ed1646904c394f4152a505066511cb59eeaa8d27f4c0316f564ae805a",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.insert-annotation.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "a87d4b1db25bd95b5dce0a2bd83d639c24232030b82d63b4ae9f55671623955d",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.insert-content.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "424df388f5dcf4d3b0e8db1ea2ae4c66f272cef996b279d37c2b8841beaab61f",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.insert-object.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "36a32e71fc9fe85489117a577d9d21b76607ee872ac77d131fbf6108085ab855",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.insert-page.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "f9076007b9d3bf20505a55a35ca49533cfd46c1811169e3143e9a45d3ec0f392",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.move-page.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "76adf83584b5ba6a9c8f3098291e2cc9c3428cd80eaa410cb2ab40740dc37df6",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.pdf14-insert-page.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "f9f7fd44f0692ef1dc86329d73075d3aa52df573b80084f4b52857bb098234e6",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.pdf14-move-page.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "024263ef5afacd73c2dd1338c466de3a189fa348586b7a1aef78e5615c9388ca",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.pdf14-remove-page.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "5f2353f8045b9ebf5b9f6e350a963b3806554d5dcc783f37891c86d4db61f288",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.pdf14-replace-page-text.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "a5e81917445020e47716be0c6a587002d02954f1feb9d3e487d272a4fe1143b6",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.pdf14-resize-page.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "ab65abbe65c63f58e4b5fbd2d1725b2e98608a33c58cf4d4f09a66c655ca9d25",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-annotation.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "a5283e48fe2eacce7945462392408c3a519688d2a140d1b37ff3e399ad591dbe",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-catalog-entry.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "2b38612990cbb3c4e415225f0ca67b46b857186b43c44c3163728598d57c1717",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-color-space.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "0bb4f4d4a01117cdc97f0271c5681a989a41876dd8c1cdd4af427df44da49582",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-content.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "f5a4fd7a23452b39075dcc6081228938bb86eaac67eb82f314fd9138c4ab4533",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-dict-entry.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "70589e354cbb042c61d5dfac12bb2e34a58d2c82307cac4ce8b1692ce3c6cd3e",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-embedded-file.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "0dbb663db3f97f4836e4b55e8304c40ef5a65d104d8458a4fd21ebd35c5602b6",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-ext-g-state.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "e10b414b6d788375ccfe78456f5e588fb098357b1f61c9a82ba081047c5f3868",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-font.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "ec590bbae2d9356903fecd0b71045c887ea76f23875339b4bd4e4f3a03a56257",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-form.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "8ae826ead29c0c7c3322d74a42331370d6270af792f2c0f6fdc3e9cb61b01e60",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-image.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "28df9410d0a4df9fd4b59e7783c1430237d9af40fb29884dc4bda482edc47110",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-named-destination.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "72b6e203823568a18fe78d850b59e6ee89be28f9e561c494e58082431c5f81fa",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-object.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "45f1aaedc8f86e69b5963ca7c09ac0d23cd3e02cdd55afdba153be131a791e1c",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-page.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "1b63fdf34a03b0eacabe5701f9090be022894f4d3eee53bfb703ee567e46348e",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-pattern.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "6e9cfa6f66d16c5b7af9d816c2020d1e127a367af4be11e76ebce5df5c7f886c",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-properties.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "c44df605503293ffcc92d0a0751c937bf73148b59194174d907a1d8075ef74d4",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-shading.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "14cb867b10da2de5dfb476baf210239989d657dba1a9ac96a514501c643623a0",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.remove-trailer-entry.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "455f7a5662b82b8048007f20d2070170e58686d468b767fd1f003ff931f68720",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.replace-content.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "19a92ce119fc140a4355da555fa718e69fc00b47c45a564b7568abe332d3ac03",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.replace-page.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "0929e0bdaab0b10a179fdd8feca478a11ed1067dc2e87a79804fbe653c73c545",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-acro-form.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "28eec04d875a274bac30cff3bfa1a95b6afa2fb55134d19af6b34feb34d9f875",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-annotation.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "4aad59630b95f61ab9517cf12265b68d2aef687af77c2be1b2d42d4fdefa1e55",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-catalog-entry.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "59dd75ffeadc76ad2da50d0503ede8e7735bc3de2d58578f42ecc2975efbe6a9",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-color-space.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "833e3eedcfb2d0f5b6250e7d0c7522d7541f4d216cb6bac9cf817b8be3df29a3",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-dict-entry.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "1caa585aa617274b0aace70730768d54a7b375d97885a3543743c50db9cc646e",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-document-id.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "f0cc57625a795fdf7c425b54a543bce80e01f4effe2be1b2caae7fa88670cbd6",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-embedded-file.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "fe32e4163f14ae78590593fe522db6d0e5ddb81030803a25c5950048e5344e2d",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-encryption.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "79206ead3b52740e51be8c32867be23a7b493ef2df64953706630afe4da0cf00",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-ext-g-state.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "7b434bc9bc6186bdbfe968640767b9195f4c4065836a6bc6fa1f3291d87868ee",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-font.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "cba5e127644ddfa2b1dc6835ae84e9207b2bbe1530d5ab289ae94652851a32e7",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-form.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "74e6f52b4863dd725cd10b72d2ec75af4b7f4f9d462950542be582c326ff82d1",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-image.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "3ab4adf7fad6251a3c74b9bf914628305de3a6251dcfa777c0f4668920425f62",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-info.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "2883d987bcc14a8bc0998be78c0252816984ecdbba553eaf7052e94995731105",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-language.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "cd2f46c16e5550591e62be79852b7fd94f009d916b3ceab75f648136388c7b51",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-mark-info.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "c5cc09ade7cd130401963bbbfe4ff2b11adb4771d1f0bf6b311d9f7df41d2c99",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-metadata.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "fa1ae031e8d9c52f713895730b7fbaf3280a63abea309e068158bb4b63caea9a",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-named-destination.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "431767fa94a70dd6cc6b4323b0a636d98e3fccd81fa56e3cd07032c9809e7891",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-object-value.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "56761f0e592d9671d3452cdb1094cfdb0e8741a23bfc87385305dbea08782a81",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-open-action.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "192b5a5e95133603add90270da423ebd4603fdd27f041ce09bcaa1a7cd34c13d",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-optional-content.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "9dcffbe734c54fb7fbda84fd94f61f1a3cc7e83b557ec60df8f889338bf61c08",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-outlines.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "c078002a4247a5dd67f58ead675fbc685320d70e57c209777455d771108f398e",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-output-intents.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "17ea708141f9fa490b9b588f63e1340592834b11d6fd02f7eedcf852a69cef15",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-box.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "82f4332b0135919faac3cb92adca43c2f5c428c37c341a2b6e453ec35d60188a",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-content.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "92a6218553ba2c946da7a4d87147a86f74e22a0002d3f69a3feec7bc742efaa4",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-crop-box.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "66a592e93c63edc9d0b3999d9c3f95d621cd19f3daa5bf206bce5c1e5b287984",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-labels.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "f8cdfae46d2d8c4a5f4c4fe65647c43e772830bfef4a458b278b906916f8d7fe",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-layout.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "99a9b0af615751c2d5772498ca8d25c9f300ce0fb15a15f363a8c050f06043ea",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-media-box.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "68a63a2e36ce8017ef9e06ab3984ccfb7e0a0f537e92b3a914874b9ae91f4d15",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-mode.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "c8d91ff443f234ed4f4eda6ffad29be636d8313cead113e4aabeb0da2dc99c19",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-rotation.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "fb25768b20cfa027f96d63f87950daeb10dbf5a66dd8e4bc683608d0906d7570",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-page-user-unit.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "f172bac3c7a1872429f2d4dbefc782fa943cb2fe05f4acc31b33b5584681df72",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-pattern.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "9d9c220c8f4482dcef0bd05fec7f901cb7b6d22e8acf0702e0061702b013fc91",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-properties.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "be64ed11336f64811ca2e2d0a59e2fbbf961e1d169a5a2e1b86340c790be9947",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-shading.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "3b9c35738d3cc9d493ccb79d5f2a429727abaf32c80e5c204482400975d849f0",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-trailer-entry.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "b6739c5a2054ff61d489bd85795c3460953dd66fca585dada0de8d99d072662c",
-                  "executable": false,
-                  "identity": "s.stdio.pdf.mutation.set-viewer-preferences.v1",
-                  "kind": "mutation",
-                  "localizations": []
                 },
                 {
                   "claims": [],
@@ -33270,7 +31933,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "388e494ca1c9d44febbfb5b21f4462b18d9eb0edf6ea63ac96fc7603196a9207",
+                  "descriptorSha256": "6aa933d7b1ffb6fa3453e613720ee29e15a31d269b0a025e5c52b728ed63f212",
                   "executable": false,
                   "identity": "s.stdio.pdf.standard.1-4.dialect.source",
                   "kind": "source-dialect",
@@ -33278,7 +31941,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "b762ceffa86bab83ce1594477e1d08e71e236d8aad1922fde2a5d9f607ec41c8",
+                  "descriptorSha256": "d271da68d1317c51d1cfabab38042e11cac0116cba397a53de2bc3a9588f4d73",
                   "executable": false,
                   "identity": "s.stdio.pdf.standard.1-4.profile.any",
                   "kind": "profile",
@@ -33344,7 +32007,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "0eae31154f1c41e2a3a9bfc6ae69d0d59700e4025099295051a153ae2979c3e3",
+                  "descriptorSha256": "c15405fd9c6b8e3deeee04f4303390a8afeeb964b59debfd8b0d8120ae6a7934",
                   "executable": false,
                   "identity": "s.stdio.pdf.standard.1-7.dialect.source",
                   "kind": "source-dialect",
@@ -33352,7 +32015,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "2e537e05d8891d896a0e9234e711792bcb2c0e128ffbf690592935669967ff43",
+                  "descriptorSha256": "9f1302e784d3ff55f778f50c06da6fb5bcc44d9c5eaa01e816b5c2ef4779b178",
                   "executable": false,
                   "identity": "s.stdio.pdf.standard.1-7.profile.any",
                   "kind": "profile",
@@ -34975,10 +33638,10 @@
                     },
                     {
                       "namespace": "codec-extension",
-                      "value": "21:stdio.semio.animation:semio"
+                      "value": "23:s.stdio.semio.animation:semio"
                     }
                   ],
-                  "descriptorSha256": "5e467c8b4286d41df39a308bb2fb4129cf725696c76b6dcbfb4c5754158760fd",
+                  "descriptorSha256": "ed5ba851f683cda9061fc5771ea12d11b3c93a479f077bbf923cc71ca17365f6",
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-animation-extension-semio.v1",
                   "kind": "codec",
@@ -34992,10 +33655,10 @@
                     },
                     {
                       "namespace": "codec-extension",
-                      "value": "20:stdio.semio.document:semio"
+                      "value": "22:s.stdio.semio.document:semio"
                     }
                   ],
-                  "descriptorSha256": "f76953c901beccaa6ce1585a773a2afe8ffd3df7e061f852206ba9e86b2230a9",
+                  "descriptorSha256": "c558c515694db7ef2c1832cbb5d9196eebee1b5ad26ee2c1cf1dbc74dee380fa",
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-document-extension-semio.v1",
                   "kind": "codec",
@@ -35009,10 +33672,10 @@
                     },
                     {
                       "namespace": "codec-extension",
-                      "value": "17:stdio.semio.graph:semio"
+                      "value": "19:s.stdio.semio.graph:semio"
                     }
                   ],
-                  "descriptorSha256": "35d2854eff216f0fea5500d983821b5409f96fc1cfc408bc4a31e7b9cca00707",
+                  "descriptorSha256": "51ab19df4e775b1efaf3df73b738ff27e62d3edf785fd021881df76a9a250212",
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-graph-extension-semio.v1",
                   "kind": "codec",
@@ -35026,10 +33689,10 @@
                     },
                     {
                       "namespace": "codec-extension",
-                      "value": "17:stdio.semio.image:semio"
+                      "value": "19:s.stdio.semio.image:semio"
                     }
                   ],
-                  "descriptorSha256": "6dbb77214815595af1fc5cfcf6110fa6a208ad87656ae3b141cae2c9dfeaa7ff",
+                  "descriptorSha256": "9eab6209a305ec3b43a0a0ede3b3b9138aa885aabcc2e52c780ad89a1be88c40",
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-image-extension-semio.v1",
                   "kind": "codec",
@@ -35043,10 +33706,10 @@
                     },
                     {
                       "namespace": "codec-extension",
-                      "value": "24:stdio.semio.presentation:semio"
+                      "value": "26:s.stdio.semio.presentation:semio"
                     }
                   ],
-                  "descriptorSha256": "f119e0b9a24798c81ad4603c12fce5c4e7239f015c031cefddb5161e91f6b3c8",
+                  "descriptorSha256": "8695ff85f1fcf661c35995d0a72a4877791256a067071495592c8fbc1e92fb6e",
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-presentation-extension-semio.v1",
                   "kind": "codec",
@@ -35060,10 +33723,10 @@
                     },
                     {
                       "namespace": "codec-extension",
-                      "value": "17:stdio.semio.table:semio"
+                      "value": "19:s.stdio.semio.table:semio"
                     }
                   ],
-                  "descriptorSha256": "e686e291b7022f8fe5e62e39aa19e1bcd3fbd8b48c4bee34d8bbe96cc3bac568",
+                  "descriptorSha256": "51cc3548ae1654c25f93b272aaa284b80c87eec2d703b1de49ed9c0062ed35fb",
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-table-extension-semio.v1",
                   "kind": "codec",
@@ -35077,10 +33740,10 @@
                     },
                     {
                       "namespace": "codec-extension",
-                      "value": "16:stdio.semio.text:semio"
+                      "value": "18:s.stdio.semio.text:semio"
                     }
                   ],
-                  "descriptorSha256": "0abb3af4262948becf683d0b167fad82a56ed24c20fda135d853f236257e68b9",
+                  "descriptorSha256": "90e28cf84206a796f47b334d3572fe7b86affbd5bd8115c111f6d11f16c37f8e",
                   "executable": false,
                   "identity": "s.stdio.semio.standard.v1.codec.codec-s-stdio-semio-text-extension-semio.v1",
                   "kind": "codec",
@@ -37207,9 +35870,9 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "6ffd518ec3410c446e8093d1a3cefb799f2b09a1e3c191308ba0843b4132164e",
+                  "descriptorSha256": "f1c658c549c181995769a5a59315caace88f98a76fefa4410d413572453bdd94",
                   "executable": false,
-                  "identity": "s.stdio.xlsx.conformance-suite.calamine-oracle",
+                  "identity": "s.stdio.xlsx.conformance-suite.public-corpus",
                   "kind": "conformance-suite",
                   "localizations": []
                 },
@@ -37282,19 +35945,6 @@
                   "claims": [
                     {
                       "namespace": "schema",
-                      "value": "s.stdio.xlsx.inference.outline.v1"
-                    }
-                  ],
-                  "descriptorSha256": "3aa7d8caf3128e78827641d4047aaa1500309b3855d8fe02d5a38c82c0a1fd56",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.inference.outline.v1",
-                  "kind": "inference",
-                  "localizations": []
-                },
-                {
-                  "claims": [
-                    {
-                      "namespace": "schema",
                       "value": "s.stdio.xlsx.inference"
                     }
                   ],
@@ -37329,222 +35979,6 @@
                       "text": "Excel Workbook\nExcel Workbook artifact definition."
                     }
                   ]
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "15a4f4a4f7172738ecd654689ff4060791eaba38a8f5dee84386eb5e901f4553",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.insert-cell.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "b24a4fc8b8bad561801824808db9657001d6328cc41dfc59c5a620d94097eff7",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.insert-shared-string.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "a4bf8502cf133ba243ba3387a0d42372bb375fa053505d632790396ed6a07811",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.insert-sheet.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "69356c680af9693582524a871ee0b6cae379ad0d0b97d4633d590e244c278ee4",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.remove-cell.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "725ee2412175203afd130a82a7d04da6e4899834593d32cd2df8e6d7510a9fe0",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.remove-content-type.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "71740ca62b88b34b65dc909ccfeea6e33e2b341f5522521f21e9fa5d8e9726a8",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.remove-relationship.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "86bbf35ab95c2cf97053ca789f3902ba9146b06e5c7ea95f78f9f86207576a37",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.remove-shared-string.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "d13502e43fb6b3c4e8507a8858f7deec6b8d960cfd0819cf4b7c20751ea49d97",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.remove-sheet.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "f36165fc10efe18acef4e3ee02fa3c24fe687b1919edc2e7ec4525472fc28ca5",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.rename-sheet.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "c84aed3ec195639eb5be5fccf964770dcf5a4d3154f8739a405921c48eb7a324",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.set-cell.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "a7622ca3f4029bc3966fec0551a28217b159c19aeaefbb42c7c41bda5383d3ff",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.set-content-type.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "b91e1f168e55fb0709b67f78b487aa9cfc43097b826bf69b2216e4eb36395ca1",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.set-relationship.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "895babf9cd5ee0b52e05358ddeb6b4ef53bae5e5000a78bff715d11bb2bf7cd0",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.set-shared-string.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "6e33580ddb7f6c0e3ff39c457b6ec564493f8144b58a6f852e22fd346f9900c4",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.strict-insert-vml-part.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "55c18e15facdbe0cc51e07c93beaf3a47b970202d89261978314c52ba96935a3",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.strict-remove-conformance-attribute.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "6279356dd0a3350ab7a582419eb340c617404ae7bd16fdf54338097cf6a7fc62",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.strict-remove-vml-part.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "3deb7a665726380732c4a89202199000ce0a99c53035f4ddaad34028486312cc",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.strict-set-conformance-attribute.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "36d2935a1e2f182117eccb08290083c1b49148aa430ace693c43d4f615ba6fc7",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.strict-set-main-namespace.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "694a4a1756d8bdb197b364254b5c5bb1d28f7aea58a0d813e03984af1385e752",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.strict-set-relationship-base.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "f630e8762920243c900e657b8c6d81ab86d97bebcd827aea20ba356a2b70b465",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.strict-set-relationships-namespace.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "c8591454b322464b0dccdb37b0c24bb90824fa75abb781018f42c8d93fb3f043",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.strict-set-worksheet-content-type.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "b3ba1cc55ffe484ab3da5600447c5b0ee90013bf4713cafec73532fa621a22b3",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.transitional-remove-conformance-attribute.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "418f3a098c432feabcfba21a6dd73a6563dfda0e02912ba3e417470fcff29475",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.transitional-set-conformance-attribute.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "5bbf4422c915e0744221249c8e517f66f37df06a253ae46bd8072ab77e94f808",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.transitional-set-main-namespace.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "19b5a86c14da9ac9bbd855a139ae545b777eb57173792a0b93d4a47be68691b3",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.transitional-set-relationship-base.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "077c2dcc1841bd8f6c9e491bf63bf498291d496309c502426fdede6506b72f49",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.transitional-set-relationships-namespace.v1",
-                  "kind": "mutation",
-                  "localizations": []
-                },
-                {
-                  "claims": [],
-                  "descriptorSha256": "8aaf53078f88c9de1ca71afa451a2bcffc6dc8c914415c8dc22dc8302d6fa9d9",
-                  "executable": false,
-                  "identity": "s.stdio.xlsx.mutation.transitional-set-worksheet-content-type.v1",
-                  "kind": "mutation",
-                  "localizations": []
                 },
                 {
                   "claims": [],
@@ -37615,7 +36049,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "5e8fef79149d9de8732daf3bee6196990c9ee487319c42772b64262efdfb7106",
+                  "descriptorSha256": "3f3e813a14890037bb88ee196e6b2a3678fa60aef206384753369d89e3a7990a",
                   "executable": false,
                   "identity": "s.stdio.xlsx.standard.ecma-376.dialect.source",
                   "kind": "source-dialect",
@@ -37623,7 +36057,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "32b837094467a096fa126d4931e911254f69ae35b357778c4b2cdf1144b5dff8",
+                  "descriptorSha256": "1e9ed820dd1ae92d899a53ca7c956ffcdbbd28c645f1832fb012527b0450b8fc",
                   "executable": false,
                   "identity": "s.stdio.xlsx.standard.ecma-376.profile.any",
                   "kind": "profile",
@@ -37631,7 +36065,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "dd1651741bbb4a049d67e8c9211fec11acc29a12752d603b9bdce1cf1267cf88",
+                  "descriptorSha256": "9ad1a6452fa2b703a73d93c94bcc53181b78fa92d4cd520b00d6f7c7396cb36d",
                   "executable": false,
                   "identity": "s.stdio.xlsx.standard.ecma-376.representation.document",
                   "kind": "representation",

@@ -234,9 +234,9 @@ export function parseListRootV1(text:string):Readonly<{svh:string;dependencies:r
  return Object.freeze({svh:own[1]!,dependencies:Object.freeze(dependencies)});
 }
 
-/** 🧋️ Asks the compiler itself for the crate hashes of one `.rmeta` file; `undefined` when it cannot say. */
+/** 🧋️ Asks the compiler itself for the crate hashes of one `.rmeta` file; `undefined` when it cannot say, including truncated metadata, which must not leave a compiler crash report in the working directory. */
 export function listRootV1(inner:readonly string[],path:string,environment:Readonly<Record<string,string|undefined>>):ReturnType<typeof parseListRootV1>{
- const run=spawnSync(inner[0]!,[...inner.slice(1),"-Z","ls=root",path],{windowsHide:true,encoding:"utf8",env:{...environment,RUSTC_BOOTSTRAP:"1"} as NodeJS.ProcessEnv,timeout:policy.unit.listTimeoutMilliseconds});
+ const run=spawnSync(inner[0]!,[...inner.slice(1),"-Z","ls=root",path],{windowsHide:true,encoding:"utf8",env:{...environment,RUSTC_BOOTSTRAP:"1",RUSTC_ICE:"0"} as NodeJS.ProcessEnv,timeout:policy.unit.listTimeoutMilliseconds});
  return run.status===0?parseListRootV1(run.stdout):undefined;
 }
 

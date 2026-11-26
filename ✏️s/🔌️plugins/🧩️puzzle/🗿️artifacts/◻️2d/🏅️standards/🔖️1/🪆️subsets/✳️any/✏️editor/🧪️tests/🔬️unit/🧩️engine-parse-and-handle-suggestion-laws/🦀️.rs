@@ -7,9 +7,12 @@
 async fn shipped_examples_parse_in_the_board_engine() {
     for (name, json) in [("concrete-forest", concrete_forest_example_json()), ("nakagin", nakagin_example_json())] {
         let snapshot: Value = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("example json");
-        let mut host = BoardHost::default();
-        let parsed = {let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&snapshot.to_string(),&mut control)};
+        let painted = crate::editor::puzzle2d::snapshot::puzzle2d_board_snapshot_json(&snapshot);
+        let mut accepted = |_| true;
+        let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64 * 1024 * 1024, &mut accepted);
+        let parsed = load_into_default_host(&painted, &mut control);
         if !parsed {
+            let snapshot: Value = semio_framework_pack_json::from_json_str(&painted, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("painted example json");
             let nodes = board_snapshot_nodes(&snapshot).to_vec();
             let edges = board_snapshot_edges(&snapshot).to_vec();
             let probe = |nodes: &[Value], edges: &[Value]| {let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_into_default_host(&json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0, "y": 0, "zoom": 1 }, "nodes": nodes, "edges": edges }).to_string(),&mut control)};
@@ -98,10 +101,8 @@ async fn deleting_an_edged_handle_keeps_the_board_parseable() {
     dispatch(&mut app, "deleteSelection", None, None).expect("delete");
     let after = fixture_of(&app);
     assert!(!board_snapshot_edges(&after).iter().any(|edge| edge.get("id").and_then(Value::as_str) == Some(edge_id.as_str())), "the edge on the deleted handle must go with it");
-    let mut host = BoardHost::default();
-    let parsed = {let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&after.to_string(),&mut control)};
+    painted_fixture_parses(&mut app, "after an edged handle delete");
     close_app(&mut app);
-    assert!(parsed, "the board engine must still parse the document after a handle delete");
 }
 
 /// 🗑️ Deleting an edged node commits through the store (its inverse is one `create-node` plus one

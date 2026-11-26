@@ -2,6 +2,7 @@
   "genesisZoom": 1.25,
   "authoredZoom": 2.5,
   "replacementZoom": 3.75,
+  "completedWork": 4,
   "cancelCuts": [
     0,
     1,

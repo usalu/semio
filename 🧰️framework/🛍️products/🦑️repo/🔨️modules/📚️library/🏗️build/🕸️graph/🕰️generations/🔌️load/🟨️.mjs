@@ -42,7 +42,7 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   reasonMore:"graph: {count} more stale inputs are not listed",
   pendingCrate:"graph: the crate manifest {path} has no build project owner yet; it stays out of the graph and does not make the workspace stale until its owner row is registered (run {command})",
   withheldDependency:"graph: {project} is withheld: {source} depends on projects that this graph snapshot does not contain ({target}), created or removed while the graph was built; run the command again to include them, or remove them from the native sources of {project}",
-  withheldSource:"graph: {project} is withheld: {source} does not parse (sha256 {sha}); fix that file and run the command again",
+  withheldSource:"graph: {project} is withheld: {source} could not be inferred (sha256 {sha}): {reason}; fix the cause and run the command again",
   changeAdded:"added",
   changeRemoved:"removed",
   changeChanged:"changed",
@@ -92,7 +92,7 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   reasonMore:"Graph: {count} weitere veraltete Eingaben werden nicht aufgelistet",
   pendingCrate:"Graph: das Crate-Manifest {path} hat noch keinen Build-Projekt-Eigner; es bleibt außerhalb des Graphen und macht den Arbeitsbereich nicht veraltet, bis seine Eigner-Zeile eingetragen ist ({command} ausführen)",
   withheldDependency:"Graph: {project} wird zurückgehalten: {source} hängt von Projekten ab, die dieser Graph-Schnappschuss nicht enthält ({target}); sie wurden während des Graph-Aufbaus angelegt oder entfernt; den Befehl erneut ausführen, um sie aufzunehmen, oder sie aus den nativen Quellen von {project} entfernen",
-  withheldSource:"Graph: {project} wird zurückgehalten: {source} lässt sich nicht lesen (sha256 {sha}); die Datei korrigieren und den Befehl erneut ausführen",
+  withheldSource:"Graph: {project} wird zurückgehalten: {source} konnte nicht abgeleitet werden (sha256 {sha}): {reason}; die Ursache beheben und den Befehl erneut ausführen",
   changeAdded:"hinzugefügt",
   changeRemoved:"entfernt",
   changeChanged:"geändert",
@@ -123,8 +123,8 @@ export function renderGenerationMessageV1(key,fields,language){
  return template.replace(/\{([a-z]+)\}/gu,(_token,name)=>String(fields[name]));
 }
 
-/** 🚧️ The fields of the message that words one withheld project: the project, its declaring source, the projects it waits for and the start of the digest of the observed bytes. */
-function withheldFieldsV1(row){return{project:row.project??row.root,source:row.source,target:row.missing?.join(", ")??"",sha:row.sha256.slice(0,12)};}
+/** 🚧️ The fields of the message that words one withheld project: the project, its declaring source, the projects it waits for, the start of the digest of the observed bytes and the reason it recorded (a source that does not parse, a failure of the inference itself: the file bytes are only the identity of the withholding, never the diagnosis). */
+function withheldFieldsV1(row){return{project:row.project??row.root,source:row.source,target:row.missing?.join(", ")??"",sha:row.sha256.slice(0,12),reason:String(row.reason??"").replace(/\s+/gu," ")};}
 
 /** 🕸️ Words one withheld project in the language of the caller: the projects a test project waits for, or the source that does not parse. */
 export function describeUnavailableProjectV1(row,language){return renderGenerationMessageV1(row.missing?"withheldDependency":"withheldSource",withheldFieldsV1(row),language);}
@@ -262,6 +262,7 @@ export function shapeComputeResultV1({workspaceRoot,part,stubs,separator="/",imp
  owners.forEach((owner,at)=>{owner.rows=joined(claims.rows[slotOf[at]],all);});
  for(const owner of edgeOnly){const{name,slot,...rest}=owner;owners.push({name,partial:"edges",...rest,rows:claims.rows[slot]});}
  const environment=claims.environment(part.env.rows,[...implementation.all,...implementation.environment]);
+ part.rows?.log?.seal?.();
  return{owners,...(part.carried?.length?{carried:part.carried}:{}),...(part.readsOf?{readsOf:part.readsOf}:{}),...(part.reEdge?{reEdge:async(name,fragment)=>orderedEdgesV1(await part.reEdge(name,fragment))}:{}),...(part.derived?.length?{derived:part.derived}:{}),env:{digest:part.env.digest,rows:environment,...(part.env.parts?{parts:part.env.parts}:{})},global:{version:1,externalNodes:part.externalNodes??{},edges:other,unavailable:part.parseUnavailable??[]},replaceTags:part.replaceTags??[],...(Number.isSafeInteger(part.inferred)?{inferred:part.inferred}:{}),...(part.phases?{phases:part.phases}:{}),...(part.dispose?{dispose:part.dispose}:{})};
 }
 

@@ -63,7 +63,7 @@ use serde_json::json;
 use crate::editor::page::{inspector};
 use crate::editor::page::*;
 use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
-use crate::standards::v1_7::subsets::base::schema::snapshot::{pack_samples, PdfAnnotationKind, PdfImage, PdfOp, PdfPage, PdfPageLayout, PdfPageMode, PdfTextString};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{pack_samples, PdfContent, PdfAnnotationKind, PdfImage, PdfOp, PdfPage, PdfPageLayout, PdfPageMode, PdfTextString};
 
 fn apply(snapshot: &mut PdfSnapshot, edit: PdfPageEdit) {
     let mutations = apply_payload(snapshot, &edit.action, &edit.payload).expect("page edit");
@@ -92,7 +92,7 @@ fn sample() -> PdfSnapshot {
         PdfOp::SetTextMatrix { matrix: [1.0, 0.0, 0.0, 1.0, 15.0, 250.0] },
         PdfOp::ShowText { text: PdfTextString::text("Hello") },
         PdfOp::EndText,
-    ];
+    ].into();
     snapshot.pages.push(page);
     snapshot.images.push(PdfImage::rgb8("Im1", 2, 2, vec![255; 12]));
     snapshot.fonts.push(crate::standards::v1_7::subsets::base::schema::snapshot::PdfFont::standard("F1", "Helvetica"));
@@ -829,7 +829,7 @@ fn canvas_repaints_image_samples_after_replacement() {
         PdfOp::Transform { matrix: serde_json::from_value(fixture["matrix"].clone()).unwrap() },
         PdfOp::PaintXObject { name: "Im1".into() },
         PdfOp::Restore,
-    ];
+    ].into();
     let mut snapshot = PdfSnapshot::default();
     snapshot.pages.push(page);
     let width = fixture["width"].as_u64().unwrap() as u32;
@@ -911,7 +911,7 @@ fn canvas_paints_base14_glyph_outlines_at_the_pdf_baseline() {
         PdfOp::SetTextRise { rise: fixture["textRise"].as_f64().unwrap() },
         PdfOp::ShowText { text: PdfTextString::text(expected["text"]["content"].as_str().unwrap()) },
         PdfOp::EndText,
-    ];
+    ].into();
     let mut snapshot = PdfSnapshot::default();
     snapshot.pages.push(page);
     snapshot.fonts.push(PdfFont::standard("F1", fixture["baseFont"].as_str().unwrap()));
@@ -1013,7 +1013,7 @@ fn canvas_viewport_crops_page_paint_and_hit_testing() {
         let [r, g, b]: [f64; 3] = serde_json::from_value(rectangle["rgb"].clone()).unwrap();
         let [x, y, width, height]: [f64; 4] = serde_json::from_value(rectangle["bounds"].clone()).unwrap();
         [PdfOp::SetFillRgb { r, g, b }, PdfOp::Rectangle { x, y, width, height }, PdfOp::Fill]
-    }).collect::<Vec<_>>();
+    }).collect::<PdfContent>();
     let point = |value: &Value| -> [f64; 2] { serde_json::from_value(value.clone()).unwrap() };
 
     for case in fixture["cases"].as_array().unwrap() {
@@ -1049,7 +1049,7 @@ fn canvas_viewport_crops_page_paint_and_hit_testing() {
                     assert_eq!(hit_test(&snapshot, x, y), None);
                 }
                 let [x, y, width, height]: [f64; 4] = serde_json::from_value(fixture["secondPageInk"].clone()).unwrap();
-                snapshot.pages[1].content = vec![PdfOp::Rectangle { x, y, width, height }, PdfOp::Fill];
+                snapshot.pages[1].content = vec![PdfOp::Rectangle { x, y, width, height }, PdfOp::Fill].into();
                 let [x, y] = point(&fixture["onSecondPage"]);
                 assert_eq!(hit_test(&snapshot, x, y).as_deref(), Some("p1:v0"));
                 let [x, y] = point(&fixture["pageGap"]);
@@ -1227,7 +1227,7 @@ fn moving_one_image_preserves_another_painted_in_the_same_transform() {
         PdfOp::Transform { matrix },
         PdfOp::PaintXObject { name: "Im1".into() },
         PdfOp::PaintXObject { name: "Im1".into() },
-    ];
+    ].into();
     let images = objects(&doc);
     let edit = edit_from_action("move", Some(&args(vec![
         ("page", semio_framework_value::DslValue::float(1.0)),
@@ -1277,7 +1277,7 @@ fn moving_a_show_operator_preserves_the_following_text_position() {
         PdfOp::ShowText { text: PdfTextString::text("A") },
         PdfOp::ShowText { text: PdfTextString::text("B") },
         PdfOp::EndText,
-    ];
+    ].into();
     let original = objects(&doc);
     assert!((original[1].x - fixture["followingX"].as_f64().unwrap()).abs() < 1e-5);
     let mut deleted = doc.clone();
@@ -1344,7 +1344,7 @@ fn text_render_modes_select_fill_stroke_and_invisible_text() {
         ops.extend([PdfOp::SetTextRenderingMode { mode: value }, PdfOp::ShowText { text: PdfTextString::text(value.to_string()) }]);
     }
     ops.push(PdfOp::EndText);
-    doc.pages[0].content = ops;
+    doc.pages[0].content = ops.into_iter().collect();
     let scene: Value = serde_json::from_str(&canvas_layers(&doc, None, semio_ui_locale::Locale::En)).unwrap();
     assert_eq!(objects(&doc).len(), 8);
     for mode in fixture["modes"].as_array().unwrap() {
@@ -1364,7 +1364,7 @@ fn text_render_modes_select_fill_stroke_and_invisible_text() {
 fn skewed_image_pointer_hits_follow_its_painted_quadrilateral() {
     let fixture: Value = serde_json::from_str(include_str!("🧪️oriented-form-clip.json")).unwrap();
     let mut page = PdfPage::new(100.0, 100.0);
-    page.content = vec![PdfOp::Transform { matrix: [20.0, 10.0, 8.0, 16.0, 20.0, 20.0] }, PdfOp::PaintXObject { name: "Im1".into() }];
+    page.content = vec![PdfOp::Transform { matrix: [20.0, 10.0, 8.0, 16.0, 20.0, 20.0] }, PdfOp::PaintXObject { name: "Im1".into() }].into();
     let mut snapshot = PdfSnapshot::default();
     snapshot.pages.push(page);
     snapshot.images.push(PdfImage::rgb8("Im1", 1, 1, vec![255, 0, 0]));
@@ -1407,7 +1407,7 @@ fn replacing_a_text_run_keeps_the_following_run_at_its_original_baseline() {
         PdfOp::BeginText, PdfOp::SetFont { name: "F1".into(), size: 12.0 },
         PdfOp::MoveText { tx: 20.0, ty: 100.0 },
         PdfOp::ShowText { text: PdfTextString::text("A") }, PdfOp::ShowText { text: PdfTextString::text("B") }, PdfOp::EndText,
-    ];
+    ].into();
     let original = objects(&doc);
     let edit = edit_from_action("set-text", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(original[0].id.clone())), ("text", semio_framework_value::DslValue::String("Longer replacement".into()))]))).unwrap();
     apply(&mut doc, edit);

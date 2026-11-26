@@ -78,7 +78,7 @@ use semio_framework_actor::{ActorId, OriginalGuestExecutionBudget, OriginalGuest
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicBool;
 use semio_framework::kernel::{BrokerCapabilityGrant, Budget, Event, TurnResult, TurnStatus};
-use semio_plugin_host_engine::{BudgetLimiter, EpochDeadlineCell, EpochDeadlines, EpochDemand, IsolatedCompileTarget, SharedEngineConfig, build_shared_engine, compiled_cache_path, default_compiled_cache_root, hex_encode, load_compiled_component, plugin_host_worker_pool, shared_engine_config_hash, store_compiled_component};
+use semio_plugin_host_engine::{BudgetLimiter, EpochDeadlineCell, EpochDeadlines, EpochDemand, IsolatedCompileTarget, SharedEngineConfig, build_shared_engine, compiled_cache_path, hex_encode, load_compiled_component, plugin_host_worker_pool, prepared_compiled_cache_root, shared_engine_config_hash, store_compiled_component};
 use wasm::component::{Component, Linker, ResourceTable};
 use wasm::{Engine, ResourceLimiter, Store};
 use semio_plugin_guest_contract::{GUEST_DIAGNOSTICS_CAPACITY_BYTES, GuestCallCancellation, GuestDocumentMirror, GuestDocumentPair, JobBudget, JobStep, PluginHostError, TurnFault, decode_guest_fault_bytes, identity_turn_fault, sqlite_wire};

@@ -1,0 +1,11 @@
+# Runtime Wake reserve classification
+
+The official MCP SDK diagnostic Note creation completed two actor turns, then reported an internal error with the message `cleanup copy exceeds operation currency`. The same subtraction handled validation of authored policy, verification of recorded ledger debits, and whether a live operation had room left beside its protected shares.
+
+Live retained item, copy, capacity, and release shortfalls now return `WorkLimit`, which the existing native MCP fault mapping represents as `BUDGET_EXCEEDED`. The result names the affected share, dimension, available amount, and reserved amount. Static policy, recorded debits, and depth validation keep their existing invalid-value classification. The calculation uses the same retained stock and protects the same reserves.
+
+The public native regression opens a real Wake Source under a valid policy, admits its actual producer, pays host copy currency in an ordinary callback, and attempts an infrastructure guest loan. The old code returned the diagnostic SDK's exact invalid-value message. The repaired code returned `WorkLimit` for the transport reserve and did not allocate a guest loan. The same Source then completed paid root retirement. The test also checks that an authored policy exceeding physical copy stock still fails validation.
+
+The shared fixture covers five dimensions, a reserve at exact equality, and a reserve with capacity remaining. Independent SQLite classification matched all seven fixture rows. All five tests in the focused Bun operation suite passed. The native production source was compiled and linked against pinned compatible native dependencies in isolated ticket scratch. The combined component build was left running.
+
+The regular native MCP gateway was also rebuilt with the established locked optimization profile. Its 04:35:43 CET executable contains the new live reserve error text. The official SDK smoke passed real stdio negotiation and capability discovery. A separate official SDK Note run against the existing component and a diagnostic reserve completed two actor turns and then returned the actual typed, retryable `BUDGET_EXCEEDED` response. The transport partition needed 2,000,000,000 copy bytes with 1,999,937,612 available. The previous executable remains available separately for controlled comparisons.

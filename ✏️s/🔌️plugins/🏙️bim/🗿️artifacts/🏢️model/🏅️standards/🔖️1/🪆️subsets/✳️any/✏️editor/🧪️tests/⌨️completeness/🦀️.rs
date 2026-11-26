@@ -15,7 +15,7 @@ use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of;
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::{bim_app, dispatch, history_verb, render_text, view, BimApp};
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, run};
 use semio_ui_locale::{LabelText, Locale};
-use semio_s_artifact_bim_model_bim::editor::bim::{BIM_TOOL_IDS, BimCommand, BimModelApp, all_keybindings, create_bim_app};
+use semio_s_artifact_bim_model_bim::editor::bim::{BIM_TOOL_IDS, BimCommand, BimModelApp, all_keybindings, bim_fault_notices, create_bim_app};
 
 fn code(result: Result<Emit<ModelMutation, NoConfigMutation>, Fault>) -> Option<String> {
     result.err().map(|fault| fault.code.0)
@@ -214,6 +214,7 @@ async fn the_wall_sweep_the_attach_and_the_reveal_are_reachable_from_the_ui_thro
 
 //#region 🔖️Panel
 fn panel(snapshot: &ModelSnapshot, elements: &[&str], library: &[&str], locale: Locale) -> String {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let own = |ids: &[&str]| ids.iter().map(|id| id.to_string()).collect::<Vec<_>>();
     let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, Clone::clone);
     let view = ViewModel::new(locale, semio_ui_locale::Terminology::Native);
@@ -264,8 +265,8 @@ async fn with_nothing_selected_the_panel_edits_the_project() {
 async fn accessible(app: &mut BimApp, body: &str, view: &ViewModel) -> (Option<String>, Option<String>) {
     use semio_plugin::PluginApp;
     semio_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, body, view, app.1.cx(), |root| {
+        let name = root.accessibility.label.as_ref().map(|label| label.0.as_str().to_string());
         let description = root.accessibility.description.as_ref().map(|label| label.0.as_str().to_string());
-        let description = root.accessibility.description.as_ref().map(|label| label.as_str().to_string());
         (name, description)
     }).await.expect("render")
 }
@@ -446,38 +447,8 @@ async fn the_diagnostics_panel_of_the_mounted_app_names_a_clean_model_in_both_la
     assert!(render_text(&mut app, diagnostics_panel::BODY_KEY, &view(Locale::De, &[], None)).await.contains("Keine Probleme gefunden"));
 }
 
-#[semio_framework_async_macros::async_test]
-async fn the_mounted_editor_analyzes_and_downloads_both_ifc_dialects() {
-    use semio_plugin::Effect;
-    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc;
-    use semio_s_artifact_stdio_contract::part21::parse_part21;
-
-    let mut app = bim_app().await;
-    let snapshot = app.snapshot().expect("snapshot");
-    assert!(!snapshot.walls.is_empty() && !snapshot.slabs.is_empty());
-    let initial = view(Locale::En, &[(plan::WINDOW_KIND_ID, plan::WINDOW_KIND_ID)], Some(plan::WINDOW_KIND_ID));
-    assert!(!render_text(&mut app, plan::BODY_KEY, &initial).await.is_empty());
-    for format in ["ifc2x3", "ifc4"] {
-        let arguments = semio_plugin::DslValue::object([("format".to_string(), semio_plugin::DslValue::String(format.into()))]);
-        let command = BimModelApp::command_from_action("exportModel", &mut Some(arguments), &mut None).expect("export action");
-        let result = dispatch(&mut app, command).await;
-        assert!(!result.edited_document());
-        let [Effect::DownloadMediaExport { filename, mime_type, data, encoding: None }] = result.requested_effects.as_slice() else {
-            panic!("expected the mounted IFC download: {:?}", result.requested_effects);
-        };
-        assert!(filename.ends_with(".ifc"));
-        assert_eq!(mime_type, "application/x-step");
-        let document = parse_part21(data).expect("the owning Part-21 codec accepts the file");
-        assert_eq!(document.by_type("IfcProject").count(), 1);
-        assert!(document.by_type("IfcWallStandardCase").chain(document.by_type("IfcWall")).count() > 0);
-        assert!(document.by_type("IfcSlab").count() > 0);
-        let expected = if format == "ifc4" { ifc::export_ifc4(&snapshot) } else { ifc::export_ifc2x3(&snapshot) };
-        assert_eq!(data.as_bytes(), expected.expect("the registered serializer").0);
-    }
-    let analyze = BimModelApp::command_from_action("analyseModel", &mut None, &mut None).expect("analyze action");
-    assert!(!dispatch(&mut app, analyze).await.edited_document());
-    assert_eq!(app.snapshot().expect("snapshot"), snapshot);
-}
+#[path = "📤️first-export/🦀️.rs"]
+mod first_export;
 
 #[semio_framework_async_macros::async_test]
 async fn the_mounted_issues_command_downloads_a_bcf_archive() {

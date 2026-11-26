@@ -8,7 +8,7 @@ import{privateRepositoryWorkspaceV1}from"../../../../../../../🧪️testing/�
 import{declareLibraryBuildTestEnvelopeV1}from"../../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 import{OWNER_POOL_POLICY_V1 as P}from"../../🟦️.ts";
 const repository=await privateRepositoryWorkspaceV1("graph");
-declareLibraryBuildTestEnvelopeV1({suite:"build-inference",scratch:"checkout"});
+declareLibraryBuildTestEnvelopeV1({suite:"build-inference-projects",scratch:"checkout"});
 
 const inference=await import("../../../../🟨️.mjs") as any;await inference.libraryBootstrap;
 const scriptInputs=await import("../../../../🧭️script-inputs/🟨️.mjs") as any,driver=await import("../../🔬️inference/🟨️.mjs") as any;

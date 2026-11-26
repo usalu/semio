@@ -26,6 +26,15 @@ pub(crate) fn validate_inference_request(item: &DeclaredInference, payload: Opti
         return Ok(());
     };
     let binding = contract.artifact_binding.as_ref();
+    if binding.is_some_and(|binding| binding.encoding == semio_framework::INFERENCE_ARTIFACT_PACK_BYTES) {
+        if payload.is_some_and(|value| value.as_object().is_none_or(|object| !object.is_empty())) {
+            return Err(inference_field_invalid("payload", format!("`{}` takes no payload: the gateway binds the artifact's pack as the whole body (contract `{}`)", item.inference_schema, contract.payload_schema_id)));
+        }
+        if artifact_id.is_none() {
+            return Err(inference_field_invalid("artifactId", format!("`{}` runs ON an artifact: name it with `artifactId` (contract `{}`)", item.inference_schema, contract.payload_schema_id)));
+        }
+        return Ok(());
+    }
     if let Some(body) = payload.filter(|value| value.as_object().is_none_or(|object| !object.is_empty())) {
         let Some(object) = body.as_object() else {
             return Err(inference_field_invalid("payload", format!("`{}` takes a JSON object body, per `{}`", item.inference_schema, contract.payload_schema_id)));

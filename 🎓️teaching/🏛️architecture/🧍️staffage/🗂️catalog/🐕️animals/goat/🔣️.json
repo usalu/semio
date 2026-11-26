@@ -76742,28 +76742,12 @@
               },
               {
                 "at": [
-                  0.0502,
-                  -0.08695,
+                  0.05020047,
+                  -0.08694921,
                   0
                 ],
                 "rx": 0.124,
                 "ry": 0.1555,
-                "exponent": 2.1,
-                "rotation": [
-                  0.20490853,
-                  0.6767662,
-                  -0.20490853,
-                  0.6767662
-                ]
-              },
-              {
-                "at": [
-                  0.0821,
-                  -0.12023,
-                  0
-                ],
-                "rx": 0.136,
-                "ry": 0.1655,
                 "exponent": 2.1,
                 "rotation": [
                   0.20490853,
@@ -76866,28 +76850,12 @@
               },
               {
                 "at": [
-                  0.262,
-                  -0.1455,
+                  0.26199944,
+                  -0.14550365,
                   0
                 ],
                 "rx": 0.149,
                 "ry": 0.1785,
-                "exponent": 2.15,
-                "rotation": [
-                  0,
-                  0.70710678,
-                  0,
-                  0.70710678
-                ]
-              },
-              {
-                "at": [
-                  0.317,
-                  -0.146,
-                  0
-                ],
-                "rx": 0.146,
-                "ry": 0.178,
                 "exponent": 2.15,
                 "rotation": [
                   0,
@@ -90349,8 +90317,8 @@
         ],
         "decisions": [
           {
-            "en": "Body (smallest feature 7.5 mm): a horned dairy doe, 0.76 m at the withers, 55 kg, 1.28 m from muzzle to pin bones. The trunk is cut at vertical stations: chest 0.25 m wide at the heart girth and 0.36 m deep with the withers 15 mm above the back, loin level, croup falling from the hooks to the pin bones, and a belly lobe that puts the greatest breadth of 0.32 m low behind the last rib as on a doe with a full rumen. Udder with two teats, neck with the throat line, head and jaw with eyes and nostrils, beard, scimitar horns, leaf ears, two tail pieces.",
-            "de": "Körper (kleinstes Merkmal 7,5 mm): eine gehörnte Milchziege, 0,76 m Widerristhöhe, 55 kg, 1,28 m von der Schnauze bis zu den Sitzbeinhöckern. Der Rumpf ist an senkrechten Stationen geschnitten: Brust am Herzgurt 0,25 m breit und 0,36 m tief, Widerrist 15 mm über dem Rücken, ebene Lende, Kruppe von den Hüfthöckern zu den Sitzbeinhöckern abfallend, und ein Bauchkörper, der die größte Breite von 0,32 m tief hinter die letzte Rippe legt wie bei einer Ziege mit vollem Pansen. Euter mit zwei Zitzen, Hals mit Kehllinie, Kopf und Unterkiefer mit Augen und Nüstern, Bart, Säbelhörner, Blattohren, zwei Schwanzstücke."
+            "en": "Body (smallest feature 7.5 mm): a horned dairy doe, 0.76 m at the withers, 55 kg, 1.28 m from muzzle to pin bones. The trunk is cut at vertical stations: chest 0.25 m wide at the heart girth and 0.36 m deep with the withers 15 mm above the back, loin level, croup falling from the hooks to the pin bones, and a belly lobe that puts the greatest breadth of 0.32 m low behind the last rib as on a doe with a full rumen. Udder with two teats, neck with the throat line, head and jaw with eyes and nostrils, beard, scimitar horns, leaf ears, two tail pieces. Croup, loin and chest meet in one shared section each, so the three barrels close on each other without a doubled station.",
+            "de": "Körper (kleinstes Merkmal 7,5 mm): eine gehörnte Milchziege, 0,76 m Widerristhöhe, 55 kg, 1,28 m von der Schnauze bis zu den Sitzbeinhöckern. Der Rumpf ist an senkrechten Stationen geschnitten: Brust am Herzgurt 0,25 m breit und 0,36 m tief, Widerrist 15 mm über dem Rücken, ebene Lende, Kruppe von den Hüfthöckern zu den Sitzbeinhöckern abfallend, und ein Bauchkörper, der die größte Breite von 0,32 m tief hinter die letzte Rippe legt wie bei einer Ziege mit vollem Pansen. Euter mit zwei Zitzen, Hals mit Kehllinie, Kopf und Unterkiefer mit Augen und Nüstern, Bart, Säbelhörner, Blattohren, zwei Schwanzstücke. Kruppe, Lende und Brust treffen sich in je einem gemeinsamen Schnitt, sodass die drei Rumpfkörper ohne doppelte Station aneinander schließen."
           },
           {
             "en": "Legs: ham and gaskin are cut at horizontal stations so the rear line runs unbroken from the pin bone over the hamstrings and the Achilles tendon to the point of the hock, and the stifle stands in front of the flank; the trunk is narrower than the thighs between them. The shoulder is the flat muscle sheet over the blade, cut at horizontal stations from the withers to the point of the shoulder 0.21 m apart, the arm the triceps wedge from the rear border of the blade to the olecranon; the breastbone ends 25 mm in front of the point of the shoulder. Below them forearm, carpus, cannon bones with thickened ends, pastern, two claws and two dewclaws per foot. Every segment overlaps its neighbour beyond the joint so walking, rearing and climbing stay closed.",
@@ -96160,12 +96128,12 @@
               },
               {
                 "at": [
-                  0.0821,
-                  -0.12023,
+                  0.05020047,
+                  -0.08694921,
                   0
                 ],
-                "rx": 0.136,
-                "ry": 0.1655,
+                "rx": 0.124,
+                "ry": 0.1555,
                 "exponent": 2.1,
                 "rotation": [
                   0.20490853,
@@ -96252,12 +96220,12 @@
               },
               {
                 "at": [
-                  0.317,
-                  -0.146,
+                  0.26199944,
+                  -0.14550365,
                   0
                 ],
-                "rx": 0.146,
-                "ry": 0.178,
+                "rx": 0.149,
+                "ry": 0.1785,
                 "exponent": 2.15,
                 "rotation": [
                   0,
@@ -103796,28 +103764,12 @@
               },
               {
                 "at": [
-                  0.0502,
-                  -0.08695,
+                  0.05020047,
+                  -0.08694921,
                   0
                 ],
                 "rx": 0.124,
                 "ry": 0.1555,
-                "exponent": 2.1,
-                "rotation": [
-                  0.20490853,
-                  0.6767662,
-                  -0.20490853,
-                  0.6767662
-                ]
-              },
-              {
-                "at": [
-                  0.0821,
-                  -0.12023,
-                  0
-                ],
-                "rx": 0.136,
-                "ry": 0.1655,
                 "exponent": 2.1,
                 "rotation": [
                   0.20490853,
@@ -103888,12 +103840,12 @@
               },
               {
                 "at": [
-                  0.317,
-                  -0.146,
+                  0.26199944,
+                  -0.14550365,
                   0
                 ],
-                "rx": 0.146,
-                "ry": 0.178,
+                "rx": 0.149,
+                "ry": 0.1785,
                 "exponent": 2.15,
                 "rotation": [
                   0,
@@ -109080,12 +109032,12 @@
               },
               {
                 "at": [
-                  0.0821,
-                  -0.12023,
+                  0.05020047,
+                  -0.08694921,
                   0
                 ],
-                "rx": 0.136,
-                "ry": 0.1655,
+                "rx": 0.124,
+                "ry": 0.1555,
                 "exponent": 2.1,
                 "rotation": [
                   0.20490853,
@@ -109140,12 +109092,12 @@
               },
               {
                 "at": [
-                  0.317,
-                  -0.146,
+                  0.26199944,
+                  -0.14550365,
                   0
                 ],
-                "rx": 0.146,
-                "ry": 0.178,
+                "rx": 0.149,
+                "ry": 0.1785,
                 "exponent": 2.15,
                 "rotation": [
                   0,

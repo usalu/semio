@@ -108,6 +108,12 @@ pub fn route_for_slot(catalog: &Catalog, instance: u32) -> Option<AppRoute> {
     distinct_routes(catalog).into_iter().nth(instance as usize)
 }
 
+/// 🏛️ Whether the catalog entry `capability_id` is owned by the framework layer every plugin guest embeds.
+#[cfg(not(target_arch = "wasm32"))]
+fn is_framework_capability(catalog: &Catalog, capability_id: &str) -> bool {
+    catalog.get(capability_id).is_some_and(|capability| matches!(capability.owner, CapabilityOwner::Framework))
+}
+
 /// 🔎️ `capability_id` → the app its own catalog entry names, under the same refusals as
 /// [`resolve_plugin_for_capability_in`].
 #[cfg(not(target_arch = "wasm32"))]
@@ -126,6 +132,7 @@ pub fn resolve_plugin_for_capability_in(catalog: &Catalog, capability_id: &str) 
     let capability = catalog.get(capability_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("unknown capability: {capability_id}")))?;
     match &capability.owner {
         CapabilityOwner::Plugin { plugin_id, .. } => Ok(plugin_id.clone()),
+        CapabilityOwner::Framework => Err(GatewayError::new(GatewayErrorCode::InputInvalid, format!("framework capability `{capability_id}` acts on one artifact and runs in that artifact's own app — name it with `target.artifactRef`"))),
         owner => Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("capability `{capability_id}` is owned by {}, not a plugin — no artifact channel routes to it", owner.dedup_key())).retryable()),
     }
 }
@@ -329,6 +336,19 @@ impl RoutingArtifactChannel {
         Ok(())
     }
 
+    /// 🎯️ The route `capability_id` runs on: a plugin capability's own catalog owner, a framework capability's
+    /// target artifact binding — the framework layer of that artifact's own guest executes it, so it needs the artifact named.
+    fn owner_route(&self, capability_id: &str, target: &ActionTarget) -> Result<AppRoute, Fault> {
+        let catalog = self.catalog.current();
+        if !is_framework_capability(&catalog, capability_id) {
+            return resolve_route_for_capability_in(&catalog, capability_id).map_err(routing_fault);
+        }
+        let artifact_ref = target.artifact_ref.as_deref().ok_or_else(|| routing_fault(resolve_plugin_for_capability_in(&catalog, capability_id).expect_err("framework capabilities have no plugin owner")))?;
+        let bound = self.plugin_artifacts.lock().expect("artifact bindings lock poisoned");
+        let binding = bound.get(artifact_ref).ok_or_else(|| Fault { code: "plugin.unavailable".to_string(), message: format!("framework capability `{capability_id}` targets `{artifact_ref}`, which is no artifact this workspace has bound; open it first") })?;
+        Ok(AppRoute { plugin_id: binding.plugin_id.clone(), app_id: Some(binding.app_id.clone()) })
+    }
+
     /// 🧭️ `route` with its app named: a plugin-scope route resolves to the plugin's first editor app,
     /// opening that app's channel the first time so the answer comes from the descriptor itself.
     fn resolved_route(&self, route: AppRoute, scope: &ActivationScope) -> Result<AppRoute, Fault> {
@@ -512,6 +532,7 @@ impl RoutingArtifactChannel {
             }
             for command in commands {
                 if let AppCommand::PureCommand { capability_id, .. } = command {
+                    if is_framework_capability(&self.catalog.current(), capability_id) { continue; }
                     let owner = resolve_route_for_capability_in(&self.catalog.current(), capability_id).map_err(routing_fault)?;
                     if owner.plugin_id != route.plugin_id || owner.app_id.as_ref().is_some_and(|app| route.app_id.as_ref() != Some(app)) {
                         return Err(Fault { code: "capability-denied".to_string(), message: "target does not own this capability".to_string() });
@@ -546,7 +567,7 @@ impl ArtifactChannel for RoutingArtifactChannel {
         if target.instance_id.is_some() {
             return Err(Fault { code: "plugin.unavailable".to_string(), message: "live instance IDs require an attached shell".to_string() });
         }
-        let owner = resolve_route_for_capability_in(&self.catalog.current(), capability_id).map_err(routing_fault)?;
+        let owner = self.owner_route(capability_id, target)?;
         if target.plugin_id.as_ref().is_some_and(|id| id != &owner.plugin_id) || target.app_id.as_ref().is_some_and(|id| owner.app_id.as_ref().is_some_and(|app| app != id)) {
             return Err(Fault { code: "capability-denied".to_string(), message: "target plugin/app does not own this capability".to_string() });
         }

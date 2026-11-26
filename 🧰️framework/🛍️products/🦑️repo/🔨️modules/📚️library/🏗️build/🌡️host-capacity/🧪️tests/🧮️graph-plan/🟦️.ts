@@ -9,6 +9,7 @@ import buildPolicy from "../../../🔣️policy.json" with {type:"json"};
 import {graphPlanObserverV1,reserveGraphPlanCapacityV1} from "../../🟦️.ts";
 import {createSlicePoolV1} from "../../../🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
 import custody from "./🧫️fixtures/🔣️custody.json" with {type:"json"};
+import retainedGrant from "./🧫️fixtures/🔣️retained-grant.json" with {type:"json"};
 
 const roots:string[]=[],fresh=()=>{const root=mkdtempSync(join(realpathSync(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir()),"plan-capacity-"));roots.push(root);return root;};
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
@@ -44,6 +45,60 @@ test("a build that fits beside the plan runs at once",async()=>{
  let ran=false;await build(directory,6000,async()=>{ran=true;expect(grants(directory).length).toBe(2);});expect(ran).toBe(true);reservation.release();
  expect(await until(()=>grants(directory).length===0)).toBe(true);
 },60000);
+
+test("an independently launched process cannot borrow an active graph reservation after the forecast ramp",async()=>{
+ const directory=fresh(),environment={LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory},fixture=retainedGrant;
+ const policy=readHostCapacityPolicyV1({...fast,wait:{...fast.wait,heartbeatMilliseconds:50},memory:{...fast.memory,rampMilliseconds:fixture.forecastRampMilliseconds,rampIdleAfterMilliseconds:fixture.forecastRampMilliseconds,settledAfterMilliseconds:fixture.forecastRampMilliseconds}});
+ const reservation=await reserveGraphPlanCapacityV1({megabytes:fixture.planMegabytes,minimumMegabytes:fixture.planMegabytes,environment,directory,policy,observe:async()=>fixture.planObservedMegabytes,write:()=>undefined,
+  sample:async()=>({host:host({totalMegabytes:fixture.hostMegabytes,availableMegabytes:fixture.initialAvailableMegabytes}),swappedOutMegabytes:0}),
+ });
+ const ledger=()=>JSON.parse(readFileSync(join(directory,"grants",grants(directory)[0]!),"utf8"));
+ const waitPath=join(directory,"contender-wait.json"),bodyPath=join(directory,"contender-body.json");
+ const child= `
+import {renameSync,writeFileSync} from "node:fs";
+import {withHostCapacityV1,newHostCapacityIdV1} from ${JSON.stringify(
+  new URL("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts",import.meta.url).href,
+ )};
+const {directory,environment,policy,fixture,sample,waitPath,bodyPath}=JSON.parse(process.argv[1]);
+const signal=AbortSignal.timeout(6000);
+const control={signal,remainingMilliseconds:()=>null,publish:async()=>undefined,yieldContinuation:async()=>undefined};
+let reported=false;
+await withHostCapacityV1({directory,environment,policy,control,request:{id:newHostCapacityIdV1(),operation:"run",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:fixture.contenderMegabytes,minimumMegabytes:fixture.contenderMegabytes,perJobMegabytes:0,cpuPerJob:1},
+ sample:async()=>({host:{...sample,atMs:Date.now()},swappedOutMegabytes:0}),write:()=>undefined,onWait:row=>{
+  if(reported)return;
+  const pending=waitPath+".tmp";writeFileSync(pending,JSON.stringify(row));renameSync(pending,waitPath);reported=true;
+ },
+},async grant=>writeFileSync(bodyPath,JSON.stringify({pid:process.pid,megabytes:grant.reservedMegabytes})));
+`;
+ const db=new Database(":memory:");
+ let worker:ReturnType<typeof Bun.spawn>|undefined,contender:ReturnType<typeof Bun.spawn>|undefined;
+ try{
+  worker=Bun.spawn([process.execPath,"-e","setInterval(()=>undefined,1000)"],{stdout:"ignore",stderr:"ignore"});
+  reservation.attach(worker.pid);
+  expect(await until(()=>ledger().observedMegabytes===fixture.planObservedMegabytes&&Date.now()-ledger().admittedAtMs>=fixture.contenderDelayMilliseconds)).toBe(true);
+  contender=Bun.spawn([process.execPath,"-e",child,JSON.stringify({directory,environment,policy,fixture,waitPath,bodyPath,
+   sample:host({totalMegabytes:fixture.hostMegabytes,availableMegabytes:fixture.laterAvailableMegabytes}),
+  })],{stdout:"ignore",stderr:"pipe"});
+  const expected=db.query("select ?1 - ?2 >= ?3 as alone, ?1 - ?2 - max(0, ?4 - ?5) >= ?3 as together").get(
+   fixture.laterAvailableMegabytes,fixture.desktopFloorMegabytes,fixture.contenderMegabytes,fixture.planMegabytes,fixture.planObservedMegabytes,
+  );
+  expect(expected).toEqual({alone:1,together:0});
+  expect(await until(()=>existsSync(waitPath)||existsSync(bodyPath))).toBe(true);
+  expect(existsSync(bodyPath)).toBe(false);
+  expect(JSON.parse(readFileSync(waitPath,"utf8"))).toMatchObject({reason:"memory",floorMegabytes:fixture.desktopFloorMegabytes,active:1});
+  expect(ledger()).toMatchObject({operation:"graph-plan",retainReservation:true,reservedMegabytes:fixture.planMegabytes});
+  worker.kill();expect(await worker.exited).not.toBe(0);
+  reservation.release();
+  expect(await contender.exited).toBe(0);
+  expect(JSON.parse(readFileSync(bodyPath,"utf8"))).toEqual({pid:contender.pid,megabytes:fixture.contenderMegabytes});
+  expect(await until(()=>grants(directory).length===0&&queue(directory).length===0)).toBe(true);
+ }finally{
+  if(contender!==undefined){contender.kill();await contender.exited;}
+  if(worker!==undefined){worker.kill();await worker.exited;}
+  reservation.release();
+  db.close();
+ }
+},15000);
 
 test("a plan that waits for memory is cancelled by its signal, rejects with the reason and leaves no waiter behind",async()=>{
  const directory=fresh(),controller=new AbortController(),environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8"};
@@ -174,7 +229,7 @@ test("the booking of a plan shows the memory of its worker tree once, not the wo
 
 test("on a 16 GB machine the graph is computed with a grant of at least its minimum and at most what it asked, whatever else the host holds, and the minimum is the one the policy derives for the rebuild",async()=>{
  const minimum=buildPolicy.hostCapacity.estimates.rebuildMinimumMegabytes,graph=buildPolicy.hostCapacity.operations.find(row=>row.name==="graph")!;
- expect(minimum,"the rebuild minimum is the least the graph operation itself runs with").toBe(graph.minimumMegabytes);
+ expect<number|undefined>(minimum,"the rebuild minimum is the least the graph operation itself runs with").toBe(graph.minimumMegabytes);
  const small=(available:number)=>async()=>({host:host({totalMegabytes:16384,availableMegabytes:available}),swappedOutMegabytes:0});
  for(const available of [2048+minimum!,2048+4000,2048+9000]){
   const directory=fresh(),reservation=await reserveGraphPlanCapacityV1({megabytes:7168,minimumMegabytes:minimum,environment:{LANG:"en_US.UTF-8"},directory,policy:fast,write:()=>undefined,sample:small(available)});

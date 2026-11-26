@@ -29,7 +29,11 @@ fn original_terminal_backings_are_retired_before_energy_authority_drop(){
     Ok(())
    })?{return Ok(())}
    scope.expect("native receiving scope returned its original outcome").into_result()?;
-   semio_framework_job::receive_original_receiving_work(cx,turn.expect("native receiving scope drove its construction step"))?;
+   let turn=turn.expect("native receiving scope drove its construction step");
+   let step=turn.result.map_err(|failure|{cx.consume_work(turn.work);failure})?;
+   semio_framework_job::receive_original_receiving_work(cx,semio_framework_value::RetainedWorkOutcome{
+    work:turn.work,result:Ok::<_,semio_framework_value::ValueError>(step)
+   })?;
    Ok(())
   }));
   result.unwrap();assert_eq!((heap.requested_bytes,heap.released_bytes),(caller.receipt().retained_capacity_bytes,caller.receipt().released_bytes));

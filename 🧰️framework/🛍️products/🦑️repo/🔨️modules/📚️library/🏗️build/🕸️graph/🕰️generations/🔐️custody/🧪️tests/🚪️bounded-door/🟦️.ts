@@ -131,7 +131,7 @@ test("competing waiters keep the single ask and its original grace",async()=>{
   await observed.promise;
   using oracle=new Database(":memory:");
   const expected=oracle.query("SELECT count(*) AS reports, min(at) AS at FROM (SELECT ? AS at)").get(askedAt);
-  expect({reports:events.length,at:(await a.handover())?.ask?.atMs}).toEqual(expected);
+  expect<unknown>({reports:events.length,at:(await a.handover())?.ask?.atMs}).toEqual(expected);
   expect(initial).toEqual(await a.handover());
   expect(events).toEqual(["newer"]);
  }finally{
@@ -162,7 +162,7 @@ for(const mode of ["released during write","write refused"])test("a handover ask
   await observed.promise;
   using oracle=new Database(":memory:");
   const expected=oracle.query("SELECT 0 AS reports, 0 AS sidecars").get();
-  expect({reports:events.length,sidecars:readdirSync(directory).filter(name=>name===a.token+".ask.json").length}).toEqual(expected);
+  expect<unknown>({reports:events.length,sidecars:readdirSync(directory).filter(name=>name===a.token+".ask.json").length}).toEqual(expected);
  }finally{
   resume.resolve();controller.abort();
   await (await waiting)?.release();

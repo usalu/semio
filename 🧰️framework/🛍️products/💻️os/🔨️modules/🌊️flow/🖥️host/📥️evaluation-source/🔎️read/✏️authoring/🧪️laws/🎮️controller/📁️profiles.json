@@ -19,8 +19,8 @@
   ],
   "profiles": [
     {
-      "items": 1,
-      "copyBytes": 4096,
+      "items": 64,
+      "copyBytes": 16384,
       "calls": 10000
     },
     {

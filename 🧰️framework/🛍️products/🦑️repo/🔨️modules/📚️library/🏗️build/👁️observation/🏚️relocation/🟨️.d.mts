@@ -13,7 +13,7 @@ export function rebaseValueV1<T>(value:T):T;
 /** 🧾️ One recorded row as it reads in the live tree. */
 export function rebaseRowV1<T extends{path:string;fact:unknown}>(row:T):T;
 /** 📚️ The rows as they read in the live tree. */
-export function rebaseRowsV1<T extends{path:string;fact:unknown}>(rows:ArrayLike<T>&Iterable<T>):ArrayLike<T>&Iterable<T>;
+export function rebaseRowsV1<T extends{path:string;fact:unknown}>(rows:ArrayLike<T>&Iterable<T>,rebase?:(row:T)=>T):ArrayLike<T>&Iterable<T>;
 /** 🔎️ The workspace roots a set of recorded rows names. */
 export function recordedRootsV1(rows:ArrayLike<{kind:string;path:string}>):string[];
 /** 🔎️ The same roots read from a lazily opened fact index. */

@@ -31,8 +31,8 @@ fn original_batch_slots_and_foreign_roots_keep_exact_custody(){
 }
 
 #[test]
-fn packet_page_birth_waits_for_the_next_original_turn() {
-    use semio_framework_job_payload::JobPayloadStep;
+fn packet_page_birth_waits_for_separate_original_turns() {
+    use semio_framework_job_payload::{JobPayloadStep, JOB_PAYLOAD_PAGE_BYTES};
     let law: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/page-birth.json")).unwrap();
     for case in law["cases"].as_array().unwrap() {
         let operation = Operation::new(allocate_operation_id(), RevisionId(82), Generation(19), 71);
@@ -46,18 +46,40 @@ fn packet_page_birth_waits_for_the_next_original_turn() {
         }
         let builder = job.wire_build.as_ref().unwrap().builder.as_ref().unwrap();
         assert!(builder.is_initialized());
-        assert!(builder.staged_page_len().is_none());
-        let result = original.turn(ENERGY_BATCH_GRANT, 8, u64::MAX, |cx| {
-            if case["pageAlreadyGranted"].as_bool().unwrap() { cx.grant_payload_page(); }
-            Ok(job.step_wire_build(cx))
-        }).unwrap();
-        assert_eq!(result, Ok(false));
-        let build = job.wire_build.as_ref().unwrap();
-        assert_eq!(build.field, 0);
-        assert_eq!(build.builder.as_ref().unwrap().staged_page_len().is_some(), case["staged"].as_bool().unwrap());
-        if !case["staged"].as_bool().unwrap() {
-            assert_eq!(original.turn(ENERGY_BATCH_GRANT, 8, u64::MAX, |cx| Ok(job.step_wire_build(cx))).unwrap(), Ok(false));
-            assert!(job.wire_build.as_ref().unwrap().builder.as_ref().unwrap().staged_page_len().is_some());
+        assert_eq!(builder.staged_page_len(), None);
+        for (index, turn) in case["turns"].as_array().unwrap().iter().enumerate() {
+            let mut grant = ENERGY_BATCH_GRANT;
+            let used = match turn["grant"].as_str().unwrap() {
+                "used" => true,
+                "short-capacity" => {
+                    grant.maximum_capacity_bytes = JOB_PAYLOAD_PAGE_BYTES - 1;
+                    false
+                }
+                "full" => false,
+                other => panic!("Unknown packet page grant {other}"),
+            };
+            let advance = turn["advance"].as_bool().unwrap();
+            let held = turn["held"].as_bool().unwrap();
+            let staged = turn["staged"].as_bool().unwrap();
+            let capacity = if staged { JOB_PAYLOAD_PAGE_BYTES } else { 0 };
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
+                original.turn(grant, 8, u64::MAX, |cx| {
+                    if used { cx.grant_payload_page(); }
+                    let before = cx.retained_progress();
+                    let fuel = cx.fuel_remaining();
+                    let step = job.step_wire_build(cx);
+                    let after = cx.retained_progress();
+                    Ok((step, fuel - cx.fuel_remaining(), after.copied_items - before.copied_items,
+                        after.retained_capacity_bytes - before.retained_capacity_bytes,
+                        cx.payload_ledger().process_share_bytes(), cx.payload_page_granted()))
+                })
+            });
+            assert_eq!(step.unwrap(), (Ok(false), u64::from(advance), usize::from(advance), capacity,
+                if held { JOB_PAYLOAD_PAGE_BYTES } else { 0 }, used || advance), "{} turn {index}", case["id"]);
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (capacity, 0));
+            let build = job.wire_build.as_ref().unwrap();
+            assert_eq!(build.field, 0);
+            assert_eq!(build.builder.as_ref().unwrap().staged_page_len(), staged.then_some(0));
         }
         original.close_job(&mut job);
         drop(job);

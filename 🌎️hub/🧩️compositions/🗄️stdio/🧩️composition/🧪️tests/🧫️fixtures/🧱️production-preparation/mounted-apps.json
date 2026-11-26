@@ -1,0 +1,23 @@
+{
+  "owner": "stdio",
+  "variants": [
+    "HtmlEditor",
+    "HtmlViewer",
+    "MdEditor",
+    "MdViewer",
+    "CsvEditor",
+    "CsvViewer",
+    "TsvEditor",
+    "TsvViewer",
+    "TxtEditor",
+    "TxtViewer",
+    "JsonAnyEditor",
+    "JsonAnyViewer",
+    "JsonIJsonEditor",
+    "JsonIJsonViewer",
+    "XmlAnyEditor",
+    "XmlAnyViewer",
+    "XmlValidEditor",
+    "XmlValidViewer"
+  ]
+}

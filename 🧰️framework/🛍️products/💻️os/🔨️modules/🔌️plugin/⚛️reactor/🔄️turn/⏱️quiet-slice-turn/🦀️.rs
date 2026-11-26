@@ -8,6 +8,18 @@ pub(super) const QUIET_TURN_SLICE_US:u64=8_000;
 /// 🔗️ Shared by the typed-operation, restored-document-load and command-exchange loops of the turn, so every quiet loop closes on the same three signals.
 pub(super) fn quiet_slice_open(host_bound_grew:bool,yielding:bool,executing_us:Option<u64>)->bool{!host_bound_grew&&!yielding&&executing_us.is_some_and(|us|us<QUIET_TURN_SLICE_US)}
 
+/// 📦️ Repeats a funded archive pump on quiet turns while the original execution clock is usable.
+pub(super) fn archive_maintenance_slice_open<E>(
+    idle_ingress: bool, cancelled: bool, yielding: bool, started_us: Option<u64>, current_us: Option<u64>,
+    funded: impl FnOnce() -> Result<bool, E>,
+) -> Result<bool, E> {
+    let elapsed = current_us.zip(started_us).and_then(|(now, start)| now.checked_sub(start));
+    if !idle_ingress || cancelled || !quiet_slice_open(false, yielding, elapsed) {
+        return Ok(false);
+    }
+    funded()
+}
+
 #[derive(Clone, Copy)]
 pub(super) enum OpeningPacing {
     Interactive,

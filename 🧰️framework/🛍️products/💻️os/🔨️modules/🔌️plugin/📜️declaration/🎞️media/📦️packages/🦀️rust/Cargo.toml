@@ -35,3 +35,7 @@ serde_json = "1.0.140"
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
+
+[[test]]
+name = "drained-original-output"
+path = "../../🏭️construction/🧪️drained/🦀️.rs"

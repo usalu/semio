@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-artifact-puzzle-5d-rewriting"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Puzzle 5D rule execution and ordered rewrite effect admission"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-os-kernel = { workspace = true }
+semio-framework-graph-manifest = { path = "../../../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-document-records = { path = "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️document-records/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-kind-catalogs = { path = "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗂️kind-catalogs/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-mut-any-5 = { path = "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-part/🧪️tests/🌱️appends-part-c/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-snapshot = { path = "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-jack = { path = "../../../../../../../🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-rewriting-inferences = { path = "../../../../../../../🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-pack-json = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

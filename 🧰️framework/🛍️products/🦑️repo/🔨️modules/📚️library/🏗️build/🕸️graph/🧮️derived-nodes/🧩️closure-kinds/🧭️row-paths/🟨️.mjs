@@ -12,6 +12,7 @@ const OWNER_REGISTRY_FILE="📋️build-owners.json";
  * @param {(path:string)=>string} relative maps an absolute path to the workspace-relative name (a name outside the workspace is the volatile marker)
  * @param {string} volatileMarker */
 export function rowPathsV1(row,relative,volatileMarker){
+ /** @type {{paths:string[];dirs:string[];outside:boolean;volatile:boolean}} */
  const out={paths:[],dirs:[],outside:false,volatile:false},add=(list,path)=>{const name=relative(path);if(name===volatileMarker)out.volatile=true;else list.push(name);};
  if(row.kind==="field"){for(const path of[row.path,...row.fact?.paths??[]])add(out.paths,path);return out;}
  if(PATH_ROWS.has(row.kind)){const name=relative(row.path);if(name===volatileMarker)out.outside=true;else out.paths.push(name);return out;}

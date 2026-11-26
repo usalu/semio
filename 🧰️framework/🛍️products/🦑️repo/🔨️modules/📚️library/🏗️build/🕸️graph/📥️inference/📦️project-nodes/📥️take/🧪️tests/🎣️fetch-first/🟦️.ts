@@ -2,7 +2,7 @@
  * @see ../../🟨️.mjs `takeFetchFirstV1` */
 import{expect,test}from"bun:test";
 import{TAKE_POLICY_V1,takeFetchFirstV1}from"../../🟨️.mjs";
-import source from"../../../🟨️.mjs"with{type:"text"};
+const source=await Bun.file(new URL("../../../🟨️.mjs",import.meta.url)).text();
 
 const POLICY={...TAKE_POLICY_V1,pollFirstMilliseconds:20,hotRetryMilliseconds:40,adoptRetryMilliseconds:40};
 const simulate=async(count:number,publishWithin:number,localMilliseconds:number,concurrency=2)=>{

@@ -1,0 +1,7 @@
+# Demonstrator release session publication
+
+The previous ticket preparation loop named branded routes such as Verfolgen. The application actually consumes nine session variants from its primary variant and its pane definitions. CAD, GIS 2D and Puzzle 3D initially had no session directory in the release products. The existing sessions held a previous catalog projection. The generated GIS session now names both GIS and Stdio.
+
+The ticket now derives the requested variants from those two application files, compares the three published files of every variant with the canonical renderer, and runs the registry’s normal publication command for every missing or stale variant. Before regeneration the check rejected Aussuchen. All nine now carry the 74-plugin and 158-playground projections. Independent Python SHA-256 checks compare all 27 files with the TypeScript publisher. The final build calls this preparation before validating the Demonstrator.
+
+The application's normal preparation command now reads sessions through the repository's artifact reader. It checks exact session bytes and owner and compares both retained catalog arrays with the current app catalog. The real release preparation advanced through all nine artifact readers and then refused the missing Stdio browser component. Its previously scoped identity check accepted stale catalogs when a variant and plugin name stayed the same.

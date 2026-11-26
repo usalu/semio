@@ -45,6 +45,7 @@ fn labels(locale: Locale) -> &'static BimLabels {
 }
 
 fn text(snapshot: &ModelSnapshot, locale: Locale) -> String {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let nodes = render_rows(snapshot, "bim-properties", "c-table", labels(locale));
     let node = PanelTreeBuilder::new("bim-properties").and_then(|builder| builder.section("bim-properties.overrides", None, true, ui_node_list(nodes)?)).and_then(PanelTreeBuilder::build).expect("the rows build");
     semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("projects")

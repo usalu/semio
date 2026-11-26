@@ -12,13 +12,13 @@ afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true})
 
 const run=async(argv:string[])=>{const child=Bun.spawn(argv,{stdout:"pipe",stderr:"pipe"}),[out,code]=await Promise.all([new Response(child.stdout).text(),child.exited]);return {out,code};};
 
-const upstream=(payload:Uint8Array)=>{
+const upstream=(payload:Uint8Array<ArrayBuffer>)=>{
  const served={requests:0,bytes:0};
  const server=Bun.serve({port:0,hostname:"127.0.0.1",fetch:request=>{if(new URL(request.url).pathname!=="/artifact.bin")return new Response("no",{status:404});served.requests++;served.bytes+=payload.byteLength;return new Response(payload);}});
  return {url:`http://127.0.0.1:${server.port}/artifact.bin`,served,stop:()=>server.stop(true)};
 };
 
-const machine=(root:string,store:string|undefined,ledger:string,remote?:{endpoint:string;instance:string;token:string|undefined})=>fleetFetchContextV1({SEMIO_FLEET_FETCH_LEDGER:ledger},root,{storeRoot:store,remote});
+const machine=(root:string,store:string|undefined,ledger:string,remote?:{endpoint:string;instance:string;token:string|undefined;authenticated:boolean})=>fleetFetchContextV1({SEMIO_FLEET_FETCH_LEDGER:ledger},root,{storeRoot:store,remote});
 const lines=(ledger:string)=>existsSync(ledger)?readFileSync(ledger,"utf8").trim().split("\n").filter(Boolean).map(line=>JSON.parse(line) as {source:string;bytes:number;direction?:string}):[];
 
 test("a second machine takes a pinned artifact from the group store and fetches 0 bytes from the upstream; the stored bytes equal shasum and curl",async()=>{

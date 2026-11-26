@@ -4,13 +4,13 @@ use super::*;
 /// 🗜️ Counts the ordinary greedy codec without constructing raw or compressed output buffers.
 pub struct DeflateMeasure{
  head:[u32;HASH_SIZE],previous:[u32;WINDOW_SIZE],bytes:[u8;WINDOW_SIZE+512],
- received:usize,position:usize,bits:usize,work:usize,
+ received:usize,position:usize,bits:usize,work:usize,misses:usize,skip:usize,
 }
 impl DeflateMeasure{
  /// 🌱️ Inline storage has the same empty chains and final fixed-block header as the producer.
- pub fn new()->Self{Self{head:[u32::MAX;HASH_SIZE],previous:[u32::MAX;WINDOW_SIZE],bytes:[0;WINDOW_SIZE+512],received:0,position:0,bits:3,work:0}}
+ pub fn new()->Self{Self{head:[u32::MAX;HASH_SIZE],previous:[u32::MAX;WINDOW_SIZE],bytes:[0;WINDOW_SIZE+512],received:0,position:0,bits:3,work:0,misses:0,skip:0}}
  /// 🧼️ Starts another independently compressed segment with the same inline window.
- pub fn reset(&mut self){self.head.fill(u32::MAX);self.previous.fill(u32::MAX);self.received=0;self.position=0;self.bits=3;self.work=0;}
+ pub fn reset(&mut self){self.head.fill(u32::MAX);self.previous.fill(u32::MAX);self.received=0;self.position=0;self.bits=3;self.work=0;self.misses=0;self.skip=0;}
  fn at(&self,position:usize)->u8{self.bytes[position%self.bytes.len()]}
  /// 📥️ Consumes one borrowed byte, retaining at most 260 bytes of lookahead.
  pub fn push(&mut self,byte:u8,checkpoint:&mut impl FnMut()->Result<(),ValueError>)->Result<(),ValueError>{
@@ -20,12 +20,13 @@ impl DeflateMeasure{
  }
  fn tick(&mut self,checkpoint:&mut impl FnMut()->Result<(),ValueError>)->Result<(),ValueError>{self.work=self.work.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Deflate measurement work overflow"))?;if self.work%256==0{checkpoint()?;}Ok(())}
  fn consume(&mut self,checkpoint:&mut impl FnMut()->Result<(),ValueError>)->Result<(),ValueError>{
-  let i=self.position;let available=self.received-i;let(mut best,mut distance)=(0,0);
-  if available>=MIN_MATCH{let hash=hash3(self.at(i),self.at(i+1),self.at(i+2));let mut candidate=self.head[hash];let mut chain=0;
+  let i=self.position;let available=self.received-i;let(mut best,mut distance)=(0,0);let skipping=self.skip>0;
+  if !skipping&&available>=MIN_MATCH{let hash=hash3(self.at(i),self.at(i+1),self.at(i+2));let mut candidate=self.head[hash];let mut chain=0;
    while candidate!=u32::MAX&&chain<MAX_CHAIN{self.tick(checkpoint)?;let position=candidate as usize;if i-position>WINDOW_SIZE{break}let mut length=0;while length<available.min(MAX_MATCH){self.tick(checkpoint)?;if self.at(position+length)!=self.at(i+length){break}length+=1;}if length>best{best=length;distance=i-position;}if best>=NICE_MATCH{break}candidate=self.previous[position%WINDOW_SIZE];chain+=1;}
   }
   let consumed=if best>=MIN_MATCH{let length=length_index_for(best as u16);let symbol=257+length;let literal_bits=if symbol<=279{7}else{8};let dist=distance_index_for(distance as u32);self.bits=self.bits.checked_add(literal_bits+usize::from(LENGTH_EXTRA[length])+5+usize::from(DIST_EXTRA[dist])).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Deflate measured bit count overflow"))?;best}else{self.bits=self.bits.checked_add(if self.at(i)<=143{8}else{9}).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Deflate measured literal count overflow"))?;1};
-  let end=i+consumed;let inserted=if consumed>MAX_INSERT{i+1}else{end};while self.position<end{let position=self.position;if position<inserted&&self.received-position>=MIN_MATCH{let hash=hash3(self.at(position),self.at(position+1),self.at(position+2));self.previous[position%WINDOW_SIZE]=self.head[hash];self.head[hash]=position as u32;}self.position+=1;self.tick(checkpoint)?;}Ok(())
+  if best>=MIN_MATCH{self.misses=0;self.skip=0;}else if skipping{self.skip-=1;self.misses+=1;}else{self.misses+=1;self.skip=self.misses>>SKIP_SHIFT;}
+  let end=i+consumed;let inserted=if skipping{i}else if consumed>MAX_INSERT{i+1}else{end};while self.position<end{let position=self.position;if position<inserted&&self.received-position>=MIN_MATCH{let hash=hash3(self.at(position),self.at(position+1),self.at(position+2));self.previous[position%WINDOW_SIZE]=self.head[hash];self.head[hash]=position as u32;}self.position+=1;self.tick(checkpoint)?;}Ok(())
  }
  /// 🏁️ Finishes the same final end-of-block symbol and byte padding as ordinary Deflate.
  pub fn finish(&mut self,checkpoint:&mut impl FnMut()->Result<(),ValueError>)->Result<usize,ValueError>{while self.position<self.received{self.consume(checkpoint)?;}checkpoint()?;self.bits.checked_add(7).and_then(|bits|bits.checked_add(7)).map(|bits|bits/8).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Deflate measured byte count overflow"))}

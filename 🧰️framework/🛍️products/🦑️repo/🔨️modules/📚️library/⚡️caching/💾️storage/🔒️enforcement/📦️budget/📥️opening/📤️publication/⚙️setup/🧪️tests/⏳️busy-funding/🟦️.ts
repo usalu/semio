@@ -43,7 +43,7 @@ test("the real process ancestry equals an independent walk with ps, and the real
   write(process.ppid,1,"the parent","shared",started(process.ppid));write(stranger.pid!,1,"the stranger","shared",started(stranger.pid!));write(process.pid,1,"this process","shared");write(dead.pid!,1,"the dead","exclusive");
   const first=observeDependencyStoreHoldersV1(directory,resource);
   expect(first.live.map(row=>[row.command,row.ancestor]).sort()).toEqual([["the parent",true],["the stranger",false],["this process",true]].sort());
-  expect(first.gone.map(row=>[row.pid,row.command,row.mode])).toEqual([[dead.pid,"the dead","exclusive"]]);
+  expect<unknown>(first.gone.map(row=>[row.pid,row.command,row.mode])).toEqual([[dead.pid,"the dead","exclusive"]]);
   expect(existsSync(join(folder,dead.pid+"-1.json"))).toBe(false);expect(existsSync(join(folder,process.ppid+"-1.json"))).toBe(true);
   expect(observeDependencyStoreHoldersV1(directory,resource).gone).toEqual([]);
   write(process.ppid,Date.now()+3600000,"a later process with the pid of the parent","shared");

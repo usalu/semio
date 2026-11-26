@@ -226,7 +226,7 @@ test("a service that has the consent runs and its receipt says ok, replacing an 
 
 test("the client that started a service which refused for the missing consent reports that refusal at once (exit 4 class) instead of waiting for a timeout",async()=>{
   const env=environment("early"),implementation=digest("impl-early"),runtime=hostEndpointsV1(implementation,env),started=Date.now();
-  const error=await connectHostV1({implementation,environment:env,languages:["en","de"],policy:{startTimeoutMilliseconds:20000,startPollMilliseconds:20,lockStaleMilliseconds:60000},spawnService:async({runtime:target}:{runtime:{directory:string;tag:string}})=>{
+  const error=await connectHostV1({implementation,environment:env,languages:["en","de"],policy:{startTimeoutMilliseconds:20000,startPollMilliseconds:20},spawnService:async({runtime:target}:{runtime:{directory:string;tag:string}})=>{
     setTimeout(()=>{writeFileSync(join(target.directory,"exit.log"),JSON.stringify({event:"exit",at:Date.now(),pid:99,reason:"access-denied",code:4,tag:target.tag,state:"denied",folder:"Documents",root:home+"/Documents/semio"})+"\n");},120);
   }}).then(()=>undefined,reason=>reason as any);
   expect(error).toBeInstanceOf(PlanRefusedErrorV1);
@@ -235,7 +235,7 @@ test("the client that started a service which refused for the missing consent re
   expect(error.message_.en).toContain("Documents");expect(error.message_.en).toContain(home+"/Documents/semio");
   expect(error.message_.en).toContain("is refused, so");expect(error.message_.en).not.toContain("{");
   expect(Date.now()-started).toBeLessThan(5000);
-  const waiting=await connectHostV1({implementation:digest("impl-early-waiting"),environment:env,languages:["de"],policy:{startTimeoutMilliseconds:20000,startPollMilliseconds:20,lockStaleMilliseconds:60000},spawnService:async({runtime:target}:{runtime:{directory:string;tag:string}})=>{
+  const waiting=await connectHostV1({implementation:digest("impl-early-waiting"),environment:env,languages:["de"],policy:{startTimeoutMilliseconds:20000,startPollMilliseconds:20},spawnService:async({runtime:target}:{runtime:{directory:string;tag:string}})=>{
     setTimeout(()=>{writeFileSync(join(target.directory,"exit.log"),JSON.stringify({event:"exit",at:Date.now(),pid:99,reason:"access-denied",code:4,tag:target.tag,state:"waiting",folder:"Desktop",root:home+"/Desktop/semio"})+"\n");},120);
   }}).then(()=>undefined,reason=>reason as any);
   expect(waiting.code).toBe("consent");expect(waiting.message_.de).toContain("Abfrage");expect(waiting.message_.de).toContain("Desktop");
@@ -245,7 +245,7 @@ test("an exit row from an earlier service does not refuse a start that began aft
   const env=environment("stale-row"),implementation=digest("impl-stale-row"),runtime=hostEndpointsV1(implementation,env);
   mkdirSync(runtime.directory,{recursive:true,mode:0o700});
   writeFileSync(join(runtime.directory,"exit.log"),JSON.stringify({event:"exit",at:Date.now()-60000,pid:98,reason:"access-denied",code:4,tag:runtime.tag,state:"denied",folder:"Documents",root:home+"/Documents/semio"})+"\n");
-  const error=await connectHostV1({implementation,environment:env,policy:{startTimeoutMilliseconds:300,startPollMilliseconds:20,lockStaleMilliseconds:60000},spawnService:async()=>undefined}).then(()=>undefined,reason=>reason as any);
+  const error=await connectHostV1({implementation,environment:env,policy:{startTimeoutMilliseconds:300,startPollMilliseconds:20},spawnService:async()=>undefined}).then(()=>undefined,reason=>reason as any);
   expect(error?.name).toBe("HostUnavailableErrorV1");expect(error.reason).toBe("timeout");
 });
 
@@ -253,7 +253,7 @@ test("a start whose process lives and is silent keeps waiting past the silence t
   const env=environment("alive-silent"),implementation=digest("impl-alive-silent"),runtime=hostEndpointsV1(implementation,env);
   const planner=createGraphPlannerPortV1({identify:async()=>"id",loadGraph:async()=>({})});
   const service=createHostServiceV1({runtime,implementation,ports:{planner},policy:{residentCheckMilliseconds:50},log:()=>undefined,onExit:()=>undefined});
-  const policy={startTimeoutMilliseconds:150,startCeilingMilliseconds:20000,startLivenessMilliseconds:20,startPollMilliseconds:20,lockStaleMilliseconds:60000};
+  const policy={startTimeoutMilliseconds:150,startCeilingMilliseconds:20000,startLivenessMilliseconds:20,startPollMilliseconds:20};
   const connecting=connectHostV1({implementation,environment:env,policy,spawnService:async()=>{setTimeout(()=>{void service.start();},700);return{alive:()=>true};}});
   const connected=await connecting;
   expect(connected.started).toBe(true);
@@ -263,18 +263,18 @@ test("a start whose process lives and is silent keeps waiting past the silence t
 
 test("a start whose process died without a socket fails at once as lost instead of waiting for the silence timeout, and one that lives past the ceiling times out",async()=>{
   const env=environment("dead-start"),implementation=digest("impl-dead-start"),started=Date.now();
-  const lost=await connectHostV1({implementation,environment:env,policy:{startTimeoutMilliseconds:20000,startCeilingMilliseconds:20000,startLivenessMilliseconds:20,startPollMilliseconds:20,lockStaleMilliseconds:60000},spawnService:async()=>({alive:()=>false})}).then(()=>undefined,reason=>reason as any);
+  const lost=await connectHostV1({implementation,environment:env,policy:{startTimeoutMilliseconds:20000,startCeilingMilliseconds:20000,startLivenessMilliseconds:20,startPollMilliseconds:20},spawnService:async()=>({alive:()=>false})}).then(()=>undefined,reason=>reason as any);
   expect(lost?.name).toBe("HostUnavailableErrorV1");expect(lost.reason).toBe("lost");
   const crashed=hostEndpointsV1(digest("impl-crash-log"),env);
-  const crash=await connectHostV1({implementation:digest("impl-crash-log"),environment:env,policy:{startTimeoutMilliseconds:20000,startCeilingMilliseconds:20000,startLivenessMilliseconds:20,startPollMilliseconds:20,lockStaleMilliseconds:60000},spawnService:async()=>{appendFileSync(crashed.log,"[script] {\"stage\":\"running\"}\nInternal error: scriptEnvironment is not defined\n");return{alive:()=>false};}}).then(()=>undefined,reason=>reason as any);
+  const crash=await connectHostV1({implementation:digest("impl-crash-log"),environment:env,policy:{startTimeoutMilliseconds:20000,startCeilingMilliseconds:20000,startLivenessMilliseconds:20,startPollMilliseconds:20},spawnService:async()=>{appendFileSync(crashed.log,"[script] {\"stage\":\"running\"}\nInternal error: scriptEnvironment is not defined\n");return{alive:()=>false};}}).then(()=>undefined,reason=>reason as any);
   expect(crash.message).toContain("Internal error: scriptEnvironment is not defined");expect(crash.message).not.toContain("stage");
   expect(Date.now()-started).toBeLessThan(5000);
-  const ceiling=await connectHostV1({implementation:digest("impl-ceiling"),environment:env,policy:{startTimeoutMilliseconds:20,startCeilingMilliseconds:300,startLivenessMilliseconds:20,startPollMilliseconds:20,lockStaleMilliseconds:60000},spawnService:async()=>({alive:()=>true})}).then(()=>undefined,reason=>reason as any);
+  const ceiling=await connectHostV1({implementation:digest("impl-ceiling"),environment:env,policy:{startTimeoutMilliseconds:20,startCeilingMilliseconds:300,startLivenessMilliseconds:20,startPollMilliseconds:20},spawnService:async()=>({alive:()=>true})}).then(()=>undefined,reason=>reason as any);
   expect(ceiling.reason).toBe("timeout");
 });
 
 test("concurrent clients that all saw a denial have one restart owner: the others wait and attach to the generation it started instead of retiring it",async()=>{
-  const env=environment("restart-owner"),implementation=digest("impl-restart-owner"),policy={startPollMilliseconds:20,startCeilingMilliseconds:20000,lockStaleMilliseconds:60000};
+  const env=environment("restart-owner"),implementation=digest("impl-restart-owner"),policy={startPollMilliseconds:20,startCeilingMilliseconds:20000};
   const order:string[]=[];
   const run=(name:string,hold:number)=>withRestartOwnerV1({implementation,environment:env,policy},async()=>{order.push(name+":owned");await sleep(hold);order.push(name+":done");return name;},async()=>{order.push(name+":joined");return name;});
   const first=run("a",300);await sleep(50);
@@ -353,7 +353,7 @@ test("on macOS a checkout below a protected folder starts its service through la
   expect(plistText).toContain("<key>SEMIO_SERVICE_ROUTE</key><string>launchd</string>");
   const waitingCalls:string[]=[];
   const pending=environment("launchd-waiting"),pendingImplementation=digest("impl-launchd-waiting"),pendingRuntime=hostEndpointsV1(pendingImplementation,pending);
-  const refusal=await connectHostV1({implementation:pendingImplementation,environment:pending,languages:["en","de"],policy:{startTimeoutMilliseconds:20000,startPollMilliseconds:20,lockStaleMilliseconds:60000},spawnService:(context:{runtime:never})=>spawnHostServiceV1({command,environment:pending,cwd,launchd:{route,run:(program,args)=>{waitingCalls.push([program,...args].join(" "));return 0;},options,ensure:()=>({state:"waiting"}),callerCanRead:()=>false}})(context)}).then(()=>undefined,reason=>reason as any);
+  const refusal=await connectHostV1({implementation:pendingImplementation,environment:pending,languages:["en","de"],policy:{startTimeoutMilliseconds:20000,startPollMilliseconds:20},spawnService:context=>spawnHostServiceV1({command,environment:pending,cwd,launchd:{route,run:(program,args)=>{waitingCalls.push([program,...args].join(" "));return 0;},options,ensure:()=>({state:"waiting"}),callerCanRead:()=>false}})(context)}).then(()=>undefined,reason=>reason as any);
   expect(refusal).toBeInstanceOf(PlanRefusedErrorV1);expect(refusal.code).toBe("consent");
   expect(refusal.message_.en).toContain("waits for your answer");expect(refusal.message_.de).toContain("wartet");
   expect(waitingCalls,"no service job while the consent waits").toEqual([]);expect(existsSync(marker),"no direct child while the consent waits").toBe(false);
@@ -396,7 +396,7 @@ test("a service that has the consent runs and its receipt says ok, replacing an 
 
 test("the client that started a service which refused for the missing consent reports that refusal at once (exit 4 class) instead of waiting for a timeout",async()=>{
   const env=environment("early"),implementation=digest("impl-early"),runtime=hostEndpointsV1(implementation,env),started=Date.now();
-  const error=await connectHostV1({implementation,environment:env,languages:["en","de"],policy:{startTimeoutMilliseconds:20000,startPollMilliseconds:20,lockStaleMilliseconds:60000},spawnService:async({runtime:target}:{runtime:{directory:string;tag:string}})=>{
+  const error=await connectHostV1({implementation,environment:env,languages:["en","de"],policy:{startTimeoutMilliseconds:20000,startPollMilliseconds:20},spawnService:async({runtime:target}:{runtime:{directory:string;tag:string}})=>{
     setTimeout(()=>{writeFileSync(join(target.directory,"exit.log"),JSON.stringify({event:"exit",at:Date.now(),pid:99,reason:"access-denied",code:4,tag:target.tag,state:"denied",folder:"Documents",root:home+"/Documents/semio"})+"\n");},120);
   }}).then(()=>undefined,reason=>reason as any);
   expect(error).toBeInstanceOf(PlanRefusedErrorV1);
@@ -404,7 +404,7 @@ test("the client that started a service which refused for the missing consent re
   expect(error.message_.en).toContain("Files & Folders");expect(error.message_.de).toContain("Dateien & Ordner");
   expect(error.message_.en).toContain("Documents");expect(error.message_.en).toContain(home+"/Documents/semio");
   expect(Date.now()-started).toBeLessThan(5000);
-  const waiting=await connectHostV1({implementation:digest("impl-early-waiting"),environment:env,languages:["de"],policy:{startTimeoutMilliseconds:20000,startPollMilliseconds:20,lockStaleMilliseconds:60000},spawnService:async({runtime:target}:{runtime:{directory:string;tag:string}})=>{
+  const waiting=await connectHostV1({implementation:digest("impl-early-waiting"),environment:env,languages:["de"],policy:{startTimeoutMilliseconds:20000,startPollMilliseconds:20},spawnService:async({runtime:target}:{runtime:{directory:string;tag:string}})=>{
     setTimeout(()=>{writeFileSync(join(target.directory,"exit.log"),JSON.stringify({event:"exit",at:Date.now(),pid:99,reason:"access-denied",code:4,tag:target.tag,state:"waiting",folder:"Desktop",root:home+"/Desktop/semio"})+"\n");},120);
   }}).then(()=>undefined,reason=>reason as any);
   expect(waiting.code).toBe("consent");expect(waiting.message_.de).toContain("Abfrage");expect(waiting.message_.de).toContain("Desktop");
@@ -414,7 +414,7 @@ test("an exit row from an earlier service does not refuse a start that began aft
   const env=environment("stale-row"),implementation=digest("impl-stale-row"),runtime=hostEndpointsV1(implementation,env);
   mkdirSync(runtime.directory,{recursive:true,mode:0o700});
   writeFileSync(join(runtime.directory,"exit.log"),JSON.stringify({event:"exit",at:Date.now()-60000,pid:98,reason:"access-denied",code:4,tag:runtime.tag,state:"denied",folder:"Documents",root:home+"/Documents/semio"})+"\n");
-  const error=await connectHostV1({implementation,environment:env,policy:{startTimeoutMilliseconds:300,startPollMilliseconds:20,lockStaleMilliseconds:60000},spawnService:async()=>undefined}).then(()=>undefined,reason=>reason as any);
+  const error=await connectHostV1({implementation,environment:env,policy:{startTimeoutMilliseconds:300,startPollMilliseconds:20},spawnService:async()=>undefined}).then(()=>undefined,reason=>reason as any);
   expect(error?.name).toBe("HostUnavailableErrorV1");expect(error.reason).toBe("timeout");
 });
 
@@ -432,7 +432,7 @@ test("`repo service host start` without the consent says what to click in the ch
 
 test("a launcher that changed after it was allowed is announced in advance: exit row with changed, the client says that macOS asks once more, in both languages, naming the launcher",async()=>{
   const env=environment("changed"),implementation=digest("impl-changed");
-  const error=await connectHostV1({implementation,environment:env,languages:["en","de"],policy:{startTimeoutMilliseconds:20000,startPollMilliseconds:20,lockStaleMilliseconds:60000},spawnService:async({runtime:target}:{runtime:{directory:string;tag:string}})=>{
+  const error=await connectHostV1({implementation,environment:env,languages:["en","de"],policy:{startTimeoutMilliseconds:20000,startPollMilliseconds:20},spawnService:async({runtime:target}:{runtime:{directory:string;tag:string}})=>{
     setTimeout(()=>{writeFileSync(join(target.directory,"exit.log"),JSON.stringify({event:"exit",at:Date.now(),pid:99,reason:"access-denied",code:4,tag:target.tag,state:"waiting",changed:true,folder:"Documents",root:home+"/Documents/semio"})+"\n");},100);
   }}).then(()=>undefined,reason=>reason as any);
   expect(error.code).toBe("consent");expect(error.message_.en).toContain("changed: macOS asks once more");expect(error.message_.de).toContain("hat sich geändert");
@@ -444,7 +444,7 @@ test("the exit row of a service this client retired never refuses the next start
   mkdirSync(runtime.directory,{recursive:true,mode:0o700});
   const row=(pid:number)=>JSON.stringify({event:"exit",at:Date.now(),pid,reason:"access-denied",code:4,tag:runtime.tag,state:"denied",folder:"Documents",root:home+"/Documents/semio",route:"direct"})+"\n";
   writeFileSync(join(runtime.directory,"exit.log"),row(98));
-  const policy={startTimeoutMilliseconds:300,startPollMilliseconds:20,lockStaleMilliseconds:60000},spawnService=async()=>undefined;
+  const policy={startTimeoutMilliseconds:300,startPollMilliseconds:20},spawnService=async()=>undefined;
   const refused=await connectHostV1({implementation,environment:env,policy,spawnService}).then(()=>undefined,reason=>reason as any);
   expect(refused?.name).toBe("PlanRefusedErrorV1");expect(refused.servicePid).toBe(98);
   const waited=await connectHostV1({implementation,environment:env,policy,spawnService,ignorePids:[98]}).then(()=>undefined,reason=>reason as any);

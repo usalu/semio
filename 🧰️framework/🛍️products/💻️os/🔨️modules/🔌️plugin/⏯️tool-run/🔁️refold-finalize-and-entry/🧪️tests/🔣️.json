@@ -1,0 +1,5 @@
+{
+  "pages": [[0, 255, 4], [127, 42], [0, 1, 3]],
+  "copyBytesPerTurn": 2,
+  "expectedHex": "00ff047f2a000103"
+}

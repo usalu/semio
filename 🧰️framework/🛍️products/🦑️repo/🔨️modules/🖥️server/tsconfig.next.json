@@ -1,0 +1,46 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../../../../../node_modules/.cache/tsconfig.server-next.tsbuildinfo",
+    "jsx": "preserve",
+    "types": [
+      "bun",
+      "node",
+      "react",
+      "react-dom"
+    ]
+  },
+  "include": [
+    "🎛️coordinator/🎫️ticket/**/*.ts",
+    "🎛️coordinator/🎫️ticket/**/*.tsx",
+    "🎛️coordinator/🧾️diff/**/*.ts",
+    "🎛️coordinator/🧾️diff/**/*.tsx",
+    "🎛️coordinator/⚠️warnings/**/*.ts",
+    "🎛️coordinator/⚠️warnings/**/*.tsx",
+    "🎛️coordinator/🪝️webhook/**/*.ts",
+    "🎛️coordinator/🪝️webhook/**/*.tsx",
+    "🎛️coordinator/📚️repository/**/*.ts",
+    "🎛️coordinator/📚️repository/**/*.tsx",
+    "🎛️coordinator/🎯️scope/**/*.ts",
+    "🎛️coordinator/🎯️scope/**/*.tsx",
+    "🎛️coordinator/🚨️breaches/**/*.ts",
+    "🎛️coordinator/🚨️breaches/**/*.tsx",
+    "🎛️coordinator/📡️event/**/*.ts",
+    "🎛️coordinator/📡️event/**/*.tsx",
+    "🎛️coordinator/🔐️authentication/**/*.ts",
+    "🎛️coordinator/🔐️authentication/**/*.tsx",
+    "🎛️coordinator/📦️packages/🟦️typescript/app/**/*.ts",
+    "🎛️coordinator/📦️packages/🟦️typescript/app/**/*.tsx",
+    "📚️library/**/*.ts",
+    "📚️library/**/*.tsx",
+    "🎛️coordinator/📦️packages/🟦️typescript/next-env.d.ts"
+  ],
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/📤️dist/**",
+    "**/.next/**",
+    "**/🗑️generated/**",
+    "**/🤖️generated/**"
+  ]
+}

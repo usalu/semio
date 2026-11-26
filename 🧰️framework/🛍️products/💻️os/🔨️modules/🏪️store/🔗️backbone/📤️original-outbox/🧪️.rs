@@ -17,7 +17,7 @@ fn original_outbox_retains_same_bytes_across_failed_attempts_and_recycles_paid_p
 fn installed_backbone_disposer_keeps_original_outbox_until_complete_native_admission(){
  let mut source=OriginalBackboneOutbox::default();let mut payload=Some(OriginalBackboneMessageBytes::try_from_slice("energy λ".as_bytes()).unwrap());let pointer=payload.as_ref().unwrap().retained_bytes().backing_ptr(0).unwrap();loop{let d=source.append_demands().unwrap();if source.can_append(fund(d)).unwrap(){break}crate::test_effect::funded(fund(d),|e|observed(||((),source.reserve_step(e).unwrap())));}let d=source.append_demands().unwrap();observed(||((),source.append_reserved(&mut payload,fund(d)).unwrap().unwrap()));
  let d=crate::backbone_retirement::ArtifactStoreBackboneRetirement::original_outbox_birth_demands();for axis in 0..5{let mut g=fund(d);let limit=match axis{0=>&mut g.maximum_items,1=>&mut g.maximum_copy_bytes,2=>&mut g.maximum_capacity_bytes,3=>&mut g.maximum_release_bytes,_=>&mut g.maximum_depth};if *limit==0{continue}*limit-=1;let(result,h)=semio_framework_trace::observe_heap_allocations_on_this_thread(||crate::backbone_retirement::ArtifactStoreBackboneRetirement::admit_original_outbox(&mut source,g).unwrap());assert!(result.0.is_none());assert_eq!(result.1,Default::default());assert_eq!((h.requested_bytes,h.released_bytes),(0,0));assert_eq!(source.front().unwrap().retained_bytes().backing_ptr(0).unwrap(),pointer);}
- let mut owner=observed(||crate::backbone_retirement::ArtifactStoreBackboneRetirement::admit_original_outbox(&mut source,fund(d)).unwrap());assert!(source.terminal_is_empty());for turn in 0..10000{if owner.is_none(){break}let d=semio_framework_value::factory_ticket_demands(owner.as_ref().unwrap(),4096).unwrap();crate::test_effect::funded(fund(d),|e|observed(||{let step=crate::test_effect::step(semio_framework_value::close_factory_ticket(&mut owner,e));((),step.progress())}));assert!(turn<9999);}
+ let mut owner=observed(||crate::backbone_retirement::ArtifactStoreBackboneRetirement::admit_original_outbox(&mut source,fund(d)).unwrap());assert!(source.terminal_is_empty());for turn in 0..10000{if owner.is_none(){break}let d=semio_framework_value::factory_ticket_demands(owner.as_ref().unwrap(),4096).unwrap();crate::test_effect::funded(fund(d),|e|observed(||{let step=crate::test_effect::step(semio_framework_value::close_factory_ticket(&mut owner,4096,e));((),step.progress())}));assert!(turn<9999);}
 }
 
 #[test]
@@ -34,15 +34,91 @@ fn original_transport_moves_original_pages_once_and_retains_both_cancel_frontier
 fn canonical_backbone_message_owns_original_paged_causal_bytes_and_closes_them(){
  let law:serde_json::Value=serde_json::from_str(include_str!("transfer.json")).unwrap();let pattern=law["pattern"].as_array().unwrap();let bytes:Vec<_>=(0..law["bytes"].as_u64().unwrap()as usize).map(|i|pattern[i%pattern.len()].as_u64().unwrap()as u8).collect();let payload=OriginalBackboneMessageBytes::try_from_slice(&bytes).unwrap();let pointer=payload.retained_bytes().backing_ptr(0).unwrap();let message=crate::BackboneMessage::Mutations{envelopes:payload};let crate::BackboneMessage::Mutations{envelopes}= &message else{unreachable!()};assert_eq!(envelopes.retained_bytes().backing_ptr(0).unwrap(),pointer);
  let encoded=semio_os_spr::OpBinary::encode_op(&message).unwrap();assert_eq!(crate::decode_backbone_message_exact(&encoded).unwrap(),message);
- let mut queue=std::collections::VecDeque::new();queue.push_back(message);let mut owner=crate::backbone_retirement::ArtifactStoreBackboneRetirement::from_queue(queue);for turn in 0..10000{if semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(&owner){break}let d=owner.demands().unwrap();crate::test_effect::funded(fund(d),|e|observed(||{let step=crate::test_effect::step(semio_framework_value::ErasedSnapshotRetirement::close_step(&mut owner,e));((),step.progress())}));assert!(turn<9999);}
+ let mut queue=std::collections::VecDeque::new();queue.push_back(message);let mut owner=crate::backbone_retirement::ArtifactStoreBackboneRetirement::from_queue(queue);for turn in 0..10000{if semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(&owner){break}let d=owner.demands().unwrap();crate::test_effect::funded(fund(d),|e|observed(||{let step=crate::test_effect::step(semio_framework_value::ErasedSnapshotRetirement::close_step(&mut owner,e.grant().maximum_copy_bytes,e));((),step.progress())}));assert!(turn<9999);}
 }
 
 #[test]
-fn original_channel_donation_preserves_pages_and_all_denied_axes(){
- let law:serde_json::Value=serde_json::from_str(include_str!("transfer.json")).unwrap();let pattern=law["pattern"].as_array().unwrap();let bytes:Vec<_>=(0..law["bytes"].as_u64().unwrap()as usize).map(|i|pattern[i%pattern.len()].as_u64().unwrap()as u8).collect();
- for prefix in [0,2]{let mut source=OriginalBackboneOutbox::default();let mut queue=std::collections::VecDeque::new();queue.try_reserve_exact(prefix).unwrap();for _ in 0..prefix{queue.push_back(crate::BackboneMessage::Ack{op_ids:Vec::new()});}let mut payload=Some(OriginalBackboneMessageBytes::try_from_slice(&bytes).unwrap());let pointer=payload.as_ref().unwrap().retained_bytes().backing_ptr(0).unwrap();loop{let d=source.append_demands().unwrap();if source.can_append(fund(d)).unwrap(){break}crate::test_effect::funded(fund(d),|e|observed(||((),source.reserve_step(e).unwrap())));}let d=source.append_demands().unwrap();observed(||((),source.append_reserved(&mut payload,fund(d)).unwrap().unwrap()));
-  for turn in 0..10000{let d=source.channel_demands(&queue).unwrap().unwrap();for axis in 0..5{let mut g=fund(d);let limit=match axis{0=>&mut g.maximum_items,1=>&mut g.maximum_copy_bytes,2=>&mut g.maximum_capacity_bytes,3=>&mut g.maximum_release_bytes,_=>&mut g.maximum_depth};if *limit==0{continue}*limit-=1;let(result,h)=semio_framework_trace::observe_heap_allocations_on_this_thread(||source.transfer_to_channel_step(&mut queue,g).unwrap());assert!(result.is_none());assert_eq!((h.requested_bytes,h.released_bytes),(0,0));assert_eq!(source.front().unwrap().retained_bytes().backing_ptr(0).unwrap(),pointer);assert_eq!(queue.len(),prefix);}let moved=observed(||{let(moved,p)=source.transfer_to_channel_step(&mut queue,fund(d)).unwrap().unwrap();(moved,p)});if moved{break}assert!(turn<9999);}
-  assert_eq!(source.len(),0);assert_eq!(queue.len(),prefix+1);let Some(crate::BackboneMessage::Mutations{envelopes})=queue.back()else{panic!("actual channel owns its canonical mutation message")};assert_eq!(envelopes.retained_bytes().backing_ptr(0).unwrap(),pointer);assert_eq!(envelopes.to_vec_owner(),bytes);assert!(source.transfer_to_channel_step(&mut queue,RetainedCloneGrant::default()).unwrap().is_none());
-  let mut owner=crate::backbone_retirement::ArtifactStoreBackboneRetirement::from_queue(queue);for turn in 0..10000{if semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(&owner){break}let d=owner.demands().unwrap();crate::test_effect::funded(fund(d),|e|observed(||{let step=crate::test_effect::step(semio_framework_value::ErasedSnapshotRetirement::close_step(&mut owner,e));((),step.progress())}));assert!(turn<9999);}source.begin_close();for turn in 0..10000{if source.terminal_is_empty(){break}let d=source.close_demands(4096).unwrap();crate::test_effect::funded(fund(d),|e|observed(||{let step=source.close_step(e).ok().unwrap();((),step.progress())}));assert!(turn<9999);}
- }
+fn original_local_queue_donation_preserves_pages_and_all_denied_axes() {
+    use crate::{BackboneMessage, Backbones, ChannelBackbone, MemoryBackbone};
+    use std::collections::VecDeque;
+    use std::sync::{Arc, Mutex, OnceLock, atomic::{AtomicUsize, Ordering}};
+
+    let law: serde_json::Value = serde_json::from_str(include_str!("transfer.json")).unwrap();
+    let pattern = law["pattern"].as_array().unwrap();
+    let bytes: Vec<_> = (0..law["bytes"].as_u64().unwrap() as usize)
+        .map(|i| pattern[i % pattern.len()].as_u64().unwrap() as u8).collect();
+    for (memory, prefix) in [(true, 0), (true, 2), (false, 0), (false, 2)] {
+        let mut source = OriginalBackboneOutbox::default();
+        let queue = Arc::new(Mutex::new(VecDeque::new()));
+        let wakes = Arc::new(AtomicUsize::new(0));
+        let endpoint = if memory {
+            Backbones::Memory(MemoryBackbone { uri: String::new(), inbox: None, outbox: Some(queue.clone()) })
+        } else {
+            let calls = wakes.clone();
+            let wake: Arc<dyn Fn() + Send + Sync> = Arc::new(move || { calls.fetch_add(1, Ordering::Relaxed); });
+            Backbones::Channel(ChannelBackbone {
+                uri: String::new(), inbound: None, outbound: Some(queue.clone()), outbound_wake: Arc::new(OnceLock::from(wake)),
+            })
+        };
+        {
+            let mut queue = queue.lock().unwrap();
+            queue.try_reserve_exact(prefix).unwrap();
+            for _ in 0..prefix { queue.push_back(BackboneMessage::Ack { op_ids: Vec::new() }); }
+        }
+        let mut payload = Some(OriginalBackboneMessageBytes::try_from_slice(&bytes).unwrap());
+        let pointer = payload.as_ref().unwrap().retained_bytes().backing_ptr(0).unwrap();
+        loop {
+            let d = source.append_demands().unwrap();
+            if source.can_append(fund(d)).unwrap() { break; }
+            crate::test_effect::funded(fund(d), |e| observed(|| ((), source.reserve_step(e).unwrap())));
+        }
+        let d = source.append_demands().unwrap();
+        observed(|| ((), source.append_reserved(&mut payload, fund(d)).unwrap().unwrap()));
+        loop {
+            let d = source.channel_demands(&queue.lock().unwrap()).unwrap().unwrap();
+            for axis in 0..5 {
+                let mut grant = fund(d);
+                let limit = match axis {
+                    0 => &mut grant.maximum_items, 1 => &mut grant.maximum_copy_bytes,
+                    2 => &mut grant.maximum_capacity_bytes, 3 => &mut grant.maximum_release_bytes, _ => &mut grant.maximum_depth,
+                };
+                if *limit == 0 { continue; }
+                *limit -= 1;
+                crate::test_effect::funded(grant, |e| observed(|| {
+                    assert!(endpoint.send_original(&mut source, e).unwrap().is_none());
+                    assert_eq!(e.performed_work(), 0);
+                    ((), Default::default())
+                }));
+                assert_eq!(source.front().unwrap().retained_bytes().backing_ptr(0).unwrap(), pointer);
+                assert_eq!(queue.lock().unwrap().len(), prefix);
+            }
+            let moved = crate::test_effect::funded(fund(d), |e| observed(|| {
+                let result = endpoint.send_original(&mut source, e).unwrap().unwrap();
+                assert_eq!(e.performed_work(), 1);
+                result
+            }));
+            if moved { break; }
+        }
+        assert_eq!(wakes.load(Ordering::Relaxed), usize::from(!memory));
+        assert_eq!(source.len(), 0);
+        let mut queue = queue.lock().unwrap();
+        assert_eq!(queue.len(), prefix + 1);
+        let Some(BackboneMessage::Mutations { envelopes }) = queue.back() else { panic!("queue owns its mutation message"); };
+        assert_eq!(envelopes.retained_bytes().backing_ptr(0).unwrap(), pointer);
+        assert_eq!(envelopes.to_vec_owner(), bytes);
+        let mut owner = crate::backbone_retirement::ArtifactStoreBackboneRetirement::from_queue(std::mem::take(&mut *queue));
+        drop(queue);
+        while !semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(&owner) {
+            let d = owner.demands().unwrap();
+            crate::test_effect::funded(fund(d), |e| observed(|| {
+                let step = crate::test_effect::step(semio_framework_value::ErasedSnapshotRetirement::close_step(&mut owner, e.grant().maximum_copy_bytes, e));
+                ((), step.progress())
+            }));
+        }
+        source.begin_close();
+        while !source.terminal_is_empty() {
+            let d = source.close_demands(4096).unwrap();
+            crate::test_effect::funded(fund(d), |e| observed(|| ((), source.close_step(e).ok().unwrap().progress())));
+        }
+    }
 }

@@ -712,6 +712,9 @@ pub fn edit_timestamp<Mutation>(edit: &Edit<Mutation>) -> HybridLogicalTimestamp
 pub mod native_digest;
 #[cfg(test)]
 use semio_framework_value_testing_allocator as _;
+#[cfg(test)]
+#[path="🧪️effect/🦀️.rs"]
+mod test_effect;
 
 #[path="🏁️publication/↩️inverse/🦀️.rs"]
 pub mod native_replay_inverses;

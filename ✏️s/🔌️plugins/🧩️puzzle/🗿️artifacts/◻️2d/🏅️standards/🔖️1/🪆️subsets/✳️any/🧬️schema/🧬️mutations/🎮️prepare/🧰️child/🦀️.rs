@@ -6,6 +6,8 @@ use semio_framework_value::retirement::{RetireOwned,controlled::ControlledRetire
 use semio_framework_value_persistent::list::{PagedList,PagedListEditCursor,PagedListEditFailure,PagedListEditOutcome,PagedListEditStep,PagedListReservationFailure,PagedListReservationOutcome};
 use std::mem::size_of;
 
+#[path="📝️identifier/🦀️.rs"]
+pub mod identifier;
 
 /// 🧾️ Charges one local preparation event to the original effect; `false` means the quote was not funded and nothing was charged.
 pub fn pay(effect:&mut RetainedAllocationEffect<'_>)->Result<bool,ValueError> {
@@ -75,6 +77,11 @@ pub fn cursor_retire<T:RetainedClone,C:RetainedCloneCursor<T>>(cursor:&mut C,eff
     cursor_close(cursor,effect)
 }
 
+/// 📐️ Quotes the same start or close action selected by the native retirement driver.
+pub fn cursor_retire_demand<T:RetainedClone,C:RetainedCloneCursor<T>>(cursor:&C,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError> {
+    if cursor.close_started() {cursor.close_demands(body)} else {cursor.begin_close_demand()}
+}
+
 /// ♻️ Advances one controlled retirement; a suspended child retries next turn.
 pub fn controlled_step<T:RetireOwned>(owner:&mut ControlledRetirement<T>,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError> {
     let body=effect.grant().maximum_copy_bytes;
@@ -117,9 +124,19 @@ pub fn edit_progress(step:PagedListEditStep)->RetainedCloneProgress {
 pub enum Puzzle2dCloseAxis { Copy,Capacity(usize),Release,Depth }
 
 impl Puzzle2dCloseAxis {
+    pub fn select(self,demand:semio_framework_value::RetirementDemand)->usize {
+        match self{Self::Copy=>demand.copy_bytes,Self::Capacity(_)=>demand.capacity_bytes,Self::Release=>demand.release_bytes,Self::Depth=>demand.depth}
+    }
+
+    pub fn owned<T:RetireOwned>(self,close:&semio_framework_value::retained_clone::RetainedCloneClose,present:bool)->Result<usize,ValueError> {
+        let body=match self{Self::Capacity(body)=>body,_=>0};
+        Ok(self.select(close.next_owner_demands::<T>(present,&None,body)?))
+    }
+
     pub fn inline<T>(self)->Result<usize,ValueError> {Ok(match self {Self::Copy=>size_of::<T>(),Self::Depth=>1,_=>0})}
     pub fn retained<T:semio_framework_value::retained_clone::RetainedClone,C:semio_framework_value::retained_clone::RetainedCloneCursor<T>>(self,owner:&C)->Result<usize,ValueError> {
-        match self {Self::Copy=>owner.next_close_copy_byte_demand(),Self::Capacity(body)=>owner.next_close_capacity_byte_demand(body),Self::Release=>owner.next_close_release_byte_demand(),Self::Depth=>owner.next_close_depth_demand()}
+        let demand=cursor_retire_demand(owner,match self{Self::Capacity(body)=>body,_=>0})?;
+        Ok(self.select(demand))
     }
     pub fn retirement<T:semio_framework_value::retirement::RetireOwned>(self,owner:&semio_framework_value::retirement::controlled::ControlledRetirement<T>)->Result<usize,ValueError> {
         match self {Self::Copy=>owner.next_copy_byte_demand(),Self::Capacity(body)=>owner.next_capacity_byte_demand(body),Self::Release=>owner.next_release_byte_demand(),Self::Depth=>owner.next_depth_demand()}

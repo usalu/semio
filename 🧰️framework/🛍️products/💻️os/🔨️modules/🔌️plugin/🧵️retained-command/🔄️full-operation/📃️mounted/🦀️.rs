@@ -95,9 +95,6 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
    })?;Ok(())})?;return Ok(true)
   }
   let plan=owner.plan().unwrap();let error_copy=2*size_of::<Option<PublicationPageWriteFailure>>()+size_of::<MountedTypedCommandFullOperationStage>();
-  let mut d=owner.write_demands(cx.retained_grant().maximum_copy_bytes.saturating_sub(error_copy))?;d.copy_bytes+=error_copy;
-
-  if !plugin_grant_funds(d,cx.retained_grant())||cx.retained_grant().maximum_items==0||cx.fuel_remaining()==0{return Ok(true)}
 
   let replacement_ui=semio_framework::kernel::UiDirtyScope::Full;
   let source=match plan.intent{
@@ -106,6 +103,11 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
    PublicationPageIntent::Raw{reason,..}=>{let bytes:&[u8]=match reason{PublicationRawReason::Empty=>b"",PublicationRawReason::AdmissionCancelled=>b"latest-wins command admission cancelled or rejected before worker publication",PublicationRawReason::Complete=>b"typed-operation-complete",PublicationRawReason::Cancelled=>b"typed-operation cancelled before its next publication unit",PublicationRawReason::Fault=>{if let Some(fault)=self.terminal_fault.as_ref(){fault.as_bytes()}else{match self.publication.as_ref(){Some(ArtifactToolCompletionValue::Emit(Err(fault),_)|ArtifactToolCompletionValue::Download(Err(fault),_))=>fault.bounded.as_bytes(),_=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted fault page lost its bounded reason").into())}}}};PublicationPageSource::Raw{reason,bytes}},
    _=>PublicationPageSource::None,
   };
+  let grant = cx.retained_grant();
+  let child = RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes.saturating_sub(error_copy), ..grant };
+  let mut d = owner.write_admission_demands(&source, child, cx.fuel_remaining())?;
+  d.copy_bytes += error_copy;
+  if !plugin_grant_funds(d, grant) || grant.maximum_items == 0 || cx.fuel_remaining() == 0 { return Ok(true); }
   let raw=matches!(plan.intent,PublicationPageIntent::Raw{..});let page=&mut self.page_publication;let stage=&mut self.stage;
   if raw{
    cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,d,|g|{

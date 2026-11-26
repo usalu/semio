@@ -8,6 +8,9 @@ mod runtime_instance_registry_tests {
         for id in fixture["instances"].as_array().unwrap() {
             registry.insert_admitted(id.as_u64().unwrap() as u32, ());
         }
+        let mut expected: Vec<_> = fixture["instances"].as_array().unwrap().iter().map(|id| id.as_u64().unwrap() as u32).collect();
+        expected.sort_by_key(|id| RuntimeInstanceRegistry::<()>::index(*id));
+        assert_eq!(registry.entries().map(|(id, _)| id).collect::<Vec<_>>(), expected);
         let mut cursor = 0;
         let actual: Vec<_> = fixture["roundRobin"]
             .as_array()
@@ -24,6 +27,7 @@ mod runtime_instance_registry_tests {
             registry.take(id.as_u64().unwrap() as u32);
         }
         assert!(registry.next_entry_from(cursor).is_none());
+        assert_eq!(registry.entries().count(), 0);
     }
 
     #[test]

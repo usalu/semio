@@ -208,7 +208,19 @@
     "ce-g-kitchen": 1.029375,
     "ce-g-living": 0.358375,
     "ce-u-child": 1.22,
-    "cmp-kitchen-unit": 1.00968
+    "cmp-kitchen-unit": 1.00968,
+    "cmp-bed-child": 0.80082,
+    "cmp-bed-master": 1.71616,
+    "cmp-chair-1": 0.018952,
+    "cmp-chair-2": 0.018824,
+    "cmp-chair-3": 0.018952,
+    "cmp-chair-4": 0.018824,
+    "cmp-table-dining": 0.058824,
+    "cmp-basin": 0.04455,
+    "cmp-wc": 0.13376,
+    "cmp-lamp-1": 0.028872,
+    "cmp-lamp-2": 0.0289008,
+    "mep-tray-living": 0.0125
   },
   "annotations": {
     "Axis spacing": {

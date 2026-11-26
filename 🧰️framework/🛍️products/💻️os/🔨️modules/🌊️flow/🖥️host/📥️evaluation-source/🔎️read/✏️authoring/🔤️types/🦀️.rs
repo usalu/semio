@@ -67,3 +67,4 @@ impl TypeTextWork{
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()&&self.retirement.is_empty()}
 }
 impl Drop for TypeTextWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original port diagnostic text requires terminal closure")}}
+

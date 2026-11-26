@@ -1,7 +1,8 @@
-//! 🧰️ The mounted-app harness of the sourcing editor tests: it drives the whole app, so it sits above every layer; it is its own compile unit so the app machinery it instantiates is paid once, and each editor test target mounts it by `crate::editor_unit_tests::context`.
+//! 🧰️ The mounted-app harness of the sourcing editor tests: it drives the whole app, so it sits above every layer; it is its own crate so the app machinery it instantiates is paid once, and each editor test target mounts it as `crate::editor_unit_tests::context`.
 
 use semio_plugin::EditorApp;
-use crate::editor::sourcing::{SourcingCurationApp, SourcingCurationCommand, create_sourcing_curation_app};
+use semio_os_kernel as protocol;
+use semio_s_artifact_sourcing_curation::editor::sourcing::{SourcingCurationApp, SourcingCurationCommand, create_sourcing_curation_app};
 use semio_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members as new_app_with_registry_impl, observe_registered_fixture_app, render_registered_fixture_app, OriginalFixtureScope};
 use semio_plugin::{App, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 

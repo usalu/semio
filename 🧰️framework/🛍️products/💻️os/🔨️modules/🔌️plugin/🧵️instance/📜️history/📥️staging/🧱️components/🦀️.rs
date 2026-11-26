@@ -25,6 +25,8 @@ pub struct CommandHistory<A: ArtifactApp> {
     pub cache: Option<AppProjectionCache<A>>,
     /// 🤝️ The cached snapshot's funded shared-owner retirement: the last alias hands its pages back instead of dropping them.
     pub cache_retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+    /// 🅿️ Invalidated caches that were the last alias of their snapshot or configuration; their sealed pages wait here for [`CommandHistory::retire_cache_step`] instead of dropping plainly.
+    pub cache_parked: Vec<AppProjectionCache<A>>,
     /// 🧾️ Append-only session command log — see `🔖️CommandLog`. Never persisted, never
     /// truncated: undo/redo/revert push entries, they never remove any.
     pub command_log: PagedCommandLog,
@@ -57,6 +59,7 @@ impl<A: ArtifactApp> CommandHistory<A> {
     pub fn new() -> Self {
         Self {
             cache: None,
+            cache_parked: Vec::new(),
             command_log: PagedCommandLog::new(),
             command_prune_generation: 0,
             command_prune_processed: 0,
@@ -72,6 +75,51 @@ impl<A: ArtifactApp> CommandHistory<A> {
             history_filter: HistoryCommandFilter::default(),
             supersedes: SupersedeLedger::default(),
         }
+    }
+}
+
+/// 🗂️ The three shared roots of one projection cache, handed to their funded retirement together.
+pub type CacheRetirementRoots<A> = (
+    semio_framework_value::retirement::arc_custody::ArcLease<<A as ArtifactApp>::Snapshot>,
+    semio_framework_value::retirement::arc_custody::ArcLease<<A as ArtifactApp>::Config>,
+    semio_framework_value::retirement::arc_custody::ArcLease<semio_plugin_decl_views::history_view::HistoryView>,
+);
+
+impl<A: ArtifactApp> CommandHistory<A> {
+    /// 🗑️ Invalidates the projection cache; a cache that is the last alias of its snapshot or configuration parks for [`Self::retire_cache_step`] instead of dropping its sealed pages plainly.
+    pub fn invalidate_cache(&mut self) {
+        let Some(cache) = self.cache.take() else { return };
+        if std::sync::Arc::strong_count(&cache.1) == 1 { self.cache_parked.push(cache) }
+    }
+
+    /// ⏳️ Whether a parked cache or its funded retirement still holds pages.
+    pub fn cache_parked_pending(&self) -> bool { !self.cache_parked.is_empty() || self.cache_retirement.is_some() }
+
+    /// 📏️ Quotes the next cache retirement step; the live cache counts only when `live` (the close ladder).
+    pub fn cache_retirement_demand(&self, live: bool, body: usize) -> Result<Option<semio_framework_value::RetirementDemand>, semio_framework_value::ValueError> {
+        if let Some(owner) = self.cache_retirement.as_ref() { return semio_framework_value::factory_ticket_demands(owner, body).map(Some) }
+        if self.cache_parked.is_empty() && !(live && self.cache.is_some()) { return Ok(None) }
+        let bytes = semio_framework_value::owned_retirement_birth_bytes::<CacheRetirementRoots<A>>();
+        Ok(Some(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Option<CacheRetirementRoots<A>>>() + bytes, capacity_bytes: bytes, depth: 1, ..Default::default() }))
+    }
+
+    /// ♻️ Hands one parked (or, when `live`, the live) cache to its funded retirement and closes that retirement step by step.
+    pub fn retire_cache_step(&mut self, live: bool, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<semio_framework_value::retained_clone::RetainedCloneProgress>, semio_framework_value::ValueError> {
+        use semio_framework_value::retirement::arc_custody::ArcLease;
+        if self.cache_retirement.is_some() {
+            let poll = semio_framework_value::close_factory_ticket(&mut self.cache_retirement, effect.grant().maximum_copy_bytes, effect);
+            return semio_plugin_ownership::bounded_ownership::plugin_settle_value(poll).map(|step| Some(step.progress()));
+        }
+        let parked = !self.cache_parked.is_empty();
+        let next = if parked { self.cache_parked.pop() } else if live { self.cache.take() } else { None };
+        let Some((key, snapshot, config, history)) = next else { return Ok(None) };
+        let mut roots = Some((ArcLease::new(snapshot), ArcLease::new(config), ArcLease::new(history)));
+        let admission = semio_framework_value::admit_owned_retirement(&mut roots, effect);
+        if let Some((ArcLease(snapshot), ArcLease(config), ArcLease(history))) = roots {
+            let cache = (key, snapshot.unwrap(), config.unwrap(), history.unwrap());
+            if parked { self.cache_parked.push(cache) } else { self.cache = Some(cache) }
+        }
+        Ok(Some(match admission.result? { Some((owner, progress)) => { self.cache_retirement = Some(owner); progress } None => Default::default() }))
     }
 }
 

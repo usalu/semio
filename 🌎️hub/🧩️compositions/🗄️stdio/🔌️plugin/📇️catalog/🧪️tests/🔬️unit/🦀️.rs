@@ -74,3 +74,42 @@ fn reduced_catalog_commits_only_registered_definitions_and_codec_receipts() {
     let foreign = selected_registry().unwrap().artifact_assemblies().unwrap();
     assert!(artifact_catalog_contribution_for(&registry, &foreign).is_err());
 }
+
+/// 🏠️ LAW: the catalog owner assembles the runtime-hosted artifacts as definitions only, the runtime roster still links their complete runtime.
+#[test]
+fn runtime_hosted_artifacts_are_definitions_for_the_owner_and_runtimes_for_the_host() {
+    let hosts = selected_registry().unwrap().runtime_host_ids();
+    assert_eq!(hosts, vec!["stdio-bim", "stdio-semio"]);
+    for (artifact, host) in selected_runtime_hosts() {
+        assert_eq!(selected_registry().unwrap().runtime_host_of(artifact), Some(*host));
+        let owner = selected_registry().unwrap().artifact_assemblies().unwrap().into_iter().find(|assembly| assembly.definition().identity().as_str() == format!("s.stdio.{artifact}")).unwrap();
+        let runtime = runtime_artifact_assemblies().unwrap().into_iter().find(|assembly| assembly.definition().identity().as_str() == format!("s.stdio.{artifact}")).unwrap();
+        assert!(matches!(owner, ArtifactAssembly::Definition(_)), "{artifact} is a definition for its owner");
+        assert!(matches!(runtime, ArtifactAssembly::Runtime(_)), "{artifact} keeps its runtime for its host");
+    }
+}
+
+/// 🏠️ LAW: moving a runtime to its host never changes what the owner's catalog commits: the owner view and the complete runtime view project the same topic.
+#[test]
+fn the_owner_catalog_commitment_equals_the_complete_runtime_catalog_commitment() {
+    let owner = native_artifact_catalog_contribution().unwrap();
+    let runtime = artifact_catalog_contribution_for(&runtime_registry().unwrap(), &runtime_artifact_assemblies().unwrap()).unwrap();
+    assert_eq!(owner.topic, runtime.topic);
+    assert!(catalog_value_matches(&owner.payload, &runtime.payload));
+}
+
+/// 🏠️ LAW: each runtime host commits its hosted artifacts under its own `stdio.artifact-catalog.<plugin>` topic and nothing else is admitted.
+#[test]
+fn each_runtime_host_publishes_its_own_exactly_validated_catalog_topic() {
+    for host in runtime_host_plugin_ids().unwrap() {
+        let expected = expected_hosted_artifact_catalog_contribution(host).unwrap();
+        assert_eq!(expected.topic, format!("stdio.artifact-catalog.{host}"));
+        validate_hosted_artifact_catalog_contributions(host, std::slice::from_ref(&expected)).unwrap();
+        assert!(validate_hosted_artifact_catalog_contributions(host, &[]).is_err());
+        let foreign = runtime_host_plugin_ids().unwrap().into_iter().find(|other| *other != host).unwrap();
+        assert!(validate_hosted_artifact_catalog_contributions(host, &[expected_hosted_artifact_catalog_contribution(foreign).unwrap()]).is_err());
+        assert!(validate_hosted_artifact_catalog_contributions(host, &[native_artifact_catalog_contribution().unwrap()]).is_err());
+        assert!(validate_hosted_artifact_catalog_contributions(host, &[expected.clone(), expected]).is_err());
+    }
+    assert!(expected_hosted_artifact_catalog_contribution("stdio").is_err());
+}

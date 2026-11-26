@@ -1,0 +1,1 @@
+{"type":"array","minItems":5,"items":{"type":"object","additionalProperties":false,"required":["name","type","tracked","ignored"],"properties":{"name":{"type":"string"},"type":{"enum":["directory","file","missing"]},"tracked":{"type":"boolean"},"ignored":{"type":"boolean"}}}}

@@ -15,6 +15,7 @@ pub struct OriginalToolRunNativeState{construction:semio_framework_job::Original
 const TRACE_PENDING:u8=6;
 const PRESENTATION_PENDING:u8=7;
 const RECEIVED:u8=8;
+const ADMITTING_CURSOR:u8=9;
 fn cursor_release_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<Box<ToolRunTickNativeCursor>>>(),release_bytes:size_of::<ToolRunTickNativeCursor>(),depth:1,..Default::default()}}
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn funds(cx:&StepContext<'_>,d:RetirementDemand)->bool{!cx.should_yield()&&semio_framework_value::retained_clone::retained_clone_grant_admits(cx.retained_grant(),d)}
@@ -30,7 +31,7 @@ impl OriginalToolRunNativeState{
  }
  pub fn capture(&self,identity:ToolRunIdentity,state:ToolRunState,effect:&mut semio_framework_value::retained_clone::RetainedAllocationEffect<'_>)->Result<Option<(ToolRunCapturedView,RetainedCloneProgress)>,ValueError>{if self.invalidated{return Ok(None)}self.owned.presentation.as_ref().map_or(Ok(None),|presentation|presentation.capture_view(identity,state,effect))}
  pub fn borrowed_view(&self,identity:ToolRunIdentity,state:ToolRunState)->Option<semio_framework_tool_run_presentation::ToolRunView<'_>>{if self.invalidated{return None}self.owned.presentation.as_ref()?.borrowed_view(identity,state)}
- pub fn has_pending_tick(&self)->bool{self.phase!=0||self.cursor.is_some()||self.outcome.is_some()||self.owned.tick.is_some()}
+ pub fn has_pending_tick(&self)->bool{self.phase!=0||self.outcome.is_some()||self.owned.tick.is_some()}
  pub fn request_close(&mut self){self.invalidated=true;}
  pub fn close_requested(&self)->bool{self.invalidated&&!self.terminal_is_empty()}
  pub fn receive(&mut self,source:&dyn OriginalTickWireSource,identity:ToolRunIdentity,state:ToolRunState,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
@@ -63,7 +64,7 @@ impl OriginalToolRunNativeState{
   let presentation=owned.presentation.as_mut().ok_or_else(||invalid("original run presentation is absent"))?;
   if !presentation.ready(){advance_presentation(presentation,&mut self.adv_reply,&mut self.adv_pending,cx)?;return Ok(false)}
   match self.phase{
-   0=>{if self.cursor.is_none(){let bytes=size_of::<ToolRunTickNativeCursor>();built(cx,&mut self.construction,&mut self.cursor,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes+size_of::<Option<Box<ToolRunTickNativeCursor>>>(),capacity_bytes:bytes,release_bytes:0,depth:1},||Ok((Box::write(Box::new_uninit(),ToolRunTickNativeCursor::empty()),RetainedCloneProgress{copied_items:1,copied_bytes:bytes+size_of::<Option<Box<ToolRunTickNativeCursor>>>(),retained_capacity_bytes:bytes,..Default::default()})))?;return Ok(false)}let d=ToolRunTickNativeCursor::birth_demands();if funds(cx,d){if let Some(p)=self.cursor.as_mut().ok_or_else(||invalid("tool-run tick cursor is absent"))?.admit(source,cx.retained_grant())?{cx.consume_retained(p)?;cx.consume_fuel(1);self.phase=1;}}},
+   0|ADMITTING_CURSOR=>{if self.cursor.is_none(){let bytes=size_of::<ToolRunTickNativeCursor>();built(cx,&mut self.construction,&mut self.cursor,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes+size_of::<Option<Box<ToolRunTickNativeCursor>>>()+size_of::<u8>(),capacity_bytes:bytes,release_bytes:0,depth:1},||Ok((Box::write(Box::new_uninit(),ToolRunTickNativeCursor::empty()),RetainedCloneProgress{copied_items:1,copied_bytes:bytes+size_of::<Option<Box<ToolRunTickNativeCursor>>>()+size_of::<u8>(),retained_capacity_bytes:bytes,..Default::default()})))?;if self.cursor.is_some(){self.phase=ADMITTING_CURSOR;}return Ok(false)}let d=ToolRunTickNativeCursor::birth_demands();if funds(cx,d){if let Some(p)=self.cursor.as_mut().ok_or_else(||invalid("tool-run tick cursor is absent"))?.admit(source,cx.retained_grant())?{cx.consume_retained(p)?;cx.consume_fuel(1);self.phase=1;}}},
    1=>{
     for _ in 0..cx.retained_grant().maximum_items.max(1){
      if let Some(outcome)=self.outcome.take(){
@@ -74,7 +75,7 @@ impl OriginalToolRunNativeState{
       if copied==0||cx.should_yield(){break}
      }
      if self.cursor.as_ref().ok_or_else(||invalid("tool-run tick cursor is absent"))?.is_complete(){self.phase=2;break}
-     let cursor=self.cursor.as_mut().ok_or_else(||invalid("tool-run tick cursor is absent"))?;let stepped=&mut self.stepped;cx.with_native_receiving(&mut self.outcome,|native,_|{*stepped=Some(cursor.advance(source,native));Ok(())})?;
+     let cursor=self.cursor.as_mut().ok_or_else(||invalid("tool-run tick cursor is absent"))?;let stepped=&mut self.stepped;let floor=cursor.next_demands()?;cx.with_native_receiving_work(&mut self.outcome,floor,|native,grant,_|{*stepped=Some(cursor.advance_run(source,native,grant));Ok(())})?;
      if self.outcome.is_none()||cx.should_yield(){break}
     }
    },
@@ -102,7 +103,12 @@ impl OriginalToolRunNativeState{
     }
    },
    4=>{self.phase=5;},
-   5=>{let cursor=self.cursor.as_ref().ok_or_else(||invalid("tool-run tick cursor is absent"))?;if cursor.terminal_is_empty(){let d=cursor_release_demands();let step=crate::retired(cx,d,|_|->Result<_,ValueError>{drop(self.cursor.take());Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;if step.progress().copied_items!=0{self.phase=RECEIVED;return Ok(true)}return Ok(false)}let d=cursor.close_demands(cx.retained_grant().maximum_copy_bytes)?;let cursor=self.cursor.as_mut().ok_or_else(||invalid("tool-run tick cursor is absent"))?;semio_framework_job::close_original_effect_step(cx,d,|effect|{let result=cursor.close_step(effect).map_err(semio_framework_value::OriginalRetirementFailure::from);semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result,work:effect.performed_work()})})?;},
+   5=>{let cursor=self.cursor.as_ref().ok_or_else(||invalid("tool-run tick cursor is absent"))?;if cursor.terminal_is_empty(){
+       let demand=RetirementDemand{copy_bytes:size_of::<u8>(),depth:1,..Default::default()};
+       if !funds(cx,demand){return Ok(false)}
+       cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})?;
+       cx.consume_fuel(1);self.phase=RECEIVED;return Ok(true)
+   }let d=cursor.close_demands(cx.retained_grant().maximum_copy_bytes)?;let cursor=self.cursor.as_mut().ok_or_else(||invalid("tool-run tick cursor is absent"))?;semio_framework_job::close_original_effect_step(cx,d,|effect|{let result=cursor.close_step(effect).map_err(semio_framework_value::OriginalRetirementFailure::from);semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result,work:effect.performed_work()})})?;},
    _=>return Err(invalid("original tick receiving phase is invalid").into()),
   }Ok(false)
  }
@@ -139,7 +145,7 @@ fn advance_presentation(presentation:&mut ToolRunPresentationSlot,reply:&mut Opt
  let body=cx.retained_grant().maximum_copy_bytes;
  if !*pending{let d=presentation.next_demands(body)?;if !funds(cx,d){return Ok(())}}
  let fuel=(cx.fuel_remaining().saturating_sub(1)/3)as usize;
- let grant=ToolRunEntityEditGrant{retirement:cx.retained_grant(),comparison:semio_framework_value::retained_clone::ordered_map::BoundedOrdGrant{maximum_items:fuel.min(1),maximum_bytes:fuel.min(64)},maximum_moved_items:fuel.min(1),maximum_moved_bytes:cx.retained_grant().maximum_copy_bytes,maximum_capacity_bytes:cx.retained_grant().maximum_capacity_bytes};
+ let grant=ToolRunEntityEditGrant{retirement:cx.retained_grant(),comparison:semio_framework_value::retained_clone::ordered_map::BoundedOrdGrant{maximum_items:fuel.min(1),maximum_bytes:fuel.min(64)},maximum_moved_items:fuel,maximum_moved_bytes:cx.retained_grant().maximum_copy_bytes,maximum_capacity_bytes:cx.retained_grant().maximum_capacity_bytes};
  let recover=*pending;
  let(outcome,performed)=match cx.with_original_source_effect(grant.retirement,|_,effect|{
   if reply.is_none(){let slot=semio_framework_value::retained_clone::OriginalEffectReply::borrow(&mut *reply)?;let done=if recover{presentation.recover_advance_into(body,grant,effect,slot)?}else{presentation.advance_into(body,grant,effect,slot)?};drop(done);}
@@ -172,30 +178,38 @@ mod settle_presentation_turn_tests{
 
  #[test]
  fn presentation_tick_keeps_its_original_source_across_turns(){
-  let stock=RetainedCloneGrant{maximum_items:1<<10,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:64};
-  let mut caller=OriginalJobFixtureCaller::admit(OperationId(2),Generation(1),stock,||Some(1),u64::MAX,100_000);
+  let stock=RetainedCloneGrant{maximum_items:1<<16,maximum_copy_bytes:1<<26,maximum_capacity_bytes:1<<26,maximum_release_bytes:1<<26,maximum_depth:64};
+  let mut caller=OriginalJobFixtureCaller::admit(OperationId(2),Generation(1),stock,||Some(1),u64::MAX,1_000_000);
+  caller.retain_dispatch().expect("keep the tick on its mounted source");
   let identity=ToolRunIdentity::new(semio_framework_tool_run::ToolRunId{app_instance_id:1,run:1},[0;32]);
   let mut presentation=ToolRunPresentationSlot::new("generator".into(),identity,ToolRunState::Starting);
   let mut reply=None;
   let mut pending=false;
   let mut advance=|presentation:&mut ToolRunPresentationSlot,caller:&mut OriginalJobFixtureCaller|{
-   for _ in 0..1024{
+   for _ in 0..16_384{
     if presentation.ready(){return;}
     caller.turn(stock,|cx|advance_presentation(presentation,&mut reply,&mut pending,cx)).unwrap();
    }
-   panic!("the original presentation must settle");
+   panic!("the original presentation must settle with its funded quote {:?}, remaining {:?}, last receipt {:?}",presentation.next_demands(stock.maximum_copy_bytes),caller.remaining_grant(),caller.receipt());
   };
   advance(&mut presentation,&mut caller);
   assert_eq!(presentation.body().unwrap().progress.sequence,0);
-  let tick=ToolRunTick{identity,sequence:1,progress:None,steps:Vec::new(),trace:Vec::new(),append_ops:Vec::new(),append_entities:Vec::new(),retract_to:None,payload:None,payload_update:None};
+  let tick=ToolRunTick{identity,sequence:1,progress:None,steps:Vec::new(),trace:Vec::new(),append_ops:Vec::new(),append_entities:vec![11,7,3],retract_to:None,payload:None,payload_update:None};
   caller.turn(stock,|cx|{
    let (((),progress),work)=cx.with_original_source_effect(cx.retained_grant(),|_,effect|{
-    presentation.begin_tick(tick,0,ToolRunState::Running,0.0,0,effect).unwrap_or_else(|(error,_)|panic!("{error}"))
+    presentation.begin_tick(tick,1,ToolRunState::Running,0.0,0,effect).unwrap_or_else(|(error,_)|panic!("{error}"))
    })?.expect("the tick admission grant is funded");
    settle_presentation_turn(cx,progress,u64::try_from(work).unwrap())
   }).unwrap();
   advance(&mut presentation,&mut caller);
   assert_eq!(presentation.body().unwrap().progress.sequence,1);
+  let entities=presentation.body().unwrap().provenance.entities();
+  let keys:Vec<_>=(0..entities.len()).map(|i|*entities.get_index(i).unwrap().0).collect();
+  assert_eq!(keys,[3,7,11]);
+  assert_eq!(presentation.borrowed_view(identity,ToolRunState::Complete).unwrap().provisional_entities.len(),3);
+  for state in [ToolRunState::Finalized,ToolRunState::Aborted,ToolRunState::Faulted] {
+   assert!(presentation.borrowed_view(identity,state).unwrap().provisional_entities.is_empty());
+  }
   let mut close=ControlledRetirement::new(presentation).unwrap_or_else(|(error,_)|panic!("{error}"));
   for _ in 0..1024{
    if close.terminal_is_empty(){break;}

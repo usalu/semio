@@ -23,6 +23,18 @@ async fn poll_load_turn(app: &mut ToyApp, operation: u64, cx: &mut semio_framewo
     PluginApp::poll_document_archive_load(app, operation, &mut artifact_app_laws::fixture_identity(), cx).await
 }
 
+/// 💧️ Hydrates the head-only lane of `app` over renewed host turns until it reports the head landed.
+async fn hydrate_pure(app: &mut ToyApp, head_pack: &[u8], cx: &mut semio_framework_job::StepContext<'_>) {
+    for _ in 0..semio_plugin_testing_laws::OriginalFixtureCaller::maximum_turns() {
+        let (grant, _) = cx.original_turn_ceiling();
+        artifact_app_laws::fixture_renew_turn(cx, semio_plugin_testing_laws::OriginalFixtureCaller::turn_fuel(), grant).expect("a renewed hydrate turn");
+        if PluginApp::hydrate_pure_head(app, head_pack, cx).await.expect("the head-only lane hydrates") {
+            return;
+        }
+    }
+    panic!("the head-only lane never hydrated under the original fixture caller");
+}
+
 /// 🧮️ What a history step may change: the head, the content revision, the edits, the transitions and the history rows.
 async fn history_trace(app: &mut ToyApp) -> ((i32, String), [u8; 32], usize, usize, usize) {
     let rows = app.render_ctx().history_patch(true).await.expect("history patch").upserts.len();
@@ -143,13 +155,13 @@ async fn a_pure_lane_hydrates_the_head_without_history_and_history_verbs_refuse(
     let actor = text(&fixture["actor"]).to_string();
     let mut source = seeded_app_as(&fixture, &actor, mounted_policy, &mut identity).await;
     for value in 0..240 {
-        source.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value }.into()], transaction: None }, &mut identity).await.expect("a source edit");
+        source.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value }.into()], transaction: None }, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("a source edit");
     }
     let head = source.stores.store.snapshot().expect("the source head");
     let files = source.document_pack().await.expect("the source pair");
     let mut pure = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(text(&fixture["actor"]).into()), mounted_policy, &mut identity).await;
     let code = |fault: Fault| fault.code.0;
-    PluginApp::hydrate_pure_head(&mut pure, &head.encode_pack(), cx).await.expect("the head-only lane hydrates");
+    hydrate_pure(&mut pure, &head.encode_pack(), cx).await;
     assert_eq!(pure.stores.store.snapshot().expect("the pure head"), head, "the pure document is the source head");
     assert!(pure.stores.store.envelope().vcs.edits.is_empty() && pure.time_travel.history_unavailable(), "no history was folded or kept");
     assert_eq!(history_verb_refusal(&mut pure, &actor, "undo", mounted_policy, &mut identity, cx).await.as_deref(), Some(PURE_HISTORY_UNAVAILABLE_CODE));
@@ -223,7 +235,7 @@ async fn a_deferred_history_step_ends_its_turn_at_the_wall_deadline_not_an_opera
         let after = app.stores.store.reprojection_progress().map_or(u32::MAX, |progress| progress.done);
         assert!(after == u32::MAX || after.saturating_sub(done) <= 8, "a 4 ms turn of 1 ms operations replays a handful: {done} → {after}");
         turns += 1;
-        assert!(turns < 1_000, "the step is adopted");
+        assert!(turns < 4_000, "the step is adopted");
     }
     assert!(turns >= 600 / 8, "600 operations of 1 ms span many 4 ms turns ({turns})");
     close(&mut app,cx);

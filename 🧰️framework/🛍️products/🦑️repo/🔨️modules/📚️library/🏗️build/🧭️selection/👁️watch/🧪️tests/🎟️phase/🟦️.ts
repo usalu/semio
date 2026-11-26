@@ -16,7 +16,7 @@ import {selectBuildProjectsV1,buildOptionV1,buildOptionsV1,buildBooleanOptionV1}
 import * as watchHelpers from "../../🟦️.ts";
 import cachePolicy from "../../../../../⚡️caching/🔣️policy.json";
 import ownership from "../../../../../🗂️workspaces/🔣️policy.json";
-import {isOpaqueSourcePathV1} from "../../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import{isOpaqueSourcePathV1}from"../../../../📥️inputs/👻️opaque-source/🟨️.mjs";
 import schema from "./📋️schema.json";
 import corpus from "./🔣️.json";
 declareLibraryBuildTestEnvelopeV1({suite:"build-targets-selection"});

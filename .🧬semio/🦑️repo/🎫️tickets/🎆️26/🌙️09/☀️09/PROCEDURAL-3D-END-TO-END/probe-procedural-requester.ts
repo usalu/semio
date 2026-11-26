@@ -1,4 +1,6 @@
+import { replayEditorDocument } from "./replay-editor-document.ts";
 import { readFile, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { Session } from "node:inspector";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -17,6 +19,7 @@ import { driveInboundRequest } from "../../../../../../../🧰️framework/🔨�
 import { guestAnswerPages } from "../../../../../../../🧰️framework/🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
 import { consumedTopicsForApp, scopeContributionsJson } from "../../../../../../../🧰️framework/🔨️modules/🎠️kernel/🧾️contributions-json/🟦️.ts";
 
+Error.stackTraceLimit = 160;
 const moduleRoot = resolve(process.argv[2]!);
 const scenario = process.argv[4] ?? "example";
 const recordedClock = process.env.SEMIO_NODE_PROBE_RECORDED_CLOCK === "1";
@@ -40,6 +43,17 @@ async function openBridge(directory: string, pluginId: string) {
     succeed: async () => stock.succeed(admission),
   }, async (url: string) => WebAssembly.compile(await readFile(new URL(url))));
 }
+if (process.env.SEMIO_NODE_PROBE_NATIVE_DIAGNOSTICS === "1") {
+  const env = await import(pathToFileURL(join(moduleRoot,"../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/environment.js")).href);
+  env._setEnv({SEMIO_RUNTIME_DIAGNOSTICS:"1"});
+  for (const level of ["debug","log","warn","error"] as const) {
+    const original = console[level].bind(console);
+    console[level] = (...args) => {
+      const message=args.find(value=>typeof value==="string" && value.includes("[TRACE]"));
+      if (!message || /cleanup continuation for instance|maintenance stage=.*outcome=Err|runtime live cleanup faulted/i.test(message)) original(...args);
+    };
+  }
+}
 const api = await openBridge(moduleRoot, pluginId);
 log("compiled requester bridge activated", app.id);
 
@@ -54,24 +68,82 @@ const pendingTicks: Record<string, unknown>[] = [];
 const requests: ReturnType<typeof wireExtensionInvocation>["invokeExtension"][] = [];
 const providerRoot = process.env.SEMIO_NODE_PROBE_PROVIDERS;
 const registryPath = process.env.SEMIO_NODE_PROBE_REGISTRY;
+const recordedMathPrefix = process.env.SEMIO_NODE_PROBE_RECORDED_MATH;
 const surfacePath = process.env.SEMIO_NODE_PROBE_SURFACE;
 const capturedHost = surfacePath ? dirname(surfacePath) : undefined;
 const exactOpen = capturedHost ? JSON.parse(await readFile(join(capturedHost, "tick-open.json"), "utf8")) : undefined;
 let exactTick = capturedHost ? JSON.parse(await readFile(join(capturedHost, "tick-ingress-1.json"), "utf8")) : undefined;
 let ingressSequence = 1n;
 const providers = new Map<string, { pluginId: string; directory: string; manifest: any; api?: any; seq: bigint }>();
+const replayArchives = process.env.SEMIO_NODE_PROBE_ARCHIVES === "1";
+const archives: Array<{parent_pack:number[];parent_spr:number[];members:[]}> = [];
+let archiveFrames: ReturnType<typeof decodeAppFrame>[] | undefined;
 let lastOperation: string | undefined;
+const recordedMath = recordedMathPrefix ? {
+  request: (await readFile(recordedMathPrefix + "-request.json", "utf8")).trim(),
+  answer: await readFile(recordedMathPrefix + "-answer.pack"),
+  completed: JSON.parse(await readFile(recordedMathPrefix + "-completed.json", "utf8")),
+} : undefined;
+if (recordedMath) {
+  if (scenario !== "integrated" || !exactTick) throw new Error("Recorded Math requires integrated mode and captured host ingress");
+  const [completion, ...others] = recordedMath.completed;
+  if (others.length || completion?.kind !== "completed" || completion.payload.req !== "1" ||
+      completion.payload.outcome.tag !== "ok" || !Buffer.from(completion.payload.outcome.val).equals(recordedMath.answer) ||
+      createHash("sha256").update(recordedMath.answer).digest("hex") !== "b1ddfe8470f5147ecf7c3a919efe7f4a09d87038e6df60c583ca6082cf22b396") {
+    throw new Error("Recorded Math capture lost its real completion bytes");
+  }
+}
+let recordedMathStage: "waiting-request" | "delivering" | "waiting-rearm" | "rearm-ready" | "dispatching-rearm" | "proved" = "waiting-request";
+
+function parseRecordedRequest(requestJson: string): Record<string, unknown> {
+  return JSON.parse(requestJson.replace(/"nodeHash":\s*(\d+)/, '"nodeHash":"$1"'));
+}
+
+function recordedMathRequestMatches(received: Record<string, unknown>, expected: Record<string, unknown>, resume: boolean): boolean {
+  expected = { ...expected };
+  expected.resume = resume;
+  if (resume) {
+    expected.inputJson = "";
+    expected.dependencyJson = "";
+  }
+  const keys = Object.keys(expected).sort();
+  return json(keys) === json(Object.keys(received).sort()) && keys.every((key) => received[key] === expected[key]);
+}
 
 async function invokePending(): Promise<void> {
   while (requests.length) {
     const request = requests.shift()!;
     const provider = providers.get(request.extensionId);
     if (!provider) throw new Error("No installed extension for exact request " + json(request));
-    provider.api ??= await openBridge(provider.directory, provider.pluginId);
     log("extension request", request.req.toString(), request.extensionId, request.capability, request.requestJson);
+    if (recordedMath && request.extensionId === "flow-extension-math" && request.capability === "evaluate") {
+      const received = parseRecordedRequest(request.requestJson);
+      const expected = parseRecordedRequest(recordedMath.request);
+      if (recordedMathStage === "dispatching-rearm" && received.windowId === expected.windowId && received.neuronId === expected.neuronId) {
+        if (request.req <= 1n || !recordedMathRequestMatches(received, expected, true)) throw new Error("Rearmed Math request changed the recorded identity or payload");
+        recordedMathStage = "proved";
+        log("recorded Math continuation emitted a distinct resumed request", request.req.toString());
+        return;
+      }
+      if (recordedMathStage === "waiting-request" && request.req === 1n) {
+        if (!recordedMathRequestMatches(received, expected, false)) throw new Error("Live Math request does not own captured progress");
+        recordedMathStage = "delivering";
+        const { prologue, terminal } = guestAnswerPages(recordedMath.answer);
+        const events = [
+          ...prologue.map((page) => ({ kind: "http-chunk", payload: { req: request.req, params: { bytes: Array.from(page), done: false } } })),
+          { kind: "completed", payload: { req: request.req, outcome: { tag: "ok", val: Array.from(terminal) } } },
+        ];
+        await poll("deliver byte-identical Math progress", undefined, undefined, events);
+        continue;
+      }
+    }
+    provider.api ??= await openBridge(provider.directory, provider.pluginId);
     const answer = await driveInboundRequest({
       req: ++provider.seq, capability: request.capability, payload: new TextEncoder().encode(request.requestJson),
-      originInstanceId: instance, submit: (events) => provider.api.poll(events, undefined, undefined, budget),
+      originInstanceId: instance, submit: async (events) => {
+        const original=await provider.api.poll(events, undefined, undefined, budget);
+        return {...original,original};
+      },
     });
     if (answer.status !== "answered") throw new Error("Provider request " + answer.status);
     const answerBytes = "ok" in answer.result ? answer.result.ok : answer.result.fault;
@@ -84,17 +156,18 @@ async function invokePending(): Promise<void> {
 
 let lifecycle: any;
 
-async function poll(label: string, event?: unknown, page?: unknown): Promise<any> {
+async function poll(label: string, event?: unknown, page?: unknown, batch?: readonly unknown[]): Promise<any> {
   const pending = patchAck ?? event;
-  if ((patchAck || operationAcks.length > 0) && event) {
+  if ((patchAck || operationAcks.length > 0) && (event || batch)) {
     await poll("acknowledge UI patch");
-    return poll(label, event, page);
+    return poll(label, event, page, batch);
   }
   patchAck = undefined;
   const now = performance.now();
   const selected = pending ?? operationAcks.shift();
-  const events = selected === undefined ? [] : [selected];
+  const events = batch ?? (selected === undefined ? [] : [selected]);
   const turn = await api.poll(events, page, undefined, budget);
+  if (batch && recordedMathStage === "delivering") recordedMathStage = "waiting-rearm";
   crossing += 1;
   const scan = scanTypedOperationPages(turn.effects);
   operationAcks.push(...scan.acknowledgements);
@@ -102,10 +175,12 @@ async function poll(label: string, event?: unknown, page?: unknown): Promise<any
     log("typed page", crossing, page.lane, json(page.token), page.payload.length,
       scan.faults.length ? scan.faults.join(" ") : "");
   }
+  if (scan.faults.length) throw new Error(label + " at crossing " + crossing + ": " + scan.faults.join(", "));
   const effects = scan.kept.map((effect: any) => {
     const bytes = shellFrameBytes(effect, instance);
     if (bytes) {
       const frame = decodeAppFrame(bytes);
+      if (archiveFrames) archiveFrames.push(frame);
       const value = "Invocation" in frame && frame.Invocation.output.length
         ? decodePackValue(Uint8Array.from(frame.Invocation.output))
         : undefined;
@@ -114,11 +189,18 @@ async function poll(label: string, event?: unknown, page?: unknown): Promise<any
       log("shell frame", crossing, Object.keys(frame)[0], json(value ?? frame)?.slice(0, 500));
       return { tag: "app-frame", frame: Object.keys(frame)[0] };
     }
+    if (replayArchives && effect.tag === "load-document") {
+      archives.push({parent_pack:Array.from(effect.val.docPack),parent_spr:Array.from(effect.val.spr),members:[]});
+    }
     if (effect.tag === "invoke-extension") requests.push(wireExtensionInvocation(effect).invokeExtension);
     if (effect.tag === "dispatch-action") {
       const invocation = wireEffectToFriendly(effect, decodePackValue);
       if (invocation && typeof invocation === "object" && "dispatchAction" in invocation && invocation.dispatchAction?.action === "flowEvalTick") {
         const args = invocation.dispatchAction.args as Record<string, unknown>;
+        if (recordedMathStage === "waiting-rearm" && args.windowId === editPreview && args.windowKindId === editPreview) {
+          log("captured Math progress rearmed its actual Edit preview", crossing, json(args));
+          recordedMathStage = "rearm-ready";
+        }
         log("flow tick rearm", crossing, json(args));
         pendingTicks.push(args);
       }
@@ -206,6 +288,8 @@ async function command(id: string, args: Record<string, unknown>, action = false
 log("real open frontier", first.status.tag, json(lifecycle), "recorded clock", recordedClock, "scenario", scenario);
 const profilePath = process.argv[5];
 const continuationLimit = Number(process.env.SEMIO_NODE_PROBE_CONTINUATIONS ?? 192);
+const setupLimit = Number(process.env.SEMIO_NODE_PROBE_SETUP_TURNS ?? 256);
+if (!Number.isSafeInteger(setupLimit) || setupLimit <= 0) throw new Error("Invalid setup turn limit");
 const inspector = new Session();
 const post = (method: string, params = {}): Promise<any> => new Promise((done, fail) => inspector.post(method, params, (error, value) => error ? fail(error) : done(value)));
 if (profilePath) {
@@ -214,29 +298,66 @@ if (profilePath) {
   await post("Profiler.setSamplingInterval", { interval: 1000 });
   await post("Profiler.start");
 }
+async function applyEditorArchive() {
+  const archive = archives.shift();
+  if (!archive) throw Error("No authored load-document effect from the compiled editor");
+  log("applying emitted document", archive.parent_pack.length, archive.parent_spr.length);
+  await replayEditorDocument(archive, () => ++sequence, async (command, seq) => {
+    archiveFrames = [];
+    const pages = createShardCommandIngressPages({ owner: BigInt(instance), generation: 1n,
+      commandIndex:0, commandCount:1, instance, seq:++ingressSequence, command:encodeAppCommand(command) });
+    for (const page of pages) {
+      let turn;
+      do { turn = await poll("offer "+Object.keys(command)[0],undefined,page); }
+      while (turn.commandIngress.tag === "backpressure");
+      if (turn.commandIngress.tag === "fault") throw Error(json(turn.commandIngress));
+    }
+    for (let n=0; n<20000 && !archiveFrames.some(frame => Object.values(frame)[0]?.in_reply_to === seq); n++)
+      await poll("archive command response");
+    const result=archiveFrames; archiveFrames=undefined; return result;
+  }, async () => {
+    for (let n=0;n<64;n++) {
+      const turn=await poll("advance native archive");
+      if (turn.status.tag==="idle" && !patchAck) break;
+    }
+  });
+  log("native editor accepted document", crossing);
+}
+
 async function drive(): Promise<boolean> {
   if ((scenario === "example" || scenario === "integrated") && !await command("setActiveExample", { exampleId: "hexagonal-mushroom-column", windowId: editPreview }, true)) return false;
   if (scenario === "integrated") {
-    if (!providerRoot || !registryPath) throw new Error("Installed providers and registry are required");
     const genesis = lastOperation;
-    for (let count = 0; count < 256 && genesis && !completedOperations.has(genesis); count += 1) await poll("settle example genesis");
+    for (let count = 0; count < setupLimit && genesis && !completedOperations.has(genesis); count += 1) await poll("settle example genesis");
     if (!genesis || !completedOperations.has(genesis)) throw new Error("Authored genesis did not publish");
+    if (replayArchives) await applyEditorArchive();
+    if (process.env.SEMIO_NODE_PROBE_SWITCH_ONLY === "1") {
+      if (!await command("setActiveExample",{exampleId:"rectangle-wire-preview",windowId:editPreview},true)) return false;
+      const operation=lastOperation;
+      for (let n=0; n<20000 && !archives.length; n++) await poll("settle rectangle admission");
+      await applyEditorArchive();
+      log("settled rectangle original archive",operation);
+      return true;
+    }
+    if (!providerRoot || !registryPath) throw new Error("Installed providers and registry are required");
     const rows = JSON.parse(await readFile(registryPath, "utf8"));
     for (const extensionId of ["math", "brep"]) {
       const row = rows.find((row: { pluginId: string }) => row.pluginId === "flow-extension-" + extensionId);
       if (!row) throw new Error("Installed extension row unavailable " + extensionId);
       const directory = join(resolve(providerRoot), row.directoryName);
       const manifest = JSON.parse(await readFile(join(directory, "🔣️.json"), "utf8")).manifest;
-      providers.set(extensionId, { pluginId: row.pluginId, directory, manifest, seq: 0n });
+      providers.set(row.pluginId, { pluginId: row.pluginId, directory, manifest, seq: 0n });
     }
-    const loaded = [{ pluginId, manifest: descriptor.manifest }, ...providers.values()];
-    const topics = consumedTopicsForApp(rows, loaded, pluginId, app.id);
-    const contributionJson = scopeContributionsJson(loaded, pluginId, topics);
-    log("selected host contributions", json(topics), contributionJson.length);
-    if (!await command("setContributions", { json: contributionJson, page: 0, pageCount: 1 })) return false;
-    const contributionOperation = lastOperation;
-    for (let count = 0; count < 256 && contributionOperation && !completedOperations.has(contributionOperation); count += 1) await poll("settle contribution installation");
-    if (!contributionOperation || !completedOperations.has(contributionOperation)) throw new Error("Contributions did not publish");
+    if (process.env.SEMIO_NODE_PROBE_NO_CONTRIBUTIONS !== "1") {
+      const loaded = [{ pluginId, manifest: descriptor.manifest }, ...providers.values()];
+      const topics = consumedTopicsForApp(rows, loaded, pluginId, app.id);
+      const contributionJson = scopeContributionsJson(loaded, pluginId, topics);
+      log("selected host contributions", json(topics), contributionJson.length);
+      if (!await command("setContributions", { json: contributionJson, page: 0, pageCount: 1 })) return false;
+      const contributionOperation = lastOperation;
+      for (let count = 0; count < setupLimit && contributionOperation && !completedOperations.has(contributionOperation); count += 1) await poll("settle contribution installation");
+      if (!contributionOperation || !completedOperations.has(contributionOperation)) throw new Error("Contributions did not publish");
+    }
     if (surfacePath) {
       const stockSurface = JSON.parse(await readFile(surfacePath, "utf8"));
       await poll("mount captured edit surface", { kind: "surface-visible", payload: {
@@ -246,19 +367,31 @@ async function drive(): Promise<boolean> {
   }
   if (scenario !== "tick" && !await command("toolRunStart", { toolId: "previewEval", windowId: editPreview }, true)) return false;
   if (!await command("flowEvalTick", { windowId: editPreview, windowKindId: editPreview })) return false;
+  if (process.env.SEMIO_NODE_PROBE_SWITCH_DURING_EVALUATION === "1") {
+    if (!replayArchives) throw Error("Overlapping switch requires original archive delivery");
+    if (!await command("setActiveExample",{exampleId:"rectangle-wire-preview",windowId:editPreview},true)) return false;
+    for (let n=0; n<20000 && !archives.length; n++) await poll("settle live rectangle admission");
+    await applyEditorArchive();
+    log("settled rectangle archive during evaluation",crossing,requests.map(request=>request.req.toString()));
+    return true;
+  }
   for (let count = 0; count < continuationLimit; count += 1) {
     if (scenario === "integrated") {
       const oldRequests = requests.length;
       await invokePending();
+      if (recordedMathStage === "proved") return true;
       if (oldRequests) { await poll("deliver extension completion"); continue; }
       const rearm = pendingTicks.shift();
       if (rearm) {
+        if (recordedMathStage === "rearm-ready" && rearm.windowId === editPreview && rearm.windowKindId === editPreview) {
+          recordedMathStage = "dispatching-rearm";
+        }
         if (!await command("flowEvalTick", rearm)) return false;
         continue;
       }
     }
     const turn = await poll("post-tick continuation");
-    if (turn.status.tag === "idle" && !patchAck) return true;
+    if (turn.status.tag === "idle" && !patchAck) return !recordedMath;
   }
   return false;
 }
@@ -270,5 +403,5 @@ try {
     inspector.disconnect();
     await writeFile(profilePath, JSON.stringify(profile));
   }
-  log("real requester probe frontier", crossing, api.originalSource.fuelRemaining, json(api.originalSource.retainedRemaining));
+  log("real requester probe frontier", crossing, api.originalSource.fuelRemaining, json(api.originalSource.retainedRemaining), recordedMath ? recordedMathStage : "");
 }

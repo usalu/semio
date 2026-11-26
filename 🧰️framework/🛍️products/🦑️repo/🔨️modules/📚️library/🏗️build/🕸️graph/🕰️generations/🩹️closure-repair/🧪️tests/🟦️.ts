@@ -44,7 +44,7 @@ test("verified ownership is exact, typed and tied to the observed sealed pointer
  const decision=sql.query(`SELECT ($shared AND NOT ($global OR $corrupt OR $superseded)) AS eligible`);
  for(const [name,shared,global,corrupt,superseded,owners] of cases as [string,boolean,boolean,boolean,boolean,string[]][]){
   const w=world({shared,global,corrupt,superseded}),prepared=await prepareClosureRepairV1({...basic,fs:w.fs,expected:w.expected,missing:[input]});
-  expect({eligible:Number(prepared!==undefined)},name).toEqual(decision.get({$shared:Number(shared),$global:Number(global),$corrupt:Number(corrupt),$superseded:Number(superseded)}));
+  expect<unknown>({eligible:Number(prepared!==undefined)},name).toEqual(decision.get({$shared:Number(shared),$global:Number(global),$corrupt:Number(corrupt),$superseded:Number(superseded)}));
   expect(prepared?.owners??[],name).toEqual(owners);
   expect(w.writes.length,name).toBe(prepared?1:0);
   if(!prepared)continue;
@@ -104,7 +104,7 @@ test("a bounded census qualifies 5,101 private fragments without dropping owners
  using sql=new Database(":memory:");
  const expected=sql.query("SELECT ? + 1 AS scanned").get(5100);
  const prepared=await prepareClosureRepairV1({...basic,fs:w.fs,expected:w.expected,missing:[input],verifyClosure:async ref=>ref.namespace===lock.namespace,progress:done=>{scanned=done;}});
- expect({scanned}).toEqual(expected);
+ expect<unknown>({scanned}).toEqual(expected);
  expect(prepared?.owners).toEqual(["a","b"]);
  },20000);
 
@@ -140,7 +140,7 @@ test("generation retirement protects live and staged repair receipts, respects g
    sql.exec("CREATE TABLE receipts(name TEXT, aged INTEGER, owned INTEGER)");
    const insert=sql.query("INSERT INTO receipts VALUES (?,?,?)");for(const row of names)insert.run(...row);
    const expected=sql.query("SELECT name FROM receipts WHERE NOT(aged AND owned AND name != ? AND ?) ORDER BY name").values(current,Number(mode==="sealed"||mode==="quarantined")).flat();
-   expect((await fs.names(receipts)).sort(),mode).toEqual(expected);
+   expect<unknown>((await fs.names(receipts)).sort(),mode).toEqual(expected);
   }finally{await rm(dir,{recursive:true,force:true});}
  }
 });

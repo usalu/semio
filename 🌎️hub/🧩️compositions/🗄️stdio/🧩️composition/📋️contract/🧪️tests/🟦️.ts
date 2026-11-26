@@ -27,6 +27,9 @@ export function runCompositionContributionChecks(): number {
       assert.deepEqual(actualLaws, expectedLaws, `${vector.id}: each retained editor preserves both owned laws`);
     }
   }
+  const hosted = corpus.cases.find((vector: any) => vector.id === "runtime-host").contributions[0];
+  assert.equal(admitCompositionContributionV1(hosted).runtimeHost, "documents");
+  for (const refused of [{ ...hosted, catalogPackage: null }, { ...hosted, runtimeHost: "other" }, { ...hosted, nativeFactories: [{ factoryId: "f", definitionPath: "d", protocolPath: "p" }] }, { ...hosted, runtimeHost: "Bad Host" }]) assert.throws(() => admitCompositionContributionV1(refused));
   const validExport = ajv.compile(read("../🧬️schema/📤️native-export/🔣️.json"));
   const base = corpus.cases.find((vector: any) => !vector.error && vector.contributions.length)?.contributions[0];
   for (const vector of corpus.nativeExportCases) {
@@ -46,5 +49,5 @@ export function runCompositionContributionChecks(): number {
   assert.deepEqual(resolveCompositionNativeFactoriesV1(empty, () => { throw new Error("must not read absent export"); }, () => { throw new Error("must not read absent source"); }), []);
   assert.deepEqual(resolveCompositionOpenTargetsV1([], []), []);
   assert.throws(() => resolveCompositionOpenTargetsV1([{ ...empty, openTargets: [{ factoryId: "absent", role: "editor", surfaceId: "neutral" }] }], []));
-  return corpus.cases.length + corpus.nativeExportCases.length + 3;
+  return corpus.cases.length + corpus.nativeExportCases.length + 3 + 5;
 }

@@ -10,7 +10,7 @@ import replay from "../../../🧪️tests/🧫️fixtures/🪪️stream-roles/�
 import schema from "../🔣️.json";
 import { valueSchema as valueSchema } from "@semio-tech/framework/value/schema";
 import snapshotSchema from "../../📸️snapshot/🔣️.json";
-import { parsePdfAdmittedStreamRole, resolveIdentity, validateRoleInputs, validateRoleTransition, pageContent } from "../🟦️.ts";
+import { parsePdfAdmittedStreamRole, resolveIdentity, validateRoleInputs, validateRoleTransition, pageContent, closureOf, consumedInputs, generatorsOf } from "../🟦️.ts";
 import type { PdfIndirectObject } from "../../📸️snapshot/📄️document/🟦️.ts";
 
 test("PDF roles admit the same logical values as independent JSON Schema", () => {
@@ -39,13 +39,39 @@ test("PDF role identities distinguish generations and changed inputs require sem
   const next = structuredClone(base); if (next[0]!.value.kind !== "stream") throw new Error("fixture stream"); next[0]!.value.data.push(113);
   expect(() => validateRoleInputs(base, next, [role], [])).toThrow();
   expect(() => validateRoleInputs(base, next, [role], [role])).not.toThrow();
-  const omitted = structuredClone(role); omitted.dependencies = [omitted.identity];
+  const omitted = structuredClone(role); omitted.dependencies = [];
   expect(() => validateRoleInputs(base, next, [role], [omitted])).toThrow("omits");
   const wrong = {...role,value:{kind:"metadataText" as const,text:"q Q"}};
   expect(() => validateRoleInputs(base, next, [role], [wrong])).toThrow("requires");
   expect(() => validateRoleInputs(base, next, [role], [role,role])).toThrow("duplicated");
   next[0]!.id.gen = 3;
   expect(() => validateRoleInputs(base, next, [role], [role])).toThrow();
+});
+
+test("PDF role dependencies are generators and every other consumed input is derived from them",() => {
+  const ref=(num:number)=>({kind:"ref" as const,num,gen:0}),owner=(num:number)=>({num,gen:0});
+  const dict=(...entries:[string,ReturnType<typeof ref>|{kind:"dict";value:{key:string;value:ReturnType<typeof ref>}[]}][])=>({kind:"dict" as const,value:entries.map(([key,value])=>({key,value}))});
+  const objects:PdfIndirectObject[]=[
+    {id:owner(1),value:dict(["Contents",ref(2)],["Resources",{kind:"dict",value:[{key:"Font",value:ref(3)}]}] as never)},
+    {id:owner(2),value:{kind:"stream",dict:[],data:[113,32,81],filters:[]}},
+    {id:owner(3),value:dict(["F1",ref(4)],["F2",ref(5)])},
+    {id:owner(4),value:dict(["Descriptor",ref(6)])},{id:owner(5),value:dict(["Name",ref(6)])},{id:owner(6),value:dict()}
+  ];
+  const contents={owner:owner(1),path:[{kind:"entry" as const,key:"Contents"}]};
+  const generators=generatorsOf(objects,contents);
+  expect(generators).toHaveLength(2);
+  expect(generators[1]).toEqual({owner:owner(1),path:[{kind:"entry",key:"Resources"},{kind:"entry",key:"Font"}]});
+  const inputs=closureOf(objects,generators);
+  expect(inputs.filter(input=>input.path.length===0).map(input=>input.owner.num).sort()).toEqual([2,3,4,5,6]);
+  expect(inputs.length).toBe(generators.length+5);
+  expect(isDeepStrictEqual(consumedInputs(objects,contents),inputs)).toBe(true);
+  const font={owner:owner(4),path:[]};
+  expect(closureOf(objects,[font]).map(input=>input.owner.num)).toEqual([4,6]);
+  expect(closureOf(objects,[contents,font,contents]).length).toBe(inputs.length);
+  const role={...parsePdfAdmittedStreamRole(fixture.role),identity:contents,dependencies:[contents,font]};
+  const next=structuredClone(objects);next[5]!.value={kind:"dict",value:[{key:"Changed",value:{kind:"null"} as never}]};
+  expect(()=>validateRoleInputs(objects,next,[role],[])).toThrow("requires");
+  expect(()=>validateRoleInputs(objects,next,[role],[role])).not.toThrow();
 });
 
 

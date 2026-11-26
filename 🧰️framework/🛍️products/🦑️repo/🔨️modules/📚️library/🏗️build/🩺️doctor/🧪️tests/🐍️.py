@@ -4,7 +4,7 @@ import json
 import re
 import sys
 
-AREAS = ["tools", "storage", "leases", "capacity", "sessions", "graph", "dependencies", "caches", "processes", "host", "doctor"]
+AREAS = ["tools", "storage", "leases", "capacity", "sessions", "graph", "dependencies", "caches", "processes", "typecheck", "host", "doctor"]
 RANK = {"error": 0, "warn": 1, "info": 2}
 PHASE = {"waiting-lease": 0, "waiting-capacity": 1, "holding": 2, "admitted": 3, "orphan": 4, "running": 5}
 WRAPPERS = {"sh", "bash", "zsh", "dash", "fish", "pwsh", "powershell", "cmd", "env", "nohup", "sudo", "time", "caffeinate", "taskpolicy", "nice", "xargs", "tee", "script"}
@@ -231,6 +231,15 @@ def analyze(policy, facts):
             add("sessions.crowded", "warn", "agent-sessions")
         if sessions["damaged"] > 0:
             add("sessions.damaged", "warn", "agent-sessions")
+
+    typecheck = facts.get("typecheck")
+    if typecheck:
+        if typecheck["product"] > 0:
+            add("typecheck.product-errors", "warn", "library")
+        if typecheck["errors"] > 0:
+            add("typecheck.errors", "info", "library")
+        if typecheck["ageSeconds"] >= policy["typecheck"]["staleSeconds"]:
+            add("typecheck.stale", "info", "library")
 
     graph = facts.get("graph")
     if graph:

@@ -198,9 +198,11 @@ fn the_text_is_the_energy_artifacts_dsl_and_the_json_its_snapshot() {
 
 #[test]
 fn the_serializer_writes_the_text_and_one_warning_per_note() {
+    use semio_framework_test_original_snapshot_owners::{original_grant, with_encoding};
+    use semio_os_kernel::io::io_mechanism::IoRunControl;
     let snapshot = decoded((*PAIR));
     let (text, notes) = export_energy(&snapshot).expect("the export");
-    let payload = futures_lite_block(ModelIntoEnergy::serialize(&snapshot, &ArchiveChildren::default())).expect("the hop");
+    let payload = with_encoding(|owner| futures_lite_block(ModelIntoEnergy::serialize(&snapshot, &ArchiveChildren::default(), &mut IoRunControl::encoding(owner.native(), original_grant())))).expect("the hop");
     assert_eq!(payload.value, IoPayload::Text(text));
     assert_eq!(payload.diagnostics.len(), notes.len());
     assert!(payload.diagnostics.iter().all(|diagnostic| diagnostic.severity == semio_framework_diagnostic::Severity::Warning));

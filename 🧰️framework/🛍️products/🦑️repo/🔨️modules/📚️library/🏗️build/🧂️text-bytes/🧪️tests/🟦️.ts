@@ -46,8 +46,7 @@ test("a byte digest equals createHash and the Python model, for a Buffer and a v
 test("a delimited digest equals the chained updates and the Python model, whatever the text edges hold",()=>{
  const expected=model();
  fixture.delimited.forEach((row,index)=>{
-  const chained=createHash("sha256");for(const text of[...("first" in row?[row.first]:[]),...row.texts])chained.update(text).update(row.delimiter);
-  const first="first" in row?row.first as string:undefined;
+  const first=row.first,chained=createHash("sha256");for(const text of[...(first===undefined?[]:[first]),...row.texts])chained.update(text).update(row.delimiter);
   expect(sha256DelimitedHexV1(row.texts,row.delimiter,first),row.name).toBe(chained.digest("hex"));
   expect(sha256DelimitedHexV1(row.texts,row.delimiter,first),row.name).toBe(expected.delimited[index]!);
  });

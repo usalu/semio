@@ -34,7 +34,7 @@ async function machine(store:string,originId:string){
 test("authenticated publish and restore report the same immutable neutral manifest across receiver generation renumbering",async()=>{
  expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
  using oracle=new Database(":memory:");
- const ranking=oracle.query(`WITH candidates(origin,age,stale) AS (VALUES ($complete,$age,0),($partial,0,$stale))
+ const ranking=oracle.query<{ordinary:string;complete:string},Record<string,string|number>>(`WITH candidates(origin,age,stale) AS (VALUES ($complete,$age,0),($partial,0,$stale))
   SELECT (SELECT origin FROM candidates ORDER BY stale+age/60000.0,age,origin LIMIT 1) AS ordinary,
          (SELECT origin FROM candidates WHERE stale=0 ORDER BY age,origin LIMIT 1) AS complete`);
  const exact=oracle.query("SELECT json_extract(?1,'$.generation')=json_extract(?2,'$.generation') AND json_extract(?1,'$.stale')=0 AND json_extract(?1,'$.implementation')=json_extract(?2,'$.implementation') AND coalesce(json_extract(?1,'$.scope'),'all')=json_extract(?2,'$.scope') AND json_extract(?1,'$.origin')=json_extract(?2,'$.origin') AND json_extract(?1,'$.manifest')=json_extract(?2,'$.manifest') AS holds");

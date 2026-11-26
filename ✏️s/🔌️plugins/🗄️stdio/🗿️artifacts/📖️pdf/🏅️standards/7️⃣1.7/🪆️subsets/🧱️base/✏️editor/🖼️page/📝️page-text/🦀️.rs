@@ -3,7 +3,7 @@
 use super::*;
 
 //#region ✏️PageText
-fn replace_page_unicode_text(page: &PdfPage, text: &str) -> Option<Vec<PdfOp>> {
+fn replace_page_unicode_text(page: &PdfPage, text: &str) -> Option<PdfContent> {
     fn replace_text_string(value: &mut PdfTextString, replacement: &mut Option<String>) {
         let PdfTextString::Text { text } = value else { return };
         *text = replacement.take().unwrap_or_default();
@@ -63,19 +63,19 @@ pub fn page_text_edit_mutations(snapshot: &PdfSnapshot, page: u32, item: u32, re
 mod document_text_edit_tests {
     use super::{page_text_edit_mutations, replace_page_unicode_text};
     use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::base::schema::mutations::PdfMutation;
-    use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfPage, PdfSnapshot, PdfTextString};
+    use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::{pdf_content, PdfOp, PdfPage, PdfSnapshot, PdfTextString};
 
     #[test]
     fn replacement_preserves_non_text_operations_and_replaces_instead_of_appending() {
         let mut page = PdfPage::default();
-        page.content = vec![
+        page.content = pdf_content([
             PdfOp::Save,
             PdfOp::BeginText,
             PdfOp::ShowText { text: PdfTextString::text("old") },
             PdfOp::NextLineShowText { text: PdfTextString::text("tail") },
             PdfOp::EndText,
             PdfOp::Restore,
-        ];
+        ]);
         page.content = replace_page_unicode_text(&page, "new\ncontent").unwrap();
         assert_eq!(page.text(), "new\ncontent");
         assert!(matches!(page.content.first(), Some(PdfOp::Save)));

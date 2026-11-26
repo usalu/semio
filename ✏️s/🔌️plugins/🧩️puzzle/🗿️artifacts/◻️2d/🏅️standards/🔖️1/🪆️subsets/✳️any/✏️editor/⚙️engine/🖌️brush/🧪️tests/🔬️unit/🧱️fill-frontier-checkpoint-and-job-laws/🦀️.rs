@@ -134,30 +134,25 @@
         let params = fill_config("puzzle2d.fill.cancel");
         let mut session = mount_fill_session(&mut original, job, params);
         original.cancel().cancel_now();
-        let mut cancelled = false;
-        for _ in 0..FILL_TEST_PUMP_LIMIT {
-            match pump_fill_session(&mut original, &mut session) {
-                WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
-                WorkerJobPoll::Terminal => {
-                    assert_eq!(seen_fill_outcome(&mut original, &mut session), FillSeen::Cancelled);
-                    acknowledge_fill_outcome(&mut original, &mut session);
-                    cancelled = true;
-                    break;
-                }
-                WorkerJobPoll::Outcome => panic!("cancelled job published a nonterminal outcome"),
-                WorkerJobPoll::Closing | WorkerJobPoll::TerminalEmpty | WorkerJobPoll::CheckedOut => panic!("cancelled owner entered invalid phase"),
+        match pump_fill_session(&mut original, &mut session) {
+            WorkerJobPoll::Idle => {}
+            WorkerJobPoll::Outcome => {
+                assert_eq!(seen_fill_outcome(&mut original, &mut session), FillSeen::Pending, "cancelled job entered a semantic callback");
+                assert!(session.callback_verdict().is_none());
+                acknowledge_fill_outcome(&mut original, &mut session);
             }
+            poll => panic!("cancelled owner entered invalid phase: {poll:?}"),
         }
-        assert!(cancelled, "cancel terminal exceeded bounded opportunities");
         close_fill_session(&mut original, &mut session);
 
         original.finish();
         let mut source = fixture(semio_framework_job::default_now_us);
         let stale_operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(11), semio_framework_job::Generation(4), 9);
-        let mut stale_job = new_fill_job(&mut source, &host, 32, stale_operation);
-        let mut foreign = OriginalFixture::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(5), fixture_stock(), semio_framework_job::default_now_us, u64::MAX, 1 << 48);
-        assert!(foreign.step_job(&mut stale_job, semio_framework_job::StepBudget { fuel: 1 << 20, deadline_us: u64::MAX, retained: FILL_TEST_GRANT }).is_err(), "different actual source roots must not execute the original job");
-        source.close_job(&mut stale_job);
+        let stale_job = new_fill_job(&mut source, &host, 32, stale_operation);
+        let mut stale = mount_fill_session(&mut source, stale_job, fill_config("puzzle2d.fill.superseded"));
+        let mut foreign = fixture(semio_framework_job::default_now_us);
+        assert!(foreign.turn(FILL_TEST_GRANT, |cx| stale.pump_one_for_interactive_turn(cx)).is_err(), "a foreign Source with the same operation and generation must not execute the original job");
+        close_fill_session(&mut source, &mut stale);
         source.finish();
         foreign.finish();
     }
@@ -168,25 +163,22 @@
         let host = frontier_fill_host();
         let operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(13), semio_framework_job::Generation(6), 17);
         let job = new_fill_job(&mut original, &host, 8, operation);
-        DEADLINE_CLOCK.store(0, std::sync::atomic::Ordering::Release);
         let params = fill_config("puzzle2d.fill.deadline");
         let mut session = mount_fill_session(&mut original, job, params);
-        let mut yielded = false;
-        for _ in 0..FILL_TEST_PUMP_LIMIT {
-            match pump_fill_session(&mut original, &mut session) {
-                WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
-                WorkerJobPoll::Outcome => {
-                    assert_eq!(seen_fill_outcome(&mut original, &mut session), FillSeen::Yield);
-                    acknowledge_fill_outcome(&mut original, &mut session);
-                    yielded = true;
-                    break;
-                }
-                WorkerJobPoll::Terminal => panic!("deadline yielded terminal outcome"),
-                WorkerJobPoll::Closing | WorkerJobPoll::TerminalEmpty | WorkerJobPoll::CheckedOut => panic!("deadline owner entered invalid phase"),
-            }
-        }
-        assert!(yielded, "deadline yield exceeded bounded opportunities");
+        original.turn(FILL_TEST_GRANT, |cx| {
+            let deadline = cx.now_us().expect("original deadline clock");
+            cx.with_original_work_loan(cx.original_turn_fuel_remaining(), deadline, |cx| {
+                let before = (cx.original_work_units_spent(), cx.retained_progress());
+                assert!(cx.deadline_exceeded());
+                assert_eq!(session.pump_one_for_interactive_turn(cx)?, WorkerJobPoll::Idle);
+                assert_eq!((cx.original_work_units_spent(), cx.retained_progress()), before);
+                Ok(())
+            })
+        }).expect("mounted fill yields under the original caller's expired deadline");
+        assert!(session.checked_out_job().is_none());
+        assert!(session.checked_out_outcome_descriptor().is_none());
         close_fill_session(&mut original, &mut session);
+        original.finish();
     }
 
     #[test]
@@ -207,9 +199,9 @@
                     break;
                 }
                 WorkerJobPoll::Outcome => {
-                    let yielded = seen_fill_outcome(&mut original, &mut complete) == FillSeen::Yield;
+                    let outcome = seen_fill_outcome(&mut original, &mut complete);
                     acknowledge_fill_outcome(&mut original, &mut complete);
-                    assert!(yielded, "a zero-count fill may only YIELD while it streams its empty commit, never publish a preview or checkpoint");
+                    assert!(matches!(outcome, FillSeen::Pending | FillSeen::Yield), "a zero-count fill may only YIELD while it streams its empty commit, never publish a preview or checkpoint");
                     complete.resume().expect("zero-count fill yield resume");
                 }
                 WorkerJobPoll::Closing | WorkerJobPoll::TerminalEmpty | WorkerJobPoll::CheckedOut => {

@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { finalizePluginDescriptor } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts";
 import { componentStageTargetsV1, settleComponentDescriptorV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts";
@@ -9,7 +9,10 @@ const [plugin, output, prior, reviewed] = process.argv.slice(2);
 if (!plugin || !output) throw Error("Actual diagnostic pack required");
 const owner = componentStageTargetsV1(workspace).find(target => target.pluginId === plugin);
 if (!owner) throw Error("Authored owner required");
-const raw = Buffer.from(readFileSync(join(output,"semantic.b64"),"utf8").trim(),"base64");
+const guestPack = join(output, "guest.pack");
+const raw = existsSync(guestPack)
+  ? readFileSync(guestPack)
+  : Buffer.from(readFileSync(join(output, "semantic.b64"), "utf8").trim(), "base64");
 const descriptor = finalizePluginDescriptor(raw, plugin);
 writeFileSync(join(output,"guest.json"),descriptor.json);
 writeFileSync(join(output,"guest.pack"),descriptor.pack);

@@ -15,7 +15,7 @@ afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});}
 const workspace=()=>{const root=realpathSync(mkdtempSync(join(tmpdir(),"tb-law-")));roots.push(root);for(const[path,text]of Object.entries(corpus.files as Record<string,string>)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}mkdirSync(dirname(join(root,corpus.schemaCopy)),{recursive:true});copyFileSync(designationSchema,join(root,corpus.schemaCopy));return root;};
 const cache=(root:string,late:boolean)=>scriptInputs.createScriptInputCache({workspaceRoot:root,lateClosures:late,scriptProviderDesignation:join(root,corpus.designation)});
 const driver="⚡️caching/🦀️cargo/📜️script.ts";
-const infer=<T>(body:()=>Promise<T>)=>observation.observeInferenceSnapshotV1(body) as Promise<T>;
+const infer=(body:()=>Promise<any>):Promise<any>=>observation.observeInferenceSnapshotV1(body);
 const owner=(root:string,name:string)=>{mkdirSync(join(root,name),{recursive:true});writeFileSync(join(root,name,"own.ts"),"export const own = 1;\n");writeFileSync(join(root,name,"📜️script.ts"),'import "../'+driver+'";\nimport "./own.ts";\nexport const script = 1;\n');return{options:{cwd:name,command:"repo ./📜️script.ts"}};};
 const read=async(root:string,target:unknown,projectRoot:string)=>infer(async()=>{const api=scriptInputs.closureApiV1(cache(root,true),root),handle=scriptInputs.closureHandleOfV1(await api.nativeTargetCommandInputs(target,await api.nativeCommandInputs(),projectRoot)),result=await api.resolve([[handle.key,handle.recipe]]);return{rows:result.rows as any[],derived:result.derived as {row:any;support:any[]}[]};});
 const holds=async(root:string,entry:{rows:any[];derived:{row:any;support:any[]}[]})=>infer(async()=>{
@@ -75,7 +75,7 @@ test("a row that names the stamp of an inferrer holds while the stamp is declare
 
 test("the files an owner keeps are those of an independent walk that stops at the tool entry, and with the tool group expanded they cover what esbuild bundles from its script",async()=>{
  const root=workspace(),first=owner(root,"app2"),list=await infer(()=>scriptInputs.nativeTargetCommandInputs(first,root,undefined,cache(root,false),"app2"));
- const kept=list.filter((item:unknown):item is string=>typeof item==="string"&&item.startsWith("{workspaceRoot}/")).map(item=>item.slice(16)).sort();
+ const kept=list.filter((item:unknown):item is string=>typeof item==="string"&&item.startsWith("{workspaceRoot}/")).map((item:string)=>item.slice(16)).sort();
  const oracle=spawnSync("python3",["-I",join(import.meta.dir,"🐍️oracle/🐍️.py"),root,"app2/📜️script.ts",JSON.stringify([join(root,driver)])],{encoding:"utf8"});
  expect(oracle.status,oracle.stderr).toBe(0);
  expect(kept).toEqual((JSON.parse(oracle.stdout) as string[]).filter(path=>path!==driver).sort());

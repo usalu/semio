@@ -143,3 +143,23 @@ fn exhausted_items_refusal_names_the_dimension_and_every_amount(){
  let overdrawn=items_exhausted(ItemsLedger{issued:10,remaining:20,guest_held:30,reserve:40,grant:0},None);
  assert!(overdrawn.message.contains("spent=0")&&overdrawn.message.contains("spendable=0")&&overdrawn.message.contains("turn grant=0"));
 }
+
+#[test]
+fn settled_debits_and_live_reserve_shortages_are_distinct(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/reserve.json")).unwrap();
+ fn grant(axis:&str,amount:usize)->RetainedCloneGrant{
+  let mut grant=RetainedCloneGrant::default();
+  *match axis{"items"=>&mut grant.maximum_items,"copy"=>&mut grant.maximum_copy_bytes,"capacity"=>&mut grant.maximum_capacity_bytes,"release"=>&mut grant.maximum_release_bytes,"depth"=>&mut grant.maximum_depth,_=>unreachable!()}=amount;
+  grant
+ }
+ for row in fixture["cases"].as_array().unwrap(){
+  let axis=row["axis"].as_str().unwrap();
+  let available=grant(axis,row["available"].as_u64().unwrap() as usize);
+  let reserved=grant(axis,row["reserved"].as_u64().unwrap() as usize);
+  let actual=consumable_remaining(available,reserved);
+  let live=remaining_beside_reserve(available,reserved,"cleanup");
+  assert_eq!(actual.as_ref().err().map(|error|error.kind.as_str()),row["static"].as_str(),"{axis}");
+  assert_eq!(live.as_ref().err().map(|error|error.kind.as_str()),row["runtime"].as_str(),"{axis}");
+  if let Err(error)=live{assert!(error.message.contains(axis),"{axis}: {}",error.message)}
+ }
+}

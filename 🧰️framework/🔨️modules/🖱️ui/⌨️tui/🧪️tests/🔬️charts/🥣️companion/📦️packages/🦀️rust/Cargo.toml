@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-ui-tui-charts-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio tui chart laws: sparkline, line chart, gauge, stat cell and chart scale against the shared fixture"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-tui-charts-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-ui-tui-charts = { path = "../../../../../📈️charts/📦️packages/🦀️rust" }
+semio-ui-tui-core = { path = "../../../../../🧱️cell-model/📦️packages/🦀️rust" }
+ui_styling = { path = "../../../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }

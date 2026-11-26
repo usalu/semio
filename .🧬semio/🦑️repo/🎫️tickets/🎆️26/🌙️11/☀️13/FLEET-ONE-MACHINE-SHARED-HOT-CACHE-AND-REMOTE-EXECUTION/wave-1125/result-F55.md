@@ -10,3 +10,28 @@
 Every wave logs `graph: inferring 48 projects in this process (memory)` (8 times in the log; also `251` at start): the project farm is declined because the parent already holds more than its grant, so 48 owners are time-sliced on one thread; 0 farm workers. So growth causes slowness: flat parent -> farm engages again. Also load 54, 10 GB free, kernel time dominated (F30).
 ## Next read: check
 `largest collections` per wave; if a name grows 100+ MB per wave, fix by it. Expect farm lines `workers` > 0 once the parent stays under the grant.
+
+# Round 2 (03:30)
+## What I could not do
+- No real snapshot of a scratch whole read: there is no standalone way to run a real read apart from the shared graph image (every test harness is mocked), and a 3-5 GB snapshot by `Bun.generateHeapSnapshot` is itself multi-GB. So the dominator is NOT proven, and per-wave flatness is NOT proven.
+## Evidence from the live log (coord-graph2.log)
+- The first wave (251 owners, in process) already leaves 5.6 M strings / 1.8 M arrays / 0.9 M objects at 1.5 GB managed (cold boot: 0.2 M strings); later +2-4 per cent per wave; the counts grow together (strings > arrays > objects, 300-650 k JSLexicalEnvironments), the ratio of a pool of parsed syntax trees or per-owner records, not of row data (row maps sum to 60 MB).
+- Strongest unregistered candidate in code: `sharedSourceFilesV1` (up to 8000 parsed TypeScript source files, trees with identifier strings, node arrays and node objects). It is cleared only by `releaseOwnerStateV1` every 32 finished owners (or on shrink), never by the wave release, and it is absent from the collections line, so it cannot show up there.
+## Landed (next read)
+1. Census row `typescript:sharedSourceFiles` (entries, text bytes x 32 estimate) in the largest-collections line: names or clears the candidate in one wave.
+2. The shared parsed trees are cleared at every wave release (3 sites in the host). Costs a re-parse of the lib files per wave if it was not the retainer.
+3. `SEMIO_GRAPH_HEAP_PROFILE=<dir>`: first wave past 1200 MB managed writes `heap-profile-<pid>.json` (classes by bytes; deepest heavy retention chains with root paths and string counts). Tested on a real snapshot (names `hold:Map`). Limit: JSC snapshots do not enumerate Map/Set entries, so a Map's mass appears as one `Cell Butterfly` under its property name, which is still the retaining name.
+## Next
+Start the next read with `SEMIO_GRAPH_HEAP_PROFILE=<dir>` (parent only, one snapshot, expect a stall of tens of seconds and extra GBs at that moment: do it with 10+ GB free) and read `largest collections` for `typescript:sharedSourceFiles`.
+
+# Round 3 (05:25)
+Source: `heap-profile-14256.json` (managed 2997 MB; path names are local variable names of closures).
+- `reuse > holds > pending > entry > carry > exact` (85 MB, 347 k strings) and `pending.levels` (27 MB) and `deriver > scripts > pass > dirty` (21 MB) are in `🏡️resident/🕰️graph-hooks/🔌️host/🟨️.mjs` `journalGraphSeamsV1`: `pending` is the cursor pass state (`entry.carry` = the owed exact paths of the stored cursor, `levels` = memo path -> doubt level), `memory` Map keeps `{cursor, carry}` per generation for ever (grows by one carry of up to 400 k path strings per verified generation: the per-wave growth), `levels` grows with every distinct row path judged.
+- `state > cache > generatedOutput > options > onOwnerObservations` (27 MB) is `scripts.generatedOutput` in `🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs` (2 sites): the arrow closed over the scope of the read function, so the shared script cache pinned the options and the wave's observations.
+## Landed
+1. `memory` bounded to the newest `maximumCarriedCursors` (2); `published()` only needs the pass base, `lookup` falls back to the store.
+2. `levels`/`fileLevels` cleared at 100000 entries (re-derivable).
+3. `generatedOutputReaderV1` module-level factory for both sites.
+Not changed: `entry.carry.exact` of the live `pending` (85 MB, constant per pass; `published` re-stores it, so it is needed); 514 MB unattributed root and `FunctionCodeBlock > JSModuleEnvironment` (63 MB) are module-level state, untouched.
+## Proof
+Not run: no scratch read possible. Next read with `SEMIO_GRAPH_HEAP_PROFILE`: expect the `memory`-map growth and the `generatedOutput` path (27 MB) to disappear and the `levels` path to stay under about 10 MB; compare `managed` per wave. Tests: graph-hooks 49/0, pass-retention 1/0. `repo typecheck`: 2 errors, both in peer test files I did not touch.

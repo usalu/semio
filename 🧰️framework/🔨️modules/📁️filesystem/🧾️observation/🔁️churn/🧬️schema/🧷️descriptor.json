@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/filesystem/observation/churn/descriptor",
+  "title": "Open descriptor verification protocol",
+  "description": "A file observed by name and opened later may differ from the observation for three different reasons, and each reason has its own verdict. `append-only` (a journal or index that siblings append to): the identity is the device, inode and link count, the size may only grow, and the volatile modification and change times are not part of it. `immutable` (a file nobody may touch while it is open): every stamp field must match; a mismatch is observed again a bounded number of times and then reported as a concurrent edit of the `read` layer of the churn policy. `renamed` (a file replaced atomically by rename): the open descriptor must be the file the name denotes now; when the name moved on, the file is opened by name again and verified again, bounded.",
+  "definitions": {
+    "Text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": {"type": "string", "minLength": 1},
+        "de": {"type": "string", "minLength": 1}
+      }
+    },
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "kinds": ["append-only", "immutable", "renamed"],
+        "pausesMilliseconds": [10, 40, 160],
+        "stampFields": ["dev", "ino", "mode", "nlink", "size", "mtimeNs", "ctimeNs"],
+        "texts": {
+          "append-only": {
+            "en": "append-only file was replaced, linked again or shortened while it was open",
+            "de": "anhängbare Datei wurde ersetzt, neu verlinkt oder gekürzt, während sie offen war"
+          },
+          "immutable": {
+            "en": "file changed while it was open",
+            "de": "Datei hat sich geändert, während sie offen war"
+          },
+          "renamed": {
+            "en": "file was replaced again while it was opened by name",
+            "de": "Datei wurde beim Öffnen über den Namen erneut ersetzt"
+          }
+        }
+      },
+      "type": "object"
+    }
+  }
+}

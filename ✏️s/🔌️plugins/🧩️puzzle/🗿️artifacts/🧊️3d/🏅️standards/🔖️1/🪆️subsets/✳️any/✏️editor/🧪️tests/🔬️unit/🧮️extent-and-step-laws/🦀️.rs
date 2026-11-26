@@ -184,7 +184,7 @@ fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
     let command = Puzzle3dCommand::from_action("acceptSuggestion", Some(json!({ "fullId": "25b0dba0-8f81-423a-94a1-b911a6031010:link" })), None).expect("acceptSuggestion command decodes");
     let work = original.construct(Puzzle3dAcceptSuggestionWork::original_birth_demands().unwrap(), |scope| Puzzle3dAcceptSuggestionWork::from_original_construction(scope));
     let kind = snapshot.typed().meta.kind_catalogs.as_ref().and_then(|catalogs| catalogs.objects.first()).expect("nakagin catalogues object kinds").id.clone();
-    let owner = semio_plugin::ArtifactInstanceOperationOwnerHandle::new(Box::new(Puzzle3dInstanceOperationOwner::default()));
+    let mut owner = semio_plugin::ArtifactInstanceOperationOwnerHandle::new(Box::new(Puzzle3dInstanceOperationOwner::default()));
     owner
         .with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| {
             let preview = semio_s_artifact_puzzle_3d_model::BrushPreviewState { target_vortex_full_id: "25b0dba0-8f81-423a-94a1-b911a6031010:link".into(), object_kind_id: kind, source_vortex_index: 0, mesh_url: "/nakagin/capsule.glb".into(), origin: [1.0, 2.0, 3.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
@@ -192,7 +192,7 @@ fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
             Ok(())
         })
         .expect("the instance owner");
-    let mut work = work.bound(Puzzle3dInstanceBinding { app_instance_id: 1, parent_document_id: "test".to_string(), owner });
+    let mut work = work.bound(Puzzle3dInstanceBinding { app_instance_id: 1, parent_document_id: "test".to_string(), owner: owner.clone() });
     let extent = ArtifactCommandWork::<EditorApp<Puzzle3dPlayApp>>::extent(&work, &command, &snapshot, &interaction, None).expect("nakagin's catalogs and real vortex count must fit the fixed bounded work envelope");
     let guard = extent.saturating_mul(4).saturating_add(1000);
     let mut iterations = 0usize;
@@ -214,6 +214,17 @@ fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
         emit.artifact_mutations.len()
     );
     semio_s_plugin_puzzle_retained::testing::close::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work);
+    let mut mounted = owner.take_aliases_for_retirement().expect("the instance retains its original owner");
+    for _ in 0..100_000 {
+        if mounted.terminal_is_empty() { break }
+        original.turn(semio_s_plugin_puzzle_retained::testing::fixture_stock(), |cx| {
+            let grant = cx.retained_grant();
+            let step = mounted.step(cx, grant).expect("close the mounted instance owner");
+            cx.consume_retained(step.progress())?;
+            Ok(())
+        }).expect("mounted instance retirement turn");
+    }
+    assert!(mounted.terminal_is_empty(), "the mounted brush suggestion owner closed");
     original.finish();
 }
 

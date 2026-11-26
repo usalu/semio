@@ -16,9 +16,9 @@ export type HostWardenHostV1=Readonly<{totalMegabytes:number;availableMegabytes:
 /** 🏔️ The runtime ceiling of a compile unit (schema `Ceiling`): the unit (`<crate>|<target>`), its budget kind, the most its resident footprint may reach, whether it is on the carving list of the admission policy and, then, its measured peak. */
 export type HostWardenCeilingV1=Readonly<{unit:string;kind:"library"|"final";megabytes:number;listed:boolean;measuredMegabytes?:number}>;
 /** 🧾️ One row of the process table (schema `ProcessRow`). */
-export type HostWardenRowV1=Readonly<{pid:number;parent:number;group:number;memoryKilobytes:number;stopped:boolean;elapsedSeconds:number;start:string;command:string}>;
+export type HostWardenRowV1=Readonly<{pid:number;parent:number;group:number;memoryKilobytes:number;nonresidentKilobytes?:number;stopped:boolean;elapsedSeconds:number;cpuSeconds?:number;start:string;command:string}>;
 /** 🎯️ One process the warden may act on (schema `Subject`): the decision reads the first ten fields, the effects the rest. */
-export type HostWardenSubjectV1=Readonly<{id:string;pid:number;kind:string;rank:number;elapsedSeconds:number;megabytes:number;suspended:boolean;suspendedSeconds:number;canSuspend:boolean;canCancel:boolean;parent?:number;start?:string;owner?:string;scope?:"process"|"group"|"tree";signal?:"SIGKILL"|"SIGTERM";capMegabytes?:number;capCritical?:boolean;ceiling?:HostWardenCeilingV1;suspensions?:number;resumedSeconds?:number}>;
+export type HostWardenSubjectV1=Readonly<{id:string;pid:number;kind:string;rank:number;elapsedSeconds:number;megabytes:number;nonresidentMegabytes?:number|null;stoppedFootprintMegabytes?:number;suspended:boolean;suspendedSeconds:number;canSuspend:boolean;canCancel:boolean;parent?:number;start?:string;owner?:string;scope?:"process"|"group"|"tree";signal?:"SIGKILL"|"SIGTERM";capMegabytes?:number;capCritical?:boolean;ceiling?:HostWardenCeilingV1;suspensions?:number;resumedSeconds?:number}>;
 /** 🎯️ What decided a level (schema `Trigger`): the available memory, the headroom, the swap in use, its share of a fixed swap, the compressed memory, the OS pressure (warn, critical) or the swap-out rate. */
 export type HostWardenTriggerV1="available"|"headroom"|"swap-used"|"swap-share"|"compressed"|"pressure"|"critical"|"swap"|"cap";
 /** 🔭️ One consumer the warden does not own (schema `Other`): the topmost process of a tree outside every subject, with the resident megabytes and the process count of the whole tree. */
@@ -34,7 +34,7 @@ export type HostWardenAlarmV1=Readonly<{version:1;atMs:number;observed:boolean;l
 /** 🗂️ The cancel record written before a cancel signal (schema `Cancel`). */
 export type HostWardenCancelV1=Readonly<{version:1;pid:number;start:string;kind:string;owner:string;command:string;megabytes:number;atMs:number;reason:"guard"|"danger"|"overdue"|"calm"|"cap"|"ceiling";ancestors:readonly number[];buildScriptOutput?:string;capMegabytes?:number;ceiling?:HostWardenCeilingV1}>;
 /** 📋️ The state file of the running warden (schema `State`), written each tick: host numbers, level, subjects by kind, the suspended set, counters, the last alarms and the overhead of the loop. */
-export type HostWardenStateV1=Readonly<{version:1;atMs:number;pid:number;mode:"observe"|"enforce";code:string;host:HostWardenHostV1;level:"calm"|"guard"|"danger";hold:boolean;trigger?:HostWardenTriggerV1|null;others?:readonly HostWardenOtherV1[];guardMegabytes:number;dangerMegabytes:number;resumeMegabytes:number;swapRoomMegabytes:number|null;headroomMegabytes:number|null;headroomGuardMegabytes:number;headroomDangerMegabytes:number;subjects:Readonly<{count:number;megabytes:number;byKind:Readonly<Record<string,Readonly<{count:number;megabytes:number}>>>}>;suspended:readonly Readonly<{id:string;pid:number;start:string;kind:string;sinceMs:number}>[];counters:Readonly<{suspended:number;resumed:number;cancelled:number;ticks:number}>;lastAlarms:readonly HostWardenAlarmV1[];overhead:Readonly<{tickMillisecondsP50:number;tickMillisecondsP95:number;cpuBasisPoints:number;residentMegabytes:number}>}>;
+export type HostWardenStateV1=Readonly<{version:1;atMs:number;pid:number;mode:"observe"|"enforce";code:string;host:HostWardenHostV1;level:"calm"|"guard"|"danger";hold:boolean;trigger?:HostWardenTriggerV1|null;others?:readonly HostWardenOtherV1[];guardMegabytes:number;dangerMegabytes:number;resumeMegabytes:number;swapRoomMegabytes:number|null;headroomMegabytes:number|null;headroomGuardMegabytes:number;headroomDangerMegabytes:number;subjects:Readonly<{count:number;megabytes:number;cpuSeconds?:number;byKind:Readonly<Record<string,Readonly<{count:number;megabytes:number}>>>}>;suspended:readonly Readonly<{id:string;pid:number;start:string;kind:string;sinceMs:number}>[];counters:Readonly<{suspended:number;resumed:number;cancelled:number;ticks:number}>;lastAlarms:readonly HostWardenAlarmV1[];overhead:Readonly<{tickMillisecondsP50:number;tickMillisecondsP95:number;cpuBasisPoints:number;residentMegabytes:number}>}>;
 /** 🪞️ The memory record a worker mirrors to the group store (schema `Mirror`): the state of its warden as written, or the absent record. */
 export type HostWardenMirrorV1=HostWardenStateV1|Readonly<{version:1;atMs:number;absent:true}>;
 /** 🏷️ Names of the closed definitions a value can be required to match. */
@@ -71,13 +71,22 @@ export function parseWardenElapsedV1(text:string):number{
  return match?((Number(match[1]??0)*24+Number(match[2]??0))*60+Number(match[3]))*60+Number(match[4]):0;
 }
 
-const ROW=/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+((?:\d+-)?(?:\d+:)?\d+:\d+)\s+(\S+\s+\S+\s+\S+\s+\S+\s+\S+?)(?:\s+(.*))?$/u;
+/** ⏱️ Turns a `ps` CPU time (`[dd-]hh:mm:ss` on Linux, `mmm:ss.cc` or `h:mm:ss.cc` on macOS) into seconds with fractions; a text of another shape is 0. */
+export function parseWardenCpuV1(text:string):number{
+ const match=/^(?:(\d+)-)?((?:\d+:)?\d+):(\d+(?:[.,]\d+)?)$/u.exec(text);
+ if(!match)return 0;
+ const head=match[2]!.split(":").map(Number),seconds=Number(match[3]!.replace(",","."));
+ const [hours,minutes]=head.length===2?[head[0]!,head[1]!]:[0,head[0]!];
+ return Number(match[1]??0)*86400+hours*3600+minutes*60+seconds;
+}
+
+const ROW=/^\s*(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+((?:\d+-)?(?:\d+:)?\d+:\d+)(?:\s+((?:\d+-)?(?:\d+:)?\d+:\d+(?:[.,]\d+)?))?\s+(\S+\s+\S+\s+\S+\s+\S+\s+\S+?)(?:\s+(.*))?$/u;
 /** 🌳️ Parses `ps -A -o pid=,ppid=,pgid=,rss=,state=,etime=,lstart=,args=` (macOS and Linux; without the `args=` column the commands are empty) into rows: a stopped process is one whose state starts with `T`, the start is the five-token `lstart` text; a line that is no row (the continuation of a multi-line command) is skipped. */
 export function parseWardenProcessTableV1(text:string):readonly HostWardenRowV1[]{
  const rows:HostWardenRowV1[]=[];
  for(const line of text.split("\n")){
   const match=ROW.exec(line);
-  if(match)rows.push(Object.freeze({pid:Number(match[1]),parent:Number(match[2]),group:Number(match[3]),memoryKilobytes:Number(match[4]),stopped:match[5]!.startsWith("T"),elapsedSeconds:parseWardenElapsedV1(match[6]!),start:match[7]!,command:match[8]??""}));
+  if(match)rows.push(Object.freeze({pid:Number(match[1]),parent:Number(match[2]),group:Number(match[3]),memoryKilobytes:Number(match[4]),stopped:match[5]!.startsWith("T"),elapsedSeconds:parseWardenElapsedV1(match[6]!),...match[7]===undefined?{}:{cpuSeconds:parseWardenCpuV1(match[7])},start:match[8]!,command:match[9]??""}));
  }
  return rows;
 }
@@ -100,7 +109,7 @@ export function wardenOwnerLabelV1(command:string,prefixes:readonly string[]=[])
 }
 
 /** 🔭️ What classification may be told besides the table: protected path fragments, a pid the subjects must descend from, the prefixes cut from owner labels, the suspension times of earlier ticks and the workspace roots the anchors of the patterns stand for. */
-export type HostWardenClassifyOptionsV1=Readonly<{protect?:readonly string[];within?:number;prefixes?:readonly string[];nowMs?:number;suspendedSince?:ReadonlyMap<string,number>;workspaces?:readonly string[];ceilings?:CompileBudgetPolicyV1}>;
+export type HostWardenClassifyOptionsV1=Readonly<{owned?:Map<string,Readonly<{cpuSeconds:number;elapsedSeconds:number}>>;protect?:readonly string[];within?:number;prefixes?:readonly string[];nowMs?:number;suspendedSince?:ReadonlyMap<string,number>;workspaces?:readonly string[];ceilings?:CompileBudgetPolicyV1}>;
 
 const escaped=(text:string):string=>text.replace(/[\\^$.*+?()[\]{}|]/gu,"\\$&");
 const anchorMarks=new RegExp(`<(${HOST_WARDEN_ANCHORS_V1.names.join("|")})>`,"gu");
@@ -156,7 +165,7 @@ export function classifyWardenSubjectsV1(rows:readonly HostWardenRowV1[],tables:
   if(kind!==undefined)found.set(row.pid,{row,kind});
  }
  const kilobytes=new Map<number,number>(),home=(row:HostWardenRowV1):number|undefined=>chain(row).find(link=>found.has(link.pid))?.pid;
- for(const row of rows){const owner=home(row);if(owner!==undefined)kilobytes.set(owner,(kilobytes.get(owner)??0)+row.memoryKilobytes);}
+ for(const row of rows){const owner=home(row);if(owner!==undefined){kilobytes.set(owner,(kilobytes.get(owner)??0)+row.memoryKilobytes);if(row.cpuSeconds!==undefined)options.owned?.set(`${row.pid}.${row.start}`,{cpuSeconds:row.cpuSeconds,elapsedSeconds:row.elapsedSeconds});}}
  const ceilingOf=(kind:HostWardenKindV1,row:HostWardenRowV1):Readonly<{ceiling?:HostWardenCeilingV1}>=>{const ceiling=kind.ceiling==="unit"?runtimeCeilingOfCommandV1(options.ceilings??UNIT_CEILING_POLICY_V1,row.command):null;return ceiling===null?{}:{ceiling};};
  return [...found.values()].sort((left,right)=>left.row.pid-right.row.pid).map(({row,kind})=>{
   const id=wardenSubjectIdV1(row.pid,row.start),since=options.suspendedSince?.get(id),seconds=row.stopped&&since!==undefined&&options.nowMs!==undefined?Math.max(0,Math.floor((options.nowMs-since)/1000)):0,top=byPid.get(rootOf(row))??row;
@@ -180,8 +189,11 @@ export function planWardenSignalsV1(rows:readonly HostWardenRowV1[],subject:Read
  return order;
 }
 
-/** 🪙️ The order of the victims, cheapest to lose first: whatever is not build-critical before what is, then the least work lost per megabyte freed (wall seconds the subject ran divided by its megabytes, compared by cross multiplication so a young unit or pool child goes before a long running final), then the cost rank, then the pid. The last of a list is the dearest to lose. */
-const order=(left:HostWardenSubjectV1,right:HostWardenSubjectV1):number=>Number(left.capCritical===true)-Number(right.capCritical===true)||left.elapsedSeconds*Math.max(1,right.megabytes)-right.elapsedSeconds*Math.max(1,left.megabytes)||left.rank-right.rank||left.pid-right.pid;
+/** 🏗️ Whether a subject is a declared final link: a compile unit whose ceiling is of the final kind and on the carving list of the admission policy. Such a unit is the single guarded heavy job of its machine (the law lets it run alone, serial back end, one slot) and a retry costs a whole link, so it is the dearest to lose among the compile units and waits longer suspended (`heavySuspendMaximumSeconds`). */
+const heavy=(subject:HostWardenSubjectV1):boolean=>subject.ceiling!==undefined&&subject.ceiling.kind==="final"&&subject.ceiling.listed;
+
+/** 🪙️ The order of the victims, cheapest to lose first: whatever is not build-critical before what is, then whatever is not a declared final link ({@link heavy}) before what is, then the least work lost per megabyte freed (wall seconds the subject ran divided by its megabytes, compared by cross multiplication so a young unit or pool child goes before a long running final), then the cost rank, then the pid. The last of a list is the dearest to lose. */
+const order=(left:HostWardenSubjectV1,right:HostWardenSubjectV1):number=>Number(left.capCritical===true)-Number(right.capCritical===true)||Number(heavy(left))-Number(heavy(right))||left.elapsedSeconds*Math.max(1,right.megabytes)-right.elapsedSeconds*Math.max(1,left.megabytes)||left.rank-right.rank||left.pid-right.pid;
 const clamp=(value:number,low:number,high:number):number=>Math.min(high,Math.max(low,value));
 
 /** 🌊️ How deep the swap and the compressed memory are (schema `Policy`): 2 at or above a danger line, 1 at or above a guard line, 0 below. The swap in use is read as a share of the physical memory and, when swap occupancy is known, also as a share of the existing swap plus the disk space available to grow it above the reserve; the compressed memory as a share of the physical memory. The source is the first of swap-used, swap-share and compressed that reaches the depth.
@@ -231,14 +243,14 @@ export function parseWardenSwapV1(platform:string,texts:Readonly<{usage?:string|
  return{swapFreeMegabytes:null,swapVolumeFreeMegabytes:null};
 }
 
-/** ⚖️ Decides one tick of the warden from the host numbers, the subjects and what the previous tick left; pure, no clock and no I/O. The law: guard, danger and resume lines are shares of the physical memory between their bounds. The level is `danger` below the danger line, with a headroom (available memory plus the swap room, bounded by the free disk of the swap volume, see {@link headroomHostWardenV1}) below the headroom danger line, with the swap or compressed memory at danger depth ({@link swapDepthHostWardenV1}) and the available memory below the guard line, or during active swap-out with danger-depth compression or a continuing OS warning and guard-depth compression (these are severe), or, whatever the available memory, with the OS pressure critical or the compressed memory at danger depth; `guard` below the guard line, with a headroom below the headroom guard line, with the OS pressure warn, with the compressed memory at guard depth, or with the swap worked or the swap or compressed memory at guard depth and the available memory below the resume line; else `calm`. So the OS pressure alone is at least tight (new work is held and the cheapest subjects are suspended) and critical alone is critical; only a severe danger cancels (suspended subjects first, until the freed megabytes cover the deficit), a danger from the pressure or the compressed memory alone suspends and cancels what stays suspended too long. The deficit is the distance to the guard line (to the resume line with a deep swap), never less than `pressureDeficitMegabytes` while acute compression and swap-out, or pressure or compressed memory without a severe shortage, holds the level. A subject of a build-critical kind (`capCritical`: the compile units, the graph pool children, the slice workers) that crosses its cap is not killed first: the level is at least tight (trigger `cap`), the other subjects are suspended until the overage is covered (the critical ones keep running), the crossing is reported as an alarm of action `report`, and the subject is cancelled only when the level is danger, when it stays suspended too long (see below) or when it is over its ceiling. When nothing but the compressed or swapped memory holds the level (pressure normal, available memory at or above the guard line, headroom above its guard line, swap not worked) the level only holds new admissions: nothing is suspended or cancelled for it, and one suspended subject, the most expensive, is resumed per tick, because compressed memory stays high long after the load is gone. A subject over the cap of its kind (`capMegabytes` of the kind, at most `capMaximumBasisPoints` of the physical memory) is cancelled at any level. A subject whose runtime ceiling (`ceiling`, set for compile units) is below its megabytes is cancelled at any level at once, before every cap and every shedding, build-critical or not (a unit does not outgrow the budget its kind or its carving entry declares); the cancel counts as freed memory. The level is quiet when no measured signal is at or below its line: the available memory at or above the guard line, the headroom at or above its guard line, the swap-out rate below `swapActiveMegabytesPerSecond` and the OS pressure not critical; the OS pressure `warn` and the compressed or swapped memory alone are only felt by the kernel, so a quiet level holds new admissions and suspends and cancels nothing (a suspended subject is resumed, one per tick, the dearest first). A suspended subject that stays suspended for `suspendMaximumSeconds` is overdue; it is cancelled only while a measured signal is at or below its line (not quiet) and not calm, and resumed when it cannot be cancelled, when the level is quiet or calm. Victims, suspended or cancelled, go in the order of `order`: not build-critical first, then the least work lost per megabyte freed (elapsed wall seconds per megabyte), then the cost rank. A subject suspended `flapMaximumSuspensions` times within `flapWindowSeconds`, or resumed less than `resumeHoldSeconds` ago, is not suspended again (damped) unless the level is severe danger. Overdue suspended subjects are cancelled (not calm and not quiet) or resumed (cannot cancel, quiet or calm); in guard and danger the cheapest running subjects are suspended until the suspended megabytes cover the deficit, the most expensive `keepRunning` keeps running unless compression and active swap-out are acute; after `calmTicks` calm ticks above the resume line one suspended subject, the most expensive, is resumed per tick.
+/** ⚖️ Decides one tick of the warden from the host numbers, the subjects and what the previous tick left; pure, no clock and no I/O. The law: guard, danger and resume lines are shares of the physical memory between their bounds. The level is `danger` below the danger line, with a headroom (available memory plus the swap room, bounded by the free disk of the swap volume, see {@link headroomHostWardenV1}) below the headroom danger line, with the swap or compressed memory at danger depth ({@link swapDepthHostWardenV1}) and the available memory below the guard line, or during active swap-out with danger-depth compression or a continuing OS warning and guard-depth compression (these are severe), or, whatever the available memory, with the OS pressure critical or the compressed memory at danger depth; `guard` below the guard line, with a headroom below the headroom guard line, with the OS pressure warn, with the compressed memory at guard depth, or with the swap worked or the swap or compressed memory at guard depth and the available memory below the resume line; else `calm`. So the OS pressure alone is at least tight (new work is held and the cheapest subjects are suspended) and critical alone is critical; only a severe danger cancels (suspended subjects first, until the freed megabytes cover the deficit), a danger from the pressure or the compressed memory alone suspends and cancels what stays suspended too long. The deficit is the distance to the guard line (to the resume line with a deep swap), never less than `pressureDeficitMegabytes` while acute compression and swap-out, or pressure or compressed memory without a severe shortage, holds the level. A subject of a build-critical kind (`capCritical`: the compile units, the graph pool children, the slice workers) that crosses its cap is not killed first: the level is at least tight (trigger `cap`), the other subjects are suspended until the overage is covered (the critical ones keep running), the crossing is reported as an alarm of action `report`, and the subject is cancelled only when the level is danger, when it stays suspended too long (see below) or when it is over its ceiling. When nothing but the compressed or swapped memory holds the level (pressure normal, available memory at or above the guard line, headroom above its guard line, swap not worked) the level only holds new admissions: nothing is suspended or cancelled for it, and after the configured quiet recovery ticks one suspended subject, the most expensive, is resumed per tick, because compressed memory stays high long after the load is gone. A subject over the cap of its kind (`capMegabytes` of the kind, at most `capMaximumBasisPoints` of the physical memory) is cancelled at any level. A subject whose runtime ceiling (`ceiling`, set for compile units) is below its megabytes is cancelled at any level at once, before every cap and every shedding, build-critical or not (a unit does not outgrow the budget its kind or its carving entry declares); the cancel counts as freed memory. The level is quiet when no measured signal is at or below its line: the available memory at or above the guard line, the headroom at or above its guard line, the swap-out rate below `swapActiveMegabytesPerSecond` and the OS pressure not critical; the OS pressure `warn` and the compressed or swapped memory alone are only felt by the kernel, so a quiet level holds new admissions and suspends and cancels nothing (a suspended subject is resumed after the quiet recovery ticks, one per tick, the dearest first). A suspended subject that stays suspended for `suspendMaximumSeconds` is overdue; it is cancelled only while a measured signal is at or below its line (not quiet) and not calm, and resumed when it cannot be cancelled or the level is quiet or calm, with quiet recovery ticks required before a quiet guard resumes. Victims, suspended or cancelled, go in the order of `order`: not build-critical first, then the least work lost per megabyte freed (elapsed wall seconds per megabyte), then the cost rank. A subject suspended `flapMaximumSuspensions` times within `flapWindowSeconds`, or resumed less than `resumeHoldSeconds` ago, is not suspended again (damped) unless the level is severe danger. Overdue suspended subjects are cancelled (not calm and not quiet) or resumed (cannot cancel, quiet or calm); in guard and danger the cheapest running subjects are suspended until the suspended megabytes cover the deficit, the most expensive `keepRunning` keeps running unless compression and active swap-out are acute; after `calmTicks` calm ticks above the resume line one suspended subject, the most expensive, is resumed per tick.
  * @see ./🧬️schema/🔣️.json */
 export function decideHostWardenV1(policy:HostWardenPolicyV1,host:HostWardenHostV1,subjects:readonly HostWardenSubjectV1[],previous:HostWardenPreviousV1):HostWardenDecisionV1{
  const total=host.totalMegabytes,available=host.availableMegabytes;
  const guard=clamp(Math.floor(total*policy.guardBasisPoints/10000),policy.guardMinimumMegabytes,policy.guardMaximumMegabytes),danger=clamp(Math.floor(total*policy.dangerBasisPoints/10000),policy.dangerMinimumMegabytes,policy.dangerMaximumMegabytes),resume=Math.max(guard,Math.floor(total*policy.resumeBasisPoints/10000));
  const swapWorked=host.swapOutMegabytesPerSecond!==null&&host.swapOutMegabytesPerSecond>=policy.swapActiveMegabytesPerSecond;
  const room=headroomHostWardenV1(policy,host),headroom=room.headroomMegabytes,deep=swapDepthHostWardenV1(policy,host),pressure=host.pressure==="critical"?2:host.pressure==="warn"?1:0;
- const critical=(subject:HostWardenSubjectV1):boolean=>subject.capCritical===true,capOf=(subject:HostWardenSubjectV1):number=>Math.min(subject.capMegabytes!,Math.floor(total*policy.capMaximumBasisPoints/10000));
+ const critical=(subject:HostWardenSubjectV1):boolean=>subject.capCritical===true,canPause=(subject:HostWardenSubjectV1):boolean=>subject.canSuspend&&subject.canCancel,capOf=(subject:HostWardenSubjectV1):number=>Math.min(subject.capMegabytes!,Math.floor(total*policy.capMaximumBasisPoints/10000));
  const over=(subject:HostWardenSubjectV1):boolean=>subject.ceiling!==undefined&&subject.canCancel&&subject.megabytes>subject.ceiling.megabytes;
  const crossed=subjects.filter(subject=>subject.canCancel&&(over(subject)||subject.capMegabytes!==undefined&&critical(subject)&&subject.megabytes>capOf(subject))),overage=crossed.reduce((sum,subject)=>sum+subject.megabytes-(over(subject)?subject.ceiling!.megabytes:capOf(subject)),0);
  const sustainedWarning = previous.level !== "calm" && pressure >= 1 && deep.compressed >= 1;
@@ -247,11 +259,23 @@ export function decideHostWardenV1(policy:HostWardenPolicyV1,host:HostWardenHost
  const base:HostWardenDecisionV1["level"]=severe||pressure===2||deep.compressed===2?"danger":available<guard||(headroom!==null&&headroom<room.headroomGuardMegabytes)||pressure>=1||deep.compressed>=1||((swapWorked||deep.depth>=1)&&available<resume)?"guard":"calm",level:HostWardenDecisionV1["level"]=base==="calm"&&crossed.length>0?"guard":base;
  const trigger:HostWardenTriggerV1|null=level==="calm"?null:base==="calm"?"cap":available<(level==="danger"?danger:guard)?"available":headroom!==null&&headroom<(level==="danger"?room.headroomDangerMegabytes:room.headroomGuardMegabytes)?"headroom":level==="danger"?deep.depth===2&&available<guard?deep.source!:deep.compressed===2?"compressed":"pressure":pressure===1?"pressure":deep.compressed>=1?"compressed":deep.depth>=1&&available<resume&&deep.source!==null?deep.source:"swap";
  const quiet=pressure<2&&available>=guard&&!(headroom!==null&&headroom<room.headroomGuardMegabytes)&&!swapWorked;
+ const calmTicks=level==="calm"?(previous.level==="calm"||previous.calmTicks>0?previous.calmTicks:0)+1:quiet&&crossed.length===0&&available>=resume?previous.calmTicks+1:0,quietReady=quiet&&calmTicks>=policy.calmTicks&&available>=resume;
  const held=(acute||!severe&&(pressure>=1||deep.compressed>=1))?policy.pressureDeficitMegabytes:0,target=deep.depth>=1?resume:guard,deficitOf=():number=>Math.max(target-available,headroom===null?0:room.headroomGuardMegabytes-headroom,held,overage,1);
  const damped=(subject:HostWardenSubjectV1):boolean=>!(level==="danger"&&severe)&&((subject.suspensions??0)>=policy.flapMaximumSuspensions||(subject.resumedSeconds!==undefined&&subject.resumedSeconds<policy.resumeHoldSeconds));
  const actions:HostWardenActionV1[]=[],acted=new Set<string>(),capLimit=Math.floor(total*policy.capMaximumBasisPoints/10000);
  let cancels=0,suspends=0,capped=0;
  const cancel=(subject:HostWardenSubjectV1,reason:"danger"|"overdue"):void=>{actions.push({action:"cancel",id:subject.id,reason});acted.add(subject.id);cancels++;};
+ const resumeRoom=quiet&&available>=resume?available-guard:0;
+ let remainingResumeRoom=resumeRoom;
+ const pageIn=(subject:HostWardenSubjectV1):number=>{
+  if(subject.nonresidentMegabytes!==null)return subject.nonresidentMegabytes??0;
+  return level==="calm"&&pressure===0?(subject.stoppedFootprintMegabytes??subject.megabytes):Infinity;
+ };
+ const wake=(subject:HostWardenSubjectV1,reason:"calm"|"overdue"):void=>{
+  remainingResumeRoom-=pageIn(subject);
+  actions.push({action:"resume",id:subject.id,reason});
+  acted.add(subject.id);
+ };
  for(const subject of [...subjects].sort(order)){
   if(!over(subject))continue;
   if(level!=="danger"){actions.push({action:"report",id:subject.id,reason:"ceiling"});continue;}
@@ -264,14 +288,14 @@ export function decideHostWardenV1(policy:HostWardenPolicyV1,host:HostWardenHost
   if(critical(subject)&&level!=="danger"){actions.push({action:"report",id:subject.id,reason:"cap",capMegabytes:cap});continue;}
   actions.push({action:"cancel",id:subject.id,reason:"cap",capMegabytes:cap});acted.add(subject.id);capped+=subject.megabytes;
  }
- const overdue=subjects.filter(subject=>subject.suspended&&subject.suspendedSeconds>=policy.suspendMaximumSeconds&&!acted.has(subject.id)).sort(order);
+ const overdue=subjects.filter(subject=>subject.suspended&&subject.suspendedSeconds>=(heavy(subject)?policy.heavySuspendMaximumSeconds:policy.suspendMaximumSeconds)&&!acted.has(subject.id)).sort(order);
  const cancelled:HostWardenSubjectV1[]=[];
- if(level!=="calm"&&!quiet)for(const subject of overdue)if(subject.canCancel&&(!critical(subject)||severe)&&cancels<policy.maximumCancelsPerTick){cancel(subject,"overdue");cancelled.push(subject);}
- for(const subject of overdue)if(!subject.canCancel||level!=="calm"&&quiet||critical(subject)&&!severe){actions.push({action:"resume",id:subject.id,reason:"overdue"});acted.add(subject.id);}
+ for(const subject of overdue)if(subject.canCancel&&(pageIn(subject)>resumeRoom||level!=="calm"&&!quiet&&(!critical(subject)||severe))&&cancels<policy.maximumCancelsPerTick){cancel(subject,"overdue");cancelled.push(subject);}
+ for(const subject of overdue)if(!acted.has(subject.id)&&pageIn(subject)<=remainingResumeRoom&&(!quiet||quietReady||level==="calm")&&(!subject.canCancel||level!=="calm"&&quiet||critical(subject)&&!severe))wake(subject,"overdue");
  if(level==="danger"&&severe){
   const deficit=deficitOf();
   let freed=capped+cancelled.reduce((sum,subject)=>sum+subject.megabytes,0);
-  const pausable=subjects.filter(subject=>subject.canSuspend),paused=(subject:HostWardenSubjectV1):boolean=>subject.suspended&&subject.suspendedSeconds>=policy.pauseDeadlineSeconds,pausingFailed=pausable.every(paused);
+  const pausable=subjects.filter(canPause),paused=(subject:HostWardenSubjectV1):boolean=>subject.suspended&&subject.suspendedSeconds>=policy.pauseDeadlineSeconds,pausingFailed=pausable.every(paused);
   const candidates=subjects.filter(subject=>subject.canCancel&&!acted.has(subject.id)&&(subject.canSuspend?paused(subject):pausingFailed)).sort((left,right)=>Number(right.suspended)-Number(left.suspended)||order(left,right));
   for(const subject of candidates){
    if(freed>=deficit||cancels>=policy.maximumCancelsPerTick)break;
@@ -283,18 +307,13 @@ export function decideHostWardenV1(policy:HostWardenPolicyV1,host:HostWardenHost
   let covered=subjects.filter(subject=>subject.suspended&&!acted.has(subject.id)).reduce((sum,subject)=>sum+subject.megabytes,0);
   for(const subject of every.filter(candidate=>!acted.has(candidate.id))){
    if(covered>=deficit||suspends>=policy.maximumSuspendsPerTick)break;
-   if(kept.has(subject.id)||!subject.canSuspend||damped(subject))continue;
+   if(kept.has(subject.id)||!canPause(subject)||damped(subject))continue;
    actions.push({action:"suspend",id:subject.id,reason:level});acted.add(subject.id);suspends++;covered+=subject.megabytes;
   }
  }
- const calmTicks=level==="calm"?(previous.level==="calm"?previous.calmTicks:0)+1:0;
- if(level!=="calm"&&quiet&&crossed.length===0){
-  const waiting=subjects.filter(subject=>subject.suspended&&!acted.has(subject.id)).sort(order).at(-1);
-  if(waiting!==undefined)actions.push({action:"resume",id:waiting.id,reason:"calm"});
- }
- if(level==="calm"&&calmTicks>=policy.calmTicks&&available>=resume){
-  const waiting=subjects.filter(subject=>subject.suspended&&!acted.has(subject.id)).sort(order).at(-1);
-  if(waiting!==undefined)actions.push({action:"resume",id:waiting.id,reason:"calm"});
+ if((quietReady&&crossed.length===0)||(level==="calm"&&calmTicks>=policy.calmTicks&&available>=resume)){
+  const waiting=subjects.filter(subject=>subject.suspended&&!acted.has(subject.id)&&pageIn(subject)<=remainingResumeRoom).sort(order).at(-1);
+  if(waiting!==undefined)wake(waiting,"calm");
  }
  return Object.freeze({level,calmTicks,hold:level!=="calm",trigger,guardMegabytes:guard,dangerMegabytes:danger,resumeMegabytes:resume,...room,actions:Object.freeze(actions)});
 }

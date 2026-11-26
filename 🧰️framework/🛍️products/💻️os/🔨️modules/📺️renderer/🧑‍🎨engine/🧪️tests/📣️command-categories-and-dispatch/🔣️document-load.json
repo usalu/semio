@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "ready": [
+    { "action": "advanceGeneration", "kind": "mutation", "retired": false, "duringLoad": 0, "afterLoad": 1 },
+    { "action": "advanceGeneration", "kind": "mutation", "retired": true, "duringLoad": 0, "afterLoad": 0 },
+    { "action": "changeCamera", "kind": "view", "retired": false, "duringLoad": 1, "afterLoad": 1 },
+    { "action": "movePointer", "kind": "interaction", "retired": false, "duringLoad": 1, "afterLoad": 1 },
+    { "action": "historyEditCancelReplay", "kind": null, "retired": false, "duringLoad": 1, "afterLoad": 1 },
+    { "action": "sharedAction", "kind": "mutation", "targetKind": "view", "retired": false, "duringLoad": 1, "afterLoad": 1 },
+    { "action": "sharedAction", "kind": "view", "targetKind": "mutation", "retired": false, "duringLoad": 0, "afterLoad": 1 }
+  ],
+  "fault": [
+    { "id": "retryable framework load refusal", "origin": "framework", "code": "document.loading", "retryable": true, "repeated": false, "attempts": 2, "published": 1 },
+    { "id": "repeated framework load refusal", "origin": "framework", "code": "document.loading", "retryable": true, "repeated": true, "attempts": 2, "published": 0 },
+    { "id": "plain error using the same text", "origin": null, "code": "document.loading", "retryable": true, "repeated": false, "attempts": 1, "published": 0 },
+    { "id": "app fault using the same code", "origin": "app", "code": "document.loading", "retryable": true, "repeated": false, "attempts": 1, "published": 0 },
+    { "id": "nonretryable framework load refusal", "origin": "framework", "code": "document.loading", "retryable": false, "repeated": false, "attempts": 1, "published": 0 },
+    { "id": "other retryable framework fault", "origin": "framework", "code": "history.replaying", "retryable": true, "repeated": false, "attempts": 1, "published": 0 }
+  ]
+}

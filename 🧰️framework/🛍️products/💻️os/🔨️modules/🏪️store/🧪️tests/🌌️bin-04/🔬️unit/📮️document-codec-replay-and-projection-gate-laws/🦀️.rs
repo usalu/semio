@@ -52,15 +52,7 @@ async fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
 
 /// 🪪 Drives a linked codec's apply-ops thunk under a fixture caller-owned identity authority and returns its original cumulative receipt.
 async fn apply_ops_under_fixture_identity(codec: &ArtifactCodec, pack: &[u8], spr: &[u8], ops: &[u8]) -> Result<(Vec<u8>, Vec<u8>, String), VcsError> {
-    const CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
-        assert!(progress.owned_bytes <= CEILING);
-        true
-    };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(CEILING, &mut observer).expect("declared fixture identity authority");
-    let result = (codec.reference().expect("authored cold codec reference").apply_ops_binary)(pack, spr, ops, &mut identity).await;
-    drop(identity.pause().expect("original cumulative fixture identity receipt"));
-    result
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn((codec.reference().expect("authored cold codec reference").apply_ops_binary)(pack, spr, ops, identity)))
 }
 
 /// 🧩️ The NATIVE twin of the guest's `codec.apply-ops`: a LINKED Rust codec reducing a NONEMPTY

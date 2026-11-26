@@ -29,7 +29,12 @@ async fn exact_overview_window_cameras_isolate_render_and_reload_through_registe
     let view_b = window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, window_b);
     let document_before = fixture_of(&app);
     let app_config_before = app.config_pack().await.expect("app config before window publications");
+    let initial_a = app.window_config_generation(&view_a).await.expect("initial window a generation");
+    let initial_b = app.window_config_generation(&view_b).await.expect("initial window b generation");
     let result_a = dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "x": 18.0, "y": -4.0, "zoom": 2.0 } })), Some(window_a)).expect("setCamera a");
+    let changed_a = app.window_config_generation(&view_a).await.expect("window a generation after camera change");
+    assert!(changed_a > initial_a);
+    assert_eq!(app.window_config_generation(&view_b).await.expect("window b before its change"), initial_b);
     let result_b = dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "x": -9.0, "y": 6.0, "zoom": 0.5 } })), Some(window_b)).expect("setCamera b");
     assert_eq!((committed_edits(&result_a), committed_edits(&result_b)), (0, 0));
     assert_eq!(fixture_of(&app), document_before);
@@ -39,8 +44,8 @@ async fn exact_overview_window_cameras_isolate_render_and_reload_through_registe
     let rendered_b = render_window(&mut app, overview::BODY_KEY, window_b);
     assert_eq!(rendered_camera(&rendered_a), (18.0, -4.0, 2.0));
     assert_eq!(rendered_camera(&rendered_b), (-9.0, 6.0, 0.5));
-    assert_eq!(app.window_config_generation(&view_a).await.expect("window a generation"), Some(1));
-    assert_eq!(app.window_config_generation(&view_b).await.expect("window b generation"), Some(1));
+    assert_eq!(app.window_config_generation(&view_a).await.expect("window a generation"), changed_a);
+    assert!(app.window_config_generation(&view_b).await.expect("window b generation") > initial_b);
     let packs = app.window_config_packs().await.expect("two exact window packs");
     assert_eq!(packs.len(), 2);
     for pack in packs {

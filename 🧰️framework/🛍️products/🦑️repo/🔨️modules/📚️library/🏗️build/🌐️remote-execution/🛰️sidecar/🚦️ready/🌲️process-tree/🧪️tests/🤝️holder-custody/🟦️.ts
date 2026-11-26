@@ -19,7 +19,7 @@ const ours={
 
 test("every authored case has the authored answer",()=>{
  fixture.parse.forEach((row,index)=>expect(ours.parse[index],row.name).toEqual(row.expected as never));
- fixture.custody.forEach((row,index)=>expect(ours.custody[index],row.name).toBe(row.expected));
+ fixture.custody.forEach((row,index)=>expect<string>(ours.custody[index],row.name).toBe(row.expected));
  fixture.reader.forEach((row,index)=>expect(ours.reader[index],row.name).toEqual(row.expected));
  fixture.foreground.forEach((row,index)=>expect(ours.foreground[index],row.name).toBe(row.expected));
 });

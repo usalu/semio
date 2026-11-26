@@ -30,7 +30,7 @@ test.skipIf(!hasOracleV1)("a view holds exactly the declared inputs: digests equ
  const inputs=await digestTaskViewInputsV1(live,[...paths,"alias.rs"]);
  const model=oracleV1({op:"digest-files",paths:paths.map(path=>join(live,path))}) as string[];
  inputs.filter(row=>row.link===undefined).forEach((row,index)=>expect(row.digest).toBe(model[index]));
- expect(taskViewInputsDigestV1(inputs)).toBe(oracleV1({op:"inputs-digest",rows:inputs}));
+ expect<unknown>(taskViewInputsDigestV1(inputs)).toBe(oracleV1({op:"inputs-digest",rows:inputs}));
  const view=ready(await openTaskViewV1({source:live,directory,hash:"cafe0001",inputs})).view;
  expect(view.receipt.files).toBe(121);
  expect(oracleV1({op:"digest-files",paths:paths.map(path=>join(view.root,path))})).toEqual(model);

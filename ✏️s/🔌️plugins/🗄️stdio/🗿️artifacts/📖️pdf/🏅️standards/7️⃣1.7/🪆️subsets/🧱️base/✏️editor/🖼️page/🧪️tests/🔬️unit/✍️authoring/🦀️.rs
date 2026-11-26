@@ -214,7 +214,7 @@ fn checkbox_and_radio_gain_state_appearances_that_lopdf_reads() {
 fn source_document() -> PdfSnapshot {
     let mut snapshot = PdfSnapshot::default();
     let mut first = PdfPage::new(100.0, 100.0);
-    first.content = vec![PdfOp::BeginText, PdfOp::SetFont { name: "F1".into(), size: 10.0 }, PdfOp::SetTextMatrix { matrix: [1.0, 0.0, 0.0, 1.0, 5.0, 50.0] }, PdfOp::ShowText { text: PdfTextString::text("Source") }, PdfOp::EndText, PdfOp::Save, PdfOp::Transform { matrix: [20.0, 0.0, 0.0, 20.0, 10.0, 10.0] }, PdfOp::PaintXObject { name: "Im1".into() }, PdfOp::Restore, PdfOp::PaintXObject { name: "Fm1".into() }];
+    first.content = vec![PdfOp::BeginText, PdfOp::SetFont { name: "F1".into(), size: 10.0 }, PdfOp::SetTextMatrix { matrix: [1.0, 0.0, 0.0, 1.0, 5.0, 50.0] }, PdfOp::ShowText { text: PdfTextString::text("Source") }, PdfOp::EndText, PdfOp::Save, PdfOp::Transform { matrix: [20.0, 0.0, 0.0, 20.0, 10.0, 10.0] }, PdfOp::PaintXObject { name: "Im1".into() }, PdfOp::Restore, PdfOp::PaintXObject { name: "Fm1".into() }].into();
     first.annotations = vec![PdfAnnotation::link([1.0, 1.0, 20.0, 20.0], "https://example.org/")];
     let mut second = PdfPage::new(120.0, 80.0);
     second.annotations = vec![PdfAnnotation::new([1.0, 1.0, 20.0, 20.0], PdfAnnotationKind::Link { action: None, destination: Some(PdfDestination::Page { page: 0, fit: crate::standards::v1_7::subsets::base::schema::snapshot::PdfDestinationFit::Fit }), highlight: None, quad_points: Vec::new() })];

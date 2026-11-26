@@ -8,6 +8,7 @@ import{brotliCompressSync,brotliDecompressSync,constants as zlibConstants}from"n
 import{lstat,mkdir,open,readdir,readFile,rename,rm}from"node:fs/promises";
 import{dirname,join}from"node:path";
 import{graphStringInternerV1,internJsonStringsV1}from"../../🧠️memory/🟨️.mjs";
+import{registerSliceCollectionsV1}from"../../🧠️memory/📋️slice-report/🟨️.mjs";
 import{canonicalJsonV1,compareCodePointsV1,decodeFactIndexV1,encodeFactIndexV1,openFactIndexV1}from"./🧮️fact-codec/🟨️.mjs";
 import{coverageOfV1,mergeVerifiedStampV1,readVerifiedStampV1,uncoveredOfV1}from"./🔭️coverage/🟨️.mjs";
 import{INDEX_CHUNK_POLICY_V1,addOwnerRunsV1,bulkUpsertClassesV1,classesOfChunksV1,createChunkInternerV1}from"./🧱️chunk-classes/🟨️.mjs";
@@ -34,6 +35,23 @@ export{canonicalJsonV1,compareCodePointsV1,createFrontierV1,diffFrontiersV1,fron
 let processStartedV1=false;
 /** ⏱️ The milliseconds stages outside the build took since the last build (`start.reader` and `start.prefetch` of the first load, `yield` of the pause between two waves): their owners fill it, the next build reports it and empties it. */
 export const carriedStagesV1={};
+
+/** 🧮️ The state a build carries from wave to wave, as rows of the report of retained memory: the owner table with the strings of the edge reads of its owners, the rows each owner is given (ids into the row logs: their bytes are the ids and the rows held beyond them), the names of the returned, dropped and derived owners and the frontier of the membership the waves reuse.
+ * @see ./🧪️tests/🌊️wave-retention */
+function carryCollectionsV1(carry,wave){
+ const owners=carry.owners??{};let reads=0;
+ for(const row of Object.values(owners))if(row.reads)for(const list of Object.values(row.reads))if(Array.isArray(list))reads+=list.length;
+ const lists=map=>{let bytes=0;for(const list of map.values()){bytes+=list.ids?.byteLength??list.length*160;for(const tail of list.tails??[])bytes+=tail.length*160;}return bytes;};
+ const frontier=wave?.live?.frontier,held=(frontier?.members?.length??0)+(frontier?.directories?.length??0),names=(carry.names?.length??0)+carry.derived.size+carry.dropped.size+carry.returned.size;
+ return[
+  {name:"generation:carry.owners",entries:Object.keys(owners).length,sample:()=>Object.values(owners).slice(0,16)},
+  {name:"generation:carry.owners.reads (strings)",entries:reads,bytes:reads*120},
+  {name:"generation:carry.upserts (row lists)",entries:carry.upserts.size,bytes:lists(carry.upserts)},
+  {name:"generation:carry.append (row lists)",entries:carry.append.size,bytes:lists(carry.append)},
+  {name:"generation:carry.names",entries:names,bytes:names*120},
+  {name:"generation:wave.frontier (members and directories)",entries:held,bytes:held*320},
+ ];
+}
 
 
 /** 💽️ Whether a build failed because the store's volume has no room left (`ENOSPC`, `EDQUOT` or the typed "disk is full" refusal): the one failure after which the journal of the build is retired at once, because its rows hold the space the next build needs and cannot be resumed on a full volume. */
@@ -187,7 +205,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  const writeManifest=async manifest=>{const bytes=Buffer.from(canonicalJsonV1(readGenerationManifestV1(Buffer.from(canonicalJsonV1(manifest)))));if(bytes.length>P.maximumManifestBytes)throw fail("Generation manifest exceeds its finite limit");const digest=sha256(bytes);await fs.write(manifestPath(digest),bytes,{ifAbsent:true});return digest;};
 
  const ledgerPath=join(root,"withheld-revalidation.json"),ledger={read:async()=>{const bytes=await fs.read(ledgerPath);return bytes?JSON.parse(Buffer.from(bytes).toString("utf8")):undefined;},write:book=>fs.write(ledgerPath,Buffer.from(JSON.stringify(book)))};
- const plan=createGenerationPlanV1({readIndexView,fragmentNames:()=>fs.names(join(root,P.fragments)),now,doubt,settler,derive,hold,workspaceRoot,ledger,say:text=>process.stderr.write("[graph-owner-revalidate] "+JSON.stringify({version:1,text})+"\n")});
+ const plan=createGenerationPlanV1({readIndexView,fragmentNames:()=>fs.names(join(root,P.fragments)),now,doubt,settler,derive,hold,workspaceRoot,ledger,reasonOf:async(_name,row)=>(await readFragment(row))?.node?.reason,say:text=>process.stderr.write("[graph-owner-revalidate] "+JSON.stringify({version:1,text})+"\n")});
 
  /** 🤝️ Swaps the pointer for the next generation only if it still names the generation the builder started from; the exclusive hold covers one small read and one rename and nothing else. */
  async function publish({manifestDigest,expectedGeneration,expectedManifest,expectedRepairParent,reason,verified,signal,claim}){
@@ -233,7 +251,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  /** 🏗️ Builds and publishes the next generation from the newest one: the plan names the dirty owners, `compute` refreshes exactly those and unchanged fragments are carried over by digest. The verification view of the fact index (the rows the plan read stay materialized in it) is released before `compute` runs, so the inference never carries it; a later plan in this process opens it again. A cold build releases its row sources after encoding them. A delta retains its sources across waves and a possible publication merge. */
  async function build(request){
   let wave,total=0,last;
-  const carry={owners:undefined,env:undefined,envParts:undefined,upserts:new Map(),append:new Map(),dropped:new Set(),returned:new Set(),derived:new Set(),disposers:[],journalKey:undefined,tried:false,done:0,waves:0,files:[],names:undefined,resumedFrom:false};
+  const carry={owners:undefined,env:undefined,envParts:undefined,upserts:new Map(),append:new Map(),dropped:new Set(),returned:new Set(),derived:new Set(),disposers:[],journalKey:undefined,tried:false,done:0,waves:0,files:[],names:undefined,resumedFrom:false},forgetCarry=registerSliceCollectionsV1("generation:carry",()=>carryCollectionsV1(carry,wave));
   try{
    for(;;){
     last=await buildOnce(wave?{...request,hint:wave}:request,carry);
@@ -246,7 +264,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
     wave=last.deferred;
    }
   }catch(error){if(carry.journalKey!==undefined&&diskFullFailureV1(error))await journal.clear(carry.journalKey).catch(()=>{});throw error;}
-  finally{await disposeSources(carry.disposers);}
+  finally{forgetCarry();await disposeSources(carry.disposers);}
  }
   async function buildOnce({identity,implementation,membership,compute,prime,signal,progress,hint,only,observedAtMs=now(),coverage,claim,repair,qualify},carry){
   const marks={};if(!processStartedV1){processStartedV1=true;marks.start=Math.round(process.uptime()*1000);}Object.assign(marks,carriedStagesV1);for(const key of Object.keys(carriedStagesV1))delete carriedStagesV1[key];let markedAt=now();const mark=name=>{const at=now();marks[name]=(marks[name]??0)+at-markedAt;markedAt=at;};
@@ -264,7 +282,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   const reuse=hint&&usable&&current.pointer.generation===hint.generation&&(hint.wave!==undefined||(hint.holds?await hint.holds().catch(()=>false):now()-hint.atMs<=P.hintMaximumAgeMilliseconds));
   let previous=retained??(usable&&!reuse?{manifest:usable,frontier:await readFrontier(usable.frontier)}:undefined),live=reuse?hint.live:await profilePhaseV1("graph.build.membership",async()=>{const began=now();try{return await membership(previous?.frontier?previous:undefined,signal);}finally{marks.membership=now()-began;}});
   if(repair){only=undefined;coverage=undefined;}
-  const found=reuse?hint.plan:await profilePhaseV1("graph.build.plan",()=>plan({current,identity,repairBase:retained?.manifest,forcedOwners:retained?repair.owners:undefined,verifyAll:!!repair,changes:previous?.frontier?live.changes:undefined,...previous?.frontier&&live.dirty?{journalDirty:live.dirty}:{},only,skipEnvironment:coverage!==undefined,signal,progress}));
+  const found=reuse?hint.plan:await profilePhaseV1("graph.build.plan",()=>plan({current,identity,implementation,repairBase:retained?.manifest,forcedOwners:retained?repair.owners:undefined,verifyAll:!!repair,changes:previous?.frontier?live.changes:undefined,...previous?.frontier&&live.dirty?{journalDirty:live.dirty}:{},only,skipEnvironment:coverage!==undefined,signal,progress}));
   const priority=readPriorityV1();mark("plan");for(const[name,ms]of Object.entries(found.times??{}))marks["plan."+name]=ms;
   if(found.kind==="clean"){
    writePendingV1(process.env,current?.pointer.generation??-1,[],priority);
@@ -444,7 +462,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   if(usable){
    const previous={manifest:first.manifest,frontier:await readFrontier(first.manifest.frontier)},key=JSON.stringify([first.pointer.generation,scope?[...scope].sort(compareCodePointsV1):null,coverage!==undefined]),reuse=planned?.key===key&&planned.plan.kind==="delta"&&previous.frontier!==undefined&&await planned.holds().catch(()=>false);
    const live=reuse?planned.live:await profilePhaseV1("graph.refresh.membership",()=>membership(previous.frontier?previous:undefined,signal));
-   const verdict=reuse?planned.plan:await profilePhaseV1("graph.refresh.plan",()=>plan({current:first,identity,changes:previous.frontier?live.changes:undefined,...previous.frontier&&live.dirty?{journalDirty:live.dirty}:{},only:scope,skipEnvironment:coverage!==undefined,signal,progress}));
+   const verdict=reuse?planned.plan:await profilePhaseV1("graph.refresh.plan",()=>plan({current:first,identity,implementation,changes:previous.frontier?live.changes:undefined,...previous.frontier&&live.dirty?{journalDirty:live.dirty}:{},only:scope,skipEnvironment:coverage!==undefined,signal,progress}));
    if(reuse)stats.plansReused++;
    if(verdict.kind==="clean"){
     if(!scope&&live.digest!==first.manifest.membership||verdict.refresh?.size){const refreshed=await refreshMetadata({current:first,live:!scope&&live.digest!==first.manifest.membership?live:undefined,signal,held:verdict.refresh});return{...refreshed,served:"verified",built:false,computed:0,plan:verdict};}

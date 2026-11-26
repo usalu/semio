@@ -39,7 +39,7 @@ export interface BuildInferenceImplementationV1{readonly revision:string;readonl
 export interface StreamingEdgesV1{edgesOf(name:string,node:unknown):BuildInferenceEdgeV1[]}
 /** 🧭️ A command walk apart from the project that asks it: the roster, the rows that support it and the derived facts that stand for the walks it consists of. */
 export interface CommandWalkV1{readonly value:readonly string[];readonly rows:readonly unknown[];readonly derived:readonly {readonly row:unknown;readonly support:readonly unknown[]}[]}
-export interface ScriptInputCacheV1{readonly files:Map<string,unknown>;readonly closures:Map<string,unknown>;readonly commandDependencies:Map<string,unknown>;readonly modules:Set<string>;readonly resources:Set<string>;readonly context:ScriptInputContextV1;readonly providerDesignation?:string}
+export interface ScriptInputCacheV1{readonly files:Map<string,unknown>;readonly closures:Map<string,unknown>;readonly commandDependencies:Map<string,unknown>;readonly modules:Set<string>;readonly resources:Set<string>;readonly context:ScriptInputContextV1;readonly providerDesignation?:string;generatedOutput?:(path:string,origin?:unknown)=>unknown}
 export interface BuildInferenceEdgeV1{readonly source:string;readonly target:string;readonly type:string;readonly sourceFile?:string}
 export interface BuildProjectFileV1{readonly file:string;readonly hash?:string}
 export interface BuildFileMapV1{readonly projectFileMap:Readonly<Record<string,readonly BuildProjectFileV1[]>>;readonly nonProjectFiles?:readonly BuildProjectFileV1[]}

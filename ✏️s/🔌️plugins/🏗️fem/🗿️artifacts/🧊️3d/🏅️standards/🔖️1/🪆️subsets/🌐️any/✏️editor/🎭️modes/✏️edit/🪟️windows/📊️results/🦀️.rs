@@ -27,7 +27,7 @@ use semio_ui_contract::HasStackLayout;
 use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::Fem3dLabels;
 use std::collections::HashMap;
 
-pub use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::{Fem3dResultRequest, Fem3dResultSource};
+pub use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::{Fem3dPageVisualLease, Fem3dResultRequest, Fem3dResultSource};
 
 /// 🎯️ Resolves the displayed source and mode against the admitted document.
 pub fn result_request(doc: &Fem3dSnapshot, source: Option<&str>, mode: Option<usize>) -> Result<Fem3dResultRequest, &'static str> {
@@ -312,10 +312,12 @@ pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: 
             let mut values = HashMap::with_capacity(fields.len());
             let mut stresses = HashMap::with_capacity(fields.len());
             let mut eigenvalue: f64 = 0.0;
+            let mut mode_resolved = false;
             for index in 0..fields.len() {
                 let Some(id) = fields.node_id(index) else { continue };
                 let values_of_node = if display.mode.uses_mode_shape() {
                     let Some((components, eigen)) = fields.mode_values(index) else { continue };
+                    mode_resolved = true;
                     eigenvalue = eigenvalue.max(eigen);
                     components
                 } else {
@@ -325,8 +327,14 @@ pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: 
                 values.insert(id.to_owned(), values_of_node);
                 if let Some(stress) = fields.stress(index) { stresses.insert(id.to_owned(), stress); }
             }
+            if display.mode.uses_mode_shape() && !mode_resolved {
+                return render_pending(doc, cfg, interaction, operation, authority, live, labels, locale);
+            }
             let scale = if display.mode.uses_mode_shape() { normalize_mode_shape(&mut values); mode_shape_scale(doc, cfg.animation.amplitude()) } else { doc.analysis.deformation_scale * cfg.animation.amplitude() };
+            let unavailable = display.mode.uses_mode_shape() && eigenvalue <= 0.0;
             let mut caption = match display.mode {
+                DisplayMode::Modal(index) if unavailable => format!("{} {}: {}{}", labels.mode_shape.as_str(), index + 1, labels.mode_unavailable.as_str(), playback_caption(&cfg.animation, labels)),
+                DisplayMode::Buckling(index) if unavailable => format!("{} {}: {}{}", labels.buckling_mode.as_str(), index + 1, labels.buckling_unavailable.as_str(), playback_caption(&cfg.animation, labels)),
                 DisplayMode::Modal(index) => format!("{} {}: {:.3} Hz{}", labels.mode_shape.as_str(), index + 1, display.mode.display_eigenvalue(eigenvalue).ok_or_else(||semio_plugin::PluginAssemblyError::new("fem3d.results-display","result display mode has no eigenvalue"))?, playback_caption(&cfg.animation, labels)),
                 DisplayMode::Buckling(index) => format!("{} {}: {} {:.3}{}", labels.buckling_mode.as_str(), index + 1, labels.factor.as_str(), display.mode.display_eigenvalue(eigenvalue).ok_or_else(||semio_plugin::PluginAssemblyError::new("fem3d.results-display","result display mode has no eigenvalue"))?, playback_caption(&cfg.animation, labels)),
                 DisplayMode::Static => format!("{}: {}{}", labels.case_caption.as_str(), display.source_id.as_deref().and_then(|identity| semio_s_fem_analyses_model::borrow_result_source_identity(identity).ok()).map(|source| source.id).or_else(|| doc.load_cases.first().map(|case| case.id.as_str())).unwrap_or("∅"), playback_caption(&cfg.animation, labels)),

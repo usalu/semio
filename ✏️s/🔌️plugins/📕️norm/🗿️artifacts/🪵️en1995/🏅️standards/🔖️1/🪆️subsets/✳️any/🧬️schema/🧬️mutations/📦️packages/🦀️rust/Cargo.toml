@@ -21,16 +21,11 @@ path = "../../🧪️tests/🔬️vectors/🦀️.rs"
 
 [dependencies]
 serde = { workspace = true, optional = true }
-semio-s-artifact-norm-en1995-mutations-proto = { workspace = true }
-semio-s-artifact-norm-en1995-mutations-json-schema = { workspace = true }
-semio-s-artifact-norm-en1995-mutations-graphql = { workspace = true }
-semio-s-artifact-norm-en1995-mutations-typescript = { workspace = true }
 semio-os-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-os-kernel = { workspace = true }
 semio-os-store-one-item = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema = { workspace = true }
-semio-framework-schema-registry = { workspace = true }
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
@@ -68,7 +63,6 @@ semio-s-artifact-norm-en1995-mut-joint-actions = { workspace = true }
 semio-s-artifact-norm-en1995-mut-members = { workspace = true }
 semio-s-artifact-norm-en1995-mut-plates = { workspace = true }
 semio-s-artifact-norm-en1995-mut-stability = { workspace = true }
-semio-s-plugin-norm-app-surface = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 
 [features]

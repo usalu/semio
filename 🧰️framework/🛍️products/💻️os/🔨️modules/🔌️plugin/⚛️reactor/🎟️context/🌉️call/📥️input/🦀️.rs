@@ -2,57 +2,20 @@
 use semio_framework_job::{OriginalCallerReturnPlace,OriginalSourceBinding,OriginalTurnFailure,StepContext};
 use semio_framework_job_native_decode::{OriginalNativeDecodeOutcome,OriginalNativeDecodePolicy};
 use semio_framework_pack_json::JsonReadLimits;
-pub use semio_framework_pack_json_output_receiving::OriginalJsonOutputFailure;
+pub use semio_plugin_abi::actor_input_receipt::{OriginalActorInputFailureIdentity,OriginalActorInputFailureView,OriginalJsonOutputFailure,retire_step};
 use semio_framework_pack_json_output_receiving::{NativeReceivingFailure,OriginalJsonOutputClose,OriginalJsonOutputOutcome,OriginalJsonOutputSource};
-use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement};
+use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement};
 use semio_plugin_abi::owned_abi::ActorInput;
+use semio_plugin_actor_input_decoder::advance as advance_json;
+use semio_plugin_actor_input_wire::{decode,empty_poll,lifecycle_ack,ordinary_open};
 use std::mem::ManuallyDrop;
 
 #[path="💼️job.rs"]
 mod job_frame;
 
-#[path="🌀️empty-poll.rs"]
-mod empty_poll;
-
-#[path="🚪️ordinary-open.rs"]
-mod ordinary_open;
-#[path="🌀️poll-wire.rs"]
-mod poll_wire;
-#[path="🪪️lifecycle-ack.rs"]
-mod lifecycle_ack;
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum InputAdmission { Pending, Ready, Failed, Closed }
-#[derive(Clone,Copy,Debug,PartialEq,Eq)]
-pub struct OriginalActorInputFailureIdentity{owner:usize,outcome:usize,settlement:usize,binding:OriginalSourceBinding}
-pub struct OriginalActorInputFailureView<'a>{pub identity:OriginalActorInputFailureIdentity,pub outcome:Option<&'a OriginalJsonOutputOutcome>,pub receiving:Option<&'a NativeReceivingFailure>,pub settlement:Option<&'a OriginalNativeDecodeOutcome<RetainedCloneStep>>,pub outcome_refusal:Option<&'a OriginalTurnFailure>,pub settlement_refusal:Option<&'a OriginalTurnFailure>}
-
-fn projection_invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"input failure projection changed its retained branch")}
-impl OriginalActorInputFailureView<'_>{
- fn field(&self,index:usize)->Result<&'static str,ValueError>{[self.outcome.and_then(|v|v.value.as_ref().err()).map(|_|"outcomeValue"),self.outcome_refusal.map(|_|"outcomeReceiving"),self.settlement.and_then(|v|v.value.as_ref().err()).map(|_|"settlementValue"),self.settlement_refusal.map(|_|"settlementReceiving")].into_iter().flatten().nth(index).ok_or_else(projection_invalid)}
-}
-impl semio_framework_job::OriginalDomainProjection for OriginalActorInputFailureView<'_>{
- fn projection_identity(&self)->usize{self.identity.owner}
- fn projection_view(&self,path:&[usize])->Result<semio_framework_job::OriginalDomainView<'_>,ValueError>{
-  let Some((&field,rest))=path.split_first()else{return Ok(semio_framework_job::OriginalDomainView::IntrinsicObject((0..4).filter(|i|self.field(*i).is_ok()).count()))};
-  match self.field(field)?{
-   "outcomeValue"=>match self.outcome.and_then(|v|v.value.as_ref().err()).ok_or_else(projection_invalid)?{OriginalJsonOutputFailure::Refused(error)=>semio_framework_job::project_original_value_error(error,rest),OriginalJsonOutputFailure::Stored(_)=>semio_framework_job::project_original_receiving_primary(self.receiving.ok_or_else(projection_invalid)?.primary(),rest)},
-   "outcomeReceiving"=>semio_framework_job::project_original_turn_failure(self.outcome_refusal.ok_or_else(projection_invalid)?,rest),
-   "settlementValue"=>semio_framework_job::project_original_value_error(self.settlement.and_then(|v|v.value.as_ref().err()).ok_or_else(projection_invalid)?,rest),
-   _=>semio_framework_job::project_original_turn_failure(self.settlement_refusal.ok_or_else(projection_invalid)?,rest)
-  }
- }
- fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{
-  let Some((&field,rest))=path.split_first()else{return self.field(index)};
-  match self.field(field)?{
-   "outcomeValue"=>match self.outcome.and_then(|v|v.value.as_ref().err()).ok_or_else(projection_invalid)?{OriginalJsonOutputFailure::Refused(error)=>semio_framework_job::key_original_value_error(error,rest,index),OriginalJsonOutputFailure::Stored(_)=>semio_framework_job::key_original_receiving_primary(self.receiving.ok_or_else(projection_invalid)?.primary(),rest,index)},
-   "outcomeReceiving"=>semio_framework_job::key_original_turn_failure(self.outcome_refusal.ok_or_else(projection_invalid)?,rest,index),
-   "settlementValue"=>semio_framework_job::key_original_value_error(self.settlement.and_then(|v|v.value.as_ref().err()).ok_or_else(projection_invalid)?,rest,index),
-   _=>semio_framework_job::key_original_turn_failure(self.settlement_refusal.ok_or_else(projection_invalid)?,rest,index)
-  }
- }
-}
-
 /// 🧳️ The caller owns this frame before the decoder borrows an unchanged wire allocation.
 pub struct OriginalActorInputReceiving {
     binding:Option<OriginalSourceBinding>, pointer:usize, length:usize, capture:OriginalCallerReturnPlace,
@@ -70,13 +33,6 @@ pub struct OriginalActorInputReceiving {
     failed:bool, closing:bool, returning:bool, returned:bool,
 }
 
-/// ♻️ Drives one paid retirement step of a retained owner through the caller's own original effect.
-pub fn retire_step<U:semio_framework_value::retirement::RetireOwned>(owner:&mut ControlledRetirement<U>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
-    let grant=cx.retained_grant();let body=grant.maximum_copy_bytes;
-    let Some((poll,_))=cx.with_original_effect(grant,|_,effect|owner.step(body,effect))?else{return Ok(())};
-    let turn=match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn,semio_framework_value::RetainedWorkPoll::Pending{work}=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}};
-    semio_framework_job::receive_original_retained_work(cx,turn)?;Ok(())
-}
 fn input_refusal(error:ValueError)->OriginalJsonOutputOutcome{
     OriginalJsonOutputOutcome{value:Err(OriginalJsonOutputFailure::Refused(error)),progress:Default::default(),work:0,reported_work:0,observed_native_work:0,receiving_refusal:None}
 }
@@ -105,7 +61,7 @@ impl OriginalActorInputReceiving {
         cx.original_source_parent()?.validate_borrowed_context(cx)?;
         let outcome=self.outcome().filter(|raw|raw.value.is_err()||raw.receiving_refusal.is_some());let settlement=self.settlement.as_ref().and_then(ControlledRetirement::original).filter(|raw|raw.value.is_err()||raw.receiving_refusal.is_some());
         if outcome.is_none()&&settlement.is_none(){return Ok(false)}let binding=self.binding.filter(|binding|binding.matches(cx)).ok_or_else(invalid)?;
-        let identity=OriginalActorInputFailureIdentity{owner:self as*const Self as usize,outcome:outcome.map_or(0,|value|value as*const OriginalJsonOutputOutcome as usize),settlement:settlement.map_or(0,|value|value as*const OriginalNativeDecodeOutcome<RetainedCloneStep>as usize),binding};
+        let identity=OriginalActorInputFailureIdentity::capture(self,outcome,settlement,binding);
         if expected.is_some_and(|expected|*expected!=identity){return Err(invalid())}if !charge(cx,true,std::mem::size_of::<OriginalActorInputFailureView<'_>>())?{return Ok(false)}receive(OriginalActorInputFailureView{identity,outcome,receiving:self.decoder.failure(),settlement,outcome_refusal:outcome.and_then(|raw|self.refusal(raw)),settlement_refusal:settlement.and_then(|raw|self.refusal(raw))},cx)?;Ok(true)
     }
     /// 🎫️ Resolves the outcome's receiving ticket through the decoder Source that issued it.
@@ -223,7 +179,7 @@ impl OriginalActorInputReceiving {
             if let Some(owner)=self.job_retirement.as_mut(){
                 if !owner.terminal_is_empty(){
                     if self.decoder.terminal_is_empty(){retire_step(owner,cx)?;}
-                    else {let address=(&mut *self.settlement as *mut Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>) as usize;let bytes=std::mem::size_of::<Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>>();if !cx.with_original_retirement(|cx|self.capture.admit_sized(cx,address,bytes))?{return Ok(InputAdmission::Pending)}if let Some(raw)=cx.with_original_retirement(|cx|self.decoder.close_owned_step(owner,cx))?{self.retain_settlement(raw)?}}
+                    else {let address=(&mut *self.settlement as *mut Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>) as usize;let bytes=std::mem::size_of::<Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>>();if !cx.with_original_retirement(|cx|self.capture.admit_sized(cx,address,bytes))?{return Ok(InputAdmission::Pending)}if let Some(raw)=cx.with_original_retirement(|cx|decode::close_job(&mut self.decoder,owner,cx))?{self.retain_settlement(raw)?}}
                     return Ok(InputAdmission::Pending)
                 }
                 if !charge(cx,true,std::mem::size_of::<Option<ControlledRetirement<semio_framework_actor::OriginalJobSource>>>())?{return Ok(InputAdmission::Pending)}self.job_retirement.take();return Ok(InputAdmission::Pending)
@@ -232,7 +188,7 @@ impl OriginalActorInputReceiving {
             if let Some(owner)=self.retirement.as_mut(){
                 if !owner.terminal_is_empty(){
                     if self.job_frame.is_some()||self.decoder.terminal_is_empty(){retire_step(owner,cx)?;}
-                    else {let address=(&mut *self.settlement as *mut Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>) as usize;let bytes=std::mem::size_of::<Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>>();if !cx.with_original_retirement(|cx|self.capture.admit_sized(cx,address,bytes))?{return Ok(InputAdmission::Pending)}if let Some(raw)=cx.with_original_retirement(|cx|self.decoder.close_owned_step(owner,cx))?{self.retain_settlement(raw)?}}
+                    else {let address=(&mut *self.settlement as *mut Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>) as usize;let bytes=std::mem::size_of::<Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>>();if !cx.with_original_retirement(|cx|self.capture.admit_sized(cx,address,bytes))?{return Ok(InputAdmission::Pending)}if let Some(raw)=cx.with_original_retirement(|cx|decode::close_actor(&mut self.decoder,owner,cx))?{self.retain_settlement(raw)?}}
                     return Ok(InputAdmission::Pending)
                 }
                 if !charge(cx,true,std::mem::size_of::<Option<ControlledRetirement<ActorInput>>>())?{return Ok(InputAdmission::Pending)}self.retirement.take();return Ok(InputAdmission::Pending)
@@ -243,7 +199,7 @@ impl OriginalActorInputReceiving {
         if self.returning{
             let(address,bytes)=self.settlement_destination();let admitted=if self.closing{cx.with_original_retirement(|cx|self.capture.admit_sized(cx,address,bytes))?}else{self.capture.admit_sized(cx,address,bytes)?};if !admitted{return Ok(InputAdmission::Pending)}
             let before=(cx.original_work_units_spent(),cx.retained_progress());
-            let close=if self.closing{cx.with_original_retirement(|cx|self.decoder.close_step(cx))?}else{self.decoder.close_step(cx)?};
+            let close=if self.closing{cx.with_original_retirement(|cx|decode::close(&mut self.decoder,cx))?}else{decode::close(&mut self.decoder,cx)?};
             match close{
                 OriginalJsonOutputClose::Producer(Some(raw))=>self.retain_settlement(raw)?,
                 OriginalJsonOutputClose::Producer(None)=>{},
@@ -283,7 +239,7 @@ impl OriginalActorInputReceiving {
                 return Ok(acknowledgment.err().map(input_refusal))
             }
         }
-        if self.decoder.ready(){self.decoder.take_step(&mut *self.input,cx)}else{self.decoder.receive_step(wire,cx)}
+        advance_json(&mut self.decoder, wire, &mut self.input, cx)
     }
 }
 

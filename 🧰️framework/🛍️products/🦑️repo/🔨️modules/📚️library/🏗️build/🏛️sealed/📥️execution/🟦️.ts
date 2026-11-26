@@ -18,7 +18,7 @@ import{implementationProcessEnvironmentV1}from"../../📥️source/🔏️closur
 async function executeImplementationOnceV1(workspace:string,entry:string,args:readonly string[],original:ScriptInvocation,control:ResourceLeaseControl,environment:Readonly<Record<string,string|undefined>>=process.env):Promise<void>{
  requireIssuedScriptInvocationV1(original);requireIssuedResourceControlInvocationV1(control,original);
  if(implementationModeV1(environment)==="live")return executeCapturedBuildSourceV1(workspace,entry,args,original,control,environment);
- const pin=environment.SEMIO_SEALED_PARTITION_PIN,group=pin&&readPartitionPinV1(workspace,pin),store=sealedEntryOfV1(workspace,entry),pointer=group?.kernels.find(value=>value.entry===entry),text=pointer&&readSealedSnapshotV1(store,pointer),loader=pointer&&readSealedLoaderV1(store,pointer);
+ const pin=environment.SEMIO_SEALED_PARTITION_PIN,group=pin?readPartitionPinV1(workspace,pin):undefined,store=sealedEntryOfV1(workspace,entry),pointer=group?.kernels.find(value=>value.entry===entry),text=pointer&&readSealedSnapshotV1(store,pointer),loader=pointer&&readSealedLoaderV1(store,pointer);
  if(!pointer||text===undefined||loader===undefined)throw Error("Authenticated command partition is unavailable");
  if(!group||group.door.digest!==environment.SEMIO_SEALED_DOOR_DIGEST)throw Error("Authenticated door and command pin disagree");
  profileMarkV1("source.served","sealed:"+pointer.digest.slice(0,12));

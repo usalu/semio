@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:counter-ledger:v1",
+  "title": "Monotonic counters that survive a restart: a cumulative ledger file and per-event counter files / Monotone Zähler, die einen Neustart überleben: eine kumulative Ledger-Datei und Zähldateien je Ereignis",
+  "description": "EN: A process that counts in memory (the remote cache server, the remote execution scheduler) loses its counts at every restart, so a dashboard that samples them sees a drop to zero and can no longer tell a restart from a quiet hour. The ledger file keeps the counts of every earlier run (`groups`, one object of named counts per group) and the process publishes `ledger + this run` as the cumulative count; the file is replaced atomically (a temporary file `<name>.<pid>.tmp` that is renamed, and removed again when the rename fails) at most every `flushMilliseconds` and only when a count changed, a temporary file of a process that is gone or older than `temporaryMaximumAgeMilliseconds` is retired at the next open. `restarts` counts the opens, `sinceMs` is the time of the first open, so a rate over any two samples is the difference of the cumulative counts. A process that counts per event on a machine shared by many processes (the local cache hits) appends one byte to the file of the event (`<directory>/<event>`), which POSIX makes atomic across processes; the size of the file is the count, the file `since` holds the time of the first count in milliseconds. DE: Ein Prozess, der im Speicher zählt (der Remote-Cache-Server, der Remote-Execution-Scheduler), verliert seine Zählung bei jedem Neustart; ein Dashboard, das sie abtastet, sieht einen Einbruch auf null und kann einen Neustart nicht mehr von einer ruhigen Stunde unterscheiden. Die Ledger-Datei bewahrt die Zählungen aller früheren Läufe (`groups`, je Gruppe ein Objekt benannter Zählungen), und der Prozess veröffentlicht `Ledger + dieser Lauf` als kumulative Zählung; die Datei wird atomar ersetzt (eine temporäre Datei `<name>.<pid>.tmp`, die umbenannt und bei fehlgeschlagener Umbenennung wieder entfernt wird), höchstens alle `flushMilliseconds` und nur, wenn sich eine Zählung änderte; eine temporäre Datei eines beendeten Prozesses oder eine ältere als `temporaryMaximumAgeMilliseconds` wird beim nächsten Öffnen entfernt. `restarts` zählt die Öffnungen, `sinceMs` ist der Zeitpunkt der ersten Öffnung, eine Rate über zwei Messungen ist also die Differenz der kumulativen Zählungen. Ein Prozess, der je Ereignis auf einer von vielen Prozessen geteilten Maschine zählt (die lokalen Cache-Treffer), hängt ein Byte an die Datei des Ereignisses (`<Verzeichnis>/<Ereignis>`), was POSIX über Prozesse hinweg atomar macht; die Dateigröße ist die Zählung, die Datei `since` hält den Zeitpunkt der ersten Zählung in Millisekunden.",
+  "definitions": {
+    "Policy": {"const": {"version": 1, "flushMilliseconds": 5000, "temporaryMaximumAgeMilliseconds": 3600000, "sinceFile": "since", "temporaryPattern": "^(.+)\\.([0-9]+)\\.tmp$"}},
+    "Name": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
+    "Counts": {"type": "object", "propertyNames": {"$ref": "#/definitions/Name"}, "additionalProperties": {"type": "integer", "minimum": 0}},
+    "Ledger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "name", "sinceMs", "updatedMs", "restarts", "groups"],
+      "properties": {
+        "version": {"const": 1},
+        "name": {"$ref": "#/definitions/Name"},
+        "sinceMs": {"type": "integer", "minimum": 0},
+        "updatedMs": {"type": "integer", "minimum": 0},
+        "restarts": {"type": "integer", "minimum": 1},
+        "groups": {"type": "object", "propertyNames": {"$ref": "#/definitions/Name"}, "additionalProperties": {"$ref": "#/definitions/Counts"}}
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "runs", "total", "restarts"],
+      "properties": {
+        "name": {"type": "string"},
+        "runs": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["groups"], "properties": {"groups": {"type": "object", "additionalProperties": {"type": "object", "additionalProperties": {"type": "number"}}}}}},
+        "total": {"type": "object", "additionalProperties": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}}},
+        "restarts": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

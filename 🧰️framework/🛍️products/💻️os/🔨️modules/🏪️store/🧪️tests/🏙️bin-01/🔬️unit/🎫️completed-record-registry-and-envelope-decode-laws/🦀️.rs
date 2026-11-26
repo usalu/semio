@@ -125,28 +125,27 @@ fn artifact_envelope_decode_withholds_success_until_field_and_page_owners_are_te
         Box::new(TestEnvelopeFieldDecoder { terminal: false, accepted: 0 }),
     )
     .unwrap_or_else(|_| panic!("fixed field decoder admission"));
-    let mut preview_sequence = 0;
+    let mut caller = OriginalEnvelopeCaller::admit_cleanup("failed-field");
+    caller.caller.renew_each_turn(4, 8192);
     let mut detached = None;
     for turn in 0..1_000 {
         drive_test_envelope_field_return(&registry, &mut detached);
-        let mut original_retained_progress_5=semio_framework_value::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(
-            semio_framework_job::OperationId(91),
-            semio_framework_job::Generation(7),
-            semio_framework_job::StepBudget::new(4, u64::MAX, schema_test_close_grant()),
-            semio_framework_job::root_cancel_token(),
-            semio_framework_job::default_now_us,
-            &mut preview_sequence,
-         &mut original_retained_progress_5);
-        match job.step_original(&mut context).expect("original decoder outcome admission") {
-            None | Some(semio_framework_job::JobOutcomeBorrow::Yield { .. }) => assert!(!job.terminal_is_empty() || registry.terminal_is_empty(), "a yielded decode retains exact owner authority until its funded outcome turn"),
+        let complete = caller.caller.turn(schema_test_close_grant(), |context| match job.step_original(context)? {
+            None | Some(semio_framework_job::JobOutcomeBorrow::Yield { .. }) => {
+                assert!(!job.terminal_is_empty() || registry.terminal_is_empty(), "a yielded decode retains exact owner authority until its funded outcome turn");
+                Ok(false)
+            }
             Some(semio_framework_job::JobOutcomeBorrow::Complete { state: None, output: None, .. }) => {
                 assert!(job.terminal_is_empty(), "success is exposed only after exact field and page terminal witnesses");
                 assert!(registry.terminal_is_empty(), "successful decode reclaimed its exact registered field owner");
                 assert!(turn > 1, "decode and close span multiple bounded turns");
-                return;
+                Ok(true)
             }
             outcome => panic!("valid envelope decode produced {outcome:?}"),
+        }).expect("original decoder outcome admission");
+        if complete {
+            caller.retire(envelope_field_close_grant());
+            return;
         }
     }
     panic!("valid envelope decode did not terminate");
@@ -164,30 +163,28 @@ fn cancelled_and_rejected_envelope_decodes_close_one_exact_owner_per_grant() {
         Box::new(TestEnvelopeFieldDecoder { terminal: false, accepted: 0 }),
     )
     .unwrap_or_else(|_| panic!("fixed cancelled decoder admission"));
-    let cancel = semio_framework_job::root_cancel_token();
-    cancel.cancel_now();
-    let mut preview_sequence = 0;
+    let mut caller = OriginalEnvelopeCaller::admit_cleanup("failed-field");
+    caller.caller.renew_each_turn(1, 8192);
+    caller.caller.cancel().cancel_now();
     let mut turns = 0;
     let mut detached = None;
     loop {
         drive_test_envelope_field_return(&registry, &mut detached);
-        let mut original_retained_progress_6=semio_framework_value::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(
-            semio_framework_job::OperationId(91),
-            semio_framework_job::Generation(7),
-            semio_framework_job::StepBudget::new(1, u64::MAX, schema_test_close_grant()),
-            cancel.clone(),
-            semio_framework_job::default_now_us,
-            &mut preview_sequence,
-         &mut original_retained_progress_6);
         turns += 1;
-        match cancelled.step_original(&mut context).expect("original cancelled decoder outcome admission") {
-            None | Some(semio_framework_job::JobOutcomeBorrow::Yield { .. }) => assert!(!cancelled.terminal_is_empty() || registry.terminal_is_empty(), "a cancelled decode retains exact owner authority until its funded outcome turn"),
-            Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => break,
+        let done = caller.caller.turn(schema_test_close_grant(), |context| match cancelled.step_original(context)? {
+            None | Some(semio_framework_job::JobOutcomeBorrow::Yield { .. }) => {
+                assert!(!cancelled.terminal_is_empty() || registry.terminal_is_empty(), "a cancelled decode retains exact owner authority until its funded outcome turn");
+                Ok(false)
+            }
+            Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => Ok(true),
             outcome => panic!("cancelled envelope decode produced {outcome:?}"),
+        }).expect("original cancelled decoder outcome admission");
+        if done {
+            break;
         }
         assert!(turns < 256);
     }
+    caller.retire(envelope_field_close_grant());
     assert!(cancelled.terminal_is_empty());
     assert!(registry.terminal_is_empty());
     assert!(turns >= 5, "field authority, two pages, and terminal shells require distinct grants");
@@ -205,7 +202,7 @@ fn cancelled_and_rejected_envelope_decodes_close_one_exact_owner_per_grant() {
     let mut detached = None;
     while !rejected.terminal_is_empty() {
         drive_test_envelope_field_return(&registry, &mut detached);
-        let step = envelope_close_turn(envelope_field_close_grant(), |effect| ErasedSnapshotRetirement::close_step(&mut rejected, effect)).result.expect("retained decode rejection closes");
+        let step = envelope_close_turn(envelope_field_close_grant(), |effect| ErasedSnapshotRetirement::close_step(&mut rejected, effect.grant().maximum_copy_bytes, effect)).result.expect("retained decode rejection closes");
         assert!(step.progress().fits(envelope_field_close_grant()));
         close_turns += 1;
         assert!(close_turns < 256);
@@ -229,14 +226,14 @@ fn artifact_envelope_public_rejection_preserves_record_lease_ticket_double_retur
     assert_eq!(Arc::as_ptr(&rejected.field_registry), registry_identity);
     assert_eq!(rejected.diagnostic, diagnostic);
     assert!(!registry.ticket_reclaimed(field_ticket));
-    assert_eq!(envelope_close_turn(RetainedCloneGrant::default(), |effect| ErasedSnapshotRetirement::close_step(&mut rejected, effect)).result, Ok(RetainedCloneStep::Progress(Default::default())));
+    assert_eq!(envelope_close_turn(RetainedCloneGrant::default(), |effect| ErasedSnapshotRetirement::close_step(&mut rejected, effect.grant().maximum_copy_bytes, effect)).result, Ok(RetainedCloneStep::Progress(Default::default())));
     assert_eq!(rejected.record.as_ref().map(|record| record.decode_pages().slot_address()), Some(record_identity));
     assert_eq!(rejected.fields.as_ref().map(ArtifactEnvelopeFieldDecoderLease::ticket), Some(field_ticket));
 
     let mut detached = None;
     for _ in 0..256 {
         drive_test_envelope_field_return(&registry, &mut detached);
-        let step = envelope_close_turn(envelope_field_close_grant(), |effect| ErasedSnapshotRetirement::close_step(&mut rejected, effect)).result.expect("public rejection closes one exact owner");
+        let step = envelope_close_turn(envelope_field_close_grant(), |effect| ErasedSnapshotRetirement::close_step(&mut rejected, effect.grant().maximum_copy_bytes, effect)).result.expect("public rejection closes one exact owner");
         assert!(step.progress().fits(envelope_field_close_grant()));
         if rejected.terminal_is_empty() {
             break;

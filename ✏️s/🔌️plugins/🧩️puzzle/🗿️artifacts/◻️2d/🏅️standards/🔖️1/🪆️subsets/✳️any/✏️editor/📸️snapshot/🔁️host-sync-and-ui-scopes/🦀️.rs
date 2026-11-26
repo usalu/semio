@@ -8,7 +8,10 @@ use semio_os_infinite_board_normal_gestures::set_transform_flags;
 /// every node/handle/edge plus the kind-catalog/kind-compat re-push. Only needed when the snapshot
 /// content actually changed — gated by `last_synced_fixture` in `handle`.
 pub fn sync_host_fixture_content(host: &mut BoardHost, envelope: &Puzzle2dScene) {
-    let _ = {let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&envelope.board_snapshot.to_string(),&mut control)};
+    let snapshot_json = puzzle2d_board_snapshot_json(&envelope.board_snapshot);
+    let mut accepted = |_| true;
+    let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64 * 1024 * 1024, &mut accepted);
+    let _ = semio_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox, &snapshot_json, &mut control);
     if let Some(json) = board_kind_catalogs_json_or_inferred(&envelope.board_snapshot) {
         let _ = host.style.set_board_kind_catalogs_from_json(&json);
     }

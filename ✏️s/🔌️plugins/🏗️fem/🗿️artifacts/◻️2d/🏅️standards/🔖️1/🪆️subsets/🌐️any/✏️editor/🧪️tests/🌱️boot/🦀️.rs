@@ -9,17 +9,17 @@ use semio_plugin::artifact_app_laws::{
     fixture_identity, fixture_mounted_policy, fixture_renew_turn, load_document, meta, new_app_with_registry_boxed,
     settle_framework_reserved_admission, settle_registered_typed_operation,
 };
-use semio_plugin::{App, ArtifactEditor, EditorApp, Effect, PluginApp, ViewModel, ViewWindowInstance};
-use semio_s_artifact_fem_2d_editor::editor::fem2d::{Fem2dPlayApp, create_fem2d_app};
+use semio_plugin::{ArtifactEditor, EditorApp, Effect, PluginApp, ViewModel, ViewWindowInstance};
+use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dPlayApp;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model;
 use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::{
     io::text::snapshot::FEM2D_EXAMPLE_TEXT, schema::snapshot::Fem2dSnapshot,
 };
 
-fn manifest() -> App {
-    App { definition: create_fem2d_app(), examples: Vec::new() }
-}
+#[path = "../🚀️initialized-manifest/🦀️.rs"]
+mod initialized_manifest;
+use initialized_manifest::manifest;
 
 /// 🌱️ A new registered editor mounts the bundled example geometry.
 #[semio_framework_async_macros::async_test]

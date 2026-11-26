@@ -1,4 +1,4 @@
-//! 📤️ `exportModel` delivers IFC2x3, IFC4, GLB, SVG, CSV and BCF files through the shell.
+//! 📤️ `exportModel` delivers IFC2x3, IFC4, gbXML, GLB, SVG, CSV and BCF files through the shell.
 //! [`ModelExportWork`] borrows the mounted view's exact inference and yields between IFC
 //! families. BCF carries the authored issues. [`ExportJob`] computes inference in reference
 //! steps, and [`handle`] writes the same file through the synchronous command path.
@@ -23,10 +23,16 @@ use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork,
 use semio_plugin::{ArtifactView, ConfigView, Effect, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
+#[path = "🌿️gbxml/🦀️.rs"]
+mod gbxml_work;
+pub use gbxml_work::GbxmlExportWork;
+
 /// 🧾️ Model and issue export formats used by the editor chrome.
-pub const FORMATS: &[&str] = &["ifc2x3", "ifc4", "glb", "svg", "csv", "bcf"];
+pub const FORMATS: &[&str] = &["ifc2x3", "ifc4", "gbxml", "glb", "svg", "csv", "bcf"];
 /// ⏩️ Graph nodes one job step may finish.
 pub const NODES_PER_STEP: usize = 256;
+/// 📏️ The maximum original export substeps in a worker turn.
+pub const MOUNTED_WORK_UNITS: u64 = 64;
 /// 🗣️ The progress text of the inference stage, English and German.
 pub const INFER_PREVIEW: &[u8] = br#"{"en":"Analysing the model","de":"Modell wird analysiert"}"#;
 /// 🗣️ The progress text of the writing stage, English and German.
@@ -99,6 +105,7 @@ pub fn encode(format: &str, model: &ModelSnapshot, inferred: &ModelInference) ->
             let (document, _) = semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::inferred_to_part21(schema_of(format).unwrap_or(Schema::Ifc2x3), model, inferred);
             return document_output(format, &stem, document);
         }
+        "gbxml" => ("gbxml", "application/xml", semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::export::gbxml::inferred_to_gbxml(model, inferred).map_err(|error| failed(format, error))?.0, None),
         "glb" => {
             let (scene, _) = semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::gltf::scene::build(model, inferred);
             let bytes = scene.to_glb().map_err(|error| failed(format, error))?;

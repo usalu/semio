@@ -39,6 +39,7 @@ test("actual framework routes keep exact registry and original configuration/imp
  expect(toolJobFrameworkReservedRoutesExact(replace(source,"self.dispatch_action_received(action,&mut source,meta,identity,cx).await","Ok(None)"))).toBe(false);
  expect(toolJobFrameworkReservedRoutesExact(replace(source,"pending_configuration_source.is_some_and(|source|!source.matches(cx))","false"))).toBe(false);
  expect(toolJobFrameworkReservedRoutesExact(replace(source,"*source!=(cx.operation(),cx.generation(),parent)","false"))).toBe(false);
+ expect(toolJobFrameworkReservedRoutesExact(replace(source,"render.prepare_reserved_media_cache(cx).await?","true"))).toBe(false);
  expect(toolJobFrameworkReservedRoutesExact(replace(source,"Self::media_donation_funded(cx)","true"))).toBe(false);
  expect(toolJobFrameworkReservedRoutesExact(replace(source,"self.prepare_reserved_wire_admission(cx)","Ok(true)"))).toBe(false);
  expect(toolJobFrameworkReservedRoutesExact(replace(source,"if permit.is_cancelled().await { return Err(Fault::new","if false { return Err(Fault::new"))).toBe(false);

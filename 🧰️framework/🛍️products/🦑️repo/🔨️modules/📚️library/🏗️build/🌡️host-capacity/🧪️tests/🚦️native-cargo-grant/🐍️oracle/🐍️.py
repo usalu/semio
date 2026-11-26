@@ -1,4 +1,4 @@
-"""🚦️ Independent Python oracle of one native cargo admission (standard library only): the request a cargo run is sized to, and the verdict, jobs and reason the machine-wide gate gives it on a host with no other grant and no other waiter. Reads {"policy": hostCapacity policy, "cases": [...]} as JSON on stdin and prints one {"verdict","jobs","reason"} per case."""
+"""🚦️ Independent Python oracle of one native cargo admission (standard library only): the request a cargo run is sized to, and the verdict, jobs and reason the machine-wide gate gives it on a host with no other grant and no other waiter; the memory kept for the interactive apps comes off the budget beside the floor. Reads {"policy": hostCapacity policy, "cases": [...]} as JSON on stdin and prints one {"verdict","jobs","reason"} per case."""
 import json
 import sys
 
@@ -7,6 +7,12 @@ def floor_megabytes(policy, total):
     memory = policy["memory"]
     share = total * memory["floorBasisPoints"] // 10000
     return min(total, max(memory["floorMinimumMegabytes"], min(memory["floorMaximumMegabytes"], share)))
+
+
+def interactive_reserve_megabytes(policy, total):
+    memory = policy["memory"]
+    share = total * memory["interactiveReserveBasisPoints"] // 10000
+    return min(total, max(memory["interactiveReserveMinimumMegabytes"], min(memory["interactiveReserveMaximumMegabytes"], share)))
 
 
 def request(policy, total, preferred):
@@ -50,7 +56,8 @@ def decide(policy, case):
     asked = request(policy, total, case["preferredJobs"])
     floor = floor_megabytes(policy, total)
     capacity = max(0, total - floor)
-    room = min(host["availableMegabytes"] - floor, capacity * policy["memory"]["budgetBasisPoints"] // 10000)
+    share = max(0, capacity - interactive_reserve_megabytes(policy, total))
+    room = min(host["availableMegabytes"] - floor, share * policy["memory"]["budgetBasisPoints"] // 10000)
     ceiling = policy["load"]["perCoreCeiling"] * host["cores"]
     load_room = float("inf") if host["load"] is None else ceiling - host["load"]
 

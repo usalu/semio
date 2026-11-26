@@ -175,6 +175,21 @@
         }
       ]
     },
+    {
+      "operation": "typecheck",
+      "kind": "execute",
+      "bind": { "--json": true },
+      "positional": [
+        {
+          "name": "files",
+          "argv": true,
+          "description": {
+            "en": "Source files or folders as an array of paths, relative to the checkout or absolute; they and the files that import them are type-checked incrementally in seconds without reading the project graph, and each touched .d.mts is compared with its .mjs (the result lists the errors, the declaration drifts and the totals).",
+            "de": "Quelldateien oder Ordner als Array von Pfaden, relativ zum Checkout oder absolut; sie und die Dateien, die sie importieren, werden inkrementell in Sekunden ohne den Projektgraphen auf Typen geprüft, und jede berührte .d.mts wird mit ihrer .mjs verglichen (das Ergebnis führt die Fehler, die Deklarationsabweichungen und die Summen auf)."
+          }
+        }
+      ]
+    },
     { "operation": "preflight", "kind": "query" },
     { "operation": "leases", "subcommand": "status", "kind": "query", "bind": { "--json": true } },
     { "operation": "capacity", "subcommand": "status", "kind": "query", "bind": { "--json": true } },

@@ -22,7 +22,19 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::paged::PagedUtf8;
 use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
 
-fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 128), 1 => RetainedCloneGrant::one_payload_turn(4096, 128), _ => RetainedCloneGrant::one_release_turn(4096, 128) } }
+fn exact(demand:semio_framework_value::RetirementDemand)->RetainedCloneGrant {
+    assert!(demand.copy_bytes+demand.capacity_bytes+demand.release_bytes<=4096,"{demand:?}");
+    RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:demand.copy_bytes, maximum_capacity_bytes:demand.capacity_bytes, maximum_release_bytes:demand.release_bytes, maximum_depth:demand.depth }
+}
+
+fn grant(cursor:&Puzzle2dDeleteNodeCandidateCursor,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,turn:usize)->RetainedCloneGrant {
+    match turn%4 {
+        0=>RetainedCloneGrant::one_capacity_turn(4096,128),
+        1=>RetainedCloneGrant::one_payload_turn(4096,128),
+        2=>RetainedCloneGrant::one_release_turn(4096,128),
+        _=>cursor.advance_test_demand(source,4096).unwrap().map_or_else(||RetainedCloneGrant::one_payload_turn(4096,128),exact),
+    }
+}
 
 fn observed(permit: RetainedCloneGrant, action: impl FnOnce() -> Result<RetainedCloneStep, ValueError>) -> RetainedCloneStep {
     let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(action);
@@ -46,9 +58,10 @@ fn retire(snapshot: Puzzle2dSnapshot) {
     let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| ControlledRetirement::new(snapshot));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     let mut owner = match result { Ok(owner) => owner, Err((error, _)) => panic!("{error:?}") };
-    for turn in 0..1_000_000 {
+    for _ in 0..1_000_000 {
         if owner.terminal_is_empty() { let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));return; }
-        let permit = grant(turn);observed(permit, || test_source_custody::close_turn(permit, |effect| owner.step(4096, effect)));
+        let permit=exact(owner.selected_demand(4096).unwrap());
+        observed(permit, || test_source_custody::close_turn(permit, |effect| owner.step(4096, effect)));
     }
     panic!("returned deletion snapshot did not retire its native pages");
 }
@@ -72,8 +85,8 @@ fn history_edit_puzzle2d_native_delete_candidate_preserves_first_ids_refusal_and
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(observed(RetainedCloneGrant::default(), || test_source_custody::run(RetainedCloneGrant::default(), |effect| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect))).progress(), RetainedCloneProgress::default());
         let mut complete = false;
-        for turn in 0..1_000_000 { let permit = grant(turn);if matches!(observed(permit, || test_source_custody::run(permit, |effect| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect))), RetainedCloneStep::Complete(_)) { complete = true;break; } }
-        assert!(complete);
+        for turn in 0..1_000_000 { let permit=grant(&cursor,source.borrow(&snapshot),turn);if matches!(observed(permit, || test_source_custody::run(permit, |effect| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect))), RetainedCloneStep::Complete(_)) { complete = true;break; } }
+        assert!(complete,"delete candidate did not complete for {} at phase {}",case["id"],cursor.phase);
         let result = cursor.take().unwrap();assert!(cursor.take().is_none());
         let status = case["status"].as_str().unwrap_or(if case["node"].is_null() { "unchanged" } else { "changed" });
         assert_eq!(result.disposition, match status { "changed" => Puzzle2dDeleteNodeDisposition::Changed, "refused" => Puzzle2dDeleteNodeDisposition::DuplicateRemovalTarget, _ => Puzzle2dDeleteNodeDisposition::Missing });
@@ -90,18 +103,20 @@ fn history_edit_puzzle2d_native_delete_candidate_preserves_first_ids_refusal_and
         if let Some(candidate) = result.snapshot { retire(candidate); }
         for pause in [0, 1, 3, 11, 97, 257, 1021] {
             let mut cancelled = Puzzle2dDeleteNodeCandidateCursor::default();
-            for turn in 0..pause { let permit = grant(turn);if matches!(observed(permit, || test_source_custody::run(permit, |effect| cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect))), RetainedCloneStep::Complete(_)) { break; } }
+            for turn in 0..pause { let permit=grant(&cancelled,source.borrow(&snapshot),turn);if matches!(observed(permit, || test_source_custody::run(permit, |effect| cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect))), RetainedCloneStep::Complete(_)) { break; } }
             close(&mut cancelled);assert!(cancelled.take().is_none());
         }
         if case["id"] == "large-prefix" || case["id"] == "both-endpoints" {
             for phase in [10, 14, 18] {
                 let mut cancelled = Puzzle2dDeleteNodeCandidateCursor::default();let mut reached = false;
-                for turn in 0..1_000_000 { let active = cancelled.phase == phase;let permit = grant(turn);let step = observed(permit, || test_source_custody::run(permit, |effect| cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect)));if active && step.progress().copied_bytes > 0 { reached = true;break; }assert!(!matches!(step, RetainedCloneStep::Complete(_))); }
+                for turn in 0..1_000_000 { let active = cancelled.phase == phase;let permit=grant(&cancelled,source.borrow(&snapshot),turn);let step = observed(permit, || test_source_custody::run(permit, |effect| cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect)));if active && step.progress().copied_bytes > 0 { reached = true;break; }assert!(!matches!(step, RetainedCloneStep::Complete(_))); }
                 assert!(reached);close(&mut cancelled);
             }
         }
-        let mut swapped = Puzzle2dDeleteNodeCandidateCursor::default();observed(grant(1), || test_source_custody::run(grant(1), |effect| swapped.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect)));
-        let other = payload.clone();assert!(test_source_custody::run(grant(1), |effect| swapped.advance(source.borrow(&snapshot), mutation.borrow(&other), 4096, effect)).is_err());close(&mut swapped);
+        let mut swapped = Puzzle2dDeleteNodeCandidateCursor::default();
+        let permit=RetainedCloneGrant::one_payload_turn(4096,128);
+        for _ in 0..2 { assert_eq!(observed(permit,||test_source_custody::run(permit,|effect|swapped.advance(source.borrow(&snapshot),mutation.borrow(&payload),4096,effect))).progress().copied_items,1); }
+        let other = payload.clone();assert!(test_source_custody::run(permit, |effect| swapped.advance(source.borrow(&snapshot), mutation.borrow(&other), 4096, effect)).is_err());close(&mut swapped);
         assert_eq!(serde_json::to_value(&snapshot).unwrap(), original);assert_eq!(serde_json::to_value(&payload).unwrap(), original_payload);
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(cursor));assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);

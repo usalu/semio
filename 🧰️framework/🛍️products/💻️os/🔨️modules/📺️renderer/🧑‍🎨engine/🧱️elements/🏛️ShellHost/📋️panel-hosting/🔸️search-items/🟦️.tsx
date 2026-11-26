@@ -11,7 +11,7 @@ import { type UISearchItem } from "../../../🔎️ShellSearch/🟦️.tsx";
 import type { useBrandState } from "../🔶️brand/🟦️.tsx";
 
 /** 🔹 Builds searchItems of usePanelHosting. */
-export function useSearchItems({ session, appLabelsOverlay, uiTerminology, uiLocale, onAction, dispatch, resolvedCommands, mobile, onCommand, hostMode, panel, spacePrograms, loadedPlugins, spawnProgram, hostControllerId, activeWindowId }: Pick<ReturnType<typeof useBrandState>, "session" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "onAction" | "dispatch" | "resolvedCommands" | "mobile" | "onCommand" | "hostMode" | "panel" | "spacePrograms" | "loadedPlugins" | "spawnProgram" | "hostControllerId" | "activeWindowId">) {
+export function useSearchItems({ session, appLabelsOverlay, uiTerminology, uiLocale, onAction, dispatch, resolvedCommands, mobile, onCommand, hostMode, panel, spacePrograms, loadedPlugins, spawnProgram, hostControllerId, activeWindowId, handleTemplateDrop, mountedWindowIdsRef }: { readonly handleTemplateDrop: (payload: { readonly windowKindId: string; readonly templateId?: string }, target: { readonly kind: "rootSplit"; readonly side: "left" | "right" | "top" | "bottom" }) => void; readonly mountedWindowIdsRef: { readonly current: ReadonlySet<string> | readonly string[] } } & Pick<ReturnType<typeof useBrandState>, "session" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "onAction" | "dispatch" | "resolvedCommands" | "mobile" | "onCommand" | "hostMode" | "panel" | "spacePrograms" | "loadedPlugins" | "spawnProgram" | "hostControllerId" | "activeWindowId">) {
   const searchItems = useMemo(() => {
     if (!session) return [];
     const items: UISearchItem[] = [];
@@ -31,7 +31,11 @@ export function useSearchItems({ session, appLabelsOverlay, uiTerminology, uiLoc
         label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label as LocalizedLabel | string, uiTerminology, uiLocale)),
         category: shellLabel("ui.search.category.windows"),
         icon: <Icon icon="app-window" size="small" />,
-        onSelect: () => dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: kind.id }),
+        onSelect: () => {
+          const mounted = [...mountedWindowIdsRef.current];
+          if (mounted.some((id) => id === kind.id || id.startsWith(`${kind.id}-`))) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: kind.id });
+          else handleTemplateDrop({ windowKindId: kind.id }, { kind: "rootSplit", side: "right" });
+        },
       });
     }
     for (const { definition, address } of resolvedCommands) {

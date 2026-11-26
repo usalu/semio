@@ -20,7 +20,7 @@ test("Cargo preparation retries changed reads and refuses conflicting output wri
         const cancelled = new Error("fixture cancelled");
         const phase = {
           leaseControl: control, signal: control.signal, advance: async () => { if (row.effect === "cancel") stop.abort(cancelled); },
-          childBudget: () => 5000, childOptions: () => ({}),
+          childBudget: () => 5000, childOptions: () => ({ signal: control.signal, output: { maximumBytes: 8192, maximumLines: 32 } }),
         };
         const input = row.input === "directory" ? { ...changed, path: dirname(path), kind: "directory" as const } : changed;
         const observed = row.effect === "vanished" ? { ...input, path: path + ".absent" } : input;

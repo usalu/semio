@@ -122,6 +122,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/mutation/splice-scene-rows/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/mutation/splice-scene-row-batch/schema.json"
     }
   ]
 }

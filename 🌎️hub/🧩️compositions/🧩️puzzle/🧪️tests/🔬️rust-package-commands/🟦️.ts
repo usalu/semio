@@ -1,6 +1,6 @@
 import { resolveTestLevel } from "@semio-tech/process/test-budget";
-import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { join, relative } from "node:path";
 import { runVitest } from "@semio-tech/repo-lib/testing";
 import { BundleScript } from "@semio-tech/process/routing";
 
@@ -12,7 +12,7 @@ export class CanonicalArchitectureScript extends BundleScript {
     const { toolJobPuzzleReservedRoutesExact, toolJobPuzzle2dReservedRoutesExact } = await import("@semio-tech/repo-lib/laws");
     console.log(`puzzle-reserved-route-contributions: checks=${toolJobPuzzleReservedRoutesSelfTests({ toolJobPuzzleReservedRoutesExact, toolJobPuzzle2dReservedRoutesExact })}`);
     resolveTestLevel([], "quick");
-    await runVitest(join(this.repoRoot, "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript"), [], "../../🧪️tests/🎚️renderer-contract/🟦️.ts");
+    await runVitest(join(this.repoRoot, "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript"), [], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -20,60 +20,37 @@ export class CanonicalArchitectureScript extends BundleScript {
 /** 🧬️ One artifact mutation tree: the directory that directly contains the mutation leaves. */
 type ArtifactTarget = { readonly label: string; readonly mutationsRoot: string };
 
-/** 🦠️ The file a mutation leaf declares its payload in, or `null` when the directory is not a leaf.
- * Two shapes are in use and both are canonical: most of the repository (puzzle 2d/3d/5d, gismap,
- * fem2d, cad, block, …) writes it bare at `<leaf>/🦀️.rs`, while `🖍️draw` and several `🗄️stdio`
- * artifacts nest it at `<leaf>/🦠️mutation/🦀️.rs`. Recognising only the nested one is what made this
- * lint walk the whole repository and then report green over every tree using the other — a lint that
- * discovers nothing passes everything. */
-function leafMutationFile(mutationsRoot: string, leaf: string): string | null {
-  return [join(mutationsRoot, leaf, "🦠️mutation/🦀️.rs"), join(mutationsRoot, leaf, "🦀️.rs")].find((candidate) => existsSync(candidate)) ?? null;
+/** 🔍️ Walks source directories without following package links, cache files or test inputs. */
+const excludedDirectories = new Set(["node_modules", "target", "dist", "temp", "storybook-static", "🧪️tests", "🗑️generated", "🤖️generated"]);
+
+function sourceDirectories(path: string): string[] {
+  return readdirSync(path, { withFileTypes: true })
+    .filter(entry => entry.isDirectory() && !entry.name.startsWith(".") && !excludedDirectories.has(entry.name))
+    .map(entry => entry.name);
 }
 
-/** 🔎️ Discovers every mutation tree in the repository — any directory named `🧬️mutations` holding
- * at least one leaf that carries the mutation's own Rust in either canonical shape (see
- * [`leafMutationFile`]). Never a hand-maintained list: a new artifact is in scope the moment it
- * lands. */
+/** 🧬️ Discovers mutation vocabularies from their Rust enum declarations. */
 function discoverArtifacts(repoRoot: string): ArtifactTarget[] {
   const found: ArtifactTarget[] = [];
-  const skip = new Set(["node_modules", "target", ".git", ".nx", "storybook-static", "temp"]);
-  const walk = (dir: string, depth: number): void => {
-    if (depth > 14) return;
-    let entries: string[];
-    try {
-      entries = readdirSync(dir);
-    } catch {
-      return;
-    }
-    for (const entry of entries) {
-      if (skip.has(entry)) continue;
+  const walk = (dir: string): void => {
+    for (const entry of sourceDirectories(dir)) {
       const child = join(dir, entry);
-      let isDir = false;
-      try {
-        isDir = statSync(child).isDirectory();
-      } catch {
-        continue;
-      }
-      if (!isDir) continue;
       if (entry === "🧬️mutations") {
-        const leaves = dirsIn(child).filter((leaf) => leafMutationFile(child, leaf) !== null);
-        if (leaves.length > 0) found.push({ label: child.slice(repoRoot.length + 1), mutationsRoot: child });
-        continue;
+        const target = { label: relative(repoRoot, child), mutationsRoot: child };
+        if (mutationVariants(child).length) found.push(target);
+      } else {
+        walk(child);
       }
-      walk(child, depth + 1);
     }
   };
-  walk(repoRoot, 0);
+  walk(repoRoot);
   return found.sort((left, right) => left.label.localeCompare(right.label));
 }
-
-/** 📛️ Directories under `🧬️mutations/` that are codec facets, not mutations. */
-const NON_MUTATION_DIRS = new Set(["💾️binary", "📝️text"]);
 
 /** 📄️ The source-of-truth files every test case must carry. These are hand-authored and are what
  * the committed Rust test asserts against. `🔺️diff` is replaced by `🔺️diff/🚫️.absent`
  * when `🎯️outcome` declares `rejected` (contract D6). */
-const CORE_CASE_FILES = ["🦠️mutation/🔣️.json", "🔺️diff/🔣️.json", "🎯️outcome/🔣️.json", "🦀️.rs"] as const;
+const CORE_CASE_FILES = ["🦠️mutation/🔣️.json", "🔺️diff/🔣️.json", "🎯️outcome/🔣️.json"] as const;
 
 /** 📄️ The derived encodings contract D1 targets. Produced from the core files by `fixtures
  * generate`, never hand-authored — a hand-forged binary would be a parallel implementation of the
@@ -94,73 +71,77 @@ const SNAPSHOT_REF = "🔗️component.ref.json";
 type Finding = { readonly level: "error" | "warn"; readonly where: string; readonly what: string };
 
 const dirsIn = (path: string): string[] =>
-  existsSync(path) ? readdirSync(path).filter((entry) => statSync(join(path, entry)).isDirectory()) : [];
+  existsSync(path) ? readdirSync(path, { withFileTypes: true }).filter(entry => entry.isDirectory()).map(entry => entry.name) : [];
 
-/** 🧬️ Reads the declared mutation vocabulary from the schema itself — the enum variants and each
- * leaf's `#[dsl(keyword)]` — so coverage is checked against the schema, never against a hand list. */
+function mutationVariants(root: string) {
+  const owners = [root, ...sourceDirectories(root).map(entry => join(root, entry))];
+  return owners.flatMap(owner => {
+    const file = [join(owner, "🦀️.rs"), join(owner, "🦠️mutation", "🦀️.rs")].find(existsSync);
+    if (!file) return [];
+    const source = readFileSync(file, "utf8");
+    return [...source.matchAll(/pub enum \w*Mutation\w* \{([\s\S]*?)\n\}/g)].flatMap(match =>
+      [...match[1].matchAll(/^\s+([A-Z]\w*)\(\s*([\w:]+)/gm)].map(variant => ({ name: variant[1], payload: variant[2].split("::").at(-1)! })));
+  });
+}
+
+/** 🦠️ Finds declared mutation payloads under their domain groups. */
 function declaredMutations(target: ArtifactTarget) {
   const mutationsRoot = target.mutationsRoot;
-  const aggregateFile = join(mutationsRoot, "🦀️.rs");
-  const aggregate = existsSync(aggregateFile) ? readFileSync(aggregateFile, "utf8") : "";
-  const enumSources = [aggregate, ...dirsIn(mutationsRoot).flatMap((entry) => {
-    const candidates = [join(mutationsRoot, entry, "🦠️mutation/🦀️.rs"), join(mutationsRoot, entry, "🦀️.rs")];
-    return candidates.filter((file) => existsSync(file)).map((file) => readFileSync(file, "utf8"));
-  })];
-  const enumBody = enumSources.map((source) => source.match(/pub enum \w*Mutation\w* \{([\s\S]*?)\n\}/)).find(Boolean) ?? null;
-  const allVariantText = enumSources
-    .flatMap((source) => [...source.matchAll(/pub enum \w*Mutation\w* \{([\s\S]*?)\n\}/g)].map((match) => match[1]))
-    .join("\n");
-  const variants = [...allVariantText.matchAll(/^\s+([A-Z][A-Za-z0-9]*)\(\s*([A-Za-z0-9_:]+)/gm)].map((match) => ({
-    name: match[1],
-    payload: (()=>{const payload=match[2]?.split("::").pop();if(payload===undefined)throw new Error("Mutation payload capture missing");return payload;})(),
-  }));
-  void enumBody;
-
-  const leaves = dirsIn(mutationsRoot)
-    .filter((entry) => !NON_MUTATION_DIRS.has(entry))
-    .filter((entry) => leafMutationFile(mutationsRoot, entry) !== null)
-    .map((entry) => {
-      const mutationFile = leafMutationFile(mutationsRoot, entry) as string;
-      const source = readFileSync(mutationFile, "utf8");
-      return {
-        dir: entry,
-        keyword: source.match(/dsl\(keyword = "([^"]+)"\)/)?.[1] ?? null,
-        struct: source.match(/^pub struct ([A-Za-z0-9]+)/m)?.[1] ?? null,
-        path: join(mutationsRoot, entry),
-      };
-    });
-
+  const variants = mutationVariants(mutationsRoot);
+  const names = new Set(variants.map(variant => variant.payload));
+  const leaves: { dir: string; struct: string; path: string }[] = [];
+  const walk = (path: string): void => {
+    for (const entry of sourceDirectories(path)) {
+      const child = join(path, entry);
+      const file = [join(child, "🦠️mutation", "🦀️.rs"), join(child, "🦀️.rs")].find(existsSync);
+      const source = file ? readFileSync(file, "utf8") : "";
+      const payload = [...source.matchAll(/pub struct (\w+)/g)].find(match => names.has(match[1]))?.[1]
+        ?? source.match(/#\[(?:dsl\(keyword|mutation_leaf\()[^\]]*\][\s\S]*?pub struct (\w+)/)?.[1];
+      if (payload) leaves.push({ dir: relative(mutationsRoot, child), struct: payload, path: child });
+      else walk(child);
+    }
+  };
+  walk(mutationsRoot);
   return { mutationsRoot, variants, leaves };
 }
 
 /** ✅️ Enforces contract D1/D6: schema variants == mutation leaves == test subjects, and every test
  * case carries a complete codec set. Returns findings; never throws on a malformed tree. */
-function lintArtifact(target: ArtifactTarget, full: boolean): Finding[] {
+function lintArtifact(target: ArtifactTarget, { variants, leaves }: ReturnType<typeof declaredMutations>, full: boolean): Finding[] {
   const findings: Finding[] = [];
-  const { variants, leaves } = declaredMutations(target);
 
-  const byStruct = new Map(leaves.filter((leaf) => leaf.struct).map((leaf) => [leaf.struct as string, leaf]));
+  const byStruct = new Set(leaves.map(leaf => leaf.struct));
   const referenced = new Set(variants.map((variant) => variant.payload));
   for (const leaf of leaves) {
-    if (leaf.struct && variants.length > 0 && !referenced.has(leaf.struct)) {
+    if (!referenced.has(leaf.struct)) {
       findings.push({ level: "error", where: `${target.label}/${leaf.dir}`, what: `payload ${leaf.struct} is declared but no enum variant wraps it` });
     }
   }
+  for (const variant of variants) {
+    if (!byStruct.has(variant.payload)) findings.push({ level: "error", where: target.label, what: `missing mutation payload ${variant.payload}` });
+  }
+  const fixtures = join(target.mutationsRoot, "..", "..", "🧪️tests", "🧫️fixtures", "🧬️mutations");
   for (const leaf of leaves) {
-    
+    const descriptor = join(leaf.path, "🔣️.json");
+    const outcomes: string[] = (existsSync(descriptor) && JSON.parse(readFileSync(descriptor, "utf8"))?.outcomeClasses) || ["applied", "no-op", "rejected"];
     const cases = dirsIn(join(leaf.path, "🧪️tests"));
     if (cases.length === 0) {
       findings.push({ level: "error", where: `${target.label}/${leaf.dir}`, what: "no 🧪️tests cases — every mutation must be directly tested" });
       continue;
     }
-    for (const testCase of cases) findings.push(...lintCase(join(leaf.path, "🧪️tests", testCase), `${target.label}/${leaf.dir}/${testCase}`, full));
+    for (const testCase of cases) {
+      const label = `${target.label}/${leaf.dir}/${testCase}`;
+      const testDir = join(leaf.path, "🧪️tests", testCase);
+      if (!existsSync(join(testDir, "🦀️.rs"))) findings.push({ level: "error", where: label, what: "missing Rust test" });
+      findings.push(...lintCase(existsSync(fixtures) ? join(fixtures, leaf.dir, testCase) : testDir, label, full, outcomes));
+    }
   }
   return findings;
 }
 
 /** 🧪️ Enforces one test case's file set. `full` also demands the derived encodings (contract D1);
  * without it only the hand-authored source-of-truth set is required and derived gaps are warnings. */
-function lintCase(caseDir: string, label: string, full: boolean): Finding[] {
+function lintCase(caseDir: string, label: string, full: boolean, outcomes: readonly string[]): Finding[] {
   const findings: Finding[] = [];
   const outcomeFile = join(caseDir, "🎯️outcome/🔣️.json");
   let rejected = false;
@@ -168,7 +149,7 @@ function lintCase(caseDir: string, label: string, full: boolean): Finding[] {
     try {
       const outcome = JSON.parse(readFileSync(outcomeFile, "utf8"));
       rejected = outcome.status === "rejected";
-      if (!["applied", "rejected"].includes(outcome.status)) findings.push({ level: "error", where: label, what: `🎯️outcome.status must be "applied" or "rejected", got ${JSON.stringify(outcome.status)}` });
+      if (!outcomes.includes(outcome.status)) findings.push({ level: "error", where: label, what: `🎯️outcome.status must be one of ${outcomes.join(", ")}, got ${JSON.stringify(outcome.status)}` });
       if (rejected && typeof outcome.code !== "string") findings.push({ level: "error", where: label, what: "rejected outcome must carry a machine-readable code" });
     } catch (error) {
       findings.push({ level: "error", where: label, what: `🎯️outcome is not valid JSON: ${(error as Error).message}` });
@@ -235,15 +216,15 @@ export class FixturesScript extends BundleScript {
     }
     const full = segments.includes("--full");
     const targets = discoverArtifacts(this.repoRoot);
-    const findings = targets.flatMap((target) => lintArtifact(target, full));
+    const vocabularies = targets.map(target => ({ target, vocabulary: declaredMutations(target) }));
+    const findings = vocabularies.flatMap(({ target, vocabulary }) => lintArtifact(target, vocabulary, full));
     const errors = findings.filter((finding) => finding.level === "error");
     const warnings = findings.filter((finding) => finding.level === "warn");
 
     let totalLeaves = 0;
     let totalCovered = 0;
     const uncoveredByTree: string[] = [];
-    for (const target of targets) {
-      const { leaves } = declaredMutations(target);
+    for (const { target, vocabulary: { leaves } } of vocabularies) {
       const covered = leaves.filter((leaf) => dirsIn(join(leaf.path, "🧪️tests")).length > 0).length;
       totalLeaves += leaves.length;
       totalCovered += covered;

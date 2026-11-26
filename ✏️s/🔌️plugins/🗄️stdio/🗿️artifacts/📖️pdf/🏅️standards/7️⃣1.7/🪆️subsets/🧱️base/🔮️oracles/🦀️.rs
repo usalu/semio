@@ -1038,6 +1038,30 @@ pub fn reference_navigation(input: &[u8]) -> Result<ReferenceNavigation, String>
     Ok(navigation)
 }
 
+/// 🔗️ Every object the independent reader reaches from `seeds` by following indirect references through dictionaries, arrays and stream dictionaries (the seeds included), as `(number, generation)` pairs.
+pub fn reference_reachable_objects(input: &[u8], seeds: &[(u32, u16)]) -> Result<std::collections::BTreeSet<(u32, u16)>, String> {
+    use lopdf::Object;
+    fn references(object: &Object, found: &mut Vec<(u32, u16)>) {
+        match object {
+            Object::Reference(id) => found.push(*id),
+            Object::Array(items) => items.iter().for_each(|item| references(item, found)),
+            Object::Dictionary(entries) => entries.iter().for_each(|(_, value)| references(value, found)),
+            Object::Stream(stream) => stream.dict.iter().for_each(|(_, value)| references(value, found)),
+            _ => {}
+        }
+    }
+    let document = lopdf::Document::load_mem(input).map_err(|error| error.to_string())?;
+    let mut reached: std::collections::BTreeSet<(u32, u16)> = seeds.iter().copied().collect();
+    let mut pending: Vec<(u32, u16)> = reached.iter().copied().collect();
+    while let Some(id) = pending.pop() {
+        let Ok(object) = document.get_object(id) else { continue };
+        let mut found = Vec::new();
+        references(object, &mut found);
+        for next in found { if reached.insert(next) { pending.push(next); } }
+    }
+    Ok(reached)
+}
+
 /// 🧬️ The image and form XObject objects the independent reader reaches from the pages: through page resources, nested form resources, tiling pattern resources and the appearance streams of annotations; object numbers, ascending.
 pub fn reference_reachable_xobjects(input: &[u8]) -> Result<(Vec<u32>, Vec<u32>), String> {
     use lopdf::{Dictionary, Document, Object};

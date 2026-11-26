@@ -185,16 +185,16 @@ impl BoardFillJob {
         Ok(())
     }
 
-    pub(super) fn publish_prefix(&mut self) -> Result<BoardFillOffer, &'static str> {
+    pub(super) fn publish_prefix(&mut self) -> Result<BoardFillTransition, &'static str> {
         let state = self.state.as_mut().ok_or("missing-fill-state")?;
         if state.accepted_count >= state.max_count {
             state.stage = BoardFillStage::Complete;
-            return Ok(BoardFillOffer::Yield);
+            return Ok(BoardFillTransition::Yield);
         }
         state.stage = BoardFillStage::ResetSources;
         let state = self.state.take().ok_or("missing-fill-state")?;
         self.checkpoint = Some(BoardFillCheckpoint { original_source: self.original_source, operation: self.operation, naming: self.naming, state: Some(state) });
-        Ok(BoardFillOffer::Checkpoint(self.checkpoint.as_ref().map_or(0, |checkpoint| u64::from(checkpoint.accepted_count()))))
+        Ok(BoardFillTransition::Checkpoint(self.checkpoint.as_ref().map_or(0, |checkpoint| u64::from(checkpoint.accepted_count()))))
     }
 }
 //#endregion 🧵️FillJob

@@ -101,7 +101,10 @@ pub async fn pump_fill_run(app: &mut Puzzle3dApp, what: &str, until: impl Fn(&pr
         }
         host_turn(app, 1, &mut settled).await;
     }
-    panic!("{what} never happened within {FILL_RUN_TURNS} host turns; presence {:?}", app.tool_run_presence());
+    let presence = app.tool_run_presence();
+    let (raw, _) = app.parts();
+    let cursors = raw.tool_runs.entries.iter().map(|entry| (&entry.tool_id, entry.slot.state, entry.operations.len(), entry.job.as_ref().and_then(|job| job.origin.outcome()).map(|outcome| outcome.kind()))).collect::<Vec<_>>();
+    panic!("{what} never happened within {FILL_RUN_TURNS} host turns; presence {presence:?}, cursors {cursors:?}");
 }
 
 /// 🚦️ Plays the refresh half of the host for the brush suggestions run: dispatches what `pending_effects`
@@ -123,7 +126,10 @@ pub async fn pump_brush_suggestions(app: &mut Puzzle3dApp, what: &str, until: im
         }
         host_turn(app, 1, &mut settled).await;
     }
-    panic!("{what} never happened within {FILL_RUN_TURNS} host turns; presence {:?}", app.tool_run_presence());
+    let presence = app.tool_run_presence();
+    let (raw, _) = app.parts();
+    let cursors = raw.tool_runs.entries.iter().map(|entry| (&entry.tool_id, entry.slot.state, entry.operations.len(), entry.job.as_ref().and_then(|job| job.origin.outcome()).map(|outcome| outcome.kind()))).collect::<Vec<_>>();
+    panic!("{what} never happened within {FILL_RUN_TURNS} host turns; presence {presence:?}, cursors {cursors:?}");
 }
 
 /// 🔎️ The brush suggestions search settled: a live run has decided every candidate of its target.

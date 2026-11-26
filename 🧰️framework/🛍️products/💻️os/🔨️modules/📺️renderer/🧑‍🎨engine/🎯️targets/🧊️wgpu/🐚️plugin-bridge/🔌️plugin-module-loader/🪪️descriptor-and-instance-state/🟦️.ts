@@ -2,7 +2,7 @@
  *
  * 🧱️ Child module of {@link ../🟦️.ts | loadPluginModule}: each function builds one group of the handle's closure state and helpers and returns them for the later groups. */
 import { fetchPackageDescriptor } from "@semio-tech/framework";
-import { AppChannelClient, AppChannelRequestSequence } from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence } from "@semio-tech/framework/app-channel";
 import { pendingOperationPublications } from "../../🧾️typed-operations-and-handle/🟦️.ts";
 import { componentPackageReceiptSource } from "@semio-tech/framework-plugin/receipt";
 import { contributionManifests, pendingTurnEffects } from "../../🎛️contributions-and-effects/🟦️.ts";

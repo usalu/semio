@@ -4,7 +4,7 @@ extern crate semio_framework_value_derive as value_derive;
 
 #[path = "../../🦀️.rs"]
 mod content_operators;
-pub use content_operators::{PdfInlineImage, PdfLineCap, PdfLineJoin, PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString};
+pub use content_operators::{pdf_content, PdfContent, PdfProgram, PDF_CONTENT_MAXIMUM_OPERATORS, PdfInlineImage, PdfLineCap, PdfLineJoin, PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString};
 
 #[path = "../../../🌈️colour-and-graphics-state/🦀️.rs"]
 mod colour_and_graphics_state;

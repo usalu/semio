@@ -25,7 +25,10 @@ export function indexPartV1(book,id,meta){
  for(const row of meta.outside){const key=rowKeyV1(row),known=book.outside.get(key);if(known===undefined)book.outside.set(key,{row,parts:[number]});else known.parts.push(number);}
 }
 
-/** ✍️ Records the answer of one closure. */
+/** ✍️ Records the answer of one closure.
+ * @param {*} book
+ * @param {string} name
+ * @param {{digest:string;fact:string;length:number;ids:readonly string[];vouch?:unknown}} entry */
 export function recordEntryV1(book,name,{digest,fact,length,ids,vouch}){book.entries.set(name,{digest,fact,length,vouch,bits:bitsOfV1(ids.map(id=>partNumberV1(book,id)))});bump(book,"e"+shardOfV1(name));}
 
 /** 🗑️ Forgets the answer of one closure; whether there was one. */
@@ -136,7 +139,8 @@ function readBundleV1({head,shards}){
 /** 💾️ The manifest of a persisted form: a form of another version, of an inconsistent shape, with a missing shard or whose head or any shard does not match its digest is a miss (an empty manifest), never trusted. */
 export function readManifestV1(bundle){try{return readBundleV1(bundle);}catch{return createManifestV1();}}
 
-/** 💾️ Loads the manifest through `read(subject)` (the head is subject `all`): the head first, then its shards in parallel; anything missing or damaged is a miss. */
+/** 💾️ Loads the manifest through `read(subject)` (the head is subject `all`): the head first, then its shards in parallel; anything missing or damaged is a miss.
+ * @param {(subject:string)=>Promise<*>} read */
 export async function loadManifestV1(read){
  try{
   const head=await read("all");if(head?.version!==4||!Array.isArray(head.shards)||headCheckV1(head)!==head.check)return createManifestV1();

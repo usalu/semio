@@ -1,9 +1,12 @@
 import {platform as osPlatform} from "node:os";
 import {join} from "node:path";
 import type {HostCapacityPolicyV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
-import {remoteExecutionReservedSlotsV1,remoteExecutionPressureGateV1,admitRemoteExecutionActionV1,type RemoteExecutionHeldUnitV1,evaluateRemoteExecutionAdmissionV1,buildRemoteExecutionLoadReportV1,REMOTE_EXECUTION_ADMISSION_POLICY_V1,remoteExecutionActionMegabytesV1,readRemoteExecutionCountersV1,readRemoteExecutionHostViewV1,readRemoteExecutionToolchainV1,remoteExecutionOriginV1,remoteExecutionPlatformIdentityV1,runRemoteExecutionReporterV1,type RemoteExecutionAdmissionV1,type RemoteExecutionHostViewV1,type RemoteExecutionLoadReportV1,type RemoteExecutionReporterEventV1,type RemoteExecutionWorkerStateV1} from "../🌡️load/🟦️.ts";
+import {hostCapacityDirectoryV1,newHostCapacityIdV1,tryHoldHostCapacityV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts";
+import {readHostWardenStateV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts";
+import {remoteExecutionReservedSlotsV1,remoteExecutionPressureGateV1,admitRemoteExecutionActionV1,evaluateRemoteExecutionAdmissionV1,buildRemoteExecutionLoadReportV1,REMOTE_EXECUTION_ADMISSION_POLICY_V1,remoteExecutionActionMegabytesV1,remoteExecutionLoadSaturatedV1,readRemoteExecutionCountersV1,readRemoteExecutionHostViewV1,readRemoteExecutionToolchainV1,remoteExecutionOriginV1,remoteExecutionPlatformIdentityV1,runRemoteExecutionReporterV1,type RemoteExecutionAdmissionV1,type RemoteExecutionHostViewV1,type RemoteExecutionLoadReportV1,type RemoteExecutionReporterEventV1,type RemoteExecutionWorkerStateV1} from "../🌡️load/🟦️.ts";
+import {readReadyStageClaimV1,withReadyStageV1} from "../🌡️load/🪑️stage-claim/🟦️.ts";
 import {remoteExecutionWorkerWhyOfMessageV1,remoteExecutionWorkerWhyV1,type RemoteExecutionWorkerWhyV1} from "../🌡️load/🔎️why/🟦️.ts";
-import {retireRemoteExecutionWorkV1,runRemoteExecutionWorkerV1,type RemoteExecutionThreadsAskV1,type RemoteExecutionUnitAskV1,type RemoteExecutionWorkerEventV1,type RemoteExecutionWorkerOptionsV1} from "../👷️worker/🟦️.ts";
+import {retireRemoteExecutionWorkV1,runRemoteExecutionWorkerV1,type RemoteExecutionReserveV1,type RemoteExecutionThreadsAskV1,type RemoteExecutionUnitAskV1,type RemoteExecutionWorkerEventV1,type RemoteExecutionWorkerOptionsV1} from "../👷️worker/🟦️.ts";
 import {readRemoteExecutionPolicyV1,remoteExecutionHostPropertiesV1,type RemoteExecutionPropertyV1} from "../🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1} from "../../🌡️host-capacity/🎛️control/🟦️.ts";
 import {remoteExecutionCodegenThreadsV1} from "../👷️worker/🧵️codegen/🟦️.ts";
@@ -14,7 +17,7 @@ import {remoteExecutionDiskSlotsV1,remoteExecutionFreeBytesV1,type RemoteExecuti
 export const REMOTE_EXECUTION_COLLECT_INTERVAL_MILLISECONDS_V1=60000;
 
 /** ⚙️ A build agent: the worker and the load reporter of one machine, one process. */
-export type RemoteExecutionAgentOptionsV1=Readonly<Omit<RemoteExecutionWorkerOptionsV1,"admit"|"observe"|"origin"|"capacity"|"properties"|"platform">&{
+export type RemoteExecutionAgentOptionsV1=Readonly<Omit<RemoteExecutionWorkerOptionsV1,"admit"|"reserve"|"observe"|"origin"|"capacity"|"properties"|"platform">&{
  root:string;code?:string;environment?:Readonly<Record<string,string|undefined>>;origin?:string;extraProperties?:readonly RemoteExecutionPropertyV1[];loadIntervalSeconds:number;worker?:boolean;drain?:AbortSignal;onRunning?:(running:number)=>void;why?:RemoteExecutionWorkerWhyV1;retryWorkerSeconds?:number;disk?:RemoteExecutionWorkerDiskV1;collect?:()=>Promise<void>;freeBytes?:()=>number|undefined;hostFreeBytes?:()=>number|undefined;
  view?:()=>Promise<RemoteExecutionHostViewV1>;ready?:()=>boolean;policy?:HostCapacityPolicyV1;now?:()=>number;onReport?:(event:RemoteExecutionReporterEventV1)=>void;
 }>;
@@ -33,22 +36,22 @@ export function drainWhenIdleV1(drain:AbortSignal|undefined,busy:()=>number,done
 /** 🛰️ Runs the build agent of this machine until its signal aborts: it reads the toolchain identity once, offers it (and the operating system and architecture) as worker properties, admits every remote action through the host capacity decision of this machine, and reports its load to the scheduler every `loadIntervalSeconds` as long as it runs, whether or not the worker could join. With `disk` the free space of the work directory and of the checkout (the host volume) is part of every admission: the worker runs as many actions at once as the space allows (none below the reserve) and says `disk-full` with the numbers while it is refusing for that reason, so a machine that runs short of disk neither leaves the scheduler nor needs a restart to serve again: the next admission, two seconds later, sees the space. A confinement the policy requires but the host lacks stops the worker (and the agent) with an error. With `ready` a machine lends only while it answers true (the toolchain behind its offer is installed): otherwise every admission refuses with `not-ready` and every report says `no-toolchain` without headroom, so the scheduler places nothing there. */
 export async function runRemoteExecutionAgentV1(given:RemoteExecutionAgentOptionsV1):Promise<void>{
  const environment=given.environment??process.env,now=given.now??Date.now,origin=given.origin??remoteExecutionOriginV1(given.root,environment),options:RemoteExecutionAgentOptionsV1={...given,concurrency:Math.max(1,given.concurrency-remoteExecutionReservedSlotsV1(origin))};
+ const policy=options.policy??BUILD_HOST_CAPACITY_POLICY_V1,simulated=options.view!==undefined||Boolean(environment.SEMIO_REMOTE_EXECUTION_HOST_VIEW);
+ const capacityDirectory=simulated&&!environment.SEMIO_HOST_CAPACITY_DIRECTORY?join(options.directory,"capacity"):hostCapacityDirectoryV1(environment);
+ const capacityEnvironment=simulated?{...environment,SEMIO_HOST_CAPACITY_DIRECTORY:capacityDirectory}:environment;
  const workerEnabled=options.worker!==false;
  const toolchain=await readRemoteExecutionToolchainV1(options.root,environment),identity=remoteExecutionPlatformIdentityV1(osPlatform(),process.arch,toolchain.toolchain,toolchain.target);
  let cached:{at:number;view:Promise<RemoteExecutionHostViewV1>}|undefined,state:RemoteExecutionWorkerStateV1={state:"absent",concurrency:options.concurrency,running:0,sandbox:null,confinement:null,network:null};
  let why:RemoteExecutionWorkerWhyV1|undefined=workerEnabled?remoteExecutionWorkerWhyV1("starting"):options.why,diskWhy:RemoteExecutionWorkerWhyV1|undefined;
  const view=():Promise<RemoteExecutionHostViewV1>=>{
   if(cached&&now()-cached.at<1000)return cached.view;
-  const fresh=(options.view??(()=>readRemoteExecutionHostViewV1(environment,options.policy)))();
+  const fresh=(options.view??(()=>readRemoteExecutionHostViewV1(capacityEnvironment,policy)))();
   cached={at:now(),view:fresh};fresh.catch(()=>{if(cached?.view===fresh)cached=undefined;});
   return fresh;
  };
  let draining=false,collectedAt=-Infinity;
  const collect=options.collect??(async()=>{await retireRemoteExecutionWorkV1(join(options.directory,"work"),{ownerlessSeconds:readRemoteExecutionPolicyV1().worker.ownerlessWorkSeconds});});
- let held:readonly RemoteExecutionHeldUnitV1[]=[];
- const unitsOf=(rows:readonly RemoteExecutionHeldUnitV1[]):readonly RemoteExecutionHeldUnitV1[]=>rows.map(row=>row.megabytes>0?row:{...row,megabytes:remoteExecutionActionMegabytesV1(options.policy)});
  const admit=async(running:number,unit:RemoteExecutionUnitAskV1):Promise<RemoteExecutionAdmissionV1>=>{
-  held=unitsOf(unit.held);
   if(draining)return {admit:false,reason:"draining"};
   if(options.ready!==undefined&&!options.ready())return {admit:false,reason:"not-ready"};
   const measure=()=>options.disk===undefined?undefined:remoteExecutionDiskSlotsV1({freeBytes:(options.freeBytes??(()=>remoteExecutionFreeBytesV1(options.directory)))(),hostFreeBytes:(options.hostFreeBytes??(()=>remoteExecutionFreeBytesV1(options.root)))(),concurrency:options.concurrency,disk:options.disk});
@@ -59,20 +62,38 @@ export async function runRemoteExecutionAgentV1(given:RemoteExecutionAgentOption
   }
   diskWhy=space!==undefined&&running>=space.slots?remoteExecutionWorkerWhyV1("disk-full","",{free:((space.freeBytes??0)/2**30).toFixed(1),path:(space.volume==="host"?options.root:options.directory).split(/[\\/]/u).filter(Boolean).slice(-3).join("/"),slots:space.slots,concurrency:options.concurrency,oneAction:(space.oneActionBytes/2**30).toFixed(1)}):undefined;
   if(diskWhy!==undefined)return {admit:false,reason:"disk"};
-  return admitRemoteExecutionActionV1({view:await view(),running,concurrency:options.concurrency,nowMs:now(),megabytes:unit.stage==="task"&&unit.megabytes>0?unit.megabytes:unit.stage==="poll"?REMOTE_EXECUTION_ADMISSION_POLICY_V1.smallestMegabytes:remoteExecutionActionMegabytesV1(options.policy),held,...options.policy?{policy:options.policy}:{}});
+  return admitRemoteExecutionActionV1({view:await view(),running,concurrency:options.concurrency,nowMs:now(),megabytes:unit.stage==="task"&&unit.megabytes>0?unit.megabytes:unit.stage==="poll"?REMOTE_EXECUTION_ADMISSION_POLICY_V1.smallestMegabytes:remoteExecutionActionMegabytesV1(policy),held:[],policy});
  };
  const threads=async(ask:RemoteExecutionThreadsAskV1):Promise<number>=>{
-  const current=await view(),peak=ask.peakMegabytes>0?ask.peakMegabytes:remoteExecutionActionMegabytesV1(options.policy);
-  const {spareMegabytes}=evaluateRemoteExecutionAdmissionV1({view:current,running:ask.held.length,concurrency:options.concurrency,nowMs:now(),megabytes:peak,held:unitsOf(ask.held),...options.policy?{policy:options.policy}:{}});
-  const gate=remoteExecutionPressureGateV1(current.host,peak,(options.policy??BUILD_HOST_CAPACITY_POLICY_V1).swap.activeBasisPointsPerSecond);
+  const current=await view(),peak=ask.peakMegabytes>0?ask.peakMegabytes:remoteExecutionActionMegabytesV1(policy);
+  const {spareMegabytes}=evaluateRemoteExecutionAdmissionV1({view:{...current,grants:current.grants.filter(grant=>grant.id!==ask.reservation)},running:0,concurrency:options.concurrency,nowMs:now(),megabytes:peak,held:[],policy});
+  const gate=remoteExecutionPressureGateV1(current.host,peak,policy.swap.activeBasisPointsPerSecond);
   return remoteExecutionCodegenThreadsV1({cores:current.host.cores,load:current.host.load,others:ask.others,spareMegabytes,peakMegabytes:peak,pressured:gate==="pressure-warn"||gate==="pressure-critical"},readRemoteExecutionPolicyV1().worker.codegen);
  };
  const report=async():Promise<RemoteExecutionLoadReportV1>=>{
-  const built=buildRemoteExecutionLoadReportV1({origin,identity,view:await view(),worker:why!==undefined&&state.state==="absent"?{...state,why}:state,counters:readRemoteExecutionCountersV1(options.root),...options.code===undefined?{}:{code:options.code},nowMs:now(),...held.length===state.running?{held}:{},...options.policy?{policy:options.policy}:{}});
+  const built=buildRemoteExecutionLoadReportV1({origin,identity,view:await view(),worker:why!==undefined&&state.state==="absent"?{...state,why}:state,counters:readRemoteExecutionCountersV1(options.root),...options.code===undefined?{}:{code:options.code},nowMs:now(),reservationOwner:process.pid,policy});
   if(options.ready!==undefined&&!options.ready())return workerEnabled?{...built,headroom:false,worker:{...built.worker,...built.worker.state==="idle"||built.worker.state==="busy"?{state:"refusing" as const}:{},why:remoteExecutionWorkerWhyV1("no-toolchain","the compiler of the offer is gone or has no target")}}:{...built,headroom:false};
   return diskWhy!==undefined&&state.state==="refusing"?{...built,headroom:false,worker:{...built.worker,state:"refusing",why:diskWhy}}:built;
  };
  const controller=new AbortController(),abort=():void=>{controller.abort();};
+ const control={signal:controller.signal,remainingMilliseconds:()=>null,publish:()=>undefined,yieldContinuation:async()=>undefined};
+ const reserve:RemoteExecutionReserveV1=async(task,run)=>{
+  const megabytes=task.megabytes>0?task.megabytes:remoteExecutionActionMegabytesV1(policy);
+  const result=await tryHoldHostCapacityV1({directory:capacityDirectory,policy,control,environment:capacityEnvironment,now,observe:async()=>task.observedMegabytes(),
+   request:{id:newHostCapacityIdV1(),operation:"remote-execution",priority:"lent",minimumJobs:1,preferredJobs:1,fixedMegabytes:megabytes,perJobMegabytes:0,cpuPerJob:1,retainReservation:true},
+   ...simulated?{sample:async()=>({host:{...(await view()).host,atMs:now()},swappedOutMegabytes:null})}:{warden:()=>readHostWardenStateV1(capacityDirectory)},
+   review:(host,grants,at)=>{
+    if(remoteExecutionLoadSaturatedV1(host))return "load";
+    const pressure=remoteExecutionPressureGateV1(host,megabytes,policy.swap.activeBasisPointsPerSecond);
+    if(pressure==="pressure-warn"||pressure==="pressure-critical")return pressure;
+    const sample=pressure==="relaxed"?{...host,pressure:"normal" as const}:host;
+    return simulated?{host:sample,grants}:withReadyStageV1({host:sample,grants},readReadyStageClaimV1(capacityDirectory,at),at);
+   },
+  },handle=>run(handle.id));
+  if(result.admit)return result;
+  const reason=result.reason;
+  return {admit:false,reason:reason==="fits"||reason==="reduced"||reason==="override"||reason==="shrunk"||reason==="never"||reason==="starved"||reason==="lent"||reason==="session-cap"?"memory":reason};
+ };
  options.signal.addEventListener("abort",abort,{once:true});
  if(options.signal.aborted)abort();
  const stopDraining=drainWhenIdleV1(options.drain,()=>{draining=true;return state.running;},()=>{controller.abort();});
@@ -87,7 +108,7 @@ export async function runRemoteExecutionAgentV1(given:RemoteExecutionAgentOption
  };
  const runWorker=async():Promise<void>=>{
   for(;;){
-   try{await runRemoteExecutionWorkerV1({threads,...options,origin,properties,signal:controller.signal,admit,observe:remember,onEvent,...capacity?{capacity}:{}});return;}
+   try{await runRemoteExecutionWorkerV1({threads,...options,origin,properties,signal:controller.signal,admit,reserve,observe:remember,onEvent,...capacity?{capacity}:{}});return;}
    catch(error){
     if(options.retryWorkerSeconds===undefined||controller.signal.aborted){controller.abort();throw error;}
     why=remoteExecutionWorkerWhyOfMessageV1((error as Error).message);state={...state,state:"absent",running:0};

@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-artifact-app-testing = []
+artifact-app-testing = ["semio-plugin-tool-run-operations/artifact-app-testing"]
 
 [dependencies]
 semio-framework-value-native-owned = { workspace = true }

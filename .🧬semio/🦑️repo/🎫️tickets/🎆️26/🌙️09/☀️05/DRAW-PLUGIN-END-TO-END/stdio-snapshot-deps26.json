@@ -1,0 +1,27 @@
+{
+  "snapshotOwner": "semio-s-artifact-stdio-txt-schema",
+  "excludedFacade": "semio-s-artifact-stdio-txt",
+  "families": [
+    {
+      "folder": "📰️xml",
+      "packages": ["xml", "xml-inferences", "xml-mutations", "xml-schema", "xml-schema-2", "xml-snapshot", "xml-tests", "xml-tests-2", "xml-tests-3"],
+      "owners": {
+        "xml-schema": ["import"],
+        "xml-mutations": ["export"]
+      }
+    },
+    {
+      "folder": "🖋️dxf",
+      "packages": ["dxf", "dxf-diff", "dxf-inferences", "dxf-mutations", "dxf-schema", "dxf-snapshot", "dxf-tests"],
+      "owners": {
+        "dxf-inferences": ["import", "export"]
+      }
+    }
+  ],
+  "drawExport": {
+    "workspace": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing",
+    "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml",
+    "package": "semio-s-artifact-draw-drawing-write",
+    "excludedDependency": "semio-s-artifact-stdio-deflate"
+  }
+}

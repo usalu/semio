@@ -16,6 +16,7 @@
           "dependencies",
           "caches",
           "processes",
+          "typecheck",
           "host",
           "doctor"
         ],
@@ -41,6 +42,7 @@
         "dependencies",
         "caches",
         "processes",
+        "typecheck",
         "host",
         "doctor"
       ]
@@ -229,6 +231,7 @@
         "dependencies",
         "caches",
         "processes",
+        "typecheck",
         "repairs"
       ],
       "properties": {
@@ -460,6 +463,16 @@
                 "pattern": "^[a-z][a-z0-9-]*$"
               }
             }
+          }
+        },
+        "typecheck": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["areasShown", "freshSeconds", "staleSeconds"],
+          "properties": {
+            "areasShown": {"type": "integer", "minimum": 1, "maximum": 20},
+            "freshSeconds": {"type": "integer", "minimum": 0},
+            "staleSeconds": {"type": "integer", "minimum": 60}
           }
         },
         "sessions": {
@@ -1286,6 +1299,18 @@
         }
       }
     },
+    "TypecheckFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["errors", "product", "tests", "ageSeconds", "areas"],
+      "properties": {
+        "errors": {"type": "integer", "minimum": 0},
+        "product": {"type": "integer", "minimum": 0},
+        "tests": {"type": "integer", "minimum": 0},
+        "ageSeconds": {"type": "integer", "minimum": 0},
+        "areas": {"type": "array", "maxItems": 60, "items": {"type": "object", "additionalProperties": false, "required": ["area", "errors", "product"], "properties": {"area": {"type": "string", "minLength": 1}, "errors": {"type": "integer", "minimum": 1}, "product": {"type": "integer", "minimum": 0}}}}
+      }
+    },
     "SessionsFacts": {
       "type": "object",
       "additionalProperties": false,
@@ -1600,6 +1625,9 @@
         },
         "sessions": {
           "$ref": "#/definitions/SessionsFacts"
+        },
+        "typecheck": {
+          "$ref": "#/definitions/TypecheckFacts"
         },
         "graph": {
           "$ref": "#/definitions/GraphFacts"

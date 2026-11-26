@@ -48,12 +48,12 @@ test("real owner take preserves fallback while wire fault, miss and cancellation
    else expect(reason,row.wire).toBeUndefined();
    expect(requests,row.wire).toBe(row.requests);
    const fallback=recordTakeLookFailureV1(Object.assign(Error("fixture"),{code:"BUILD_TAKE_MISS",outcome:observed?.outcome,lookupFault:observed?.fault}),counters,controller.signal.aborted);
-   expect(fallback,row.wire).toBe(row.outcome);
-   expect(observed?.fault,row.wire).toBe(row.reason==="cancelled"?undefined:row.reason??undefined);
+   expect<unknown>(fallback,row.wire).toBe(row.outcome);
+   expect<unknown>(observed?.fault,row.wire).toBe(row.reason==="cancelled"?undefined:row.reason??undefined);
   }finally{server.stop(true);}
  }
  const expected=db.query<{reason:string;count:number},[string]>("select json_extract(value,'$.reason') reason,count(*) count from json_each(?1) where json_type(value,'$.reason')='text' group by reason").all(JSON.stringify(fixture.cases));
- expect(counters.lookups()).toEqual({misses:1,cancelled:expected.find(row=>row.reason==="cancelled")?.count,faults:{...Object.fromEntries(graphSchema.definitions.LookupFault.enum.map(key=>[key,0])),...Object.fromEntries(expected.filter(row=>row.reason!=="cancelled").map(row=>[row.reason,row.count]))}});
+ expect<unknown>(counters.lookups()).toEqual({misses:1,cancelled:expected.find(row=>row.reason==="cancelled")?.count,faults:{...Object.fromEntries(graphSchema.definitions.LookupFault.enum.map(key=>[key,0])),...Object.fromEntries(expected.filter(row=>row.reason!=="cancelled").map(row=>[row.reason,row.count]))}});
  const outcomes=db.query<{kind:string;count:number},[string]>("select json_extract(value,'$.reported') kind,count(*) count from json_each(?1) group by kind").all(JSON.stringify(fixture.cases));
  expect(counters.counts()).toMatchObject({...Object.fromEntries(outcomes.filter(row=>row.kind!=="cancelled").map(row=>[row.kind,row.count])),stale:0});
  expect(imports).toBe(0);

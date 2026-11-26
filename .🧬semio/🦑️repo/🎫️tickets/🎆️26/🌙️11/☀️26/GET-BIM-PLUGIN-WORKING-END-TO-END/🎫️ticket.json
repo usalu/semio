@@ -1,0 +1,23 @@
+{
+  "title": "Get Bim Plugin Working End to End",
+  "emoji": "🏙️",
+  "status": "open",
+  "description": "Get bim plugin working end to end: model artifact (standards 1 / subset any), engine, viewer, editor, io (ifc/gltf/bcf/svg/pdf/gbxml), schema, tests (feature/rust/python/ts), bridge, hub compositions, dev variant entry, browser loading in s.",
+  "goal": "runningplugins",
+  "sessions": [
+    "d24bbcce-817c-410b-b5ca-14c003bf9352"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-26 05:52:55",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get bim plugin working end to end: model artifact (standards 1 / subset any), engine, viewer, editor, io (ifc/gltf/bcf/svg/pdf/gbxml), schema, tests (feature/rust/python/ts), bridge, hub compositions, dev variant entry, browser loading in s.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    }
+  ]
+}

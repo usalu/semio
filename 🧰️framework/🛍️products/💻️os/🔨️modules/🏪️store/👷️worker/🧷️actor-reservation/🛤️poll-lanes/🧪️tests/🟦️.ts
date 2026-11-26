@@ -66,3 +66,12 @@ test("a failing drive cancels the sibling already running and the first failure 
   expect(log.filter((entry) => entry.includes("cancelJob"))).toEqual(["jobs.cancelJob:5"]);
   expect(log).not.toContain("jobs.startJob:6");
 });
+
+test("a reserved job keeps its owner across bounded host admissions", async () => {
+  const { lanes, child, log } = fixture((_job, step) => step === 122 ? done([42]) : running);
+  const [event] = await lanes.driveSpawnedJobs(child, [{ ...spawn(64n), kind: "framework.reserved.tool" }], () => {});
+  expect(event).toEqual({ tag: "job-completed", val: { job: 64n, outcome: { tag: "ok", val: [42] } } });
+  expect(log.filter(call => call === "jobs.startJob:64")).toHaveLength(1);
+  expect(log.filter(call => call === "jobs.stepJob:64")).toHaveLength(123);
+  expect(log).not.toContain("jobs.cancelJob:64");
+});

@@ -62,6 +62,26 @@ def representation_items(element):
     return [(shape.RepresentationIdentifier, item) for shape in element.Representation.Representations for item in shape.Items]
 
 
+def closed_shell_problems(element):
+    """🧊️ Check that every oriented edge of each faceted shell has exactly one opposite edge."""
+    from collections import Counter
+
+    problems = []
+    for identifier, item in representation_items(element):
+        if identifier != "Body" or not item.is_a("IfcFacetedBrep"):
+            continue
+        edges = Counter()
+        for face in item.Outer.CfsFaces:
+            for bound in face.Bounds:
+                points = [p.id() for p in bound.Bound.Polygon]
+                if not bound.Orientation:
+                    points.reverse()
+                edges.update(zip(points, points[1:] + points[:1]))
+        if any(count != 1 or edges[(b, a)] != 1 for (a, b), count in edges.items()):
+            problems.append("%s: body shell has open or non-manifold edges" % element.Tag)
+    return problems
+
+
 def record_of(element, name):
     """🏷️ The authored record row `name` of an element, `None` when absent."""
     return authored(element).get(name)

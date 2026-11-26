@@ -1,6 +1,6 @@
 import{createRepositoryFilesystemJournalV1}from"../../🕸️graph/🔏️seal/📥️membership/📥️journal/🟦️.ts";
 import workspaceNativePin from"../../../🏗️build/🏡️resident/🔭️watch/🦀️rust/🔣️.json"with{type:"json"};
-import{SOURCE_OPACITY_PROTOCOL_V1,isOpaqueSourcePathV1}from"../../🔍️discovery/📂️source/🟦️.ts";
+import{SOURCE_OPACITY_PROTOCOL_V1,isOpaqueSourcePathV1}from"../../../🏗️build/📥️inputs/👻️opaque-source/🟨️.mjs";
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";

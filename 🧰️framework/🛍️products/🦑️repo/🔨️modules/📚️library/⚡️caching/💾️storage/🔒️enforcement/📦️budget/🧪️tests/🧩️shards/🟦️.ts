@@ -10,8 +10,8 @@ const GiB=1073741824;
 const declared=Object.entries(policy.partitions).flatMap(([id,row])=>"imageShards"in row?[[id,(row as{imageShards:unknown}).imageShards]as const]:[]);
 test("the oversized partitions declare their shards, closed and equal to the shard schema, and keep the live single-image layout until the switchover",()=>{
  expect(declared.map(([id])=>id)).toEqual(["rust","dependencies"]);
- for(const[,rule]of declared){expect(validateJsonSchemaSubset(shardSchema.definitions.Rule,rule,shardSchema)).toEqual([]);expect(requireNativeImageShardRuleV1(rule)).toEqual(rule);expect((rule as{enabled:boolean}).enabled).toBe(false);}
- const budget=readRepositoryCacheBudgetV1(policy);expect(budget.partitions.rust.imageShards).toEqual(declared[0]![1]);expect(budget.partitions.tools.imageShards).toBeUndefined();
+ for(const[,rule]of declared){expect(validateJsonSchemaSubset(shardSchema.definitions.Rule,rule,shardSchema)).toEqual([]);expect<unknown>(requireNativeImageShardRuleV1(rule)).toEqual(rule);expect((rule as{enabled:boolean}).enabled).toBe(false);}
+ const budget=readRepositoryCacheBudgetV1(policy);expect<unknown>(budget.partitions.rust.imageShards).toEqual(declared[0]![1]);expect(budget.partitions.tools.imageShards).toBeUndefined();
  const bad={...(declared[0]![1] as object),extra:true};expect(validateJsonSchemaSubset(budgetSchema,{...policy,partitions:{...policy.partitions,rust:{...policy.partitions.rust,imageShards:bad}}}).length).toBeGreaterThan(0);
  expect(validateJsonSchemaSubset(shardSchema.definitions.Rule,bad,shardSchema).length).toBeGreaterThan(0);
 });

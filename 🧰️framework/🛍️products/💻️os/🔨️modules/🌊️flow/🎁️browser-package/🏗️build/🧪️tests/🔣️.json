@@ -1,5 +1,9 @@
 {
   "version": 1,
+  "evaluationOwners": {
+    "semio-plugin-extension": ["ExtensionInvokeStep", "ExtensionResourceOwner"],
+    "semio-plugin-ownership": ["PluginLifecycleStep"]
+  },
   "cases": [
     {
       "id": "producer-has-no-generated-self-input",

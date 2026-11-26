@@ -7,7 +7,8 @@ import { parseElevationSource } from "../../../../../🧬️schema/🗺️import
 import schema from "../../../../../🧬️schema/🗺️imported-map/🏔️elevation/🔣️.json" with { type: "json" };
 import fixture from "../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏔️replace-elevation-source/🏔️authors/🦠️mutation/🔣️.json" with { type: "json" };
 
-const surface = fixture.ReplaceElevationSource.newElevationSource;
+const authored = fixture.ReplaceElevationSource.newElevationSource;
+const surface = { ...authored, bounds: authored.bounds as [number, number, number, number] };
 const validate = new Ajv().addKeyword("x-semio-ui").compile(schema);
 
 test("authored fractional elevations have rectangular 2–65 dimensions and signed millimetres", () => {
@@ -43,7 +44,7 @@ test("authored fractional elevations have rectangular 2–65 dimensions and sign
 test("the largest grid fits its exact normalized row budget", async () => {
   const rowsMillimetres = Array.from({ length: 65 }, () => Array<number>(65).fill(125));
   rowsMillimetres[64]![64] = -2147483648;
-  const elevationSource = { bounds: surface.bounds as [number, number, number, number], rowsMillimetres };
+  const elevationSource = { bounds: surface.bounds, rowsMillimetres };
   const snapshot = { exaggeration: { bits: 0x3ff0000000000000n }, elevationSource };
   const maxRows = 2 + 1 + 65 * 65;
   await expect(gisTerrainSnapshotToSqliteDatabase(snapshot, { maxRows: maxRows - 1 })).rejects.toThrow("row");

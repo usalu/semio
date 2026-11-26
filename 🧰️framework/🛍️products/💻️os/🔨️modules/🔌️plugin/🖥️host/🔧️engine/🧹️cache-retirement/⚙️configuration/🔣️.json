@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "maximumBytes": 8589934592,
+  "maximumAgeSeconds": 1209600,
+  "minimumIdleSeconds": 3600,
+  "scratchGraceSeconds": 21600,
+  "minimumIntervalSeconds": 21600,
+  "touchIntervalSeconds": 600,
+  "maximumEntries": 100000,
+  "stampFile": "retirement.stamp"
+}

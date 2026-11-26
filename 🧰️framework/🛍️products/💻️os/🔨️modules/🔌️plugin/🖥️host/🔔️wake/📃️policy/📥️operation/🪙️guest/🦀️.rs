@@ -17,7 +17,7 @@ impl GuestEscrowReconcile<'_>{
  pub fn retire_closed_history_step(&mut self,home:&mut GuestIssuedHistoryHome,producer:OriginalNativeRecipientIdentity,witness:&semio_framework_job::OriginalNativeRetiredWitness,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,OriginalTurnFailure>{let parent=cx.original_source_parent()?;parent.validate_borrowed_context(cx)?;if parent.source_identity()?!=self.source||!self.binding.matches(cx){return Err(invalid("history retirement changed its actual issuer Source").into())}home.retire_closed_step(producer,witness,self.ledger,cx)}
  pub fn apply(&mut self,history:semio_framework_job::OriginalNativeBorrowed<'_,GuestIssuedHistoryHome>,frozen:&semio_plugin_host_guest_runtime::GuestFrozenEscrowBorrow<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let parent=cx.original_source_parent()?;parent.validate_borrowed_context(cx)?;if parent.source_identity()?!=self.source||!self.binding.matches(cx){return Err(invalid("guest reconciliation changed its actual parent Source").into())}GuestIssuedHistoryHome::apply_ledger_step(history,frozen,self.ledger,cx)}
 }
-use super::{consumable_remaining,intersect,invalid,spent,GuestRelayWakeDriver,GuestRelayAdmissionCall,GuestRelayAdmissionFailure};
+use super::{consumable_remaining,remaining_beside_reserve,intersect,invalid,spent,GuestRelayWakeDriver,GuestRelayAdmissionCall,GuestRelayAdmissionFailure};
 use semio_framework_actor::{RetainedTurnInput,OriginalActorTurnWork,OriginalJobBudget};
 use semio_framework_job::{OriginalNativeLease,OriginalNativeRetirement,OriginalNativeRecipientIdentity,OriginalTurnFailure};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError};
@@ -118,8 +118,8 @@ impl GuestRelayWakeDriver{
   let operation=original.operation.as_ref().ok_or_else(||invalid("guest reservation requires an actual per-operation Source"))?;
   if operation.closed||operation.cleanup&&!cleanup{return Err(invalid("guest semantic admission cannot follow Source cleanup").into())}if operation.guest.pending(){return Err(invalid("guest crossing still owes its exact fixed receipt").into())}
   let physical=operation.guest.physical_remaining(original.treasury.original_remaining())?;
-  let beside_cleanup=consumable_remaining(physical,operation.reserve.retained)?;
-  let available=if cleanup{beside_cleanup}else{consumable_remaining(beside_cleanup,operation.transit.retained)?};
+  let beside_cleanup=remaining_beside_reserve(physical,operation.reserve.retained,"cleanup")?;
+  let available=if cleanup{beside_cleanup}else{remaining_beside_reserve(beside_cleanup,operation.transit.retained,"transport")?};
   let mut semantic=operation.guest.logical_remaining(GuestRelayGuestPurpose::Semantic,operation.request.retained)?;if cleanup{semantic.maximum_items=0;semantic.maximum_copy_bytes=0;semantic.maximum_capacity_bytes=0;semantic.maximum_release_bytes=0;}let infrastructure=operation.guest.logical_remaining(GuestRelayGuestPurpose::Infrastructure,operation.infrastructure.retained)?;
   let total=GuestUsage::reservation(semantic,0).add(GuestUsage::reservation(infrastructure,0))?;let header_grant=intersect(available,RetainedCloneGrant{maximum_depth:semantic.maximum_depth.max(infrastructure.maximum_depth),..total.policy()});
   let grant=intersect(header_grant,match purpose{GuestRelayGuestPurpose::Semantic=>semantic,GuestRelayGuestPurpose::Infrastructure=>infrastructure});

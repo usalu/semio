@@ -18,7 +18,7 @@ export function buildRawCloseState({ rawCloseBlock, rawSource, base, Ajv, source
       && release.includes("drop(std::mem::take(&mut self.raw))") && release.includes("released_bytes:bytes")
       && !release.includes("maximum_copy_bytes") && !close.includes("copied_bytes:bytes")
       && text.includes("RetirementDemand{release_bytes:self.raw.capacity(),depth:1,..Default::default()}")
-      && text.includes("fn test_raw_allocation_close<A: ArtifactApp>()")
+      && text.includes("fn test_raw_allocation_close<A: ArtifactApp>(raw: Vec<u8>)")
       && text.includes("assert_eq!(heap.released_bytes,progress.released_bytes)");
   };
   if (!rawClose(rawSource)) throw new Error("retained command raw close loses independent copy or physical release authority");

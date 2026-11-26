@@ -65,7 +65,7 @@ test("native code is keyed by platform: equal on machines of one platform whatev
 });
 
 test("the portable text of a Windows root agrees with Python's Windows path library: the root becomes the token and the rest is spelled with forward slashes, whatever the separator",()=>{
- const python=testPythonV1();if(python===undefined)return;
+ const python=testPythonV1();if(python===null)return;
  const vectors=[["C:\\semio","C:\\semio\\crates\\core"],["C:\\semio","C:\\semio\\crates\\core\\src\\lib.rs"],["C:\\Work\\semio ws","C:\\Work\\semio ws\\a"],["C:\\semio","C:\\semio"],["C:\\semio","C:\\semiofoo\\x"],["\\\\server\\share\\semio","\\\\server\\share\\semio\\crates\\core"]];
  const script="import json,sys\nfrom pathlib import PureWindowsPath\nrows=json.load(sys.stdin)\nout=[]\nfor root,path in rows:\n    r=PureWindowsPath(root);p=PureWindowsPath(path)\n    try:\n        rel=p.relative_to(r).as_posix()\n        out.append('@@semio-cwd@@' if rel=='.' else '@@semio-cwd@@/'+rel)\n    except ValueError:\n        out.append(path)\nprint(json.dumps(out))";
  const done=Bun.spawnSync([python,"-I","-c",script],{stdin:new TextEncoder().encode(JSON.stringify(vectors)),stdout:"pipe",stderr:"pipe"});expect(done.exitCode,done.stderr.toString()).toBe(0);

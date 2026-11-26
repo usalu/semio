@@ -11,11 +11,13 @@ import {readOffloadOutputsV1} from "../../🚀️offload/🔌️client/🟦️.t
 import {offloadDeclaredThreadsV1,readFamilyPeakV1,readUnitPeakV1,writeUnitPeakV1} from "../../🚀️offload/🚦️admission/🟦️.ts";
 import {placementChargeMegabytesV1} from "../../🗓️scheduler/⚖️placement/🟦️.ts";
 import {RemoteExecutionSchedulerV1} from "../../🗓️scheduler/🟦️.ts";
+import {startRemoteExecutionServerV1} from "../../🖥️server/🟦️.ts";
 import {createRemoteExecutionMeterV1,remoteExecutionGroupMegabytesV1,remoteExecutionProcessTableV1} from "../../👷️worker/📏️task-memory/🟦️.ts";
 
 const here=import.meta.dir,scratch:string[]=[];
 afterEach(()=>{for(const path of scratch.splice(0))rmSync(path,{recursive:true,force:true});});
-const oracle=JSON.parse(spawnSync("python3",["-I",join(here,"🐍️.py")],{encoding:"utf8"}).stdout) as {lifetime:{declared:number;measured:number|null;charge:number}[];ramps:{declared:number;measured:number|null;startedAtMs:number;reportAtMs:number|null;rampMs:number;charge:number}[];tables:{table:string;groups:number[];megabytes:Record<string,number>}[];peaks:{megabytes:number;text:string}[]};
+type LinkedOracleRow={peak:number;workers:{origin:string;target:boolean;linker:boolean;free:number}[];linked:number;general:number};
+const oracle=JSON.parse(spawnSync("python3",["-I",join(here,"🐍️.py")],{encoding:"utf8"}).stdout) as {lifetime:{declared:number;measured:number|null;charge:number}[];ramps:{declared:number;measured:number|null;startedAtMs:number;reportAtMs:number|null;rampMs:number;charge:number}[];tables:{table:string;groups:number[];megabytes:Record<string,number>}[];peaks:{megabytes:number;text:string}[];linked:LinkedOracleRow[]};
 
 test("a running action is charged once over its life: its declared peak minus what is measured of it, equal to the Python oracle (not started, growing, at its peak, beyond it)",()=>{
  expect(oracle.lifetime.length).toBe(32);
@@ -105,6 +107,24 @@ test("the scheduler charges a running action once: the slots a machine offers gr
 });
 
 function profile(properties:{name:string;value:string}[]):RemoteExecutionWorkerRegistrationV1{return {version:1,name:"a",host:"h",platform:"darwin-arm64",properties,concurrency:4,sandbox:"isolated-root",runtime:"test",origin:"a",capacity:{cores:8,memoryMegabytes:16384},confinement:"none",network:"unenforced"};}
+
+test("the idle route counts only workers that jointly fit the linked final",async()=>{
+ const link={target:"wasm32-wasip2",linker:"abcdabcdabcdabcd"},now=1_000_000,content=new Memory();
+ const server=await startRemoteExecutionServerV1({host:"127.0.0.1",grpcPort:0,workerPort:0,content,tokens:{},cacheUrl:null,maximumMessageBytes:1048576,maximumBatchBytes:1048576,scheduler:{unmatchedSeconds:30,lingerSeconds:0.05,leaseSeconds:10,maximumAttempts:3,defaultActionSeconds:60,maximumActionSeconds:600,maximumQueued:100,heartbeatSeconds:2,pollSeconds:5,loadExpireSeconds:600,refusalCooldownSeconds:2,sweepMilliseconds:0,now:()=>now}});
+ try{
+  const platform={key:"macos-arm64-aaaaaaaaaaaaaaaa",os:"macos",arch:"arm64",toolchain:"aaaaaaaaaaaaaaaa",target:"aarch64-apple-darwin"} as const,capacity={cores:8,memoryMegabytes:16384};
+  for(const worker of oracle.linked[0]!.workers)server.scheduler.register({...profile([{name:"semio-offload-format",value:"argv-1"},...worker.target?[{name:"semio-rustc-target-"+link.target,value:"1"}]:[],{name:"semio-linker",value:worker.linker?link.linker:"1111111111111111"}]),name:worker.origin,origin:worker.origin});
+  for(const row of oracle.linked){
+   for(const worker of row.workers)server.scheduler.acceptLoad({version:1,origin:worker.origin,platform,capacity,running:0,queued:0,pressure:"normal",freeMegabytes:worker.free,load:1,headroom:true,wallMs:now,worker:{state:"idle",concurrency:4,running:0,sandbox:null,confinement:null,network:null},counters:{unit:{localHit:0,remoteHit:0,miss:0,stored:0},offload:{out:0,refused:0,fellBack:0}}});
+   const general=new URL("v1/fleet/idle",server.workerUrl+"/");general.searchParams.set("origin","requester");general.searchParams.set("peak",String(row.peak));
+   expect(await (await fetch(general)).json()).toMatchObject({slots:row.general});
+   general.searchParams.set("target",link.target);general.searchParams.set("linker",link.linker);
+   expect(await (await fetch(general)).json()).toMatchObject({slots:row.linked,link});
+   general.searchParams.delete("target");
+   expect((await fetch(general)).status).toBe(400);
+  }
+ }finally{await server.stop();}
+});
 
 test("the real process table measures the group of a spawned child, and the closed heartbeat shape admits the usage rows and nothing else",async()=>{
  if(process.platform!=="win32"){

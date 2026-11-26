@@ -1,4 +1,4 @@
-import {isOpaqueSourcePathV1,opaqueSourceInputExclusionsV1} from "../../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import{isOpaqueSourcePathV1,opaqueSourceInputExclusionsV1}from"../../../👻️opaque-source/🟨️.mjs";
 /** 🧬️ Tests for inputs owner-view inference. */
 import {expect, test} from "bun:test";
 import {readFileSync} from "node:fs";

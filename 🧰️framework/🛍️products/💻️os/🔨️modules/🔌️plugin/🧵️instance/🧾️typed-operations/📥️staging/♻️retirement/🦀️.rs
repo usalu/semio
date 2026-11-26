@@ -14,8 +14,9 @@ use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOpera
 use semio_plugin_composition_publication::MountedTypedCommandFullOperationStage;
 use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;
-use semio_plugin_ownership::bounded_ownership::{PluginLifecycleStep, plugin_grant_funds, plugin_retirement_fault};
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_plugin_ownership::bounded_ownership::{PluginLifecycleStep, original_lifecycle_step, original_plugin_turn_grant, plugin_grant_funds, plugin_retirement_fault};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_plugin_reactor_app::remaining_plugin_turn_grant;
 use crate::typed_bundle::TypedCtx;
 use semio_framework_value::ValueError;
 use semio_ui_contract::*;
@@ -82,13 +83,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 // Earlier units settled directly on this recipient. Start the granted
                 // retirement receipt in its own publication window.
                 if pump != 0 { return Ok(()); }
-
-                let grant=semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.close,cx.retained_grant());
-                let demand=self.tools.tool_operations.get(operation_id).unwrap().granted_retirement_demands(grant.maximum_copy_bytes)?;let step=semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|{let step=self.tools.tool_operations.get_mut(operation_id).unwrap().granted_retirement_step(same,actual)?;Ok((PluginLifecycleStep::Progress(step.progress()),false))})?;let step=RetainedCloneStep::Progress(step.progress().unwrap_or_default());
-                if !step.progress().fits(grant){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed operation retirement exceeded its issuer grant").with_retained_progress(step.progress()).into());}
-                let progress=step.progress();if progress==RetainedCloneProgress::default(){return Ok(());}
-                let owner=self.tools.tool_operations.get_mut(operation_id).unwrap();assert!(owner.original_retirement_receipt.is_none(),"original mounted Close receipt cannot be overwritten before acknowledgement");owner.original_retirement_receipt=Some((grant,progress));return Ok(());
-
+                return self.retire_granted_typed_operation_run(operation_id, cx, started_us);
             }
             let grant = semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.close, cx.retained_grant());
             let demand = self.tools.typed_operation_retirement_demands(&*self.child_composition, operation_id, &*self.stores, grant.maximum_copy_bytes)?;
@@ -109,6 +104,51 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             if cx.should_yield()||started_us.is_some_and(|started_us|cx.now_us().is_some_and(|now_us|now_us.saturating_sub(started_us)>=INTERACTIVE_TURN_WORKER_WALL_US)) {
                 return Ok(());
             }
+        }
+        Ok(())
+    }
+
+    /// 🧾️ Returns the consecutive granted retirement units of one Close turn in a single original receipt.
+    fn retire_granted_typed_operation_run(
+        &mut self,
+        operation_id: u64,
+        cx: &mut semio_framework_job::StepContext<'_>,
+        started_us: Option<u64>,
+    ) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        let grant = original_plugin_turn_grant(self.mounted_policy.close, cx.retained_grant());
+        let owner = self.tools.tool_operations.get_mut(operation_id).expect("the selected retiring operation is mounted");
+        let mut spent = RetainedCloneProgress::default();
+        let outcome = (|| -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+            for _ in 0..INTERACTIVE_TURN_WORKER_PUMPS {
+                let remaining = remaining_plugin_turn_grant(grant, spent);
+                if remaining.maximum_items == 0 || !owner.granted_retirement_ready() || !owner.granted_retirement_pending() {
+                    break;
+                }
+                let demand = owner.granted_retirement_demands(remaining.maximum_copy_bytes)?;
+                let step = original_lifecycle_step(cx, remaining, demand, |same, actual| {
+                    let step = owner.granted_retirement_step(same, actual)?;
+                    Ok((PluginLifecycleStep::Progress(step.progress()), false))
+                })?;
+                let progress = step.progress().unwrap_or_default();
+                if !progress.fits(remaining) {
+                    return Err(ValueError::invariant("original typed operation retirement exceeded its issuer grant").with_retained_progress(progress).into());
+                }
+                spent = spent.checked_add(progress)?;
+                if progress == RetainedCloneProgress::default() || cx.should_yield()
+                    || started_us.is_some_and(|started| cx.now_us().is_some_and(|now| now.saturating_sub(started) >= INTERACTIVE_TURN_WORKER_WALL_US))
+                {
+                    break;
+                }
+            }
+            Ok(())
+        })();
+        if let Err(mut failure) = outcome {
+            failure.effects = spent.saturating_add(failure.effects);
+            return Err(failure);
+        }
+        if spent != RetainedCloneProgress::default() {
+            assert!(owner.original_retirement_receipt.is_none(), "original mounted Close receipt cannot be overwritten before acknowledgement");
+            owner.original_retirement_receipt = Some((grant, spent));
         }
         Ok(())
     }

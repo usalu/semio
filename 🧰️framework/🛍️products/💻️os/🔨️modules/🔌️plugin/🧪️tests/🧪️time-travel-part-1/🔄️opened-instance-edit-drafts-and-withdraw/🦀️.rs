@@ -34,18 +34,23 @@ async fn an_opened_instance_acts_as_its_admitted_actor_across_reload_and_on_the_
     history_verb(&mut reader, "reader", "undo", None, mounted_policy, &mut identity, cx).await;
     assert_eq!((head(&reader).0, reader.stores.store.applied_edit_ids().len()), (2, 2), "an undo never takes back another author's edit");
     let pure_head = reader.stores.store.snapshot().expect("the reloaded head").encode_pack();
-    PluginApp::hydrate_pure_head(&mut reader, &pure_head, cx).await.expect("the head-only lane hydrates");
+    hydrate_pure(&mut reader, &pure_head, cx).await;
     assert_eq!(reader.stores.store.local_actor_id(), &protocol::ActorId("reader".into()), "a head-only hydrate keeps the instance's actor");
 
     let own = app.render_ctx().history_patch(true).await.expect("history patch").upserts.into_iter().find(|row| row.author.as_deref() == Some("ada")).expect("the instance's own row").seq;
     history_verb(&mut app, "ada", "revertToCommand", Some(DslValue::object([("entrySeq".to_string(), DslValue::uint(own))])), mounted_policy, &mut identity, cx).await;
     assert_eq!(app.stores.store.local_actor_id(), &protocol::ActorId("ada".into()), "the revert route acts as the reverting actor");
     assert!(app.stores.store.applied_edit_ids().iter().any(|id| *id == other), "a revert never takes back another actor's edit");
-    history_verb(&mut app, "grace", "undo", None, mounted_policy, &mut identity, cx).await;
-    pump_until(&mut app, "the undo lands", |app| !app.stores.store.local_step_pending(), mounted_policy, &mut identity,cx).await;
-    assert!(!app.stores.store.applied_edit_ids().iter().any(|id| *id == other), "an undo takes back the acting actor's own edit");
+    let mut grace = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("grace".into()), mounted_policy, &mut identity).await;
+    PluginApp::bind_actor(&mut grace, "grace").await;
+    artifact_app_laws::load_document(&mut grace, &app.document_pack().await.expect("document pack"), &mut identity, cx).await.expect("pack reload");
+    grace.render_ctx().refresh_cache().await.expect("the reloaded log backfills");
+    history_verb(&mut grace, "grace", "undo", None, mounted_policy, &mut identity, cx).await;
+    pump_until(&mut grace, "the undo lands", |app| !app.stores.store.local_step_pending(), mounted_policy, &mut identity,cx).await;
+    assert!(!grace.stores.store.applied_edit_ids().iter().any(|id| *id == other), "an undo takes back the acting actor's own edit");
     close(&mut reader,cx);
     close(&mut app,cx);
+    close(&mut grace,cx);
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
@@ -77,7 +82,7 @@ async fn a_remote_edit_while_editing_keeps_the_draft_and_accept_replays_it_too()
     let (target, generation) = (seeded_mutation(&local, 1), local.time_travel.session().generation);
     let drafted = local.time_travel.session().pending.clone().expect("a pending draft");
 
-    remote.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: 9 }.into()], transaction: None }, &mut identity).await.expect("the remote edit");
+    remote.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: 9 }.into()], transaction: None }, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the remote edit");
     relay_adopted(&mut remote_probe, &mut local_probe, &mut local, mounted_policy, &mut identity).await;
     pump_until(&mut local, "the base move reaches the session", |app| app.time_travel.session().base.content_revision == app.stores.store.content_revision(), mounted_policy, &mut identity,cx).await;
     let arrived = local.stores.store.mutation_ops().expect("applied operations").last().map(|op| op.mutation_id.0.clone()).expect("the remote operation");
@@ -109,6 +114,7 @@ async fn a_remote_edit_while_editing_keeps_the_draft_and_accept_replays_it_too()
         let result = verb(&mut local, &fixture, action, args, mounted_policy, &mut identity, cx).await;
         assert_eq!(rejected(&result), None, "{action}: {:?}", result.output);
     }
+    pump_until(&mut local, "the finalize retires", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
     assert_eq!(head(&local), (9, "c".to_string()), "the overwrite lands on the remote edit");
     relay_adopted(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity).await;
     assert_eq!(head(&remote), head(&local), "the other replica adopts the history edit");
@@ -142,8 +148,21 @@ async fn a_session_edge_republishes_every_window_only_when_the_shown_document_sw
     let mutation = seeded_mutation(&app, 1);
     let begun = verb(&mut app, &fixture, "historyEditBegin", vec![("mutationId".into(), DslValue::String(mutation))], mounted_policy, &mut identity, cx).await;
     assert!(rejected(&begun).is_none() && full(&begun), "opening shows the preview in every window: {:?}", begun.ui_scope);
-    let drafted = verb(&mut app, &fixture, "historyEditInput", vec![("path".into(), DslValue::String("/value".into())), ("value".into(), DslValue::String("b".into()))], mounted_policy, &mut identity, cx).await;
-    assert!(rejected(&drafted).is_none() && full(&drafted), "a draft is a new preview: {:?}", drafted.ui_scope);
+    let acting = ActionMeta { view_state: meta(&fixture).view_state, ..artifact_app_laws::meta(app.stores.store.local_actor_id().0.as_str()) };
+    let args = DslValue::Object(vec![("path".into(), DslValue::String("/value".into())), ("value".into(), DslValue::String("b".into()))]);
+    let drafted = dispatch(&mut app, "historyEditInput", Some(args), &acting, mounted_policy, &mut identity, cx).await.expect("the input is admitted");
+    let swaps = |scope: &UiDirtyScope| matches!(scope, UiDirtyScope::Full) || matches!(scope, UiDirtyScope::Partial { window_bodies, .. } if !window_bodies.is_empty());
+    let mut swapped = swaps(&drafted.ui_scope);
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+    while app.time_travel.preview_progress().is_some() || app.time_travel.is_ui_dirty() || app.time_travel.has_pending_work() {
+        assert!(std::time::Instant::now() < deadline, "the draft preview never settled");
+        app.advance_typed_operation_publication(&mut identity, cx).await.expect("driver turn");
+        collect_original_history_command_receipt(&mut app);
+        while let Some(progress) = app.take_typed_operation_ui_progress() {
+            swapped |= swaps(&progress.ui_scope);
+        }
+    }
+    assert!(rejected(&drafted).is_none() && swapped, "a draft is a new preview: {:?}", drafted.ui_scope);
     let accepted = verb(&mut app, &fixture, "historyEditAccept", Vec::new(), mounted_policy, &mut identity, cx).await;
     assert!(rejected(&accepted).is_none() && history_only(&accepted), "an accepted draft keeps its preview while it replays: {:?}", accepted.ui_scope);
     assert!(render_body(&mut app,cx).await.contains("count=1 label=b"), "the preview stays while the replay runs");
@@ -218,6 +237,7 @@ async fn a_mutation_row_offers_withdraw_and_restore_takes_an_accepted_draft_back
     assert_eq!(rejected(&withdrawn), None, "{:?}", withdrawn.output);
     let session = app.time_travel.session();
     assert_eq!((session.stage, session.pending.as_ref().map(|pending| (pending.target.mutation.0.clone(), pending.replacement.clone()))), (TimeTravelStage::Editing, Some((target.clone(), protocol::InputReplacement::Withdrawn))), "the session opens on a withdrawn draft");
+    pump_until(&mut app, "the withdrawn preview settles", |app| app.time_travel.preview_progress().is_none(), mounted_policy, &mut identity, cx).await;
     assert_eq!((render_body(&mut app,cx).await.contains("count=1 label=a"), app.stores.store.generation()), (true, generation), "the preview is the state before the mutation; the store is untouched");
     let editing = row_actions(&seeded_mutation_node(&mut app, 3, cx).await);
     assert_eq!((editing[0].2, editing[0].3.as_deref().is_some_and(|reason| reason.starts_with("Blocked")), &editing[1]), (true, true, &enabled("historyEditWithdraw", "Withdraw")), "the withdrawn draft blocks Edit; Withdraw stays the editor's own: {editing:?}");

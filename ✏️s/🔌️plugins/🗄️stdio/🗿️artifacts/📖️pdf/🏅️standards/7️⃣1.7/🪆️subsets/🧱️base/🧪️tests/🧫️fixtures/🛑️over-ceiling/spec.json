@@ -1,0 +1,8 @@
+{
+  "pageCount": 30,
+  "operatorsPerPage": 14000,
+  "decodedBytesPerPage": 28001,
+  "paddingBytes": 8192,
+  "fileBytes": 16978,
+  "ceiling": 33554432
+}

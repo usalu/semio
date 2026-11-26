@@ -99137,6 +99137,42 @@
             "slender": true
           },
           {
+            "id": "child-foot-bones-l",
+            "kind": "capsule",
+            "bone": "child-foot-l",
+            "material": "bone",
+            "role": "body",
+            "tone": 0.93,
+            "p0": [
+              0.248,
+              -0.122,
+              0.2525
+            ],
+            "p1": [
+              0.31,
+              -0.134,
+              0.2525
+            ],
+            "r0": 0.006,
+            "r1": 0.006,
+            "member": "child-foot-l",
+            "part": "member",
+            "transform": {
+              "translation": [
+                -0.26666408,
+                0.06404741,
+                -0.25481847
+              ],
+              "rotation": [
+                -0.01688049,
+                0.00161858,
+                0.09543299,
+                0.9952914
+              ]
+            },
+            "slender": true
+          },
+          {
             "id": "child-humerus-l",
             "kind": "capsule",
             "bone": "child-upper-arm-l",
@@ -99276,6 +99312,42 @@
                 -0.01278806,
                 0.49748183,
                 0.8670937
+              ]
+            },
+            "slender": true
+          },
+          {
+            "id": "child-foot-bones-r",
+            "kind": "capsule",
+            "bone": "child-foot-r",
+            "material": "bone",
+            "role": "body",
+            "tone": 0.93,
+            "p0": [
+              0.248,
+              -0.122,
+              0.1325
+            ],
+            "p1": [
+              0.31,
+              -0.134,
+              0.1325
+            ],
+            "r0": 0.006,
+            "r1": 0.006,
+            "member": "child-foot-r",
+            "part": "member",
+            "transform": {
+              "translation": [
+                -0.26666408,
+                0.07710312,
+                -0.12996011
+              ],
+              "rotation": [
+                0.01688049,
+                -0.00161858,
+                0.09543299,
+                0.9952914
               ]
             },
             "slender": true

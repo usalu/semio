@@ -13,6 +13,7 @@
    {"memory":3072,"cpu":4,"condition":"active","starts":true},
    {"memory":1536,"cpu":4,"condition":"active","starts":false},
    {"memory":3072,"cpu":2,"condition":"active","starts":false},
+   {"memory":3072,"cpu":4,"condition":"forecast","starts":false},
    {"memory":3072,"cpu":4,"condition":"quiet","starts":false},
    {"memory":3072,"cpu":4,"condition":"lent","starts":false},
    {"memory":3072,"cpu":4,"condition":"disabled","starts":false}

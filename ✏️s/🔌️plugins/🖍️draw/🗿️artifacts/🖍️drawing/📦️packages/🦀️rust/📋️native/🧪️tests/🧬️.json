@@ -43,6 +43,7 @@
               "omit",
               "duplicate",
               "unknown",
+              "foreign-package",
               "wrong-manifest",
               "omit-check",
               "omit-test"

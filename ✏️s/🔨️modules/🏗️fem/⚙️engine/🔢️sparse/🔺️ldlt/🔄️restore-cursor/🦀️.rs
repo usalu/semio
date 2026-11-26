@@ -42,7 +42,7 @@ impl LdltRestoreCursor {
             self.state = Some(LdltCheckpoint {
                 identity, a: CscSym { n, colptr: PagedList::empty(), rowind: PagedList::empty(), vals: PagedList::empty() }, columns: SparseColumns::default(), d: PagedList::empty(), contributors: RowContributors::default(), column: scalar(5)?,
                 cursor: LdltColumnCursor { stage, source: scalar(7)?, contributor: value(8), entry: scalar(9)?, emit_row: scalar(10)?, active_column: scalar(11)?, lookup_lower: scalar(21)?, lookup_upper: scalar(22)?, lookup_mid: scalar(23)?, lookup_comparison: value(24) as i64 as i8, lookup_initialized: value(25) != 0, factor: f64::from_bits(value(12)), pivot: f64::from_bits(value(13)) },
-                workspace: LdltColumnWorkspace { values: PagedList::empty(), marks: PagedList::empty(), generation: value(20) as u32, touched: PagedList::empty(), candidate: PagedList::empty(), sort: HeapSortCursor::new(0) }, admission_fault: value(14) != 0, reserve_lane: value(15) as u8, reserve_cursor: scalar(16)?, checkpoint_due: false, publication_stage: value(17) as u8, publication_outer: scalar(18)?, publication_inner: scalar(19)?,
+                workspace: LdltColumnWorkspace { values: PagedList::empty(), marks: PagedList::empty(), generation: value(20) as u32, touched: PagedList::empty(), candidate: PagedList::empty(), sort: HeapSortCursor::new(0) }, admission_fault: value(14) != 0, reserve_lane: value(15) as u8, reserve_cursor: scalar(16)?, checkpoint_due: false, checkpoint_entries: 0, checkpoint_floor: LDLT_CHECKPOINT_MINIMUM_ENTRIES, publication_stage: value(17) as u8, publication_outer: scalar(18)?, publication_inner: scalar(19)?,
             });
             self.expected_field = 1;
             return Ok(true);

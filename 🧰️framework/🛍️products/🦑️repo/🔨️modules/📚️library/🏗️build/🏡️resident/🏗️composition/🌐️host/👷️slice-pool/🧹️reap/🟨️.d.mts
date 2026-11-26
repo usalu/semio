@@ -1,4 +1,4 @@
-export type ProcessRowV1={pid:number;ppid:number;token?:string};
+export type ProcessRowV1={pid:number;ppid:number;token?:string;service?:true};
 export type ReapScopeV1={pids?:Iterable<number>;match?:(row:ProcessRowV1)=>boolean};
 export const SLICE_JOB_VARIABLE_V1:string;
 export const SLICE_GRACE_MILLISECONDS_V1:number;

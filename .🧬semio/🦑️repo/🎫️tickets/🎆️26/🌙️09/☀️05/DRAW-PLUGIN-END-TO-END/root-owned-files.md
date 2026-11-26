@@ -298,3 +298,14 @@ Pending combined ticket closure only; no exclusive ownership or whole-diff attri
 ## Draw build host sampling
 
 - `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/sample-draw-build-26.py`
+
+## Draw package and publication verification
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/draw-member-wire-budget26.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/draw-member-wire-budget26.json`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/verify-published-draw-receipt.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/attest-draw-journeys-26.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/hub-app-carve.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/memory-incident-26.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/draw-cargo-fallback26.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/completion-audit-26.md`

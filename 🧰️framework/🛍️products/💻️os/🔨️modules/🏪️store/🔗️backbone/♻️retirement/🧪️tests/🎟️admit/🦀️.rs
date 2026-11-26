@@ -30,7 +30,7 @@ fn backbone_retirement_installed_admission_keeps_original_backbone_after_empty_q
             if owner.is_none() { break; }
             let demand = semio_framework_value::factory_ticket_demands(owner.as_ref().unwrap(), 17).unwrap();
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 17, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            let (step, heap) = crate::test_effect::funded(grant, |effect| semio_framework_trace::observe_heap_allocations_on_this_thread(|| crate::test_effect::step(semio_framework_value::close_factory_ticket(&mut owner, effect))));
+            let (step, heap) = crate::test_effect::funded(grant, |effect| semio_framework_trace::observe_heap_allocations_on_this_thread(|| crate::test_effect::step(semio_framework_value::close_factory_ticket(&mut owner, 17, effect))));
             assert_eq!(heap.requested_bytes, step.progress().retained_capacity_bytes);
             assert_eq!(heap.released_bytes, step.progress().released_bytes);
             assert!(step.progress().fits(grant));
@@ -70,19 +70,19 @@ fn backbone_retirement_installed_admission_preserves_empty_queue_capacity_until_
     assert_eq!(demand.release_bytes, capacity * size_of::<BackboneMessage>());
     let closing = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth, ..Default::default() };
     for grant in [RetainedCloneGrant { maximum_items: 0, ..closing }, RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..closing }] {
-        let (step, heap) = crate::test_effect::funded(grant, |effect| semio_framework_trace::observe_heap_allocations_on_this_thread(|| crate::test_effect::step(semio_framework_value::close_factory_ticket(&mut owner, effect))));
+        let (step, heap) = crate::test_effect::funded(grant, |effect| semio_framework_trace::observe_heap_allocations_on_this_thread(|| crate::test_effect::step(semio_framework_value::close_factory_ticket(&mut owner, 0, effect))));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(step.progress(), RetainedCloneProgress::default());
         assert!(owner.is_some());
     }
-    let (step, heap) = crate::test_effect::funded(closing, |effect| semio_framework_trace::observe_heap_allocations_on_this_thread(|| crate::test_effect::step(semio_framework_value::close_factory_ticket(&mut owner, effect))));
+    let (step, heap) = crate::test_effect::funded(closing, |effect| semio_framework_trace::observe_heap_allocations_on_this_thread(|| crate::test_effect::step(semio_framework_value::close_factory_ticket(&mut owner, 0, effect))));
     assert_eq!(heap.released_bytes, demand.release_bytes);
     assert_eq!(step.progress().released_bytes, heap.released_bytes);
     assert!(step.progress().fits(closing));
     let demand = semio_framework_value::factory_ticket_demands(owner.as_ref().unwrap(), 0).unwrap();
     assert_eq!(demand.release_bytes, frame);
-    let closing = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: frame, maximum_depth: demand.depth, ..Default::default() };
-    let (_, heap) = crate::test_effect::funded(closing, |effect| semio_framework_trace::observe_heap_allocations_on_this_thread(|| crate::test_effect::step(semio_framework_value::close_factory_ticket(&mut owner, effect))));
+    let closing = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_release_bytes: frame, maximum_depth: demand.depth, ..Default::default() };
+    let (_, heap) = crate::test_effect::funded(closing, |effect| semio_framework_trace::observe_heap_allocations_on_this_thread(|| crate::test_effect::step(semio_framework_value::close_factory_ticket(&mut owner, 0, effect))));
     assert_eq!(heap.released_bytes, frame);
     assert!(owner.is_none());
     let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| ArtifactStoreBackboneRetirement::admit_attached(&mut queue, &mut backbone, full));
@@ -118,7 +118,7 @@ fn backbone_retirement_constructor_preserves_original_queue_on_every_refusal() {
     while owner.is_some() {
         let demand = semio_framework_value::factory_ticket_demands(owner.as_ref().unwrap(), 0).unwrap();
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        let (step, heap) = crate::test_effect::funded(grant, |effect| semio_framework_trace::observe_heap_allocations_on_this_thread(|| crate::test_effect::step(semio_framework_value::close_factory_ticket(&mut owner, effect))));
+        let (step, heap) = crate::test_effect::funded(grant, |effect| semio_framework_trace::observe_heap_allocations_on_this_thread(|| crate::test_effect::step(semio_framework_value::close_factory_ticket(&mut owner, 0, effect))));
         assert_eq!(heap.requested_bytes, step.progress().retained_capacity_bytes);
         assert_eq!(heap.released_bytes, step.progress().released_bytes);
         assert!(step.progress().fits(grant));
@@ -148,7 +148,7 @@ fn backbone_retirement_releases_an_installed_actor_wake_and_finishes() {
         if owner.is_none() { break; }
         let demand = semio_framework_value::factory_ticket_demands(owner.as_ref().unwrap(), 4096).unwrap();
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        crate::test_effect::funded(grant, |effect| crate::test_effect::step(semio_framework_value::close_factory_ticket(&mut owner, effect)));
+        crate::test_effect::funded(grant, |effect| crate::test_effect::step(semio_framework_value::close_factory_ticket(&mut owner, 4096, effect)));
         assert!(turn < 999);
     }
     assert!(owner.is_none());
@@ -172,7 +172,7 @@ fn memory_pair_ends_retire_while_their_peer_still_shares_the_queues() {
             if owner.is_none() { break; }
             let demand = semio_framework_value::factory_ticket_demands(owner.as_ref().unwrap(), 4096).unwrap();
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            crate::test_effect::funded(grant, |effect| crate::test_effect::step(semio_framework_value::close_factory_ticket(&mut owner, effect)));
+            crate::test_effect::funded(grant, |effect| crate::test_effect::step(semio_framework_value::close_factory_ticket(&mut owner, 4096, effect)));
             assert!(turn < 999, "a pair end never retired while its peer lived");
         }
         assert!(owner.is_none());

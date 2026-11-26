@@ -36,6 +36,7 @@
           ]
         },
         "enforceTickMilliseconds": 30000,
+        "volumeReliefReserveFactor": 2,
         "incrementBytes": 2147483648,
         "transientLeaseMs": 1800000,
         "transientGraceMs": 60000,
@@ -47,7 +48,7 @@
         "holderRenewMs": 900000,
         "holderCacheMs": 30000,
         "holderProtectedShare": 0.4,
-        "admissionBudgetMs": 30000,
+        "admissionBudgetMs": 15000,
         "highWatermark": 0.9,
         "lowWatermark": 0.75,
         "partition": {

@@ -14,7 +14,7 @@ const repository=await privateRepositoryWorkspaceV1("graph");
 declareLibraryBuildTestEnvelopeV1({suite:"build-inference",scratch:"checkout"});
 const roots:string[]=[];
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
-const write=(root:string,files:Readonly<Record<string,string>>)=>{for(const[path,text]of Object.entries(files)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}};
+const write=(root:string,files:Readonly<Record<string,string|undefined>>)=>{for(const[path,text]of Object.entries(files)){if(text===undefined)continue;mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}};
 const esbuildClosure=async(root:string,entry:string)=>{const result=await createRequire(import.meta.url)("esbuild").build({entryPoints:[join(root,entry)],absWorkingDir:root,bundle:true,write:false,platform:"node",format:"esm",metafile:true,logLevel:"silent",outfile:"out.js"});return Object.keys(result.metafile.inputs).map((path:string)=>path.replace(/^\.\//u,"")).sort();};
 const build=(root:string,killAfter?:number)=>{
  const run=Bun.spawnSync([process.execPath,"test",fileURLToPath(new URL("./🏭️build.ts",import.meta.url)),"--timeout","1800000"],{cwd:fileURLToPath(new URL(".",import.meta.url)),env:{...process.env,SEMIO_OWNER_REUSE_ROOT:root,...killAfter===undefined?{}:{SEMIO_OWNER_REUSE_KILL_AFTER:String(killAfter)}},stderr:"pipe",stdout:"pipe"}),text=run.stdout.toString(),line=text.split("\n").find(row=>row.startsWith("owner-reuse "));

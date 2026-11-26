@@ -85,7 +85,7 @@ test("an action path is relative POSIX and is mapped to the separators of the ex
   ["\\\\?\\C:\\w\\r","🦀️/lib.rs","\\\\?\\C:\\w\\r\\🦀️\\lib.rs"],
  ];
  for(const [root,path,expected] of table)expect(remoteExecutionWindowsPathV1(root,path),`${root} + ${path}`).toBe(expected);
- const windows={join:(...parts:string[])=>remoteExecutionWindowsPathV1(parts[0]!,parts.slice(1).join("/")),sep:"\\"};
+ const windows={join:(...parts:string[])=>remoteExecutionWindowsPathV1(parts[0]!,parts.slice(1).join("/")),sep:"\\" as const};
  expect(expandRemoteExecutionRootV1("--remap-path-prefix=@root=name","C:\\w\\r",windows)).toBe("--remap-path-prefix=C:\\w\\r=name");
  expect(expandRemoteExecutionRootV1("--remap-path-prefix=@root/.semio-offload/p=./x","C:\\w\\r",windows)).toBe("--remap-path-prefix=C:\\w\\r\\.semio-offload\\p=./x");
  expect(expandRemoteExecutionRootV1("-Clink-arg=-Wl,-oso_prefix,@root/.semio-offload/o/","C:\\w\\r",windows)).toBe("-Clink-arg=-Wl,-oso_prefix,C:\\w\\r\\.semio-offload\\o\\");

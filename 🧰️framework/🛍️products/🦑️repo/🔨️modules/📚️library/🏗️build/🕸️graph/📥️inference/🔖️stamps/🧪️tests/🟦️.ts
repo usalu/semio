@@ -111,7 +111,7 @@ test("settling the conformance stamps of the real providers registers one stamp 
   expect(first.map(row=>row.status)).toEqual(derived.map(()=>"computed"));
   for(const id of derived){expect(projectStampPathsV1({native:false})).toContain("inferrer:"+id);expect(inferrerActiveV1(id)).toBe(true);}
   const recorded=await captureObservedSourceInputsV1(async()=>{observedInferenceStampsV1(derived.map(id=>"inferrer:"+id));},undefined,false);
-  expect(recorded.observations.map(row=>row.fact)).toEqual(first.map(row=>row.stamp));
+  expect<unknown>(recorded.observations.map(row=>row.fact)).toEqual(first.map(row=>row.stamp));
   expect(await observationsHold(recorded.observations as never)).toBe(true);
   const second=await settleConformanceStampsV1({libraryRoot:library,directory});
   expect(second.map(row=>row.status)).toEqual(derived.map(()=>"stored"));expect(second.map(row=>row.stamp)).toEqual(first.map(row=>row.stamp));
@@ -151,7 +151,7 @@ test("no record, parser identity or generation fact is keyed by the bytes of the
  expect(read("🧬️source-analyses","🟨️.mjs")).toContain("inferrerStampV1(\"source-analyses\")");
  const observation=readFileSync(join(library,"🏗️build","👁️observation","🟨️.mjs"),"utf8");
  expect(observation,"an owner record is keyed by its own key, never by the workspace-wide authority: its recorded observations decide whether it holds").toContain("[recordStampV1(),null,key]");expect(observation).not.toContain("inferenceAuthorityDigestV1(),key");
- expect(observation).toContain("nestedProject?recordStampV1():OBSERVATION_REVISION");
+ expect(observation).not.toMatch(/JSON\.stringify\(\[[^\]]*OBSERVATION_REVISION/u);
  expect(observation).toContain("stampedFragments.some(fragment=>row.path.includes(fragment))");
  const host=readFileSync(join(library,"🏗️build","🕸️graph","🕰️host","🟦️.ts"),"utf8")+readFileSync(join(library,"🏗️build","🕸️graph","🏷️retention","🟦️.ts"),"utf8");
  expect(host).toContain("producer.classifyImplementationRowsV1(rows)");expect(host).toContain("generationSchemaV1.definitions.Identity.const");expect(readFileSync(join(library,"🏗️build","🕸️graph","🕰️generations","🧬️schema","🔣️.json"),"utf8")).toContain("graph-generations-v4");

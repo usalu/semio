@@ -6,7 +6,7 @@ import {evaluateHostCapacityV1,type HostCapacityPolicyV1,type HostReasonV1,type 
 import {currentHostProbeV1,readHostSampleV1,type HostProbeV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts";
 import {claimHeldV1,processAliveV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🔒️lock/🟦️.ts";
-import {readRemoteExecutionPolicyV1,remoteExecutionPlatformMatchesV1} from "../../🟦️.ts";
+import {readRemoteExecutionPolicyV1,remoteExecutionPlatformMatchesV1,type RemoteExecutionLinkedFinalV1} from "../../🟦️.ts";
 import {OFFLOAD_POLICY_V1,offloadExpenseV1,offloadFamilyCrateV1,offloadFamilyMillisecondsV1,offloadFamilyPeakMegabytesV1,offloadLearnPeakMegabytesV1,offloadCostRecordV1,type OffloadRunMeasureV1,offloadModeV1,offloadPeakMegabytesV1,offloadUnitPeakMegabytesV1,type OffloadExpenseV1} from "../📐️policy/🟦️.ts";
 import {parseProcessIdentityV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
@@ -92,8 +92,13 @@ async function fleetSchedulerGetV1<T>(environment:Readonly<Record<string,string|
 }
 
 /** 📡️ The scheduler's own idle counting for this machine (`/v1/fleet/idle?origin=`, signed, one request with a time limit); `undefined` when none is published, it does not answer in time or refuses. Never throws. */
-async function fleetIdleAnswerV1(environment:Readonly<Record<string,string|undefined>>,ports:OffloadAdmissionPortsV1):Promise<{candidates?:number;slots?:number}|undefined>{
- return fleetSchedulerGetV1<{candidates?:number;slots?:number}>(environment,ports,own=>"/v1/fleet/idle?origin="+encodeURIComponent(own)+(ports.peakMegabytes!==undefined&&ports.peakMegabytes>0?"&peak="+Math.ceil(ports.peakMegabytes):""));
+async function fleetIdleAnswerV1(environment:Readonly<Record<string,string|undefined>>,ports:OffloadAdmissionPortsV1,link?:RemoteExecutionLinkedFinalV1):Promise<{candidates?:number;slots?:number;compatible?:number;link?:RemoteExecutionLinkedFinalV1}|undefined>{
+ return fleetSchedulerGetV1(environment,ports,own=>{
+  const query=new URLSearchParams({origin:own});
+  if(ports.peakMegabytes!==undefined&&ports.peakMegabytes>0)query.set("peak",String(Math.ceil(ports.peakMegabytes)));
+  if(link){query.set("target",link.target);query.set("linker",link.linker);}
+  return "/v1/fleet/idle?"+query;
+ });
 }
 
 /** 📊️ How the scheduler's queue stands (`/status`, signed): the actions waiting, the origins that run actions now (never this machine) and the median of the last queue waits in seconds; `undefined` when no scheduler answers. Never throws. */
@@ -135,15 +140,18 @@ export function readOffloadLinkerV1(root:string):string|undefined{
  try{const identity=(JSON.parse(readFileSync(join(root,"offload-linker.json"),"utf8")) as {identity?:unknown}).identity;return typeof identity==="string"&&/^[0-9a-f]{16}$/u.test(identity)?identity:undefined;}catch{return undefined;}
 }
 
-/** 🛰️ Bounds the scheduler's sized slot count by the known linker's worker slots. An explicit link target requires an eligible worker for that target and linker before returning a count, including zero for a busy compatible fleet. A missing or incompatible explicit fleet returns null. */
-export async function fleetLinkedSlotsV1(environment:Readonly<Record<string,string|undefined>>,ports:OffloadAdmissionPortsV1={},link?:Readonly<{target:string;linker:string}>):Promise<number|null>{
+/** 🛰️ An explicit final uses the scheduler's joint target, linker and memory count. Zero means compatible workers are busy, while null means capability or eligibility is unknown. Without an explicit final this bounds the scheduler's count by the known linker's slots. */
+export async function fleetLinkedSlotsV1(environment:Readonly<Record<string,string|undefined>>,ports:OffloadAdmissionPortsV1={},link?:RemoteExecutionLinkedFinalV1):Promise<number|null>{
+ if(link!==undefined){
+  if(offloadModeV1(environment)==="never"||!Number.isFinite(ports.peakMegabytes)||(ports.peakMegabytes??0)<=0)return null;
+  const answer=await fleetIdleAnswerV1(environment,ports,link);
+  return answer?.link?.target===link.target&&answer.link.linker===link.linker&&Number.isInteger(answer.compatible)&&answer.compatible!>0&&Number.isInteger(answer.slots)&&answer.slots!>=0?answer.slots!:null;
+ }
  const idle=await fleetIdleSlotsV1(environment,ports),root=environment.SEMIO_UNIT_CACHE_ROOT;
- if(idle===null||idle===0&&link===undefined)return idle;
- if(!root)return link===undefined?idle:null;
- const linker=link?.linker??readOffloadLinkerV1(root),fleet=linker===undefined?undefined:await fleetWorkersV1(environment,root,ports);
- if(fleet===undefined)return link===undefined?idle:null;
- const property=OFFLOAD_POLICY_V1.property,fit=eligibleFleetWorkersV1(fleet,[{name:property.linker,value:linker!},...link===undefined?[]:[{name:property.targetPrefix+link.target,value:"1"}]]);
- return link!==undefined&&fit.eligible===0?null:Math.min(idle,fit.slots);
+ if(idle===null||idle===0||!root)return idle;
+ const linker=readOffloadLinkerV1(root),fleet=linker===undefined?undefined:await fleetWorkersV1(environment,root,ports);
+ if(fleet===undefined)return idle;
+ return Math.min(idle,eligibleFleetWorkersV1(fleet,[{name:OFFLOAD_POLICY_V1.property.linker,value:linker!}]).slots);
 }
 
 /** 🌊️ Returns the fleet fanout ceiling when offloading can relieve this machine: a scheduler is published, at least one other machine has headroom (`fleetHeadroomV1`), and either the door refused the whole build (`doorRefused`, the one verdict the build then hands to every compiler call through `SEMIO_OFFLOAD_PRESSURE`) or a local unit would queue. `undefined` keeps the caller waiting as before: no scheduler, nobody with headroom, or a calm machine. Under `pin` every unit goes to the named machine, so the ceiling is granted without pressure. */
@@ -183,6 +191,13 @@ export function offloadPeakAtThreadsMegabytesV1(samples:Readonly<Record<string,n
  const below=rows.filter(([count])=>count<threads).sort((left,right)=>right[0]-left[0])[0],above=rows.filter(([count])=>count>threads).sort((left,right)=>left[0]-right[0])[0];
  const grown=below===undefined?undefined:below[1]+(threads-below[0])*extraPerThread;
  return grown===undefined?above?.[1]:above===undefined?grown:Math.min(grown,above[1]);
+}
+
+/** 🏠️ The local final forecast. A managed cdylib runs a serial back end, so only its one-thread evidence describes that execution mode. */
+export function localFinalPeakMegabytesV1(samples:Readonly<Record<string,number>>,serial:boolean):number|undefined{
+ if(!serial)return offloadPeakAtThreadsMegabytesV1(samples,offloadDeclaredThreadsV1(true),readRemoteExecutionPolicyV1().worker.codegen.extraMegabytesPerThread);
+ const measured=samples["1"];
+ return measured!==undefined&&Number.isFinite(measured)&&measured>0?measured:undefined;
 }
 
 /** 📒️ The measured peaks of a crate here per codegen thread count (a file `<crate>.peak` beside the cost record: a JSON object from thread count to megabytes); empty when none was measured or the file is not of that shape. */

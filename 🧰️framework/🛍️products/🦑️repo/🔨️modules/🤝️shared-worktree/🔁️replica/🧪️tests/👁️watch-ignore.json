@@ -1,0 +1,1 @@
+[{"name":"ignored-directory","type":"directory","tracked":false,"ignored":true},{"name":"ordinary-file","type":"file","tracked":false,"ignored":false},{"name":"deleted-path","type":"missing","tracked":false,"ignored":false},{"name":"file-to-directory","type":"directory","tracked":true,"ignored":false},{"name":"shared-directory","type":"directory","tracked":false,"ignored":false}]

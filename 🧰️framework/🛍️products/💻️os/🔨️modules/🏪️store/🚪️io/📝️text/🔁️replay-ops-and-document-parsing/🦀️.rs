@@ -265,6 +265,7 @@ where
     while owners.vcs.checkpoints.pop().is_some() {}
     while owners.vcs.alternatives.pop().is_some() {}
     while owners.edit_messages.pop().is_some() {}
+    while owners.transitions.pop().is_some() {}
     let (snapshot, pack) = owners.vcs.genesis.into_owners();
     retire_shared_projection::<P, Mutation>(snapshot);
     drop(pack);

@@ -22,7 +22,7 @@ import { buildInputSourceRoleV1, buildSourceDemandV1, buildNativeSourceObservati
 import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
 import {INFERENCE_LIMITS_V1} from "../🧬️schema/🟨️.mjs";
 import {observationRoundV1} from "../../../👁️observation/🟨️.mjs";
-import {isOpaqueSourcePathV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import{isOpaqueSourcePathV1}from"../../../📥️inputs/👻️opaque-source/🟨️.mjs";
 const { existsSync, lstatSync, readFileSync, readdirSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */

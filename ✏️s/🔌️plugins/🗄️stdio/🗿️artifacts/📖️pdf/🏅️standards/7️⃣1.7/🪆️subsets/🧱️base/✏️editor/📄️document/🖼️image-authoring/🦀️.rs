@@ -109,7 +109,7 @@ fn paint_image(page: usize, placement: ImagePlacement, id: String) -> PdfMutatio
     match placement {
         ImagePlacement::Insert { matrix, .. } => PdfMutation::AppendPageContent(AppendPageContent {
             index: page,
-            content: vec![PdfOp::Save, PdfOp::Transform { matrix }, paint, PdfOp::Restore],
+            content: vec![PdfOp::Save, PdfOp::Transform { matrix }, paint, PdfOp::Restore].into(),
         }),
         ImagePlacement::Replace { operator, .. } => PdfMutation::ReplaceContent(ReplaceContent { index: page, at: operator, op: paint }),
     }

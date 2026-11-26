@@ -31,6 +31,9 @@ pub use semio_os_flow_host_source::{seeds::FlowEvaluationSeeds, work::FlowEvalua
 #[cfg(test)] use semio_os_flow_operators::registry::*;
 
 #[cfg(test)]
+#[path = "🧰️effect/🦀️.rs"]
+mod effect;
+#[cfg(test)]
 #[path = "../🧹️retirement/🧪️tests/🧹️retirement/🦀️.rs"]
 mod session_retirement_tests;
 #[cfg(test)]

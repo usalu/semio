@@ -208,7 +208,7 @@ pub fn acceptance_change_buckets(inputs: &[ActionArgDef], value: &DslValue) -> [
                 }
                 ArgSchema::Boolean => buckets[1].push((pointer.clone(), DslValue::Bool(!current.and_then(DslValue::as_bool).unwrap_or(false)))),
                 ArgSchema::String { options, .. } if !options.is_empty() => {
-                    let selected = current.and_then(DslValue::as_str);
+                    let selected = current.or(input.default.as_ref()).and_then(DslValue::as_str);
                     buckets[2].extend(options.iter().filter(|option| Some(option.value.as_str()) != selected).map(|option| (pointer.clone(), DslValue::String(option.value.clone()))));
                 }
                 ArgSchema::Vector { min, max, step, .. } => {

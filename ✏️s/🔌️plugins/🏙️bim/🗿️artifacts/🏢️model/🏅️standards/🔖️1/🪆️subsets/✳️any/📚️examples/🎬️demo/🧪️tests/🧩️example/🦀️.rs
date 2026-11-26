@@ -43,7 +43,7 @@ mod shared {
     use semio_s_artifact_bim_model_formula::examples::demo::{ASSET_DIR, PRIMARY_TEXT};
     use super::SNAPSHOT_JSON;
 
-    const ASSET: Asset = Asset { dir: ASSET_DIR, text: PRIMARY_TEXT, json: (*SNAPSHOT_JSON) };
+    static ASSET: std::sync::LazyLock<Asset> = std::sync::LazyLock::new(|| Asset { dir: ASSET_DIR, text: PRIMARY_TEXT, json: *SNAPSHOT_JSON });
 
     #[semio_framework_async_macros::async_test]
     async fn the_demo_round_trips_validates_and_is_closed() {

@@ -153,6 +153,7 @@ fn fem2d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                 use semio_plugin::ViewWindowInstance;
 
                 fn manifest() -> App {
+                    semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::initialize();
                     App { definition: create_fem2d_app(), examples: Vec::new() }
                 }
 

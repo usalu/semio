@@ -8,6 +8,16 @@ import { NATIVE_BUILD_DRIVER_POLICY_V1 } from "../../🟦️.ts";
 import { ConcurrentEditErrorV1, churnProtocolV1, installRestartableFailureHandlerV1 } from "../../../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import { artifacts, header, stubCargo, stubWorkspace, runStub } from "../🎭️stub/🟦️.ts";
 
+registerIsolatedBuildTestV1(import.meta.path, "an unlinked partial release reports the original Cargo failure and retires reclamation", { bodyMilliseconds: 60_000, scope: { kind: "body" } }, async checkpoint => {
+  const row = fixture.unlinkedPartialPass;
+  const root = mkdtempSync(join(artifacts, "z-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", [row.package], "release");
+  const lines: string[] = [];
+  await expect(runStub(root, {version: 1, passes: [pass]}, cargo, {partialProvenance: true, log: line => lines.push(line)}, "omit-last")).rejects.toThrow("Native build failed: " + row.package);
+  expect(lines.some(line => line.includes(`exit ${row.exit}, ${row.linked}/1 component(s) linked`))).toBe(true);
+  expect(lines.some(line => line.includes(`${row.staged} component(s) staged`) && line.includes("; report "))).toBe(true);
+  checkpoint();
+}, /Native build failed: comp-a/u);
+
 registerIsolatedBuildTestV1(import.meta.path, "a failed cargo exit with no failed unit surfaces cargo's own stderr in the error and the report", { bodyMilliseconds: 120_000, scope: { kind: "body" } }, async (checkpoint) => {
   const root = mkdtempSync(join(artifacts, "g-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a"], "release");
   let report = "";

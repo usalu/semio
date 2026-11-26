@@ -46,9 +46,9 @@ test("attack: unsigned, old bearer credentials and unknown machines get 401 on e
 test("roles: a read key cannot write, a write key can, and a replayed or retargeted signature is refused",async()=>{
  const fleet=await fleetServer(),key=sha("k2"),body=result([sha("out")]),target=`/semio/ac/${key}`;
  const reader=loadFleetSignerV1(fleet.a,"cache-read")!,writer=loadFleetSignerV1(fleet.a,"cache-write")!;
- const signedPut=(signer:typeof reader,path:string,bytes:Uint8Array)=>fetch(`http://127.0.0.1:${fleet.running.port}${path}`,{method:"PUT",headers:signer.sign({audience:"cache",method:"PUT",target:path,content:fleetContentHashV1(bytes)}),body:bytes});
+ const signedPut=(signer:typeof reader,path:string,bytes:Uint8Array<ArrayBuffer>)=>fetch(`http://127.0.0.1:${fleet.running.port}${path}`,{method:"PUT",headers:signer.sign({audience:"cache",method:"PUT",target:path,content:fleetContentHashV1(bytes)}),body:bytes});
  expect((await signedPut(reader,target,body)).status,"a cache-read key used for a write").toBe(403);
- const headers=writer.sign({audience:"cache",method:"PUT",target,content:fleetContentHashV1(body)}),send=(extra:Record<string,string>={},bytes:Uint8Array=body,path=target)=>fetch(`http://127.0.0.1:${fleet.running.port}${path}`,{method:"PUT",headers:{...headers,...extra},body:bytes});
+ const headers=writer.sign({audience:"cache",method:"PUT",target,content:fleetContentHashV1(body)}),send=(extra:Record<string,string>={},bytes:Uint8Array<ArrayBuffer>=body,path=target)=>fetch(`http://127.0.0.1:${fleet.running.port}${path}`,{method:"PUT",headers:{...headers,...extra},body:bytes});
  expect((await send()).status).toBe(200);
  expect((await send()).status,"the same captured request replayed").toBe(401);
  const otherKey=sha("k2b");expect((await send({},body,`/semio/ac/${otherKey}`)).status,"the captured signature on another key").toBe(401);
@@ -62,7 +62,7 @@ test("roles: a read key cannot write, a write key can, and a replayed or retarge
 
 test("provenance: a different origin cannot replace a unit with different content, the divergence is recorded with both digests, identical content is accepted, the first uploader stays",async()=>{
  const fleet=await fleetServer(),key=sha("unit"),first=result([sha("one")]),second=result([sha("two")]),same=result([sha("one")]);
- const put=(root:string,bytes:Uint8Array)=>fleet.signed(root)(`${fleet.base}/ac/${key}`,{method:"PUT",body:bytes});
+ const put=(root:string,bytes:Uint8Array<ArrayBuffer>)=>fleet.signed(root)(`${fleet.base}/ac/${key}`,{method:"PUT",body:bytes});
  expect((await put(fleet.a,first)).status).toBe(200);
  expect((await put(fleet.b,second)).status,"another origin, other content").toBe(409);
  expect((await put(fleet.b,same)).status,"another origin, same content").toBe(200);
@@ -108,7 +108,7 @@ test("the network gate refuses a peer outside the fleet CIDR before any credenti
 
 test("attack: every signed write binds its body: blobs to their digest, nx archives and results to a signed hash verified while streaming, so a body swapped in flight is refused and removed",async()=>{
  const fleet=await fleetServer(),writer=loadFleetSignerV1(fleet.a,"cache-write")!,port=fleet.running.port;
- const send=(path:string,body:string|Uint8Array,content:string|undefined)=>fetch(`http://127.0.0.1:${port}${path}`,{method:"PUT",headers:writer.sign({audience:"cache",method:"PUT",target:path,...(content===undefined?{}:{content})}),body});
+ const send=(path:string,body:string|Uint8Array,content:string|undefined)=>fetch(`http://127.0.0.1:${port}${path}`,{method:"PUT",headers:writer.sign({audience:"cache",method:"PUT",target:path,...(content===undefined?{}:{content})}),body:typeof body==="string"?body:Uint8Array.from(body)});
  const good="payload",digest=sha(good),blob=`/semio/cas/${digest}`;
  expect((await send(blob,good,undefined)).status,"unbound blob").toBe(400);
  expect((await send(blob,good,sha("other"))).status,"blob signed for another digest").toBe(400);
@@ -124,7 +124,7 @@ test("attack: every signed write binds its body: blobs to their digest, nx archi
 const unitResult=(manifest:string,outputs:readonly string[])=>encodeProtobufV1(REAPI_V1.actionResult,{output_files:[{path:"unit.json",digest:{hash:manifest,size_bytes:3}},...outputs.map((hash,index)=>({path:`out/o${index}`,digest:{hash,size_bytes:3}}))],exit_code:0});
 
 test("provenance: two builds of one unit whose manifests differ only in their timestamps are the same result, other output bytes are still a divergence",async()=>{
- const fleet=await fleetServer(),key=sha("manifest unit"),put=(root:string,bytes:Uint8Array)=>fleet.signed(root)(`${fleet.base}/ac/${key}`,{method:"PUT",body:bytes});
+ const fleet=await fleetServer(),key=sha("manifest unit"),put=(root:string,bytes:Uint8Array<ArrayBuffer>)=>fleet.signed(root)(`${fleet.base}/ac/${key}`,{method:"PUT",body:bytes});
  expect((await put(fleet.a,unitResult(sha("built at 1"),[sha("rlib"),sha("rmeta")]))).status).toBe(200);
  expect((await put(fleet.b,unitResult(sha("built at 2"),[sha("rmeta"),sha("rlib")]))).status,"another origin, same outputs, other manifest").toBe(200);
  expect((await put(fleet.b,unitResult(sha("built at 3"),[sha("other rlib"),sha("rmeta")]))).status,"another origin, other outputs").toBe(409);
@@ -134,7 +134,7 @@ test("provenance: two builds of one unit whose manifests differ only in their ti
 
 test("consumption: the status names which origin read the results of which origin, and how many of them were compiled units",async()=>{
  const fleet=await fleetServer(),unit=sha("consumed unit"),record=sha("consumed record");
- const put=(root:string,key:string,bytes:Uint8Array)=>fleet.signed(root)(`${fleet.base}/ac/${key}`,{method:"PUT",body:bytes});
+ const put=(root:string,key:string,bytes:Uint8Array<ArrayBuffer>)=>fleet.signed(root)(`${fleet.base}/ac/${key}`,{method:"PUT",body:bytes});
  expect((await put(fleet.a,unit,unitResult(sha("m"),[sha("rlib")]))).status).toBe(200);
  expect((await put(fleet.a,record,result([sha("record.br")]))).status).toBe(200);
  const get=async(root:string,key:string)=>{const answer=await fleet.signed(root)(`${fleet.base}/ac/${key}`);await answer.arrayBuffer();return answer.status;};

@@ -10,6 +10,8 @@ import {httpRemoteExecutionContentV1} from "../../🗄️content/🟦️.ts";
 import {startRemoteExecutionServerV1,type RemoteExecutionServerV1} from "../../🖥️server/🟦️.ts";
 import {readRemoteExecutionPolicyV1} from "../../🟦️.ts";
 import {readSchedulerJournalV1,writeSchedulerJournalV1} from "../../🗓️scheduler/📓️journal/🟦️.ts";
+import {openCounterLedgerV1} from "../../../📈️counter-ledger/🟦️.ts";
+import {schedulerMetricsSourcesV1,startFleetScopeMetricsV1} from "../📈️metrics/🟦️.ts";
 import {type RemoteExecutionSidecarContextV1,sleep,remoteExecutionPortsV1} from "../🧰️shared/🟦️.ts";
 
 /** 🗓️ The scheduler of the group (run on the group server only): serves the Remote Execution API and the worker and load API on the ports of the topology row of the group with signature-checked requests (no shared secret): the origins of its own group may submit and work, the origins of the peer groups of the fleet may submit only, and the network is an access condition only when the topology says `access.enforceNetwork`, bound to the fleet interface only, publishes its origin and port in the fleet facts, republishes it while it runs and leaves when the fleet credential rotates (the supervisor restarts it with the new one). */
@@ -30,14 +32,15 @@ export async function runScheduler(context:RemoteExecutionSidecarContextV1):Prom
  let flushing:ReturnType<typeof setTimeout>|undefined,service:RemoteExecutionServerV1|undefined,closed=false;
  const flush=():void=>{if(flushing!==undefined)clearTimeout(flushing);flushing=undefined;if(service!==undefined&&!closed)writeSchedulerJournalV1(journalPath,service.scheduler.journal());};
  const changed=():void=>{if(flushing===undefined){flushing=setTimeout(flush,250);flushing.unref();}};
- const restore=readSchedulerJournalV1(journalPath,Date.now(),server.resumeGraceSeconds*10_000);
+ const restore=readSchedulerJournalV1(journalPath,Date.now(),server.resumeGraceSeconds*10_000),ledger=openCounterLedgerV1({path:join(dirname(journalPath),"build-scheduler.counters.json"),name:"remote-execution"});
  const running:RemoteExecutionServerV1=await startRemoteExecutionServerV1({
   host:address,grpcPort:ports.grpc,workerPort:ports.worker,content:httpRemoteExecutionContentV1({endpoint:cacheUrl,fetch:remoteCacheFetchV1(environment,{root:context.root})}),cacheUrl,tokens:{},gate,maximumWorkers:server.maximumWorkers,maximumRequestBytes:server.maximumRequestBytes,advertise:shown,
   maximumMessageBytes:server.maximumMessageBytes,maximumBatchBytes:server.maximumBatchBytes,
-  scheduler:{unmatchedSeconds:server.unmatchedSeconds,lingerSeconds:server.lingerSeconds,leaseSeconds:server.leaseSeconds,maximumAttempts:server.maximumAttempts,defaultActionSeconds:server.defaultActionSeconds,maximumActionSeconds:server.maximumActionSeconds,maximumQueued:server.maximumQueued,heartbeatSeconds:policy.worker.heartbeatSeconds,pollSeconds:policy.worker.pollSeconds,loadExpireSeconds:server.loadExpireSeconds,refusalCooldownSeconds:server.refusalCooldownSeconds,resumeGraceSeconds:server.resumeGraceSeconds,restore,onChange:changed,language:"none"},
+  scheduler:{unmatchedSeconds:server.unmatchedSeconds,lingerSeconds:server.lingerSeconds,leaseSeconds:server.leaseSeconds,maximumAttempts:server.maximumAttempts,defaultActionSeconds:server.defaultActionSeconds,maximumActionSeconds:server.maximumActionSeconds,maximumQueued:server.maximumQueued,heartbeatSeconds:policy.worker.heartbeatSeconds,pollSeconds:policy.worker.pollSeconds,loadExpireSeconds:server.loadExpireSeconds,refusalCooldownSeconds:server.refusalCooldownSeconds,resumeGraceSeconds:server.resumeGraceSeconds,restore,ledger,onChange:changed,language:"none"},
   onEvent:event=>{if(event.stage!=="submitted"&&event.stage!=="completed"&&event.stage!=="assigned")say(`scheduler ${event.stage}: ${event.detail}`);},
  });
  service=running;changed();
+ const stopMetrics=startFleetScopeMetricsV1(context,{source:"remote-execution",sources:schedulerMetricsSourcesV1({root:context.root,environment:context.environment,counts:()=>{if(closed)return null;const status=running.scheduler.status();return {running:status.running,queued:status.queued};}})});
  const endpoint=`http://${shown}:${new URL(running.grpcUrl.replace(/^grpc/u,"http")).port}`;
  say(`serving ${endpoint}, worker api ${running.workerUrl}`);
  const publish=async():Promise<void>=>{if(storeRoot!==undefined)await setFleetExecutionV1(storeRoot,{origin:machine.originId,port:Number(new URL(running.grpcUrl.replace(/^grpc/u,"http")).port),protocolVersion:1}).catch(error=>{say(`publishing the endpoint failed: ${(error as Error).message}`);});};
@@ -55,8 +58,8 @@ export async function runScheduler(context:RemoteExecutionSidecarContextV1):Prom
    if(summary!==lastSummary){lastSummary=summary;say(`scheduler summary: ${summary}`);}
   }
  }finally{
-  flush();closed=true;
-  await running.stop().catch(()=>{});
+  flush();closed=true;stopMetrics();
+  await running.stop().catch(()=>{});ledger.close();
   if(context.signal.aborted&&storeRoot!==undefined)await setFleetExecutionV1(storeRoot,null).catch(()=>{});
  }
 }

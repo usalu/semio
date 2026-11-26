@@ -231,6 +231,8 @@ pub enum Fem3dNumericalStage {
     PublishNodeScalar,
     RecoverStressElement,
     PublishStressScalar,
+    BeginBuckling,
+    Buckling,
     BeginModal,
     PrepareModal,
     BeginLdlt,

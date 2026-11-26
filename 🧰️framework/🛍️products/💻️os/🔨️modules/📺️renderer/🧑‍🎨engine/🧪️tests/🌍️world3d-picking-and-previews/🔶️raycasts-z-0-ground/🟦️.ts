@@ -3,7 +3,7 @@ import { cleanup } from "@semio-tech/ui-react/test";
 import { afterEach, expect, it } from "vitest";
 import { worldHoverPaintIdV1 } from "../../../🧱️elements/🌐️World3dHost/🧱️instance-layers/🪟️instance-chrome-store/🟦️.ts";
 import { resolveClickInstanceIdFromProjected, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick } from "../../../🧱️elements/🌐️World3dHost/🎯️marquee-and-bridges/🟦️.tsx";
-import { WORLD3D_CLICK_AFTER_RELEASE_MS, world3dMissedClickBelongsToPickRelease } from "../../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts";
+import { WORLD3D_CLICK_AFTER_RELEASE_MS, world3dClickRepeatsPaddedPick, world3dMissedClickBelongsToPickRelease } from "../../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 import { world3dInstancePickUsesInteractionDomain, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture } from "../../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 import { world3dFrameCameraFromBounds, world3dFrameCameraFromInstances } from "../../../🧱️elements/🌐️World3dHost/🔭️scene-schema/🟦️.ts";
 import { raycastGroundPoint, clearWorldCatalogueDropPreview, getWorldCatalogueDropPreview, registerWorldCatalogueDropHost, setWorldCatalogueDropPreview, subscribeWorldCatalogueDropPreview, worldCatalogueDropHostContainsPoint } from "../../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
@@ -110,6 +110,24 @@ export function registerRaycastsZ0GroundTests(): void {
     expect(world3dInstancePickUsesInteractionDomain(undefined)).toBe(false);
     expect(world3dInstancePickUsesInteractionDomain({})).toBe(false);
     expect(world3dInstancePickUsesInteractionDomain({ interactionId: "port@0" })).toBe(true);
+  });
+  it("dispatches one selection for a click whose padded pick on release already selected that very instance", () => {
+    expect(world3dClickRepeatsPaddedPick(null, "beam", 1001)).toBe(false);
+    expect(world3dClickRepeatsPaddedPick({ id: "beam", timeStamp: 1000 }, "beam", 1001)).toBe(true);
+    expect(world3dClickRepeatsPaddedPick({ id: "beam", timeStamp: 1000 }, "beam", 1000 + WORLD3D_CLICK_AFTER_RELEASE_MS)).toBe(true);
+    expect(world3dClickRepeatsPaddedPick({ id: "beam", timeStamp: 1000 }, "column", 1001)).toBe(false);
+    expect(world3dClickRepeatsPaddedPick({ id: "beam", timeStamp: 1000 }, "beam", 1400)).toBe(false);
+    expect(world3dClickRepeatsPaddedPick({ id: "beam", timeStamp: 1000 }, "beam", 990)).toBe(false);
+    const selections: string[] = [];
+    let pick: { id: string; timeStamp: number } | null = null;
+    const release = (id: string, at: number): void => { pick = { id, timeStamp: at }; selections.push(id); };
+    const meshClick = (id: string, at: number): void => { if (!world3dClickRepeatsPaddedPick(pick, id, at)) selections.push(id); };
+    release("beam", 1000);
+    meshClick("beam", 1001);
+    expect(selections).toEqual(["beam"]);
+    release("column", 3000);
+    meshClick("beam", 3001);
+    expect(selections).toEqual(["beam", "column", "beam"]);
   });
   it("paints the pane's own raycast hover before the guest echoes it, and the guest's when the pointer is elsewhere", () => {
     expect(worldHoverPaintIdV1("bim-1", null)).toBe("bim-1");

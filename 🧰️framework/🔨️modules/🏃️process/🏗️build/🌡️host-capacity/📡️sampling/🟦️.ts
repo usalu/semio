@@ -292,10 +292,15 @@ export function parseSmapsRollupV1(text:string,fields:readonly string[]=OBSERVER
  return total;
 }
 
-/** 🐧️ Reads the footprint (proportional plus swapped proportional set size) in kilobytes of every listed process through `/proc/<pid>/smaps_rollup`, all reads at once; a process that exited, is not ours to read or has no such field is absent from the answer. The callers list only processes whose resident set is large enough to matter, because the kernel walks the page tables of the process to answer. */
-export async function readLinuxChargesV1(pids:readonly number[],read:HostTextReaderV1):Promise<ReadonlyMap<number,number>>{
- const linux=OBSERVERS.platforms.linux,found=new Map<number,number>();
- await Promise.all(pids.map(async pid=>{try{const text=await read(`${linux.processDirectory}/${pid}/${linux.footprint.file}`),value=text===null?undefined:parseSmapsRollupV1(text,linux.footprint.fields);if(value!==undefined)found.set(pid,value);}catch{}}));
+/** 🐧️ Reads the proportional resident and swapped charges in kilobytes from the same Linux page-table sample. */
+export async function readLinuxChargesV1(pids:readonly number[],read:HostTextReaderV1):Promise<ReadonlyMap<number,Readonly<{resident:number;swapped:number|undefined}>>>{
+ const linux=OBSERVERS.platforms.linux,[residentField,swappedField]=linux.footprint.fields,found=new Map<number,Readonly<{resident:number;swapped:number|undefined}>>();
+ await Promise.all(pids.map(async pid=>{try{
+  const text=await read(`${linux.processDirectory}/${pid}/${linux.footprint.file}`);
+  if(text===null)return;
+  const resident=parseSmapsRollupV1(text,[residentField!]);
+  if(resident!==undefined)found.set(pid,{resident,swapped:parseSmapsRollupV1(text,[swappedField!])});
+ }catch{}}));
  return found;
 }
 

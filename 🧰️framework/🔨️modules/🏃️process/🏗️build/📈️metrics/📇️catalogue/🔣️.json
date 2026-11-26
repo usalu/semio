@@ -1,0 +1,794 @@
+{
+  "$schema": "../🧬️schema/🔣️.json#/definitions/Catalogue",
+  "metrics": [
+    {
+      "id": "host.cpu.busy",
+      "kind": "gauge",
+      "unit": "percent",
+      "scope": "origin",
+      "source": "host-sampler",
+      "label": {
+        "en": "CPU busy share",
+        "de": "CPU-Auslastung"
+      }
+    },
+    {
+      "id": "host.cpu.load",
+      "kind": "gauge",
+      "unit": "ratio",
+      "scope": "origin",
+      "platforms": ["darwin", "linux"],
+      "source": "host-sampler",
+      "label": {
+        "en": "Load average (1 min)",
+        "de": "Last im Mittel (1 Min.)"
+      }
+    },
+    {
+      "id": "host.cpu.cores",
+      "kind": "gauge",
+      "unit": "count",
+      "scope": "origin",
+      "source": "host-sampler",
+      "label": {
+        "en": "CPU cores",
+        "de": "CPU-Kerne"
+      }
+    },
+    {
+      "id": "host.memory.total",
+      "kind": "gauge",
+      "unit": "bytes",
+      "scope": "origin",
+      "source": "host-sampler",
+      "label": {
+        "en": "Memory total",
+        "de": "Speicher gesamt"
+      }
+    },
+    {
+      "id": "host.memory.available",
+      "kind": "gauge",
+      "unit": "bytes",
+      "scope": "origin",
+      "source": "host-sampler",
+      "label": {
+        "en": "Memory available",
+        "de": "Speicher verfügbar"
+      }
+    },
+    {
+      "id": "host.memory.compressed",
+      "kind": "gauge",
+      "unit": "bytes",
+      "scope": "origin",
+      "platforms": ["darwin"],
+      "source": "host-sampler",
+      "label": {
+        "en": "Memory compressed",
+        "de": "Speicher komprimiert"
+      }
+    },
+    {
+      "id": "host.memory.pressure",
+      "kind": "state",
+      "unit": "state",
+      "scope": "origin",
+      "source": "host-sampler",
+      "label": {
+        "en": "Memory pressure (0 normal, 1 warn, 2 critical)",
+        "de": "Speicherdruck (0 normal, 1 Warnung, 2 kritisch)"
+      }
+    },
+    {
+      "id": "host.swap.used",
+      "kind": "gauge",
+      "unit": "bytes",
+      "scope": "origin",
+      "platforms": ["darwin", "linux"],
+      "source": "host-sampler",
+      "label": {
+        "en": "Swap used",
+        "de": "Swap belegt"
+      }
+    },
+    {
+      "id": "host.swap.rate",
+      "kind": "gauge",
+      "unit": "bytesPerSecond",
+      "scope": "origin",
+      "platforms": ["darwin", "linux"],
+      "source": "host-sampler",
+      "label": {
+        "en": "Swap traffic",
+        "de": "Swap-Verkehr"
+      }
+    },
+    {
+      "id": "host.disk.free",
+      "kind": "gauge",
+      "unit": "bytes",
+      "scope": "origin",
+      "source": "host-sampler",
+      "label": {
+        "en": "Disk free",
+        "de": "Festplatte frei"
+      }
+    },
+    {
+      "id": "host.disk.total",
+      "kind": "gauge",
+      "unit": "bytes",
+      "scope": "origin",
+      "source": "host-sampler",
+      "label": {
+        "en": "Disk total",
+        "de": "Festplatte gesamt"
+      }
+    },
+    {
+      "id": "host.files.open",
+      "kind": "gauge",
+      "unit": "count",
+      "scope": "origin",
+      "platforms": ["darwin", "linux"],
+      "source": "host-sampler",
+      "label": {
+        "en": "Open files",
+        "de": "Offene Dateien"
+      }
+    },
+    {
+      "id": "host.images.attached",
+      "kind": "gauge",
+      "unit": "count",
+      "scope": "origin",
+      "platforms": ["darwin"],
+      "source": "host-sampler",
+      "label": {
+        "en": "Attached disk images",
+        "de": "Eingehängte Datenträgerabbilder"
+      }
+    },
+    {
+      "id": "warden.level",
+      "kind": "state",
+      "unit": "state",
+      "scope": "origin",
+      "source": "warden",
+      "label": {
+        "en": "Warden level (0 calm, 1 tight, 2 danger)",
+        "de": "Wächterstufe (0 ruhig, 1 knapp, 2 Gefahr)"
+      }
+    },
+    {
+      "id": "warden.subjects.count",
+      "kind": "gauge",
+      "unit": "count",
+      "scope": "origin",
+      "source": "warden",
+      "label": {
+        "en": "Guarded processes",
+        "de": "Überwachte Prozesse"
+      }
+    },
+    {
+      "id": "warden.subjects.memory",
+      "kind": "gauge",
+      "unit": "bytes",
+      "scope": "origin",
+      "source": "warden",
+      "label": {
+        "en": "Guarded process memory",
+        "de": "Speicher überwachter Prozesse"
+      }
+    },
+    {
+      "id": "warden.headroom",
+      "kind": "gauge",
+      "unit": "bytes",
+      "scope": "origin",
+      "platforms": ["darwin", "linux"],
+      "source": "warden",
+      "label": {
+        "en": "Memory headroom",
+        "de": "Speicherreserve"
+      }
+    },
+    {
+      "id": "warden.cancelled",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "warden",
+      "label": {
+        "en": "Processes cancelled by the warden",
+        "de": "Vom Wächter abgebrochene Prozesse"
+      }
+    },
+    {
+      "id": "process.repo.count",
+      "kind": "gauge",
+      "unit": "count",
+      "scope": "origin",
+      "source": "process-tree",
+      "label": {
+        "en": "Repo tool processes",
+        "de": "Repo-Werkzeugprozesse"
+      }
+    },
+    {
+      "id": "process.repo.memory",
+      "kind": "gauge",
+      "unit": "bytes",
+      "scope": "origin",
+      "source": "process-tree",
+      "label": {
+        "en": "Repo tool process memory",
+        "de": "Speicher der Repo-Werkzeugprozesse"
+      }
+    },
+    {
+      "id": "process.repo.cpu",
+      "kind": "gauge",
+      "unit": "percent",
+      "scope": "origin",
+      "platforms": ["darwin", "linux"],
+      "source": "process-tree",
+      "label": {
+        "en": "Repo tool process CPU",
+        "de": "CPU der Repo-Werkzeugprozesse"
+      }
+    },
+    {
+      "id": "build.tasks.running",
+      "kind": "gauge",
+      "unit": "count",
+      "scope": "origin",
+      "source": "process-tree",
+      "label": {
+        "en": "Compilation tasks running",
+        "de": "Laufende Kompilierungsaufgaben"
+      }
+    },
+    {
+      "id": "build.tasks.queued",
+      "kind": "gauge",
+      "unit": "count",
+      "scope": "origin",
+      "source": "scheduler",
+      "label": {
+        "en": "Tasks waiting in the queue",
+        "de": "Wartende Aufgaben in der Warteschlange"
+      }
+    },
+    {
+      "id": "build.units.compiled",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "unit-counters",
+      "label": {
+        "en": "Units compiled",
+        "de": "Kompilierte Einheiten"
+      }
+    },
+    {
+      "id": "build.units.restored.local",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "unit-counters",
+      "label": {
+        "en": "Units restored from the local cache",
+        "de": "Einheiten aus dem lokalen Cache"
+      }
+    },
+    {
+      "id": "build.units.restored.fleet",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "unit-counters",
+      "label": {
+        "en": "Units restored from the fleet cache",
+        "de": "Einheiten aus dem Flotten-Cache"
+      }
+    },
+    {
+      "id": "build.units.stored",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "unit-counters",
+      "label": {
+        "en": "Units stored",
+        "de": "Gespeicherte Einheiten"
+      }
+    },
+    {
+      "id": "build.units.skipped",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "unit-counters",
+      "label": {
+        "en": "Units skipped",
+        "de": "Übersprungene Einheiten"
+      }
+    },
+    {
+      "id": "cache.local.hit",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "local-cache",
+      "label": {
+        "en": "Local cache hits",
+        "de": "Lokale Cache-Treffer"
+      }
+    },
+    {
+      "id": "cache.local.miss",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "local-cache",
+      "label": {
+        "en": "Local cache misses",
+        "de": "Lokale Cache-Fehlgriffe"
+      }
+    },
+    {
+      "id": "cache.local.bytes",
+      "kind": "gauge",
+      "unit": "bytes",
+      "scope": "origin",
+      "source": "local-cache",
+      "label": {
+        "en": "Local cache size",
+        "de": "Größe des lokalen Caches"
+      }
+    },
+    {
+      "id": "cache.remote.ac.hit",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "remote-cache",
+      "label": {
+        "en": "Remote cache action hits",
+        "de": "Treffer bei Remote-Cache-Aktionen"
+      }
+    },
+    {
+      "id": "cache.remote.ac.miss",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "remote-cache",
+      "label": {
+        "en": "Remote cache action misses",
+        "de": "Fehlgriffe bei Remote-Cache-Aktionen"
+      }
+    },
+    {
+      "id": "cache.remote.ac.put",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "remote-cache",
+      "label": {
+        "en": "Remote cache action puts",
+        "de": "Gespeicherte Remote-Cache-Aktionen"
+      }
+    },
+    {
+      "id": "cache.remote.ac.conflict",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "remote-cache",
+      "label": {
+        "en": "Remote cache action conflicts",
+        "de": "Konflikte bei Remote-Cache-Aktionen"
+      }
+    },
+    {
+      "id": "cache.remote.cas.hit",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "remote-cache",
+      "label": {
+        "en": "Remote cache blob hits",
+        "de": "Treffer bei Remote-Cache-Blobs"
+      }
+    },
+    {
+      "id": "cache.remote.cas.miss",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "remote-cache",
+      "label": {
+        "en": "Remote cache blob misses",
+        "de": "Fehlgriffe bei Remote-Cache-Blobs"
+      }
+    },
+    {
+      "id": "cache.remote.cas.put",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "remote-cache",
+      "label": {
+        "en": "Remote cache blob puts",
+        "de": "Gespeicherte Remote-Cache-Blobs"
+      }
+    },
+    {
+      "id": "cache.remote.nx.hit",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "remote-cache",
+      "label": {
+        "en": "Remote cache Nx hits",
+        "de": "Treffer beim Nx-Remote-Cache"
+      }
+    },
+    {
+      "id": "cache.remote.nx.miss",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "remote-cache",
+      "label": {
+        "en": "Remote cache Nx misses",
+        "de": "Fehlgriffe beim Nx-Remote-Cache"
+      }
+    },
+    {
+      "id": "cache.remote.nx.put",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "remote-cache",
+      "label": {
+        "en": "Remote cache Nx puts",
+        "de": "Gespeicherte Nx-Remote-Cache-Einträge"
+      }
+    },
+    {
+      "id": "cache.remote.entries",
+      "kind": "gauge",
+      "unit": "count",
+      "scope": "fleet",
+      "source": "remote-cache",
+      "label": {
+        "en": "Remote cache entries",
+        "de": "Einträge im Remote-Cache"
+      }
+    },
+    {
+      "id": "cache.remote.bytes",
+      "kind": "gauge",
+      "unit": "bytes",
+      "scope": "fleet",
+      "source": "remote-cache",
+      "label": {
+        "en": "Remote cache size",
+        "de": "Größe des Remote-Caches"
+      }
+    },
+    {
+      "id": "exec.offload.in",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "fleet",
+      "source": "remote-execution",
+      "label": {
+        "en": "Tasks offloaded in",
+        "de": "Eingehend ausgelagerte Aufgaben"
+      }
+    },
+    {
+      "id": "exec.offload.out",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "offload-counters",
+      "label": {
+        "en": "Tasks offloaded out",
+        "de": "Ausgehend ausgelagerte Aufgaben"
+      }
+    },
+    {
+      "id": "exec.offload.fellback",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "offload-counters",
+      "label": {
+        "en": "Offloads fallen back to local",
+        "de": "Auslagerungen mit lokalem Rückfall"
+      }
+    },
+    {
+      "id": "exec.refused",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "offload-counters",
+      "label": {
+        "en": "Tasks refused",
+        "de": "Abgelehnte Aufgaben"
+      }
+    },
+    {
+      "id": "exec.queue.running",
+      "kind": "gauge",
+      "unit": "count",
+      "scope": "fleet",
+      "source": "remote-execution",
+      "label": {
+        "en": "Remote executions running",
+        "de": "Laufende Remote-Ausführungen"
+      }
+    },
+    {
+      "id": "exec.queue.queued",
+      "kind": "gauge",
+      "unit": "count",
+      "scope": "fleet",
+      "source": "remote-execution",
+      "label": {
+        "en": "Remote executions queued",
+        "de": "Wartende Remote-Ausführungen"
+      }
+    },
+    {
+      "id": "graph.read.owners",
+      "kind": "gauge",
+      "unit": "count",
+      "scope": "origin",
+      "source": "owner-pool",
+      "label": {
+        "en": "Owners in the graph read",
+        "de": "Eigentümer im Graphlesen"
+      }
+    },
+    {
+      "id": "graph.read.owners.done",
+      "kind": "gauge",
+      "unit": "count",
+      "scope": "origin",
+      "source": "owner-pool",
+      "label": {
+        "en": "Owners read",
+        "de": "Gelesene Eigentümer"
+      }
+    },
+    {
+      "id": "graph.read.facts",
+      "kind": "gauge",
+      "unit": "count",
+      "scope": "origin",
+      "source": "graph-service",
+      "label": {
+        "en": "Facts read into the graph index",
+        "de": "In den Graphindex gelesene Fakten"
+      }
+    },
+    {
+      "id": "graph.pool.claimed",
+      "kind": "gauge",
+      "unit": "count",
+      "scope": "origin",
+      "source": "owner-pool",
+      "label": {
+        "en": "Owner pool claimed",
+        "de": "Eigentümer-Pool beansprucht"
+      }
+    },
+    {
+      "id": "graph.pool.published",
+      "kind": "gauge",
+      "unit": "count",
+      "scope": "origin",
+      "source": "owner-pool",
+      "label": {
+        "en": "Owner pool published",
+        "de": "Eigentümer-Pool veröffentlicht"
+      }
+    },
+    {
+      "id": "graph.pool.failed",
+      "kind": "gauge",
+      "unit": "count",
+      "scope": "origin",
+      "source": "owner-pool",
+      "label": {
+        "en": "Owner pool failed",
+        "de": "Eigentümer-Pool fehlgeschlagen"
+      }
+    },
+    {
+      "id": "graph.pool.memory",
+      "kind": "gauge",
+      "unit": "bytes",
+      "scope": "origin",
+      "source": "owner-pool",
+      "label": {
+        "en": "Owner pool memory",
+        "de": "Speicher des Eigentümer-Pools"
+      }
+    },
+    {
+      "id": "ready.stage",
+      "kind": "state",
+      "unit": "state",
+      "scope": "origin",
+      "source": "ready",
+      "label": {
+        "en": "Readiness stage index",
+        "de": "Index der Bereitschaftsstufe"
+      }
+    },
+    {
+      "id": "ready.state",
+      "kind": "state",
+      "unit": "state",
+      "scope": "origin",
+      "source": "ready",
+      "label": {
+        "en": "Readiness state (0 absent, 1 waiting, 2 running, 3 ready)",
+        "de": "Bereitschaftszustand (0 fehlt, 1 wartet, 2 läuft, 3 bereit)"
+      }
+    },
+    {
+      "id": "ready.attempts",
+      "kind": "gauge",
+      "unit": "count",
+      "scope": "origin",
+      "source": "ready",
+      "label": {
+        "en": "Readiness attempts",
+        "de": "Bereitschaftsversuche"
+      }
+    },
+    {
+      "id": "replica.journal.events",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "journal",
+      "label": {
+        "en": "Journal events",
+        "de": "Journal-Ereignisse"
+      }
+    },
+    {
+      "id": "replica.journal.bytes",
+      "kind": "gauge",
+      "unit": "bytes",
+      "scope": "origin",
+      "source": "journal",
+      "label": {
+        "en": "Journal size",
+        "de": "Journalgröße"
+      }
+    },
+    {
+      "id": "metrics.self.cpu",
+      "kind": "gauge",
+      "unit": "percent",
+      "scope": "origin",
+      "source": "self",
+      "label": {
+        "en": "Collector CPU share (its own steps)",
+        "de": "CPU-Anteil des Sammlers (seine eigenen Schritte)"
+      }
+    },
+    {
+      "id": "metrics.self.memory",
+      "kind": "gauge",
+      "unit": "bytes",
+      "scope": "origin",
+      "source": "self",
+      "label": {
+        "en": "Collector retained memory",
+        "de": "Vom Sammler gehaltener Speicher"
+      }
+    },
+    {
+      "id": "metrics.self.tick.duration",
+      "kind": "gauge",
+      "unit": "microseconds",
+      "scope": "origin",
+      "source": "self",
+      "label": {
+        "en": "Sampler tick duration",
+        "de": "Dauer eines Sampler-Takts"
+      }
+    },
+    {
+      "id": "metrics.self.write.duration",
+      "kind": "gauge",
+      "unit": "microseconds",
+      "scope": "origin",
+      "source": "self",
+      "label": {
+        "en": "Ring write duration",
+        "de": "Dauer des Ring-Schreibens"
+      }
+    },
+    {
+      "id": "metrics.self.write.bytes",
+      "kind": "counter",
+      "unit": "bytes",
+      "scope": "origin",
+      "source": "self",
+      "label": {
+        "en": "Ring bytes written",
+        "de": "Geschriebene Ring-Bytes"
+      }
+    },
+    {
+      "id": "metrics.self.samples",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "self",
+      "label": {
+        "en": "Samples recorded",
+        "de": "Aufgezeichnete Messungen"
+      }
+    },
+    {
+      "id": "metrics.self.dropped",
+      "kind": "counter",
+      "unit": "count",
+      "scope": "origin",
+      "source": "self",
+      "label": {
+        "en": "Samples dropped",
+        "de": "Verworfene Messungen"
+      }
+    },
+    {
+      "id": "metrics.self.publish.duration",
+      "kind": "gauge",
+      "unit": "milliseconds",
+      "scope": "origin",
+      "source": "self",
+      "label": {
+        "en": "Publication duration",
+        "de": "Dauer der Veröffentlichung"
+      }
+    },
+    {
+      "id": "process.ready.cpu",
+      "kind": "gauge",
+      "unit": "percent",
+      "scope": "origin",
+      "source": "self",
+      "label": {
+        "en": "Readiness process CPU share (whole process)",
+        "de": "CPU-Anteil des Bereitschaftsprozesses (ganzer Prozess)"
+      }
+    },
+    {
+      "id": "process.ready.rss",
+      "kind": "gauge",
+      "unit": "bytes",
+      "scope": "origin",
+      "source": "self",
+      "label": {
+        "en": "Readiness process resident memory (whole process)",
+        "de": "Residenter Speicher des Bereitschaftsprozesses (ganzer Prozess)"
+      }
+    }
+  ]
+}

@@ -18,6 +18,7 @@ use semio_ui_runtime::ComponentTree;
 use semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND;
 use protocol::LOCAL_ACTOR_ID;
 use semio_plugin_instance_ladders::ladders_plugin_app_impl::MAINTENANCE_STAGES;
+use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
 use semio_plugin_decl_views::NoTransient;
 use semio_plugin_decl_views::NoTransientMutation;
 use semio_plugin_decl_views::PeerPresenceRoot;

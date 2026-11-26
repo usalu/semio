@@ -522,6 +522,13 @@
       "keys": [
         "!"
       ]
+    },
+    {
+      "scope": "prefix",
+      "action": "show-fleet",
+      "keys": [
+        "W"
+      ]
     }
   ]
 }

@@ -117,6 +117,8 @@ semio_ui_locale::app_labels! {
         analysis_error: native_en "Analysis error", native_de "Analysefehler", reuse_en "Analysis error", reuse_de "Analysefehler";
         modal_error: native_en "Modal analysis error", native_de "Fehler der Eigenformanalyse", reuse_en "Modal analysis error", reuse_de "Fehler der Eigenformanalyse";
         buckling_error: native_en "Buckling analysis error", native_de "Fehler der Knickanalyse", reuse_en "Buckling analysis error", reuse_de "Fehler der Knickanalyse";
+        mode_unavailable: native_en "no such mode", native_de "Eigenform nicht vorhanden", reuse_en "no such mode", reuse_de "Eigenform nicht vorhanden";
+        buckling_unavailable: native_en "no buckling factor (no compressive load)", native_de "kein Knickfaktor (keine Drucklast)", reuse_en "no buckling factor (no compressive load)", reuse_de "kein Knickfaktor (keine Drucklast)";
         stage_meshing: native_en "Generating mesh", native_de "Netz wird erzeugt", reuse_en "Generating mesh", reuse_de "Netz wird erzeugt";
         stage_assembly: native_en "Assembling analysis", native_de "Berechnung wird aufgebaut", reuse_en "Assembling analysis", reuse_de "Berechnung wird aufgebaut";
         stage_statics: native_en "Solving loads", native_de "Lasten werden berechnet", reuse_en "Solving loads", reuse_de "Lasten werden berechnet";

@@ -99,13 +99,13 @@ impl<'a> Lowering<'a> {
     }
 
     /// 🗜️ A content stream object for `ops`.
-    pub(crate) fn content_stream(&mut self, ops: &[PdfOp]) -> PResult<PdfObject> {
+    pub(crate) fn content_stream<'o>(&mut self, ops: impl IntoIterator<Item = &'o PdfOp>) -> PResult<PdfObject> {
         let bytes = print_content(ops, self)?;
         Ok(if self.options.compress { stream(Vec::new(), bytes) } else { raw_stream(Vec::new(), bytes) })
     }
 
     /// 📚 The `/Resources` dictionary a content stream needs.
-    pub(crate) fn resources_for(&mut self, ops: &[PdfOp]) -> PdfObject {
+    pub(crate) fn resources_for<'o>(&mut self, ops: impl IntoIterator<Item = &'o PdfOp>) -> PdfObject {
         let references = content_references(ops);
         let mut dict = Vec::new();
         let mut sub = |lowering: &mut Self, key: &str, category: Category, names: &[String]| {
@@ -126,7 +126,7 @@ impl<'a> Lowering<'a> {
     }
 
     /// 🔢 Records the glyphs `ops` show per font (for subsetting).
-    fn record_glyphs(&mut self, ops: &[PdfOp]) {
+    fn record_glyphs<'o>(&mut self, ops: impl IntoIterator<Item = &'o PdfOp>) {
         let mut current: Option<String> = None;
         let mut stack: Vec<Option<String>> = Vec::new();
         let use_text = |lowering: &mut Self, font: &Option<String>, text: &PdfTextString| {
@@ -179,6 +179,24 @@ pub fn lower_page_standalone(snapshot: &PdfSnapshot, page: &PdfPage, page_index:
     lowering.lower_page(page_index, page, page_ref, pages_ref)?;
     lowering.objects.sort_by_key(|object| object.id.num);
     Ok((lowering.objects, annotation_refs))
+}
+
+/// 🆕 Lowers only the fonts, images, forms, graphics states, shadings and patterns of `snapshot` (the new resources an edit introduced) under fresh numbers from `first_number`; returns their objects and the reference each resource got, for an appended section to adopt.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn lower_resources_standalone<'o>(snapshot: &PdfSnapshot, ops: impl IntoIterator<Item = &'o PdfOp>, first_number: u32, options: LowerOptions) -> PResult<(Vec<PdfIndirectObject>, HashMap<(Category, String), ObjRef>)> {
+    let mut lowering = Lowering::new(snapshot, first_number, options)?;
+    lowering.reserve_resources();
+    if lowering.options.subset_fonts {
+        lowering.record_glyphs(ops);
+    }
+    lowering.lower_fonts()?;
+    lowering.lower_images()?;
+    lowering.lower_forms()?;
+    lowering.lower_ext_g_states()?;
+    lowering.lower_shadings()?;
+    lowering.lower_patterns()?;
+    lowering.objects.sort_by_key(|object| object.id.num);
+    Ok((lowering.objects, lowering.refs))
 }
 
 /// ⬆️ Lowers the interactive form after every page was written (its fields reference the

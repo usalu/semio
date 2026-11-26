@@ -358,6 +358,7 @@ impl OsHost {
     fn build_and_publish_snapshot_on_original_caller(&mut self,cx:&mut semio_framework_job::StepContext<'_>,demand:FrameDemand)->Result<(),semio_framework_job::OriginalTurnFailure>{
         if cx.should_yield(){return Ok(())}
         self.pump_frame_inputs(cx)?;
+        self.presenter.note_pending_input(!self.events.is_empty()||self.runtime.has_pending_applies());
         if !crate::os_host::component_surface_close_pending(){
             let inputs=self.runtime.frame_inputs(semio_renderer_wgpu_host_base::app_now_ms());
             let generation=semio_framework_trace::Generation(self.frame_generation);

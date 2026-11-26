@@ -141,8 +141,7 @@
       "caseId"
     ],
     "required": [
-      "elementId",
-      "wy"
+      "elementId"
     ]
   },
   "addAreaLoad": {
@@ -227,8 +226,7 @@
       "enabled"
     ],
     "required": [
-      "caseId",
-      "enabled"
+      "caseId"
     ]
   }
 }

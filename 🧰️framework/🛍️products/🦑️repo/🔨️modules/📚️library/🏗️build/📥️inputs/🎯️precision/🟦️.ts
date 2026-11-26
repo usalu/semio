@@ -1,4 +1,4 @@
-import {isOpaqueSourcePathV1} from "../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import{isOpaqueSourcePathV1}from"../👻️opaque-source/🟨️.mjs";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type: "json"};
 import {resolveBuildHelpLanguageV1} from "../../⚙️operations/📖️help/🟦️.ts";

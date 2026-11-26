@@ -6,11 +6,12 @@ import {lstatSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from 
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {javascriptInstallSchemaV1 as installSchema} from "../../🧱️schemas/🟦️.ts";
+import { loadProductFunctionsV1 } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 
 type Scan=(root:string,control:unknown,check:()=>void,ledger?:{rows:unknown[];directory:(...rest:unknown[])=>void})=>Promise<{entries:number;sha256:string}>;
 const build=async(attempts:number,stat:unknown)=>{
- const ts=await import("typescript"),source=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("dependency-path.ts",source,ts.ScriptTarget.Latest,true),fn=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="scanJavascriptDependencyInstalledPathsV1")!,code=ts.transpileModule(fn.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,descriptors=await import("@semio-tech/framework-filesystem/observation/descriptor");
- return new Function("installSchema","createHash","lstatSync","withArtifactReadDirectoryV1","join","requireIssuedResourceControlV1","checkResourceLeaseControl",code+";return scanJavascriptDependencyInstalledPathsV1;")({$defs:{InstalledPathProtocol:{const:{...installSchema.$defs.InstalledPathProtocol.const,maximumScanAttempts:attempts}}}},createHash,stat,descriptors.withArtifactReadDirectoryV1,join,()=>{},()=>{})as Scan;
+ const descriptors=await import("@semio-tech/framework-filesystem/observation/descriptor");
+ return (await loadProductFunctionsV1(new URL("../../🟦️.ts",import.meta.url),["scanJavascriptDependencyInstalledPathsV1"],{installSchema:{$defs:{InstalledPathProtocol:{const:{...installSchema.$defs.InstalledPathProtocol.const,maximumScanAttempts:attempts}}}},createHash,lstatSync:stat,withArtifactReadDirectoryV1:descriptors.withArtifactReadDirectoryV1,join,requireIssuedResourceControlV1:()=>{},checkResourceLeaseControl:()=>{}})).scanJavascriptDependencyInstalledPathsV1 as Scan;
 };
 const control={signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:async()=>{},yieldContinuation:async()=>{}};
 const disturb=(target:string,key:"mtimeNs"|"size")=>{let calls=0;return((path:string,options:unknown)=>{const facts=(lstatSync as any)(path,options);if(path===target&&++calls===2)return Object.create(facts,{[key]:{value:facts[key]+1n}});return facts;})as unknown;};

@@ -2,5 +2,6 @@
   "version": 1,
   "lowWaterDivisor": 4,
   "floorDivisor": 16,
-  "maximumDeferral": 1024
+  "maximumDeferral": 1024,
+  "reserveDivisor": 32
 }

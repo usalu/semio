@@ -1,4 +1,4 @@
-import{isOpaqueSourcePathV1}from"../../../../🔍️discovery/📂️source/🟦️.ts";
+import{isOpaqueSourcePathV1}from"../../../../../🏗️build/📥️inputs/👻️opaque-source/🟨️.mjs";
 import schema from"./🔣️schema.json"with{type:"json"};
 import{lstat}from"node:fs/promises";
 import{join,resolve}from"node:path";
@@ -42,9 +42,9 @@ export async function createRepositoryWorkspaceWatcherV1(root:string,policy:Repo
  const refuse=(answer:{reason:string}&Record<string,unknown>)=>Error("Workspace journal cannot vouch: "+renderChangeRefusalV1(answer as never,"en"));
  await control.publish({resource:"workspace-watch:subscribe",mode:"shared",elapsedMs:0});check();
  let interrupted!:(reason:unknown)=>void;const aborted=new Promise<never>((_accept,reject)=>{interrupted=reject;}),onAbort=()=>interrupted(signal.reason);signal.addEventListener("abort",onAbort,{once:true});
- let cursor;
+ let cursor:Awaited<ReturnType<typeof client.cursor>>;
  try{cursor=await Promise.race([client.cursor(startup.signal),aborted]);}finally{signal.removeEventListener("abort",onAbort);}
- check();if(cursor.exact===false)throw refuse(cursor);
+ check();if("exact" in cursor&&cursor.exact===false)throw refuse(cursor);
  const state=readChangeStateV1(changeJournalDirectoryV1(workspace,environment));
  if(!state)throw Error("Workspace journal state required");
  requireJournalCoversSourceV1(state.exclude,policy);

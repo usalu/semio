@@ -61,7 +61,20 @@ impl<A: ArtifactApp> MediaTransfers<A> {
     /// output — the exact complement of what [`Self::admit_typed_operation_slot`] can still hand out,
     /// so `0` is the only value that proves every admitted slot reached its release path.
     pub fn live_typed_operation_slots(&self, pending: &PendingReserved<A>, tools: &ToolOperations<A>) -> usize {
-        (0..ARTIFACT_LIVE_OUTPUT_SLOTS).filter(|slot| !self.typed_operation_slot_is_vacant(pending, tools, *slot)).count()
+        if !(tools.tool_operations.allocation_admitted && tools.latest_wins_commands.allocation_admitted
+            && pending.pending_reserved.allocation_admitted && self.segmented_downloads.allocation_admitted
+            && self.segmented_closures.allocation_admitted) {
+            return ARTIFACT_LIVE_OUTPUT_SLOTS;
+        }
+        let mut occupied = tools.tool_operations.occupied | tools.latest_wins_commands.occupied
+            | pending.pending_reserved.occupied | self.segmented_downloads.occupied | self.segmented_closures.occupied;
+        for (slot, reservation) in tools.typed_operation_reservations.iter().enumerate() {
+            if reservation.is_some() { occupied |= 1u64 << slot; }
+        }
+        for commit in &pending.reserved_commits {
+            occupied |= 1u64 << (commit.permit.operation.operation.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS);
+        }
+        occupied.count_ones() as usize
     }
 
     /// 🎫️ Pre-admits the exact operation slot BEFORE an operation id exists. Every typed authority is a

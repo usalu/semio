@@ -72,7 +72,7 @@ test("an unreadable or start-less holder record keeps everything of the lane, a 
  const{store,root,names}=build([{id:"u1",files:[["a.o",9*hour]],holders:["{not json"]},{id:"u2",files:[["a.o",9*hour]],holders:[holder(undefined)]},{id:"u3",files:[["a.o",9*hour]],holders:[holder(Date.now()-hour)]}]);
  try{
   expect(temporariesHoldersV1(lanePathsV1(root,"u1").live,alive)).toEqual([{startedMs:null}]);expect(temporariesHoldersV1(lanePathsV1(root,"nowhere").live,alive)).toEqual([]);
-  const lanes=await measureTemporariesV1(root,{alive:pid=>pid===4242&&false});expect(lanes.every(lane=>lane.holders.length===0||lane.id==="u1")).toBe(true);
+  const lanes=await measureTemporariesV1(root,{alive:holder=>holder.pid===4242&&false});expect(lanes.every(lane=>lane.holders.length===0||lane.id==="u1")).toBe(true);
   await collectTemporariesV1(root,{dryRun:false,alive:()=>true});
   expect(names("u1")).toEqual(["a.o"]);expect(names("u2")).toEqual(["a.o"]);expect(names("u3")).toEqual([]);
  }finally{rmSync(store,{recursive:true,force:true});}

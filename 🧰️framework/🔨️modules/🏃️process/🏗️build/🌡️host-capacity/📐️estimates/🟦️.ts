@@ -120,6 +120,12 @@ export function learnableHostRunV1(status:HostRunStatusV1,evidence:Readonly<{lim
  return evidence.pressured!==true&&(status==="ok"||evidence.limited===true);
 }
 
+/** 📣️ The run a grant reports to the learned estimates once the run declared what it needs (`needMegabytes`, see `declareHostCapacityNeedV1`): whatever its end, it taught its class at least that need, so a run that failed or was refused for lack of memory can never leave the class sized below what it asked for (`limited`: the declared need is a fact the run itself established, like the breach of a limit, and the learn rule accepts it for a failed or cancelled run alike); a run without a declaration, or one that held at least its need, stays as measured; a pure function that every language ports as written.
+ * @see ../🧪️tests/📣️need/🧫️fixtures/🔣️.json */
+export function hostRunAfterNeedV1<Run extends Readonly<{peakMegabytes:number;status:string}>>(run:Run,needMegabytes:number|undefined):Run&Readonly<{limited?:true}>{
+ return needMegabytes===undefined||!(needMegabytes>run.peakMegabytes)?run:{...run,peakMegabytes:needMegabytes,limited:true};
+}
+
 /** 🔝️ The most one learned peak may count: the share of the memory above the floor that a class may ask for (`estimates.maximumShareBasisPoints`) and, when the class declares one, its ceiling; a measured peak above either is no evidence of what the class needs, so every learned peak is clamped to it before it is stored and a store can never teach a request more than the host could give an idle machine.
  * @see hostClassCeilingV1 */
 export function hostLearnCeilingV1(policy:HostCapacityPolicyV1,capacityMegabytes:number,classCeilingMegabytes?:number):number{

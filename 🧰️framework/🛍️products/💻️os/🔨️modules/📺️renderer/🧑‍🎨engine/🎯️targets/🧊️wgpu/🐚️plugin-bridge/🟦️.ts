@@ -1,4 +1,4 @@
-import { packValueFromBase64 } from "@semio-tech/framework-os";
+import { packValueFromBase64 } from "@semio-tech/framework/packs";
 import type { InvocationResponse, PluginDispatchHintV1 } from "@semio-tech/framework";
 import type { WgpuEphemeralSnapshot, WgpuPluginHandle } from "./🧾️typed-operations-and-handle/🟦️.ts";
 import { naturalFileMediaInputV1 } from "../../../🧱️elements/🛠️ShellHelpers/🎞️media-import/🟦️.ts";

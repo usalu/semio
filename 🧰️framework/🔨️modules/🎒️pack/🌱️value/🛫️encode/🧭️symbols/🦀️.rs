@@ -39,7 +39,18 @@ pub struct ProjectedSymbolScratch{
  symbols:PagedList<SourceSymbol,SYMBOL_CAPACITY>,indices:PagedList<usize,SYMBOL_CAPACITY>,phase:ScratchPhase,
 }
 pub(super) fn compare_text(left:TextReadView<'_>,right:TextReadView<'_>,control:&mut NativeEncodeControl<'_>)->Result<Ordering,ValueError>{
- control.scoped_stage(|control|{let length=left.len().min(right.len());control.begin_stage(length)?;for start in(0..length).step_by(256){control.checkpoint()?;let end=(start+256).min(length);let(mut a,mut b)=([0;256],[0;256]);left.copy_bytes(start,&mut a[..end-start])?;right.copy_bytes(start,&mut b[..end-start])?;let order=a[..end-start].cmp(&b[..end-start]);control.advance(end-start)?;if order!=Ordering::Equal{return Ok(order)}}Ok(left.len().cmp(&right.len()))})
+ control.scoped_stage(|control|{
+  use semio_framework_value_paged_text::paged_text::TextReadCursor;
+  let length=left.len().min(right.len());control.begin_stage(length)?;
+  let(mut left_reader,mut right_reader)=(TextReadCursor::default(),TextReadCursor::default());
+  for start in (0..length).step_by(256){
+   let count=(length-start).min(256);let(mut a,mut b)=([0;256],[0;256]);
+   if left_reader.copy_controlled(left,start,&mut a[..count],control)?!=count||right_reader.copy_controlled(right,start,&mut b[..count],control)?!=count{return Err(invalid("canonical text source shortened during comparison"))}
+   let order=a[..count].cmp(&b[..count]);control.advance(count)?;
+   if order!=Ordering::Equal{return Ok(order)}
+  }
+  Ok(left.len().cmp(&right.len()))
+ })
 }
 fn invalid(reason:&str)->ValueError{ValueError::new(ValueRefusalKind::InvariantViolated,reason)}
 fn paged_refusal(reason:&'static str)->ValueError{ValueError::new(ValueRefusalKind::AllocationFailed,reason)}

@@ -16,6 +16,8 @@ const flag = (name: string): string | undefined => (args.indexOf(`--${name}`) < 
 const out = resolve(flag("out")!);
 const minutes = Number(flag("minutes") ?? 30);
 const only = flag("assets")?.split(",");
+const scale = Number(process.env.PLAN_SCALE ?? 1);
+const capMb = Number(process.env.PLAN_CAP_MB ?? 1e9);
 
 /** 📏️ The classes of the final run, heaviest first: which assets they take, the resident memory of one asset process (measured, see the report), processes at a time, the limit of one asset in seconds, and the estimated seconds per asset and per megabyte of document on the loaded host (trees take 4 to 46 minutes whatever their document size, so they count per asset; people and rigid assets per megabyte). */
 type Class = { readonly name: string; readonly takes: (head: Sized) => boolean; readonly memory: number; readonly jobs: number; readonly limitS: number; readonly secondsEach: number; readonly secondsPerMb: number };
@@ -31,7 +33,8 @@ type Sized = AssetHead & { readonly bytes: number };
 const heads = mapCatalog((asset): Sized => ({ ...headOf(asset), bytes: JSON.stringify(asset).length }), only);
 const lines: string[] = [];
 const pending = pendingAssets(out, heads, args.includes("--retry-failed"));
-for (const found of CLASSES) {
+for (const base of CLASSES) {
+  const found: Class = { ...base, jobs: Math.max(1, Math.min(Math.round(base.jobs * scale), Math.floor((capMb - 100) / base.memory))) };
   const mine = pending.filter(found.takes).sort((a, b) => b.bytes - a.bytes);
   let request: Sized[] = [];
   let seconds = 0;

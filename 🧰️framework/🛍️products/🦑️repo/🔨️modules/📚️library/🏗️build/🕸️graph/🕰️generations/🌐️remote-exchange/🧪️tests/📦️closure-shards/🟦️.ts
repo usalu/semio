@@ -90,7 +90,7 @@ test("an archived-size generation publishes and restores every closure within th
    if(row.condition==="omitted shard")action=encodeProtobufV1(REAPI_V1.actionResult,{...portable,output_directories:portable.output_directories.slice(0,-1)});
    if(row.condition==="missing leaf")cas.delete(leaf.hash);
    const result=await restoreGenerationV1({...reader,content,key,closures:receiveLeaves,identity,implementation,requireComplete:true});
-   expect(result.status,row.condition).toBe(row.head);
+   expect<unknown>(result.status,row.condition).toBe(row.head);
    expect(await reader.files.read(join(reader.root,GENERATION_POLICY_V1.pointer))!==undefined,row.condition).toBe(row.head==="restored");
   }
  }finally{rmSync(work,{recursive:true,force:true});}

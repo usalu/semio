@@ -20,10 +20,10 @@ test("the fixture and the policy are valid against the schema",()=>{
 
 test("kill plans, lease verdicts, deadlines and progress keys equal the fixture",()=>{
  for(const row of fixture.tree)expect(readyKillPlanV1({table:row.table,root:row.root,known:row.known,self:row.self,spare:new Set((row as {spare?:number[]}).spare??[])}),row.name).toEqual(row.kill);
- for(const row of fixture.cpu){const tree=readyTreeCpuV1(row.rows,row.root,row.extra),before=new Map(Object.entries(row.before).map(([pid,ms])=>[Number(pid),ms]));expect(Object.fromEntries(tree),row.name).toEqual(row.tree);expect(readyLivenessV1(before,tree),row.name).toBe(row.alive);}
+ for(const row of fixture.cpu){const tree=readyTreeCpuV1(row.rows,row.root,row.extra),before=new Map(Object.entries(row.before).map(([pid,ms])=>[Number(pid),ms]));expect<unknown>(Object.fromEntries(tree),row.name).toEqual(row.tree);expect(readyLivenessV1(before,tree),row.name).toBe(row.alive);}
  expect(["0:01.50","1:02:03","2-03:04:05.50","12:34","x"].map(readyCpuMillisecondsV1)).toEqual([1500,3723000,183845500,754000,null]);
- for(const row of fixture.lease)expect(readyLeaseVerdictV1({lease:(row as {lease?:{pid:number;startMs?:number;wallMs:number}|null}).lease,nowMs:row.nowMs,staleMs:row.staleMs,process:(row as {process:"alive"|"gone"|"unknown"}).process,processStartMs:(row as {processStartMs?:number}).processStartMs}),row.name).toEqual(row.expect);
- for(const row of fixture.deadline)expect(readyDeadlineV1(row),row.name).toBe(row.verdict);
+ for(const row of fixture.lease)expect<unknown>(readyLeaseVerdictV1({lease:(row as {lease?:{pid:number;startMs?:number;wallMs:number}|null}).lease,nowMs:row.nowMs,staleMs:row.staleMs,process:(row as {process:"alive"|"gone"|"unknown"}).process,processStartMs:(row as {processStartMs?:number}).processStartMs}),row.name).toEqual(row.expect);
+ for(const row of fixture.deadline)expect<string>(readyDeadlineV1(row),row.name).toBe(row.verdict);
  for(const row of fixture.progress)expect(readyProgressKeyV1(row.lines),row.name).toBe(row.key);
 });
 

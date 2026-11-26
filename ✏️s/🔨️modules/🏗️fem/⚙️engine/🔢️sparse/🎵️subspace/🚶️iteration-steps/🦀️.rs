@@ -830,8 +830,9 @@ impl SubspaceIterationJob {
         std::mem::swap(&mut self.state.x, &mut self.state.work.candidate_x);
         self.state.iteration += 1;
         self.state.converged = self.state.eigensystem_certified&&self.state.converged_count==self.state.p.min(self.state.final_theta.len())&&(self.state.final_theta.len()>=self.state.p||self.state.m==self.state.n);
-        self.state.checkpoint_due = true;
-        self.state.preview_due = true;
+        let due = self.state.iteration >= self.state.publication_floor;
+        self.state.checkpoint_due = self.state.checkpoint_due || due;
+        self.state.preview_due = self.state.preview_due || due;
         self.state.publication_stage = 0;
         self.state.publication_first = 0;
         self.state.publication_second = 0;

@@ -114,12 +114,12 @@ test("a cache that refuses claims (read-only token, old server) is a plain cache
 
 test("the upload carries the slot the executor announced and nothing else about the task leaks upstream",async()=>{
  const seen:Array<Record<string,string>>=[];
- const upstream=await startNxFlightV1({upstream:"http://127.0.0.1:1",instance:"main",token:"t",fetch:async(input,init)=>{
+ const upstream=await startNxFlightV1({upstream:"http://127.0.0.1:1",instance:"main",token:"t",fetch:Object.assign(async(input:URL|RequestInfo,init?:RequestInit)=>{
   const url=String(input);
   if(url.includes("/claim/"))return Response.json({state:"granted",owner:"x",untilMilliseconds:1,ttlMilliseconds:1000});
   if(init?.method==="PUT"){seen.push(init.headers as Record<string,string>);await new Response(init.body as ReadableStream).arrayBuffer();return new Response("Stored",{status:200});}
   return new Response("no",{status:404});
- }});stops.push(()=>upstream.stop());
+ },{preconnect:globalThis.fetch.preconnect})});stops.push(()=>upstream.stop());
  const id=key("slot");await (await get(upstream,id)).text();
  await announceNxTaskFinishV1(upstream.environment(),{hash:id,project:"p",target:"build",slot:SLOT,succeeded:true});
  expect((await put(upstream,id,"archive")).status).toBe(200);

@@ -7,7 +7,6 @@ include!("../🧰️prelude/🦀️.rs");
 #[path = "../🧰️context/🦀️.rs"]
 pub mod context;
 use context::*;
-use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dCamera;
 
 include!("🪟️window-option-laws/🦀️.rs");
 

@@ -4,6 +4,9 @@ use crate::schema::snapshot::GisMapSnapshot;
 use semio_s_artifact_gis_gismap_snapshot::gis_map_inference_demands;
 
 //#region 💡️InferenceService
+/// 📜️ The published contract of the whole-map inference: no caller payload, the named map's pack is the request, `GisMapInference` is the result.
+pub const GIS_MAP_INFERENCE_CONTRACT: semio_plugin::ArtifactInferencePayloadContract = semio_plugin::ArtifactInferencePayloadContract::pack_bound("s.gis.gismap.inference.payload.v1", include_str!("📤️result.json"), "feature");
+
 /// 💡️ The single executable whole-map inference matching the declared schema family.
 pub fn gis_map_inference_service() -> semio_plugin::ArtifactInferenceService {
     semio_plugin::ArtifactInferenceService::new(
@@ -16,7 +19,7 @@ pub fn gis_map_inference_service() -> semio_plugin::ArtifactInferenceService {
             inference_schema_version: 1,
             algorithm_version: 1,
             policy_version: 1,
-            payload: None,
+            payload: Some(GIS_MAP_INFERENCE_CONTRACT),
         },
         infer_gis_map,gis_map_inference_demands)
 }

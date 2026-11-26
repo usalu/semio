@@ -24,12 +24,24 @@ fn native_effective_digest_preserves_borrowed_replacement_contract(){
  let mut map=crate::lifted_replay::EffectiveSupersessions::new();
  for row in [0,2]{map.insert(MutationId(format!("{}#{row}",edit.id)),semio_os_spr::EffectiveSupersession{transition_id:format!("energy:replacement-{row}"),actor:"energy:test".into(),timestamp:semio_os_spr::HybridLogicalTimestamp::new(1,2),scope:None,replacement:if row==0{semio_os_spr::InputReplacement::Withdrawn}else{semio_os_spr::InputReplacement::Input{schema:"energy/model".into(),payload:vec![0,255,3,16,32]}}});}
  let expected=CursorRevisionAccumulator::effective_edit_digest::<(),Operation>(&edit,original,&map);let mut cursor=NativeEffectiveDigest::default();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
- for _ in 0..10000{let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance::<(),Operation>(&edit,&map,original,grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if cursor.digest().is_some(){break}}
+ for _ in 0..10000{let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance::<(),Operation>(&edit,&map,original,grant).result.unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if cursor.digest().is_some(){break}}
  assert_eq!(cursor.digest(),Some(expected));let oracle:Vec<u8>=cases[2]["effectiveDigest"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect();assert_eq!(expected.as_slice(),oracle);
 }
 
 #[test]
 fn native_staged_inverse_digest_preserves_live_original_and_independent_bytes(){
  let cases:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
- for case in cases.as_array().unwrap(){let wire=serde_json::to_string(&case["edit"]).unwrap();let value=semio_framework_pack_json::from_json_str(&wire,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let mut edit=Edit::<bool>::from_value(value).unwrap();let candidate=std::mem::take(&mut *edit.inverse);edit.inverse.push(true);edit.inverse.push(true);edit.inverse.push(false);let live=edit.inverse.iter().copied().collect::<Vec<_>>();let mut cursor=NativeEditDigest::default();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64};for _ in 0..100000{let(p,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance_with_inverse(&edit,&candidate,grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));assert_eq!(edit.inverse.iter().copied().collect::<Vec<_>>(),live);if cursor.digest().is_some(){break}}let expected=case["digest"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect::<Vec<_>>();assert_eq!(cursor.digest().unwrap().as_slice(),expected);}
+ for case in cases.as_array().unwrap(){let wire=serde_json::to_string(&case["edit"]).unwrap();let value=semio_framework_pack_json::from_json_str(&wire,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let mut edit=Edit::<bool>::from_value(value).unwrap();let candidate=std::mem::take(&mut *edit.inverse);edit.inverse.push(true);edit.inverse.push(true);edit.inverse.push(false);let live=edit.inverse.iter().copied().collect::<Vec<_>>();let mut cursor=NativeEditDigest::default();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64};for _ in 0..100000{let(p,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance_with_inverse(&edit,&candidate,grant).result.unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));assert_eq!(edit.inverse.iter().copied().collect::<Vec<_>>(),live);if cursor.digest().is_some(){break}}let expected=case["digest"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect::<Vec<_>>();assert_eq!(cursor.digest().unwrap().as_slice(),expected);}
+}
+
+#[test]
+fn batched_edit_digest_equals_the_whole_value_reference_over_a_size_grid(){
+ for forwards in [0usize,1,2,3,5]{for id_length in (1..140).chain([255,256,257]){for items in [1,2,64,1000]{
+  let id:String=(0..id_length).map(|at|["e","ö","\\","\"","x"][at%5]).collect();
+  let wire=serde_json::json!({"id":id,"forwards":vec![true;forwards],"inverse":vec![false;forwards],"sequenceNumber":7,"startedAt":"2026-10-21T10:00:00Z","line":"l".repeat(id_length%70)});
+  let value=semio_framework_pack_json::from_json_str(&serde_json::to_string(&wire).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let edit=Edit::<bool>::from_value(value).unwrap();
+  let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:1<<20,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64};let mut cursor=NativeEditDigest::default();let mut turns=0;
+  while cursor.digest().is_none(){let turn=cursor.advance(&edit,grant);turn.result.unwrap();turns+=1;assert!(turns<1000000,"no progress")}
+  assert_eq!(cursor.digest().unwrap(),CursorRevisionAccumulator::edit_digest(&edit),"forwards {forwards} id {id_length} items {items}");
+ }}}
 }

@@ -64,7 +64,6 @@ semio-s-plugin-puzzle-jobs = { workspace = true }
 semio-s-plugin-puzzle-retained = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-wasm-bindgen = { workspace = true }
 
 [dev-dependencies]
 semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
@@ -85,5 +84,6 @@ serde_json = { workspace = true }
 semio-s-artifact-puzzle-2d-graph-manifest = { path = "../../../../../../../../🛂️manifest/📦️packages/🦀️rust", features = ["testkit"] }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
+wasm-bindgen = { workspace = true }
 js-sys = { workspace = true }
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }

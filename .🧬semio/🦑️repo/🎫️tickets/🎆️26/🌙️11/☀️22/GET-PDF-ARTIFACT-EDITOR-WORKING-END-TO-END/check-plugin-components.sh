@@ -8,10 +8,10 @@ mkdir -p "$here/🗑️generated/$tag"
 guard() {
   while :; do
     free=$(df -k /System/Volumes/Data | awk 'NR==2 {print int($4/1048576)}')
-    [ "$free" -ge 25 ] && return 0
+    [ "$free" -ge 15 ] && return 0
     find "$here"/🗑️generated/native-target/lane-*/b/debug/build/*/* -mindepth 0 -maxdepth 0 -type d -mmin +60 -exec rm -rf {} + 2>/dev/null
     free=$(df -k /System/Volumes/Data | awk 'NR==2 {print int($4/1048576)}')
-    [ "$free" -ge 25 ] && return 0
+    [ "$free" -ge 15 ] && return 0
     echo "disk guard: ${free} GB free, waiting" >&2
     sleep 60
   done

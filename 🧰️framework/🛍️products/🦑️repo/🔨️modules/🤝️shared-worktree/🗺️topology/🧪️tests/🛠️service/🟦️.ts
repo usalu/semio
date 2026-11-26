@@ -2,8 +2,9 @@
 import {afterAll,expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {chmodSync,mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,writeFileSync,existsSync} from "node:fs";
-import {tmpdir} from "node:os";
+import {homedir,tmpdir} from "node:os";
 import {join} from "node:path";
+import {stretchedBudgetMillisecondsV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
 import {bindFleetHostsV1,readTopologyV1,serverPartsV1,workerPartsV1} from "../../🟦️.ts";
 import {fileURLToPath} from "node:url";
@@ -218,14 +219,15 @@ test("windows: the task is exported, registered again from UTF-16 XML with /F, a
 });
 
 const launchctl=(...args:string[]):{status:number|null;stdout:string}=>{const run=spawnSync("launchctl",args,{encoding:"utf8"});return {status:run.status,stdout:run.stdout??""};};
-const uid=process.getuid?.()??0,domainReady=process.platform==="darwin"&&launchctl("print",`gui/${uid}`).status===0;
+const uid=process.getuid?.()??0,domainReady=process.env["SEMIO_REAL_LAUNCHD_TESTS"]!=="0"&&process.platform==="darwin"&&launchctl("print",`gui/${uid}`).status===0;
 const pidOf=(label:string):number|undefined=>{const match=/\bpid = (\d+)/u.exec(launchctl("print",`gui/${uid}/${label}`).stdout);return match===null?undefined:Number(match[1]);};
-const priority=(pid:number):number=>Number(spawnSync("ps",["-o","pri=","-p",String(pid)],{encoding:"utf8"}).stdout.trim().replace(/\D/gu,""));
+const priorityOnce=(pid:number):number=>Number(spawnSync("ps",["-o","pri=","-p",String(pid)],{encoding:"utf8"}).stdout.trim().replace(/\D/gu,""));
+const priority=(pid:number):number=>{let last=priorityOnce(pid);for(let index=0;index<20;index++){spawnSync("sleep",["0.25"]);const next=priorityOnce(pid);if(next===last&&index>=3)return next;last=next;}return last;};
 const waitFor=async(check:()=>boolean,seconds:number):Promise<boolean>=>{for(let index=0;index<seconds*4;index++){if(check())return true;await new Promise(done=>setTimeout(done,250));}return check();};
 const job=(label:string,program:string,extra:string):string=>`<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0"><dict><key>Label</key><string>${label}</string><key>LimitLoadToSessionType</key><string>Aqua</string>${extra}<key>ProgramArguments</key><array><string>${program}</string><string>600</string></array><key>RunAtLoad</key><true/><key>KeepAlive</key><true/><key>ThrottleInterval</key><integer>1</integer></dict></plist>\n`;
 
 const real=async(good:boolean):Promise<{outcome:string;pidBefore:number;pidAfter:number|undefined;before:number;after:number|undefined;helperGone:boolean}>=>{
- const directory=mkdtempSync(join(tmpdir(),"semio-e27-launchd-"));scratch.push(directory);
+ const root=join(homedir(),"Library","Application Support","semio","launchd-probe");mkdirSync(root,{recursive:true});const directory=mkdtempSync(join(root,"e27-"));scratch.push(directory);
  const label=`tech.semio.e27probe.${process.pid}.${good?"good":"bad"}`,helper=`${label}.reload`,target=join(directory,`${label}.plist`),previous=join(directory,"previous.plist"),result=join(directory,"result.json"),script=join(directory,"reload.sh"),helperPlist=join(directory,`${helper}.plist`),domain=`gui/${uid}`;
  try{
   const old=job(label,"/bin/sleep","");
@@ -237,7 +239,7 @@ const real=async(good:boolean):Promise<{outcome:string;pidBefore:number;pidAfter
   writeFileSync(script,reloadScriptV1({domain,helper,result,items:[{label,plist:target,previous,expect:"running"}],delaySeconds:1,settleSeconds:6}),{mode:0o755});
   writeFileSync(helperPlist,reloadHelperPlistV1(helper,script,join(directory,"reload.log")));
   expect(launchctl("bootstrap",domain,helperPlist).status).toBe(0);
-  expect(await waitFor(()=>existsSync(result),90)).toBe(true);
+  expect(await waitFor(()=>existsSync(result),Math.ceil(stretchedBudgetMillisecondsV1(90000)/1000))).toBe(true);
   const outcome=(JSON.parse(readFileSync(result,"utf8")) as {outcome:string}).outcome;
   await waitFor(()=>launchctl("print",`${domain}/${helper}`).status!==0,10);
   await waitFor(()=>pidOf(label)!==undefined,10);
@@ -251,13 +253,13 @@ test.skipIf(!domainReady)("real launchd: the helper job swaps a running LaunchAg
  expect(outcome.outcome).toBe("applied");
  expect(outcome.before).toBe(20);expect(outcome.after).toBe(31);
  expect(outcome.pidAfter).not.toBe(outcome.pidBefore);expect(outcome.helperGone).toBe(true);
-},180_000);
+},stretchedBudgetMillisecondsV1(180_000));
 
 test.skipIf(!domainReady)("real launchd: a new plist that does not run is replaced by the previous one and the job runs again",async()=>{
  const outcome=await real(false);
  expect(outcome.outcome).toBe("restored");
  expect(outcome.pidAfter).toBeDefined();expect(outcome.after).toBe(20);expect(outcome.helperGone).toBe(true);
-},180_000);
+},stretchedBudgetMillisecondsV1(180_000));
 
 const python=Bun.which("python3")??Bun.which("python"),oracle=fileURLToPath(new URL("./🐍️.py",import.meta.url)),prioritySchema=fileURLToPath(new URL("../../../../📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🪜️priority/🧬️schema/🔣️.json",import.meta.url));
 

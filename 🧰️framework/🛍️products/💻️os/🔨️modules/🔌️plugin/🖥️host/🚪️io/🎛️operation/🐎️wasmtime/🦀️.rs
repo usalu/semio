@@ -44,6 +44,7 @@ pub fn register<T:OperationHostStore>(linker:&mut Linker<T>)->wasm::Result<()>{
   let mut interface=linker.instance("semio:framework/pure@1.0.0")?;
   interface.func_wrap("log",|mut store:wasm::StoreContextMut<'_,T>,(level,message):(String,String)|{store.data_mut().operation_log(level,message);Ok(())})?;
   interface.func_wrap("operation-clock-us",|mut store:wasm::StoreContextMut<'_,T>,(clock_binding,):(u64,)|Ok((store.data_mut().operation_clock_us(clock_binding),)))?;
+  interface.func_wrap("actor-execution-clock-us",|_store:wasm::StoreContextMut<'_,T>,(_binding,):(u64,)|Ok((None::<u64>,)))?;
   interface.func_wrap("now-ms",|mut store:wasm::StoreContextMut<'_,T>,():()|Ok((store.data_mut().operation_now_ms(),)))?;
   interface.func_wrap("trace-span",|mut store:wasm::StoreContextMut<'_,T>,(name,):(String,)|{store.data_mut().operation_trace_span(name);Ok(())})?;
   interface.func_wrap_concurrent("operation-begin",|accessor,():()|Box::pin(async move{Ok((match request(accessor,OperationRequest::Begin).await{OperationReply::Begin(value)=>value,_=>Err(4)},))}))?;

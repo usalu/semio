@@ -2,10 +2,10 @@
   "complete": {
     "cacheHits": 0,
     "complete": true,
-    "computed": 1,
+    "computed": 2,
     "cursor": null,
     "faulted": 0,
-    "fuelUsed": 29,
+    "fuelUsed": 597,
     "progress": {
       "completed": 4,
       "fraction": 1.0,
@@ -13,7 +13,7 @@
     },
     "widgets": [
       {
-        "dep": "",
+        "dep": "bfd3e482d3a5ba95ff3b28c0216257ac6549dc10aa5a0be191ac113404455d26",
         "fault": null,
         "id": "ball",
         "outputs": [
@@ -26,7 +26,7 @@
         "quality": "exact-analytic"
       },
       {
-        "dep": "",
+        "dep": "44b78840256b4c1970930580ba9741d8578ac3f234f45ef8e8fa7c7be0a8f723",
         "fault": null,
         "id": "box",
         "outputs": [
@@ -39,7 +39,7 @@
         "quality": "exact-analytic"
       },
       {
-        "dep": "",
+        "dep": "c884a3e43a05d1dd13fc0d40f947cccfe07560c7ffe608cbe95eb75428c9cc48",
         "fault": null,
         "id": "size",
         "outputs": [
@@ -52,7 +52,7 @@
         "quality": "exact-analytic"
       },
       {
-        "dep": "",
+        "dep": "015c285da5cd8242d34517c54e1e9462a892eefef8eda95409b37a903708fae5",
         "fault": null,
         "id": "view",
         "outputs": [
@@ -69,10 +69,10 @@
   "faulted": {
     "cacheHits": 0,
     "complete": true,
-    "computed": 2,
+    "computed": 1,
     "cursor": null,
     "faulted": 1,
-    "fuelUsed": 467,
+    "fuelUsed": 84,
     "progress": {
       "completed": 4,
       "fraction": 1.0,
@@ -80,7 +80,7 @@
     },
     "widgets": [
       {
-        "dep": "",
+        "dep": "4d9d5483eac0fc3ae1a27dc1174377a76028e0cb9ae9ebd5f3664c90120c9437",
         "fault": {
           "code": "generation3d.geometry.input-range",
           "de": "Der Wert liegt außerhalb des zulässigen Bereichs.",
@@ -92,7 +92,7 @@
         "quality": "exact-analytic"
       },
       {
-        "dep": "",
+        "dep": "44b78840256b4c1970930580ba9741d8578ac3f234f45ef8e8fa7c7be0a8f723",
         "fault": null,
         "id": "box",
         "outputs": [
@@ -105,7 +105,7 @@
         "quality": "exact-analytic"
       },
       {
-        "dep": "",
+        "dep": "c884a3e43a05d1dd13fc0d40f947cccfe07560c7ffe608cbe95eb75428c9cc48",
         "fault": null,
         "id": "size",
         "outputs": [
@@ -118,7 +118,7 @@
         "quality": "exact-analytic"
       },
       {
-        "dep": "",
+        "dep": "015c285da5cd8242d34517c54e1e9462a892eefef8eda95409b37a903708fae5",
         "fault": null,
         "id": "view",
         "outputs": [
@@ -228,12 +228,12 @@
     "fuelUsed": 999,
     "progress": {
       "completed": 1,
-      "fraction": 0.4751928448677063,
+      "fraction": 0.4483739733695984,
       "total": 4
     },
     "widgets": [
       {
-        "dep": "",
+        "dep": "c884a3e43a05d1dd13fc0d40f947cccfe07560c7ffe608cbe95eb75428c9cc48",
         "fault": null,
         "id": "size",
         "outputs": [

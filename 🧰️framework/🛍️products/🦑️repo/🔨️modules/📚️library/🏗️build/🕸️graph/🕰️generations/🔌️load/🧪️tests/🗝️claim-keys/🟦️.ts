@@ -49,7 +49,7 @@ test("the claim by path equals the independent Python model on seeded corpora (o
   let claimedExtra=0,added=0;
   for(let seed=1;seed<=fixture.equality.seeds;seed++){
    const c=corpus(seed),file=join(dir,"corpus-"+seed+".json");writeFileSync(file,JSON.stringify(c));
-   const expected=JSON.parse(Bun.spawnSync([python,"-I",oracle,file]).stdout.toString()),actual=shape(c);
+   const expected=JSON.parse(Bun.spawnSync([python!,"-I",oracle,file]).stdout.toString()),actual=shape(c);
    expect(actual,"seed "+seed).toEqual(expected);
    for(const owner of c.part.owners)added+=actual.owners[owner.name]!.length-owner.nodeRows.length-c.implementation.all.length;
    claimedExtra+=actual.environment.length;
@@ -66,7 +66,7 @@ test("shaping many owners that share one long block inserts into sets once per r
  for(let owner=0;owner<owners;owner++){
   const own:Row[]=Array.from({length:foundRows},(_,i)=>({kind:"file",path:"/w/p"+owner+"/f"+i,fact:"o"+owner}));
   const rows=[...shared,...own];
-  rows[Symbol.iterator]=function*(){for(let at=0;at<rows.length;at++){visits++;yield rows[at]!;}};
+  Object.assign(rows,{[Symbol.iterator]:function*(){for(let at=0;at<rows.length;at++){visits++;yield rows[at]!;}}});
   capture.push(...own);part.owners.push({name:"o"+owner,root:"p"+owner,node:{targets:{}},nodeRows:rows});
  }
  const NativeSet=globalThis.Set;let insertions=0;

@@ -52,6 +52,6 @@ test("a closure row whose entry moved is named by the moved file the provider re
  const said=await observation.verifyStoredProjectRecordV1({cachePath,key:["closure"]});
  refusedFiles.clear();
  expect(said.verdict).toBe("stale");
- expect(said.staleRow.kind).toBe("file");expect(said.staleRow.path).toContain("entry-a");
- expect(said.staleRow.why).toMatch(/^closure-entry-stale \(recipe test\); judge /u);
+ expect(said.staleRow?.kind).toBe("file");expect(said.staleRow?.path).toContain("entry-a");
+ expect(said.staleRow?.why).toMatch(/^closure-entry-stale \(recipe test\); judge /u);
 });

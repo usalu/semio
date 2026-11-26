@@ -23,7 +23,7 @@ fn samples() -> Vec<PdfMutation> {
     vec![
         PdfMutation::InsertPage(InsertPage { index: 1, page: PdfPage::new(10.0, 20.0) }),
         PdfMutation::SetPageBox(set_page_box::SetPageBox { index: 0, kind: crate::standards::v1_7::subsets::base::schema::diff::PdfPageBox::Trim, rect: Some([1.0, 2.0, 3.0, 4.0]) }),
-        PdfMutation::AppendPageContent(AppendPageContent { index: 0, content: vec![PdfOp::Save, PdfOp::Rectangle { x: 0.0, y: 0.0, width: 5.0, height: 5.0 }, PdfOp::Fill, PdfOp::Restore] }),
+        PdfMutation::AppendPageContent(AppendPageContent { index: 0, content: vec![PdfOp::Save, PdfOp::Rectangle { x: 0.0, y: 0.0, width: 5.0, height: 5.0 }, PdfOp::Fill, PdfOp::Restore].into() }),
         PdfMutation::SetFont(set_font::SetFont { font: base.fonts[0].clone(), index: None }),
         PdfMutation::RemoveFont(remove_font::RemoveFont { id: "F1".into() }),
         PdfMutation::SetImage(set_image::SetImage { image: PdfImage::gray8("Im1", 2, 2, vec![0, 64, 128, 255]), index: None }),
@@ -76,7 +76,7 @@ fn pdf17_operations_round_trip_through_the_pack_document_with_exact_float_words(
         let operations = vec![
             PdfMutation::InsertPage(InsertPage { index: 0, page: PdfPage::new(value, 792.0) }),
             PdfMutation::SetPageBox(set_page_box::SetPageBox { index: 0, kind: crate::standards::v1_7::subsets::base::schema::diff::PdfPageBox::Trim, rect: Some([value, value, 612.0, 792.0]) }),
-            PdfMutation::AppendPageContent(AppendPageContent { index: 0, content: vec![PdfOp::Rectangle { x: value, y: 0.0, width: 5.0, height: value }] }),
+            PdfMutation::AppendPageContent(AppendPageContent { index: 0, content: vec![PdfOp::Rectangle { x: value, y: 0.0, width: 5.0, height: value }].into() }),
         ];
         for operation in operations {
             let bytes = operation.encode_op().unwrap();

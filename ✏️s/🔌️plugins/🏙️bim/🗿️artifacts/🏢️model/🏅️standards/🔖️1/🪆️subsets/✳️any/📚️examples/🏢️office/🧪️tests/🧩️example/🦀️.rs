@@ -5,7 +5,7 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 use semio_framework_test_fixtures::fixture_text;
 static SNAPSHOT_JSON: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../🪆️subsets/✳️any/🖼️assets/🏢️office/📸️snapshot.json"));
 
-const ASSET: Asset = Asset { dir: ASSET_DIR, text: PRIMARY_TEXT, json: (*SNAPSHOT_JSON) };
+static ASSET: std::sync::LazyLock<Asset> = std::sync::LazyLock::new(|| Asset { dir: ASSET_DIR, text: PRIMARY_TEXT, json: *SNAPSHOT_JSON });
 
 fn walls_on(model: &ModelSnapshot, storey: &str) -> usize {
     model.walls.values().filter(|wall| wall.storey == storey).count()

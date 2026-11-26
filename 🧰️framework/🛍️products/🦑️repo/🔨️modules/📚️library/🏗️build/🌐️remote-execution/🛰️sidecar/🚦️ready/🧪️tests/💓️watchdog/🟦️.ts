@@ -53,7 +53,7 @@ for(const row of corpus.cases)test("watchdog adoption preserves "+row.id,async()
    child.kill("SIGKILL");await exited;
    expect(existsSync(end)).toBe(false);
    const result=await run(new AbortController().signal);
-   const expected=db.query<{peak:number},[number,number]>("select max(?1,?2) peak").get(row.priorMegabytes,row.nextMegabytes)!.peak;
+   const expected=db.query<{peak:number},[number,number]>("select max(?1,?2) peak").get(row.priorMegabytes!,row.nextMegabytes!)!.peak;
    expect(result).toMatchObject({startedMs,peakMegabytes:expected,spawnFailed:false,exit:null});
    expect(result.tail.join("\n")).toContain("vanished without an exit status");
    return;
@@ -95,9 +95,9 @@ for(const row of corpus.cases)test("watchdog adoption preserves "+row.id,async()
    expect(third.offset).toBe(second.offset);
   }
   if("priorMegabytes" in row){
-   const sample=readyTreeMegabytesV1(child.pid+" 1 "+row.nextMegabytes*1024,child.pid!);
-   expect(sample).toBe(row.nextMegabytes);
-   const expected=db.query<{peak:number},[number,number]>("select max(?1,?2) peak").get(row.priorMegabytes,sample)!.peak;
+   const sample=readyTreeMegabytesV1(child.pid+" 1 "+row.nextMegabytes!*1024,child.pid!);
+   expect(sample).toBe(row.nextMegabytes!);
+   const expected=db.query<{peak:number},[number,number]>("select max(?1,?2) peak").get(row.priorMegabytes!,sample)!.peak;
    if(row.mode==="peak")expect(third.peakMegabytes).toBe(expected);
    else expect(third.peakMegabytes).toBeLessThan(expected);
    writeFileSync(stop,"");

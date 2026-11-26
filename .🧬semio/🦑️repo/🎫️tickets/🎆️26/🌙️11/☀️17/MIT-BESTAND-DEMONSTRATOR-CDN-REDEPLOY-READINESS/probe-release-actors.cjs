@@ -5,19 +5,28 @@ const { createHash } = require("node:crypto");
 const root = process.cwd();
 const requireProject = createRequire(join(root, "♻️mit-bestand/🧺️demonstrator/package.json"));
 process.env.PLAYWRIGHT_BROWSERS_PATH ??= resolve(".🧬semio/🦑️repo/⚡️cache/tools/ms-playwright");
+const extensionDirectory = "🧩️extension-modules", pluginDirectory = "🔌️plugin-modules";
+function actorRoster(site, retained) {
+ const roster = JSON.parse(readFileSync(join(root,"♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧫️cases.json"),"utf8"));
+ const groups = [[extensionDirectory,roster.extensionIds]];
+ if (!retained) groups.unshift([pluginDirectory,roster.pluginIds]);
+ const rows = [];
+ for (const [directory, expected] of groups) {
+  const names = readdirSync(join(site,directory),{withFileTypes:true})
+   .filter(entry=>entry.isDirectory() && require("node:fs").existsSync(join(site,directory,entry.name,"🧾️receipt.json")))
+   .map(entry=>entry.name).sort();
+  const ids = names.map(name=>JSON.parse(readFileSync(join(site,directory,name,"🧾️receipt.json"),"utf8")).pluginId).sort();
+  if (JSON.stringify(ids)!==JSON.stringify([...expected].sort())) throw Error("Unexpected actor roster in "+directory);
+  for (const name of names) rows.push({name,directory});
+ }
+ return rows;
+}
+module.exports = {actorRoster};
 async function main() {
  const [site, option] = process.argv.slice(2);
  if (!site || (option !== undefined && option !== "--retained")) throw Error("Expected a captured site directory and optional --retained");
  const retained = option === "--retained";
- const rows = [];
- const extensionDirectory = "🧩️extension-modules", pluginDirectory = "🔌️plugin-modules";
- for (const [directory, expected] of retained ? [[extensionDirectory,21]] : [[pluginDirectory,11],[extensionDirectory,21]]) {
-  const names = readdirSync(join(site,directory),{withFileTypes:true})
-   .filter(row=>row.isDirectory() && require("node:fs").existsSync(join(site,directory,row.name,"🧾️receipt.json")))
-   .map(row=>row.name).sort();
-  if (names.length !== expected) throw Error("Unexpected receipt count in "+directory+": "+names.length);
-  for (const name of names) rows.push({name,directory});
- }
+ const rows = actorRoster(site,retained);
  const workerPath = "/"+pluginDirectory+"/🧵️shard/🟨️shard-worker.js";
  const shard = readFileSync(retained
   ? resolve(".cache/b/p/m/browser/release/modules/🧵️shard/🟨️shard-worker.js")
@@ -79,4 +88,4 @@ async function main() {
  }
  if (failures) throw Error("Release actor activation/close failed");
 }
-main().catch(error=>{console.error(error);process.exitCode=1;});
+if (require.main === module) main().catch(error=>{console.error(error);process.exitCode=1;});

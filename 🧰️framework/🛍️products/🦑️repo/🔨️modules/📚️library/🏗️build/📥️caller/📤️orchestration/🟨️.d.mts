@@ -17,3 +17,6 @@ export function projectBuildOrchestrationCapabilitiesV1(envelope:unknown,workspa
 
 /** 🔏️ Requires the complete carried closure to match its immutable admitted graph. */
 export function requireBuildOrchestrationContextV1(projects:Readonly<Record<string,BuildOrchestrationProjectV1>>,value:unknown):BuildOrchestrationContextV1;
+
+/** 🔏️ Binds projected authority to the actual evaluated helper and closed contracts. */
+export function buildOrchestrationSourceIdentityV1(): string;

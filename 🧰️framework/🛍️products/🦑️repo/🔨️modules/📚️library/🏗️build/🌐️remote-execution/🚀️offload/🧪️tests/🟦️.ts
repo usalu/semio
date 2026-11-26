@@ -17,6 +17,7 @@ import {spawnSync} from "node:child_process";
 import {mkdirSync,mkdtempSync,readFileSync,realpathSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {availableParallelism,tmpdir} from "node:os";
 import {BUILD_HOST_CAPACITY_POLICY_V1} from "../../../🌡️host-capacity/🎛️control/🟦️.ts";
+import {ownProcessIdentityV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 import {fleetHeadroomV1,localUnitAdmissionV1,offloadFanOutJobsV1,readUnitCostV1,workspaceRootFromV1,worthARoundTripV1,writeUnitCostV1,readOffloadMemoV1,slotQueueMillisecondsV1,writeOffloadMemoV1} from "../🚦️admission/🟦️.ts";
 import {declineOffloadV1,detectWorkerRustcV1} from "../🟦️.ts";
 import {offloadSdkIdentityV1} from "../🧰️toolchain/🟦️.ts";
@@ -250,8 +251,8 @@ test("a unit queues here when every slot is held: the estimate is the age of the
  expect(slotQueueMillisecondsV1(root,2,5000)).toBe(0);expect(slotQueueMillisecondsV1(root,0,5000)).toBe(0);
  const first=tryClaimV1(slots,"0")!,second=tryClaimV1(slots,"1")!;
  expect(slotQueueMillisecondsV1(root,2,5000)).toBe(1);
- writeFileSync(join(tickets,`${String(2000).padStart(15,"0")}-abcd1234-${process.pid}`),"{}");
- writeFileSync(join(tickets,`${String(1000).padStart(15,"0")}-abcd1234-999999999`),"{}");
+ writeFileSync(join(tickets,`${String(2000).padStart(15,"0")}-abcd1234-${process.pid}`),JSON.stringify({...ownProcessIdentityV1(),token:"t",atMs:1}));
+ writeFileSync(join(tickets,`${String(1000).padStart(15,"0")}-abcd1234-999999999`),JSON.stringify({pid:999999999,startMs:1,token:"t",atMs:1}));
  expect(slotQueueMillisecondsV1(root,2,5000)).toBe(3000);
  first.release();expect(slotQueueMillisecondsV1(root,2,5000)).toBe(0);
  second.release();rmSync(root,{recursive:true,force:true});

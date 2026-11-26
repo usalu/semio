@@ -71,10 +71,12 @@ test("the filter keeps what it must: directory names only leave where the entry 
 /** ⚖️ The law: the fact kinds that read a directory are exactly the declared ones, and no directory listing reaches a fact or a row without the rule. */
 test("law: every fact kind that reads a directory is declared in the schema and goes through the source tree rule",()=>{
  const text=readFileSync(module,"utf8"),block=text.slice(text.indexOf("const facts = {"),text.indexOf("\n};",text.indexOf("const facts = {"))),declared=rules.readers.find((row:{module:string})=>row.module==="👁️observation")!.kinds;
- const found=[...block.matchAll(/^\s{2}([A-Za-z]+):.*(?:readdirSync|typescriptDirectoriesV1)/gmu)].map(match=>match[1]);
+ const entries=block.split(/\n(?=\s{2}[A-Za-z]+:)/u),found=entries.map(entry=>/^\s{2}([A-Za-z]+):/u.exec(entry)?.[1]).filter((name,index)=>name!==undefined&&/readdirSync|typescriptDirectoriesV1|typedListingV1/u.test(entries[index]!));
  expect(found.sort()).toEqual([...declared].sort());
- for(const line of block.split("\n").filter(line=>/readdirSync|typescriptDirectoriesV1/u.test(line)))expect(line,line).toContain("directoryFactV1(");
- const reads=text.split("\n").filter(line=>/(?<![\w.])readdirSync\(|world\.readdirSync\(/u.test(line)&&!/^\s*(?:\/\*\*|\*)/u.test(line)&&!/function typescriptDirectoriesV1|world\.readdirSync\(path\|\|"\."/u.test(line)&&!/^(?:function|export function) directoryFactOfV1/u.test(line)&&!/hollowDirectoryV1\(/u.test(line));
+ for(const entry of entries.filter(entry=>/readdirSync|typescriptDirectoriesV1|typedListingV1/u.test(entry)))expect(entry,entry).toContain("directoryFactV1(");
+ const all=text.split("\n").filter(line=>/(?<![\w.])readdirSync\(|world\.readdirSync\(/u.test(line)&&!/^\s*(?:\/\*\*|\*)/u.test(line)&&!/function typescriptDirectoriesV1|world\.readdirSync\(path\|\|"\."/u.test(line)&&!/^(?:function|export function) directoryFactOfV1/u.test(line)&&!/hollowDirectoryV1\(/u.test(line));
+ const listing=text.slice(text.indexOf("function typedListingV1("),text.indexOf("\n}\n",text.indexOf("function typedListingV1(")));
+ const sanctioned=new Set(listing.split("\n")),reads=all.filter(line=>!sanctioned.has(line));
  for(const line of reads)expect(line,line).toContain("directoryFactV1(");
  expect(text).toContain("getDirectories: (path) => probe(\"directories\",path,()=>sys.getDirectories(path),value=>directoryFactV1(value))");
  expect(declared.length).toBe(3);

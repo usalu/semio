@@ -33,7 +33,7 @@ test("a glob selection requests the same owner set and closure as the equivalent
  const admit=async(selection:ReturnType<typeof buildInvocationGraphSelectionV1>)=>{const seen:string[]=[],closed=await closeBuildOwnerAdmissionV1(selection,registry,async owner=>{seen.push(owner.name);return{project:{name:owner.name,targets:{component:{}}},files:[owner.manifest],dependencies:[]};});return{owners:closed.owners,seen:seen.sort()};};
  const expected=oracle(["semio-s-plugin-flow-*-component"]),left=await admit(glob),right=await admit(exact);
  expect(left.owners).toEqual(expected);expect(left).toEqual(right);expect(left.seen.length).toBeLessThan(names.length);
- expect(readBuildGraphSelectionV1(glob)).toEqual(glob);expect(buildGraphScopeKeyV1(glob,registry)).toMatch(/^[0-9a-f]{64}$/u);
+ expect(readBuildGraphSelectionV1(glob)).toEqual(glob);expect(buildGraphScopeKeyV1(glob)).toMatch(/^[0-9a-f]{64}$/u);
 });
 
 test("comma lists, repeated options, negation and excludes scope the read; order of a negation is kept",()=>{

@@ -10,6 +10,10 @@
   "releaseWork": 1,
   "deniedWork": 0,
   "dropEvents": 1,
+  "cloneBacking": {
+    "payloadBytes": 2048,
+    "maximumTurnBytes": 4096
+  },
   "prefix": {
     "first": 2,
     "second": 1,

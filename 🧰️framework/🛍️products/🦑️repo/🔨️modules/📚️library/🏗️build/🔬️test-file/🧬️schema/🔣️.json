@@ -61,6 +61,7 @@
         "elapsedSlackMs",
         "extensions",
         "pythonHints",
+        "oracle",
         "limits"
       ],
       "properties": {
@@ -189,6 +190,62 @@
             "minLength": 1
           }
         },
+        "oracle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "owner",
+            "route",
+            "budgetMs",
+            "extensions",
+            "command",
+            "usage",
+            "environment"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$"
+            },
+            "owner": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$"
+            },
+            "route": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$"
+            },
+            "budgetMs": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 3600000
+            },
+            "extensions": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^\\.[a-z]+$"
+              }
+            },
+            "command": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$"
+            },
+            "usage": {
+              "type": "string",
+              "minLength": 1
+            },
+            "environment": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        },
         "limits": {
           "type": "object",
           "additionalProperties": false,
@@ -240,7 +297,8 @@
         "mode": {
           "enum": [
             "suite",
-            "plain"
+            "plain",
+            "oracle"
           ]
         },
         "table": {
@@ -320,7 +378,8 @@
         "mode": {
           "enum": [
             "suite",
-            "plain"
+            "plain",
+            "oracle"
           ]
         },
         "table": {

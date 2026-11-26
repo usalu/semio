@@ -347,6 +347,7 @@ impl ShellArtifactChannel {
             let entry = entries.iter().find(|entry| entry.instance_id == existing).filter(|entry| {
                 Self::capability_of(command).is_none_or(|capability_id| self.catalog.get(capability_id).is_some_and(|capability| match &capability.owner {
                     CapabilityOwner::Plugin { plugin_id, app_id, .. } => &entry.plugin_id == plugin_id && app_id.as_ref().is_none_or(|app| &entry.app_id == app),
+                    CapabilityOwner::Framework => true,
                     _ => false,
                 }))
             });
@@ -469,16 +470,19 @@ impl ShellArtifactChannel {
 impl ArtifactChannel for ShellArtifactChannel {
     fn select_target(&mut self, instance: u32, capability_id: &str, target: &ActionTarget) -> Result<ActionTarget, Fault> {
         let capability = self.catalog.get(capability_id).ok_or_else(|| fault("capability.not-found", "unknown target capability"))?;
-        let CapabilityOwner::Plugin { plugin_id, app_id, .. } = &capability.owner else {
-            return Err(fault("plugin.unavailable", "target capability has no plugin owner"));
+        let (plugin_id, app_id) = match &capability.owner {
+            CapabilityOwner::Plugin { plugin_id, app_id, .. } => (Some(plugin_id), app_id),
+            CapabilityOwner::Framework if target.artifact_ref.is_some() => (None, &None),
+            CapabilityOwner::Framework => return Err(fault("plugin.unavailable", format!("framework capability `{capability_id}` acts on one artifact and runs in that artifact's own app — name it with `target.artifactRef`"))),
+            _ => return Err(fault("plugin.unavailable", "target capability has no plugin owner")),
         };
-        if target.plugin_id.as_ref().is_some_and(|id| id != plugin_id) || target.app_id.as_ref().is_some_and(|id| app_id.as_ref().is_some_and(|owner| owner != id)) {
+        if target.plugin_id.as_ref().is_some_and(|id| plugin_id.is_some_and(|owner| owner != id)) || target.app_id.as_ref().is_some_and(|id| app_id.as_ref().is_some_and(|owner| owner != id)) {
             return Err(fault("capability-denied", "target plugin/app does not own this capability"));
         }
         let (handle, connection) = self.binding.relay_connection().ok_or_else(|| fault("plugin.unavailable", "target shell is disconnected"))?;
         let entries = handle.last_instances(connection).unwrap_or_default();
         let candidates: Vec<_> = entries.iter().filter(|entry|
-            entry.plugin_id == *plugin_id
+            plugin_id.is_none_or(|id| &entry.plugin_id == id)
             && app_id.as_ref().is_none_or(|id| &entry.app_id == id)
             && target.instance_id.as_ref().is_none_or(|id| &entry.instance_id == id)
             && target.plugin_id.as_ref().is_none_or(|id| &entry.plugin_id == id)

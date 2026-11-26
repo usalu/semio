@@ -54,7 +54,7 @@ for(const row of fixture)test("host status "+row.mode,async()=>{
    requestHostStatusV1(options).then(reply=>reply?.pid===process.pid?"answered":"absent")
   ).catch(error=>error===reason?"parent":error instanceof HostUnavailableErrorV1&&error.reason==="timeout"?"timeout":Promise.reject(error));
   const outcome=await Promise.race([operation,new Promise<never>((_,reject)=>{watchdog=setTimeout(()=>reject(Error("The local status probe did not settle")),500);})]);
-  expect({result:outcome,signals}).toEqual({result:row.result,signals:row.signals});
+  const observed:{result:string;signals:number}={result:outcome,signals};expect(observed).toEqual({result:row.result,signals:row.signals});
   if(row.mode!=="absent")expect(requests).toBeGreaterThan(0);
   if(row.mode==="command-silent")expect(errors).toEqual(["Zeitüberschreitung beim Warten auf den Status des lokalen Graphdienstes.\n"]);
  }finally{

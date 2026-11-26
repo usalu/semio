@@ -8,6 +8,19 @@ extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
+use semio_plugin::__semio_dispatch_PluginApp;
+use semio_plugin::plugin_app_close_prelude::*;
+
+/// 🧩️ Mounted payload built by the Binary editor surface.
+pub type BinaryEditorApp = VcsArtifactApp<EditorApp<editor::binary::BinaryEditor>>;
+
+semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🎮️ Closed dispatch for the current Binary editor.
+    pub enum BinaryEditorApps: PluginApp {
+        Editor(BinaryEditorApp),
+    }
+}
+
 pub use schema::snapshot::BinarySnapshot;
 pub use schema::mutations::BinaryMutation;
 #[cfg(test)]

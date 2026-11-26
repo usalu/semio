@@ -1,3 +1,4 @@
+import {processPidExistsV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 const P=schema.definitions.Protocol.const;
 function role(name:string):string{
@@ -43,7 +44,7 @@ function temporaryBase(name:string):string|undefined{
 function orphanTemporary(name:string,modified:number,now:number,seconds:number,alive:(pid:number)=>boolean):boolean{
  if(now-modified>seconds*1000)return true;const pid=/\.([0-9]+)(?:\.[0-9a-z]+)?\.tmp$/u.exec(name)?.[1];return pid!==undefined&&Number(pid)>0&&!alive(Number(pid));
 }
-function processAlive(pid:number):boolean{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}}
+function processAlive(pid:number):boolean{return processPidExistsV1(pid);}
 /** 🌀️ A directory that processes of the machine write while the proof runs, because they hold no custody of the graph store and cannot ask for it: the source analysis store `inference/(selections|contexts)/<hash>/sa` of a dataset (`🏗️build/👁️observation/🗄️analysis-store`). The proof never reads, requires or retires what lies below it, so it is neither entered nor stamped (a file added to it changed a directory stamp and refused every proof with "Closure reference directory changed"); only its identity (device, inode, mode) and its image are kept, like an ignored graph control directory.
  * @see ./🧪️tests/🌀️row-log-spill/🟦️.ts */
 function liveSpillDirectory(name:string):boolean{return /^inference\/(?:selections|contexts)\/[a-f0-9]{64}\/sa$/u.test(name);}

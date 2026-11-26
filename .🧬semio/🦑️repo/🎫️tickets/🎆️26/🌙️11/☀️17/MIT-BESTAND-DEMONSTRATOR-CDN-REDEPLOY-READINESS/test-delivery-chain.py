@@ -1,4 +1,4 @@
-"""🧪️ Exercise the captured synthetic 32-receipt site through the final archive gate."""
+"""🧪️ Exercise a captured synthetic site through the final archive gate."""
 import json
 from pathlib import Path
 import runpy
@@ -103,8 +103,8 @@ command = [sys.executable, str(ticket / 'package-site.py'), str(site), str(outpu
 subprocess.run(command, check=True, stdout=subprocess.DEVNULL)
 archive, = output.glob('site-*.tar.gz')
 verify = runpy.run_path(str(ticket / 'verify-release-archive.py'))['verify']
-assert verify(archive, accepted)[0] >= 32
+assert verify(archive, accepted)[0] == len(accepted.read_bytes().splitlines())
 (site / 'index.html').write_text('changed after acceptance')
 assert subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0
 assert len(list(output.glob('site-*.tar.gz'))) == 1
-print('32-receipt synthetic delivery: manifest, 96-case verdict, archive and changed-site refusal passed')
+print('Synthetic release delivery: manifest, 96-case verdict, archive and changed-site refusal passed')

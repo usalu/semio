@@ -27,6 +27,13 @@ export const text = {
 } as const;
 export const kinds = ["Glulam GL24h 200×400", "KVH C24 100×200", "Steel IPE 200", "Steel HEA 160", "Casement Window 100×120", "Fixed Window 150×150", "Tilt & Turn Window 120×140", "Concrete Slab 240mm", "CLT Slab 160mm", "Hollow Core Slab 265mm"];
 export const reuse = "Hexagonal Cut Concrete Forest";
+/** 🗣️ The demo stock names the editor shows per language (English document names, German catalog names); `reuse` is the common prefix of both reuse rows. */
+export const stockNames = {
+  en: { kinds, reuse, reuseRows: ["Hexagonal Cut Concrete Forest Left", "Hexagonal Cut Concrete Forest Right"] },
+  de: { kinds: ["Brettschichtholz GL24h 200×400", "KVH C24 100×200", "Stahl IPE 200", "Stahl HEA 160", "Drehflügelfenster 100×120", "Festverglasung 150×150", "Dreh-Kipp-Fenster 120×140", "Betondecke 240 mm", "BSP-Decke 160 mm", "Hohlkörperdecke 265 mm"], reuse: "Sechseckig geschnittener Betonwald", reuseRows: ["Sechseckig geschnittener Betonwald links", "Sechseckig geschnittener Betonwald rechts"] },
+} as const;
+const allEnglish = [...kinds, "Hexagonal Cut Concrete Forest Left", "Hexagonal Cut Concrete Forest Right"];
+const allGerman = [...stockNames.de.kinds, ...stockNames.de.reuseRows];
 export const BAD = /program load failed sourcing|plugin\.descriptor-invalid|ui\.fixed-capacity|program module unavailable sourcing|Plugin Recovery/u;
 export const DEBUG = /\[DEBUG\]/u;
 
@@ -38,6 +45,8 @@ export async function session(browser: Browser, language: "en" | "de") {
   page.on("pageerror", error => faults.push(`pageerror: ${error.message}`.slice(0, 400)));
   page.on("console", message => { if (!DEBUG.test(message.text()) && (message.type() === "error" || BAD.test(message.text()))) faults.push(`${message.type()}: ${message.text()}`.slice(0, 400)); });
   const t = text[language];
+  const names_ = stockNames[language];
+  const n = (english: string) => language === "en" ? english : allGerman[allEnglish.indexOf(english)] ?? english;
   const shot = (name: string) => page.screenshot({ path: join(out, `${process.env.JOURNEY ?? "journey"}-${language}-${name}.png`) });
   const panel = (name: string) => page.getByRole("tabpanel", { name, exact: true });
   const pool = () => panel(t.pool);
@@ -63,7 +72,7 @@ export async function session(browser: Browser, language: "en" | "de") {
     await shot(`${verdicts.length}`).catch(() => undefined);
     verdicts.push(verdict);
   };
-  return { context, page, faults, t, shot, pool, curated, preview, rowIn, countIn, names, body, settle, eventually, step };
+  return { context, page, faults, t, kinds: [...names_.kinds], reuse: names_.reuse, n, shot, pool, curated, preview, rowIn, countIn, names, body, settle, eventually, step };
 }
 
 /** 🏁️ Runs one journey per requested language in a fresh browser, writes `<name>.json` of all verdicts and sets the exit code. */

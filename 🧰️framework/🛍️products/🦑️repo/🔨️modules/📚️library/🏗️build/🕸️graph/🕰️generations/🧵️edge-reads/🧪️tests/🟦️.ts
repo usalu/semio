@@ -19,9 +19,10 @@ const model=(worlds:ReturnType<typeof world>[])=>{
 };
 
 test("hand-written situations: the consumers equal the stated answer and the independent model",()=>{
- const answers=model(fixture.cases.map(row=>world(row.previous as Parts|null,row.current as Parts,row.rows as Record<string,Row>)));
- fixture.cases.forEach((row,at)=>{
-  expect(own(row.previous as Parts|null,row.current as Parts,row.rows as Record<string,Row>),row.name).toEqual(row.expect);
+ const cases:{name:string;previous:Parts|null;current:Parts;rows:Record<string,Row>;expect:string[]}[]=JSON.parse(JSON.stringify(fixture.cases));
+ const answers=model(cases.map(row=>world(row.previous,row.current,row.rows)));
+ cases.forEach((row,at)=>{
+  expect(own(row.previous,row.current,row.rows),row.name).toEqual(row.expect);
   expect(answers[at]!.affected,row.name).toEqual(row.expect);
  });
 });
@@ -79,6 +80,6 @@ test("stored reads and environment parts are closed, sorted and bounded",()=>{
  expect(readEdgeReadsV1({owners:["a","b"],lock:true})).toEqual({owners:["a","b"],lock:true});
  for(const bad of[null,[],{unknown:["a"]},{owners:[]},{owners:["b","a"]},{owners:["a","a"]},{owners:[""]},{owners:[1]},{lock:false},{owners:["x".repeat(4097)]}])expect(()=>readEdgeReadsV1(bad)).toThrow();
  const good={packages:[["@w/a","a"]],modules:[],workspaces:[["Cargo.toml","d"]],lock:null,taxonomy:"t"};
- expect(readEnvironmentPartsV1(good)).toEqual(good);
+ expect<unknown>(readEnvironmentPartsV1(good)).toEqual(good);
  for(const bad of[null,{},{...good,owners:[]},{...good,packages:[["a"]]},{...good,lock:1},{...good,taxonomy:undefined}])expect(()=>readEnvironmentPartsV1(bad)).toThrow();
 });

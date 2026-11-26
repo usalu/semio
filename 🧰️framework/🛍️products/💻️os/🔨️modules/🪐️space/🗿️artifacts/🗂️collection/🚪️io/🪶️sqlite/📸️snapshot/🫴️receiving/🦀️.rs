@@ -39,6 +39,21 @@ fn project(source:&CollectionSnapshot,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)
 fn body<'a>(entry:&SqliteRow,database:&'a SqliteDatabase,frame:&Frame,port:&mut Paid<'_,'_,'_>)->Fallible<(&'a SqliteRow,bool)>{
  let documents=&table(database,3)?.rows;let blobs=&table(database,4)?.rows;let document=identity_position(documents,&frame.ids[3],entry.rowid,port)?;let blob=identity_position(blobs,&frame.ids[4],entry.rowid,port)?;port.work(3,0)?;match(text(entry,7)?,document,blob){("document",Some(index),None)=>Ok((&documents[index],true)),("blob",None,Some(index))=>Ok((&blobs[index],false)),_=>Err(invalid())}
 }
+fn equal(source:&str,actual:&str,port:&mut Paid<'_,'_,'_>)->Fallible<()>{
+ port.work(3,0)?;if source.len()!=actual.len(){return Err(invalid())}let total=source.len();port.control.checkpoint(port.phase(),0,total)?;
+ for(index,(source,actual))in source.as_bytes().chunks(256).zip(actual.as_bytes().chunks(256)).enumerate(){port.work(3,0)?;if source!=actual{return Err(invalid())}port.control.checkpoint(port.phase(),(index*256+source.len()).min(total),total)?}Ok(())
+}
+fn equal_optional(source:Option<&str>,actual:&SqliteValue,port:&mut Paid<'_,'_,'_>)->Fallible<()>{port.work(3,0)?;match(source,actual){(None,SqliteValue::Null)=>Ok(()),(Some(source),SqliteValue::Text(actual))=>equal(source,actual,port),_=>Err(invalid())}}
+fn coordinate(dialect:&semio_framework_artifact_reference::ArtifactDialect)->Fallible<()>{if dialect.artifact_kind!=crate::S_COLLECTION_SCHEMA||dialect.standard!="1"||dialect.subset!="*"{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Collection owned SQLite dialect differs"))}Ok(())}
+fn check(source:&CollectionSnapshot,database:&SqliteDatabase,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->Fallible<()>{
+ validate_schema_sql(database,SQL,port)?;check_database(database,port)?;let documents=&table(database,0)?.rows;port.work(2,0)?;if documents.len()!=1{return Err(invalid())}let root=&documents[0];indexes(database,frame,root.rowid,port)?;let folders=&table(database,1)?.rows;let entries=&table(database,2)?.rows;
+ if folders.len()!=source.folders.len()||entries.len()!=source.entries.len()||add(table(database,3)?.rows.len(),table(database,4)?.rows.len())?!=entries.len(){return Err(invalid())}
+ equal(&source.schema,text(root,1)?,port)?;equal(&source.name,text(root,2)?,port)?;
+ for(index,value)in source.folders.iter().enumerate(){let row=&folders[frame.ordered[0][index]];equal(&value.id,text(row,3)?,port)?;equal_optional(value.parent_id.as_deref(),&row.values[4],port)?;equal(&value.name,text(row,5)?,port)?;port.control.checkpoint(port.phase(),index+1,folders.len())?}
+ for(index,value)in source.entries.iter().enumerate(){let row=&entries[frame.ordered[1][index]];let(body,document)=body(row,database,frame,port)?;equal(&value.id,text(row,3)?,port)?;equal_optional(value.folder_id.as_deref(),&row.values[4],port)?;equal(&value.name,text(row,5)?,port)?;equal(&value.kind_id,text(row,6)?,port)?;
+  match(value.body.as_ref(),document){(ArtifactBody::Document{schema,document_id},true)=>{equal(schema,text(body,1)?,port)?;equal(document_id,text(body,2)?,port)?},(ArtifactBody::Blob{blob},false)=>{port.work(4,size_of::<u64>())?;if blob.size!=super::word(body,2)?{return Err(invalid())}equal(&blob.hash,text(body,1)?,port)?;equal(&blob.media_type,text(body,4)?,port)?},_=>return Err(invalid())}
+  port.control.checkpoint(port.phase(),index+1,entries.len())?}Ok(())
+}
 fn read(database:&SqliteDatabase,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->Fallible<()>{
  validate_schema_sql(database,SQL,port)?;check_database(database,port)?;let documents=&table(database,0)?.rows;port.work(2,0)?;if documents.len()!=1{return Err(invalid())}let root=&documents[0];indexes(database,frame,root.rowid,port)?;let folders=&table(database,1)?.rows;let entries=&table(database,2)?.rows;if add(table(database,3)?.rows.len(),table(database,4)?.rows.len())?!=entries.len(){return Err(invalid())}
  {copy(text(root,1)?,&mut frame.snapshot.schema,port,2)?;copy(text(root,2)?,&mut frame.snapshot.name,port,2)?;port.vector(folders.len(),&mut frame.snapshot.folders,2)?;port.vector(entries.len(),&mut frame.snapshot.entries,2)?}
@@ -57,24 +72,40 @@ macro_rules! receive{
   use semio_framework_value::RetainedWorkOutcome;
   type Inner=Stage<$output,store::NativeSnapshotFailure>;
   let before=owner.native().owned_bytes();let Some(maximum)=before.checked_add(control.allocation_remaining_bytes())else{return RetainedWorkOutcome{result:Err(Stage::NotStarted(ValueError::literal(ValueRefusalKind::OwnershipLimit,"collection receiving original SQL ceiling overflow"))),work:0}};
-  let settlement=store::space_history::io::sqlite::snapshot::settlement::TypedFileSettlement::new(control,before,SqliteSnapshotPhase::$phase);let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);
+  let settlement=store::sqlite_snapshot::artifact::receiving::ReceivingSettlement::new(control,before,SqliteSnapshotPhase::$phase);let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);
   let turn=owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<Frame,std::result::Result<$output,Inner>,store::NativeSnapshotFailure>(output,&mut |slot,published,_marker,_unwind,native,body|{
-   let before_work=settlement.control.borrow().performed_work();
+   let before_work=settlement.with_control(|control|control.performed_work());
    let result=(||->std::result::Result<(),store::NativeSnapshotFailure>{
-    let mut control=settlement.control.borrow_mut();let mut port=Paid{control:&mut **control,native:Direction::$direction(native),body};port.work(1,size_of::<Frame>())?;*slot=Some(Frame::new());let frame=slot.as_mut().unwrap();port.work(1,size_of::<$output>())?;frame.result=Some(($operation)(source,database,frame,&mut port));let owned=port.owned();drop(port);drop(control);
-    let operation=frame.result.take().unwrap().and_then(|()|($publish)(frame)).map_err(store::NativeSnapshotFailure::from);
-    *published=Some(match settlement.finish_body(owned){Ok(())=>operation.map_err(Stage::Operation),Err(refusal)=>Err(Stage::Settlement{operation,refusal:refusal.with_retained_progress(body.progress()),receipt:None})});
+    let owned=settlement.with_control(|control|{let mut port=Paid{control,native:Direction::$direction(native),body};port.work(1,size_of::<Frame>())?;*slot=Some(Frame::new());let frame=slot.as_mut().unwrap();port.work(1,size_of::<$output>())?;frame.result=Some(($operation)(source,database,frame,&mut port));Ok::<_,ValueError>(port.owned())})?;
+    let frame=slot.as_mut().unwrap();let status=frame.result.take().unwrap();let settled=settlement.finish_body(owned);
+    *published=Some(match(status,settled){
+     (Ok(()),Ok(()))=>Fallible::<$output>::from(($publish)(frame)).map_err(store::NativeSnapshotFailure::from).map_err(Stage::Operation),
+     (Ok(()),Err(refusal))=>Err(Stage::Operation(refusal.with_retained_progress(body.progress()).into())),
+     (Err(primary),Ok(()))=>Err(Stage::Operation(primary.into())),
+     (Err(primary),Err(refusal))=>Err(Stage::Settlement{operation:Err(primary.into()),refusal:refusal.with_retained_progress(body.progress()),receipt:None}),
+    });
     Ok(())
    })();
-   RetainedWorkOutcome{result,work:u128::from(settlement.control.borrow().performed_work().checked_sub(before_work).expect("original SQL producer work is monotone"))}
+   RetainedWorkOutcome{result,work:u128::from(settlement.with_control(|control|control.performed_work()).saturating_sub(before_work))}
   }));
-  let result=match settlement.cause.borrow_mut().take(){Some(refusal)=>Err(Stage::Settlement{operation:turn.result,refusal:refusal.with_retained_progress(owner.progress()),receipt:None}),None=>turn.result.map_err(Stage::Operation)};
+  let result=turn.result.map_err(|error|Stage::Operation(settlement.refused_failure(owner.native().owned_bytes(),error)));
   RetainedWorkOutcome{result,work:turn.work}
  }
  };
 }
 receive!(project_receiving,NativeSnapshotDecodeOwner,semio_framework_value_native_owned::native_decoding::NativeDecodeProgress,Decode,ProjectSnapshot,SqliteDatabase,|source:Option<&CollectionSnapshot>,_:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|project(source.unwrap(),frame,port),|frame:&mut Frame|Ok(std::mem::replace(&mut frame.projection.database,SqliteDatabase{tables:Vec::new()})));
 receive!(reconstruct_receiving,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeProgress,Encode,ReconstructSnapshot,CollectionSnapshot,|_:Option<&CollectionSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|read(database.unwrap(),frame,port),|frame:&mut Frame|Ok(std::mem::replace(&mut frame.snapshot,empty())));
+macro_rules! validate{
+ ($name:ident,$receiving:ident,$owner:ident)=>{
+ pub(super)fn $name(source:&CollectionSnapshot,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut $owner<'_,'_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoResult<()>>>)->store::os_store::serialization::SnapshotReceivingOutcome{
+  match coordinate(dialect){Ok(())=>$receiving(Some(source),Some(database),control,owner,output),Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error.with_retained_progress(owner.progress()))),work:0}}
+ }
+ };
+}
+receive!(validate_decoding_receiving,NativeSnapshotDecodeOwner,semio_framework_value_native_owned::native_decoding::NativeDecodeProgress,Decode,ProjectSnapshot,store::io_schema::IoResult<()>,|source:Option<&CollectionSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|check(source.unwrap(),database.unwrap(),frame,port),|_:&mut Frame|Ok(store::io_schema::IoOutcome::clean(())));
+receive!(validate_encoding_receiving,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeProgress,Encode,ReconstructSnapshot,store::io_schema::IoResult<()>,|source:Option<&CollectionSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|check(source.unwrap(),database.unwrap(),frame,port),|_:&mut Frame|Ok(store::io_schema::IoOutcome::clean(())));
+validate!(validate_decoding,validate_decoding_receiving,NativeSnapshotDecodeOwner);
+validate!(validate_encoding,validate_encoding_receiving,NativeSnapshotEncodeOwner);
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

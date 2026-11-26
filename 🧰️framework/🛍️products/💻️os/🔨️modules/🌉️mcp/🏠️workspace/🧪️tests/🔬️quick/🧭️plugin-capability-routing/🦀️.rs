@@ -238,3 +238,32 @@ fn pure_command_binds_the_actual_caller_context() {
         }
     }
 }
+
+/// 🏛️ A framework capability runs in the target artifact's own app: its route comes from the artifact binding, and it refuses without one.
+#[test]
+fn framework_capabilities_route_from_the_target_artifact_binding() {
+    use semio_os_mcp_port::channel_port::{ActionTarget, ArtifactChannel};
+    let bound = unbound_plugin_artifacts();
+    let mut router = RoutingArtifactChannel::new(Arc::new(WorkspaceCatalog::fixed(note_and_cad_catalog())), None, "agent:test#sess".to_string(), Arc::clone(&bound), None, crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy"));
+    let target = |artifact_ref: Option<&str>| ActionTarget { artifact_ref: artifact_ref.map(str::to_string), ..ActionTarget::default() };
+    assert!(note_and_cad_catalog().get("framework.undo").is_some_and(|capability| capability.description.contains("target.artifactRef")), "the catalog tells agents a framework capability needs a target artifact");
+    let unnamed = router.select_target(0x8000_0000, "framework.undo", &target(None)).expect_err("a framework capability needs its artifact named");
+    assert!(unnamed.message.contains("target.artifactRef"), "{unnamed:?}");
+    let unbound = router.select_target(0x8000_0000, "framework.undo", &target(Some("journey-note-typed"))).expect_err("an unbound artifact has no owning app");
+    assert_eq!(unbound.code, "plugin.unavailable");
+    bound.lock().expect("binding map").insert("journey-note-typed".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), artifact_kind: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string(), surface_id: None, archive: None, document: Some(Arc::new(SessionDocumentPair { pack: vec![1], spr: vec![2] })), backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)), relay: Arc::default(), used: 0 });
+    let resolved = router.select_target(0x8000_0000, "framework.undo", &target(Some("journey-note-typed"))).expect("the bound artifact's own app runs it");
+    assert_eq!((resolved.plugin_id.as_deref(), resolved.app_id.as_deref(), resolved.artifact_ref.as_deref()), (Some("note"), Some("note.editor"), Some("journey-note-typed")));
+    let mismatched = router.select_target(0x8000_0001, "framework.undo", &ActionTarget { plugin_id: Some("cad".to_string()), artifact_ref: Some("journey-note-typed".to_string()), ..ActionTarget::default() }).expect_err("the named plugin must own the artifact");
+    assert_eq!(mismatched.code, "capability-denied");
+}
+
+/// 🏛️ Without a target a framework capability is an input error naming the missing artifact, not a missing plugin.
+#[test]
+fn resolve_plugin_for_capability_asks_a_framework_capability_for_its_target_artifact() {
+    let dir = store::test_support::tempdir().expect("tempdir");
+    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), note_and_cad_catalog(), crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy"));
+    let error = workspace.resolve_plugin_for_capability("framework.undo").expect_err("framework-owned, no plugin of its own");
+    assert_eq!(error.code, GatewayErrorCode::InputInvalid);
+    assert!(error.message.contains("target.artifactRef"));
+}

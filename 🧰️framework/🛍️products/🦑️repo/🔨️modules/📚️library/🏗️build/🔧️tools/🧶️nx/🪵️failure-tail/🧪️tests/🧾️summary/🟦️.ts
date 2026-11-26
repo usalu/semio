@@ -23,7 +23,7 @@ test("the summary schema is closed: bilingual texts with the same placeholders, 
 test("a transcript is read to the failed tasks, the reason of each and the verdict of the refusal class table, exactly like the independent oracle",()=>{
  for(const row of fixture.cases){
   const own=nxFailureSummaryOfTailV1(row.tail);
-  expect(own??null,row.id).toEqual(row.expect??null);
+  expect<unknown>(own??null,row.id).toEqual(row.expect??null);
   if(oracle)expect(oracle[row.id]??null,row.id).toEqual(row.expect??null);
  }
 });

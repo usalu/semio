@@ -154,6 +154,29 @@ impl ArtifactOutputChunks {
         }
     }
 
+    /// 📏️ Quotes a uniquely held output whose bounded queue has no chunk payloads.
+    pub fn drained_close_demands(&self) -> Option<(semio_framework_value::RetirementDemand, u64)> {
+        if std::sync::Arc::strong_count(&self.inner) != 1 || std::sync::Arc::weak_count(&self.inner) != 0 { return None; }
+        let state = self.inner.state.try_lock().ok()?;
+        let (bytes, work) = state.chunks.drained_release()?;
+        let release_bytes = bytes.checked_add(semio_framework_value::shared_retirement_allocation_bytes::<ArtifactOutputChunksInner>())?;
+        Some((semio_framework_value::RetirementDemand { copy_bytes: size_of::<Option<Self>>(), release_bytes, depth: 1, ..Default::default() }, work))
+    }
+
+    /// ♻️ Returns an empty original page table after paying the exact shell release and bounded slot work.
+    pub fn close_drained_original(owner: &mut Option<Self>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
+        let Some((demand, work)) = owner.as_ref().and_then(Self::drained_close_demands) else { return Ok(Default::default()); };
+        let grant = effect.grant();
+        if grant.maximum_items == 0 || !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand)
+            || effect.remaining_work_units()? < work
+            || owner.as_mut().and_then(|owner| std::sync::Arc::get_mut(&mut owner.inner)).is_none()
+            || !effect.performed(work)? {
+            return Ok(Default::default());
+        }
+        drop(owner.take());
+        Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() })
+    }
+
     pub fn push(&self, chunk: Vec<u8>) -> Result<usize, Fault> {
         if self.inner.sealed.load(std::sync::atomic::Ordering::Acquire) || chunk.is_empty() || chunk.len() > ARTIFACT_OUTPUT_CHUNK_BYTES {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-output-limit"), "segmented output is sealed, empty, oversized, or exceeds its exact byte cap"));

@@ -83,20 +83,8 @@ impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
             return Err(Fault::from("puzzle3d-window-work-capacity"));
         }
         self.turns += 1;
-        let resolved_window_id = {
-            let view = view_state.ok_or_else(|| Fault::from("puzzle3d-window-context-required"))?;
-            let roster: Vec<String> = view.window_instances.iter().map(|instance| instance.id.clone()).collect();
-            puzzle3d_addressed_window_id(Some(view), None, command.window_id(), &roster).to_string()
-        };
-        let addressed_view = view_state.filter(|view| view.window_id.as_deref() != Some(resolved_window_id.as_str())).map(|view| {
-            view.for_window_instance(&resolved_window_id).unwrap_or_else(|| {
-                let mut next = view.clone();
-                next.window_id = Some(resolved_window_id.clone());
-                next
-            })
-        });
-        let view = addressed_view.as_ref().or(view_state).ok_or_else(|| Fault::from("puzzle3d-window-context-required"))?;
-        let window_id = resolved_window_id.as_str();
+        let view = view_state.ok_or_else(|| Fault::from("puzzle3d-window-context-required"))?;
+        let window_id = view.window_id.as_deref().ok_or_else(|| Fault::from("puzzle3d-window-context-required"))?;
         let window_config = window_ownership::config_from_snapshot(window_config_snapshot);
         let window_transient = window_ownership::transient_from_snapshot(window_transient_snapshot);
         let runtime = window_ownership::runtime(config, &window_config, &window_transient, Some(view));

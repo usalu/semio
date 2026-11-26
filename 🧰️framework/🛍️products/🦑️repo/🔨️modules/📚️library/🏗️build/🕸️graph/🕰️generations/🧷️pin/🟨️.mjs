@@ -1,3 +1,4 @@
+import {processPidExistsV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟨️.mjs"
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import{compareCodePointsV1}from"../🟨️.mjs";
 import{decodeVerifiedScopeV1,encodeVerifiedScopeV1,readVerifiedStampV1}from"../🔭️coverage/🟨️.mjs";
@@ -48,7 +49,7 @@ export function generationPinOwnerV1(environment,pid=process.pid){
  const value=Number(environment[P.invocationEnvironment]);return Number.isSafeInteger(value)&&value>0?value:pid;
 }
 
-const processAlive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error?.code==="EPERM";}};
+const processAlive=pid=>processPidExistsV1(pid);
 
 /** 🧭️ Whether the environment holds a pin this command is bound by: `none` without a pin, `bound` while the owner is one of the invocations the command answers to, alive, not older than `maximumAgeMilliseconds` and not this process itself (the Original reads its own loads fresh; only its descendants are served from its pin), `foreign` otherwise (an orphan, a daemon that cleared its invocation, a pin of another tree); a malformed pin refuses. */
 export function generationPinStateV1(environment,{alive=processAlive,self=process.pid,now=Date.now()}={}){

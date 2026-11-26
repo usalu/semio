@@ -431,7 +431,7 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
             ReferenceSpaceMember::ingest_remote_payload(&mut entry.member, &envelopes).await.map_err(|error| error.into_fault())?;
             folded += 1;
         }
-        history.cache = None;
+        history.invalidate_cache();
         Ok(folded)
     }
 

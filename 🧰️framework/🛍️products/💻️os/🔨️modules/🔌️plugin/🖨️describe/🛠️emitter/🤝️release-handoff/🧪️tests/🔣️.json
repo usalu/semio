@@ -1,0 +1,22 @@
+{
+  "request": { "version": 1, "id": "0123456789abcdef0123456789abcdef", "callerSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "platform": "darwin" },
+  "evidence": { "version": 1, "mode": "release", "platform": "darwin", "binarySha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "receiptSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "indexSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd" },
+  "replyCases": [
+    { "id": "same request", "requestDelta": {}, "evidenceDelta": {}, "validShape": true, "accepted": true },
+    { "id": "earlier attempt", "requestDelta": { "id": "1123456789abcdef0123456789abcdef" }, "evidenceDelta": {}, "validShape": true, "accepted": false },
+    { "id": "unrelated parent", "requestDelta": { "callerSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" }, "evidenceDelta": {}, "validShape": true, "accepted": false },
+    { "id": "wrong producer platform", "requestDelta": { "platform": "linux" }, "evidenceDelta": {}, "validShape": true, "accepted": false },
+    { "id": "wrong executable platform", "requestDelta": {}, "evidenceDelta": { "platform": "win32" }, "validShape": true, "accepted": false },
+    { "id": "prototype reply", "requestDelta": {}, "evidenceDelta": { "mode": "prototype" }, "validShape": false, "accepted": false },
+    { "id": "extra path selector", "requestDelta": { "path": "../foreign" }, "evidenceDelta": {}, "validShape": false, "accepted": false },
+    { "id": "short receipt", "requestDelta": {}, "evidenceDelta": { "receiptSha256": "abc" }, "validShape": false, "accepted": false }
+  ],
+  "terminalCases": [
+    { "exit": 0, "sealed": true, "accept": true },
+    { "exit": 0, "sealed": false, "accept": false },
+    { "exit": 75, "sealed": true, "accept": true },
+    { "exit": 75, "sealed": false, "accept": false },
+    { "exit": 1, "sealed": true, "accept": false },
+    { "exit": 143, "sealed": true, "accept": false }
+  ]
+}

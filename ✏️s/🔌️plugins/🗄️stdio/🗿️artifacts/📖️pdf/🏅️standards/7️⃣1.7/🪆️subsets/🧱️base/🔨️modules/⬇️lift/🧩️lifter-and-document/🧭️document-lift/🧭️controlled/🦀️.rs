@@ -5,7 +5,7 @@ use crate::standards::v1_7::subsets::base::modules::{
     colour::{extra_entries, lift_ext_g_state}, content::{bounded_number, content_extent, FontTable, PdfFixedCodeWidth}, fonts::{controlled_simple_text, ControlledFontResources, FontCodec},
     images::{ControlledImageBinding, ControlledImageResources}, lexer::{CosReceipt, CosStatus, grow_table, table_growth},
 };
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfCharProc, PdfExtGState, PdfFont, PdfFontKind, PdfFontProgram, PdfFormXObject, PdfNamedProperties};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfCharProc, PdfContent, PdfExtGState, PdfFont, PdfFontKind, PdfFontProgram, PdfFormXObject, PdfNamedProperties};
 use crate::standards::v1_7::subsets::base::io::text_string::decode_text_string;
 use crate::standards::v1_7::subsets::base::schema::content_mapping::{rename_target, ResourceMap};
 use crate::standards::v1_7::subsets::base::modules::lift::{Category as LiftCategory, FontLift, FontStart};
@@ -238,7 +238,7 @@ pub struct ControlledDocumentLiftCursor {
     cold_bytes: usize,
     page_forms: PageSlots,
     renames: ResourceMap,
-    mirror: Vec<PdfOp>,
+    mirror: PdfContent,
     releasing: Option<usize>,
     annotations: Option<AnnotationArray>,
     acro_form: Option<Node>,
@@ -259,7 +259,7 @@ impl ControlledDocumentLiftCursor {
             states: Default::default(), content_roles: 0, images: Default::default(),
             page_refs: Vec::new(), visited: Vec::new(), frames: [Frame::at(None); MAX_TREE_DEPTH], frames_len: 0, walking: false,
             detail: [0; MAX_COPY], detail_len: 0,
-            cold: DocumentLiftState::default(), font_lift: None, registered: 0, registered_typed: [0; 3], cold_bytes: 0, page_forms: PageSlots::default(), renames: ResourceMap::default(), mirror: Vec::new(), releasing: None,
+            cold: DocumentLiftState::default(), font_lift: None, registered: 0, registered_typed: [0; 3], cold_bytes: 0, page_forms: PageSlots::default(), renames: ResourceMap::default(), mirror: PdfContent::default(), releasing: None,
             annotations: None, acro_form: None, form_step: FormStep::Start, form_resources: false, debug_trace: Vec::new(),
         }
     }
@@ -293,7 +293,7 @@ impl ControlledDocumentLiftCursor {
         matches!(self.stage, Stage::PageCapacity | Stage::AnnotationArray(_, 0, _))
             || matches!(self.stage, Stage::Image { .. }) && self.images.reserves_empty()
             || matches!(self.stage, Stage::Program) && self.program.as_ref().is_some_and(PageProgramCursor::reserving_empty_backing)
-            || matches!(self.stage, Stage::Mirror(_)) && self.mirror.capacity() == 0
+            || matches!(self.stage, Stage::Mirror(index) if !self.mirror.has_reserved_slot() && self.page.as_ref().is_some_and(|page| index < page.content.len()))
     }
 
     /// 📨️ Quotes a typed body before insertion into an admitted slot.
@@ -831,9 +831,10 @@ impl ControlledDocumentLiftCursor {
             .map(|entry| size_of::<PdfDictEntry>() + entry.key.len() + reach(source, &entry.value, 2)).sum::<usize>();
         if let Some(denied) = budget(grant, estimate, 0) { return denied; }
         let Some((annotation, _)) = self.cold(source, false, |lifter| lifter.lift_annotation(&dict)) else { return self.defer_detail(Barrier::Page, "Annots"); };
+        let retained = annotation_heap(&annotation).map_or(estimate, |heap| heap.min(estimate));
         self.page.as_mut().expect("active typed page").annotations.push(annotation);
         self.stage = Stage::AnnotationArray(array, index + 1, resume);
-        work(estimate, 0)
+        work(retained, 0)
     }
 
     /// 🖼️ Lifts one annotation with appearance streams (its forms, their resources and `Operators` roles) through the reference builder over the persistent reference state, then moves what it typed into the document lanes in the reference order.
@@ -1398,22 +1399,23 @@ impl ControlledDocumentLiftCursor {
 
     /// 🪞️ Copies one operator of the lifted page into the content role, before the page's renames, so the role holds the authored program without parsing the content a second time.
     fn mirror(&mut self, grant: CosGrant, index: usize) -> ControlledLiftReceipt {
-        let content = &self.page.as_ref().expect("active typed page").content;
-        if self.mirror.capacity() < content.len() {
-            let bytes = (content.len() - self.mirror.capacity()) * size_of::<PdfOp>();
+        let Some(op) = self.page.as_ref().expect("active typed page").content.get(index) else { self.stage = Stage::Rename(0); return work(0, 0); };
+        if !self.mirror.has_reserved_slot() {
+            let Ok(bytes) = self.mirror.next_allocation_bytes() else { return ControlledLiftReceipt { event: Err("unable to quote the PDF content role page"), ..work(0, 0) }; };
             if let Some(denied) = budget(grant, bytes, 0) { return denied; }
-            if self.mirror.try_reserve_exact(content.len()).is_err() { return ControlledLiftReceipt { event: Err("unable to allocate the PDF content role"), ..work(0, 0) }; }
-            return work(bytes, 0);
+            return match self.mirror.reserve_one_cold(bytes) {
+                Ok(progress) if progress.progressed => work(progress.allocated_bytes, 0),
+                _ => ControlledLiftReceipt { event: Err("unable to allocate the PDF content role"), ..work(0, 0) },
+            };
         }
-        let Some(op) = content.get(index) else { self.stage = Stage::Rename(0); return work(0, 0); };
         let bytes = operator_bytes(op).expect("collected PDF operators own measured backing");
         if let Some(denied) = budget(grant, bytes, 0) { return denied; }
-        self.mirror.push(op.clone());
+        if self.mirror.push_reserved(op.clone()).is_err() { return ControlledLiftReceipt { event: Err("the PDF content role page lost its reserved slot"), ..work(0, 0) }; }
         self.stage = Stage::Mirror(index + 1);
         work(bytes, 0)
     }
 
-    fn mirror_bytes(&self) -> usize { self.mirror.capacity() * size_of::<PdfOp>() + self.mirror.iter().filter_map(operator_bytes).sum::<usize>() }
+    fn mirror_bytes(&self) -> usize { self.mirror.allocated_bytes() + self.mirror.iter().filter_map(operator_bytes).sum::<usize>() }
 
     /// 🔁️ Renames one operator of the lifted page through the page's resource renames, as the reference lifter's `rename_content` does for the whole page; the content role keeps the authored names.
     fn rename(&mut self, grant: CosGrant, index: usize) -> ControlledLiftReceipt {
@@ -1655,8 +1657,8 @@ impl ControlledDocumentLiftCursor {
             self.visited = Vec::new();
             self.page_fonts = PageSlots::default();
             self.page_forms = PageSlots::default();
-        } else if self.mirror.capacity() != 0 {
-            self.mirror = Vec::new();
+        } else if self.mirror.allocated_bytes() != 0 {
+            self.mirror = PdfContent::default();
         } else if self.states.held_bytes() != 0 {
             self.states = GraphicsStates::default();
         } else if self.images.held_bytes() != 0 {
@@ -1675,7 +1677,7 @@ impl ControlledDocumentLiftCursor {
         self.page_refs = Vec::new();
         self.page_fonts = PageSlots::default();
         self.page_forms = PageSlots::default();
-        self.mirror = Vec::new();
+        self.mirror = PdfContent::default();
         self.visited = Vec::new();
         self.release_cold();
         self.states = GraphicsStates::default();
@@ -1691,6 +1693,12 @@ impl ControlledDocumentLiftCursor {
         self.registered_typed = [0; 3];
         self.cold_bytes = 0;
     }
+
+    /// 🧘️ Whether no page, page program or font is half built, so that [`Self::held_bytes`] is every byte the lift credits back before it completes.
+    pub fn between_pages(&self) -> bool { matches!(self.stage, Stage::Walk) && self.page.is_none() && self.program.is_none() && self.font_lift.is_none() }
+
+    /// 📏️ Bytes the lift holds only to build its result and credits back at completion or close: the navigation tables, the content role mirror, the graphics-state and image owner tables and the reference builder state.
+    pub fn held_bytes(&self) -> usize { self.navigation_bytes() + self.cold_bytes + self.states.held_bytes() + self.mirror_bytes() + self.images.held_bytes() + self.font_resources.held_bytes() }
 
     fn navigation_bytes(&self) -> usize { self.page_refs.capacity() * size_of::<ObjRef>() + self.visited.capacity() * size_of::<u32>() + self.page_fonts.held_bytes() + self.page_forms.held_bytes() }
 
@@ -1847,6 +1855,7 @@ impl ControlledDocumentLiftCursor {
         let growth = table_growth(outline_level(outlines, depth), 1);
         if let Some(denied) = budget(grant, growth + estimate, 0) { return denied; }
         let Some((lifted, _)) = self.cold(source, false, |lifter| lifter.lift_outline_item(&dict, Vec::new())) else { return self.defer_detail(Barrier::Catalog, "Outlines"); };
+        let retained = growth + outline_item_heap(&lifted).min(estimate);
         let level = outline_level_mut(&mut self.snapshot.as_mut().expect("active typed PDF snapshot").outlines, depth);
         if !push_grown(level, lifted) { return ControlledLiftReceipt { event: Err("unable to allocate PDF outline items"), ..work(0, 0) }; }
         self.mark(item.num);
@@ -1854,7 +1863,7 @@ impl ControlledDocumentLiftCursor {
         if let Some(first) = dict_get(&dict, "First") {
             if !self.push_frame(Frame::at(first.as_ref().map(Node::Object))) { return self.defer_detail(Barrier::Catalog, "Outlines"); }
         }
-        work(growth + estimate, 0)
+        work(retained, 0)
     }
 
     fn number_or_name_tree(&mut self, source: &mut dyn ObjectSource, grant: CosGrant, lane: Lane) -> ControlledLiftReceipt {
@@ -1924,23 +1933,24 @@ impl ControlledDocumentLiftCursor {
         if lane == Lane::Labels {
             let PdfObject::Int(index) = key else { return work(0, 0); };
             let labels = &self.snapshot.as_ref().expect("active typed PDF snapshot").page_labels;
-            let bytes = table_growth(labels, 1) + estimate;
-            if let Some(denied) = budget(grant, bytes, 0) { self.frames[depth].pair -= 1; return denied; }
+            let growth = table_growth(labels, 1);
+            if let Some(denied) = budget(grant, growth + estimate, 0) { self.frames[depth].pair -= 1; return denied; }
             let Some((label, _)) = self.cold(source, false, |lifter| lifter.lift_page_label(index, &value)) else { return self.defer_detail(Barrier::Catalog, "PageLabels"); };
+            let retained = growth + label.prefix.as_ref().map_or(0, String::capacity).min(estimate);
             if !push_grown(&mut self.snapshot_mut().page_labels, label) { return ControlledLiftReceipt { event: Err("unable to allocate PDF page labels"), ..work(0, 0) }; }
-            return work(bytes, 0);
+            return work(retained, 0);
         }
         let destinations = &self.snapshot.as_ref().expect("active typed PDF snapshot").named_destinations;
-        let bytes = table_growth(destinations, 1) + size_of::<PdfNamedDestination>() + estimate;
-        if let Some(denied) = budget(grant, bytes, 0) { self.frames[depth].pair -= 1; return denied; }
+        let growth = table_growth(destinations, 1);
+        if let Some(denied) = budget(grant, growth + size_of::<PdfNamedDestination>() + estimate, 0) { self.frames[depth].pair -= 1; return denied; }
         let Some((named, _)) = self.cold(source, false, |lifter| {
             let name = lifter.text(Some(&key))?;
             lifter.lift_destination(&value).map(|destination| PdfNamedDestination { name, destination })
         }) else { return self.defer_detail(Barrier::Catalog, "Dests"); };
-        if let Some(named) = named {
-            if !push_grown(&mut self.snapshot_mut().named_destinations, named) { return ControlledLiftReceipt { event: Err("unable to allocate PDF named destinations"), ..work(0, 0) }; }
-        }
-        work(bytes, 0)
+        let Some(named) = named else { return work(0, 0); };
+        let retained = growth + named_destination_heap(&named).min(estimate);
+        if !push_grown(&mut self.snapshot_mut().named_destinations, named) { return ControlledLiftReceipt { event: Err("unable to allocate PDF named destinations"), ..work(0, 0) }; }
+        work(retained, 0)
     }
 
     fn catalog_dests(&mut self, source: &mut dyn ObjectSource, grant: CosGrant) -> ControlledLiftReceipt {
@@ -1958,14 +1968,16 @@ impl ControlledDocumentLiftCursor {
         });
         let Some(entry) = entry else { return self.next_lane(Lane::Dests); };
         let destinations = &self.snapshot.as_ref().expect("active typed PDF snapshot").named_destinations;
-        let bytes = table_growth(destinations, 1) + size_of::<PdfNamedDestination>() + 3 * (entry.key.len() + reach(source, &entry.value, 2));
-        if let Some(denied) = budget(grant, bytes, 0) { return denied; }
+        let growth = table_growth(destinations, 1);
+        let estimate = 3 * (entry.key.len() + reach(source, &entry.value, 2));
+        if let Some(denied) = budget(grant, growth + size_of::<PdfNamedDestination>() + estimate, 0) { return denied; }
         self.frames[0].pair += 1;
         let Some((destination, _)) = self.cold(source, false, |lifter| lifter.lift_destination(&entry.value)) else { return self.defer_detail(Barrier::Catalog, "Dests"); };
-        if let Some(destination) = destination {
-            if !push_grown(&mut self.snapshot_mut().named_destinations, PdfNamedDestination { name: entry.key, destination }) { return ControlledLiftReceipt { event: Err("unable to allocate PDF named destinations"), ..work(0, 0) }; }
-        }
-        work(bytes, 0)
+        let Some(destination) = destination else { return work(0, 0); };
+        let named = PdfNamedDestination { name: entry.key, destination };
+        let retained = growth + named_destination_heap(&named).min(estimate);
+        if !push_grown(&mut self.snapshot_mut().named_destinations, named) { return ControlledLiftReceipt { event: Err("unable to allocate PDF named destinations"), ..work(0, 0) }; }
+        work(retained, 0)
     }
 
     fn defer_turn(&mut self, reason: Barrier, turn: ControlledLiftReceipt) -> ControlledLiftReceipt {
@@ -2405,6 +2417,58 @@ fn direct_bytes(value: &PdfObject) -> usize {
         PdfObject::Dict(entries) | PdfObject::Stream { dict: entries, .. } => entries.iter().map(|entry| size_of::<PdfDictEntry>() + entry.key.len() + direct_bytes(&entry.value)).sum(),
         _ => 0,
     }
+}
+
+/// 📏️ The heap bytes a typed destination retains: only a named destination owns any.
+fn destination_heap(destination: &PdfDestination) -> usize { match destination { PdfDestination::Named { name } => name.capacity(), _ => 0 } }
+
+/// 📏️ The heap bytes a typed file specification retains.
+fn file_specification_heap(file: &PdfFileSpecification) -> usize { match file { PdfFileSpecification::Path { path } => path.capacity(), PdfFileSpecification::Embedded { file } => file.capacity() } }
+
+/// 📏️ The heap bytes a typed string list retains.
+fn strings_heap(items: &Vec<String>) -> usize { items.capacity() * size_of::<String>() + items.iter().map(String::capacity).sum::<usize>() }
+
+/// 📏️ The heap bytes the entries of a typed dictionary retain: the entry table, each key and the heap of each value.
+fn entries_heap(entries: &Vec<PdfDictEntry>) -> usize { entries.capacity() * size_of::<PdfDictEntry>() + entries.iter().map(|entry| entry.key.capacity() + direct_bytes(&entry.value) - size_of::<PdfObject>()).sum::<usize>() }
+
+/// 📏️ The heap bytes a typed action and its chained actions retain.
+fn action_heap(action: &PdfAction) -> usize {
+    action.next.capacity() * size_of::<PdfAction>() + action.next.iter().map(action_heap).sum::<usize>() + match &action.kind {
+        PdfActionKind::GoTo { destination } | PdfActionKind::GoToEmbedded { destination, .. } => destination_heap(destination),
+        PdfActionKind::GoToRemote { file, destination, .. } => file_specification_heap(file) + destination_heap(destination),
+        PdfActionKind::Launch { file, .. } | PdfActionKind::ImportData { file } => file_specification_heap(file),
+        PdfActionKind::Thread { file, .. } => file.as_ref().map_or(0, file_specification_heap),
+        PdfActionKind::Uri { uri, .. } => uri.capacity(),
+        PdfActionKind::Sound { sound, .. } => sound.capacity(),
+        PdfActionKind::Movie { annotation, operation } => annotation.as_ref().map_or(0, String::capacity) + operation.as_ref().map_or(0, String::capacity),
+        PdfActionKind::Hide { annotations, .. } => strings_heap(annotations),
+        PdfActionKind::Named { name } => name.capacity(),
+        PdfActionKind::SubmitForm { url, fields, .. } => url.capacity() + strings_heap(fields),
+        PdfActionKind::ResetForm { fields, .. } => strings_heap(fields),
+        PdfActionKind::JavaScript { script } => script.capacity(),
+        PdfActionKind::SetOptionalContentState { states, .. } => entries_heap(states),
+        PdfActionKind::Rendition { entries } | PdfActionKind::Transition { entries } | PdfActionKind::GoTo3dView { entries } => entries_heap(entries),
+        PdfActionKind::Unknown { subtype, entries } => subtype.capacity() + entries_heap(entries),
+    }
+}
+
+/// 📏️ The heap bytes an outline item retains beside its own slot in the level table: its title, destination, action and extra entries (its children are charged as they are lifted).
+fn outline_item_heap(item: &PdfOutlineItem) -> usize {
+    item.title.capacity() + item.destination.as_ref().map_or(0, destination_heap) + item.action.as_ref().map_or(0, action_heap) + entries_heap(&item.extra)
+}
+
+/// 📏️ The heap bytes a named destination retains beside its own slot in the table.
+fn named_destination_heap(named: &PdfNamedDestination) -> usize { named.name.capacity() + destination_heap(&named.destination) }
+
+/// 📏️ The heap bytes a link annotation without appearance or markup retains beside its own slot in the page's table; `None` for every other annotation, which keeps its admission quote.
+fn annotation_heap(annotation: &PdfAnnotation) -> Option<usize> {
+    let PdfAnnotationKind::Link { action, destination, highlight, quad_points } = &annotation.kind else { return None; };
+    if annotation.appearance.is_some() || annotation.markup.is_some() { return None; }
+    let text = |text: &Option<String>| text.as_ref().map_or(0, String::capacity);
+    Some(action.as_ref().map_or(0, action_heap) + destination.as_ref().map_or(0, destination_heap) + text(highlight) + quad_points.capacity() * size_of::<f64>()
+        + text(&annotation.contents) + text(&annotation.name) + text(&annotation.modified) + text(&annotation.appearance_state) + text(&annotation.optional_content)
+        + annotation.border.as_ref().map_or(0, |border| text(&border.style) + border.dash.as_ref().map_or(0, |dash| dash.capacity() * size_of::<f64>()))
+        + annotation.color.capacity() * size_of::<f64>() + entries_heap(&annotation.extra))
 }
 
 /// 📏️ Quotes the stream dictionary and the direct entries of a stream object without its body.

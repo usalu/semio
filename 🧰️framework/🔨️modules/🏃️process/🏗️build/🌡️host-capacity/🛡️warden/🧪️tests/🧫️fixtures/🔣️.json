@@ -558,7 +558,7 @@
    },
    "expect": {
     "level": "guard",
-    "calmTicks": 0,
+    "calmTicks": 1,
     "hold": true,
     "trigger": "pressure",
     "guardMegabytes": 1638,
@@ -2714,7 +2714,7 @@
    }
   },
   {
-   "name": "danger without cancellable subjects only suspends",
+   "name": "danger without cancellable subjects does not take custody of a process it cannot cancel",
    "host": {
     "totalMegabytes": 16384,
     "availableMegabytes": 500,
@@ -2779,18 +2779,7 @@
     "headroomMegabytes": null,
     "headroomGuardMegabytes": 4096,
     "headroomDangerMegabytes": 2048,
-    "actions": [
-     {
-      "action": "suspend",
-      "id": "p110",
-      "reason": "danger"
-     },
-     {
-      "action": "suspend",
-      "id": "p111",
-      "reason": "danger"
-     }
-    ]
+    "actions": []
    }
   },
   {
@@ -5898,7 +5887,7 @@
    },
    "expect": {
     "level": "guard",
-    "calmTicks": 0,
+    "calmTicks": 1,
     "hold": true,
     "trigger": "pressure",
     "guardMegabytes": 1638,
@@ -5979,7 +5968,7 @@
    },
    "expect": {
     "level": "guard",
-    "calmTicks": 0,
+    "calmTicks": 1,
     "hold": true,
     "trigger": "pressure",
     "guardMegabytes": 1638,
@@ -6234,7 +6223,7 @@
    },
    "expect": {
     "level": "danger",
-    "calmTicks": 0,
+    "calmTicks": 1,
     "hold": true,
     "trigger": "compressed",
     "guardMegabytes": 1638,
@@ -6315,7 +6304,7 @@
    },
    "expect": {
     "level": "guard",
-    "calmTicks": 0,
+    "calmTicks": 1,
     "hold": true,
     "trigger": "compressed",
     "guardMegabytes": 1638,
@@ -6447,7 +6436,7 @@
    },
    "expect": {
     "level": "guard",
-    "calmTicks": 0,
+    "calmTicks": 1,
     "hold": true,
     "trigger": "compressed",
     "guardMegabytes": 1638,
@@ -6516,7 +6505,7 @@
    },
    "expect": {
     "level": "danger",
-    "calmTicks": 0,
+    "calmTicks": 1,
     "hold": true,
     "trigger": "compressed",
     "guardMegabytes": 1638,
@@ -6530,7 +6519,7 @@
    }
   },
   {
-   "name": "compressed-only tight resumes one suspended subject per tick (the most expensive)",
+   "name": "compressed-only tight waits for quiet recovery before resuming",
    "host": {
     "totalMegabytes": 16384,
     "availableMegabytes": 3900,
@@ -6585,7 +6574,7 @@
    },
    "expect": {
     "level": "guard",
-    "calmTicks": 0,
+    "calmTicks": 1,
     "hold": true,
     "trigger": "compressed",
     "guardMegabytes": 1638,
@@ -6595,13 +6584,7 @@
     "headroomMegabytes": null,
     "headroomGuardMegabytes": 4096,
     "headroomDangerMegabytes": 2048,
-    "actions": [
-     {
-      "action": "resume",
-      "id": "p102",
-      "reason": "calm"
-     }
-    ]
+    "actions": []
    }
   },
   {
@@ -6810,7 +6793,7 @@
    },
    "expect": {
     "level": "guard",
-    "calmTicks": 0,
+    "calmTicks": 1,
     "hold": true,
     "trigger": "pressure",
     "guardMegabytes": 1638,
@@ -7436,7 +7419,7 @@
    },
    "expect": {
     "level": "guard",
-    "calmTicks": 0,
+    "calmTicks": 1,
     "hold": true,
     "trigger": "pressure",
     "guardMegabytes": 1638,
@@ -8281,7 +8264,7 @@
    }
   },
   {
-   "name": "ceiling incident: OS pressure warn alone with 3000 MB available and a build-critical unit suspended for too long: resumed, never cancelled, the pressure is no measured signal",
+   "name": "ceiling incident: OS pressure warn alone with 3000 MB available and a build-critical unit suspended for too long waits for quiet recovery",
    "host": {
     "totalMegabytes": 16384,
     "availableMegabytes": 3000,
@@ -8334,7 +8317,7 @@
    },
    "expect": {
     "level": "guard",
-    "calmTicks": 0,
+    "calmTicks": 1,
     "hold": true,
     "trigger": "pressure",
     "guardMegabytes": 1638,
@@ -8344,17 +8327,11 @@
     "headroomMegabytes": null,
     "headroomGuardMegabytes": 4096,
     "headroomDangerMegabytes": 2048,
-    "actions": [
-     {
-      "action": "resume",
-      "id": "p101",
-      "reason": "overdue"
-     }
-    ]
+    "actions": []
    }
   },
   {
-   "name": "overdue critical unit while only the compressed memory holds the level (quiet): resumed, not cancelled",
+   "name": "overdue critical unit while only compressed memory holds the level waits for quiet recovery",
    "host": {
     "totalMegabytes": 16384,
     "availableMegabytes": 6000,
@@ -8393,7 +8370,7 @@
    },
    "expect": {
     "level": "guard",
-    "calmTicks": 0,
+    "calmTicks": 1,
     "hold": true,
     "trigger": "compressed",
     "guardMegabytes": 1638,
@@ -8403,13 +8380,7 @@
     "headroomMegabytes": null,
     "headroomGuardMegabytes": 4096,
     "headroomDangerMegabytes": 2048,
-    "actions": [
-     {
-      "action": "resume",
-      "id": "p101",
-      "reason": "overdue"
-     }
-    ]
+    "actions": []
    }
   },
   {
@@ -9052,7 +9023,7 @@
    },
    "expect": {
     "level": "guard",
-    "calmTicks": 0,
+    "calmTicks": 1,
     "hold": true,
     "trigger": "pressure",
     "guardMegabytes": 1638,
@@ -9066,7 +9037,7 @@
    }
   },
   {
-   "name": "coordinator incident: the long running final suspended earlier is overdue under pressure warn alone: resumed, never cancelled, with 3921 MB available",
+   "name": "coordinator incident: the long running final overdue under pressure warn alone waits for quiet recovery with 3921 MB available",
    "host": {
     "totalMegabytes": 16384,
     "availableMegabytes": 3921,
@@ -9126,7 +9097,7 @@
    },
    "expect": {
     "level": "guard",
-    "calmTicks": 0,
+    "calmTicks": 1,
     "hold": true,
     "trigger": "pressure",
     "guardMegabytes": 1638,
@@ -9136,13 +9107,7 @@
     "headroomMegabytes": 12113,
     "headroomGuardMegabytes": 4096,
     "headroomDangerMegabytes": 2048,
-    "actions": [
-     {
-      "action": "resume",
-      "id": "p101",
-      "reason": "overdue"
-     }
-    ]
+    "actions": []
    }
   },
   {
@@ -9440,7 +9405,7 @@
    }
   },
   {
-   "name": "overdue under a measured signal (available below the guard line) is cancelled, the long final too: only escalation, never a resume -- since the overdue rule: a build-critical subject is resumed, never cancelled, below a severe shortage",
+   "name": "overdue under a measured signal (available below the guard line) is cancelled, the long final too: only escalation, never a resume -- since the overdue rule: a build-critical subject is resumed, never cancelled, below a severe shortage -- since the heavy rule: a declared final link (listed, final kind) is overdue only after 600 seconds, so at 130 seconds it is neither resumed nor cancelled",
    "host": {
     "totalMegabytes": 16384,
     "availableMegabytes": 1500,
@@ -9510,13 +9475,7 @@
     "headroomMegabytes": null,
     "headroomGuardMegabytes": 4096,
     "headroomDangerMegabytes": 2048,
-    "actions": [
-     {
-      "action": "resume",
-      "id": "p101",
-      "reason": "overdue"
-     }
-    ]
+    "actions": []
    }
   },
   {
@@ -10809,6 +10768,374 @@
       "action": "cancel",
       "id": "p263",
       "reason": "danger"
+     }
+    ]
+   }
+  },
+  {
+   "name": "heavy: a young declared final link is kept running and the long running library unit is suspended instead (the work lost per megabyte of a young link would make it the first victim)",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1500,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 30,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "capMegabytes": 10240,
+     "capCritical": true,
+     "nonresidentMegabytes": 0,
+     "ceiling": {
+      "unit": "semio_hub_stdio_component|wasm32-wasip2",
+      "kind": "final",
+      "megabytes": 9820,
+      "listed": true,
+      "measuredMegabytes": 9306
+     }
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 600,
+     "megabytes": 900,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "capMegabytes": 10240,
+     "capCritical": true,
+     "nonresidentMegabytes": 0,
+     "ceiling": {
+      "unit": "semio_plain|wasm32-wasip2",
+      "kind": "library",
+      "megabytes": 1536,
+      "listed": false
+     }
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "trigger": "available",
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p102",
+      "reason": "guard"
+     }
+    ]
+   }
+  },
+  {
+   "name": "heavy: a declared final link suspended 130 seconds is not overdue (its maximum is 600 seconds) and stays suspended, an ordinary unit suspended as long is overdue and resumed",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1500,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 900,
+     "megabytes": 6000,
+     "suspended": true,
+     "suspendedSeconds": 130,
+     "canSuspend": true,
+     "canCancel": true,
+     "capMegabytes": 10240,
+     "capCritical": true,
+     "nonresidentMegabytes": 0,
+     "ceiling": {
+      "unit": "semio_hub_stdio_component|wasm32-wasip2",
+      "kind": "final",
+      "megabytes": 9820,
+      "listed": true,
+      "measuredMegabytes": 9306
+     }
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 600,
+     "megabytes": 900,
+     "suspended": true,
+     "suspendedSeconds": 130,
+     "canSuspend": true,
+     "canCancel": true,
+     "capMegabytes": 10240,
+     "capCritical": true,
+     "nonresidentMegabytes": 0,
+     "ceiling": {
+      "unit": "semio_plain|wasm32-wasip2",
+      "kind": "library",
+      "megabytes": 1536,
+      "listed": false
+     }
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "trigger": "available",
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": [
+     {
+      "action": "resume",
+      "id": "p102",
+      "reason": "overdue"
+     }
+    ]
+   }
+  },
+  {
+   "name": "heavy: a declared final link suspended 700 seconds is overdue like any unit: below a severe shortage the ordinary overdue rule resumes a build-critical unit instead of cancelling it",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1500,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 900,
+     "megabytes": 6000,
+     "suspended": true,
+     "suspendedSeconds": 700,
+     "canSuspend": true,
+     "canCancel": true,
+     "capMegabytes": 10240,
+     "capCritical": true,
+     "nonresidentMegabytes": 0,
+     "ceiling": {
+      "unit": "semio_hub_stdio_component|wasm32-wasip2",
+      "kind": "final",
+      "megabytes": 9820,
+      "listed": true,
+      "measuredMegabytes": 9306
+     }
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "trigger": "available",
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": [
+     {
+      "action": "resume",
+      "id": "p101",
+      "reason": "overdue"
+     }
+    ]
+   }
+  },
+  {
+   "name": "heavy: the danger line still cancels a declared final link that stays suspended (available below the danger line, suspended 130 seconds): not overdue, but the danger cancel fires",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 700,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 900,
+     "megabytes": 6000,
+     "suspended": true,
+     "suspendedSeconds": 130,
+     "canSuspend": true,
+     "canCancel": true,
+     "capMegabytes": 10240,
+     "capCritical": true,
+     "nonresidentMegabytes": 0,
+     "ceiling": {
+      "unit": "semio_hub_stdio_component|wasm32-wasip2",
+      "kind": "final",
+      "megabytes": 9820,
+      "listed": true,
+      "measuredMegabytes": 9306
+     }
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "trigger": "available",
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": [
+     {
+      "action": "cancel",
+      "id": "p101",
+      "reason": "danger"
+     }
+    ]
+   }
+  },
+  {
+   "name": "heavy: an unlisted final unit and a listed library unit are no declared final links and keep the ordinary order and suspend maximum",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1500,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal",
+    "swapFreeMegabytes": null,
+    "swapVolumeFreeMegabytes": null
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 30,
+     "megabytes": 3000,
+     "suspended": true,
+     "suspendedSeconds": 130,
+     "canSuspend": true,
+     "canCancel": true,
+     "capMegabytes": 10240,
+     "capCritical": true,
+     "nonresidentMegabytes": 0,
+     "ceiling": {
+      "unit": "semio_new|wasm32-wasip2",
+      "kind": "final",
+      "megabytes": 4096,
+      "listed": false
+     }
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 600,
+     "megabytes": 900,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "capMegabytes": 10240,
+     "capCritical": true,
+     "nonresidentMegabytes": 0,
+     "ceiling": {
+      "unit": "semio_lib|wasm32-wasip2",
+      "kind": "library",
+      "megabytes": 1700,
+      "listed": true,
+      "measuredMegabytes": 1600
+     }
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "trigger": "available",
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "swapRoomMegabytes": null,
+    "headroomMegabytes": null,
+    "headroomGuardMegabytes": 4096,
+    "headroomDangerMegabytes": 2048,
+    "actions": [
+     {
+      "action": "resume",
+      "id": "p101",
+      "reason": "overdue"
      }
     ]
    }
@@ -13344,9 +13671,8 @@
      "ceiling": {
       "unit": "semio_hub_sourcing_component|wasm32-wasip2",
       "kind": "final",
-      "megabytes": 5600,
-      "listed": true,
-      "measuredMegabytes": 5519
+      "megabytes": 4096,
+      "listed": false
      }
     },
     {
@@ -13514,9 +13840,9 @@
      "ceiling": {
       "unit": "semio_hub_sourcing|wasm32-wasip2",
       "kind": "library",
-      "megabytes": 4500,
+      "megabytes": 3100,
       "listed": true,
-      "measuredMegabytes": 4273
+      "measuredMegabytes": 2824
      }
     },
     {

@@ -67,7 +67,7 @@ async fn results_panel_play_button_switches_to_pause_while_running() {
     assert!(stopped.contains(labels().play.as_str()), "{stopped}");
     let running = Fem3dResultsWindowConfig { animation: FemResultsAnimation { playing: true, ..FemResultsAnimation::default() }, ..Fem3dResultsWindowConfig::default() };
     let running = panel_json(&running);
-    assert!(running.contains(labels().pause.as_str()), "{running}");
+    assert!(running.contains("\"icon\":\"pause\""), "{running}");
 }
 
 /// 📚️ LAW: the source select offers every load case AND every combination of the live document.
@@ -152,9 +152,12 @@ async fn results_panel_play_control_is_a_pressed_toggle_that_follows_the_transpo
     let idle = panel_json(&config);
     config.animation.playing = true;
     let running = panel_json(&config);
-    let control = |json: &str| json[json.find("fem3d-play-results.transport.play").expect("play control")..].chars().take(900).collect::<String>();
-    assert!(control(&idle).contains("\"toggle\"") || control(&idle).to_lowercase().contains("toggle"), "{}", control(&idle));
+    let control = |json: &str| {
+        let end = json.find("\"key\":\"fem3d-play-results.transport.play\"").expect("play control");
+        json[end.saturating_sub(420)..end].to_owned()
+    };
+    assert!(control(&idle).contains("\"type\":\"toggle\""), "{}", control(&idle));
     assert!(control(&idle).contains("\"on\":false"), "{}", control(&idle));
     assert!(control(&running).contains("\"on\":true"), "{}", control(&running));
-    assert!(control(&running).contains("playing"), "the change dispatches the playing field: {}", control(&running));
+    assert!(control(&running).contains("\"field\":\"playing\""), "the change dispatches the playing field: {}", control(&running));
 }

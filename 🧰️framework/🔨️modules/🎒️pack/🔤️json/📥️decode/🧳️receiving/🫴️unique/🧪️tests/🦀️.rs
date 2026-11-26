@@ -115,13 +115,16 @@ fn sliced_clock() -> Option<u64> {
 #[test]
 fn yielded_output_retirement_preserves_the_accepted_payload() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🔣️.json")).unwrap();
-    let fixture = corpus["cases"].as_array().unwrap().iter().find(|row| row["name"] == "compact").unwrap();
+    let case = &corpus["pausedRetirement"];
+    let fixture = corpus["cases"].as_array().unwrap().iter().find(|row| row["name"] == case["case"]).unwrap();
     let wire = fixture["wire"].as_str().unwrap().as_bytes();
-    let expected: Projection = serde_json::from_slice(wire).unwrap();
+    let expected: Projection = serde_json::from_value(case["output"].clone()).unwrap();
+    assert_eq!(serde_json::from_slice::<Projection>(wire).unwrap(), expected);
     let grant = RetainedCloneGrant { maximum_items: 1_000_000, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 64 };
     let limits = JsonReadLimits { maximum_bytes: 2048, maximum_allocation_bytes: grant.maximum_capacity_bytes, maximum_depth: 16, maximum_items: 10_000 };
     let mut slices = Vec::new();
-    for reads in 0..24 {
+    let clock_reads = &case["clockReads"];
+    for reads in clock_reads[0].as_u64().unwrap()..clock_reads[1].as_u64().unwrap() {
         SLICED_CLOCK.with(|clock| clock.set(None));
         let mut caller = OriginalJobFixtureCaller::admit(OperationId(945), Generation(1), grant, sliced_clock, 100_000_000, 1_000_000);
         caller.retain_dispatch().unwrap();
@@ -134,7 +137,7 @@ fn yielded_output_retirement_preserves_the_accepted_payload() {
             let phase = source.receiver().map(|receiver| receiver.phase());
             let offered = RetainedCloneGrant { maximum_items: if phase == Some("take") { 1 } else { grant.maximum_items }, ..grant };
             let outcome = funded(&mut caller, offered, |cx| {
-                if !sliced && phase == Some("closeReceiver") {
+                if !sliced && phase == case["phase"].as_str() {
                     cx.restore_clock_stride(semio_framework_job::ClockStride::new());
                     SLICED_CLOCK.with(|clock| clock.set(Some(reads)));
                     sliced = true;

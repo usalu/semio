@@ -1,0 +1,8 @@
+{
+ "version": 1,
+ "atMs": 1800000303000,
+ "host": {
+  "totalMegabytes": 16384,
+  "availableMegabytes": 6640
+ }
+}

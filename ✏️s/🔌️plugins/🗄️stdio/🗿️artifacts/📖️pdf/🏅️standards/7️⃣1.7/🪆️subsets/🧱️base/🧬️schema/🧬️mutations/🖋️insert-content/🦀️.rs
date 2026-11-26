@@ -12,7 +12,7 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 pub struct InsertContent {
     pub index: usize,
     pub at: usize,
-    pub content: Vec<PdfOp>,
+    pub content: PdfContent,
 }
 
 impl<Op> MutationKind<PdfSnapshot, Op> for InsertContent

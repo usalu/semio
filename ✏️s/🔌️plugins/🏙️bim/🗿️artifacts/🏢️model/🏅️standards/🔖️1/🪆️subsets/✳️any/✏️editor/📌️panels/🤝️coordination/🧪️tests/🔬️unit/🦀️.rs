@@ -44,16 +44,19 @@ fn project(node: BuiltNode) -> String {
 }
 
 fn clashes_text(snapshot: &ModelSnapshot, inference: &ModelInference, locale: Locale) -> String {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let view = ViewModel::new(locale, Terminology::Native);
     project(render_clashes(snapshot, inference, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &TreeWindows::for_body(&view, CLASHES_KEY)).expect("the clash panel renders"))
 }
 
 fn rules_text(snapshot: &ModelSnapshot, inference: &ModelInference, locale: Locale) -> String {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let view = ViewModel::new(locale, Terminology::Native);
     project(render_rules(snapshot, inference, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &TreeWindows::for_body(&view, RULES_KEY)).expect("the rules panel renders"))
 }
 
 fn issues_text(snapshot: &ModelSnapshot, locale: Locale) -> String {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let view = ViewModel::new(locale, Terminology::Native);
     project(render_issues(snapshot, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &TreeWindows::for_body(&view, ISSUES_KEY)).expect("the issues panel renders"))
 }

@@ -5,6 +5,7 @@
   "law": "🧪️tests/🛂️committed-descriptor/🦀️.rs",
   "fixture": "🧫️fixtures/🛂️committed-descriptor/🔣️.json",
   "descriptorPath": "🌎️hub/🧩️compositions/🏙️bim/🧩️component/🛂️.descriptor.semio",
+  "componentCratePath": "🌎️hub/🧩️compositions/🏙️bim/🧩️component/📦️packages/🦀️rust",
   "componentDirectory": "🌎️hub/🧩️compositions/🏙️bim/🧩️component/📦️packages/🦀️rust/dist",
   "componentName": "semio_hub_bim_component.wasm",
   "deliverables": {

@@ -136,6 +136,8 @@ pub(super) struct SubspaceCheckpoint {
     pub(super) converged_count: usize,
     pub(super) converged: bool,
     pub(super) checkpoint_due: bool,
+    pub(super) publication_floor: usize,
+    pub(super) pace: PublicationPace,
     pub(super) preview_due: bool,
     pub(super) admission_fault: bool,
     pub(super) factor_validation_cursor: usize,
@@ -172,6 +174,26 @@ pub(super) enum SubspaceStage {
     ShiftOperatorColumnRow,
     CertifyNonPositive,
 }
+
+/// 🧮️ Work units the iteration arithmetic and each kind of publication have spent, so a checkpoint or preview starts only once the arithmetic since the last one has paid for what the last one cost.
+#[derive(Clone, Copy, Default, PartialEq)]
+pub(super) struct PublicationPace {
+    pub(super) work: u128,
+    pub(super) checkpoint_cost: u128,
+    pub(super) checkpoint_spent: u128,
+    pub(super) checkpoint_mark: u128,
+    pub(super) preview_cost: u128,
+    pub(super) preview_spent: u128,
+    pub(super) preview_mark: u128,
+}
+
+impl PublicationPace {
+    pub(super) fn checkpoint_affordable(&self) -> bool { self.work.saturating_sub(self.checkpoint_mark) >= self.checkpoint_cost }
+    pub(super) fn preview_affordable(&self) -> bool { self.work.saturating_sub(self.preview_mark) >= self.preview_cost }
+}
+
+/// 🪜️ Iterations a subspace job runs before its first checkpoint or preview.
+pub(super) const SUBSPACE_PUBLICATION_MINIMUM_ITERATIONS: usize = 8;
 
 #[derive(Clone, PartialEq)]
 pub(super) struct SubspaceWork {
@@ -302,6 +324,7 @@ pub struct SubspaceIterationJob {
     pub(super) checkpoint_cursor: NumericalPageCursor,
     pub(super) desk: NumericalOutcomeDesk,
     pub(super) terminal_published: bool,
+    pub(super) branch: u8,
 }
 
 pub(super) fn close_subspace_checkpoint_step(state: &mut SubspaceCheckpoint, maximum_bytes: usize) -> (bool, usize, usize) {
@@ -356,6 +379,8 @@ impl SubspaceCheckpoint {
                 converged_count: 0,
                 converged: false,
                 checkpoint_due: false,
+                publication_floor: SUBSPACE_PUBLICATION_MINIMUM_ITERATIONS,
+                pace: PublicationPace::default(),
                 preview_due: false,
                 admission_fault,
                 factor_validation_cursor: 0,
@@ -421,6 +446,15 @@ impl SubspaceCheckpoint {
 }
 
 impl SubspaceIterationJob {
+    /// 🚫️ Never checkpoints or previews: for a caller that discards both, they only cost page writes.
+    pub fn without_publication(mut self) -> Self { self.state.publication_floor = usize::MAX; self }
+
+    /// 🎯️ Declares the right matrix positive semidefinite (a mass matrix), so the iteration needs no shift: it skips the inverse-norm bound, whose large shift flattens the convergence ratio, and runs plain inverse subspace iteration.
+    pub fn with_positive_semidefinite_right(mut self) -> Self { self.state.shift = Some(0.0); self }
+
+    /// 🪜️ Fewest iterations before the first checkpoint or preview; each later one waits until the iteration count doubles, so publication costs a constant factor of the iteration work. Resume laws lower it to publish after every iteration.
+    pub fn with_publication_floor(mut self, iterations: usize) -> Self { self.state.publication_floor = iterations.max(1); self }
+
     pub fn admits_shape(order:usize,modes:usize)->bool{order!=0&&modes!=0&&modes<=order&&order<=u32::MAX as usize&&order.checked_mul(order).and_then(|cells|cells.checked_mul(size_of::<f64>())).is_some()}
 
     pub fn new(operation: Operation, k_factor: LdltFactor, b: Csr, n: usize, p: usize, max_iter: usize) -> Self {
@@ -433,7 +467,7 @@ impl SubspaceIterationJob {
             terminal_page_cursor: 0,
             checkpoint_writer: None,
             checkpoint_cursor: NumericalPageCursor::new(),
-            terminal_published: false, desk: NumericalOutcomeDesk::default(),
+            terminal_published: false, branch: 0, desk: NumericalOutcomeDesk::default(),
         }
     }
 

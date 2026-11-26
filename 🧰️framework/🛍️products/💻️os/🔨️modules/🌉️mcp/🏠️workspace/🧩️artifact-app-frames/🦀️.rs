@@ -341,10 +341,19 @@ pub fn bind_inference_document(declared: &semio_framework::ContributedInferenceM
     let Some(binding) = declared.payload.as_ref().and_then(|contract| contract.artifact_binding.as_ref()) else {
         return Ok(command.canonical_payload.clone());
     };
+    if binding.encoding == semio_framework::INFERENCE_ARTIFACT_PACK_BYTES {
+        return match command.artifact_document.as_ref() {
+            Some(document) => Ok(document.pack.clone()),
+            None => Err(Fault {
+                code: "app.command.rejected".to_string(),
+                message: format!("`{}` is artifact-bound: name the artifact to run it on with `artifactId`", declared.inference_schema),
+            }),
+        };
+    }
     if binding.encoding != semio_framework::INFERENCE_ARTIFACT_PACK_BASE64 {
         return Err(Fault {
             code: "app.command.rejected".to_string(),
-            message: format!("`{}` declares artifact binding encoding `{}`, which this gateway has no writer for (it writes `{}`)", declared.inference_schema, binding.encoding, semio_framework::INFERENCE_ARTIFACT_PACK_BASE64),
+            message: format!("`{}` declares artifact binding encoding `{}`, which this gateway has no writer for (it writes `{}` and `{}`)", declared.inference_schema, binding.encoding, semio_framework::INFERENCE_ARTIFACT_PACK_BASE64, semio_framework::INFERENCE_ARTIFACT_PACK_BYTES),
         });
     }
     let mut body = if command.canonical_payload.is_empty() {

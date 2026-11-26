@@ -24,7 +24,7 @@ import {nxOracleRequireV1,independentGlobV1,graph,withGraphTestInvocationV1} fro
 import{privateRepositoryWorkspaceV1,testCheckoutRootV1}from"../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 import{existsSync as existsRootV1}from"node:fs";import{dirname as dirnameRootV1,join as joinRootV1}from"node:path";
 const repositoryRootV1=(()=>{let directory=import.meta.dir;while(!existsRootV1(joinRootV1(directory,"MODULE.bazel"))&&dirnameRootV1(directory)!==directory)directory=dirnameRootV1(directory);return directory;})();
-const repository=await privateRepositoryWorkspaceV1();
+const repository=await privateRepositoryWorkspaceV1("socket");
 
 const require=createRequire(import.meta.url),Ajv=require("ajv/dist/2020").default,sha256=(bytes:string|Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
 /** ⏳️ The Original budget of a law that opens native images: every opening accepts a 10 s cleanup reserve before effects (`reserveMilliseconds` of the native storage schema), so the 20 s default leaves a loaded host no time for boot recovery, publication and the read. */

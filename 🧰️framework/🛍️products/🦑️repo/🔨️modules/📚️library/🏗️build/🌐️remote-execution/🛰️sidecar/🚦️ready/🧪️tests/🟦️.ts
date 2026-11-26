@@ -696,7 +696,7 @@ posix("a stage that starts a detached grandchild whose parent exits is stopped w
   const said:string[]=[],second=await runReadyStageV1({home:fake.home,root,environment:{},stage:stageOf("tools",600000),signal:new AbortController().signal,jobs:1,onLine:line=>said.push(line),tree:{...TREE,stallStopMilliseconds:2500},orphans:{registryRoot:registry,windows:()=>[{stage:"dependencies",startedMs:first.startedMs,endedMs:ended}],human:()=>({startedMs:personEntry.startedAtMs+1000})}});
   expect(await gone(orphan),"the orphan is reaped before the next stage").toBe(true);
   expect(await gone(agent),"an entry with a session address is judged like any other").toBe(true);expect(()=>process.kill(person,0),"a process that started in the working window of a person is never reaped").not.toThrow();
-  expect(second.containment!.reaped.map(row=>[row.pid,row.kind]).sort()).toEqual([[orphan,"registry"],[agent,"registry"]].sort());
+  expect<unknown>(second.containment!.reaped.map(row=>[row.pid,row.kind]).sort()).toEqual([[orphan,"registry"],[agent,"registry"]].sort());
   const line=said.find(text=>text.includes(`Stopped orphan ${orphan}`))!;expect(line).toContain(" / Verwaisten Prozess ");
   expect(readFileSync(join(root,".cache","f","ready","tools.log"),"utf8"),"the reap is in the log of the stage").toContain(`Stopped orphan ${orphan}`);
  }finally{
@@ -862,7 +862,7 @@ print(json.dumps(written))`,JSON.stringify(fixture)],{encoding:"utf8"});
    clear(handle);
   })as typeof clearInterval);
   try{
-   await runReadyV1({...w.ports,status,disk:()=>recovered?null:{path:"C:\\semio\\.cache",resource:"space",needed:fixture.needed,free:fixture.free},recover:async request=>{
+   await runReadyV1({...w.ports,status,disk:()=>recovered?null:{path:"C:\\semio\\.cache",resource:"space",needed:fixture.needed,available:fixture.free},recover:async request=>{
     report=request.report;expect(request.signal).toBe(w.controller.signal);
     for(const event of fixture.events){w.shared.now=started+event.at;if(event.action==="report")request.report(event.line!);else pulse?.();}
     if(cancel){w.controller.abort();request.report("late after cancellation");}
@@ -907,7 +907,7 @@ test("the memory mirror keeps the warden alive and writes memory.json at most ev
  const store=temp("memory"),file=join(store,"v1","origins","w1",P.memoryMirrorName),clock={now:1000000};
  let ensured=0,state:object={version:1,atMs:0,absent:true};
  const mirror=createReadyMemoryMirrorV1({store,origin:"w1",now:()=>clock.now,ensure:()=>{ensured++;},current:at=>({...state,atMs:at}) as never});
- const read=()=>JSON.parse(readFileSync(file,"utf8")) as {atMs:number;absent?:boolean;level?:string;counters?:{cancelled:number}};
+ const read=()=>JSON.parse(readFileSync(file,"utf8")) as {version?:number;atMs:number;absent?:boolean;level?:string;counters?:{cancelled:number}};
  expect(mirror.tick()).toBe(true);expect(read()).toEqual({version:1,atMs:1000000,absent:true});expect(ensured).toBe(1);
  clock.now+=1000;expect(mirror.tick()).toBe(false);expect(read().atMs).toBe(1000000);expect(ensured).toBe(2);
  const full={version:1,pid:1,mode:"observe",code:"c",host:{totalMegabytes:16384,availableMegabytes:3000,swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,compressedMegabytes:0,pressure:"normal"},level:"calm",hold:false,guardMegabytes:1,dangerMegabytes:1,resumeMegabytes:1,subjects:{count:0,megabytes:0,byKind:{}},suspended:[],counters:{suspended:0,resumed:0,cancelled:0,ticks:1},lastAlarms:[],overhead:{tickMillisecondsP50:1,tickMillisecondsP95:1,cpuBasisPoints:1,residentMegabytes:1}};

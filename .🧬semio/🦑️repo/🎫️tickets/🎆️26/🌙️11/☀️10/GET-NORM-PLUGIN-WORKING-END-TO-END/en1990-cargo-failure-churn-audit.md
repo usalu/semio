@@ -1,0 +1,7 @@
+# EN 1990 Cargo source-change recovery
+
+`coord-en1990-stable-actor-wire-retry.log` shows `semio-framework-value-paged-text` compiling at line 18327. At lines 27891–27910, `semio-framework-pack-record-encode` could not import `TextReadCursor` from the producer artifact. The live producer source now defines the symbol. The likely ordering is that rustc compiled the old producer source, then compiled the consumer after it had been updated to reference the new API.
+
+The normal repository Cargo launcher already checks this failure path. For Cargo status 101 and a recognized dependency diagnostic from a failed compiler invocation, it checks the failed unit's dependency artifacts. It reads bounded rustc dependency receipts and looks for a BLAKE3 mismatch between bytes a dependency compiler consumed and current repository source. The retry owner requires a fresh byte witness and re-admits the Cargo graph before reusing the existing lane. When that graph cannot be admitted unchanged, it reports a structured input edit for the enclosing repository command to restart under its existing bounded policy.
+
+The log records the source-change diagnosis and actual command restart at lines 29674–29677, takeover of the same 2663 MB grant at line 29682, and admission of the replacement Cargo compiler at line 31437. The command ends with owned cancellation and lease release after the replacement was intentionally stopped. The error was recovered by the existing mechanism on this run. This audit made no implementation changes and started no Cargo process.

@@ -44,7 +44,7 @@ async function observe(row:typeof cases[number],interruption?:string){
      else for(const previous of sockets)if(previous!==socket)previous.write(encodeFrameV1({t:"plan-reply",id:frame.id,revision:"7".repeat(64),plan:{tasks:[]},progress:[],cacheHits:0}));
      return;
     }
-    const send=()=>{for(const event of row.frames)socket.write(encodeFrameV1(frames[event]!(frame.id)));};
+    const send=()=>{for(const event of row.frames)socket.write(encodeFrameV1(frames[event]!(frame.id??0)));};
     send();
     if(row.repeat){const timer=setInterval(send,20);socket.once("close",()=>clearInterval(timer));}
    }
@@ -83,9 +83,9 @@ async function observeReattachedPlan(){
   trace.push("start");
   await options.progress?.(1000);
   await new Promise<void>((resolve,reject)=>{
-   const abort=()=>{trace.push("abort");reject(options.signal.reason);};
-   options.signal.addEventListener("abort",abort,{once:true});
-   pending.then(()=>{options.signal.removeEventListener("abort",abort);resolve();});
+   const abort=()=>{trace.push("abort");reject(options.signal?.reason);};
+   options.signal?.addEventListener("abort",abort,{once:true});
+   pending.then(()=>{options.signal?.removeEventListener("abort",abort);resolve();});
   });
   trace.push("answer");
   return inner.plan(options);

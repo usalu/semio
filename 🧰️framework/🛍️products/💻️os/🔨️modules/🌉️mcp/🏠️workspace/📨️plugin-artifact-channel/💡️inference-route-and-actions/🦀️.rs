@@ -113,6 +113,13 @@ impl PluginArtifactChannel {
     /// 🎯️ Resolves an action from its declared owner; PureCommandRequest binds the actual caller surface.
     pub(crate) fn addressed_action_invocation(&self, capability_id: &str, arguments: impl FnOnce() -> Result<std::collections::BTreeMap<String, semio_framework_value::DslValue>, String>) -> Result<semio_framework::manifest::ActionInvocation, Fault> {
         let plugin_id = self.plugin_id.as_str();
+        if let Some(action_id) = capability_id.strip_prefix("framework.") {
+            let app = self.descriptor.manifest.apps.iter().find(|app| app.id == self.app_ref.app_id).ok_or_else(|| Fault { code: "capability.not-found".to_string(), message: format!("plugin `{plugin_id}` declares no app `{}` to run framework capability `{capability_id}` on", self.app_ref.app_id) })?;
+            let window_instance_id = app.window_kinds.iter().next().map(|kind| kind.id.clone()).ok_or_else(|| Self::not_wired("PureCommand", format!("app `{}` declares no window kind, so there is no pane an agent could address framework action `{action_id}` in", app.id)))?;
+            let address = semio_framework::manifest::ActionAddress { plugin_id: plugin_id.to_string(), app_id: app.id.clone(), mode_id: app.default_mode_id.clone(), window_kind_id: "*".to_string(), window_instance_id, action_id: action_id.to_string() };
+            let arguments = arguments().map_err(|detail| Self::not_wired("PureCommand", detail))?;
+            return Ok(semio_framework::manifest::ActionInvocation { expected_document_revision: None, address, arguments });
+        }
         let mut address: Option<semio_framework::manifest::ActionAddress> = None;
         'apps: for app in self.descriptor.manifest.apps.iter() {
             let base_window = app.window_kinds.iter().next().map(|kind| kind.id.clone());

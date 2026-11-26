@@ -13,23 +13,55 @@ impl<P,Mu> TimeTravelStoreState<P,Mu>where P: store::os_store::serialization::Ar
  pub fn commit_finished(&mut self,store:&mut ArtifactStore<P,Mu>,request:&mut Option<store::HistoryFinalization>,actor:Option<&str>,cx:&mut StepContext<'_>)->Result<TimeTravelCommit,Fault>{
   if self.finalizing()||request.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"completed replay finalization request destination is occupied").into_fault())}let invalid_actor=actor.is_some_and(|actor|actor!=store.local_actor_id().0.as_str());let cancelled=cx.is_cancelled();let d=Self::commit_request_demands();let step=cx.with_original_retirement(|cx|close_original_retained_step(cx,d,|_|{self.commit_request=request.take();self.commit_stage=0;self.commit_closing=cancelled||invalid_actor;self.commit_outcome=invalid_actor.then_some(TimeTravelCommit::Failed);work(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))})).map_err(|failure|{self.commit_failure=Some(failure);self.commit_closing=true;ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original finalization request retained its complete admission failure").into_fault()})?;if step.progress().copied_items==0{return Ok(TimeTravelCommit::Pending)}Ok(TimeTravelCommit::Pending)
  }
+ #[cfg(any(test, feature = "artifact-app-testing"))]
+ pub(crate) fn original_publication_phase(&self)->Option<u8>{self.commit_publisher.as_ref().map(|owner|owner.preparation_phase())}
  /// 📏️ A contextual close quotes the actual retained publisher and the exact original Store ledgers it returns.
  pub fn commit_close_demands(&self,store:&ArtifactStore<P,Mu>,body:usize)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.commit_publisher.as_ref(){return if owner.terminal_is_empty(){Ok(OriginalReplayPublication::<P,Mu>::boxed_release_demands())}else{owner.close_demands(store,body)}}if !self.commit_resident.terminal_is_empty(){return Ok(self.commit_resident.close_demands(body))}let owner=&self.commit_request_close;if !owner.is_empty(){return owner.demands(body)}if self.commit_request.is_some(){return owner.next_owner_demands::<store::HistoryFinalization>(true,&None,body)}if self.commit_failure.is_some(){return owner.next_owner_demands::<semio_framework_job::OriginalTurnFailure>(true,&None,body)}Ok(RetirementDemand{copy_bytes:std::mem::size_of::<TimeTravelCommit>()+std::mem::size_of::<bool>(),depth:1,..Default::default()})}
+ /// 🧳️ An undo or redo Report is still moving into its publisher through [`Self::commit_report`], so no commit driver step may run yet.
+ pub fn admitting_report(&self)->bool{self.commit_stage==0&&!self.commit_closing&&(self.commit_publisher.is_some()||!self.commit_resident.terminal_is_empty())}
  /// 🧯️ Retains the complete original refusal without replacing an earlier source or converting its cause.
  pub fn retain_commit_failure(&mut self,failure:semio_framework_job::OriginalTurnFailure)->Result<(),semio_framework_job::OriginalTurnFailure>{if self.commit_failure.is_some(){return Err(failure)}self.commit_failure=Some(failure);self.commit_closing=true;self.commit_outcome=Some(TimeTravelCommit::Failed);Ok(())}
  /// ♻️ A cancelled authored replay enters the same actual typed retirement queue under its original decoder.
  pub fn retire_authoring_replay(&mut self,store:&mut ArtifactStore<P,Mu>,replay:&mut Option<store::os_store::snapshot_read::ArtifactDerivedReplay<P,Mu>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if replay.is_none(){return Ok(true)}if self.retirements.len()==self.retirements.capacity(){let bytes=(self.retirements.len()+1)*std::mem::size_of::<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>();let release=self.retirements.capacity()*std::mem::size_of::<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>();let d=RetirementDemand{capacity_bytes:bytes,release_bytes:release,depth:1,..Default::default()};close_original_retained_step(cx,d,|_|work(self.retirements.try_reserve_exact(1).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original undo retirement queue refused")).map(|_|RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,released_bytes:release,..Default::default()}))))?;return Ok(false)}let grant=cx.retained_grant();let outcome=cx.with_original_effect(grant,|cx,effect|cx.with_native_retirement(|control|store.retire_derived_report_replay_controlled(replay,effect,control)))?;let work=replay.as_mut().and_then(|owner|owner.take_preparation_work());let Some((result,performed))=outcome else{return Ok(false)};if performed!=0{cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX))}else if let Some(work)=work{cx.consume_fuel(work)}let p=match result?{Some((owner,p))=>{self.retirements.push_back(owner);p},None=>replay.as_mut().map_or(Default::default(),|replay|replay.take_preparation_receipt())};if performed==0&&work.is_none(){cx.consume_fuel(p.copied_items as u64)}cx.consume_retained(p)?;Ok(replay.is_none())}
  /// 🧳️ Undo and redo retain their own original completed Report until the same genuine publisher captures it.
- pub fn commit_report(&mut self,store:&ArtifactStore<P,Mu>,result:&mut Option<store::os_store::replay::EditReplayResult<P,Mu>>,request:&mut Option<store::HistoryFinalization>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if self.finalizing(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original time-travel publisher is already occupied").into())}let ready=OriginalReplayPublication::admit(store,result,request,cx,&mut self.commit_publisher,&mut self.commit_resident)?;if ready{self.commit_stage=1;self.commit_closing=false;}Ok(ready)}
+ pub fn commit_report(&mut self,store:&ArtifactStore<P,Mu>,result:&mut Option<store::os_store::replay::EditReplayResult<P,Mu>>,request:&mut Option<store::HistoryFinalization>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+  if self.finalizing() && !self.capturing_authored_report(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original time-travel publisher is already occupied").into())}
+  let ready=OriginalReplayPublication::admit(store,result,request,cx,&mut self.commit_publisher,&mut self.commit_resident)?;
+  if ready{self.commit_stage=1;self.commit_closing=false;}
+  Ok(ready || self.commit_publisher.is_some())
+ }
+ /// 📨️ The author retains the Report until its publisher constructor takes the original.
+ pub fn capturing_authored_report(&self)->bool{
+  self.commit_request.is_none() && self.commit_publisher.is_none() && !self.commit_closing && !self.commit_resident.terminal_is_empty()
+ }
  /// 🪡️ Every preparation, visible decision, acknowledgement and physical return uses the actual current original Job context.
  pub fn step_commit(&mut self,store:&mut ArtifactStore<P,Mu>,cx:&mut StepContext<'_>)->Result<TimeTravelCommit,semio_framework_job::OriginalTurnFailure>{
   if self.commit_publisher.as_ref().is_some_and(|owner|!owner.matches_caller(cx)){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"native finalization requires its same original caller and decoder recipient").into())}
   let result=(||->Result<TimeTravelCommit,semio_framework_job::OriginalTurnFailure>{
    if !self.finalizing(){return Ok(TimeTravelCommit::Pending)}if cx.is_cancelled(){self.commit_closing=true;}
-   if self.commit_closing{return cx.with_original_retirement(|cx|self.close_commit(store,cx))}
+   {let t=DBGC.fetch_add(1,std::sync::atomic::Ordering::Relaxed);let ph=self.commit_publisher.as_ref().map_or(255,|p|p.preparation_phase());let st=(self.commit_stage,self.commit_closing,ph);if t%2000==0||DBGCS.lock().unwrap().replace(st)!=Some(st){eprintln!("[DEBUG] commit t={t} ms={} stage={} closing={} phase={} grant={:?}",DBGCW.get_or_init(std::time::Instant::now).elapsed().as_millis(),self.commit_stage,self.commit_closing,ph,cx.retained_grant());}}
+   if self.commit_closing{
+    let turns=cx.retained_grant().maximum_items.min(64);let mut outcome=TimeTravelCommit::Pending;
+    for _ in 0..turns{
+     if cx.should_yield(){break}
+     let before=(cx.retained_progress(),cx.original_work_units_spent());
+     outcome=cx.with_original_retirement(|cx|self.close_commit(store,cx))?;
+     if outcome!=TimeTravelCommit::Pending||!self.commit_closing||before==(cx.retained_progress(),cx.original_work_units_spent()){break}
+    }
+    return Ok(outcome)
+   }
    match self.commit_stage{
     0=>{let result=OriginalReplayPublication::admit(store,&mut self.finished,&mut self.commit_request,cx,&mut self.commit_publisher,&mut self.commit_resident);match result{Ok(true)=>self.commit_stage=1,Ok(false)=>{},Err(failure)=>{if failure.retained_progress()!=Default::default(){return Err(failure)}self.commit_failure=Some(failure);self.commit_outcome=Some(if self.finished.as_ref().is_some_and(|finished|finished.revision!=store.content_revision()){TimeTravelCommit::Stale}else{TimeTravelCommit::Blocked});self.commit_closing=true;}}},
-    1=>{if self.commit_publisher.as_mut().unwrap().advance(store,cx)?{self.commit_stage=2;}},
+    1=>{
+      let publisher=self.commit_publisher.as_mut().unwrap();
+      let turns=cx.retained_grant().maximum_items.min(64);
+      for _ in 0..turns {
+       if cx.should_yield(){break}
+       let before=(cx.retained_progress(),cx.original_work_units_spent(),publisher.preparation_phase());
+       if publisher.advance(store,cx)?{self.commit_stage=2;break}
+       if before==(cx.retained_progress(),cx.original_work_units_spent(),publisher.preparation_phase()){break}
+      }
+    },
     2=>{if self.commit_publisher.as_mut().unwrap().publish(store,cx)?{self.commit_stage=3;}},
     3=>{let grant=cx.retained_grant();let Some((outbound,performed))=cx.with_original_effect(grant,|_,effect|store.advance_original_outbound(effect))?else{return Ok(TimeTravelCommit::Pending)};cx.consume_work(performed);let progress=match &outbound{Ok(Some((_,p)))=>*p,Err(error)=>error.retained_progress(),_=>Default::default()};cx.consume_retained(progress)?;if let Err(error)=outbound{return Err(error.into())}if progress==Default::default(){self.commit_stage=4;}},
     4=>{if self.commit_publisher.as_mut().unwrap().take_receipt(cx,&mut self.commit_receipt)?{self.commit_stage=5;}},
@@ -47,3 +79,7 @@ impl<P,Mu> TimeTravelStoreState<P,Mu>where P: store::os_store::serialization::Ar
   let d=RetirementDemand{copy_bytes:std::mem::size_of::<TimeTravelCommit>()+std::mem::size_of::<bool>(),depth:1,..Default::default()};let mut outcome=TimeTravelCommit::Pending;close_original_retained_step(cx,d,|_|{outcome=self.commit_receipt.take().map_or_else(||self.commit_outcome.take().unwrap_or(TimeTravelCommit::Failed),|receipt|TimeTravelCommit::Finalized{receipt});self.commit_outcome=None;self.commit_closing=false;self.commit_stage=0;work(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))})?;Ok(outcome)
  }
 }
+
+static DBGC:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);
+static DBGCW:std::sync::OnceLock<std::time::Instant>=std::sync::OnceLock::new();
+static DBGCS:std::sync::Mutex<Option<(u8,bool,u8)>>=std::sync::Mutex::new(None);

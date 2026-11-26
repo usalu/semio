@@ -7,14 +7,14 @@ pub struct BoardFillJob {
         pub(super) original_source: Option<semio_framework_action_bus::OriginalToolSourceBinding>,
 pub operation: semio_framework_job::Operation,
     pub naming: &'static BoardNaming,
-    pub state: Option<BoardFillJobState>,
+    pub state: Option<Box<BoardFillJobState>>,
     pub checkpoint: Option<BoardFillCheckpoint>,
     pub preview: Option<BoardFillPreview>,
     pub(super) commit_encoder: Option<BoardFillCommitEncoder>,
     pub(super) commit_writer: Option<semio_framework_job_payload::RetainedPayloadBuilder>,
     pub(super) lent: Option<semio_framework_job_payload::RetainedJobPayload>,
     pub(super) commit_output: Option<semio_framework_job_payload::RetainedJobPayload>,
-    pub(super) offer: Cell<Option<BoardFillOffer>>,
+    pub(super) offer: Cell<Option<BoardFillTransition>>,
     pub admitted: Cell<bool>,
     pub fault: Option<&'static str>,
     pub closing: bool,
@@ -22,7 +22,7 @@ pub operation: semio_framework_job::Operation,
 
 /// 🎟️ The one outcome a fill turn owes its driver; it stays offered until admission succeeds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum BoardFillOffer { Yield, Preview, Checkpoint(u64), Complete, Fault, Cancelled }
+pub enum BoardFillTransition { Yield, Advanced, Checkpoint(u64), Complete, Fault, Cancelled }
 
 // #region board_host
 pub fn begin_board_fill_snapshot(admission: &mut semio_framework_job::OriginalConstructionAdmission, style: &BoardStyleState, brush: &BoardBrushState, output: &mut Option<BoardFillSnapshotCapture>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {

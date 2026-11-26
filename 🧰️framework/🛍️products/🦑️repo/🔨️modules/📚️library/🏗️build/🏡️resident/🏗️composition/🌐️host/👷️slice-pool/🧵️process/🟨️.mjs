@@ -44,7 +44,7 @@ export function createProcessWorkerV1(url,data,env,{spawn=fork,graceMilliseconds
     const reading=readFile(graphFile,"utf8").then(text=>listener({...rest,graph:JSON.parse(text)}),error=>listener({type:"error",message:"Slice result unreadable: "+String(error?.message??error)}));
     pending.add(reading);void reading.finally(()=>pending.delete(reading));
    });
-   else if(event==="exit")child.on("exit",code=>{void Promise.race([new Promise(done=>child.once("close",done)),new Promise(done=>setTimeout(done,STDERR_DRAIN_MILLISECONDS_V1).unref?.())]).then(()=>Promise.allSettled([...pending])).then(()=>listener(code));});
+   else if(event==="exit")child.on("exit",(code,signal)=>{void Promise.race([new Promise(done=>child.once("close",done)),new Promise(done=>setTimeout(done,STDERR_DRAIN_MILLISECONDS_V1).unref?.())]).then(()=>Promise.allSettled([...pending])).then(()=>listener(code,signal));});
    else child.on(event==="error"?event:"never",listener);
   },
   /** 🛑 SIGINT to the group, SIGKILL after the grace period whether or not the process answered; resolves when the process is gone. */

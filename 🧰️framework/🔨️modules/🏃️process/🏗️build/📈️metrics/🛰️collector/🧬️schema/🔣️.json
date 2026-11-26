@@ -1,0 +1,415 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/metrics/collector/v1",
+  "title": "Metrics collector: the cadences, the collectors of the catalogue, the baseline file and the publication into the fleet store",
+  "definitions": {
+    "Policy": {
+      "description": "The authored numbers of the collector. `tickMilliseconds` is the cadence of the host gauges (the finest bucket of tier t0), `slowMilliseconds` the cadence of the counter files and status files and of the fleet-scope collectors. `baselineMaximumAgeMilliseconds`: a persisted counter baseline older than this is only a new baseline (a long downtime is not one huge delta). `publishMilliseconds`: how often the publisher looks for rows closed since its last look; it appends exactly those rows (a few KB) in place to the published ring files, whose rows carry a start stamp at both ends, so a reader never takes a torn row, and the header cursor is written last; a whole file is copied (kernel copy, temporary name, rename) only when the published file is absent or of another layout. `fleetDirectory`: the directory below the store `v1/` that holds the fleet-scope rings `fleet/metrics/<source>/`. `fileBytesMaximum` bounds one published file. `lockFile` makes one collector the writer of a ring directory; `wardenFreshMilliseconds` is how old a warden state may be; `repoCpuMaximumGapMilliseconds` is the longest span between two warden readings that still gives a repo CPU rate.",
+      "const": {
+        "tickMilliseconds": 1000,
+        "slowMilliseconds": 10000,
+        "publishMilliseconds": 5000,
+        "baselineMaximumAgeMilliseconds": 120000,
+        "fileBytesMaximum": 16777216,
+        "wardenFreshMilliseconds": 15000,
+        "sampleFreshMilliseconds": 120000,
+        "lockFile": "collector.lock",
+        "lockRolePattern": "^(origin|fleet:[a-z][a-z0-9-]{0,63})$",
+        "lockUnreadableMilliseconds": 2000,
+        "baselineFile": "baseline.json",
+        "temporaryPattern": "^(.+)\\.([0-9]{1,10})\\.tmp$",
+        "volumeChildrenMaximum": 32,
+        "fleetDirectory": "fleet",
+        "repoCpuMaximumGapMilliseconds": 60000,
+        "openRetryMilliseconds": 30000,
+        "appleDoublePrefix": "._",
+        "sweepMilliseconds": 600000
+      }
+    },
+    "Collectors": {
+      "description": "One entry per feeding collector: its cadence, the catalogue `source` of its metrics and the metric ids it feeds. Every catalogue id belongs to exactly one collector (a law test proves it, and that the source of each id is the source of its collector).",
+      "const": [
+        {
+          "name": "cpu",
+          "cadence": "tick",
+          "source": "host-sampler",
+          "ids": [
+            "host.cpu.busy",
+            "host.cpu.load",
+            "host.cpu.cores"
+          ],
+          "label": {
+            "en": "CPU busy share, load and cores from two processor time readings",
+            "de": "CPU-Auslastung, Last und Kerne aus zwei Prozessorzeit-Ablesungen"
+          },
+          "scope": "origin"
+        },
+        {
+          "name": "memory",
+          "cadence": "tick",
+          "source": "host-sampler",
+          "ids": [
+            "host.memory.total",
+            "host.memory.available",
+            "host.memory.compressed",
+            "host.memory.pressure",
+            "host.swap.used",
+            "host.swap.rate"
+          ],
+          "label": {
+            "en": "Memory and swap from the warden state, the gate sample or the operating system",
+            "de": "Speicher und Swap aus dem Wächterzustand, der Gate-Probe oder dem Betriebssystem"
+          },
+          "scope": "origin"
+        },
+        {
+          "name": "warden",
+          "cadence": "tick",
+          "source": "warden",
+          "ids": [
+            "warden.level",
+            "warden.subjects.count",
+            "warden.subjects.memory",
+            "warden.headroom",
+            "warden.cancelled"
+          ],
+          "label": {
+            "en": "The state file of the memory warden",
+            "de": "Die Zustandsdatei des Speicherwächters"
+          },
+          "scope": "origin"
+        },
+        {
+          "name": "process-tree",
+          "cadence": "tick",
+          "source": "process-tree",
+          "ids": [
+            "process.repo.count",
+            "process.repo.memory",
+            "process.repo.cpu",
+            "build.tasks.running"
+          ],
+          "label": {
+            "en": "The classified repo process tree as the warden counts it, with its CPU time",
+            "de": "Der klassifizierte Repo-Prozessbaum, wie der Wächter ihn zählt, mit seiner CPU-Zeit"
+          },
+          "scope": "origin"
+        },
+        {
+          "name": "self",
+          "cadence": "tick",
+          "source": "self",
+          "ids": [
+            "metrics.self.cpu",
+            "metrics.self.dropped",
+            "metrics.self.memory",
+            "metrics.self.publish.duration",
+            "metrics.self.samples",
+            "metrics.self.tick.duration",
+            "metrics.self.write.bytes",
+            "metrics.self.write.duration",
+            "process.ready.cpu",
+            "process.ready.rss"
+          ],
+          "label": {
+            "en": "This collector measuring its own steps (CPU time inside its ticks, bytes it retains) and, separately, the whole readiness process that hosts it",
+            "de": "Dieser Sammler misst seine eigenen Schritte (CPU-Zeit in seinen Ticks, von ihm gehaltene Bytes) und getrennt den ganzen Bereitschaftsprozess, der ihn beherbergt"
+          },
+          "scope": "origin"
+        },
+        {
+          "name": "volumes",
+          "cadence": "slow",
+          "source": "host-sampler",
+          "ids": [
+            "host.disk.free",
+            "host.disk.total",
+            "host.files.open",
+            "host.images.attached"
+          ],
+          "label": {
+            "en": "Free space of the volumes of the worktree and its cache images; open files and attached images from the gate sample",
+            "de": "Freier Platz der Datenträger des Arbeitsbaums und seiner Cache-Images; offene Dateien und angehängte Images aus der Gate-Probe"
+          },
+          "scope": "origin"
+        },
+        {
+          "name": "queue",
+          "cadence": "slow",
+          "source": "scheduler",
+          "ids": [
+            "build.tasks.queued"
+          ],
+          "label": {
+            "en": "The waiters of the fair build queue of the machine",
+            "de": "Die Wartenden der fairen Build-Warteschlange der Maschine"
+          },
+          "scope": "origin"
+        },
+        {
+          "name": "unit-counters",
+          "cadence": "slow",
+          "source": "unit-counters",
+          "ids": [
+            "build.units.compiled",
+            "build.units.restored.local",
+            "build.units.restored.fleet",
+            "build.units.stored",
+            "build.units.skipped"
+          ],
+          "label": {
+            "en": "The monotonic unit cache counter files",
+            "de": "Die monotonen Zählerdateien des Einheiten-Caches"
+          },
+          "scope": "origin"
+        },
+        {
+          "name": "local-cache",
+          "cadence": "slow",
+          "source": "local-cache",
+          "ids": [
+            "cache.local.hit",
+            "cache.local.miss",
+            "cache.local.bytes"
+          ],
+          "label": {
+            "en": "The hit and miss counter files and the census size of the host content store",
+            "de": "Die Treffer- und Fehlzugriffszähler und die Zensus-Größe des Host-Inhaltsspeichers"
+          },
+          "scope": "origin"
+        },
+        {
+          "name": "remote-cache",
+          "cadence": "slow",
+          "source": "remote-cache",
+          "ids": [
+            "cache.remote.ac.hit",
+            "cache.remote.ac.miss",
+            "cache.remote.ac.put",
+            "cache.remote.ac.conflict",
+            "cache.remote.cas.hit",
+            "cache.remote.cas.miss",
+            "cache.remote.cas.put",
+            "cache.remote.nx.hit",
+            "cache.remote.nx.miss",
+            "cache.remote.nx.put"
+          ],
+          "label": {
+            "en": "The persisted counter ledger of the remote cache server of this machine",
+            "de": "Das persistierte Zählerbuch des Remote-Cache-Servers dieser Maschine"
+          },
+          "scope": "origin"
+        },
+        {
+          "name": "remote-cache-status",
+          "cadence": "slow",
+          "scope": "fleet",
+          "source": "remote-cache",
+          "ids": [
+            "cache.remote.entries",
+            "cache.remote.bytes"
+          ],
+          "label": {
+            "en": "The entries and bytes the remote cache server holds (run by the machine that serves the cache)",
+            "de": "Die Einträge und Bytes des Remote-Cache-Servers (betrieben von der Maschine, die den Cache bereitstellt)"
+          }
+        },
+        {
+          "name": "offload-counters",
+          "cadence": "slow",
+          "source": "offload-counters",
+          "ids": [
+            "exec.offload.out",
+            "exec.offload.fellback",
+            "exec.refused"
+          ],
+          "label": {
+            "en": "The offload counter files",
+            "de": "Die Auslagerungszähler-Dateien"
+          },
+          "scope": "origin"
+        },
+        {
+          "name": "remote-execution",
+          "cadence": "slow",
+          "source": "remote-execution",
+          "ids": [
+            "exec.offload.in",
+            "exec.queue.running",
+            "exec.queue.queued"
+          ],
+          "label": {
+            "en": "The scheduler of the fleet: remote executions running and queued, units offloaded in (run by the machine that serves the scheduler)",
+            "de": "Der Scheduler der Flotte: laufende und wartende Remote-Ausführungen, eingehend ausgelagerte Einheiten (betrieben von der Maschine, die den Scheduler bereitstellt)"
+          },
+          "scope": "fleet"
+        },
+        {
+          "name": "owner-pool",
+          "cadence": "slow",
+          "source": "owner-pool",
+          "ids": [
+            "graph.read.owners",
+            "graph.read.owners.done",
+            "graph.pool.claimed",
+            "graph.pool.published",
+            "graph.pool.failed",
+            "graph.pool.memory"
+          ],
+          "label": {
+            "en": "The owner pool status and the slice phase of the graph read",
+            "de": "Der Status des Eigentümer-Pools und die Scheibenphase des Graphlesens"
+          },
+          "scope": "origin"
+        },
+        {
+          "name": "graph-service",
+          "cadence": "slow",
+          "source": "graph-service",
+          "ids": [
+            "graph.read.facts"
+          ],
+          "label": {
+            "en": "The graph rows the graph service read into its row store (slice memory record)",
+            "de": "Die Graph-Zeilen, die der Graphdienst in seinen Zeilenspeicher gelesen hat (Slice-Speicher-Datensatz)"
+          },
+          "scope": "origin"
+        },
+        {
+          "name": "ready",
+          "cadence": "slow",
+          "source": "ready",
+          "ids": [
+            "ready.stage",
+            "ready.state",
+            "ready.attempts"
+          ],
+          "label": {
+            "en": "The readiness status file",
+            "de": "Die Bereitschaftsstatus-Datei"
+          },
+          "scope": "origin"
+        },
+        {
+          "name": "journal",
+          "cadence": "slow",
+          "source": "journal",
+          "ids": [
+            "replica.journal.events",
+            "replica.journal.bytes"
+          ],
+          "label": {
+            "en": "The head of the shared worktree journal",
+            "de": "Der Kopf des Journals des geteilten Arbeitsbaums"
+          },
+          "scope": "origin"
+        }
+      ]
+    },
+    "Unsourced": {
+      "description": "The ids whose collector has no source at all. Empty: every catalogue metric has a source; the law test pins the list so it can only stay empty.",
+      "const": []
+    },
+    "Enums": {
+      "description": "The numbers of the state metrics.",
+      "const": {
+        "pressure": {
+          "normal": 0,
+          "warn": 1,
+          "critical": 2
+        },
+        "wardenLevel": {
+          "calm": 0,
+          "guard": 1,
+          "danger": 2
+        },
+        "readyState": {
+          "absent": 0,
+          "waiting": 1,
+          "backoff": 1,
+          "observing": 1,
+          "running": 2,
+          "ready": 3,
+          "server": 3
+        }
+      }
+    },
+    "Baseline": {
+      "description": "`baseline.json` in the local ring directory: the last cumulative reading of every counter metric, so a restart of the collector (every code change restarts it) continues the deltas instead of losing the count since the last tick.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "atMs",
+        "readings"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "readings": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "Lock": {
+      "description": "`collector.lock` in the local ring directory: the process that writes the rings (one writer per directory), named by its identity (`pid` and `startMs`, so a reused pid is no holder), the `role` it collects for (`origin` for the machine, `fleet:<source>` for a fleet-scope source) and the `checkout` it runs for. Only a real collector may hold the lock of the machine-wide ring directory: a claim whose checkout lies inside the temporary directory, a claim made under a test runner, or a role outside `lockRolePattern` is refused; a test uses a private ring directory.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "pid",
+        "startMs",
+        "role"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "startMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "role": {
+          "type": "string",
+          "pattern": "^(origin|fleet:[a-z][a-z0-9-]{0,63})$"
+        },
+        "checkout": {
+          "type": "string"
+        }
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "locked": "Another collector writes the rings in {directory}.",
+          "failed": "The collector {name} failed: {reason}",
+          "opening": "Opening the rings in {directory} failed, trying again later: {reason}",
+          "publication": "Publishing {file} failed: {reason}",
+          "refused": "This process may not write the rings in {directory}: {reason}",
+          "foreign": "The rings in {directory} are written by {holder}, waiting for it to end."
+        },
+        "de": {
+          "locked": "Ein anderer Sammler schreibt die Ringe in {directory}.",
+          "failed": "Der Sammler {name} ist gescheitert: {reason}",
+          "opening": "Das Öffnen der Ringe in {directory} ist gescheitert, später erneut: {reason}",
+          "publication": "Das Veröffentlichen von {file} ist gescheitert: {reason}",
+          "refused": "Dieser Prozess darf die Ringe in {directory} nicht schreiben: {reason}",
+          "foreign": "Die Ringe in {directory} schreibt {holder}, warte auf dessen Ende."
+        }
+      }
+    }
+  }
+}

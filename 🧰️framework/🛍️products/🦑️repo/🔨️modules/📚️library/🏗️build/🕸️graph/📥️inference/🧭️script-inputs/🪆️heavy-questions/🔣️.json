@@ -1,7 +1,9 @@
 {
   "version": 1,
   "environment": "SEMIO_HEAVY_QUESTION_CHILD",
-  "memoryLimitMegabytes": 2560,
+  "memoryFloorMegabytes": 2560,
+  "memoryCeilingMegabytes": 6144,
+  "concurrentChildren": 2,
   "pollMilliseconds": 200,
   "timeoutMilliseconds": 900000,
   "heartbeatMilliseconds": 2000,

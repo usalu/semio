@@ -5,7 +5,7 @@
 async fn select_children(app: &mut ToyApp, children: &[String], mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     let selection = protocol::DomainSelection { granularity: "child".into(), ids: children.to_vec(), anchor_id: None };
     let state = protocol::InteractionState { selection: BTreeMap::from([("test.slot".to_string(), selection)]), ..protocol::InteractionState::default() };
-    app.stores.interaction_store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![InteractionConfigMutation::set_state(state)], lane: HistoryLane::Interaction, transaction: None }, identity).await.expect("the selection lands");
+    app.stores.interaction_store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![InteractionConfigMutation::set_state(state)], lane: HistoryLane::Interaction, transaction: None }, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the selection lands");
 }
 
 /// ⚖️ LAW (design §16.4, R14, R31): a blocked review is resolved by editing the failing mutation's targets — Next problem
@@ -80,7 +80,7 @@ async fn a_warning_an_edit_introduces_stays_visible_after_finalize_and_reload() 
     let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.clone().into()), mounted_policy, &mut identity).await;
     assert_eq!(app.stores.store.local_actor_id(), &protocol::ActorId(actor.clone().into()));
     for value in ["a", "b"] {
-        app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetLabel { value: value.into() }.into()], transaction: None }, &mut identity).await.expect("a label edit applies");
+        app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetLabel { value: value.into() }.into()], transaction: None }, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("a label edit applies");
     }
     app.render_ctx().refresh_cache().await.expect("the command log backfills");
     assert!(seeded_mutation_row(&mut app, 1).await.worst.is_none(), "before the edit the downstream label changes the document");
@@ -123,9 +123,9 @@ async fn a_warning_an_edit_introduces_stays_visible_after_finalize_and_reload() 
 }
 
 /// 🧱️ `replica` with one long edit after the seed, so a replay downstream of the seed exceeds one turn's budget.
-async fn long_replica(fixture: &Value, uri: &str, actor: &str, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (ToyApp, MemoryBackbone) {
+async fn long_replica(fixture: &Value, uri: &str, actor: &str, count: i32, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (ToyApp, MemoryBackbone) {
     let (mut app, probe) = replica(fixture, uri, actor, true, mounted_policy, identity).await;
-    apply_long_edit(&mut app, 3_000, identity).await;
+    apply_long_edit(&mut app, count, identity).await;
     app.render_ctx().refresh_cache().await.expect("the long edit is logged");
     (app, probe)
 }
@@ -148,7 +148,7 @@ async fn a_long_remote_history_change_replays_over_turns_and_pauses_on_cancel() 
     remote.stores.store.defer_remote_replays(Some(store::os_store::store_schema::ReplayTurnBudget::operations(1)));
     relay(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity, cx).await;
     assert_eq!(head(&remote), head(&local), "the remote replica holds the seed");
-    commit_scenario(&mut local, &fixture, "overwrite-supersedes-in-place", mounted_policy, &mut identity).await;
+    commit_scenario(&mut local, &fixture, "overwrite-supersedes-in-place", mounted_policy, &mut identity, cx).await;
     relay(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity, cx).await;
     let status = remote.render_ref().reprojection_status().expect("the remote history change waits for its replay");
     assert!(status.total > 0 && status.done < status.total && !status.paused && status.kind == semio_framework::kernel::HistoryReprojectionKind::Remote && status.fault.is_none(), "{status:?}");
@@ -181,6 +181,79 @@ async fn a_long_remote_history_change_replays_over_turns_and_pauses_on_cancel() 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
+/// 🔢️ Driver turns the Report replay of one input change over `count` downstream operations takes to leave `Replaying`.
+async fn replay_turns(count: i32, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> usize {
+    let fixture = fixture();
+    let actor = text(&fixture["actor"]).to_string();
+    let (mut app, probe) = long_replica(&fixture, "long-turns", &actor, count, mounted_policy, identity).await;
+    for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } }), serde_json::json!({ "accept": null })] {
+        run_step(&mut app, &fixture, &step, mounted_policy, identity, cx).await;
+    }
+    let mut turns = 0usize;
+    while app.time_travel.session().stage == TimeTravelStage::Replaying {
+        assert!(turns < 200_000, "the replay over {count} operations never left Replaying");
+        app.advance_typed_operation_publication(identity, cx).await.expect("driver turn");
+        collect_original_history_command_receipt(&mut app);
+        while app.take_typed_operation_ui_progress().is_some() {}
+        turns += 1;
+    }
+    drop(probe);
+    close(&mut app, cx);
+    turns
+}
+
+/// ⚖️ LAW: the Report replay batches its one-item units within a turn's grant, so driver turns per replayed operation stay below a small constant whatever the history length.
+#[semio_framework_async_macros::async_test]
+async fn the_report_replay_takes_a_constant_number_of_driver_turns_per_operation() {
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
+    let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
+    let mut observer=|_|true;
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    for count in [100, 1_000] {
+        let turns = replay_turns(count, mounted_policy, &mut identity, cx).await;
+        assert!(turns <= 10 * usize::try_from(count).unwrap(), "{turns} driver turns replayed {count} operations");
+    }
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
+}
+
+/// 🔢️ Driver turns finalizing and committing the Report of a replay over `count` downstream operations takes to leave no pending work.
+async fn finalize_turns(count: i32, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> usize {
+    let fixture = fixture();
+    let actor = text(&fixture["actor"]).to_string();
+    let (mut app, probe) = long_replica(&fixture, "long-finalize", &actor, count, mounted_policy, identity).await;
+    for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } }), serde_json::json!({ "accept": null }), serde_json::json!({ "replay": "clean" }), serde_json::json!({ "finalize": null }), serde_json::json!({ "commit": { "choice": "overwrite" } })] {
+        run_step(&mut app, &fixture, &step, mounted_policy, identity, cx).await;
+    }
+    let mut turns = 0usize;
+    while app.time_travel.has_pending_work() {
+        assert!(turns < 200_000, "the finalize over {count} operations never settled");
+        app.advance_typed_operation_publication(identity, cx).await.expect("driver turn");
+        collect_original_history_command_receipt(&mut app);
+        while app.take_typed_operation_ui_progress().is_some() {}
+        turns += 1;
+    }
+    drop(probe);
+    close(&mut app, cx);
+    turns
+}
+
+/// ⚖️ LAW: the finalize publication hashes and retires its units in bounded batches, so driver turns per operation stay below a small constant whatever the history length.
+#[semio_framework_async_macros::async_test]
+async fn the_finalize_takes_a_constant_number_of_driver_turns_per_operation() {
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
+    let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
+    let mut observer=|_|true;
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let short = finalize_turns(100, mounted_policy, &mut identity, cx).await;
+    let long = finalize_turns(1_000, mounted_policy, &mut identity, cx).await;
+    assert!(long.saturating_sub(short) <= 4 * 900, "{short} driver turns finalized 100 operations but {long} finalized 1000");
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
+}
+
 /// ⚖️ LAW (design §16.6, G9): the undo of a finalize over a long downstream history is authored resumably — the verb answers
 /// at once, history editing is busy while its replay runs, and the driver commits it: the original input is back and the
 /// undo row reads like every other.
@@ -193,8 +266,8 @@ async fn the_undo_of_a_finalize_over_a_long_history_lands_through_the_driver() {
     let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let actor = text(&fixture["actor"]).to_string();
-    let (mut app, probe) = long_replica(&fixture, "long-undo", &actor, mounted_policy, &mut identity).await;
-    commit_scenario(&mut app, &fixture, "overwrite-supersedes-in-place", mounted_policy, &mut identity).await;
+    let (mut app, probe) = long_replica(&fixture, "long-undo", &actor, 3_000, mounted_policy, &mut identity).await;
+    commit_scenario(&mut app, &fixture, "overwrite-supersedes-in-place", mounted_policy, &mut identity, cx).await;
     assert_eq!(head(&app).1, "b");
     history_verb(&mut app, &actor, "undo", None, mounted_policy, &mut identity, cx).await;
     if app.time_travel.authoring_pending() {
@@ -208,6 +281,35 @@ async fn the_undo_of_a_finalize_over_a_long_history_lands_through_the_driver() {
     assert_eq!(english(&history_edit_rows(&mut app).await), ["History edit undone — overwrite: 1 mutation", "History edited — overwrite: 1 mutation"]);
     drop(probe);
     close(&mut app,cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
+}
+/// 🔢️ Retained capacity the authoring replay of the undo of a finalize over `count` downstream operations charges to the caller's stock.
+async fn undo_capacity(count: i32, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> usize {
+    let fixture = fixture();
+    let actor = text(&fixture["actor"]).to_string();
+    let (mut app, probe) = long_replica(&fixture, "long-undo-capacity", &actor, count, mounted_policy, identity).await;
+    commit_scenario(&mut app, &fixture, "overwrite-supersedes-in-place", mounted_policy, identity, cx).await;
+    let before = cx.retained_progress().retained_capacity_bytes;
+    history_verb(&mut app, &actor, "undo", None, mounted_policy, identity, cx).await;
+    pump_until(&mut app, "the undo lands", |app| !app.time_travel.authoring_pending(), mounted_policy, identity, cx).await;
+    let spent = cx.retained_progress().retained_capacity_bytes - before;
+    drop(probe);
+    close(&mut app, cx);
+    spent
+}
+
+/// ⚖️ LAW: the authoring replay streams, so the capacity it charges to the caller's stock is the peak it holds at once and grows by at most a small constant per replayed operation whatever the history length.
+#[semio_framework_async_macros::async_test]
+async fn the_authoring_replay_retains_capacity_independently_of_the_history_length() {
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
+    let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
+    let mut observer=|_|true;
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let short = undo_capacity(100, mounted_policy, &mut identity, cx).await;
+    let long = undo_capacity(1_000, mounted_policy, &mut identity, cx).await;
+    assert!(long.saturating_sub(short) <= 512 * 900, "the authoring replay charged {short} capacity bytes over 100 operations but {long} over 1000");
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }

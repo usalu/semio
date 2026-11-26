@@ -355,7 +355,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         }
         let report = if action == "undo" { CompositionCoordinator::undo_group(&parent_ref, &mut *self.stores.store, &mut members, group_id, identity).await } else { CompositionCoordinator::redo_group(&parent_ref, &mut *self.stores.store, &mut members, group_id, identity).await };
         drop(members);
-        self.history.cache = None;
+        self.history.invalidate_cache();
         for (reference, _) in report.undone.iter().filter(|(reference, _)| reference.artifact_id != parent_id) {
             let Some(key) = self.child_composition.children.keyed_entries().find(|(_, entry)| entry.reference.artifact_id == reference.artifact_id).map(|(key, _)| key.to_key()) else {
                 return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("transaction.group-history-root"), "group history moved a child without exact immutable-root authority"));
@@ -476,7 +476,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         self.stores.store.set_authoring_verb(None);
         let receipt = receipt.map_err(|error| plugin_sdk_fault(error.to_string()))?;
         drop(dispatches);
-        self.history.cache = None;
+        self.history.invalidate_cache();
         if let Some(publication_generation) = child_publication_generation {
             let mut next = ChildContentView::clone(&self.child_composition.child_content_root);
             for child_emit in child_emits.iter().filter(|child| !child.ops.is_empty()) {

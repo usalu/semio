@@ -33,7 +33,13 @@ impl<const N: usize> PagedBytes<N> {
         if value.len() > N {
             return Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, format!("octet value has {} bytes, exceeding paged capacity {N}", value.len())));
         }
-        Ok(Self { bytes: PagedList::try_from_iter(value.iter().copied()).map_err(ValueError::from)? })
+        let mut result = Self::default();
+        while result.len() < value.len() {
+            let bytes = result.cold_reservation_bytes()?;
+            result.cold_reserve_page(bytes)?;
+            result.cold_push_slice(&value[result.len()..]);
+        }
+        Ok(result)
     }
 
     /// 📐️ Quotes one actual backing frontier before a subsequent reserved octet placement.
@@ -72,9 +78,7 @@ impl<const N: usize> PagedBytes<N> {
 
     /// 🫳️ Places as many octets as the reserved slots take and returns how many were placed.
     pub fn cold_push_slice(&mut self,bytes:&[u8])->usize{
-        let count=self.cold_free_slots().min(bytes.len());
-        for byte in &bytes[..count]{let _=self.bytes.push_reserved(*byte);}
-        count
+        self.bytes.extend_reserved_from_slice(bytes)
     }
 
     /// ♻️ Retires one page of an exclusive cold owner: its octets first, then its empty backing within `maximum_release_bytes`.
@@ -265,16 +269,21 @@ pub struct PagedUtf8<const N: usize> {
 
 impl<const N: usize> Default for PagedUtf8<N> {
     fn default() -> Self {
-        Self { chunks: PagedList::default(), byte_len: 0 }
+        Self { chunks: PagedList::with_page_items(4), byte_len: 0 }
     }
 }
 
 impl<const N: usize> PagedUtf8<N> {
+    fn for_source_bytes(length: usize) -> Self {
+        let chunks = PagedList::with_page_items(length.div_ceil(PAGED_UTF8_CHUNK_BYTES));
+        Self { chunks, byte_len: 0 }
+    }
+
     pub fn try_from_str(value: &str) -> Result<Self, ValueError> {
         if value.len() > N {
             return Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, format!("UTF-8 value has {} bytes, exceeding paged capacity {N}", value.len())));
         }
-        let mut output = Self::default();
+        let mut output = Self::for_source_bytes(value.len());
         let mut start = 0usize;
         while start < value.len() {
             let mut end = (start + PAGED_UTF8_CHUNK_BYTES).min(value.len());
@@ -294,7 +303,7 @@ impl<const N: usize> PagedUtf8<N> {
         }
         control.scoped_stage(|control| {
             control.begin_stage(value.len())?;
-            let mut output = Self::default();
+            let mut output = Self::for_source_bytes(value.len());
             let mut start = 0usize;
             while start < value.len() {
                 let mut end = (start + PAGED_UTF8_CHUNK_BYTES).min(value.len());
@@ -847,3 +856,7 @@ pub use native_receive::PagedTextReceiver;
 #[path="📖️read/🦀️.rs"]
 mod byte_read;
 pub use byte_read::{ByteReadSource,ByteReadRange};
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

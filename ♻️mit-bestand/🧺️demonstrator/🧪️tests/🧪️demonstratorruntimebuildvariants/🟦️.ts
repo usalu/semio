@@ -8,7 +8,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   //#region 🧪️DemonstratorPluginBuildTests
   describe("demonstratorRuntimeBuildVariants", () => {
     it("builds one additional artifact for each standalone pane runtime", () => {
-      expect(demonstratorRuntimeBuildVariants("generator")).toEqual(["generation3d", "cad", "puzzle3d", "gis2d", "energy", "fem3d"]);
+      expect(demonstratorRuntimeBuildVariants("generator")).toEqual(["cad", "puzzle3d", "aussuchen", "gis2d", "energy", "fem3d"]);
     });
 
     it("validates the authored runtime catalog against its owner schema module", async () => {

@@ -58,3 +58,131 @@ The census generalizes one theme: the framework moved (diff traits, native recei
 ## Disk
 
 The first sweep (full test builds) filled the volume; the disk guard in the scripts now prunes `lane-*/b/debug/build/*/*` units older than 60 minutes whenever fewer than 25 GB are free.
+
+## Progress log (2026-11-26 03:00)
+
+### Results
+
+| Check | Result |
+| --- | --- |
+| Freshness law `a_committed_descriptor_is_fresh_only_when_it_equals_the_assembled_one` (`semio-plugin-extension` lib tests, fixture `🧫️descriptor-freshness`) | passes (4 cases: identical fresh, changed label stale, undecodable committed fault, undecodable assembled fault) |
+| animate strict `descriptor_is_fresh` after settling | passes (`vf1`) |
+| dag, note strict check | blocked by `semio-os-inference` compile break (another session editing it); settled pairs written, confirmation pending (`after-inference-quiet.sh` retries after 15 min quiet) |
+| cad, demonstrator | check clean; emit blocked by the same inference break; retry pending |
+
+### Settled pairs (JSON / pack bytes, before -> after)
+
+| Plugin | JSON | Pack |
+| --- | --- | --- |
+| animate | 200,698 -> 196,029 | 60,751 -> 60,751 |
+| dag | 278,967 -> 216,580 | 77,617 -> 66,872 |
+| note | 248,871 -> 248,871 (already current) | 75,457 -> 75,457 |
+
+### Phase 1 census additions
+
+| Plugin | First error class | Owning file | Last modified | Action |
+| --- | --- | --- | --- | --- |
+| draw | `semio_framework_replication` unresolved in graph-manifest | `🕸️graph/🛂️manifest/📡️delta/🦀️.rs` | 11-26 02:02 | graph-manifest `Cargo.toml` dependency renamed so both spellings resolve; recheck pending |
+| energy, fem | `semio-os-inference`: `driver` and `values` disagree (`publish_output_step` arity, borrow) | `💡️inference/🏁️driver`, `🧺️values` | 11-26 02:23 | another session editing; retry after quiet |
+| flow | missing generated `🤖️generated/📇️registry/🦀️.rs` (gitignored build product) | `🌎️hub/🧩️compositions/🌊️flow/🦀️.rs` | n/a | official `repo run @semio-tech/plugin-registry:generate` fails: `nx:authorizers` cannot find `./🧬️schema/🔣️.json` in the process testing authorizer compile (repo infrastructure, being edited); retry later |
+| forms | `ReplaceConfig` / `SetContributions: DslOwnedReceivingField` | `📋️forms/…/🎚️config/🧬️schema/🧬️mutations/📸️replace`, `🧩️set` | 11-19 | `DslOwnedReceiving` derive added to both; recheck (`ck6`) pending |
+| demonstrator, dag, cad | clean | | | settled / pending as above |
+
+Note on blanket migration: of about 5,100 `MutationLeaf` derives in the plugins nearly all lack `DslReceiving`/`DslOwnedReceiving`, yet most plugins compile, so the derive is added only where a crate errors on it.
+
+## Progress log (2026-11-26 08:45)
+
+### Settled descriptor pairs (native emit, committed through `settleComponentDescriptorV1`)
+
+| Plugin | JSON bytes (before -> after) | Pack bytes (before -> after) | Strict `descriptor_is_fresh` |
+| --- | --- | --- | --- |
+| stdio-pdf | 4,496,151 -> 1,281,668 | 968,129 -> 299,702 | green (earlier) |
+| animate | 200,698 -> 196,029 | 60,751 | green |
+| note | 248,871 (already current) | 75,457 | green |
+| dag | 278,967 -> 216,580 | 77,617 -> 66,872 | green |
+| cad | 330,301 -> 233,279 | 90,115 -> 72,727 | pending (link race fixed, rerun queued) |
+| gis | 1,831,749 -> 1,760,499 | 756,769 -> 729,968 | pending |
+| procedural | 751,605 (already current) | 205,545 | fresh at emit (exit 0) |
+| reasoning | 210,907 | 67,201 | pending |
+| space | 566,224 | 155,877 | pending |
+
+### Framework and artifact fixes made on the way (root causes)
+
+| Area | Break | Fix |
+| --- | --- | --- |
+| `semio-plugin-instance-render` | `CommandHistory::invalidate_cache` called, never defined | defined (drops the cache) |
+| `semio-plugin-time-travel-turns` | `TimeTravelReplayStep::Unfunded` not matched | arm added: `Unfunded => return Ok(())` (the variant's documented meaning) |
+| `semio-plugin-runtime-ops-document` | `PLUGIN_RUNTIME_INSTANCE_SLOTS` not imported | added to the existing import |
+| `semio-framework-graph-manifest` | dependency spelled `semio-framework-replication`, source spells `semio_framework_replication` | Cargo dependency renamed with `package =` |
+| forms config | mutation leaves lacked `DslOwnedReceiving` / `RetainedClone`; `FormsConfig` lacked `DslOwnedReceiving` | derives added (closure tool `native-receive-closure.py`) |
+| playbook examples carve | `crate::editor::playbook::terminology` not mounted | mounted from `✏️editor/🗣️terminology` |
+| writer sqlite snapshot | `ArtifactSqliteSnapshotHost` native encode/decode gained `output` and `SnapshotReceivingOutcome` | migrated; post-decode `admit_values` kept through `decode_sqlite_snapshot_record_receiving` |
+
+### Open items
+
+| Plugin | Blocker | Owner / status |
+| --- | --- | --- |
+| writer | `✏️editor/⌨️typing/🔗️fold`: retained-work protocol changed (`admit_original_construction` now takes an `OriginalConstructionAdmission` plus a work quote; close steps return `RetainedWorkOutcome`; `step` takes an effect). Needs a state field and work-quote design, not a mechanical port; sequence's import analogue is stale against the same API | deferred until the framework migration lands |
+| stdio, stdio-semio, draw, demonstrator, energy | `DEBUG_PHASE` static in pack document cursor | pack agent fixing |
+| block, lowpoly, others with a sqlite native bridge | same `output` signature change as writer | migrate with the writer pattern, keeping post-decode admission |
+| flow | emit run killed (memory warden); retry scheduled alone | `c13` |
+| remaining phase 1 crates | run `ck4` still going | |
+
+
+## Census snapshot (2026-11-26 09:45, runs paused at the coordinator's request)
+
+Built from the most recent log of each component crate across all check, emit and verify runs. Caveat: the runs I stopped at 09:29 left partial logs, so `no error recorded` and some `clean (check)` rows mean the run was cut short, not that the crate is green; the authoritative green set is the table of strict checks above.
+
+| Crate | Latest state | Run | Time |
+| --- | --- | --- | --- |
+| hub-animate | strict check passed | vf1 | 11-26 02:06 |
+| hub-architect | fails: semio-s-artifact-architect-program-inferences | ck3 | 11-26 00:27 |
+| hub-bim | fails: semio-s-artifact-bim-model-kit | ck2 | 11-26 00:24 |
+| hub-block | fails: semio-s-artifact-block-2d-model, semio-s-artifact-block-3d-model, semio-s-artifact-block-5 | ck2 | 11-26 00:40 |
+| hub-cad | strict check passed | vf-c7 | 11-26 08:42 |
+| hub-dag | strict check passed | vf-r3 | 11-26 08:58 |
+| hub-demonstrator | fails: semio-hub-demonstrator-component | em-r3 | 11-26 08:37 |
+| hub-draw | fails: semio-framework-pack-record-encode-cursor | em-r3 | 11-26 08:05 |
+| hub-energy | clean (check) | ck17 | 11-26 09:29 |
+| hub-fem | fails: semio-plugin-time-travel-turns | ck-r2 | 11-26 06:36 |
+| hub-flow | no error recorded | em-c13 | 11-26 09:29 |
+| hub-forms | clean (check) | ck10 | 11-26 09:29 |
+| hub-gis | fails: semio-hub-gis-component | vf-c7 | 11-26 09:07 |
+| hub-imperative | fails: semio-plugin-instance-render | ck-r2 | 11-26 05:44 |
+| hub-layout | fails: semio-plugin-instance-render | ck-r2 | 11-26 05:46 |
+| hub-lowpoly | fails: semio-plugin-instance-render | ck-r2 | 11-26 05:47 |
+| hub-mathematical | fails: semio-plugin-instance-render | ck-r2 | 11-26 05:47 |
+| hub-norm | fails: semio-plugin-time-travel-turns | ck11 | 11-26 06:33 |
+| hub-norm-energy | fails: semio-hub-norm-energy-component | ck-r2 | 11-26 05:50 |
+| hub-norm-eurocode | fails: semio-hub-norm-eurocode-component | ck4 | 11-26 04:31 |
+| hub-norm-eurocode-materials | fails: semio-plugin-time-travel-turns | ck11 | 11-26 06:37 |
+| hub-norm-eurocode-structural | fails: semio-plugin-guest-contract | ck4 | 11-26 05:08 |
+| hub-note | no error recorded | vf-r3 | 11-26 09:42 |
+| hub-playbook | no error recorded | em-c18 | 11-26 09:29 |
+| hub-procedural | strict check passed | vf-c7 | 11-26 07:35 |
+| hub-process | fails: semio-plugin-instance-render | ck4 | 11-26 05:38 |
+| hub-puzzle | no error recorded | em-c17 | 11-26 09:28 |
+| hub-raster | fails: semio-plugin-instance-render | ck4 | 11-26 05:44 |
+| hub-reasoning | emitted, committed stale at that run | vf-c7 | 11-26 07:55 |
+| hub-remodel | fails: semio-plugin-instance-render | ck4 | 11-26 05:47 |
+| hub-sequence | fails: semio-plugin-instance-render | ck4 | 11-26 05:47 |
+| hub-shooting | fails: semio-plugin-instance-render | ck4 | 11-26 05:48 |
+| hub-sourcing | fails: semio-plugin-instance-render | ck4 | 11-26 05:48 |
+| hub-space | no error recorded | vf-c9 | 11-26 09:39 |
+| hub-stdio-bim | fails: semio-plugin-time-travel-turns | ck4 | 11-26 06:32 |
+| hub-stdio-binary | fails: semio-plugin-time-travel-turns | ck4 | 11-26 06:36 |
+| hub-stdio-cad | fails: semio-plugin-time-travel-turns | ck4 | 11-26 06:38 |
+| hub-stdio | fails: semio-framework-pack-record-encode-cursor | em-c9 | 11-26 08:05 |
+| hub-stdio-image | fails: semio-os-store-engine-derived | ck4 | 11-26 06:52 |
+| hub-stdio-media | emitted, committed stale at that run | em-c9 | 11-26 08:34 |
+| hub-stdio-mesh | emitted, committed stale at that run | em-c9 | 11-26 08:52 |
+| hub-stdio-office | emitted, committed stale at that run | em-c9 | 11-26 09:39 |
+| hub-stdio | no error recorded | em-c14 | 11-26 09:29 |
+| hub-trinity | clean (check) | ck10 | 11-26 09:23 |
+| hub-vcs | fails: semio-s-artifact-vcs-vcs-editor | ck4 | 11-26 08:29 |
+| hub-wfc | no error recorded | em-c16 | 11-26 09:29 |
+| hub-writer | clean (check) | ck4 | 11-26 09:30 |
+
+Never run in phase 1 or phase 2 (the plugin extension crates and the host test component): semio-hub-stdio-pdf-component, semio-plugin-host-test-component, semio-s-plugin-cad-aec-building-component, semio-s-plugin-cad-aec-energy-component, semio-s-plugin-cad-aec-structure-component, semio-s-plugin-cad-spatial-shape-component, semio-s-plugin-flow-bim-component, semio-s-plugin-flow-brep-component, semio-s-plugin-flow-dictionary-component, semio-s-plugin-flow-draw-component, semio-s-plugin-flow-list-component, semio-s-plugin-flow-logic-component, semio-s-plugin-flow-math-component, semio-s-plugin-flow-primitive-component, semio-s-plugin-flow-text-component, semio-s-plugin-imperative-control-component, semio-s-plugin-imperative-effect-component, semio-s-plugin-imperative-logic-component, semio-s-plugin-imperative-math-component, semio-s-plugin-imperative-text-component, semio-s-plugin-playbook-procedural-component, semio-s-plugin-process-concrete-component, semio-s-plugin-process-metal-component, semio-s-plugin-process-robotic-component, semio-s-plugin-process-wood-component, semio-s-plugin-sourcing-beams-component, semio-s-plugin-sourcing-slabs-component, semio-s-plugin-sourcing-windows-component.
+
+Paused: every queued descriptor run was stopped at the coordinator's request (PDF-critical runs share the memory gate). In flight at the pause: the `r3` strict-check chain. Held and to be resubmitted afterwards: `ck17` (full recheck of the 28 earlier failures), `c9` stdio family emits, `c13`/`c14` (`flow`, `stdio-semio`), `c15`..`c18` (`puzzle`, `wfc`, `playbook`), then the 22 extension crates.

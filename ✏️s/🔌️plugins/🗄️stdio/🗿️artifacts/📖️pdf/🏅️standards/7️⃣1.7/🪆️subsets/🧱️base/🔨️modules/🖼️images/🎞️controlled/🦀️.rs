@@ -339,8 +339,7 @@ impl ControlledImageResources {
             let mask = active.mask.as_ref().map(|mask| std::str::from_utf8(&mask.name[..mask.length]).expect("authored PDF soft mask name"));
             let [image, role] = samples.take_images(binding.name(), mask).expect("qualified PDF image is fully sampled");
             let identity = PdfGraphIdentity { owner: binding.owner, path: Vec::new() };
-            let mut dependencies = vec![identity.clone()];
-            if let Some(mask) = samples.soft_mask { dependencies.push(PdfGraphIdentity { owner: mask, path: Vec::new() }); }
+            let dependencies = vec![identity.clone()];
             active.role_position = Some(snapshot.admitted_stream_roles.len());
             active.role_target = snapshot.admitted_stream_roles.len() - content_roles;
             snapshot.admitted_stream_roles.push(PdfAdmittedStreamRole {

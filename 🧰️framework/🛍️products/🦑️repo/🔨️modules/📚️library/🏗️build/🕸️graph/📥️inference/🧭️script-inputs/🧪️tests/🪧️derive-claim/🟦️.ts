@@ -35,7 +35,7 @@ test("a cancelled claim waiter keeps the live holder's custody",()=>withClosureP
   const guard=setTimeout(()=>first.release(),400);
   try{
    const outcome=await pending;
-   if("value"in outcome)outcome.value?.release?.();
+   if("value"in outcome&&outcome.value!==undefined&&"release"in outcome.value)outcome.value.release();
    expect("error"in outcome?outcome.error:undefined).toBe(primary);
    expect(readdirSync(directory)).toHaveLength(1);
   }finally{clearTimeout(guard);}

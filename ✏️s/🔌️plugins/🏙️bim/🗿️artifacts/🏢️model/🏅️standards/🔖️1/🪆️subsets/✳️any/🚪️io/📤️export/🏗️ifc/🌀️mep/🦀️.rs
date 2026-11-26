@@ -4,7 +4,8 @@
 //! `IfcDistributionSystem` with its predefined type) that groups the segments and the terminals (components with a system) of that service with `IfcRelAssignsToGroup` and serves the buildings they stand in.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcsharedbldgserviceelements/lexical/ifcflowsegment.htm>
 
-use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, mesh_item, mesh_where};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, mesh_item};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::element_solids::mep::visit_segment_meshes;
 use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::property_set;
 use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
 use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, opt_text, refs, rf, unset, V};
@@ -71,21 +72,23 @@ fn segment(x: &mut Export<'_>, types: &mut BTreeMap<String, u64>, id: &str, row:
         x.skip("mep element", id, "its storey is missing");
         return;
     };
-    let (Some(value), Some(solid)) = (x.inferred.mep.get(id), x.solid(id)) else {
+    let Some(value) = x.inferred.mep.get(id) else {
         x.skip("mep element", id, "it is not inferred");
         return;
     };
-    if !value.buildable() || solid.is_empty() {
+    if !value.buildable() {
         x.skip("mep element", id, "its section or path has no extent");
         return;
     }
     let kind = value.section.kind;
     let (occurrence_2x3, occurrence_4, _, _, quantity_set) = entities(kind);
-    let Some(item) = mesh_item(&mut x.ifc, &mesh_where(solid, storey.elevation, |_, _| true)) else {
-        x.skip("mep element", id, "its solid is empty");
-        return;
-    };
-    let body = x.ifc.shape(x.ifc.body, "Body", body_kind(&x.ifc), &[item]);
+    let mut items = Vec::with_capacity(value.segments.len());
+    visit_segment_meshes(value, |mesh| {
+        if let Some(item) = mesh_item(&mut x.ifc, &mesh.translated([0.0, 0.0, -storey.elevation])) {
+            items.push(item);
+        }
+    });
+    let body = x.ifc.shape(x.ifc.body, "Body", body_kind(&x.ifc), &items);
     let points: Vec<u64> = row.path.iter().map(|point| x.ifc.point3([point.x, point.y, point.z])).collect();
     let curve = x.ifc.add("IFCPOLYLINE", vec![refs(&points)]);
     let axis = x.ifc.shape(x.ifc.axis, "Axis", "Curve3D", &[curve]);

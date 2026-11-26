@@ -15,8 +15,10 @@ import {remoteExecutionOperationV1} from "../../../🖥️server/🟦️.ts";
 import {spawnSync} from "node:child_process";
 import {encodeProtobufV1,REAPI_V1} from "../../../📡️wire/📦️protobuf/🟦️.ts";
 import {fileURLToPath} from "node:url";
+import {CAS_POLICY_V1} from "../../../../🗄️cas/🧬️schema/🟦️.ts";
 
 const timeouts=OFFLOAD_POLICY_V1.timeouts;
+test("content request allows CAS admission and the server's ordinary write budget",()=>{expect(timeouts.requestMilliseconds).toBeGreaterThanOrEqual(CAS_POLICY_V1.admissionBudgetMs+10000);expect(timeouts.requestMilliseconds).toBeLessThan(timeouts.uploadMilliseconds);});
 const never=():Promise<never>=>new Promise(()=>{});
 
 test("the client waits for the action at most as long as the action may run plus one small margin, and that margin is small",()=>{

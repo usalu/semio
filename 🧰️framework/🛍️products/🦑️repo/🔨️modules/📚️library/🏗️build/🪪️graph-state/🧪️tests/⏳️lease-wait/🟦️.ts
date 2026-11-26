@@ -113,7 +113,7 @@ for(const [caseIndex,row] of waits.cases.entries())test(row.name,async()=>{
   }
   const result=await decision;
   if(result.outcome==="compute")result.hold?.stop();
-  expect({outcome:result.outcome,reason:result.outcome==="hit"?null:result.reason,claims:client.claims,listenersDuring,listenersAfter:getEventListeners(signal,"abort").length}).toEqual(row.expected);
+  expect<unknown>({outcome:result.outcome,reason:result.outcome==="hit"?null:result.reason,claims:client.claims,listenersDuring,listenersAfter:getEventListeners(signal,"abort").length}).toEqual(row.expected);
   expect(getEventListeners(signal,"abort")).toEqual([initial]);
  }
 });

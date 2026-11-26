@@ -15,7 +15,7 @@ const serve=(mirror:boolean)=>startRemoteCacheServerV1({directory:directory("cac
 test("a healthy probe turns on the transport settings; a server without the mirror, a stopped server or SEMIO_FLEET_MIRROR=off turn them off",async()=>{
  const root=directory("root");mkdirSync(join(root,".cache","f"),{recursive:true});
  const ambient={SEMIO_WORKSPACE_ROOT:root};
- const withMirror=await serve(true),context=(endpoint:string)=>fleetFetchContextV1({},root,{storeRoot:undefined,remote:{endpoint,instance:"main",token:"w"}});
+ const withMirror=await serve(true),context=(endpoint:string)=>fleetFetchContextV1({},root,{storeRoot:undefined,remote:{endpoint,instance:"main",token:"w",authenticated:false}});
  try{
   expect(fleetMirrorBaseV1(ambient)).toBeUndefined();
   expect((await refreshFleetMirrorStateV1(context(withMirror.url)))?.healthy).toBe(true);

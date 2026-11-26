@@ -5,6 +5,6 @@ export CARGO_BUILD_BUILD_DIR='C:\t\pk' TMP='C:\t\pktmp' TEMP='C:\t\pktmp' TMPDIR
 A="/c/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts"
 LOG="$M/🗑️generated/pk/law-$3.log"
 if [ "$1" = 2d ]; then DIR="$A/◻️2d"; PKG=semio-s-artifact-fem-2d-editor; else DIR="$A/🧊️3d"; PKG=semio-s-artifact-fem-3d-editor; fi
-(cd "$DIR" && CARGO_TARGET_DIR='C:\t\pk' cargo test -j 3 --config 'build.rustc="rustc"' --config 'build.rustc-wrapper=""' -p "$PKG" --test "${4:-editor_app_2}" -- --nocapture --test-threads=1 $2) > "$LOG" 2>&1
+(cd "$DIR" && CARGO_TARGET_DIR='C:\t\pk' cargo test -j 3 --config 'build.rustc="rustc"' --config 'build.rustc-wrapper=""' -p "${PKGOVERRIDE:-$PKG}" $([ "$4" = lib ] && echo --lib || echo --test ${4:-editor_app_2}) -- --nocapture --test-threads=1 $2) > "$LOG" 2>&1
 echo "rc=$?" >> "$LOG"
 grep -E "^test |test result|^error(\[|:)|rc=|panicked|\[DEBUG\]" "$LOG" | head -40

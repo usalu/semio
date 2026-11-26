@@ -31,6 +31,7 @@
           "operation": {
             "enum": [
               "clock",
+              "actorExecutionClock",
               "wall",
               "seed",
               "check",

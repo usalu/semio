@@ -100,7 +100,7 @@ struct FormPaint<'a> {
 }
 
 /// 🖌️ Paints one placed object; false when only a placeholder stands in for content the canvas cannot display.
-fn paint_object<'a>(snapshot: &'a PdfSnapshot, page: &PdfPage, content: &[PdfOp], item: &Placed, layers: &mut Vec<Value>, forms: &mut FormPaint<'a>) -> bool {
+fn paint_object<'a>(snapshot: &'a PdfSnapshot, page: &PdfPage, content: &dyn PdfProgram, item: &Placed, layers: &mut Vec<Value>, forms: &mut FormPaint<'a>) -> bool {
     let form = match item.object.kind {
         ObjectKind::Form => snapshot.form(&item.object.text).map(|form| (form, item.object.ctm)),
         ObjectKind::Annotation => match page.annotations.get(item.object.start) {
@@ -163,7 +163,7 @@ fn paint_object<'a>(snapshot: &'a PdfSnapshot, page: &PdfPage, content: &[PdfOp]
             layers.push(layer);
         }
         ObjectKind::Vector => {
-            let (fill, even_odd, stroke_path) = vector_paint(item, &content[item.object.end]);
+            let (fill, even_odd, stroke_path) = vector_paint(item, content.get(item.object.end).expect("placed vector operator"));
             let segments = match stroke_path {
                 Some((inverse, _, _)) => mapped_vector_segments(&item.object.path, |(x, y)| apply(inverse, x, y), !item.object.vector_stroke.dash.is_empty()),
                 None => vector_segments(page, item.top, &item.object.path),

@@ -12,6 +12,10 @@ where
         self.replay.is_some()
     }
 
+    fn preview_live(&self) -> bool {
+        self.preview_owners_live()
+    }
+
     fn preview_progress(&self) -> Option<store::os_store::replay::ReplayProgress> {
         if let Some(job) = self.preview_job.as_ref() {
             return Some(job.progress());

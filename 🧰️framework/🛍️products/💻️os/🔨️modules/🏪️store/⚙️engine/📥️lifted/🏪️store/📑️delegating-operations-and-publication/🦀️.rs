@@ -69,14 +69,60 @@ where
     /// 📤️ Borrows the original queued causal bytes through the Store's actual live ownership.
     pub fn original_outbound_message(&self)->Option<&dyn semio_framework_value::ByteReadSource>{self.wire.original_outbox.front().map(|bytes|bytes as &dyn semio_framework_value::ByteReadSource)}
 
+    /// 📮️ Reports pending document deliveries and the retained outbox pages awaiting release.
+    pub fn original_document_outbound_pending(&self) -> bool {
+        self.wire.backbone.is_some() && !self.wire.original_outbox.terminal_is_empty()
+    }
+
+    /// 📫️ Advances the queued document message through its ordinary or authenticated multipart sender.
+    pub fn advance_bound_document_outbound(
+        &mut self, binding: [u8; 32],
+        delivery: &mut Option<semio_os_store_backbone::atomic_transport::AtomicBackboneDelivery>,
+        effect: &mut RetainedAllocationEffect<'_>,
+    ) -> Result<Option<RetainedCloneProgress>, VcsError> {
+        if self.wire.original_outbox.has_delivered_retirement() {
+            return settled_exit(self.wire.original_outbox.close_delivered_step(effect)).map(Some).map_err(VcsError::InverseRefused);
+        }
+        let Some(original) = self.wire.original_outbox.front() else {
+            if delivery.is_some() {
+                return Err(VcsError::InverseRefused(ValueError::invariant("original document delivery lost its queued body")));
+            }
+            return self.advance_original_outbound(effect).map(|step| step.map(|(_, receipt)| receipt)).map_err(VcsError::InverseRefused);
+        };
+        if semio_os_spr::atomic_group::AtomicBackboneSender::matches_prepared(original) {
+            return self.advance_bound_atomic_outbound(binding, delivery, effect);
+        }
+        if let Some(backbone @ Backbones::Port(_)) = self.wire.backbone.as_ref() {
+            use semio_os_store_backbone::atomic_transport::AtomicBackboneDelivery;
+            let Some(owner) = delivery.as_mut() else {
+                let copy_bytes = size_of::<Option<AtomicBackboneDelivery>>();
+                let demand = semio_framework_value::RetirementDemand { copy_bytes, depth: 1, ..Default::default() };
+                if !semio_framework_value::retained_clone::retained_clone_grant_admits(effect.grant(), demand)
+                    || !effect.performed(1).map_err(VcsError::InverseRefused)?
+                {
+                    return Ok(Some(Default::default()));
+                }
+                *delivery = Some(AtomicBackboneDelivery::begin_actor_message(binding));
+                return Ok(Some(RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, ..Default::default() }));
+            };
+            owner.check_binding(&binding).map_err(VcsError::InverseRefused)?;
+            if owner.actor_message_sent() {
+                return self.acknowledge_bound_document_outbound(delivery, effect).map_err(VcsError::InverseRefused);
+            }
+            return owner.advance_ordinary_wire(original, backbone, effect).map(Some);
+        }
+        self.advance_original_outbound(effect)
+            .map(|step| step.map(|(_, receipt)| receipt))
+            .map_err(VcsError::InverseRefused)
+    }
+
     /// 🚇️ Transfers retained intent to the actual attached actor queue without encoding or gathering bytes.
     pub fn advance_original_outbound(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<(bool,RetainedCloneProgress)>,ValueError>{
-        let grant=effect.grant();
         if self.wire.original_outbox.front().is_none(){if self.wire.original_outbox.terminal_is_empty(){return Ok(None)}let p=settled_exit(self.wire.original_outbox.recycle_step(effect))?;return Ok((p!=Default::default()).then_some((false,p)))}
         if self.wire.original_outbox.front().is_some_and(semio_os_spr::atomic_group::AtomicBackboneSender::matches_prepared) {
             return Ok(None);
         }
-        match self.wire.backbone.as_ref(){Some(Backbones::Channel(channel))=>channel.send_original(&mut self.wire.original_outbox,grant),Some(Backbones::Memory(memory))=>memory.send_original(&mut self.wire.original_outbox,grant),_=>Ok(None)}
+        match self.wire.backbone.as_ref(){Some(backbone)=>backbone.send_original(&mut self.wire.original_outbox,effect),None=>Ok(None)}
     }
 
     /// 🎟️ Advances an authenticated atomic outbox cursor before exposing a physical frame.
@@ -100,6 +146,17 @@ where
         };
         owner.check_binding(&binding)?;
         if !owner.terminal_is_empty() { return owner.advance(original, effect).map(Some); }
+        self.acknowledge_bound_document_outbound(delivery, effect)
+    }
+
+    fn acknowledge_bound_document_outbound(
+        &mut self,
+        delivery: &mut Option<semio_os_store_backbone::atomic_transport::AtomicBackboneDelivery>,
+        effect: &mut RetainedAllocationEffect<'_>,
+    ) -> Result<Option<RetainedCloneProgress>, ValueError> {
+        let grant = effect.grant();
+        let admits = semio_framework_value::retained_clone::retained_clone_grant_admits;
+        let header = size_of_val(delivery);
         let mut demand = self.wire.original_outbox.acknowledgement_demands()?;
         demand.copy_bytes += header;
         if !admits(grant, demand) || !effect.performed(1)? { return Ok(Some(Default::default())); }

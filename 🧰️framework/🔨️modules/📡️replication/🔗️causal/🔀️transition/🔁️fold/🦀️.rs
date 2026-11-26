@@ -77,7 +77,7 @@ fn charged_split<R>(control:&HistoryFoldControl,slot:&semio_framework_value::ret
 
 /// 🏁️ Settles one finished retirement poll into its step and work; a refused or suspended close is a fault of the fold.
 pub(crate) fn settled(poll:semio_framework_value::OriginalRetirementPoll)->Result<(RetainedCloneStep,u128),ValueError>{
-    match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(step)=>Ok((step,turn.work)),Err(failure)=>{let progress=failure.retained_progress();drop(failure);Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fold close was refused").with_retained_progress(progress))}},semio_framework_value::RetainedWorkPoll::Pending{..}=>Err(ValueError::invariant("fold close stayed pending"))}
+    match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(step)=>Ok((step,turn.work)),Err(failure)=>{let progress=failure.retained_progress();let error=failure.primary().cloned().unwrap_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"fold close was refused"));drop(failure);Err(error.with_retained_progress(progress))}},semio_framework_value::RetainedWorkPoll::Pending{..}=>Err(ValueError::invariant("fold close stayed pending"))}
 }
 
 /// ⏱️ The shared pulse and retirement authority of one immutable-source fold.
@@ -99,6 +99,11 @@ impl HistoryFoldControl {
     fn charged<R>(&self,operation:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->(R,u128))->Result<R,ValueError>{
         let (output,reported,done)=self.0.slot.with_effect(|effect|{let before=effect.performed_work();let (output,reported)=operation(effect);(output,reported,effect.performed_work().saturating_sub(before))})?;
         self.record_shared_work(reported.max(done));
+        self.owe(reported.saturating_sub(done))?;Ok(output)
+    }
+    /// 🪢️ Like `charged`, but local retirement frames are not shared admission work and stay out of `shared_work`.
+    fn charged_local<R>(&self,operation:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->(R,u128))->Result<R,ValueError>{
+        let (output,reported,done)=self.0.slot.with_effect(|effect|{let before=effect.performed_work();let (output,reported)=operation(effect);(output,reported,effect.performed_work().saturating_sub(before))})?;
         self.owe(reported.saturating_sub(done))?;Ok(output)
     }
     fn record_shared_work(&self,actual:impl Into<u128>){let actual=u64::try_from(actual.into()).unwrap_or(u64::MAX);let _=self.0.shared_work.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|before|Some(before.saturating_add(actual)));}
@@ -123,7 +128,7 @@ impl HistoryFoldControl {
         let bytes=owned_retirement_birth_bytes::<T>();let copy=admission_copy::<T>();
         self.0.retirement_capacity.try_update(Ordering::Relaxed,Ordering::Relaxed,|remaining|remaining.checked_sub(bytes)).expect("fold transfer requires admitted retirement capacity");
         self.0.retirement_items.try_update(Ordering::Relaxed,Ordering::Relaxed,|remaining|remaining.checked_sub(1)).expect("fold transfer requires admitted retirement item");
-        let mut holder=Some(value);let turn=self.charged(|effect|{let turn=admit_owned_retirement(&mut holder,&mut effect.nested(admission_grant(bytes,copy)));let work=turn.work;(turn.result,work)}).unwrap_or_else(|error|panic!("admitted fold owner has no lent effect: {error}"));let (owner,progress)=turn.unwrap_or_else(|error|panic!("admitted fold owner refused retirement: {error}")).expect("admitted fold owner is present");
+        let mut holder=Some(value);let turn=self.charged_local(|effect|{let carried=effect.actual().take();let turn=admit_owned_retirement(&mut holder,&mut effect.nested(admission_grant(bytes,copy)));let fresh=effect.actual().take();*effect.actual()=match(carried,fresh){(None,None)=>None,(before,now)=>Some(before.unwrap_or(0)+now.unwrap_or(0))};let work=turn.work;(turn.result,work)}).unwrap_or_else(|error|panic!("admitted fold owner has no lent effect: {error}"));let (owner,progress)=turn.unwrap_or_else(|error|panic!("admitted fold owner refused retirement: {error}")).expect("admitted fold owner is present");
         let mut queue=self.0.retirements.lock();assert!(queue.len()<queue.capacity(),"fold retirement queue requires a reserved slot");queue.push_back(owner);
         self.0.admitted_retirement_capacity.fetch_add(progress.retained_capacity_bytes,Ordering::Relaxed);
         self.0.admitted_retirement_items.fetch_add(progress.copied_items,Ordering::Relaxed);
@@ -168,7 +173,7 @@ impl<K:Copy+Ord+RetireOwned> HistoryFoldSetCopy<K> for HistoryFoldSet<K> {
 }
 
 pub struct SharedActorAdmission {original:Option<HistoryFoldOwned<String>>,control:HistoryFoldControl,capacity:usize,done:bool}
-impl SharedActorAdmission{const COPY_BYTES:usize=2*size_of::<usize>()+size_of::<Arc<std::mem::MaybeUninit<String>>>()+size_of::<String>()+size_of::<Arc<String>>();}
+impl SharedActorAdmission{const COPY_BYTES:usize=2*size_of::<usize>()+size_of::<Arc<std::mem::MaybeUninit<String>>>()+size_of::<Option<Arc<std::mem::MaybeUninit<String>>>>()+2*size_of::<Option<usize>>()+size_of::<String>()+size_of::<Arc<String>>();}
 impl Future for SharedActorAdmission {
     type Output=Result<semio_framework_value::SharedUtf8,ValueError>;
     fn poll(mut self:Pin<&mut Self>,_:&mut Context<'_>)->Poll<Self::Output>{
@@ -212,7 +217,7 @@ impl<T: RetireOwned> Future for HistoryFoldAdmission<T> {
         if self.control.0.retirement_items.load(Ordering::Relaxed) == 0 || self.control.0.retirement_capacity.load(Ordering::Relaxed) < bytes || self.control.0.original_copy.load(Ordering::Relaxed) < copy { return Poll::Pending; }
         let value = self.value.take().expect("fold admission retains original owner");
         let grant = admission_grant(bytes, copy);
-        let mut slot=Some(value);let turn=match self.control.charged(|effect|{let turn=admit_typed_controlled_retirement(&mut slot,&mut effect.nested(grant));let work=turn.work;(turn.result,work)}){Ok(done)=>done,Err(_)=>{self.value=slot;return Poll::Pending;}};let (owner, progress) = match turn { Ok(Some(admitted)) => admitted, Ok(None) | Err(_) => { self.value = slot; return Poll::Pending; } };
+        let mut slot=Some(value);let turn=match self.control.charged_local(|effect|{let turn=admit_typed_controlled_retirement(&mut slot,&mut effect.nested(grant));let work=turn.work;(turn.result,work)}){Ok(done)=>done,Err(_)=>{self.value=slot;return Poll::Pending;}};let (owner, progress) = match turn { Ok(Some(admitted)) => admitted, Ok(None) | Err(_) => { self.value = slot; return Poll::Pending; } };
         self.control.0.retirement_capacity.fetch_sub(progress.retained_capacity_bytes, Ordering::Relaxed);
         self.control.0.retirement_items.fetch_sub(progress.copied_items, Ordering::Relaxed);
         self.control.0.admitted_retirement_capacity.fetch_add(progress.retained_capacity_bytes, Ordering::Relaxed);
@@ -386,7 +391,7 @@ impl<T:RetireOwned> HistoryFoldJob<'_,T>{
         if self.control_closed{return self.result.as_ref().map_or(Ok(Default::default()),|result|match result{Err(error)=>semio_framework_replication_error::protocol_cause_retirement_demand(error),Ok(_)=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closed fold retained successful result"))});}
         if !self.control.empty(){let mut demand=self.control.demands(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"fold nested retirement depth overflow"))?;return Ok(demand);}
         if let Some(future)=self.future.as_ref(){return Ok(RetirementDemand{capacity_bytes:self.control.0.pending_retirement_birth.load(Ordering::Relaxed),release_bytes:size_of_val(future.as_ref().get_ref()),depth:1,..Default::default()});}
-        if self.control.0.cancelled.load(Ordering::Acquire){if let Some(result)=self.result.as_ref(){return match result{Ok(_)=>Ok(RetirementDemand{capacity_bytes:owned_retirement_birth_bytes::<T>(),depth:1,..Default::default()}),Err(error)=>semio_framework_replication_error::protocol_cause_retirement_demand(error)};}}
+        if self.control.0.cancelled.load(Ordering::Acquire){if let Some(result)=self.result.as_ref(){return match result{Ok(_)=>Ok(RetirementDemand{copy_bytes:admission_copy::<T>(),capacity_bytes:owned_retirement_birth_bytes::<T>(),depth:1,..Default::default()}),Err(error)=>semio_framework_replication_error::protocol_cause_retirement_demand(error)};}}
         let queue=self.control.0.retirements.lock();let release_bytes=if queue.capacity()!=0{queue.capacity()*size_of::<Box<dyn ErasedSnapshotRetirement>>()}else if self.waker.is_some(){size_of::<[usize;2]>()}else{self.control_frame_bytes()};Ok(RetirementDemand{release_bytes,depth:1,..Default::default()})
     }
     pub fn next_copy_byte_demand(&self)->Result<usize,ValueError>{if self.original_output.is_some()||self.control_closed&&matches!(self.result,Some(Ok(_))){return self.next_demand(0).map(|d|d.copy_bytes)}if self.control_closed{self.result.as_ref().map_or(Ok(0),|result|match result{Err(error)=>semio_framework_replication_error::protocol_cause_retirement_demand(error).map(|demand|demand.copy_bytes),Ok(_)=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closed fold retained successful result"))})}else if self.control.empty()&&self.future.is_none()&&self.control.0.cancelled.load(Ordering::Acquire){match self.result.as_ref(){Some(Err(error))=>semio_framework_replication_error::protocol_cause_retirement_demand(error).map(|demand|demand.copy_bytes),_=>Ok(0)}}else{self.control.demands(0).map(|demand|demand.copy_bytes)}}
@@ -855,6 +860,8 @@ impl HistoryFoldControl {
     pub fn retirements(&self) -> impl DerefMut<Target = VecDeque<Box<dyn ErasedSnapshotRetirement>>> + '_ { self.0.retirements.lock() }
     /// 🪝️ Queues one owner for retirement, for the companion crate.
     pub fn testkit_retire<T: RetireOwned>(&self, value: T) { self.retire(value) }
+    /// 🪝️ Lends `effect` to this control for exactly `run`, for the companion crate.
+    pub fn testkit_lend<R>(&self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,run:impl FnOnce()->R)->Result<R,ValueError>{let lend=self.0.slot.lend(effect)?;let output=run();drop(lend);Ok(output)}
     /// 🪝️ Reports whether the retirement queue is empty, for the companion crate.
     pub fn testkit_empty(&self) -> bool { self.empty() }
     /// 🪝️ Quotes the next queued retirement, for the companion crate.

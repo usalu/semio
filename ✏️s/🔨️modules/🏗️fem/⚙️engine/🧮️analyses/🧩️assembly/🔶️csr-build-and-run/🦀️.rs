@@ -94,67 +94,72 @@ impl AssemblyJob<'_> {
                 Err(_) => NumericalRun::Fault,
             };
         }
-        context.consume_fuel(1);
-        if self.state.checkpoint_due {
-            self.state.checkpoint_due = false;
-            if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
+        loop {
+            context.consume_fuel(1);
+            if self.state.checkpoint_due {
+                self.state.checkpoint_due = false;
+                if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
+                    return NumericalRun::Yield;
+                }
+                self.publication = Some((AssemblyPublicationKind::Checkpoint, NumericalBytesPublication::new(JobPayloadStream::CheckpointState, self.checkpoint_bytes())));
                 return NumericalRun::Yield;
             }
-            self.publication = Some((AssemblyPublicationKind::Checkpoint, NumericalBytesPublication::new(JobPayloadStream::CheckpointState, self.checkpoint_bytes())));
-            return NumericalRun::Yield;
-        }
-        if self.state.preview_due {
-            self.state.preview_due = false;
-            if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
+            if self.state.preview_due {
+                self.state.preview_due = false;
+                if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
+                    return NumericalRun::Yield;
+                }
+                self.publication = Some((AssemblyPublicationKind::Preview, NumericalBytesPublication::new(JobPayloadStream::Preview, encode_value(&self.preview()))));
                 return NumericalRun::Yield;
             }
-            self.publication = Some((AssemblyPublicationKind::Preview, NumericalBytesPublication::new(JobPayloadStream::Preview, encode_value(&self.preview()))));
-            return NumericalRun::Yield;
-        }
-        if self.state.stage == AssemblyJobStage::Complete {
-            if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
-                return NumericalRun::Complete;
+            if self.state.stage == AssemblyJobStage::Complete {
+                if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
+                    return NumericalRun::Complete;
+                }
+                self.publication = Some((AssemblyPublicationKind::Complete, NumericalBytesPublication::new(JobPayloadStream::CommitOutput, encode_value(&self.preview()))));
+                return NumericalRun::Yield;
             }
-            self.publication = Some((AssemblyPublicationKind::Complete, NumericalBytesPublication::new(JobPayloadStream::CommitOutput, encode_value(&self.preview()))));
-            return NumericalRun::Yield;
-        }
-        match self.state.stage {
-            AssemblyJobStage::ElementTriplets => {
-                if !self.reclaim_element_owner() {
-                    if self.state.pending.is_none() {
-                        if self.state.element_cursor == self.state.total_elements {
-                            self.state.stage = AssemblyJobStage::MergeFull;
+            match self.state.stage {
+                AssemblyJobStage::ElementTriplets => {
+                    if !self.reclaim_element_owner() {
+                        if self.state.pending.is_none() {
+                            if self.state.element_cursor == self.state.total_elements {
+                                self.state.stage = AssemblyJobStage::MergeFull;
+                            } else {
+                                let result = if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) { self.advance_element_build(context.retained_grant().maximum_depth).map(|_| ()) } else { self.begin_borrowed_element() };
+                                if result.is_err() {
+                                    return NumericalRun::Fault;
+                                }
+                            }
                         } else {
-                            let result = if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) { self.advance_element_build(context.retained_grant().maximum_depth).map(|_| ()) } else { self.begin_borrowed_element() };
-                            if result.is_err() {
+                            if self.assemble_cell().is_err() {
                                 return NumericalRun::Fault;
                             }
                         }
-                    } else {
-                        if self.assemble_cell().is_err() {
-                            return NumericalRun::Fault;
-                        }
                     }
                 }
+                AssemblyJobStage::MergeFull => match self.advance_partition_merge(true) {
+                    Ok(None) => {
+                        self.state.merge_scan_partition = 0;
+                        self.state.merge_candidate = None;
+                        self.state.stage = AssemblyJobStage::MergeFree;
+                    }
+                    Ok(Some(_)) => {}
+                    Err(_) => return NumericalRun::Fault,
+                },
+                AssemblyJobStage::MergeFree => match self.advance_partition_merge(false) {
+                    Ok(None) => self.state.stage = AssemblyJobStage::Complete,
+                    Ok(Some(_)) => {}
+                    Err(_) => return NumericalRun::Fault,
+                },
+                AssemblyJobStage::Complete => {}
             }
-            AssemblyJobStage::MergeFull => match self.advance_partition_merge(true) {
-                Ok(None) => {
-                    self.state.merge_scan_partition = 0;
-                    self.state.merge_candidate = None;
-                    self.state.stage = AssemblyJobStage::MergeFree;
-                }
-                Ok(Some(_)) => {}
-                Err(_) => return NumericalRun::Fault,
-            },
-            AssemblyJobStage::MergeFree => match self.advance_partition_merge(false) {
-                Ok(None) => self.state.stage = AssemblyJobStage::Complete,
-                Ok(Some(_)) => {}
-                Err(_) => return NumericalRun::Fault,
-            },
-            AssemblyJobStage::Complete => {}
-        }
-        if context.is_cancelled() {
-            return NumericalRun::Cancelled;
+            if context.is_cancelled() {
+                return NumericalRun::Cancelled;
+            }
+            if self.state.preview_due || self.state.checkpoint_due || self.state.stage == AssemblyJobStage::Complete || context.should_yield() {
+                break;
+            }
         }
         if self.state.preview_due {
             self.state.preview_due = false;

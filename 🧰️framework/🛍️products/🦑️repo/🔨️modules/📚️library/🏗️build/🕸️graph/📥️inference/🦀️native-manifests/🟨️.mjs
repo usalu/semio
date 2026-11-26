@@ -8,7 +8,8 @@ import { runtimeParseTomlV1 } from "../../../../../../../../📦️packages/🟦
 import {runtimeKeyV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {isOpaqueSourcePathV1,CACHE_POLICY} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import{isOpaqueSourcePathV1}from"../../../📥️inputs/👻️opaque-source/🟨️.mjs";
+import{CACHE_POLICY}from"../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 import sourceSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 import { interfaceDependencyInputV1 } from "../../../📥️inputs/🔭️interface/🟦️.ts";
 const { existsSync, readdirSync, readFileSync, lstatSync } = observedFs;

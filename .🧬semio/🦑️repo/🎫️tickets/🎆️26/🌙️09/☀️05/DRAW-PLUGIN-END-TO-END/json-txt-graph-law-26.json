@@ -1,0 +1,112 @@
+{
+  "converterOwner": "semio-s-artifact-stdio-json-schema",
+  "schemaOwner": "semio-s-artifact-stdio-txt-schema",
+  "facade": "semio-s-artifact-stdio-txt",
+  "title": "TxtSnapshot",
+  "unusedOwners": [
+    "semio-s-artifact-stdio-json",
+    "semio-s-artifact-stdio-json-mutations",
+    "semio-s-artifact-stdio-json-mutations-2",
+    "semio-s-artifact-stdio-json-number",
+    "semio-s-artifact-stdio-json-schema-2",
+    "semio-s-artifact-stdio-json-tests"
+  ],
+  "combinedLocks": {
+    "semio-s-artifact-stdio-json-schema": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": "semio-s-artifact-stdio-txt-schema"
+    },
+    "semio-s-artifact-stdio-xml-schema": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": "semio-s-artifact-stdio-txt-schema"
+    },
+    "semio-s-artifact-stdio-xml-mutations": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": "semio-s-artifact-stdio-txt-schema"
+    },
+    "semio-s-artifact-stdio-dxf-inferences": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": "semio-s-artifact-stdio-txt-schema"
+    },
+    "semio-s-artifact-stdio-json": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-json-mutations": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-json-mutations-2": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-json-number": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-json-schema-2": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-json-tests": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-xml": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-xml-inferences": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-xml-schema-2": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-xml-snapshot": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-xml-tests": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-xml-tests-2": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-xml-tests-3": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-dxf": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-dxf-diff": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-dxf-mutations": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-dxf-schema": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-dxf-snapshot": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-stdio-dxf-tests": {
+      "from": "semio-s-artifact-stdio-txt",
+      "to": ""
+    },
+    "semio-s-artifact-draw-drawing-write": {
+      "from": "semio-s-artifact-stdio-deflate",
+      "to": ""
+    }
+  }
+}

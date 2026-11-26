@@ -12,6 +12,8 @@ pub struct ArtifactCanonicalRecordDigest {
  phase:u8,
  result:Option<[u8;32]>,
 }
+/// 🎟️ The most canonical encoder steps one record digest unit batches inside its grant.
+const ARTIFACT_CANONICAL_RECORD_UNIT_STEPS:usize=64;
 impl Default for ArtifactCanonicalRecordDigest{fn default()->Self{Self{cursor:Default::default(),hash:Sha256::new(),length:0,offset:0,phase:0,result:None}}}
 impl ArtifactCanonicalRecordDigest{
  pub fn digest(&self)->Option<[u8;32]>{self.result}
@@ -25,15 +27,21 @@ impl ArtifactCanonicalRecordDigest{
   if self.phase==4{self.result=Some(self.hash.clone().finalize());self.phase=5;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
   if self.phase==1{self.cursor=Default::default();self.phase=2;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
   if self.phase==2{
-   let domain_length=(domain.len()as u64).to_be_bytes();let prefix_length=(prefix.len()as u64).to_be_bytes();let length=self.length.to_be_bytes();let mut at=self.offset;let mut byte=None;
-   for part in [b"semio.artifact.cursor.v2".as_slice(),domain_length.as_slice(),domain,prefix_length.as_slice(),prefix,length.as_slice()]{if at<part.len(){byte=Some(part[at]);break}at-=part.len()}
-   let copied=if let Some(byte)=byte{self.hash.update(&[byte]);self.offset+=1;1}else{self.phase=3;0};
+   let domain_length=(domain.len()as u64).to_be_bytes();let prefix_length=(prefix.len()as u64).to_be_bytes();let length=self.length.to_be_bytes();let mut at=self.offset;let mut copied=0;
+   for part in [b"semio.artifact.cursor.v2".as_slice(),domain_length.as_slice(),domain,prefix_length.as_slice(),prefix,length.as_slice()]{if at<part.len(){self.hash.update(&part[at..]);copied+=part.len()-at;at=0}else{at-=part.len()}}
+   self.offset+=copied;self.phase=3;
    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()}))
   }
-  let mut output=[0];let step=self.cursor.encode_chunk_admitted(source,&mut output,grant).map_err(|error|error.reason)?;
-  if self.phase==0{self.length=self.length.checked_add(step.written_bytes as u64).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"canonical record byte extent overflow"))?}else{self.hash.update(&output[..step.written_bytes])}
-  if matches!(step.ownership,RetainedCloneStep::Complete(_)){self.phase=if self.phase==0{1}else{4}}
-  Ok(RetainedCloneStep::Progress(step.ownership.progress()))
+  let mut output=[0];let mut total=RetainedCloneProgress::default();
+  for _ in 0..ARTIFACT_CANONICAL_RECORD_UNIT_STEPS{
+   let left=RetainedCloneGrant{maximum_items:grant.maximum_items.saturating_sub(total.copied_items),maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(total.copied_bytes),maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(total.retained_capacity_bytes),maximum_release_bytes:grant.maximum_release_bytes.saturating_sub(total.released_bytes),..grant};
+   let step=self.cursor.encode_chunk_admitted(source,&mut output,left).map_err(|error|error.reason)?;
+   if self.phase==0{self.length=self.length.checked_add(step.written_bytes as u64).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"canonical record byte extent overflow"))?}else{self.hash.update(&output[..step.written_bytes])}
+   let progress=step.ownership.progress();total=total.saturating_add(progress);
+   if matches!(step.ownership,RetainedCloneStep::Complete(_)){self.phase=if self.phase==0{1}else{4};break}
+   if progress==RetainedCloneProgress::default()||total.copied_items>=grant.maximum_items{break}
+  }
+  Ok(RetainedCloneStep::Progress(total))
   })();semio_framework_value::RetainedWorkOutcome{result,work}
  }
 }

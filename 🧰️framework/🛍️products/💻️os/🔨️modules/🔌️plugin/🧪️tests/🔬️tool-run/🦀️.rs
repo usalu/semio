@@ -219,7 +219,12 @@ impl ToyRunJob {
       0=>{if self.purpose==ToolRunJobPurpose::Revalidate{if self.scan==self.original.provisional_counts.len(){if Self::metadata(cx)?{self.finished=true;self.phase=12;}return Ok(None)}let valid=self.original.provisional_counts[self.scan]==self.base_count.checked_add(self.scan as i32+1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original revalidation count overflow"))?;if Self::metadata(cx)?{if valid{self.scan+=1;}else{self.retraction=Some((self.scan as u32).checked_mul(2).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original revalidation index overflow"))?);self.phase=13;}}return Ok(None)}
        if self.done>self.target{let result=self.original.writer.admit_original_retraction(self.target.checked_mul(2).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original retarget extent overflow"))?,grant);let complete=Self::receive(cx,result)?;if complete&&cx.retained_progress().copied_items==0&&!Self::metadata(cx)?{return Ok(None)}if complete{self.done=self.target;}return Ok(None)}
        if self.done==self.target{if self.original.writer.is_empty(){return semio_framework_job::JobOutcomeBorrow::admit_complete(cx,None,None).map_err(semio_framework_job::OriginalTurnFailure::from)}if Self::metadata(cx)?{self.phase=1;}return Ok(None)}
-       let unit=self.done.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original Toy unit overflow"))?;if self.unit.advance(&mut self.original.writer,self.base_count,unit,cx)?{self.done=unit;self.batch_units+=1;if self.batch_units==64||self.done==self.target||self.original.writer.should_flush(){self.phase=1;}}}
+       let step_limit = cx.semantic_step_limit();
+       if step_limit.is_some_and(|limit| u64::from(self.done) >= limit) {
+        if !self.original.writer.is_empty() && Self::metadata(cx)? { self.phase = 1; }
+        return Ok(None);
+       }
+       let unit=self.done.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original Toy unit overflow"))?;if self.unit.advance(&mut self.original.writer,self.base_count,unit,cx)?{self.done=unit;self.batch_units+=1;if self.batch_units==64||self.done==self.target||step_limit==Some(u64::from(self.done))||self.original.writer.should_flush(){self.phase=1;}}}
       1=>{if Self::metadata(cx)?{self.progress_source=Some(ToolRunProgress{identity:self.original.writer.identity(),sequence:0,state:ToolRunState::Running,stage:0,completed:u64::from(self.done),total:Some(u64::from(self.target)),counters:Vec::new(),units_per_second:0.0,conflicts:0,steps:ToolRunStepRing::new()});self.counter_source=Some(ToolRunCounter{counter:0,value:u64::from(self.resumed_from)});self.phase=2;}}
       2=>{let result=ToolRunTickWriter::admit_original_progress_counter(self.progress_source.as_mut().unwrap(),&mut self.counter_source,grant);if Self::receive(cx,result)?{self.phase=3;}}
       3=>{let result=self.original.writer.admit_original_progress(&mut self.progress_source,grant);if Self::receive(cx,result)?{self.phase=4;}}
@@ -241,6 +246,8 @@ impl ToyRunJob {
 }
 
 impl semio_framework_job::InteractiveJob for ToyRunJob {
+    fn checkpoint_follows_preview(&self) -> bool { self.purpose == ToolRunJobPurpose::Run && self.phase == 6 }
+
     toy_job_step!();
     fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,ValueError>{self.emission.borrow_outcome(descriptor)}
 

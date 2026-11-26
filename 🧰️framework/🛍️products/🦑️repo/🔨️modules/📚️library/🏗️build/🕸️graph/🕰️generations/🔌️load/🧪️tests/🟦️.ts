@@ -761,7 +761,7 @@ test("a local missing closure reacquires live structural custody before it can i
    });
    const status=await loadGenerationGraphV1(mock.host).then(()=>"served",error=>error.code);
    const after=readWorldPointer(dir);
-   expect({status,settled,kept:Number(after.manifest===observed.manifest)},mode).toEqual(expected.get({$mode:mode}));
+   expect<unknown>({status,settled,kept:Number(after.manifest===observed.manifest)},mode).toEqual(expected.get({$mode:mode}));
    expect(entries,mode).toBe(2);
    expect(tokens.size,mode).toBe(2);
    if(healthy)expect(after,mode).toEqual(healthy);
@@ -787,7 +787,7 @@ test("cold fragment payloads leave memory before the source rows are consumed",a
   let releasedMidway=0,releasedBeforeRows=0;
   mock.host.discoverPart=async(...args)=>{
    const part=await discover(...args);
-   for(const {node} of part.owners)if(node!==undefined)payloads.push(new WeakRef(node));
+   for(const {node} of part.owners)if(typeof node==="object"&&node!==null)payloads.push(new WeakRef(node));
    events.push("discovered");
    return{...part,dispose:()=>{events.push("disposed");}};
   };
@@ -839,9 +839,9 @@ for(const mode of ["cancel","write error"])test("cold fragment "+mode+" leaves t
     await phases.advance(phase,done);
    }};
   };
-  mock.host.storeOptions=store=>({...options(store),fs:{...fs,async write(path,...args){
-   if(dirname(path)===join(store.root,GENERATION_POLICY_V1.fragments)&&++writes===count&&mode==="write error")throw stopped;
-   await fs.write(path,...args);
+  mock.host.storeOptions=store=>({...options(store),fs:{...fs,async write(...call:Parameters<typeof fs.write>){
+   const path=call[0];if(dirname(path)===join(store.root,GENERATION_POLICY_V1.fragments)&&++writes===count&&mode==="write error")throw stopped;
+   await fs.write(...call);
   }}});
   await expect(loadGenerationGraphV1(mock.host)).rejects.toThrow(mode);
   expect(disposed).toBe(1);

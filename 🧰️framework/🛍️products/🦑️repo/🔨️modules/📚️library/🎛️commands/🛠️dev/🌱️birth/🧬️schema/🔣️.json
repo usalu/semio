@@ -14,7 +14,8 @@
     "PlaygroundProtocol": {
       "const": {
         "prefix": ["dev", "playground"],
-        "operands": 5
+        "operands": 5,
+        "publishedEmitterFlag": "--published-emitter"
       }
     },
     "PlaygroundRequest": {
@@ -24,8 +25,13 @@
       "properties": {
         "variant": { "type": "string", "maxLength": 64, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
         "renderer": { "enum": ["react", "wgpu", "native"] },
-        "profile": { "enum": ["prototype", "release"] }
-      }
+        "profile": { "enum": ["prototype", "release"] },
+        "publishedEmitter": { "type": "string", "pattern": "^(?:[0-9a-f]{64}:){2}[0-9a-f]{64}$" }
+      },
+      "allOf": [{
+        "if": { "type": "object", "required": ["publishedEmitter"], "properties": { "publishedEmitter": true } },
+        "then": { "type": "object", "properties": { "renderer": { "const": "react" }, "profile": { "const": "prototype" } } }
+      }]
     },
     "Target": {
       "type": "string",

@@ -1,0 +1,22 @@
+[
+ {
+  "set": "representations.500.geometry.elevation[sil-seat].points.4.0",
+  "was": -0.108485,
+  "value": -0.124485
+ },
+ {
+  "set": "representations.500.geometry.elevation[sil-seat].points.5.0",
+  "was": -0.108485,
+  "value": -0.124485
+ },
+ {
+  "set": "representations.500.geometry.front[sil-seat].points.7.0",
+  "was": -0.108485,
+  "value": -0.124485
+ },
+ {
+  "set": "representations.500.geometry.front[sil-seat].points.8.0",
+  "was": -0.108485,
+  "value": -0.124485
+ }
+]

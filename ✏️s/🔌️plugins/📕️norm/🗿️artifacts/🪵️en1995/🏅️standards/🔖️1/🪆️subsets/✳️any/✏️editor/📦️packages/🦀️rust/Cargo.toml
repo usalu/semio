@@ -39,6 +39,7 @@ semio-s-artifact-norm-en1995-inferences = { workspace = true }
 semio-s-artifact-norm-en1995-io = { workspace = true }
 semio-s-artifact-norm-en1995-model = { workspace = true }
 semio-s-artifact-norm-en1995-mutations = { workspace = true }
+semio-s-artifact-norm-en1995-mutations-edit-rules = { workspace = true }
 semio-s-artifact-norm-en1995-schema = { workspace = true }
 semio-s-artifact-norm-en1995-scene = { workspace = true }
 semio-s-plugin-norm-structural-scene = { workspace = true }

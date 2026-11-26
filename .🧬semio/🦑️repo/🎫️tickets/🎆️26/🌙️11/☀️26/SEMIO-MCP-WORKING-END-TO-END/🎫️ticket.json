@@ -1,0 +1,26 @@
+{
+  "title": "Semio MCP Working End to End",
+  "emoji": "🌉",
+  "status": "open",
+  "description": "Get the semio MCP server (repo dev mcp stdio os, not repo mcp) working end to end: boot, list tools/resources/prompts, exercise every tool (capabilities, context, artifact create/open/snapshot/validate/export, transactions, history, actions, jobs, inference, ui, conversation) and fix every failure found.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2801"
+  },
+  "goal": "🎯runningos",
+  "sessions": [
+    "24781465-a201-4af5-84ff-5ead9c8e2c5a"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-26 14:48:57",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get the semio MCP server (repo dev mcp stdio os, not repo mcp) working end to end: boot, list tools/resources/prompts, exercise every tool (capabilities, context, artifact create/open/snapshot/validate/export, transactions, history, actions, jobs, inference, ui, conversation) and fix every failure found.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    }
+  ]
+}

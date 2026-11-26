@@ -3,6 +3,8 @@ import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
+import { exportedDocumentMatchesSnapshotV1 } from "@semio-tech/framework-os-mcp";
 import { mcpServerEntries, takeMcpPluginCatalog, withMcpHostDriverPolicy } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { encodeMcpComponentModelManifestV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/📦️component-models/🟦️.ts";
 import { readNativeCatalogV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
@@ -34,19 +36,34 @@ if (driverPolicy) args.push("--host-driver-policy", resolve(driverPolicy));
 const client = new Client({ name: "semio-sdk-note-create", version: "1" });
 const trace = process.env.SEMIO_MCP_POLL_TRACE === "1";
 const startTransport = () => new StdioClientTransport({ command: resolve(executable), args: withMcpHostDriverPolicy(["stdio", ...args, "--no-bridge", "--auto-approve", "all"]), cwd, env: { ...env, SEMIO_MCP_COMPONENT_MODELS: models, ...(trace ? { SEMIO_MCP_POLL_TRACE: "1" } : {}) }, stderr: trace ? "inherit" : "ignore" });
-const transport=startTransport();
+const transport = startTransport();
+const artifactId = "note-seeded-sdk";
 
 try {
   await (await import("./note-seeded-history.ts")).seedNote(generated, folder);
   await client.connect(transport);
+  if (process.env.SEMIO_EXPORT_LAW_OPEN_ARTIFACT === "1") {
+    const opened = await client.callTool({ name: "artifact_open", arguments: { artifactId } }, CallToolResultSchema);
+    assert(!opened.isError && opened.structuredContent, JSON.stringify(opened.structuredContent));
+    assert.equal(opened.structuredContent.artifactKind, pins.artifactKind);
+  }
   const stablePair = async () => {
-    const reply = await client.callTool({name:"artifact_snapshot", arguments:{artifactId:"note-seeded-sdk"}});
-    assert(!reply.isError, JSON.stringify(reply.structuredContent));
-    return (reply.structuredContent.untrusted).content;
+    const reply = await client.callTool({ name: "artifact_snapshot", arguments: { artifactId } }, CallToolResultSchema);
+    assert(!reply.isError && reply.structuredContent, JSON.stringify(reply.structuredContent));
+    const envelope = reply.structuredContent.untrusted as { schema: string; content: { packBase64: string; sprBase64: string } };
+    assert.equal(envelope.schema, "semio.mcp.untrusted-content/v1");
+    return envelope.content;
   };
   const expected = await stablePair();
-  const args = {artifactId:"note-seeded-sdk",format:"artifact:out"};
-  for (const cut of requestedCuts.length ? requestedCuts : ["loading-document","reading-document"]) {
+  const seed = (await readFile(join(generated, "note-wasi-seeded-pair.tsv"), "utf8")).trim().split("\t");
+  assert.deepEqual([expected.packBase64, expected.sprBase64], seed);
+  const request = { name: "artifact_export", arguments: { artifactId, format: "artifact:out" } };
+  const cuts = requestedCuts.length ? requestedCuts : ["loading-document", "reading-document"];
+  const onlyComplete = process.env.SEMIO_EXPORT_LAW_ONLY_COMPLETE === "1";
+  const admittedAfter = new Map([["opening-guest", 0], ["loading-document", 0.75], ["reading-document", 0.875]]);
+  for (const cut of onlyComplete ? [] : cuts) {
+    const after = admittedAfter.get(cut);
+    assert(after !== undefined, `Unknown export cut ${cut}`);
     let requestId;
     let stop;
     const send = transport.send.bind(transport);
@@ -55,12 +72,12 @@ try {
       return send(message, options);
     };
     const progress = [];
-    const reply = await client.callTool({name:"artifact_export",arguments:args}, undefined, {
+    const reply = await client.callTool(request, CallToolResultSchema, {
       timeout:240000, onprogress:note => {
         if (progress.at(-1) !== note.message) { progress.push(note.message); console.log("[DEBUG] SDK export phase", note.message); }
-        const admitted = cut === "loading-document" ? note.progress > 0.75 : cut === "reading-document" ? note.progress > 0.875 : true;
-        if (!stop && admitted && note.message?.endsWith(cut)) {
+        if (!stop && note.progress > after && note.message === `exporting: ${cut}`) {
           assert(requestId !== undefined);
+          console.log("[DEBUG] SDK cancelling export", JSON.stringify({ cut, progress: note.progress, requestId }));
           stop = send({jsonrpc:"2.0",method:"notifications/cancelled",params:{requestId,reason:"stop at "+cut}});
         }
       },
@@ -68,16 +85,33 @@ try {
     await stop;
     console.log("[DEBUG] SDK export answered",JSON.stringify(reply.structuredContent));
     assert(stop && reply.isError && reply.structuredContent?.code === "CANCELLED", JSON.stringify({cut,progress,result:reply.structuredContent}));
+    assert.equal(reply.structuredContent.untrusted, undefined);
     assert.deepEqual(await stablePair(), expected);
     await client.ping();
     console.log("[DEBUG] SDK export cancellation", JSON.stringify({cut,progress,persistedPairUnchanged:true}));
   }
-  if (process.env.SEMIO_EXPORT_LAW_NO_RETRY !== "1") {
-  const completed = await client.callTool({name:"artifact_export",arguments:args}, undefined, {timeout:240000});
-  assert(!completed.isError, JSON.stringify(completed.structuredContent));
-  const {exportedDocumentMatchesSnapshotV1} = await import("@semio-tech/framework-os-mcp");
-  assert(exportedDocumentMatchesSnapshotV1(completed.structuredContent.untrusted.content.contentBase64,[expected.packBase64,expected.sprBase64].join(".")));
-  console.log("[DEBUG] Actual Note archive exactly matches original Pack and SPR", completed.structuredContent.contentBytes);
+  if (onlyComplete || process.env.SEMIO_EXPORT_LAW_NO_RETRY !== "1") {
+    let phase: string | undefined;
+    const completed = await client.callTool(request, CallToolResultSchema, {
+      timeout: 240000,
+      onprogress: note => {
+        if (phase === note.message) return;
+        phase = note.message;
+        console.log("[DEBUG] SDK completion phase", phase);
+      },
+    });
+    const result = completed.structuredContent;
+    assert(!completed.isError && result, JSON.stringify(result));
+    assert.equal(result.artifactId, request.arguments.artifactId);
+    assert.equal(result.format, request.arguments.format);
+    assert.equal(result.pluginId, note.pluginId);
+    const exported = result.untrusted as { schema: string; content: { contentBase64: string } };
+    assert.equal(exported.schema, "semio.mcp.untrusted-content/v1");
+    assert.equal(result.contentBytes, Buffer.from(exported.content.contentBase64, "base64").length);
+    assert(exportedDocumentMatchesSnapshotV1(exported.content.contentBase64, seed.join(".")));
+    assert.deepEqual(await stablePair(), expected);
+    await client.ping();
+    console.log("[DEBUG] Actual Note archive exactly matches original Pack and SPR", result.contentBytes);
   }
 } finally {
   await client.close();

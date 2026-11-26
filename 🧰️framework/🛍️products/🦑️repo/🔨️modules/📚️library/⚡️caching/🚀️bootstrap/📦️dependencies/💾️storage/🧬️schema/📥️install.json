@@ -5954,7 +5954,8 @@
       "required": [
         "mode",
         "failed",
-        "aborted"
+        "aborted",
+        "poisonsOriginal"
       ],
       "properties": {
         "mode": {
@@ -5972,6 +5973,9 @@
           "type": "boolean"
         },
         "aborted": {
+          "type": "boolean"
+        },
+        "poisonsOriginal": {
           "type": "boolean"
         }
       }

@@ -684,3 +684,6 @@ CMakeFiles/
 compile_commands.json
 # Dependency-install symlink: dot plus eleven hex digits, points to an absolute `.cache/.../node_modules` path.
 .[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]
+
+/rustc-ice-*.txt
+*.long-type-*.txt

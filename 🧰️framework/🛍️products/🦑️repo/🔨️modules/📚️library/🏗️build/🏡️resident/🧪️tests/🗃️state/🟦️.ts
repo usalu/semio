@@ -212,7 +212,7 @@ describe("state against naive oracles under random edits",()=>{
   const rows:string[]=[],walk=(rel:string):void=>{const status=lstatSync(root+"/"+rel);rows.push(rel+"\0"+status.mtimeMs+"\0"+status.size+"\0"+status.ino);if(status.isDirectory())for(const name of readdirSync(root+"/"+rel).sort())walk(rel+"/"+name);};walk("out");
   expect(rows.length).toBeGreaterThan(retired);
   const python=spawnSync("python3",["-I","-c","import hashlib,sys;print(hashlib.sha256(sys.stdin.buffer.read()).hexdigest())"],{input:rows.join("\n"),encoding:"utf8"});
-  expect(python.stdout.trim()).toBe(signature);
+  expect<string|undefined>(python.stdout.trim()).toBe(signature);
   await Bun.sleep(5);writeFileSync(root+"/out/d29/f02999","changed longer");expect(await outputSignatureV1(root,["out"])).not.toBe(signature);
  });
 });

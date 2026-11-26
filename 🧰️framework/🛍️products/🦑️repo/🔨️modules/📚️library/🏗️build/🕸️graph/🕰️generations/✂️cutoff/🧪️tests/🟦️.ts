@@ -17,7 +17,8 @@ import{decodeFactIndexV1,encodeFactIndexV1,openFactIndexV1}from"../../🧮️fac
 import{patchFactIndexBytesV1}from"../../🌊️stream-patch/🟨️.mjs";
 import fixture from"./🔣️.json";
 
-const settleSuspectsV1=(options:Record<string,any>)=>createClosureSettlerV1({store:options.store}).settle({pseudoRows:suspectRowsV1(options.index,options.suspects),derive:options.derive,hold:options.hold,signal:options.signal,progress:options.progress});
+type SettleOptions=Parameters<ReturnType<typeof createClosureSettlerV1>["settle"]>[0];
+const settleSuspectsV1=(options:{index:Parameters<typeof suspectRowsV1>[0];suspects:Parameters<typeof suspectRowsV1>[1];store?:unknown;derive?:SettleOptions["derive"];hold?:SettleOptions["hold"];signal?:AbortSignal;progress?:SettleOptions["progress"]})=>createClosureSettlerV1({store:options.store}).settle({pseudoRows:suspectRowsV1(options.index,options.suspects),derive:options.derive,hold:options.hold,signal:options.signal,progress:options.progress});
 type World={readonly id:string;readonly owners:Readonly<Record<string,{readonly raw:readonly string[];readonly derived:readonly string[]}>>;readonly derived:Readonly<Record<string,{readonly answer:string;readonly support:readonly string[]}>>;readonly stale:readonly string[];readonly answers:Readonly<Record<string,string>>;readonly expect:{dirty:string[];held:string[];changed:string[]};readonly scope?:readonly string[]};
 const isFixture=(value:unknown):value is {readonly worlds:readonly World[]}=>new Ajv2020({strict:false}).validate({$ref:"#/definitions/Fixture",definitions:schema.definitions},value) as boolean;
 const worlds=((): readonly World[]=>{if(!isFixture(fixture))throw Error("Closed cutoff fixture required");return fixture.worlds;})();
@@ -408,7 +409,7 @@ test("rounds answered from the settle manifest equal the full re-verification un
  for(const name of names){const reads:[string,string][]=[];for(let item=0;item<8+draw(8);item++){const dir=dirs[draw(dirs.length)]!,kind=["file","file","exists","readdir"][draw(4)]!;reads.push(kind==="readdir"?[kind,dir]:[kind,nameOf(dir,draw(14))]);}if(draw(3)===0)reads.push(["registry","package.json"]);plans.set(name,reads);}
  const shared=(dir:string)=>[rowOf("readdir",dir)];
  const derive=async(row:{path:string})=>{const reads=plans.get(row.path)!,rows=reads.map(([kind,path])=>rowOf(kind,path));return{fact:rows.map(item=>String(item.fact)).join("|").length+":"+rows.map(item=>JSON.stringify(item.fact)).join("").split("").reduce((sum,char)=>(sum*31+char.charCodeAt(0))>>>0,7),parts:[shared("a"),rows]};};
- const hold=async(rows:GenerationRowV1[])=>rows.every(item=>JSON.stringify(rowOf(item.kind,item.path).fact)===JSON.stringify(item.fact));
+ const hold=async(rows:readonly GenerationRowV1[])=>rows.every(item=>JSON.stringify(rowOf(item.kind,item.path).fact)===JSON.stringify(item.fact));
  const rootA=mkdtempSync(join(tmpdir(),"manifest-a-")),rootB=mkdtempSync(join(tmpdir(),"manifest-b-"));
  try{
   const fast=createClosureSettlerV1({store:createNodeStoreV1({root:rootA})}),full=()=>createClosureSettlerV1({store:createNodeStoreV1({root:rootB+"/"+draw(1e9)})});

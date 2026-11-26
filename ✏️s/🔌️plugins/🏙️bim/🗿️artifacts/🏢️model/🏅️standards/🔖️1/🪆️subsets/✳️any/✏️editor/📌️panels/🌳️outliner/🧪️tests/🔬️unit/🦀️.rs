@@ -54,6 +54,7 @@ fn demo() -> (ModelSnapshot, ModelInference) {
 }
 
 fn text(snapshot: &ModelSnapshot, inference: &ModelInference, locale: Locale) -> String {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let view = ViewModel::new(locale, Terminology::Native);
     let node = render(snapshot, inference, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &TreeWindows::for_body(&view, BODY_KEY)).expect("the outliner renders");
     semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("projects")
@@ -86,6 +87,7 @@ async fn an_empty_model_offers_its_add_rows_and_says_it_is_empty() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_huge_group_stays_closed_and_an_opened_one_materialises_only_the_requested_slice() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let (mut snapshot, inference) = demo();
     let template = snapshot.walls["w-south"].clone();
     for index in 0..600 {

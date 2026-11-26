@@ -1,3 +1,4 @@
+import {processPidExistsV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import{readIssuedScriptProcessEnvelopeV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{readNativeCallerAuthorityV1}from"../../../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import{createHash,randomInt}from"node:crypto";
@@ -65,7 +66,7 @@ const osStartedAtMsOfProcessV1=(pid:number):number|undefined=>{
   if(process.platform==="win32"){const run=spawnSync("powershell",["-NoProfile","-Command","[DateTimeOffset]::new((Get-Process -Id "+pid+" -ErrorAction Stop).StartTime).ToUnixTimeMilliseconds()"],{windowsHide:true,encoding:"utf8",timeout:15000}),value=Number.parseInt(run.stdout,10);return run.status===0&&Number.isSafeInteger(value)?value:undefined;}
   const run=spawnSync("ps",["-o","etime=","-p",String(pid)],{encoding:"utf8",env:{...process.env,LC_ALL:"C"},timeout:15000}),seconds=leaseElapsedSecondsV1(run.stdout);return run.status===0&&seconds!==undefined?Date.now()-seconds*1000:undefined;
 };
-const processAliveV1=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
+const processAliveV1=(pid:number):boolean=>processPidExistsV1(pid);
 const registryPortsV1:DependencyStoreRegistryPortsV1=Object.freeze({
   entries:directory=>{
     const folder=leaseRegistryFolderV1(leaseRegistryRootV1(),directory),rows:Array<Readonly<{path:string;entry:LeaseRegistryEntryV1}>>=[];
@@ -99,7 +100,7 @@ export function dependencyStoreWaitPortsForV1(lease:()=>Readonly<{directory:stri
 }
 /** 🔁️ Repeats an attempt that found the dependency store parent held by a sibling until it is acquired: a busy parent means wait, never fail. Cancellation and the deadline of the control end the wait at once; so does the bound, with a bilingual refusal. */
 export async function retryWhileDependencyStoreBusyV1<T>(control:ResourceLeaseControl,attempt:()=>Promise<Readonly<{acquired:true;value:T}>|Readonly<{acquired:false}>>,ports:DependencyStoreWaitPortsV1=dependencyStoreWaitPorts):Promise<T>{
-  const started=ports.now();let step=DEPENDENCY_STORE_WAIT_V1.firstMilliseconds,said:number|undefined,ancestorSince:number|undefined;
+  const started=ports.now();let step:number=DEPENDENCY_STORE_WAIT_V1.firstMilliseconds,said:number|undefined,ancestorSince:number|undefined;
   for(;;){
     checkResourceLeaseControl(control);const selected=await attempt();if(selected.acquired)return selected.value;
     const now=ports.now(),waited=now-started,seen=ports.observe?.(),live=seen?.live??[],limit=Math.min(ports.limitMilliseconds,dependencyStoreWaitScopeV1.getStore()??Infinity);

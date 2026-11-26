@@ -20,7 +20,7 @@ test("a part whose rows are a row log list claims exactly what the independent m
    const log=createRowLogV1<Row>({path:join(directory,"w"+index+".rows")}),rows=world.rows as Row[];
    const part=(partRows:unknown)=>({owners:world.owners.map(owner=>({name:owner.name,root:owner.root,...("nativeRoot"in owner?{nativeRoot:(owner as{nativeRoot:string}).nativeRoot}:{}),node:{},nodeRows:log.append(owner.nodeRows.map(at=>rows[at]!))})),edgeOnly:world.edgeOnly,edges:[],rows:partRows,env:{digest:"e".repeat(64),rows:[]}});
    const streamed=shapeComputeResultV1({workspaceRoot:world.workspaceRoot,part:part(log.append(world.partRows.map(at=>rows[at]!))) as never,stubs:world.stubs as never});
-   const expected=world.expect as{owners:Record<string,number[]>;environment:number[]};
+   const expected:{owners:Readonly<Record<string,readonly number[]|undefined>>;environment:readonly number[]}=world.expect;
    for(const owner of streamed.owners)expect(keys(listed(owner.rows as never)),"world "+index+" owner "+owner.name).toEqual(keys(expected.owners[owner.name]!.map(at=>rows[at]!)));
    expect(keys(listed(streamed.env.rows as never)),"world "+index+" environment").toEqual(keys(expected.environment.map(at=>rows[at]!)));
    log.close();

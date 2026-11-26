@@ -1,0 +1,14 @@
+import {mock} from "bun:test";
+import {mkdirSync,writeFileSync} from "node:fs";
+import {join,relative,resolve} from "node:path";
+const root=resolve(import.meta.dir,"../../../../../../../"),A=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers");
+const entry=relative(root,join(A,"📜️script.ts")).replaceAll("\\","/");
+const routing=join(root,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),leases=join(root,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"),real={routing:await import(routing),leases:await import(leases)};
+mock.module(routing,()=>({...real.routing,requireIssuedResourceControlV1:()=>{}}));mock.module(leases,()=>({...real.leases,checkResourceLeaseControl:()=>{}}));
+const {captureNxAuthorizerSourcesV1}=await import(join(A,"🟦️.ts")),{snapshotNxAuthorizerSourcesV1,compileNxAuthorizerSnapshotV1}=await import(join(A,"📦️snapshot/🟦️.ts"));
+const control:any={signal:new AbortController().signal,publish:async()=>{},yieldContinuation:async()=>{}};
+const snap=snapshotNxAuthorizerSourcesV1(await captureNxAuthorizerSourcesV1(root,entry,control.signal));writeFileSync(process.argv[2]+"/compiler-snapshot.json",JSON.stringify(snap));
+const sealed=await compileNxAuthorizerSnapshotV1(root,snap,control,"runtime","program");
+const out=join(process.argv[2]!,"a/b/c");mkdirSync(out,{recursive:true});writeFileSync(join(out,".semio-authorizer-compiler.mjs"),sealed.bytes);console.log(out,sealed.bytes.length);
+const cap=Buffer.from(JSON.stringify(snapshotNxAuthorizerSourcesV1(await captureNxAuthorizerSourcesV1(root,relative(root,join(A,"📦️runtime/🟦️.ts")).replaceAll("\\","/"),control.signal)))+"\n");
+writeFileSync(join(out,"captured.json"),cap);const {createHash}=await import("node:crypto");writeFileSync(join(out,"digest"),createHash("sha256").update(cap).digest("hex"));mkdirSync(join(out,"stage"),{recursive:true});console.log(root);

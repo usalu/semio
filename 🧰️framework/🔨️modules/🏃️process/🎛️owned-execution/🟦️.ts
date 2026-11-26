@@ -1,5 +1,5 @@
 import {noticeLanguagesV1} from "../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
-import{readOwnedCommandAuxiliaryInputV1,publishOwnedAuxiliaryInputV1,OwnedAuxiliaryPublicationFailureV1,type OwnedCommandAuxiliaryInputV1}from"./📥️auxiliary/🟦️.ts";
+import{readOwnedCommandAuxiliaryInputV1,publishOwnedAuxiliaryInputV1,spawnOwnedBunCommandV1,OwnedAuxiliaryPublicationFailureV1,type OwnedCommandAuxiliaryInputV1}from"./📥️auxiliary/🟦️.ts";
 export {OwnedAuxiliaryPublicationFailureV1}from"./📥️auxiliary/🟦️.ts";
 export type{OwnedCommandAuxiliaryInputV1,OwnedAuxiliaryPublicationContextV1,OwnedAuxiliaryPublicationPhaseV1}from"./📥️auxiliary/🟦️.ts";
 import {captureOwnedCommandBodyV1,writeOwnedCommandOutputV1,type OwnedCommandInputV1} from "./📥️capture/🟦️.ts";
@@ -112,12 +112,23 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
   const commandSignal=auxiliary?options.control!.signal:options.signal;
   if (commandSignal?.aborted) {if(auxiliary||commandSignal.reason instanceof ResourceLoanDeadlineExhaustedV1)throw commandSignal.reason;throw stopRefusalV1(label, "cancelled");}
   const ceiling = bunTestCeilingV1(command, args, cwd, options.env ?? process.env);
-  const routed = routeRegisteredCommandV1(command, args, cwd, options.env ?? process.env), child = spawn(routed.command, [...routed.arguments], { cwd, env: routed.environment as NodeJS.ProcessEnv, detached: process.platform !== "win32", stdio: [options.input === undefined ? "inherit" : "pipe", options.stdout === "ignore" && options.output === undefined && !options.outputConsumer ? "ignore" : "pipe", "pipe", ...(auxiliary?["pipe" as const]:[])], windowsHide: true });
+  const routed = routeRegisteredCommandV1(command, args, cwd, options.env ?? process.env);
+  const outputPipe = options.stdout !== "ignore" || options.output !== undefined;
+  const bunChild = auxiliary && typeof Bun !== "undefined" && process.platform !== "win32"
+    ? spawnOwnedBunCommandV1(routed.command, routed.arguments, cwd, routed.environment, {
+        input: options.input === undefined ? "inherit" : typeof options.input === "string" ? Buffer.from(options.input) : Uint8Array.from(options.input),
+        output: outputPipe,
+        auxiliary: true,
+      })
+    : undefined;
+  const nativeChild = bunChild ? undefined : spawn(routed.command, [...routed.arguments], { cwd, env: routed.environment as NodeJS.ProcessEnv, detached: process.platform !== "win32", stdio: [options.input === undefined ? "inherit" : "pipe", outputPipe ? "pipe" : "ignore", "pipe", ...(auxiliary?["pipe" as const]:[])], windowsHide: true });
+  const child = bunChild ?? nativeChild!;
   let stopped = "", stopRefusal: RepoErrorV1 | ResourceLoanDeadlineExhaustedV1 | undefined, closed = false, publicationRefused = false, publicationFailure: unknown, interruptPublication!: () => void;
   const pending = new Set<Promise<void>>(), interrupted = new Promise<void>(accept => { interruptPublication = accept; });
   const terminate = (reason: string, refusal?: RepoErrorV1 | ResourceLoanDeadlineExhaustedV1): void => {
     if (!stopped) { stopped = reason; stopRefusal = refusal; }
     interruptPublication();
+    bunChild?.auxiliary?.destroy();
     if (!closed) void terminateOwnedChildTreeGracefullyV1(child, { record: (row, signal) => { const line = ownedKillRecordLineV1({ pid: row.pid, signal, killer: process.pid, label, reason: stopped }); process.stderr.write(`${line}\n`); } }).catch(() => undefined);
   };
   const release = ceiling !== undefined && child.pid !== undefined ? ceiling(child.pid, terminate) : undefined;
@@ -181,7 +192,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     stopTimeout = (): void => { stopFixed(); stopLive?.(); };
   let auxiliaryFailed=false,auxiliaryFailure:unknown;
   try {
-    const auxiliaryPublication=auxiliary?publishOwnedAuxiliaryInputV1(child.stdio[3] as import("node:stream").Writable|null,auxiliary.text,(error,phase)=>{if(!auxiliaryFailed){auxiliaryFailed=true;auxiliaryFailure=new OwnedAuxiliaryPublicationFailureV1(error,phase);}terminate("auxiliary input publication refused");}):Promise.resolve();
+    const auxiliaryPublication=auxiliary?publishOwnedAuxiliaryInputV1(bunChild?.auxiliary??nativeChild?.stdio[3] as import("node:stream").Writable|null,auxiliary.text,(error,phase)=>{if(!auxiliaryFailed){auxiliaryFailed=true;auxiliaryFailure=new OwnedAuxiliaryPublicationFailureV1(error,phase);}terminate("auxiliary input publication refused");}):Promise.resolve();
     const inputPublication = options.input === undefined || !child.stdin ? Promise.resolve() : new Promise<void>(accept => {
       child.stdin!.once("finish", accept); child.stdin!.once("close", accept);
       child.stdin!.once("error", () => { if (!closed && !stopped) terminate("input publication refused"); accept(); });
@@ -206,6 +217,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     if (status.signal !== null || status.code !== 0) throw new OwnedCommandFailure(label, { version: 1, status: status.code, signal: status.signal });
     if(deliveryFailed)throw deliveryFailure;
   } finally {
+    bunChild?.auxiliary?.destroy();
     if (release) release();
     for(const stream of deliveryStreams)stream.off("error",deliveryRefused);
     commandSignal?.removeEventListener("abort", abort);

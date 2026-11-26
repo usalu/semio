@@ -801,6 +801,7 @@
         "💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/♻️pressure/🟦️.ts",
         "💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/⛓️cpu-last/🟦️.ts",
         "💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🔒️exclusive-writer/🟦️.ts",
+        "💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🪢️writer-control/🟦️.ts",
         "💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🟦️.ts",
         "💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts",
         "💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🟦️.ts",
@@ -1202,7 +1203,8 @@
         "🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
         "🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts",
         "🚀️bootstrap/🔌️nx-plugin/🧪️tests/🦀️native-dependency-closures/🟦️.ts",
-        "🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🧪️tests/🟦️.ts"
+        "🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🧪️tests/🟦️.ts",
+        "📦️bundle/🧪️tests/🟦️.ts"
       ],
       "fileLaunchers": {
         "🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts": "nx-watcher-namespace",

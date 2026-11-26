@@ -7,10 +7,11 @@ import {remoteExecutionWorkerWhyV1} from "../🌡️load/🔎️why/🟦️.ts";
 import {OFFLOAD_REFUSAL_PREFIX_V1} from "../🚀️offload/🩺️failure/🟦️.ts";
 import {OFFLOAD_POLICY_V1} from "../🚀️offload/📐️policy/🟦️.ts";
 import type {SchedulerJournalRowV1} from "./📓️journal/🟦️.ts";
+import type {CounterGroupsV1,CounterLedgerV1} from "../../📈️counter-ledger/🟦️.ts";
 import {OperationInputLeasesV1} from "./🔐️input-leases/🟦️.ts";
 
 const withoutWhyV1=(state:RemoteExecutionWorkerStateV1):Omit<RemoteExecutionWorkerStateV1,"why">=>{const {why:_why,...rest}=state;return rest;};
-import {readRemoteExecutionPolicyV1,remoteExecutionControlV1,remoteExecutionPeakMegabytesV1,remoteExecutionDigestV1,remoteExecutionMatchPropertiesV1,remoteExecutionPlatformKeyV1,remoteExecutionPlatformMatchesV1,type RemoteExecutionDigestV1,type RemoteExecutionHeartbeatAnswerV1,type RemoteExecutionPollAnswerV1,type RemoteExecutionPropertyV1,type RemoteExecutionTaskResultV1,type RemoteExecutionTaskStatusV1,type RemoteExecutionTaskV1,type RemoteExecutionWorkerRegisteredV1,type RemoteExecutionWorkerRegistrationV1} from "../🟦️.ts";
+import {readRemoteExecutionPolicyV1,remoteExecutionControlV1,remoteExecutionPeakMegabytesV1,remoteExecutionDigestV1,remoteExecutionMatchPropertiesV1,remoteExecutionPlatformKeyV1,remoteExecutionPlatformMatchesV1,type RemoteExecutionDigestV1,type RemoteExecutionHeartbeatAnswerV1,type RemoteExecutionLinkedFinalV1,type RemoteExecutionPollAnswerV1,type RemoteExecutionPropertyV1,type RemoteExecutionTaskResultV1,type RemoteExecutionTaskStatusV1,type RemoteExecutionTaskV1,type RemoteExecutionWorkerRegisteredV1,type RemoteExecutionWorkerRegistrationV1} from "../🟦️.ts";
 
 /** 🎞️ The stages an operation passes through, in the protocol's own words. */
 export type RemoteExecutionStageV1="CACHE_CHECK"|"QUEUED"|"EXECUTING"|"COMPLETED";
@@ -25,7 +26,7 @@ export type RemoteExecutionSnapshotV1=Readonly<{name:string;instance:string;acti
 export type RemoteExecutionSchedulerEventV1=Readonly<{stage:"submitted"|"cached"|"assigned"|"completed"|"retried"|"worker-joined"|"worker-left"|"worker-lost"|"unmatched"|"refused"|"declined"|"restored";detail:string}>;
 
 /** ⚙️ Bounds of the scheduler; all durations are seconds. */
-export type RemoteExecutionSchedulerOptionsV1=Readonly<{content:RemoteExecutionContentV1;unmatchedSeconds:number;lingerSeconds:number;leaseSeconds:number;maximumAttempts:number;defaultActionSeconds:number;maximumActionSeconds:number;maximumQueued:number;heartbeatSeconds:number;pollSeconds:number;loadExpireSeconds:number;refusalCooldownSeconds:number;keepAliveSeconds?:number;cancelGraceSeconds?:number;stuckSeconds?:number;chargeRampSeconds?:number;resumeGraceSeconds?:number;inputLeaseRenewSeconds?:number;restore?:readonly SchedulerJournalRowV1[];onChange?:()=>void;cache:Readonly<{url:string;relative:boolean}>;language:"en"|"de"|"none";sweepMilliseconds?:number;now?:()=>number;onEvent?:(event:RemoteExecutionSchedulerEventV1)=>void}>;
+export type RemoteExecutionSchedulerOptionsV1=Readonly<{content:RemoteExecutionContentV1;unmatchedSeconds:number;lingerSeconds:number;leaseSeconds:number;maximumAttempts:number;defaultActionSeconds:number;maximumActionSeconds:number;maximumQueued:number;heartbeatSeconds:number;pollSeconds:number;loadExpireSeconds:number;refusalCooldownSeconds:number;keepAliveSeconds?:number;cancelGraceSeconds?:number;stuckSeconds?:number;chargeRampSeconds?:number;resumeGraceSeconds?:number;inputLeaseRenewSeconds?:number;restore?:readonly SchedulerJournalRowV1[];ledger?:CounterLedgerV1;onChange?:()=>void;cache:Readonly<{url:string;relative:boolean}>;language:"en"|"de"|"none";sweepMilliseconds?:number;now?:()=>number;onEvent?:(event:RemoteExecutionSchedulerEventV1)=>void}>;
 
 type Operation={
  id:string;instance:string;action:RemoteExecutionDigestV1;key:string;platform:RemoteExecutionPropertyV1[];timeoutSeconds:number;stage:RemoteExecutionStageV1;version:number;createdAt:number;queuedAt:number;
@@ -65,6 +66,7 @@ export class RemoteExecutionSchedulerV1{
   this.clock=options.now??Date.now;this.startedAt=new Date(this.clock()).toISOString();this.load=new RemoteExecutionLoadTableV1(options.loadExpireSeconds*1000,this.clock);this.inputs=new OperationInputLeasesV1(options.content,(options.inputLeaseRenewSeconds??server.inputLeaseRenewSeconds)*1000,this.clock);
   const every=options.sweepMilliseconds??1000;
   this.lastTick=this.clock();
+  options.ledger?.bind(()=>this.persistent());
   if(every>0){this.timer=setInterval(()=>{this.tick(every);},every);this.timer.unref();}
   if(options.restore!==undefined)this.restore(options.restore);
  }
@@ -432,15 +434,24 @@ export class RemoteExecutionSchedulerV1{
   return ended;
  }
 
+ /** 🧮️ The counts of this run that the ledger keeps over restarts (see `📈️counter-ledger`): the monotonic scheduler counters (`submitted` and `assigned` are the counts `queued` and `executing` of `status()` before they are replaced by the gauges) and, per machine, `offload.<origin>` with its offloaded in, offloaded out and refused counts. */
+ private persistent():CounterGroupsV1{
+  const {queued:submitted,executing:assigned,...rest}=this.counters;
+  return {scheduler:{...rest,submitted,assigned},...this.load.counts()};
+ }
+
+ /** 📈️ The cumulative counts: the ledger of earlier runs plus this run, or this run alone without a ledger. */
+ cumulative():CounterGroupsV1{return this.options.ledger?.total()??this.persistent();}
+
  /** 📊️ A secret-free view of the scheduler for `GET /status`. */
  status():Readonly<{counters:Record<string,number>;workers:readonly Record<string,unknown>[];platforms:readonly {key:string;queued:number;workers:number}[];queued:number;running:number}>{
-  const now=this.clock(),platforms=new Map<string,{key:string;queued:number;workers:number}>();
+  const now=this.clock(),totals=this.cumulative(),platforms=new Map<string,{key:string;queued:number;workers:number}>();
   const row=(key:string)=>{let found=platforms.get(key);if(!found){found={key,queued:0,workers:0};platforms.set(key,found);}return found;};
   for(const operation of this.queue)row(remoteExecutionPlatformKeyV1(remoteExecutionMatchPropertiesV1(operation.platform))).queued++;
   const workers=[...this.workers.values()].map(worker=>{
    for(const key of new Set([...platforms.keys()].filter(key=>remoteExecutionPlatformMatchesV1(key===""?[]:key.split(";").map(part=>({name:part.slice(0,part.indexOf("=")),value:part.slice(part.indexOf("=")+1)})),worker.registration.properties))))row(key).workers++;
    const entry=this.load.get(worker.registration.origin);
-   return {id:worker.id,name:worker.registration.name,host:worker.registration.host,platform:worker.registration.platform,properties:worker.registration.properties,concurrency:worker.registration.concurrency,running:worker.running.size,sandbox:worker.registration.sandbox,lastSeenSeconds:Math.max(0,Math.round((now-worker.lastSeen)/1000)),draining:worker.draining,origin:worker.registration.origin,confinement:worker.registration.confinement,network:worker.registration.network,headroom:placementHasHeadroomV1(this.workerView(worker),entry,now),offloadedIn:entry?.offloadedIn??0,refused:worker.refused};
+   return {id:worker.id,name:worker.registration.name,host:worker.registration.host,platform:worker.registration.platform,properties:worker.registration.properties,concurrency:worker.registration.concurrency,running:worker.running.size,sandbox:worker.registration.sandbox,lastSeenSeconds:Math.max(0,Math.round((now-worker.lastSeen)/1000)),draining:worker.draining,origin:worker.registration.origin,confinement:worker.registration.confinement,network:worker.registration.network,headroom:placementHasHeadroomV1(this.workerView(worker),entry,now),offloadedIn:totals[`offload.${worker.registration.origin}`]?.offloadedIn??entry?.offloadedIn??0,refused:worker.refused};
   });
   let running=0;for(const worker of this.workers.values())running+=worker.running.size;
   return {counters:{...this.counters,...this.waitStats(),queued:this.queue.length,executing:running},workers,platforms:[...platforms.values()],queued:this.queue.length,running};
@@ -453,9 +464,11 @@ export class RemoteExecutionSchedulerV1{
  }
 
  /** 🔢️ How the workers stand for a unit of `requester` (of `peakMegabytes` when it is sized: workers without the free memory for it are not candidates and their slots count whole multiples of the peak) right now, by the very counting the submission check uses, for the action format of this version: what the build door asks before it admits cargo without a grant. */
- idleFor(requester:string,peakMegabytes:number=0):ReturnType<typeof placementIdleCountV1>{
+ idleFor(requester:string,peakMegabytes:number=0,link?:RemoteExecutionLinkedFinalV1):ReturnType<typeof placementIdleCountV1>{
   const property=OFFLOAD_POLICY_V1.property;
-  const standing=placementIdleCountV1({id:"idle-probe",platform:[{name:property.format,value:property.formatValue}],tried:new Set<string>(),requester,peakMegabytes},this.views(),this.load,this.clock());
+  const platform:RemoteExecutionPropertyV1[]=[{name:property.format,value:property.formatValue}];
+  if(link)platform.push({name:property.targetPrefix+link.target,value:"1"},{name:property.linker,value:link.linker});
+  const standing=placementIdleCountV1({id:"idle-probe",platform,tried:new Set<string>(),requester,peakMegabytes},this.views(),this.load,this.clock());
   if(standing.candidates>0)this.reserved.set(requester,this.clock()+RESERVATION_SECONDS*1000);
   return standing;
  }
@@ -465,10 +478,10 @@ export class RemoteExecutionSchedulerV1{
 
  /** 🌍️ The live table of the fleet (`FleetLoad` of the schema): one row per machine that reported within the expiry, and the actions the scheduler holds. */
  fleetLoad():Readonly<Record<string,unknown>>{
-  const now=this.clock(),workers=new Map([...this.workers.values()].map(worker=>[worker.registration.origin,worker]));
+  const now=this.clock(),totals=this.cumulative(),workers=new Map([...this.workers.values()].map(worker=>[worker.registration.origin,worker]));
   const machines=this.load.all().map(entry=>{
    const report=entry.report,worker=workers.get(report.origin),state=worker===undefined?{...report.worker,state:"absent" as const,running:0,why:report.worker.state==="absent"&&report.worker.why!==undefined?report.worker.why:remoteExecutionWorkerWhyV1("not-registered")}:{...(report.worker.state==="refusing"?report.worker:withoutWhyV1(report.worker)),running:worker.running.size,concurrency:worker.registration.concurrency,sandbox:worker.registration.sandbox,confinement:worker.registration.confinement,network:worker.registration.network,state:report.worker.state==="refusing"||now<worker.refusedUntil?"refusing" as const:worker.running.size>0?"busy" as const:"idle" as const};
-   return {origin:report.origin,platform:report.platform,capacity:report.capacity,running:report.running,queued:report.queued,pressure:report.pressure,freeMegabytes:report.freeMegabytes,load:report.load,headroom:report.headroom,ageSeconds:Math.max(0,Math.round((now-entry.receivedAtMs)/1000)),...report.code===undefined?{}:{code:report.code},worker:state,offloadedIn:entry.offloadedIn,offloadedOut:entry.offloadedOut,refused:entry.refused,counters:report.counters};
+   return {origin:report.origin,platform:report.platform,capacity:report.capacity,running:report.running,queued:report.queued,pressure:report.pressure,freeMegabytes:report.freeMegabytes,load:report.load,headroom:report.headroom,ageSeconds:Math.max(0,Math.round((now-entry.receivedAtMs)/1000)),worker:state,offloadedIn:totals[`offload.${report.origin}`]?.offloadedIn??entry.offloadedIn,offloadedOut:totals[`offload.${report.origin}`]?.offloadedOut??entry.offloadedOut,refused:totals[`offload.${report.origin}`]?.refused??entry.refused,counters:report.counters};
   });
   const owner=(id:string|undefined)=>id===undefined?null:this.workers.get(id)?.registration.origin??null;
   const tasks=[...this.operations.values()].filter(operation=>operation.stage==="QUEUED"||operation.stage==="EXECUTING").map(operation=>({id:operation.id,action:operation.action.hash.slice(0,12),stage:operation.stage as "QUEUED"|"EXECUTING",worker:owner(operation.worker),requester:operation.requester??null,elapsedSeconds:Math.max(0,Math.round((now-(operation.startedAt??operation.queuedAt))/1000))}));

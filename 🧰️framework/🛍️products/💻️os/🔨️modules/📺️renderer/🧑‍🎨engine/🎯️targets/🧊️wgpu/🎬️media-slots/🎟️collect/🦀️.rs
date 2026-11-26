@@ -134,7 +134,8 @@ impl OriginalPresentedRoster{
   if let Some(assembly)=self.assembly.as_mut(){if !assembly.close_step(cx)?{return Ok(false)}if !metadata(cx)?{return Ok(false)}self.assembly=None;return Ok(false)}
   if self.json_failure.is_some(){if let Some(original)=admit_staged(&mut self.json_failure,&mut self.json_place,cx)?{return Err(original)}return Ok(false)}
   if let Some(owner)=self.owners.as_mut(){if !owner.terminal_is_empty(){let bytes=cx.retained_grant().maximum_copy_bytes;let demand=owner.selected_demand(bytes)?;let _=semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(bytes,effect))?;return Ok(false)}}
-  for loan in self.loans.iter_mut().flatten(){if !engine.return_presented_tree_source(loan,cx)?{return Ok(false)}}if self.loans.iter().any(Option::is_some){if !metadata(cx)?{return Ok(false)}self.loans=std::array::from_fn(|_|None);return Ok(false)}Ok(true)}
+  for loan in self.loans.iter_mut().flatten(){if !engine.return_presented_tree_source(loan,cx)?{return Ok(false)}}if self.loans.iter().any(Option::is_some){if !metadata(cx)?{return Ok(false)}self.loans=std::array::from_fn(|_|None);return Ok(false)}
+  Ok(true)}
  pub fn close_step(&mut self,engine:&mut Ui,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.initial_failure.is_some()||self.compound.is_some(){return self.close_failed_step(engine,cx)}
   match self.close_source_step(engine,cx){Ok(closed)=>Ok(closed),Err(original)=>{self.initial_failure=Some(original);Ok(false)}}

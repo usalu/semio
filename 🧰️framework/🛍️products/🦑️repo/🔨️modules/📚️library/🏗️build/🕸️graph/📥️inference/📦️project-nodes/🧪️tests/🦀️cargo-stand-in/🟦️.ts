@@ -24,7 +24,7 @@ test("the sibling project file of a listed Cargo manifest is a candidate, so the
   write("lone/Cargo.toml",'[package]\nname = "lone-package"\nversion = "0.0.0"\n');
   expect(projectConfigCandidatesV1(["owner/Cargo.toml","lone/Cargo.toml"],root)).toEqual(["lone/Cargo.toml","owner/Cargo.toml","owner/📋️project.json"]);
   const placement=relative(workspace,join(root,"owner")),contracts={fixture:{ownership:"owned",ownerPath:placement,target:"fixture-owner:generate",inputPatterns:[],outputRoots:[]}};
-  const assemble=(json:object)=>projectWithDefaults(json,placement,join(root,"owner"),workspace,contracts,new Map(),undefined,createScriptInputCache(),undefined,"source",["generate"],[]);
+  const assemble=(json:Readonly<Record<string,unknown>>)=>projectWithDefaults(json,placement,join(root,"owner"),workspace,contracts,new Map(),undefined,createScriptInputCache(),undefined,"source",["generate"],[]);
   expect(Object.keys((await assemble({name:"fixture-owner",targets:{generate:{executor:"repo:noop",cache:false}}})).targets)).toEqual(["generate"]);
   await expect(assemble({name:"fixture-package",tags:["language:cargo","discovery:manifest"],targets:{}})).rejects.toThrow("Generator target has no project owner: fixture-owner:generate");
  }finally{rmSync(root,{recursive:true,force:true});}

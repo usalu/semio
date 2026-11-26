@@ -21,5 +21,11 @@ createServer((request, response) => {
   if (!file) { response.writeHead(404); response.end(); return; }
   response.writeHead(200, {"content-type": types[extname(file)] ?? "application/octet-stream", "cache-control": "no-store"});
   if (request.method === "HEAD") { response.end(); return; }
+  if (process.env.SEMIO_OVERLAY_FLOW_REQUESTS === "1" && request.method === "GET") {
+    const path = new URL(request.url, "http://x").pathname;
+    if (/^\/assets\/flow_core[-_][^/]+\.(js|wasm)$/u.test(path) && /Chrome\//u.test(request.headers["user-agent"] ?? "")) {
+      response.once("finish", () => console.log("[DEBUG] Flow HTTP " + JSON.stringify({ path, file, status: response.statusCode })));
+    }
+  }
   createReadStream(file).pipe(response);
 }).listen(Number(port), "127.0.0.1");

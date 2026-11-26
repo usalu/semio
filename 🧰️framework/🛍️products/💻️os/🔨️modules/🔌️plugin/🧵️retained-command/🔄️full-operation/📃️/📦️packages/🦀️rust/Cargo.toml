@@ -42,3 +42,7 @@ path = "../../../📃️wire/🧪️tests/🦀️.rs"
 [[test]]
 name = "pending-original-page"
 path = "../../../📃️pending/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "compact-original-page"
+path = "../../../📃️pending/🧪️compact/🦀️.rs"

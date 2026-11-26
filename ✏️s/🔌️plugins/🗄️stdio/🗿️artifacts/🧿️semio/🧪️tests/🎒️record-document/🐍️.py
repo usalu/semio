@@ -70,7 +70,9 @@ class PrimitiveLaws(unittest.TestCase):
 
     def test_deflate_reproduces_every_vector_of_the_rust_retained_producer(self) -> None:
         with open(os.path.join(HERE, "../../../../../../../🧰️framework/🔨️modules/🗜️deflate/🛫️encode/⏳️cursor/🧪️tests/🧫️fixtures/🔣️.json"), encoding="utf-8") as handle:
-            vectors = json.load(handle)["vectors"]
+            retained = json.load(handle)
+        vectors = retained["vectors"]
+        self.assertEqual(codec.DEFLATE_POLICY, retained["policy"])
         self.assertGreaterEqual(len(vectors), 5)
         for vector in vectors:
             self.assertEqual(list(codec.deflate(bytes(vector["raw"]))), vector["stored"], vector["id"])
@@ -155,7 +157,7 @@ class SubsetLaws(unittest.TestCase):
 # endregion 🔖️Packs
 
 # region 🔖️Hostile
-HOSTILE_VALUE_HEX = "8953504b0d0a1a0a010000000100000001000000ef65ef880000000000000000030303016300001d75fe6e04034b62636414146067e78c8f2f28ca2fc98f8f676164674ce461646162674eca4c67f90f05f5ec2ce59929a970fe7f4676e69cfc7266243e6b716e624e0e0b2b3b6b5a4e7e62092b03187cb007003a8adaca0103302e6348addadbcc79f048cc5ecb99c92f2dfe2c8f5ec35bbc5480cd7a99d49d951b9fae38a51dcca8c0cd0004498c0c0c00d1e7c4d10000007aa3646053504b464f4f543101000000010000007e0000000000000038000000000000001101000000000000a5fd061bc8a594b70e83de0ccdff6158fac82066ef6db399f4ff289b53d97e020000000000000000b66f0ae9"
+HOSTILE_VALUE_HEX = "8953504b0d0a1a0a010000000100000001000000ef65ef880000000000000000030303016300001d75fe6e04034c62636414146067e78c8f2f28ca2fc98f8f676164674ce461646162674eca4c67f90f05f5ec2ce59929a970fe7f4676e69cfc7266983c90cf5a9c9b9893c3c2cace9a96939f58c2ca00061fec0154abac680103302e6348addadbcc79f048cc5ecb99c92f2dfe2c8f5ec35bbc5480cd7a99d49d951b9fae38a51dc2a8c0cd0004498c0c0c008829ea000000007aa3646053504b464f4f543101000000010000007f0000000000000038000000000000001201000000000000a5fd061bc8a594b70e83de0ccdff6158fac82066ef6db399f4ff289b53d97e020000000000000000b8a77fb9"
 
 
 def hostile_spec():

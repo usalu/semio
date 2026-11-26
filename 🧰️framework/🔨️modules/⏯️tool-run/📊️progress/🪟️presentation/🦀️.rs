@@ -39,7 +39,16 @@ impl ToolRunPresentation{
 impl ToolRunPresentation{
  pub fn body(&self)->&ToolRunPresentationBody{self.body.get()}
  pub fn identity(&self)->usize{self.body.identity()}
- pub fn borrowed_view(&self,identity:ToolRunIdentity,state:ToolRunState)->ToolRunView<'_>{let body=self.body();ToolRunView{tool_id:body.tool_id.get(),identity,state,provisional_entities:body.provenance.entities(),progress:&body.progress,payload:body.payload.as_ref().and_then(|payload|payload.get().borrowed_view(identity))}}
+ pub fn borrowed_view(&self, identity: ToolRunIdentity, state: ToolRunState) -> ToolRunView<'_> {
+    static EMPTY_ENTITIES: std::sync::LazyLock<semio_framework_tool_run_entities::EntityMap> = std::sync::LazyLock::new(Default::default);
+    let body = self.body();
+    let provisional_entities = if state.is_terminal() { &*EMPTY_ENTITIES } else { body.provenance.entities() };
+    let payload = match state {
+        ToolRunState::Aborted | ToolRunState::Faulted => None,
+        _ => body.payload.as_ref().and_then(|payload| payload.get().borrowed_view(identity)),
+    };
+    ToolRunView { tool_id: body.tool_id.get(), identity, state, provisional_entities, progress: &body.progress, payload }
+ }
  pub fn capture_view(&self,identity:ToolRunIdentity,state:ToolRunState,effect:&mut RetainedAllocationEffect<'_>)->Result<(ToolRunCapturedView,RetainedCloneProgress),ValueError>{if effect.grant().maximum_copy_bytes<ToolRunCapturedView::capture_copy_bytes(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"captured presentation and scalar envelope handoff is not funded"));}let(presentation,mut receipt)=self.capture(effect)?;receipt.copied_bytes=ToolRunCapturedView::capture_copy_bytes();Ok((ToolRunCapturedView{presentation,identity,state},receipt))}
 }
 

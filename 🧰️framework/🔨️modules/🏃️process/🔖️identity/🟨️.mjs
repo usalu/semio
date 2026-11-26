@@ -1,9 +1,8 @@
 import {spawnSync} from "node:child_process";
-import {createRequire} from "node:module";
+import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 📐️ The tolerances of a process identity; the schema file is the single source.
  * @see ./🧬️schema/🔣️.json */
-const schema = createRequire(import.meta.url)("./🧬️schema/🔣️.json");
 export const PROCESS_IDENTITY_POLICY_V1 = Object.freeze({...schema.definitions.Policy.const});
 
 const POSIX_COLUMNS = "lstart=";

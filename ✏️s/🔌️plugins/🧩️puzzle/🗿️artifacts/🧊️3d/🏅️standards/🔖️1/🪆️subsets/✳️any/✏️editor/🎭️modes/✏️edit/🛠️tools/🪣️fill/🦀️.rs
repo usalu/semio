@@ -297,6 +297,10 @@ impl ToolRunRetargetableJob<Puzzle3dConfig> for Puzzle3dFillToolRunJob {
 }
 
 impl InteractiveJob for Puzzle3dFillToolRunJob {
+    fn checkpoint_follows_preview(&self) -> bool {
+        matches!(&self.phase, FillToolRunPhase::Run(job) if job.checkpoint_follows_preview())
+    }
+
     /// 🪜️ Prepares on the first turns, then hands the claimed turn to the running or revalidating child.
     fn step<'a>(&'a mut self, context: &mut StepContext<'_>, claim: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
         use semio_framework_job::InteractiveJobStep;

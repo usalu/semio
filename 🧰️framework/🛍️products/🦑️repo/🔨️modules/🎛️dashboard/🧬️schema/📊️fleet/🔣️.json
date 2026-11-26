@@ -1,0 +1,552 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Dashboard Fleet Monitoring",
+  "description": "What the workspace daemon tells the dashboard about the fleet: one request names the visible range, the column budget and optionally one origin to drill into; one snapshot answers it with compact rows read from the shared store (`origins/<origin>/ready.json`, `addresses.json`, `memory.json` and the multi-resolution rings below `metrics/`). Machine identity is the origin id; no address and no operating system host name travels. Points are `[start, width, min, max, mean, last]` in milliseconds and the unit of their metric; a counter metric is already a rate per minute.",
+  "anyOf": [
+    {
+      "$ref": "#/definitions/Request"
+    },
+    {
+      "$ref": "#/definitions/Snapshot"
+    }
+  ],
+  "definitions": {
+    "Policy": {
+      "description": "Numbers that decide what a row is, as data: after `staleBeats` missed beats a live origin is stale; its metrics are stale after `staleMetricsMs`; the overview sparklines have `overviewColumns` columns unless the request says otherwise; the column budget of a request is clamped to `minimumColumns`..`maximumColumns`; every tier run keeps at least `minimumRunColumns` columns. `rememberMs`: the daemon reuses the row of an origin it read before while none of the files behind it changed (modification time and size) and the row is younger than this, so a refresh costs what changed, not what exists.",
+      "const": {
+        "staleBeats": 2,
+        "defaultBeatMs": 120000,
+        "staleMetricsMs": 60000,
+        "overviewColumns": 16,
+        "minimumColumns": 8,
+        "maximumColumns": 240,
+        "minimumRunColumns": 6,
+        "heartbeatMs": 5000,
+        "decimals": 3,
+        "rememberMs": 30000
+      }
+    },
+    "Ranges": {
+      "description": "The zoom levels the dashboard offers, finest first. `refreshMs` is the least time between two reads of the rings for that range (a coarse range changes slowly and reads more bytes); it never goes below one second.",
+      "const": [
+        {
+          "id": "5m",
+          "spanMs": 300000,
+          "refreshMs": 1000,
+          "label": {
+            "en": "5 min",
+            "de": "5 Min."
+          }
+        },
+        {
+          "id": "1h",
+          "spanMs": 3600000,
+          "refreshMs": 10000,
+          "label": {
+            "en": "1 h",
+            "de": "1 Std."
+          }
+        },
+        {
+          "id": "24h",
+          "spanMs": 86400000,
+          "refreshMs": 15000,
+          "label": {
+            "en": "24 h",
+            "de": "24 Std."
+          }
+        },
+        {
+          "id": "7d",
+          "spanMs": 604800000,
+          "refreshMs": 30000,
+          "label": {
+            "en": "7 d",
+            "de": "7 T."
+          }
+        },
+        {
+          "id": "90d",
+          "spanMs": 7776000000,
+          "refreshMs": 60000,
+          "label": {
+            "en": "90 d",
+            "de": "90 T."
+          }
+        }
+      ]
+    },
+    "Overview": {
+      "description": "The metrics the overview is made of and what each one feeds. A metric whose catalogue `scope` is `fleet` is not on the rings of an origin: it is read from the fleet rings `<store>/v1/fleet/metrics/<source>/`, the source being the catalogue `source` of the metric, and it feeds the fleet total.",
+      "const": {
+        "cpu": "host.cpu.busy",
+        "memoryAvailable": "host.memory.available",
+        "memoryTotal": "host.memory.total",
+        "diskFree": "host.disk.free",
+        "diskTotal": "host.disk.total",
+        "units": "build.units.compiled",
+        "localHit": "cache.local.hit",
+        "localMiss": "cache.local.miss",
+        "remoteHit": "cache.remote.ac.hit",
+        "remoteMiss": "cache.remote.ac.miss",
+        "offloadIn": "exec.offload.in",
+        "offloadOut": "exec.offload.out",
+        "queueRunning": "exec.queue.running",
+        "queueQueued": "exec.queue.queued",
+        "remoteEntries": "cache.remote.entries",
+        "remoteBytes": "cache.remote.bytes"
+      }
+    },
+    "Groups": {
+      "description": "The metric groups of the drill-down, in display order; every id is a metric of the metrics catalogue (a law test checks it). A group lists only the metrics the origin has rings for.",
+      "const": [
+        {
+          "id": "host",
+          "label": {
+            "en": "Host",
+            "de": "Rechner"
+          },
+          "metrics": [
+            "host.cpu.busy",
+            "host.cpu.load",
+            "host.memory.available",
+            "host.swap.used",
+            "host.disk.free",
+            "process.repo.count"
+          ]
+        },
+        {
+          "id": "build",
+          "label": {
+            "en": "Build",
+            "de": "Bauen"
+          },
+          "metrics": [
+            "build.tasks.running",
+            "build.tasks.queued",
+            "build.units.compiled",
+            "build.units.restored.local",
+            "build.units.restored.fleet",
+            "build.units.stored",
+            "build.units.skipped"
+          ]
+        },
+        {
+          "id": "cache",
+          "label": {
+            "en": "Cache",
+            "de": "Cache"
+          },
+          "metrics": [
+            "cache.local.hit",
+            "cache.local.miss",
+            "cache.remote.ac.hit",
+            "cache.remote.ac.miss",
+            "cache.remote.ac.put",
+            "cache.remote.cas.hit",
+            "cache.remote.cas.miss"
+          ]
+        },
+        {
+          "id": "exec",
+          "label": {
+            "en": "Execution",
+            "de": "Ausführung"
+          },
+          "metrics": [
+            "exec.offload.in",
+            "exec.offload.out",
+            "exec.offload.fellback",
+            "exec.refused",
+            "exec.queue.running",
+            "exec.queue.queued"
+          ]
+        },
+        {
+          "id": "graph",
+          "label": {
+            "en": "Graph",
+            "de": "Graph"
+          },
+          "metrics": [
+            "graph.read.owners",
+            "graph.read.owners.done",
+            "graph.read.facts",
+            "graph.pool.claimed",
+            "graph.pool.published",
+            "graph.pool.failed"
+          ]
+        },
+        {
+          "id": "ready",
+          "label": {
+            "en": "Readiness",
+            "de": "Bereitschaft"
+          },
+          "metrics": [
+            "ready.state",
+            "ready.stage",
+            "ready.attempts"
+          ]
+        }
+      ]
+    },
+    "Id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "An origin id such as g1-m07."
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "range",
+        "columns"
+      ],
+      "properties": {
+        "range": {
+          "enum": [
+            "5m",
+            "1h",
+            "24h",
+            "7d",
+            "90d"
+          ]
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 8,
+          "maximum": 240
+        },
+        "origin": {
+          "$ref": "#/definitions/Id"
+        }
+      }
+    },
+    "Point": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "number"
+      },
+      "description": "[start, width, min, max, mean, last]"
+    },
+    "Freshness": {
+      "enum": [
+        "live",
+        "stale",
+        "missing"
+      ],
+      "description": "`live`: the beat of ready.json is younger than `staleBeats` beats; `stale`: older (or ready.json is unreadable but rings exist); `missing`: the origin folder has neither."
+    },
+    "HostName": {
+      "enum": [
+        "ok",
+        "warning",
+        "unknown"
+      ],
+      "description": "`warning`: the origin does not advertise its name or other origins use the same one; `unknown`: no addresses.json."
+    },
+    "Ready": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "ready",
+        "stageIndex",
+        "stageCount",
+        "updatedMs",
+        "beatMs"
+      ],
+      "properties": {
+        "state": {
+          "type": "string"
+        },
+        "ready": {
+          "type": "boolean"
+        },
+        "stage": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stageIndex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stageCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "updatedMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "beatMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "platform": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "refusal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "freshness",
+        "hostName",
+        "duplicates"
+      ],
+      "properties": {
+        "origin": {
+          "$ref": "#/definitions/Id"
+        },
+        "freshness": {
+          "$ref": "#/definitions/Freshness"
+        },
+        "ready": {
+          "$ref": "#/definitions/Ready"
+        },
+        "hostName": {
+          "$ref": "#/definitions/HostName"
+        },
+        "duplicates": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "metricsMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The end of the newest point of the rings, if any."
+        },
+        "cpu": {
+          "type": "number",
+          "description": "Percent busy, newest value."
+        },
+        "memory": {
+          "type": "number",
+          "description": "Percent used (1 - available / total), newest values; from memory.json while the rings have none."
+        },
+        "disk": {
+          "type": "number",
+          "description": "Percent used, newest values."
+        },
+        "unitsPerMinute": {
+          "type": "number",
+          "description": "Compiled units per minute, mean over the range."
+        },
+        "localHit": {
+          "type": "number"
+        },
+        "localMiss": {
+          "type": "number"
+        },
+        "remoteHit": {
+          "type": "number"
+        },
+        "remoteMiss": {
+          "type": "number"
+        },
+        "offloadIn": {
+          "type": "number"
+        },
+        "offloadOut": {
+          "type": "number"
+        },
+        "cpuSeries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Point"
+          }
+        },
+        "unitsSeries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Point"
+          }
+        },
+        "unsupported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The overview metric ids the platform of this origin cannot measure at all (the catalogue `platforms` of the metric): shown as n/a, which is neither a gap (no data yet) nor stale."
+        }
+      }
+    },
+    "Series": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "unit",
+        "scope",
+        "points"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "gauge",
+            "counter",
+            "state"
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Point"
+          }
+        },
+        "scope": {
+          "enum": [
+            "origin",
+            "fleet"
+          ],
+          "description": "`fleet` series are facts of the whole fleet (scheduler queue, remote cache), the same in every drill-down."
+        },
+        "unsupported": {
+          "const": true,
+          "description": "The platform of the origin cannot measure this metric (the catalogue `platforms`): there are no points and the window shows n/a; a series that is merely empty so far is left out."
+        }
+      }
+    },
+    "Detail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "groups"
+      ],
+      "properties": {
+        "origin": {
+          "$ref": "#/definitions/Id"
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "series"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "series": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Series"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "atMs",
+        "range",
+        "columns",
+        "fromMs",
+        "toMs",
+        "store",
+        "rows"
+      ],
+      "properties": {
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "range": {
+          "enum": [
+            "5m",
+            "1h",
+            "24h",
+            "7d",
+            "90d"
+          ]
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 8,
+          "maximum": 240
+        },
+        "fromMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "toMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "store": {
+          "enum": [
+            "available",
+            "unavailable"
+          ]
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Row"
+          }
+        },
+        "detail": {
+          "$ref": "#/definitions/Detail"
+        },
+        "fleet": {
+          "$ref": "#/definitions/Totals"
+        }
+      }
+    },
+    "Totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The fleet-scope facts: offloads into the fleet over the range (sum), the newest scheduler queue and remote cache size.",
+      "properties": {
+        "offloadIn": {
+          "type": "number"
+        },
+        "queueRunning": {
+          "type": "number"
+        },
+        "queueQueued": {
+          "type": "number"
+        },
+        "remoteEntries": {
+          "type": "number"
+        },
+        "remoteBytes": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

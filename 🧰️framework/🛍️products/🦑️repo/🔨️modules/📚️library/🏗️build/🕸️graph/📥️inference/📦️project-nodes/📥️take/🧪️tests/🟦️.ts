@@ -3,6 +3,7 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
+import type {TakeOutcomeV1} from "../🟨️.mjs";
 import {TAKE_POLICY_V1,createTakeLedgerV1,takeAdmittedV1,takeConcurrencyV1,takeLookConcurrencyV1,takeLanesV1, takePassV1,takePollV1,takePollWaitV1,takeSplitV1} from "../🟨️.mjs";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
@@ -32,7 +33,7 @@ test("a take deadline aborts the transport and waits for it to release its admis
    };
    const client=createGraphFleetClientV1({endpoint:"https://fixture.invalid",instance:"graph",token:undefined,upload:false,stateDirectory:directory},{fetch:request as typeof fetch});
    const port=createProjectFleetPortV1({root:directory,environment:{},client,owner:"fixture",platform:"macos"})!;
-   const attempt=takeAdmittedV1((name,signal)=>runTakeLookV1(async look=>{
+   const attempt=takeAdmittedV1<string,TakeOutcomeV1>((name,signal)=>runTakeLookV1(async look=>{
     await port.gate({cachePath:here("./test-record"),fleet:name,keyText:"[]",exportRecord:()=>undefined,import:async()=>false});
     return look.outcome==="fault"?"fault":"miss";
    },signal),()=>undefined,pass.signal,admission);
@@ -85,7 +86,7 @@ test("the looks of a pass under a cut still reach the declared floor, and the fo
   await takePassV1({names:Array.from({length:60},(_,index)=>"o"+index),concurrency:takeLookConcurrencyV1(cut),attempt:async()=>{flying++;peak=Math.max(peak,flying);await new Promise(resolve=>setTimeout(resolve,2));flying--;return "miss";}});
   expect(peak).toBe(Math.max(Math.min(TAKE_POLICY_V1.concurrency,cut),Math.min(TAKE_POLICY_V1.concurrency,TAKE_POLICY_V1.lookFloorConcurrency)));
  }
- let held=0,most=0;const gate={async admit(){await new Promise(resolve=>setTimeout(resolve,1));}},state={flying:0},attempt=takeAdmittedV1(async()=>{held++;most=Math.max(most,held);await new Promise(resolve=>setTimeout(resolve,3));held--;return "miss";},()=>gate,undefined,state);
+ let held=0,most=0;const gate={async admit(){await new Promise(resolve=>setTimeout(resolve,1));}},state={flying:0},attempt=takeAdmittedV1<string,TakeOutcomeV1>(async()=>{held++;most=Math.max(most,held);await new Promise(resolve=>setTimeout(resolve,3));held--;return "miss";},()=>gate,undefined,state);
  await takePassV1({names:Array.from({length:40},(_,index)=>"g"+index),concurrency:takeLookConcurrencyV1(2),attempt});
  expect(most).toBeLessThanOrEqual(TAKE_POLICY_V1.lookFloorConcurrency);
 });

@@ -175,7 +175,10 @@ export function tryAcquireSlotV1(root:string,count:number):ClaimV1|undefined{
 }
 
 /** 🎰️ Host-wide compile slots. Waiters take a numbered ticket and only the oldest live ticket may claim a free slot, so grants are first-in-first-out and no waiter starves; tickets and slots of dead processes are reaped. */
-export async function acquireSlotV1(root:string,count:number,options:Readonly<{signal?:AbortSignal;onWait?:(waitedMs:number)=>void;since?:number}>={}):Promise<ClaimV1>{
+/** ⌛️ The compile slot was not free within its deadline: a live holder whose compile makes no progress (its compiler waits for an admission verdict that never comes) must not stall every other unit of the host; the caller compiles without the slot and the memory broker still admits it. */
+export class SlotWaitTimeoutV1 extends Error{readonly waitedMs:number;constructor(waitedMs:number){super("compile slot not free after "+String(waitedMs)+" ms");this.waitedMs=waitedMs;this.name="SlotWaitTimeoutV1";}}
+
+export async function acquireSlotV1(root:string,count:number,options:Readonly<{signal?:AbortSignal;onWait?:(waitedMs:number)=>void;since?:number;maximumWaitMilliseconds?:number}>={}):Promise<ClaimV1>{
  if(!Number.isSafeInteger(count)||count<1)throw Error("Positive compile slot count required");
  const slots=join(root,policy.layout.slots),tickets=join(root,policy.layout.tickets);mkdirSync(slots,{recursive:true});mkdirSync(tickets,{recursive:true});
  const started=Date.now(),name=String(Math.min(started,options.since??started)).padStart(15,"0")+"-"+randomBytes(4).toString("hex")+"-"+process.pid,ticket=join(tickets,name);
@@ -196,7 +199,8 @@ export async function acquireSlotV1(root:string,count:number,options:Readonly<{s
     }
    }
    if(!reported&&Date.now()-started>200){reported=true;options.onWait?.(Date.now()-started);}
-   await listener.wait(policy.slot.fallbackMilliseconds,options.signal);
+   if(options.maximumWaitMilliseconds!==undefined&&Date.now()-started>=options.maximumWaitMilliseconds)throw new SlotWaitTimeoutV1(Date.now()-started);
+   await listener.wait(options.maximumWaitMilliseconds===undefined?policy.slot.fallbackMilliseconds:Math.max(1,Math.min(policy.slot.fallbackMilliseconds,options.maximumWaitMilliseconds-(Date.now()-started))),options.signal);
   }
  }catch(error){clearInterval(beat);removeClaimFileV1(ticket);throw error;}finally{listener.close();}
 }

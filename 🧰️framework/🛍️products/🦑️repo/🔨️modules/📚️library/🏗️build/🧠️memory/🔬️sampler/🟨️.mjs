@@ -33,7 +33,9 @@ export function summarizeSampleBookV1(book,policy=SLICE_SAMPLER_POLICY_V1){
 /** 🪣️ The index of the uptime bucket of `seconds`. */
 export const sampleBucketV1=(seconds,policy=SLICE_SAMPLER_POLICY_V1)=>{let at=0;while(at<policy.bucketsUptimeSeconds.length&&seconds>=policy.bucketsUptimeSeconds[at])at++;return at;};
 
-/** 🔬️ Starts the sampling profiler of the JavaScript engine of this process (when it has one) and drains it every `drainMilliseconds` into one book per uptime bucket, so the slice report shows where the CPU of a worker goes early and late; the report source is `profile`. Off unless `SEMIO_SLICE_SAMPLER=on` (the engine's profiler walks the stack of the running thread; a worker does not carry it by default). Answers the function that stops it. */
+/** 🔬️ Starts the sampling profiler of the JavaScript engine of this process (when it has one) and drains it every `drainMilliseconds` into one book per uptime bucket, so the slice report shows where the CPU of a worker goes early and late; the report source is `profile`. Off unless `SEMIO_SLICE_SAMPLER=on` (the engine's profiler walks the stack of the running thread; a worker does not carry it by default). Answers the function that stops it.
+ * @param {{engine?:{startSamplingProfiler?:()=>void;samplingProfilerStackTraces?:()=>{traces?:unknown}|undefined};environment?:Record<string,string|undefined>;uptime?:()=>number;policy?:typeof SLICE_SAMPLER_POLICY_V1;setTimer?:(run:()=>void,milliseconds:number)=>{unref?:()=>void};clearTimer?:(timer:unknown)=>void}} [options]
+ * @returns {()=>void} */
 export function startSliceSamplerV1({engine,environment=process.env,uptime=()=>performance.now()/1000,policy=SLICE_SAMPLER_POLICY_V1,setTimer=setInterval,clearTimer=clearInterval}={}){
  if(environment.SEMIO_SLICE_SAMPLER!=="on")return()=>{};
  let jsc=engine;if(jsc===undefined){try{jsc=globalThis.Bun!==undefined?process.getBuiltinModule?.("bun:jsc")??undefined:undefined;}catch{}}

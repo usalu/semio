@@ -1,4 +1,4 @@
-import{isOpaqueSourcePathV1}from"../../../../../🔍️discovery/📂️source/🟦️.ts";
+import{isOpaqueSourcePathV1}from"../../../../../../🏗️build/📥️inputs/👻️opaque-source/🟨️.mjs";
 import{createRepositoryWorkspaceWatcherV1}from"../../../../🏁️startup/🚦️service/👁️workspace/🟦️.ts";
 import{repositoryCachePartitionRootV1}from"../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import workspaceWatchPin from"../../../../../../🏗️build/🏡️resident/🔭️watch/🦀️rust/🔣️.json" with{type:"json"};

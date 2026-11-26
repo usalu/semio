@@ -7,3 +7,4 @@ for await(const line of console){
  const said=await observation.verifyStoredProjectRecordV1(request);
  process.stdout.write(JSON.stringify(said)+"\n");
 }
+export{};

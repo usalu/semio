@@ -13,12 +13,24 @@ const familyText=(root:string,path:string)=>{const dir=resolve(root,path,".."),p
 test("Plugin fixture caller admits independent finite original authority",()=>{
  const base=resolve(import.meta.dirname,".."),repo=resolve(base,"../../../../../../.."),read=(path:string)=>JSON.parse(readFileSync(resolve(base,path),"utf8")),ajv=new Ajv({strict:true,allErrors:true});ajv.addSchema(JSON.parse(readFileSync(valueOrderedRetirementSchemaUrl,"utf8")));const caller=read("🧪️tests/🧫️fixtures/🎟️caller.json"),validate=ajv.compile(read("🧬️schema/🔣️.json"));const accepted:boolean=validate(caller);assert(accepted,JSON.stringify(validate.errors));assert(!validate({...caller,demandCapacity:1}));const expected=read("🧪️tests/🧫️fixtures/🧾️expected.json"),db=new Database(":memory:");try{const actual=db.query("SELECT ?1 AS operation,?2 AS generation,?3 AS deadlineUs,?4 >= ?3 AS expired,?5 = 'original-parent' AS originalParent").get(caller.operation,caller.generation,caller.deadlineUs,caller.clockUs,caller.sourceKind)as{operation:number;generation:number;deadlineUs:number;expired:number;originalParent:number};assert.deepEqual({...actual,expired:!!actual.expired,originalParent:!!actual.originalParent,oneShot:true,callerRetainsFailure:true},expected)}finally{db.close()}
 });
+
+test("Exact window replay has a bounded fixture allowance", () => {
+ const caller = JSON.parse(readFileSync(new URL("./🧫️fixtures/🎟️caller.json", import.meta.url), "utf8"));
+ const sqlite = new Database(":memory:");
+ try {
+  const allowance = sqlite.query("SELECT ?1 < ?2 AND ?2 < ?3 AS bounded").get(caller.maximumTurns, caller.maximumWindowRestoreTurns, caller.maximumCloseTurns);
+  assert.deepEqual(allowance, { bounded: 1 });
+ } finally { sqlite.close(); }
+});
 /** 🪙️ Real fixture helpers borrow one original context across phase loans and return the complete original failure. */
 test("Plugin settle close and history consumers preserve original fixture authority",()=>{
  const root = resolve(import.meta.dirname, "../../..");
  const source = readModuleTreeSource(resolve(root, "🧪️testing/🦀️.rs"));
+ const wrapper = source.indexOf("fn settle_registered_typed_operation<");
+ const forwarding = source.slice(wrapper, source.indexOf("\n}", wrapper));
+ assert(forwarding.includes("settle_registered_typed_operation_within(app, receiver, mounted_policy, identity, cx, OriginalFixtureCaller::maximum_turns())"));
  const phaseCalls = {
-  settle_registered_typed_operation: [
+  settle_registered_typed_operation_within: [
    "MountedOwnerTurnV1::admit(receiver, caller, phase, mounted_policy, cx)",
    "app.mounted_owner_maintenance_step(&mut turn)",
   ],

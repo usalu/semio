@@ -133,7 +133,7 @@ async fn several_drafts_from_a_review_finalize_as_one_overwrite_supersede() {
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     let before = app.stores.store.envelope().transitions.len();
-    commit_scenario(&mut app, &fixture, "several-drafts-accumulated-from-a-review-finalize-once", mounted_policy, &mut identity).await;
+    commit_scenario(&mut app, &fixture, "several-drafts-accumulated-from-a-review-finalize-once", mounted_policy, &mut identity, cx).await;
     let added = added_transitions(&app, before);
     let [store::os_spr::HistoryTransition::Supersede(supersede)] = added.as_slice() else { panic!("an overwrite is one Supersede: {added:?}") };
     let targets: BTreeSet<String> = supersede.inputs.iter().map(|input| input.target.0.clone()).collect();
@@ -166,7 +166,7 @@ async fn a_new_alternative_is_one_branch_then_one_scoped_supersede() {
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     let before = app.stores.store.envelope().transitions.len();
-    commit_scenario(&mut app, &fixture, "a-new-alternative-keeps-the-original", mounted_policy, &mut identity).await;
+    commit_scenario(&mut app, &fixture, "a-new-alternative-keeps-the-original", mounted_policy, &mut identity, cx).await;
     let added = added_transitions(&app, before);
     let alternative = app.stores.store.envelope().active_alternative_id.clone().expect("the new alternative is current");
     let (checkpoints, tail) = added.split_at(added.len().saturating_sub(2));

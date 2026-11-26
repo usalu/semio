@@ -10,6 +10,7 @@ import {createSidecarClosureWatchV1,createSidecarRestartDebounceV1} from "../../
 import {superviseGraphChildV1} from "../../👷️agent/🟦️.ts";
 import {createSidecarRestartV1,sidecarRestartPolicyForV1,sidecarRestartPolicyV1,sidecarRestartTextV1} from "../../🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
+import type {SidecarWorkV1} from "../../🧰️shared/🟦️.ts";
 
 const scratch:string[]=[];
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
@@ -132,7 +133,7 @@ test("a graph server that is idle restarts by the ordinary rule, and goes on to 
 });
 
 test("an edit that is reverted while the serve runs cancels the pending restart and lifts the block on new reads",()=>{
- const world=tree(),work={busy:true,restartPending:false},test=rig("graph",world.watch,{},work);
+ const world=tree(),work:SidecarWorkV1={busy:true,restartPending:false},test=rig("graph",world.watch,{},work);
  appendFileSync(world.inside,"// x\n");
  for(let tick=0;tick<10;tick++)test.advance(30*SECOND);
  expect(work.restartPending).toBe(true);

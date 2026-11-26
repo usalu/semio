@@ -9,6 +9,9 @@
     { "type": "hello", "client_id": "client-1", "protocol": 2, "build_id": "dev-0123456789abcdef", "env": [["PATH", "/usr/bin"], ["TERM", "xterm"]] },
     { "type": "attach", "client_id": "developer" },
     { "type": "watch" },
+    { "type": "fleet_watch", "request": { "range": "1h", "columns": 24, "origin": "g1-m01" } },
+    { "type": "fleet_unwatch" },
+    { "type": "fleet", "snapshot": { "atMs": 1800000305000, "range": "5m", "columns": 16, "fromMs": 1800000005000, "toMs": 1800000305000, "store": "available", "rows": [{ "origin": "g1-m01", "freshness": "live", "ready": { "state": "ready", "ready": true, "stage": null, "stageIndex": 0, "stageCount": 5, "updatedMs": 1800000295000, "beatMs": 120000 }, "hostName": "ok", "duplicates": 0, "cpu": 42.5, "cpuSeries": [[1800000005000.0, 18750.0, 40.0, 45.0, 42.5, 44.0]] }, { "origin": "g1-m03", "freshness": "missing", "hostName": "unknown", "duplicates": 0 }] } },
     { "type": "subscribe", "session_id": "test" },
     { "type": "unsubscribe", "session_id": "test" },
     { "type": "detach" },
@@ -59,6 +62,10 @@
     {"type": "session_changed", "session": {"session_id": "process-deadline", "command": {"cmd": "bun", "args": [], "cwd": ".", "env": [], "cols": 80, "rows": 24, "command_id": "", "label": {"verb": "", "owner": [], "subject": "", "qualifier": "", "parameters": [], "members": 0}}, "status": "timed_out", "pid": null, "code": 124, "started_ms": 1790000000000, "ended_ms": 1790000002000}}
   ],
   "invalid": [
+    { "type": "fleet_watch" },
+    { "type": "fleet_watch", "request": { "range": "5m", "columns": 16 }, "extra": 1 },
+    { "type": "fleet_unwatch", "request": {} },
+    { "type": "fleet", "snapshot": "x" },
     { "type": "spawn", "session_id": "test" },
     { "type": "kill" },
     { "type": "resize", "session_id": "test", "cols": 0, "rows": 24 },

@@ -65,11 +65,16 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
   const gate=signal===undefined?wait:new Promise((resolve,reject)=>{if(signal.aborted){reject(signal.reason);return;}const abort=()=>reject(signal.reason);signal.addEventListener("abort",abort,{once:true});wait.then(resolve,reject).finally(()=>signal.removeEventListener("abort",abort));});
   return gate.finally(()=>clearInterval(beat));
  };
- const runWorker=(request,signal,onProgress,limit,reservation,booked,waveBasisPoints=10000,cut=graphCutV1(0,cutPolicy),outcome={},wantsReport=()=>false,carried=undefined)=>new Promise((resolve,reject)=>{
+ const runWorker=(request,signal,onProgress,limit,reservation,waveBasisPoints=10000,cut=graphCutV1(0,cutPolicy),outcome={},wantsReport=()=>false,carried=undefined)=>new Promise((resolve,reject)=>{
   const environment={...process.env};delete environment[READY_SLICE_REPORT_POLICY_V1.grantEnvironment];
-  counters.started++;const index=++sequence,token=sliceJobTokenV1(process.pid,index),load={token,pids:new Set(),baseline:new Set(process.platform==="win32"?listProcessesV1().filter(row=>row.ppid===process.pid).map(row=>row.pid):[])},worker=createWorker(workerUrl,{...request,heartbeatMilliseconds},{...environment,SEMIO_SLICE_WAVE_BASIS_POINTS:String(waveBasisPoints),...graphChildEnvironmentV1(),...graphCutEnvironmentV1(cut,cutPolicy),...recycle===null?{}:sliceRecycleEnvironmentV1(carried,recycle),...reservation?.megabytes>0&&reservation.megabytes<booked?{[GRAPH_MEMORY_POLICY_V1.budgetEnvironment]:String(Math.max(GRAPH_MEMORY_POLICY_V1.minimumBudgetMegabytes,Math.floor(reservation.megabytes*GRAPH_MEMORY_POLICY_V1.grantShare)))}:{},...Number.isFinite(planLimitMegabytes)?{[GRAPH_MEMORY_POLICY_V1.planCeilingEnvironment]:String(Math.floor(planLimitMegabytes))}:{},[HOST_POLICY_V1.memoryPurge.environmentVariable]:String(HOST_POLICY_V1.memoryPurge.delayMilliseconds),[SLICE_JOB_VARIABLE_V1]:token}),started=now(),entry={index,sample:undefined};running.set(index,entry);loads.set(token,load);outcome.started=true;
+  if(reservation?.megabytes>0&&environment.SEMIO_HOST_CAPACITY!=="off"){
+   const{budgetEnvironment,minimumBudgetMegabytes,grantShare}=GRAPH_MEMORY_POLICY_V1;
+   const managed=Math.max(minimumBudgetMegabytes,Math.floor(reservation.megabytes*grantShare)),configured=Number(environment[budgetEnvironment]);
+   if(environment[budgetEnvironment]===undefined||Number.isFinite(configured)&&configured>managed)environment[budgetEnvironment]=String(managed);
+  }
+  counters.started++;const index=++sequence,token=sliceJobTokenV1(process.pid,index),load={token,pids:new Set(),baseline:new Set(process.platform==="win32"?listProcessesV1().filter(row=>row.ppid===process.pid).map(row=>row.pid):[])},worker=createWorker(workerUrl,{...request,heartbeatMilliseconds},{...environment,SEMIO_SLICE_WAVE_BASIS_POINTS:String(waveBasisPoints),...graphChildEnvironmentV1(),...graphCutEnvironmentV1(cut,cutPolicy),...recycle===null?{}:sliceRecycleEnvironmentV1(carried,recycle),...Number.isFinite(planLimitMegabytes)?{[GRAPH_MEMORY_POLICY_V1.planCeilingEnvironment]:String(Math.floor(planLimitMegabytes))}:{},[HOST_POLICY_V1.memoryPurge.environmentVariable]:String(HOST_POLICY_V1.memoryPurge.delayMilliseconds),[SLICE_JOB_VARIABLE_V1]:token}),started=now(),entry={index,sample:undefined};running.set(index,entry);loads.set(token,load);outcome.started=true;
   let settled=false;
-  const finish=(done,value)=>{if(settled)return;settled=true;outcome.peakMegabytes=entry.peakMegabytes??0;if(entry.peakMegabytes&&(done===resolve||value?.code==='memory-budget'))learned.write(Math.round(entry.peakMegabytes*(value?.code==='memory-budget'?(elasticity.learnedGrowthBasisPoints??10000)/10000:1)));running.delete(index);if(entry.sample!==undefined)recent=[{index,sample:entry.sample},...recent].slice(0,maximum);clearInterval(beat);clearInterval(guard);signal?.removeEventListener("abort",abort);const gone=Promise.resolve(worker.terminate?.()).catch(()=>undefined).then(()=>reaped(load)).then(()=>limit?.release()).catch(()=>undefined).finally(()=>{loads.delete(token);reservation?.release();});if(done===reject&&value!==null&&typeof value==="object"){try{Object.defineProperty(value,"gone",{value:gone,enumerable:false,configurable:true});}catch{}}done(value);};
+  const finish=(done,value)=>{if(settled)return;settled=true;outcome.peakMegabytes=entry.peakMegabytes??0;const learnedMegabytes=done===resolve||value?.code==='memory-budget'?entry.peakMegabytes:entry.treePeakMegabytes;if(learnedMegabytes)learned.write(Math.round(learnedMegabytes*(value?.code==='memory-budget'?(elasticity.learnedGrowthBasisPoints??10000)/10000:1)));running.delete(index);if(entry.sample!==undefined)recent=[{index,sample:entry.sample},...recent].slice(0,maximum);clearInterval(beat);clearInterval(guard);signal?.removeEventListener("abort",abort);const gone=Promise.resolve(worker.terminate?.()).catch(()=>undefined).then(()=>reaped(load)).then(()=>limit?.release()).catch(()=>undefined).finally(()=>{loads.delete(token);reservation?.release();});if(done===reject&&value!==null&&typeof value==="object"){try{Object.defineProperty(value,"gone",{value:gone,enumerable:false,configurable:true});}catch{}}done(value);};
   const abort=()=>{counters.cancelled++;finish(reject,signal.reason??new Error("cancelled"));};
   let settling;
   const ceilingMegabytes=hostMegabytes>0?Math.max(Math.floor(hostMegabytes*planGuard.ceilingBasisPoints/10000),planLimitMegabytes):Infinity;
@@ -89,6 +94,7 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
    void Promise.resolve().then(()=>settled?null:observe(pid)).then(megabytes=>{
     treeSamplePending=false;
     if(settled||!Number.isFinite(megabytes))return;
+    if(megabytes>(entry.treePeakMegabytes??0))entry.treePeakMegabytes=megabytes;
     if(megabytes>(entry.peakMegabytes??0))entry.peakMegabytes=megabytes;
     judge(megabytes);
    },()=>{treeSamplePending=false;});
@@ -116,7 +122,7 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
    else if(message?.type==="error"){const error=errorOfMessageV1(message),cutTo=error.key==="build.graph.plan-too-heavy"?graphCutAfterV1({level:cut.level,treeMegabytes:Number(error.values?.megabytes),limitMegabytes:Number(error.values?.limit)},cutPolicy):undefined;if(cutTo!==undefined){counters.overBudget++;finish(reject,Object.assign(new Error("Slice plan is cut smaller"),{code:"plan-cut",cutTo,reason:"stage",currentMegabytes:Number(error.values?.megabytes)||0,limitMegabytes:Number(error.values?.limit)||0}));}else{counters.failed++;finish(reject,error);}}
   });
   worker.on("error",error=>{counters.failed++;finish(reject,error);});
-  worker.on("exit",code=>{if(!settled){counters.failed++;const tail=typeof worker.stderrTail==="function"?worker.stderrTail():"";finish(reject,Object.assign(new Error("Slice worker exited with code "+code),{exit:code,restart:code===HOST_POLICY_V1.sliceRestartExitCode,ranMilliseconds:Math.round(now()-started),workerCause:tail===""?"":workerCauseV1(tail),drift:implementationDriftPathsV1(tail)}));}});
+  worker.on("exit",(code,signal)=>{if(!settled){counters.failed++;const killed=code===null&&typeof signal==="string"&&signal!=="",tail=typeof worker.stderrTail==="function"?worker.stderrTail():"";finish(reject,Object.assign(new Error("Slice worker exited with code "+code+(killed?" (killed by "+signal+")":"")),{exit:code,...killed?{code:"slice-killed",signal,currentMegabytes:entry.treePeakMegabytes}:{},restart:killed||code===HOST_POLICY_V1.sliceRestartExitCode,ranMilliseconds:Math.round(now()-started),workerCause:killed?"killed by "+signal+" from outside (resource-transient)":tail===""?"":workerCauseV1(tail),drift:implementationDriftPathsV1(tail)}));}});
  });
  const execute=async(request,{signal,onProgress,wantsReport,rank}={})=>{
   const turn=(async()=>{
@@ -138,7 +144,7 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
     limit=policy===undefined?undefined:await limiter.create(policy,"slice-"+(sequence+1)).catch(()=>undefined);
     signal?.throwIfAborted();
     const granted=Number(reservation?.megabytes),waveBasisPoints=Number.isFinite(granted)&&granted>0?Math.min(admission.waveBasisPoints,Math.max(500,Math.floor(granted*10000/booked))):admission.waveBasisPoints;
-    const cut=graphCutV1(level,cutPolicy),outcome={},work=runWorker(request,signal,onProgress,limit,reservation,booked,Math.min(waveBasisPoints,cut.waveBasisPoints),cut,outcome,wantsReport,carried);
+    const cut=graphCutV1(level,cutPolicy),outcome={},work=runWorker(request,signal,onProgress,limit,reservation,Math.min(waveBasisPoints,cut.waveBasisPoints),cut,outcome,wantsReport,carried);
     if(outcome.started){reservation=undefined;limit=undefined;}
     const answer=await work;
     learnedLevel=graphCutLearnedV1({level,peakMegabytes:outcome.peakMegabytes??0,limitMegabytes:planLimitMegabytes},cutPolicy);
@@ -150,12 +156,12 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
     if(error?.code==="plan-cut"&&!signal?.aborted){level=error.cutTo;restarts--;note();onProgress?.(0,{phase:"reservation",done:0,total:0,running:[],decision:{key:"cut",used:level,budget:cutPolicy.levels,kind:String(error.currentMegabytes),limit:error.limitMegabytes}});continue;}
     if(error?.code==="slice-recycle"&&recycle!==null&&!signal?.aborted&&recycles<recycle.maximumRecycles){recycles++;carried=error.recycle;restarts--;note();onProgress?.(0,{phase:"reservation",done:0,total:0,running:[],decision:{key:"recycled",used:recycles,budget:recycle.maximumRecycles,kind:String(carried?.heapMegabytes??""),limit:recycle.heapMegabytes}});continue;}
     if(error?.key==="build.graph.owner-too-heavy"&&!signal?.aborted&&Number(error.values?.producers)!==0&&heavyHandoffs<cutPolicy.heavyHandoffs){heavyHandoffs++;restarts--;note();onProgress?.(0,{phase:"reservation",done:0,total:0,running:[],decision:{key:"handoff",used:heavyHandoffs,budget:cutPolicy.heavyHandoffs,kind:String(error.values?.named??"")}});continue;}
-    const squeezed=(error?.code==="memory-budget"||error?.code==="memory-pressure")&&!signal?.aborted?graphCutAfterV1({level,treeMegabytes:Number(error.currentMegabytes),limitMegabytes:Number(error.limitMegabytes)},cutPolicy):undefined;
+    const squeezed=(error?.code==="memory-budget"||error?.code==="memory-pressure"||error?.code==="slice-killed")&&!signal?.aborted?graphCutAfterV1({level,treeMegabytes:Number(error.currentMegabytes),limitMegabytes:Number(error.limitMegabytes)},cutPolicy):undefined;
     if(squeezed!==undefined){level=squeezed;restarts--;note();onProgress?.(0,{phase:"reservation",done:0,total:0,running:[],decision:{key:"cut",used:level,budget:cutPolicy.levels,kind:String(error.currentMegabytes??""),limit:error.limitMegabytes??0}});continue;}
     if(error?.restart!==true||signal?.aborted)throw error;
     totalRestarts++;
     const lasted=error.ranMilliseconds>=restartPolicy.progressMilliseconds;
-    const cause=String(error.workerCause??""),unsettled=cause.includes(UNSETTLED_PREFIX_V1);sameCause=unsettled?0:cause!==""&&cause===lastCause?sameCause+1:cause!==""?1:0;lastCause=cause;
+    const cause=String(error.workerCause??""),unsettled=cause.includes(UNSETTLED_PREFIX_V1);sameCause=unsettled||error.code==="slice-killed"?0:cause!==""&&cause===lastCause?sameCause+1:cause!==""?1:0;lastCause=cause;
     if(sameCause>=(restartPolicy.sameCauseMaximum??Infinity)&&cause.includes(STALE_FACTS_PREFIX_V1)&&!refreshed.has(cause)){refreshed.add(cause);sameCause=0;}
     if(cause!==""&&sameCause>=(restartPolicy.sameCauseMaximum??Infinity))throw Object.assign(new Error(Object.values(renderBothV1("host-slice-worker-failing",{count:sameCause,exit:error.exit,cause})).join("\n")),{code:"slice-worker-failing",cause,count:sameCause,exit:error.exit});
     if(lasted){churnSince=now();streak=0;}

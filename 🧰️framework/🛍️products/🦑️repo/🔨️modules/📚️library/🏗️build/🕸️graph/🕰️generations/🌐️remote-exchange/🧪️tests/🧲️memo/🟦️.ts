@@ -36,7 +36,7 @@ test("closure memo reuses exact fragment addresses and replaces obsolete entries
    FROM json_each(?1) AS fragment, json_each(fragment.value) AS closure
    ORDER BY closure.value, fragment.key`).values(JSON.stringify(Object.fromEntries(current.map(row=>[row.name,row.entries]))));
  const actual=[...inventory].flatMap(([entry,row])=>[...row.fragments].map(name=>[entry,name])).sort();
- expect(actual).toEqual(expected);
+ expect<unknown>(actual).toEqual(expected);
  expect([...readClosureMemoV1(Buffer.from(encodeClosureMemoV1(names,restored)!)).keys()]).toEqual([...names].sort());
 });
 

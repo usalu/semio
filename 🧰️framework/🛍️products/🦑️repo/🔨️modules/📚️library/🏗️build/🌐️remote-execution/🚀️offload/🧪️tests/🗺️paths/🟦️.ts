@@ -43,7 +43,7 @@ test("a module declared inside a macro_rules body that another file expands (ser
   expect([...withGap.files.values()]).toContain(join(root,"src","stray.rs"));
   expect([...withGap.files.values()]).not.toContain(join(root,"src","missing.rs"));
   expect(exactReadsV1(join(root,"nothing.d"),root,[])).toEqual([]);
-  expect(exactReadsV1(info,root,[]).sort()).toEqual(expect.arrayContaining(oracle));
+  expect([...exactReadsV1(info,root,[])].sort()).toEqual(expect.arrayContaining(oracle));
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 

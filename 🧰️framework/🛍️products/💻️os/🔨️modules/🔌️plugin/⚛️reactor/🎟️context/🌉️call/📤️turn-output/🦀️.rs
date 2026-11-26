@@ -39,6 +39,16 @@ impl OriginalTurnOutput{
   let value=self.value.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original turn result is absent"))?;
   let Some(source)=KernelTurnJsonSource::try_borrow(value)?else{return Ok(false)};self.encoder.advance(&source,&mut self.encoded,cx)
  }
+ /// 🧶️ Advances up to 32 paid JSON phases while the current Poll still has time and work.
+ pub fn encode_batch_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+  for _ in 0..32 {
+   if cx.is_cancelled() || cx.should_yield() { return Ok(false); }
+   let before = (cx.retained_progress(), cx.fuel_remaining());
+   if self.encode_step(cx)? { return Ok(true); }
+   if before == (cx.retained_progress(), cx.fuel_remaining()) { return Ok(false); }
+  }
+  Ok(false)
+ }
  /// 🪜️ Advances individually funded closure transitions within one original Source turn.
  pub fn close_batch_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.is_empty(){return Ok(true)}
@@ -78,6 +88,119 @@ impl Drop for OriginalTurnOutput{fn drop(&mut self){assert!(std::thread::panicki
 #[cfg(test)]mod tests{
  use super::*;use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
  fn clock()->Option<u64>{Some(100)}
+ #[test]
+ fn batched_original_turn_encoding_preserves_wire_and_paid_work() {
+  let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
+  let law: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+  let grant: semio_framework_value::RetainedCloneGrant = serde_json::from_value(law["grant"].clone()).unwrap();
+  let batch = &law["batchedEncoding"];
+  let tiny = batch["tinyGrantItems"].as_u64().unwrap() as usize;
+  let run = |batched: bool, cancel_at: Option<usize>| {
+   let mut caller = OriginalJobFixtureCaller::admit(OperationId(71), Generation(3), grant, clock, 1_000_000, 1_000_000);
+   let mut output = OriginalTurnOutput::empty();
+   let mut wire = law["result"].clone();
+   wire["uiPatches"] = law["batchedRetirement"]["uiPatches"].clone();
+   let mut incoming = Some(serde_json::from_value(wire).unwrap());
+   let mut epoch = 0;
+   let mut capture_ready = false;
+   for _ in 0..256 {
+    epoch += 1;
+    capture_ready = caller.turn(grant, |cx| {
+     cx.bind_original_source_epoch(epoch)?;
+     output.capture_step(cx, |_| Ok::<_, OriginalTurnFailure>(incoming.take().unwrap()))
+    }).unwrap();
+    if capture_ready { break }
+   }
+   assert!(capture_ready && incoming.is_none());
+   let expected = serde_json::to_vec(&Ok::<_, ()>(output.get().unwrap())).unwrap();
+   assert_eq!(expected.len(), batch["expectedBytes"].as_u64().unwrap() as usize);
+   let mut total = RetainedCloneProgress::default();
+   let mut work = 0;
+   let mut turns = 0;
+   let mut ready = false;
+   for index in 0..10000 {
+    if cancel_at == Some(index) {
+     assert!(output.encoded().is_none());
+     caller.cancel().cancel_now();
+     epoch += 1;
+     let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn(grant, |cx| {
+      cx.bind_original_source_epoch(epoch)?;
+      assert!(cx.is_cancelled());
+      let before = (cx.retained_progress(), cx.fuel_remaining());
+      let result = output.encode_batch_step(cx)?;
+      assert_eq!((cx.retained_progress(), cx.fuel_remaining()), before);
+      Ok(result)
+     }).unwrap());
+     assert!(!result && output.encoded().is_none());
+     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+     break;
+    }
+    let turn_grant = match index {
+     0 => semio_framework_value::RetainedCloneGrant { maximum_items: 0, ..grant },
+     1 => semio_framework_value::RetainedCloneGrant { maximum_items: tiny, ..grant },
+     _ => grant,
+    };
+    epoch += 1;
+    turns += 1;
+    let ((done, spent), heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn(turn_grant, |cx| {
+     cx.bind_original_source_epoch(epoch)?;
+     let before = cx.fuel_remaining();
+     if batched && index == 2 {
+      let progress = cx.retained_progress();
+      let done = cx.with_original_work_loan(before, clock().unwrap(), |cx| {
+       assert!(cx.deadline_exceeded());
+       output.encode_batch_step(cx)
+      })?;
+      assert!(!done);
+      assert_eq!((cx.retained_progress(), cx.fuel_remaining()), (progress, before));
+     }
+     let done = if batched { output.encode_batch_step(cx)? } else { output.encode_step(cx)? };
+     Ok((done, before - cx.fuel_remaining()))
+    }).unwrap());
+    let receipt = caller.receipt();
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes));
+    assert!(receipt.copied_items <= turn_grant.maximum_items);
+    if index == 0 {
+     assert!(!done);
+     assert_eq!(receipt, RetainedCloneProgress::default());
+     assert_eq!(spent, 0);
+    }
+    total = total.checked_add(receipt).unwrap();
+    work += spent;
+    if done { ready = true; break }
+   }
+   assert_eq!(ready, cancel_at.is_none());
+   if ready { assert_eq!(output.encoded().unwrap(), expected); }
+   caller.cancel().cancel_now();
+   let mut released = 0;
+   for _ in 0..10000 {
+    epoch += 1;
+    let (done, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn(grant, |cx| {
+     cx.bind_original_source_epoch(epoch)?;
+     cx.with_original_retirement(|cx| output.close_batch_step(cx))
+    }).unwrap());
+    let receipt = caller.receipt();
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes));
+    released += heap.released_bytes;
+    if done { break }
+   }
+   assert!(output.is_empty());
+   caller.retire(grant);
+   (turns, work, total, released)
+  };
+  let single = run(false, None);
+  let batched = run(true, None);
+  let factor = batch["minimumTurnReduction"].as_u64().unwrap() as usize;
+  assert!(single.0 >= batched.0 * factor, "one-step {:?}, batched {:?}", single, batched);
+  assert!(batched.1 > 0 && batched.1 <= single.1);
+  assert_eq!(batched.2.retained_capacity_bytes, single.2.retained_capacity_bytes);
+  assert_eq!(batched.2.released_bytes, single.2.released_bytes);
+  assert_eq!(batched.3, single.3);
+  for cut in batch["cancelAfterTurns"].as_array().unwrap() {
+   run(true, Some(cut.as_u64().unwrap() as usize));
+  }
+  eprintln!("[DEBUG] owned turn encoding single={single:?}, batched={batched:?}");
+ }
  #[test]
  fn batched_original_turn_retirement_releases_the_same_owner_in_fewer_turns(){
   let _arena=semio_ui_contract_values::testkit::UiArenaFixture::new();

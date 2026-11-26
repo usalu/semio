@@ -1,5 +1,7 @@
 """🔬 Resolve sampled WASM frames to the original linked Rust owners and report inclusive stacks."""
 from pathlib import Path
+import os
+import struct
 import collections
 import json
 import mmap
@@ -20,8 +22,16 @@ for i,n in nodes.items():
     m=re.fullmatch(r'wasm-function\[(\d+)\]',f['functionName'])
     if m:wasm[i]=int(m[1])
 hot=sorted(set(wasm.values()))
-old=core['original_index'](hot)
-with (g/"requester-final-objects/procedural.core.wasm").open('rb') as f,mmap.mmap(f.fileno(),0,access=mmap.ACCESS_READ) as data:
+binary=g/"requester-final-objects/procedural.core.wasm"
+if os.environ.get("SEMIO_PROFILE_BUILD")=="b4":
+    old=hot[:]
+    for pass_no in [2,1]:
+        mapping=(g/f"b4/fold{pass_no}-index.u32").read_bytes()
+        old=[struct.unpack_from("<I",mapping,4*n)[0] for n in old]
+    binary=g/"b4/proc.core.wasm"
+else:
+    old=core["original_index"](hot)
+with binary.open('rb') as f,mmap.mmap(f.fileno(),0,access=mmap.ACCESS_READ) as data:
     names=dict(core['names'](data,set(old)))
 symbols=''.join(f'{n}\t{k}\t{names.get(k,"unnamed")}\n' for n,k in zip(hot,old))
 result=subprocess.run([g/'demangle-requester'],input=symbols,text=True,capture_output=True,check=True)

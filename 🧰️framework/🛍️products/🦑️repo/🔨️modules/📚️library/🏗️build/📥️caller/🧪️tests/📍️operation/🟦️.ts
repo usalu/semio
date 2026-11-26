@@ -8,7 +8,7 @@ const target=(execution:unknown)=>({workspace:{targets:{"deps-build-tools":{exec
 
 test("a declared Repo operation is admitted by the neutral contract, the execution contract and an independent validator",async()=>{
  const api=await import("../../📤️orchestration/🟨️.mjs"),operation=new Ajv({strict:false}).compile(contract.definitions.Operation),union=new Ajv({strict:false}).compile(executionContract);
- for(const row of fixture.accepted){expect(operation(row)).toBe(true);expect(union(row)).toBe(true);const context=api.buildOrchestrationContextV1(target(row),fixture.task);expect(context?.targets).toEqual([{...fixture.task,delegation:row}]);expect(api.requireBuildOrchestrationContextV1(target(row),context)).toEqual(context);}
+ for(const row of fixture.accepted){expect(operation(row)).toBe(true);expect(union(row)).toBe(true);const context=api.buildOrchestrationContextV1(target(row),fixture.task);expect<unknown>(context?.targets).toEqual([{...fixture.task,delegation:row}]);expect<unknown>(api.requireBuildOrchestrationContextV1(target(row),context)).toEqual(context);}
  for(const row of fixture.rejected){expect(operation(row)).toBe(false);if(row.kind==="orchestration")expect(()=>api.buildOrchestrationContextV1(target(row),fixture.task)).toThrow();}
 });
 

@@ -439,6 +439,13 @@ pub async fn default_compiled_cache_root() -> PathBuf {
     PathBuf::from(home).join(".semio").join("cache").join("wasmtime")
 }
 
+/// 🧹️ The compiled cache root after its rate-limited retirement (age limit and size cap of [`CacheRetirementPolicy`]): the engine start of every runtime calls this instead of [`default_compiled_cache_root`], so a cache nobody reads again cannot fill the volume.
+pub async fn prepared_compiled_cache_root() -> PathBuf {
+    let root = default_compiled_cache_root().await;
+    let _ = retire_compiled_cache_if_due(&root, now_epoch_ms(), &CacheRetirementPolicy::shipped());
+    root
+}
+
 pub async fn shared_engine_config_hash(cfg: &SharedEngineConfig, pooling_active: bool) -> [u8; 32] {
     let descriptor = format!("wasmtime=47.0.3;component_model=1;fuel={};epoch=1;pooling={};instances={};max_memory={};keep_resident={}", u8::from(cfg.fuel_metering), pooling_active, cfg.total_component_instances, cfg.max_memory_bytes, cfg.linear_memory_keep_resident_bytes);
     *semio_framework_hash::hash(descriptor.as_bytes()).as_bytes()
@@ -453,6 +460,11 @@ pub fn hex_encode(bytes: &[u8]) -> String {
 pub async fn compiled_cache_path(cache_root: &Path, engine_config_hash: &[u8; 32], package_hash: &[u8; 32]) -> PathBuf {
     cache_root.join(hex_encode(engine_config_hash)).join(format!("{}.cwasm", hex_encode(package_hash)))
 }
+
+#[path = "🧹️cache-retirement/🦀️.rs"]
+pub mod cache_retirement;
+
+pub use cache_retirement::{CacheEntry, CacheRetirement, CacheRetirementPolicy, now_epoch_ms, retire_compiled_cache, retire_compiled_cache_if_due, scan_compiled_cache, select_retired, touch_compiled_cache_entry};
 
 #[path = "🔒️compile-admission/🦀️.rs"]
 mod compile_admission;
@@ -470,7 +482,11 @@ pub async fn load_compiled_component(engine: &Engine, path: &Path) -> Option<Com
     if !path.exists() {
         return None;
     }
-    unsafe { Component::deserialize_file(engine, path).ok() }
+    let component = unsafe { Component::deserialize_file(engine, path).ok() };
+    if component.is_some() {
+        touch_compiled_cache_entry(path, now_epoch_ms(), &CacheRetirementPolicy::shipped());
+    }
+    component
 }
 
 /// 💾️ Writes the compiled code under a scratch name owned by this process and renames it into
@@ -580,3 +596,7 @@ pub fn minimal_component_without_actor_world() -> &'static [u8] {
 #[cfg(test)]
 #[path = "🧪️tests/🏊️capacity/🦀️.rs"]
 mod native_capacity_tests;
+
+#[cfg(test)]
+#[path = "🧹️cache-retirement/🧪️tests/🦀️.rs"]
+mod cache_retirement_tests;

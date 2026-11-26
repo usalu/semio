@@ -460,6 +460,39 @@ export function viewContextWireValue(view: unknown): unknown {
   return viewContextWithIntegerCarriers(view as PluginViewState, (value) => (isPackInteger(value) ? value : packUInt(BigInt(value as number))));
 }
 
+type CompletionFaultFields = {
+  readonly message: string;
+  readonly retainedProgress?: object;
+  readonly span?: object;
+  readonly source?: object;
+  readonly causes?: readonly { readonly message: string; readonly retainedProgress?: object }[];
+};
+
+function faultUnsignedFields(fields: object): Record<string, PackInteger> {
+  const values: Record<string, PackInteger> = {};
+  for (const [key, value] of Object.entries(fields)) {
+    if (value === undefined || value === null) continue;
+    if (isPackInteger(value) && value.kind === "uint") values[key] = value;
+    else if (typeof value === "bigint" || (typeof value === "number" && Number.isSafeInteger(value))) values[key] = packUInt(BigInt(value));
+    else throw new Error(`fault.${key}: expected an exact unsigned integer`);
+  }
+  return values;
+}
+
+/** 🧯️ Writes the typed fault body carried by a Completed event, preserving the original diagnostic and exact counters. */
+export function encodeFaultPack(fault: CompletionFaultFields): Uint8Array<ArrayBuffer> {
+  const progress = fault.retainedProgress ?? { copiedItems: 0, copiedBytes: 0, retainedCapacityBytes: 0, releasedBytes: 0 };
+  return encodePackValue({
+    ...fault,
+    retainedProgress: faultUnsignedFields(progress),
+    ...(fault.span && { span: faultUnsignedFields(fault.span) }),
+    ...(fault.source && { source: faultUnsignedFields(fault.source) }),
+    ...(fault.causes && { causes: fault.causes.map(cause => cause.retainedProgress
+      ? { ...cause, retainedProgress: faultUnsignedFields(cause.retainedProgress) }
+      : cause) }),
+  });
+}
+
 /** 📥️ TS twin of `store::pack_rt::decode_wire_value` — the inverse of {@link encodePackValue}. */
 export function decodePackValue(bytes: Uint8Array): PackValue {
   const pos: [number] = [0];

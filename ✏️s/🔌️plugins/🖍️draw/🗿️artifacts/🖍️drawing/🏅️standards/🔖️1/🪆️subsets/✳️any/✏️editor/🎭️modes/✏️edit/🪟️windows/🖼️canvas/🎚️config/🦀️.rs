@@ -267,7 +267,3 @@ pub fn addressed(view: &semio_plugin::ViewModel, config: DrawingCanvasWindowConf
     }
     Ok(semio_plugin::WindowConfigMutation::of::<DrawingCanvasWindowConfigOwner>(id, DrawingCanvasWindowConfigMutation::Set(DrawingCanvasWindowConfigSet { viewport: config.viewport, framed: config.framed })))
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️window/🦀️.rs"]
-mod window_ownership_tests;

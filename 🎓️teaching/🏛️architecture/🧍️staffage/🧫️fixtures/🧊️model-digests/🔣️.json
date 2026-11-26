@@ -543,7 +543,7 @@
   },
   "sample-figure.walk.s50.forces.fbx": {
    "byteLength": 1074908,
-   "sha256": "bdb83dff05a26ecf366d49e3fee3799fcc6f436c5cc0b4403a4015542e2432c6",
+   "sha256": "bf69d54ba7ae871175f4f1c131b3f63c62da174f476dc9c44df81a276de78b1c",
    "objectCounts": {
     "AnimationCurve": 225,
     "AnimationCurveNode": 75,
@@ -691,7 +691,7 @@
   },
   "sample-figure.walk.s100.forces.fbx": {
    "byteLength": 697452,
-   "sha256": "c668624ed88b13082e756caf53f7e5e197a18b397078e028938660d10cf81d0c",
+   "sha256": "1b7ee8119d7de0b683144eeedd1dcc77a2a3c3d8392e1cd1e2c47b333d596d20",
    "objectCounts": {
     "AnimationCurve": 207,
     "AnimationCurveNode": 69,
@@ -824,7 +824,7 @@
   },
   "sample-figure.walk.s200.forces.fbx": {
    "byteLength": 571036,
-   "sha256": "5a9292ef0cfd0cc948b4e717dce8b899a03ac9a55d6d242dcdef043ad6bea4a6",
+   "sha256": "af556aff959435b63c72ee1e2e1b4ed8eb174347db9384fde4e9eb5396b76be3",
    "objectCounts": {
     "AnimationCurve": 195,
     "AnimationCurveNode": 65,
@@ -949,7 +949,7 @@
   },
   "sample-figure.walk.s500.forces.fbx": {
    "byteLength": 543932,
-   "sha256": "284f033ba31762c7a0519cf53dbe50cae41a64497bc0e5d1d5eef6296be19e09",
+   "sha256": "c52c253799800e44286052eef09367d6914b74a823587eaade1ca1af87681f75",
    "objectCounts": {
     "AnimationCurve": 192,
     "AnimationCurveNode": 64,

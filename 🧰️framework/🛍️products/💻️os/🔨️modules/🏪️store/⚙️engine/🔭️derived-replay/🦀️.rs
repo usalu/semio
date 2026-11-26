@@ -40,6 +40,8 @@ fn funded_plan_retirement(control:&mut semio_framework_value_native_owned::nativ
 mod history_preview;
 #[path = "🧩️operation/🦀️.rs"]
 mod operation;
+#[path = "🔁️replacement/🦀️.rs"]
+mod replacement;
 #[path = "📜️report-replay/🦀️.rs"]
 mod report_replay;
 #[path = "📸️checkpoint-read/🦀️.rs"]

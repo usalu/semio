@@ -22,7 +22,7 @@ test("the rows, the verdicts and the refresh states equal the fixture, the schem
  expect(run.status,run.stderr).toBe(0);
  const oracle=JSON.parse(run.stdout) as {digests:string[][][];verdicts:unknown[];states:string[]};
  expect(fixture.verdicts.map(row=>observedDigestsV1(row.rows as never).map(each=>[each.path,each.sha256]))).toEqual(oracle.digests);
- expect(fixture.verdicts.map(row=>freshVerdictV1({rows:row.rows as never,hashOf:path=>(row.tree as Record<string,string>)[path],createdMs:row.createdMs,now:row.now,closureHolds:(row as {closures?:Record<string,boolean>}).closures===undefined?undefined:each=>(row as {closures:Record<string,boolean>}).closures[each.path]===true,rowHolds:(row as {holds?:Record<string,boolean>}).holds===undefined?undefined:each=>(row as {holds:Record<string,boolean>}).holds[each.kind+":"+each.path]===true}))).toEqual(oracle.verdicts);
+ expect<unknown>(fixture.verdicts.map(row=>freshVerdictV1({rows:row.rows as never,hashOf:path=>(row.tree as Record<string,string>)[path],createdMs:row.createdMs,now:row.now,closureHolds:(row as {closures?:Record<string,boolean>}).closures===undefined?undefined:each=>(row as {closures:Record<string,boolean>}).closures[each.path]===true,rowHolds:(row as {holds?:Record<string,boolean>}).holds===undefined?undefined:each=>(row as {holds:Record<string,boolean>}).holds[each.kind+":"+each.path]===true}))).toEqual(oracle.verdicts);
  expect(fixture.states.map(row=>refreshStateV1({digest:row.digest} as never,row.noteHash).digest)).toEqual(oracle.states);
  expect(oracle.verdicts.map((row:any)=>row.fresh)).toEqual([true,false,false,true,true,true,false,true,true,false,true]);
 });

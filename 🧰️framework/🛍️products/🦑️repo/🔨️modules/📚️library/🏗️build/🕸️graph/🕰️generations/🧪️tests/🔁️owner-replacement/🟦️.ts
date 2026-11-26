@@ -8,7 +8,7 @@ import {applyOps,createWorld,seed} from "../🏃️world/🟦️.ts";
 const scratch=()=>mkdtempSync(join(realpathSync(tmpdir()),"graph-replace-"));
 const config=(name:string,primary=false)=>JSON.stringify({name,package:`@syn/${name}`,uses:[],...(primary?{primary}:{})});
 const source=(root:string)=>({[`${root}/src/index.ts`]:"export const v=1;\n"});
-const names=async(world:ReturnType<typeof createWorld>)=>Object.keys((await world.refresh()).current!.manifest.owners).sort();
+const names=async(world:ReturnType<typeof createWorld>)=>Object.keys((await world.refresh()).current!.manifest!.owners).sort();
 
 test("a project.json added over a module.json owner replaces it",async()=>{
  const dir=scratch();

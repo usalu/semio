@@ -150,7 +150,7 @@ async fn try_open_registered_pdf_with(input: Vec<u8>, page_count: usize, scope: 
     match outcome {
         Ok(cost) => Ok((app, cost)),
         Err(reason) => {
-            let _ = laws::close_registered_fixture_app(&mut app, policy, scope.cx());
+            if laws::close_registered_fixture_app(&mut app, policy, scope.cx()).is_err() { std::mem::forget(app); }
             Err(reason)
         }
     }
@@ -1329,7 +1329,7 @@ async fn registered_pdf_draft_publishes_once_refuses_stale_and_undoes_redoes() {
     use semio_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
     let mut original = PdfSnapshot::default();
-    original.pages.push(PdfPage { content: vec![PdfOp::BeginText, PdfOp::ShowText { text: PdfTextString::text("before") }, PdfOp::EndText], ..Default::default() });
+    original.pages.push(PdfPage { content: vec![PdfOp::BeginText, PdfOp::ShowText { text: PdfTextString::text("before") }, PdfOp::EndText].into(), ..Default::default() });
     let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_PDF17_DOCUMENT_SCHEMA) else { panic!("PDF fixture produces a document load") };
@@ -1585,7 +1585,7 @@ async fn natural_file_route_opens_reexports_and_reopens_large_sampled_images() {
         for (page, expected) in mounted.pages.iter().zip(pages) {
             let image = expected["image"].as_u64().unwrap() as usize;
             let name = spec["images"][image]["name"].as_str().unwrap();
-            assert!(matches!(&page.content[1..3], [PdfOp::Transform { matrix }, PdfOp::PaintXObject { name: actual }]
+            assert!(matches!(page.content.iter().skip(1).take(2).collect::<Vec<_>>().as_slice(), [PdfOp::Transform { matrix }, PdfOp::PaintXObject { name: actual }]
                 if actual == name && *matrix == [72., 0., 0., 72., 20., 20.]));
         }
 
@@ -2114,6 +2114,26 @@ async fn registered_real_world_site_plan_opens_edits_saves_and_reopens_like_the_
     real_world_round_trip("site plan", fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/🌍️real-world/🗺️site.pdf"), 64 * 1024).await;
 }
 
+/// 🛑️ LAW: a document whose typed output is over the natural-file ceiling is refused with the ceiling's own message within the open's turn bound, although retiring what it already built takes thousands of turns: the fault page is published as soon as the decoder refuses, before its worker session retires (the thesis' refusal used to stay invisible for 3,800 turns behind that retirement). The file is a 30-page pymupdf-checked PDF (`over-ceiling-fixture.py`) of 14,000 save and restore operators per page, 17 KB in all, whose typed pages and role mirrors pass the ceiling after about 20 pages.
+#[semio_framework_async_macros::async_test]
+async fn registered_pdf_over_the_output_ceiling_is_refused_promptly_with_the_ceiling_message() {
+    use semio_plugin::artifact_app_laws as laws;
+    use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::{reference_page_count, reference_stream_bodies};
+
+    let spec: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🛑️over-ceiling/spec.json")).unwrap();
+    let input = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/🛑️over-ceiling/over-ceiling.pdf");
+    let pages = spec["pageCount"].as_u64().unwrap() as usize;
+    assert_eq!(reference_page_count(input).unwrap(), pages, "lopdf reads every page");
+    let decoded = spec["decodedBytesPerPage"].as_u64().unwrap() as usize * pages + spec["paddingBytes"].as_u64().unwrap() as usize;
+    assert_eq!(reference_stream_bodies(input).unwrap().iter().map(Vec::len).sum::<usize>(), decoded, "lopdf inflates the streams to the spec's size");
+    let ceiling = spec["ceiling"].as_u64().unwrap();
+    let mut scope = laws::OriginalFixtureScope::admit();
+    let started = std::time::Instant::now();
+    let refusal = try_open_registered_pdf_with(input.to_vec(), pages, &mut scope, PdfIntake::NaturalSource, BROWSER_TURN_FUEL, true, 4096).await.err().expect("a document over the output ceiling is refused");
+    assert!(refusal.contains(&format!("maximum is {ceiling}")) && refusal.contains("output bytes"), "the refusal names the ceiling: {refusal}");
+    println!("over-ceiling refusal after {:?}: {}", started.elapsed(), refusal.chars().take(400).collect::<String>());
+}
+
 /// 🏰️ The institution diagram (1,345 form XObjects, 187 KB of streams) through the registered browser route, in turns and copy proportional to its file and its decoded streams.
 #[semio_framework_async_macros::async_test]
 async fn registered_real_world_institution_diagram_opens_edits_saves_and_reopens_like_the_reference_readers() {
@@ -2236,9 +2256,9 @@ async fn registered_pdf_png_picker_publishes_an_atomic_revision_guarded_image_ed
     assert_eq!(published.image(source_id), loaded.image(source_id));
     assert_eq!(published.forms, loaded.forms);
     assert_eq!(published.pages[1], loaded.pages[1], "page two is untouched");
-    assert!(published.pages[0].content.starts_with(&loaded.pages[0].content));
+    assert!(published.pages[0].content.iter().zip(loaded.pages[0].content.iter()).all(|(published, loaded)| published == loaded));
     assert!(matches!(
-        &published.pages[0].content[loaded.pages[0].content.len()..],
+        published.pages[0].content.iter().skip(loaded.pages[0].content.len()).collect::<Vec<_>>().as_slice(),
         [PdfOp::Save, PdfOp::Transform { matrix: applied }, PdfOp::PaintXObject { name }, PdfOp::Restore]
             if applied == &matrix && name == image_id
     ), "one-based page 1 receives the paint: {:?}", published.pages[0].content);

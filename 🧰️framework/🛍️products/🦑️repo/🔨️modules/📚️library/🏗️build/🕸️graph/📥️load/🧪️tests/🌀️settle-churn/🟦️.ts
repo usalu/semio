@@ -64,7 +64,7 @@ test("one unrelated file flipping state every round seals in one round and a lat
  expect(first.events.map(event=>event.settled)).toEqual([true]);
  expect(first.events[0]!.paths).toEqual([join(root,"noise.txt")]);
  expect(counts(first.discovered)).toEqual(Object.fromEntries(owners.map(owner=>[owner.name,1])));
- const rows=(first.captured!.observations as {kind:string;path:string;fact:{sha256?:string}}[]).filter(row=>row.kind==="file"&&row.path===join(root,"noise.txt")).map(row=>row.fact.sha256!).sort();
+ const rows=[...first.captured!.observations].flatMap(row=>row.kind==="file"&&row.path===join(root,"noise.txt")&&"sha256" in row.fact?[row.fact.sha256]:[]).sort();
  expect(rows).toEqual(contents.get("noise.txt")!.slice(0,2).map(sha).sort());
  await write("noise.txt","n".repeat(contents.get("noise.txt")!.length+1));
  const staleBefore=modelStale(owners,contents);
@@ -88,9 +88,9 @@ test("an owner whose own input flips inside its observation is observed again an
  expect(outcome.events[0]!.settled).toBeUndefined();
  expect(outcome.events[0]!.paths).toEqual([join(root,target.files[0]!)]);
  expect(counts(outcome.discovered)).toEqual({...Object.fromEntries(owners.map(owner=>[owner.name,1])),[target.name]:2});
- const states=(outcome.captured!.observations as {kind:string;path:string;fact:{sha256?:string}}[]).filter(row=>row.kind==="file"&&row.path===join(root,target.files[0]!));
+ const states=[...outcome.captured!.observations].flatMap(row=>row.kind==="file"&&row.path===join(root,target.files[0]!)&&"sha256" in row.fact?[row.fact]:[]);
  expect(states.length).toBe(1);
- expect(states[0]!.fact.sha256).toBe(sha(contents.get(target.files[0]!)!.at(-1)!));
+ expect(states[0]!.sha256).toBe(sha(contents.get(target.files[0]!)!.at(-1)!));
 }));
 
 test("a contradiction inside one owner that never settles is refused after the round limit while every other owner is observed once",()=>world(async({root,owners,contents,write})=>{

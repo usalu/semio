@@ -1,6 +1,7 @@
 """Independent reading of `repo test-file`: argument parsing and suite routing, written from the documented rules and not from the TypeScript."""
 import json
 import os
+import re
 import sys
 
 VALUED = ["--lang"]
@@ -86,8 +87,45 @@ def route(root, policy, files):
     return out
 
 
+def declared_arguments(policy, file, text, existing):
+    oracle = policy["oracle"]
+    found = re.search("🐍️\\.py " + oracle["command"] + " " + oracle["usage"], text)
+    if not found:
+        return []
+    parts = found.group(1).split("/")
+    directory = file.rsplit("/", 1)[0] if "/" in file else ""
+    while True:
+        candidate = "/".join(filter(None, [directory] + parts))
+        if candidate in existing:
+            return [oracle["command"], candidate]
+        if not directory:
+            return {REFUSE: "oracle.fixtures-missing"}
+        directory = directory.rsplit("/", 1)[0] if "/" in directory else ""
+
+
+def owner(file, entries):
+    if file in entries:
+        return file
+    name = file.rsplit("/", 1)[1]
+    parent = file.rsplit("/", 1)[0]
+    while "/" in parent:
+        parent = parent.rsplit("/", 1)[0]
+        if parent + "/" + name in entries:
+            return parent + "/" + name
+    return {REFUSE: "oracle.orphan"}
+
+
 def main():
     mode = sys.argv[1]
+    if mode == "oracle-arguments":
+        with open(sys.argv[2], encoding="utf-8") as handle:
+            policy = json.load(handle)
+        rows = json.load(sys.stdin)
+        print(json.dumps([declared_arguments(policy, r["file"], r["text"], set(r["exists"])) for r in rows], ensure_ascii=False))
+        return
+    if mode == "oracle-owners":
+        print(json.dumps([owner(r["file"], set(r["entries"])) for r in json.load(sys.stdin)], ensure_ascii=False))
+        return
     if mode == "arguments":
         vectors = json.load(sys.stdin)
         print(json.dumps([parse(v) for v in vectors], ensure_ascii=False))

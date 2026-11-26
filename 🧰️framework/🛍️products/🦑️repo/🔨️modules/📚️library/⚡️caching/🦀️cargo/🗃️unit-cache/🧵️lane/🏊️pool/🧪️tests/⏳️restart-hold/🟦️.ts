@@ -26,7 +26,7 @@ test("the production rules and the Python oracle reach the verdict of every corp
  const verdicts=JSON.parse(run.stdout);
  for(const[index,row]of corpus.retained.entries()){expect(laneRetainedV1(row.id,row.lastUsedMs,row.nowMs,(row as {holdUntilMs?:number}).holdUntilMs),row.id+" production").toBe(row.expect);expect(verdicts.retained[index],row.id+" oracle").toBe(row.expect);}
  for(const[index,row]of corpus.trim.entries()){expect(planPoolTrimV1(boundedPoolV1(lanesOf(row.lanes)),row.bounds),row.id+" production").toEqual(row.expect);expect(verdicts.trim[index],row.id+" oracle").toEqual(row.expect);}
- for(const[index,row]of corpus.acquire.entries()){expect(planPoolAcquireV1(lanesOf(row.lanes),row.request,row.bounds),row.id+" production").toEqual(row.expect);expect(verdicts.acquire[index],row.id+" oracle").toEqual(row.expect);}
+ for(const[index,row]of corpus.acquire.entries()){expect<unknown>(planPoolAcquireV1(lanesOf(row.lanes),row.request,row.bounds),row.id+" production").toEqual(row.expect);expect(verdicts.acquire[index],row.id+" oracle").toEqual(row.expect);}
 });
 
 test("a restart takes the lane of the killed pass again although another crate set arrived while it waited, and a lane without a hold is lost to that crate set",async()=>{

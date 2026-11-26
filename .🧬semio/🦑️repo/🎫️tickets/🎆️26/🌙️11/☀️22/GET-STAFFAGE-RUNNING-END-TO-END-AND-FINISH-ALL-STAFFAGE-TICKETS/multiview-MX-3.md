@@ -1,7 +1,6 @@
-IN WORK
-JOB1 DONE (2026-11-25 23:35)
+FINAL (2026-11-26 09:10; Job 1 done 2026-11-25 23:35, Job 2 done 2026-11-26 08:41)
 
-# 🔭️ Multiview: Engine and Suite Owner MX-3 (2026-11-25, Sonnet 5.5)
+# 🔭️ Multiview: Engine and Suite Owner MX-3 (2026-11-25 to 26, Sonnet 5.5)
 
 Paths: `R` repo root, `S` = `R/🎓️teaching/🏛️architecture/🧍️staffage`, `U` this ticket folder, `K` the multiview ticket of 2026-11-02. Scripts: `U/🧰️matrix/MX-3/`. Every run through `repo capacity run` (one request at a time, 900 to 1800 MB), logs in `U/🗑️generated/matrix/MX-3/` (kept until Job 2 ends).
 
@@ -39,6 +38,10 @@ Asset side, D68: the elevation draws one hand plate to u 0.176 m where front and
 
 No defect in `unionPolygons` (D69): shapely agrees in area and extent on the real bodies of `hawthorn` at 4 degrees (126 evaluations) and on 332 synthetic and random cases; the short extent is in the sections of the loft tool. Guard added to `🧪️tests/🔺️polygon-union` (44 of 44). No engine change; answer in `requests.md` ("multiview MX-3 — polygon union at small bead spacing").
 
+### `black-alder` / `field-maple` silhouette guard (MV-L1 request, coordinator 2026-11-26)
+
+Located (`🧰️matrix/MX-3/guard-where.ts`): two sub-pen holes (15 x 7 cm, 0.75 x 0.35 mm on paper at 1:200) of the guard's reference that the loft drawing covers; no channel and no hole in the drawing. Cured by the pocket rule (trial module: 16.8 mm against 1207.5 mm on the `fol-8` copy). Whole-tree copies at 1:50 and 1:100 not proven. D70; answer in `requests.md`. Landing the pocket rule is therefore also the cure the two trees wait for.
+
 ## Order to land the pocket rule (prepared; waits for the coordinator's go)
 
 1. Preconditions: no catalog `🔣️.json` written in the last 10 minutes and no live lane process with `--write`; nobody editing `S/🔨️modules/🗂️catalog/🧊️volumes/🌓️silhouette/🟦️.ts`.
@@ -49,11 +52,27 @@ No defect in `unionPolygons` (D69): shapely agrees in area and extent on the rea
 6. `person-with-white-cane` (56 cells): scan, `MR/measure.ts`, check CLI, then `📊️matrix.ts --fresh --jobs 1 --assets person-with-white-cane` (800 MB, `timeout` 3600 s).
 7. Answer the requests that wait on it (MH-4 small hole, MV-2 pocket, MU slender solid, ML-3 `fol-6`) with the numbers of steps 2 to 4.
 
-## Job 2 (not started; prepared only)
+## Job 2 (done)
 
-`U/🧰️matrix/MX-2/pocket/` (`patch.py --land`, then `🧊️catalog-silhouette` whole) and ML-3's request "loft silhouette fol-6" wait for the coordinator's go.
+Landed 2026-11-26 **08:34:13** (`patch.py --land`, second run "already landed", md5 `57764b63…`; module before: `d8fa2805…`, kept as `🧰️matrix/MX-3/extremes/silhouette-before-landing.ts.txt`). One patch of three changes: pocket rule (`agreedPockets`), `sealRings`, body-following rule (`drawsBody`, MU's chairs at 1:500).
+
+| Proof | Result |
+|---|---|
+| `🧊️catalog-silhouette` whole, before | 385 of 385 (08:30, peak 2,918 MB; the first attempt was cut by the 3000 s timeout after 126 cases) |
+| same, after (trial copy of the module, identical to the landed one but for imports) | 385 of 385 (08:32, peak 2,738 MB): no verdict changed, nothing of the eight assets of MV-L2/MV-L3 to exclude |
+| `pocket/test.ts` on the live module | 14 of 14 (6 of 14 before) |
+| tsc, staffage package | exit 0, 0 errors |
+| `✅️asset-validation` | 85 of 85 |
+| matrix `person-with-white-cane` | 252 cells, 175 ok, 0 fail |
+| matrix `used-bentwood-dining-chairs` | 252 cells, 230 ok, 22 fail (the 22 of MU's report: 1:500 gate findings; its cure now passes the guard in the trial, 0.9464 against 0.92) |
+
+Requests answered: the announcement `## multiview MX-3 — pocket rule live 08:34`, `## multiview MV-L1 — silhouette guard reads 1207 mm …` (located: sub-pen holes of the reference, cured by the rule), `## multiview ML-3 — loft silhouette fol-6`. Open for others: the chairs (run the 1:500 cure on a copy and the guard first), whole-tree copies of `black-alder`/`field-maple` and `rowan` 1:50 plan on a copy with the rule live.
+
+## Decisions (K/🗂️work-board.md)
+
+D62 to D70: band-resolution tables of `🧊️model-bounds`; frames; compressor and lamp selection; chain-state roots; loft depth twin; paper simplification as expected behaviour; guide-dog hands recipe (3.5 mm open for ML-5); union exact at small bead spacing; sub-pen reference holes.
 
 ## Files
 
-Updated: `S/🧪️tests/🧊️model-bounds/🟦️.ts`, `S/🧪️tests/🧊️chain-state/🟦️.ts`, `🥒️.feature` (chain-state), `S/🔨️modules/🧮️evaluation/🟦️.ts`, `K/🗂️work-board.md` (D62 to D67), `U/requests.md` (five answers).
+Updated: `S/🔨️modules/🗂️catalog/🧊️volumes/🌓️silhouette/🟦️.ts` (the landing), `S/🧪️tests/🔺️polygon-union/🟦️.ts`, `🐍️.py`, `🥒️.feature` (bead masses), `S/🧪️tests/🧊️model-bounds/🟦️.ts`, `S/🧪️tests/🧊️chain-state/🟦️.ts`, `🥒️.feature` (chain-state), `S/🔨️modules/🧮️evaluation/🟦️.ts`, `K/🗂️work-board.md` (D62 to D70), `U/requests.md` (answers and the announcement).
 Created: `S/🧪️tests/🧊️loft-depth/` (`🟦️.ts`, `🥒️.feature`), `U/🧰️matrix/MX-3/` (`env.sh`, `q.sh`, `vt.sh`, `soft.sh`, `ids.ts`, `world.ts`, `ray.ts`, `repeats.ts`, `affected.py`, `compare.ts`, `lofts-edge.ts`, `simplify-compare.ts`, `evaluation-before-mvl1.ts.txt`, `extremes/`), `U/multiview-MX-3.md`.

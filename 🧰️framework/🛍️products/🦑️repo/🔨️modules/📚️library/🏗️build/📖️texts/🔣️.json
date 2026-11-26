@@ -146,6 +146,10 @@
       "en": "A heavy derived question was cancelled by the host warden to keep the machine from running out of memory (child pid {pid}, {kind}, {megabytes} MB, {reason}; question {question}); the owner asks it again.",
       "de": "Eine schwere abgeleitete Frage wurde vom Host-Wächter abgebrochen, damit der Maschine der Speicher nicht ausgeht (Kind-pid {pid}, {kind}, {megabytes} MB, {reason}; Frage {question}); der Eigentümer stellt sie erneut."
     },
+    "graph.heavy-question-memory": {
+      "en": "A heavy derived question was stopped: its child process grew past its resident memory cap of {limit} MB (resident {rss} MB; question {question}, last phase {phase}). The cap is what this machine can admit: {host} MB of memory, {available} MB available now, shared by {children} heavy children, never below {floor} MB nor above {ceiling} MB; ask again when more memory is free or on a larger machine.",
+      "de": "Eine schwere abgeleitete Frage wurde gestoppt: ihr Kindprozess ist über seine Grenze des residenten Speichers von {limit} MB gewachsen (resident {rss} MB; Frage {question}, letzte Phase {phase}). Die Grenze ist, was diese Maschine zulassen kann: {host} MB Speicher, jetzt {available} MB verfügbar, geteilt unter {children} schweren Kindern, nie unter {floor} MB und nie über {ceiling} MB; erneut fragen, sobald mehr Speicher frei ist, oder auf einer grösseren Maschine."
+    },
     "graph.heavy-question-silent": {
       "en": "A heavy derived question was stopped: its child process showed no sign of life for {seconds} s, no output and no processor time (question {question}, last phase {phase}, longest event-loop stall {lag} s; a dead peer, a lock nobody releases or a frozen process): {detail}",
       "de": "Eine schwere abgeleitete Frage wurde gestoppt: ihr Kindprozess hat {seconds} s lang kein Lebenszeichen gezeigt, weder Ausgabe noch Prozessorzeit (Frage {question}, letzte Phase {phase}, längster Stillstand der Ereignisschleife {lag} s; ein toter Partner, eine Sperre, die niemand freigibt, oder ein eingefrorener Prozess): {detail}"
@@ -169,10 +173,6 @@
     "closure.graph-incomplete": {
       "en": "Module closure graph lacks the module {key}",
       "de": "Dem Modul-Closure-Graphen fehlt das Modul {key}"
-    },
-    "closure.derived-provider-differs": {
-      "en": "The derived command walk was recorded under another script provider designation: {provider}",
-      "de": "Der abgeleitete Befehlsdurchlauf wurde unter einer anderen Skriptanbieter-Bezeichnung aufgezeichnet: {provider}"
     },
     "assembly.symbolic-group-without-list": {
       "en": "Symbolic input group {name} of project {project} has no input list; the record carries {record}",

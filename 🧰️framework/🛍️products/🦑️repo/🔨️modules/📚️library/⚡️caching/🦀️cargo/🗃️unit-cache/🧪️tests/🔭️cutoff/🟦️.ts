@@ -88,7 +88,7 @@ real("an edit that changes the interface compiles every dependant",async()=>{
 real("a body edit that a dependant can observe (a const function) compiles the dependants",async()=>{
  const w=world("const");
  const base={a:"pub const fn k(x: u32) -> u32 { x + 1 }\npub fn answer(x: u32) -> u32 { x }\n",b:"pub fn twice(x: u32) -> u32 { a::k(x) }\n",c:"pub fn thrice(x: u32) -> u32 { b::twice(x) + a::answer(x) }\n"};
- const run=async(edits:Partial<Record<string,string>>)=>{const before=readLookupsV1(w.cache).length,now={...base,...edits};for(const crate of["a","b","c"])expect(await check(w,crate,now[crate]!),crate).toBe(0);const out:Record<string,string>={};for(const row of readLookupsV1(w.cache).slice(before))out[row.crate]=row.outcome;return out;};
+ const run=async(edits:Partial<Record<string,string>>)=>{const before=readLookupsV1(w.cache).length,now:Record<string,string|undefined>={...base,...edits};for(const crate of["a","b","c"])expect(await check(w,crate,now[crate]!),crate).toBe(0);const out:Record<string,string>={};for(const row of readLookupsV1(w.cache).slice(before))out[row.crate]=row.outcome;return out;};
  expect(await run({})).toEqual({a:"miss",b:"miss",c:"miss"});
  expect(await run({a:base.a.replace("x + 1","x + 2")})).toEqual({a:"miss",b:"miss",c:"miss"});
 },900000);
@@ -99,3 +99,10 @@ real("with the cache off nothing changes: the wrapper compiles what it is given"
  expect(existsSync(dependenciesFileV1(rmetaOf(w,"a")))).toBe(false);
  expect(digestFileV1(rmetaOf(w,"a"),undefined)).not.toBeNull();
 });
+
+real("truncated metadata yields no crate hashes and no crash report",()=>{
+ const w=world("truncated"),path=join(w.work,"target","deps","libz-z.rmeta"),before=readdirSync(process.cwd()).filter(name=>name.startsWith("rustc-ice-"));
+ writeFileSync(path,Buffer.from("rust\0\0\0\x0a"));
+ expect(listRootV1([rustc!],path,process.env)).toBeUndefined();
+ expect(readdirSync(process.cwd()).filter(name=>name.startsWith("rustc-ice-"))).toEqual(before);
+},60000);

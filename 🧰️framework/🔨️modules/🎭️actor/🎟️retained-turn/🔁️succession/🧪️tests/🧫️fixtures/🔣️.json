@@ -233,5 +233,22 @@
   "retirement": {
     "jobs": 1,
     "liveSourcesAfterClose": 0
-  }
+  },
+  "reserve": [
+    {
+      "name": "a fresh stock",
+      "remaining": 1000000,
+      "gatedIssue": 968750
+    },
+    {
+      "name": "just above the floor",
+      "remaining": 62500,
+      "gatedIssue": 31250
+    },
+    {
+      "name": "at the gated floor",
+      "remaining": 62499,
+      "exhausted": true
+    }
+  ]
 }

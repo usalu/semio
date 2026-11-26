@@ -2,6 +2,8 @@
   "ownedResolverLock": {
     "tool": "lock-tool",
     "peer": "z-unrelated",
+    "ancestorPackage": "inactive-ancestor",
+    "ancestorEdit": "# unrelated ancestor workspace changed after output custody",
     "version": "0.1.0",
     "edit": "# workspace peer rewrote its lock row during Cargo",
     "stdout": "pinned Cargo\n"
@@ -314,6 +316,11 @@
     "library": "libfixture.rlib",
     "libraryText": "rlib"
   },
+  "compilerFailureReasons": [
+    {"lines":["Compiling fixture","warning: slow unit"],"expected":null},
+    {"lines":["error[E0425]: unresolved name","error: could not compile fixture"],"expected":"error[E0425]: unresolved name"},
+    {"lines":["error: another crate failed","[unit-cache] [warden] cancelled local-unit pid 84 (1638 MB): unit fixture|host peaked above its library ceiling","error: could not compile fixture"],"expected":"[unit-cache] [warden] cancelled local-unit pid 84 (1638 MB): unit fixture|host peaked above its library ceiling"}
+  ],
   "diagnostics": {
     "lines": 1000,
     "live": 50,

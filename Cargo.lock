@@ -6685,6 +6685,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-process-metrics"
+version = "0.1.0"
+
+[[package]]
 name = "semio-framework-process-routing-workspace"
 version = "0.1.0"
 
@@ -7178,6 +7182,7 @@ name = "semio-framework-repo-dashboard-daemon"
 version = "0.1.0"
 dependencies = [
  "semio-framework-repo-dashboard-core",
+ "semio-framework-repo-dashboard-fleet",
  "semio-framework-repo-dashboard-labels",
  "semio-framework-repo-dashboard-launch",
  "semio-framework-repo-dashboard-wire",
@@ -7193,6 +7198,15 @@ dependencies = [
  "semio-framework-repo-dashboard-preferences",
  "semio-ui-locale",
  "semio-ui-tui-terminal",
+]
+
+[[package]]
+name = "semio-framework-repo-dashboard-fleet"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-process-metrics",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -7343,6 +7357,7 @@ dependencies = [
  "semio-framework-repo-dashboard-core",
  "semio-framework-repo-dashboard-daemon",
  "semio-framework-repo-dashboard-feedback",
+ "semio-framework-repo-dashboard-fleet",
  "semio-framework-repo-dashboard-inventory",
  "semio-framework-repo-dashboard-keymap-editor",
  "semio-framework-repo-dashboard-labels",
@@ -7355,6 +7370,7 @@ dependencies = [
  "semio-framework-repo-dashboard-wire",
  "semio-ui-locale",
  "semio-ui-styling",
+ "semio-ui-tui-charts",
  "semio-ui-tui-core",
  "semio-ui-tui-engine",
  "semio-ui-tui-frame",
@@ -7369,6 +7385,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-filesystem-workspace",
  "semio-framework-repo-dashboard-feedback",
+ "semio-framework-repo-dashboard-fleet",
  "semio-framework-repo-dashboard-keymap-editor",
  "semio-framework-repo-dashboard-labels",
  "semio-framework-repo-dashboard-launch",
@@ -7381,6 +7398,7 @@ dependencies = [
  "semio-framework-test-fixtures",
  "semio-ui-locale",
  "semio-ui-styling",
+ "semio-ui-tui-charts",
  "semio-ui-tui-core",
  "semio-ui-tui-engine",
  "semio-ui-tui-frame",
@@ -7394,6 +7412,7 @@ name = "semio-framework-repo-dashboard-wire"
 version = "0.1.0"
 dependencies = [
  "semio-framework-repo-dashboard-core",
+ "semio-framework-repo-dashboard-fleet",
  "semio-framework-repo-dashboard-launch",
  "semio-framework-repo-library-build-graph",
  "semio-ui-tui-terminal",
@@ -9448,7 +9467,8 @@ dependencies = [
  "semio-framework-value-native-owned",
  "semio-os-flow-operators",
  "semio-os-kernel-neural-engine",
- "semio-plugin",
+ "semio-plugin-extension",
+ "semio-plugin-ownership",
  "serde",
  "serde_json",
 ]
@@ -9561,6 +9581,7 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-ordered",
  "semio-framework-value-testing-admission",
  "semio-framework-value-testing-effect-bank",
  "semio-os-flow-drawing",
@@ -10213,6 +10234,7 @@ dependencies = [
  "semio-framework-value",
  "semio-os-infinite-board-engine",
  "semio-os-infinite-board-normal-gestures",
+ "semio-os-infinite-board-normal-host",
  "semio-os-infinite-board-normal-model",
  "semio-os-infinite-board-normal-scene",
  "semio-os-infinite-board-schema",
@@ -12565,6 +12587,7 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-trace-memory-testing",
  "semio-framework-value",
+ "semio-framework-value-clone-source-testing",
  "semio-framework-value-derive",
  "semio-framework-value-persistent",
  "semio-framework-value-snapshot-read",
@@ -13350,6 +13373,7 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-trace-memory-testing",
  "semio-framework-value",
+ "semio-framework-value-clone-source-testing",
  "semio-framework-value-persistent",
  "semio-framework-value-retirement-owner",
  "semio-framework-value-snapshot-read",
@@ -14195,6 +14219,7 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-trace-memory-testing",
  "semio-framework-value",
+ "semio-framework-value-clone-source-testing",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
  "semio-os-spr",
@@ -14370,6 +14395,7 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-trace-memory-testing",
  "semio-framework-value",
+ "semio-framework-value-clone-source-testing",
  "semio-framework-value-derive",
  "semio-framework-value-persistent",
  "semio-framework-value-snapshot-read",
@@ -14953,7 +14979,9 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-job",
+ "semio-framework-job-native-decode",
  "semio-framework-kernel-identity",
+ "semio-framework-pack-json-output-receiving",
  "semio-framework-schema-composition",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -14984,6 +15012,31 @@ dependencies = [
 
 [[package]]
 name = "semio-plugin-actor-input"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-actor",
+ "semio-framework-job",
+ "semio-framework-job-native-decode",
+ "semio-framework-pack-json",
+ "semio-framework-pack-json-output-receiving",
+ "semio-framework-value",
+ "semio-plugin-abi",
+ "semio-plugin-actor-input-decoder",
+ "semio-plugin-actor-input-wire",
+]
+
+[[package]]
+name = "semio-plugin-actor-input-decoder"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-pack-json-output-receiving",
+ "semio-plugin-abi",
+]
+
+[[package]]
+name = "semio-plugin-actor-input-wire"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
@@ -15741,6 +15794,7 @@ dependencies = [
  "semio-framework-schema-registry",
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-framework-value-control-contract",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-os-kernel",
@@ -15782,7 +15836,6 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-plugin-abi",
- "semio-plugin-actor-input",
  "semio-ui-contract",
  "semio-ui-contract-values",
  "serde",
@@ -16140,6 +16193,7 @@ dependencies = [
  "semio-os-services",
  "semio-plugin-guest-contract",
  "semio-plugin-host-guest-runtime",
+ "semio-plugin-host-operation",
  "semio-plugin-host-process-transport",
  "semio-plugin-host-shard",
  "serde_json",
@@ -17392,6 +17446,7 @@ dependencies = [
  "semio-framework-value-testing-allocator",
  "semio-os-kernel",
  "semio-plugin-abi",
+ "semio-plugin-actor-input",
  "semio-plugin-decl-emission",
  "semio-plugin-extension",
  "semio-plugin-guest-contract",
@@ -18305,6 +18360,7 @@ dependencies = [
  "semio-plugin-reactor-tasks",
  "semio-plugin-retained-command",
  "semio-plugin-runtime-exchange",
+ "semio-plugin-runtime-instances",
  "semio-plugin-runtime-ops",
  "semio-plugin-store-lifecycle",
  "semio-plugin-testing-caller",
@@ -18739,6 +18795,7 @@ dependencies = [
  "semio-plugin-testing-caller",
  "semio-plugin-testing-fixtures",
  "semio-plugin-testing-fixtures-publication",
+ "semio-plugin-testing-instance-laws",
  "semio-plugin-testing-laws",
  "semio-plugin-tool-machine",
  "semio-plugin-tool-run",
@@ -19968,6 +20025,7 @@ dependencies = [
  "semio-plugin-instance-app",
  "semio-plugin-instance-jobs",
  "semio-plugin-interaction",
+ "semio-plugin-mounted-owner",
  "semio-plugin-operation",
  "semio-plugin-ownership",
  "semio-plugin-retained-command",
@@ -25776,6 +25834,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-ui-tui-charts"
+version = "0.1.0"
+dependencies = [
+ "semio-ui-locale",
+ "semio-ui-tui-core",
+]
+
+[[package]]
 name = "semio-ui-tui-core"
 version = "0.1.0"
 dependencies = [
@@ -25823,7 +25889,6 @@ dependencies = [
 name = "semio-ui-tui-widgets"
 version = "0.1.0"
 dependencies = [
- "semio-ui-locale",
  "semio-ui-tui-core",
  "semio-ui-tui-vt",
 ]

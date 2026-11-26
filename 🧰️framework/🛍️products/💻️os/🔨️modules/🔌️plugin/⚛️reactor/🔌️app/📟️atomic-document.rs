@@ -3,14 +3,10 @@
 use semio_framework::FaultFrom;
 use semio_framework_job::{OriginalTurnFailure, StepContext};
 use semio_framework_value::{RetainedAllocationEffect, RetainedCloneProgress, RetirementPollExit};
-use semio_os_kernel::os_spr::{ColdMutation, MergeReport, StoreMutationFor, StoreState, atomic_group::AtomicBackboneSender};
+use semio_os_kernel::os_spr::{ColdMutation, MergeReport, StoreMutationFor, StoreState};
 use semio_os_kernel::os_store::{ArtifactStore, AtomicStoreReceive};
 use semio_os_kernel::os_store::backbone::atomic_transport::{AtomicBackboneInbox, AtomicInboxStep};
 use semio_os_kernel::os_vcs::VcsError;
-
-pub fn original_atomic_outbox(original: Option<&dyn semio_framework_value::ByteReadSource>) -> bool {
-    original.is_some_and(AtomicBackboneSender::matches_prepared)
-}
 
 /// 📥️ Drives a bounded slice and returns one completely authenticated edit to its caller.
 fn advance_atomic_inbox(
@@ -37,7 +33,7 @@ fn advance_atomic_inbox(
         return Ok(());
     }
     for _ in 0..64 {
-        if cx.should_yield() { break; }
+        if cx.is_cancelled() || cx.should_yield() { break; }
         let grant = cx.retained_grant();
         let Some((result, performed)) = cx.with_original_effect(grant, |_, effect| {
             if original.is_some() {
@@ -79,7 +75,7 @@ where
 }
 
 /// 📤️ Reports only the source-funded work actually performed by the attached Store sender.
-pub fn drive_atomic_outbox(
+pub fn drive_document_outbox(
     cx: &mut StepContext<'_>,
     mut advance: impl FnMut(&mut RetainedAllocationEffect<'_>) -> Result<Option<RetainedCloneProgress>, VcsError>,
 ) -> Result<(), OriginalTurnFailure> {

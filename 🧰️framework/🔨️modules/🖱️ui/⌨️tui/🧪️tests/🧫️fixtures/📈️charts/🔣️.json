@@ -1,0 +1,3141 @@
+{
+ "schema": "semio-ui-tui-charts-fixture/1",
+ "eighths": [
+  {
+   "v": 0,
+   "lo": 0,
+   "hi": 10,
+   "levels": 8,
+   "expect": 1
+  },
+  {
+   "v": 10,
+   "lo": 0,
+   "hi": 10,
+   "levels": 8,
+   "expect": 8
+  },
+  {
+   "v": 5,
+   "lo": 0,
+   "hi": 10,
+   "levels": 8,
+   "expect": 5
+  },
+  {
+   "v": 5.0,
+   "lo": 5.0,
+   "hi": 5.0,
+   "levels": 8,
+   "expect": 4
+  },
+  {
+   "v": 3.3,
+   "lo": 0,
+   "hi": 10,
+   "levels": 8,
+   "expect": 3
+  },
+  {
+   "v": -4,
+   "lo": 0,
+   "hi": 10,
+   "levels": 8,
+   "expect": 1
+  },
+  {
+   "v": 99,
+   "lo": 0,
+   "hi": 10,
+   "levels": 8,
+   "expect": 8
+  },
+  {
+   "v": 0.07,
+   "lo": 0,
+   "hi": 1,
+   "levels": 24,
+   "expect": 3
+  },
+  {
+   "v": 0.5,
+   "lo": 0,
+   "hi": 1,
+   "levels": 24,
+   "expect": 13
+  },
+  {
+   "v": 2,
+   "lo": 2,
+   "hi": 2,
+   "levels": 24,
+   "expect": 12
+  },
+  {
+   "v": 7,
+   "lo": 0,
+   "hi": 100,
+   "levels": 16,
+   "expect": 2
+  }
+ ],
+ "dot_row": [
+  {
+   "v": 0,
+   "lo": 0,
+   "hi": 10,
+   "dots": 8,
+   "expect": 7
+  },
+  {
+   "v": 10,
+   "lo": 0,
+   "hi": 10,
+   "dots": 8,
+   "expect": 0
+  },
+  {
+   "v": 5,
+   "lo": 0,
+   "hi": 10,
+   "dots": 8,
+   "expect": 4
+  },
+  {
+   "v": 5,
+   "lo": 5,
+   "hi": 5,
+   "dots": 8,
+   "expect": 4
+  },
+  {
+   "v": 1,
+   "lo": 0,
+   "hi": 3,
+   "dots": 12,
+   "expect": 7
+  },
+  {
+   "v": 2.5,
+   "lo": 0,
+   "hi": 3,
+   "dots": 12,
+   "expect": 2
+  },
+  {
+   "v": 7,
+   "lo": 0,
+   "hi": 100,
+   "dots": 4,
+   "expect": 3
+  },
+  {
+   "v": 200,
+   "lo": 0,
+   "hi": 100,
+   "dots": 4,
+   "expect": 0
+  }
+ ],
+ "filled_eighths": [
+  {
+   "fraction": 0,
+   "cells": 10,
+   "expect": 0
+  },
+  {
+   "fraction": 1,
+   "cells": 10,
+   "expect": 80
+  },
+  {
+   "fraction": 0.5,
+   "cells": 10,
+   "expect": 40
+  },
+  {
+   "fraction": 0.333,
+   "cells": 7,
+   "expect": 19
+  },
+  {
+   "fraction": 1.7,
+   "cells": 5,
+   "expect": 40
+  },
+  {
+   "fraction": -1,
+   "cells": 5,
+   "expect": 0
+  },
+  {
+   "fraction": 0.073,
+   "cells": 20,
+   "expect": 12
+  }
+ ],
+ "level": [
+  {
+   "fraction": 0.5,
+   "warn": 0.7,
+   "critical": 0.9,
+   "polarity": "high",
+   "expect": "ok"
+  },
+  {
+   "fraction": 0.7,
+   "warn": 0.7,
+   "critical": 0.9,
+   "polarity": "high",
+   "expect": "warn"
+  },
+  {
+   "fraction": 0.9,
+   "warn": 0.7,
+   "critical": 0.9,
+   "polarity": "high",
+   "expect": "critical"
+  },
+  {
+   "fraction": 1.2,
+   "warn": 0.7,
+   "critical": 0.9,
+   "polarity": "high",
+   "expect": "critical"
+  },
+  {
+   "fraction": 0.5,
+   "warn": 0.2,
+   "critical": 0.1,
+   "polarity": "low",
+   "expect": "ok"
+  },
+  {
+   "fraction": 0.2,
+   "warn": 0.2,
+   "critical": 0.1,
+   "polarity": "low",
+   "expect": "warn"
+  },
+  {
+   "fraction": 0.05,
+   "warn": 0.2,
+   "critical": 0.1,
+   "polarity": "low",
+   "expect": "critical"
+  },
+  {
+   "fraction": 0.0,
+   "warn": 0.7,
+   "critical": 0.9,
+   "polarity": "high",
+   "expect": "ok"
+  }
+ ],
+ "columns": [
+  {
+   "name": "uniform",
+   "axis": "time",
+   "domain": [
+    0,
+    4000
+   ],
+   "width": 8,
+   "buckets": [
+    [
+     0,
+     1000,
+     [
+      0,
+      1,
+      0.5,
+      0.75
+     ]
+    ],
+    [
+     1000,
+     2000,
+     [
+      1,
+      2,
+      1.5,
+      1.75
+     ]
+    ],
+    [
+     2000,
+     3000,
+     [
+      2,
+      3,
+      2.5,
+      2.75
+     ]
+    ],
+    [
+     3000,
+     4000,
+     [
+      3,
+      4,
+      3.5,
+      3.75
+     ]
+    ]
+   ],
+   "expect": [
+    [
+     0,
+     1,
+     0.5,
+     0.75
+    ],
+    [
+     0,
+     1,
+     0.5,
+     0.75
+    ],
+    [
+     1,
+     2,
+     1.5,
+     1.75
+    ],
+    [
+     1,
+     2,
+     1.5,
+     1.75
+    ],
+    [
+     2,
+     3,
+     2.5,
+     2.75
+    ],
+    [
+     2,
+     3,
+     2.5,
+     2.75
+    ],
+    [
+     3,
+     4,
+     3.5,
+     3.75
+    ],
+    [
+     3,
+     4,
+     3.5,
+     3.75
+    ]
+   ],
+   "tier_columns": []
+  },
+  {
+   "name": "gap",
+   "axis": "time",
+   "domain": [
+    0,
+    4000
+   ],
+   "width": 8,
+   "buckets": [
+    [
+     0,
+     1000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     1000,
+     2000,
+     null
+    ],
+    [
+     2000,
+     3000,
+     null
+    ],
+    [
+     3000,
+     4000,
+     [
+      9,
+      9,
+      9,
+      9
+     ]
+    ]
+   ],
+   "expect": [
+    [
+     1,
+     1,
+     1.0,
+     1
+    ],
+    [
+     1,
+     1,
+     1.0,
+     1
+    ],
+    null,
+    null,
+    null,
+    null,
+    [
+     9,
+     9,
+     9.0,
+     9
+    ],
+    [
+     9,
+     9,
+     9.0,
+     9
+    ]
+   ],
+   "tier_columns": []
+  },
+  {
+   "name": "tiers_time",
+   "axis": "time",
+   "domain": [
+    0,
+    184000
+   ],
+   "width": 23,
+   "buckets": [
+    [
+     0,
+     60000,
+     [
+      1,
+      3,
+      2,
+      2
+     ]
+    ],
+    [
+     60000,
+     120000,
+     [
+      2,
+      4,
+      3,
+      3
+     ]
+    ],
+    [
+     120000,
+     180000,
+     null
+    ],
+    [
+     180000,
+     181000,
+     [
+      5,
+      5,
+      5,
+      5
+     ]
+    ],
+    [
+     181000,
+     182000,
+     [
+      6,
+      8,
+      7,
+      7
+     ]
+    ],
+    [
+     182000,
+     183000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     183000,
+     184000,
+     [
+      4,
+      4,
+      4,
+      4
+     ]
+    ]
+   ],
+   "expect": [
+    [
+     1,
+     3,
+     2.0,
+     2
+    ],
+    [
+     1,
+     3,
+     2.0,
+     2
+    ],
+    [
+     1,
+     3,
+     2.0,
+     2
+    ],
+    [
+     1,
+     3,
+     2.0,
+     2
+    ],
+    [
+     1,
+     3,
+     2.0,
+     2
+    ],
+    [
+     1,
+     3,
+     2.0,
+     2
+    ],
+    [
+     1,
+     3,
+     2.0,
+     2
+    ],
+    [
+     1,
+     4,
+     2.5,
+     3
+    ],
+    [
+     2,
+     4,
+     3.0,
+     3
+    ],
+    [
+     2,
+     4,
+     3.0,
+     3
+    ],
+    [
+     2,
+     4,
+     3.0,
+     3
+    ],
+    [
+     2,
+     4,
+     3.0,
+     3
+    ],
+    [
+     2,
+     4,
+     3.0,
+     3
+    ],
+    [
+     2,
+     4,
+     3.0,
+     3
+    ],
+    [
+     2,
+     4,
+     3.0,
+     3
+    ],
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    [
+     1,
+     8,
+     4.25,
+     4
+    ]
+   ],
+   "tier_columns": [
+    [
+     22,
+     3
+    ]
+   ]
+  },
+  {
+   "name": "tiers_index",
+   "axis": "index",
+   "domain": [
+    0,
+    7
+   ],
+   "width": 23,
+   "buckets": [
+    [
+     0,
+     60000,
+     [
+      1,
+      3,
+      2,
+      2
+     ]
+    ],
+    [
+     60000,
+     120000,
+     [
+      2,
+      4,
+      3,
+      3
+     ]
+    ],
+    [
+     120000,
+     180000,
+     null
+    ],
+    [
+     180000,
+     181000,
+     [
+      5,
+      5,
+      5,
+      5
+     ]
+    ],
+    [
+     181000,
+     182000,
+     [
+      6,
+      8,
+      7,
+      7
+     ]
+    ],
+    [
+     182000,
+     183000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     183000,
+     184000,
+     [
+      4,
+      4,
+      4,
+      4
+     ]
+    ]
+   ],
+   "expect": [
+    [
+     1,
+     3,
+     2.0,
+     2
+    ],
+    [
+     1,
+     3,
+     2.0,
+     2
+    ],
+    [
+     1,
+     3,
+     2.0,
+     2
+    ],
+    [
+     1,
+     3,
+     2.0,
+     2
+    ],
+    [
+     2,
+     4,
+     3.0,
+     3
+    ],
+    [
+     2,
+     4,
+     3.0,
+     3
+    ],
+    [
+     2,
+     4,
+     3.0,
+     3
+    ],
+    null,
+    null,
+    null,
+    [
+     5,
+     5,
+     5.0,
+     5
+    ],
+    [
+     5,
+     5,
+     5.0,
+     5
+    ],
+    [
+     5,
+     5,
+     5.0,
+     5
+    ],
+    [
+     5,
+     5,
+     5.0,
+     5
+    ],
+    [
+     6,
+     8,
+     7.0,
+     7
+    ],
+    [
+     6,
+     8,
+     7.0,
+     7
+    ],
+    [
+     6,
+     8,
+     7.0,
+     7
+    ],
+    [
+     1,
+     1,
+     1.0,
+     1
+    ],
+    [
+     1,
+     1,
+     1.0,
+     1
+    ],
+    [
+     1,
+     1,
+     1.0,
+     1
+    ],
+    [
+     4,
+     4,
+     4.0,
+     4
+    ],
+    [
+     4,
+     4,
+     4.0,
+     4
+    ],
+    [
+     4,
+     4,
+     4.0,
+     4
+    ]
+   ],
+   "tier_columns": [
+    [
+     9,
+     3
+    ]
+   ]
+  },
+  {
+   "name": "narrow",
+   "axis": "time",
+   "domain": [
+    0,
+    184000
+   ],
+   "width": 3,
+   "buckets": [
+    [
+     0,
+     60000,
+     [
+      1,
+      3,
+      2,
+      2
+     ]
+    ],
+    [
+     60000,
+     120000,
+     [
+      2,
+      4,
+      3,
+      3
+     ]
+    ],
+    [
+     120000,
+     180000,
+     null
+    ],
+    [
+     180000,
+     181000,
+     [
+      5,
+      5,
+      5,
+      5
+     ]
+    ],
+    [
+     181000,
+     182000,
+     [
+      6,
+      8,
+      7,
+      7
+     ]
+    ],
+    [
+     182000,
+     183000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     183000,
+     184000,
+     [
+      4,
+      4,
+      4,
+      4
+     ]
+    ]
+   ],
+   "expect": [
+    [
+     1,
+     4,
+     2.021733813770727,
+     3
+    ],
+    [
+     2,
+     4,
+     3.0,
+     3
+    ],
+    [
+     1,
+     8,
+     4.25,
+     4
+    ]
+   ],
+   "tier_columns": [
+    [
+     2,
+     3
+    ]
+   ]
+  },
+  {
+   "name": "wider_than_buckets",
+   "axis": "index",
+   "domain": [
+    0,
+    2
+   ],
+   "width": 7,
+   "buckets": [
+    [
+     0,
+     10,
+     [
+      1,
+      2,
+      1.5,
+      2
+     ]
+    ],
+    [
+     10,
+     20,
+     [
+      3,
+      4,
+      3.5,
+      4
+     ]
+    ]
+   ],
+   "expect": [
+    [
+     1,
+     2,
+     1.5,
+     2
+    ],
+    [
+     1,
+     2,
+     1.5,
+     2
+    ],
+    [
+     1,
+     2,
+     1.5,
+     2
+    ],
+    [
+     1,
+     2,
+     1.5,
+     2
+    ],
+    [
+     3,
+     4,
+     3.5,
+     4
+    ],
+    [
+     3,
+     4,
+     3.5,
+     4
+    ],
+    [
+     3,
+     4,
+     3.5,
+     4
+    ]
+   ],
+   "tier_columns": []
+  },
+  {
+   "name": "nan_is_gap",
+   "axis": "time",
+   "domain": [
+    0,
+    2000
+   ],
+   "width": 4,
+   "buckets": [
+    [
+     0,
+     1000,
+     [
+      "nan",
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     1000,
+     2000,
+     [
+      2,
+      2,
+      2,
+      2
+     ]
+    ]
+   ],
+   "expect": [
+    null,
+    null,
+    [
+     2,
+     2,
+     2.0,
+     2
+    ],
+    [
+     2,
+     2,
+     2.0,
+     2
+    ]
+   ],
+   "tier_columns": []
+  }
+ ],
+ "domain": [
+  {
+   "axis": "time",
+   "buckets": [
+    [
+     0,
+     60000,
+     [
+      1,
+      3,
+      2,
+      2
+     ]
+    ],
+    [
+     60000,
+     120000,
+     [
+      2,
+      4,
+      3,
+      3
+     ]
+    ],
+    [
+     120000,
+     180000,
+     null
+    ],
+    [
+     180000,
+     181000,
+     [
+      5,
+      5,
+      5,
+      5
+     ]
+    ],
+    [
+     181000,
+     182000,
+     [
+      6,
+      8,
+      7,
+      7
+     ]
+    ],
+    [
+     182000,
+     183000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     183000,
+     184000,
+     [
+      4,
+      4,
+      4,
+      4
+     ]
+    ]
+   ],
+   "expect": [
+    0,
+    184000
+   ]
+  },
+  {
+   "axis": "index",
+   "buckets": [
+    [
+     0,
+     60000,
+     [
+      1,
+      3,
+      2,
+      2
+     ]
+    ],
+    [
+     60000,
+     120000,
+     [
+      2,
+      4,
+      3,
+      3
+     ]
+    ],
+    [
+     120000,
+     180000,
+     null
+    ],
+    [
+     180000,
+     181000,
+     [
+      5,
+      5,
+      5,
+      5
+     ]
+    ],
+    [
+     181000,
+     182000,
+     [
+      6,
+      8,
+      7,
+      7
+     ]
+    ],
+    [
+     182000,
+     183000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     183000,
+     184000,
+     [
+      4,
+      4,
+      4,
+      4
+     ]
+    ]
+   ],
+   "expect": [
+    0,
+    7
+   ]
+  }
+ ],
+ "spark": [
+  {
+   "name": "empty",
+   "width": 8,
+   "rows": 1,
+   "axis": "time",
+   "range": null,
+   "aggregate": "mean",
+   "band": false,
+   "buckets": [],
+   "expect": [
+    "········"
+   ]
+  },
+  {
+   "name": "all_gaps",
+   "width": 6,
+   "rows": 1,
+   "axis": "time",
+   "range": null,
+   "aggregate": "mean",
+   "band": false,
+   "buckets": [
+    [
+     0,
+     1000,
+     null
+    ],
+    [
+     1000,
+     2000,
+     null
+    ]
+   ],
+   "expect": [
+    "······"
+   ]
+  },
+  {
+   "name": "gaps",
+   "width": 8,
+   "rows": 1,
+   "axis": "time",
+   "range": null,
+   "aggregate": "mean",
+   "band": false,
+   "buckets": [
+    [
+     0,
+     1000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     1000,
+     2000,
+     [
+      2,
+      2,
+      2,
+      2
+     ]
+    ],
+    [
+     2000,
+     3000,
+     null
+    ],
+    [
+     3000,
+     4000,
+     null
+    ],
+    [
+     4000,
+     5000,
+     [
+      8,
+      8,
+      8,
+      8
+     ]
+    ],
+    [
+     5000,
+     6000,
+     [
+      4,
+      4,
+      4,
+      4
+     ]
+    ],
+    [
+     6000,
+     7000,
+     null
+    ],
+    [
+     7000,
+     8000,
+     [
+      5,
+      5,
+      5,
+      5
+     ]
+    ]
+   ],
+   "expect": [
+    "▁▂··█▄·▅"
+   ]
+  },
+  {
+   "name": "one_point",
+   "width": 6,
+   "rows": 1,
+   "axis": "time",
+   "range": null,
+   "aggregate": "mean",
+   "band": false,
+   "buckets": [
+    [
+     0,
+     1000,
+     [
+      42,
+      42,
+      42,
+      42
+     ]
+    ]
+   ],
+   "expect": [
+    "▄▄▄▄▄▄"
+   ]
+  },
+  {
+   "name": "flat",
+   "width": 8,
+   "rows": 1,
+   "axis": "time",
+   "range": null,
+   "aggregate": "mean",
+   "band": false,
+   "buckets": [
+    [
+     0,
+     1000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ],
+    [
+     1000,
+     2000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ],
+    [
+     2000,
+     3000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ],
+    [
+     3000,
+     4000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ],
+    [
+     4000,
+     5000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ],
+    [
+     5000,
+     6000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ],
+    [
+     6000,
+     7000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ],
+    [
+     7000,
+     8000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ]
+   ],
+   "expect": [
+    "▄▄▄▄▄▄▄▄"
+   ]
+  },
+  {
+   "name": "flat_fixed_range",
+   "width": 8,
+   "rows": 1,
+   "axis": "time",
+   "range": [
+    0,
+    6
+   ],
+   "aggregate": "mean",
+   "band": false,
+   "buckets": [
+    [
+     0,
+     1000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ],
+    [
+     1000,
+     2000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ],
+    [
+     2000,
+     3000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ],
+    [
+     3000,
+     4000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ],
+    [
+     4000,
+     5000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ],
+    [
+     5000,
+     6000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ],
+    [
+     6000,
+     7000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ],
+    [
+     7000,
+     8000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ]
+   ],
+   "expect": [
+    "▅▅▅▅▅▅▅▅"
+   ]
+  },
+  {
+   "name": "ramp",
+   "width": 8,
+   "rows": 1,
+   "axis": "time",
+   "range": null,
+   "aggregate": "mean",
+   "band": false,
+   "buckets": [
+    [
+     0,
+     1000,
+     [
+      0,
+      0,
+      0,
+      0
+     ]
+    ],
+    [
+     1000,
+     2000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     2000,
+     3000,
+     [
+      2,
+      2,
+      2,
+      2
+     ]
+    ],
+    [
+     3000,
+     4000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ],
+    [
+     4000,
+     5000,
+     [
+      4,
+      4,
+      4,
+      4
+     ]
+    ],
+    [
+     5000,
+     6000,
+     [
+      5,
+      5,
+      5,
+      5
+     ]
+    ],
+    [
+     6000,
+     7000,
+     [
+      6,
+      6,
+      6,
+      6
+     ]
+    ],
+    [
+     7000,
+     8000,
+     [
+      7,
+      7,
+      7,
+      7
+     ]
+    ]
+   ],
+   "expect": [
+    "▁▂▃▄▅▆▇█"
+   ]
+  },
+  {
+   "name": "spikes",
+   "width": 12,
+   "rows": 1,
+   "axis": "time",
+   "range": null,
+   "aggregate": "mean",
+   "band": false,
+   "buckets": [
+    [
+     0,
+     1000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     1000,
+     2000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     2000,
+     3000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     3000,
+     4000,
+     [
+      100,
+      100,
+      100,
+      100
+     ]
+    ],
+    [
+     4000,
+     5000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     5000,
+     6000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     6000,
+     7000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     7000,
+     8000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     8000,
+     9000,
+     [
+      100,
+      100,
+      100,
+      100
+     ]
+    ],
+    [
+     9000,
+     10000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     10000,
+     11000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     11000,
+     12000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ]
+   ],
+   "expect": [
+    "▁▁▁█▁▁▁▁█▁▁▁"
+   ]
+  },
+  {
+   "name": "spike_max_aggregate",
+   "width": 4,
+   "rows": 1,
+   "axis": "time",
+   "range": null,
+   "aggregate": "max",
+   "band": false,
+   "buckets": [
+    [
+     0,
+     1000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     1000,
+     2000,
+     [
+      1,
+      90,
+      5,
+      1
+     ]
+    ],
+    [
+     2000,
+     3000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     3000,
+     4000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ]
+   ],
+   "expect": [
+    "▁█▁▁"
+   ]
+  },
+  {
+   "name": "band",
+   "width": 8,
+   "rows": 3,
+   "axis": "time",
+   "range": null,
+   "aggregate": "mean",
+   "band": true,
+   "buckets": [
+    [
+     0,
+     1000,
+     [
+      0,
+      6,
+      3,
+      2
+     ]
+    ],
+    [
+     1000,
+     2000,
+     [
+      1,
+      7,
+      4,
+      3
+     ]
+    ],
+    [
+     2000,
+     3000,
+     [
+      2,
+      8,
+      5,
+      4
+     ]
+    ],
+    [
+     3000,
+     4000,
+     [
+      3,
+      9,
+      6,
+      5
+     ]
+    ],
+    [
+     4000,
+     5000,
+     [
+      4,
+      10,
+      7,
+      6
+     ]
+    ],
+    [
+     5000,
+     6000,
+     [
+      5,
+      11,
+      8,
+      7
+     ]
+    ],
+    [
+     6000,
+     7000,
+     [
+      6,
+      12,
+      9,
+      8
+     ]
+    ],
+    [
+     7000,
+     8000,
+     [
+      7,
+      13,
+      10,
+      9
+     ]
+    ]
+   ],
+   "expect": [
+    "   ░░░▁▃",
+    "░░▂▄▅▇██",
+    "▆███████"
+   ]
+  },
+  {
+   "name": "band_off",
+   "width": 8,
+   "rows": 3,
+   "axis": "time",
+   "range": null,
+   "aggregate": "mean",
+   "band": false,
+   "buckets": [
+    [
+     0,
+     1000,
+     [
+      0,
+      6,
+      3,
+      2
+     ]
+    ],
+    [
+     1000,
+     2000,
+     [
+      1,
+      7,
+      4,
+      3
+     ]
+    ],
+    [
+     2000,
+     3000,
+     [
+      2,
+      8,
+      5,
+      4
+     ]
+    ],
+    [
+     3000,
+     4000,
+     [
+      3,
+      9,
+      6,
+      5
+     ]
+    ],
+    [
+     4000,
+     5000,
+     [
+      4,
+      10,
+      7,
+      6
+     ]
+    ],
+    [
+     5000,
+     6000,
+     [
+      5,
+      11,
+      8,
+      7
+     ]
+    ],
+    [
+     6000,
+     7000,
+     [
+      6,
+      12,
+      9,
+      8
+     ]
+    ],
+    [
+     7000,
+     8000,
+     [
+      7,
+      13,
+      10,
+      9
+     ]
+    ]
+   ],
+   "expect": [
+    "     ▁▅█",
+    "   ▃▆███",
+    "▁▄██████"
+   ]
+  },
+  {
+   "name": "narrow",
+   "width": 3,
+   "rows": 1,
+   "axis": "time",
+   "range": null,
+   "aggregate": "mean",
+   "band": false,
+   "buckets": [
+    [
+     0,
+     1000,
+     [
+      0,
+      0,
+      0,
+      0
+     ]
+    ],
+    [
+     1000,
+     2000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     2000,
+     3000,
+     [
+      2,
+      2,
+      2,
+      2
+     ]
+    ],
+    [
+     3000,
+     4000,
+     [
+      3,
+      3,
+      3,
+      3
+     ]
+    ],
+    [
+     4000,
+     5000,
+     [
+      4,
+      4,
+      4,
+      4
+     ]
+    ],
+    [
+     5000,
+     6000,
+     [
+      5,
+      5,
+      5,
+      5
+     ]
+    ],
+    [
+     6000,
+     7000,
+     [
+      6,
+      6,
+      6,
+      6
+     ]
+    ],
+    [
+     7000,
+     8000,
+     [
+      7,
+      7,
+      7,
+      7
+     ]
+    ]
+   ],
+   "expect": [
+    "▂▄▇"
+   ]
+  },
+  {
+   "name": "narrow_mean_of_columns",
+   "width": 2,
+   "rows": 1,
+   "axis": "time",
+   "range": null,
+   "aggregate": "mean",
+   "band": false,
+   "buckets": [
+    [
+     0,
+     1000,
+     [
+      0,
+      0,
+      0,
+      0
+     ]
+    ],
+    [
+     1000,
+     2000,
+     [
+      10,
+      10,
+      10,
+      10
+     ]
+    ],
+    [
+     2000,
+     3000,
+     [
+      0,
+      0,
+      0,
+      0
+     ]
+    ],
+    [
+     3000,
+     4000,
+     [
+      10,
+      10,
+      10,
+      10
+     ]
+    ]
+   ],
+   "expect": [
+    "▅▅"
+   ]
+  },
+  {
+   "name": "tiers_time",
+   "width": 23,
+   "rows": 1,
+   "axis": "time",
+   "range": null,
+   "aggregate": "mean",
+   "band": false,
+   "buckets": [
+    [
+     0,
+     60000,
+     [
+      1,
+      3,
+      2,
+      2
+     ]
+    ],
+    [
+     60000,
+     120000,
+     [
+      2,
+      4,
+      3,
+      3
+     ]
+    ],
+    [
+     120000,
+     180000,
+     null
+    ],
+    [
+     180000,
+     181000,
+     [
+      5,
+      5,
+      5,
+      5
+     ]
+    ],
+    [
+     181000,
+     182000,
+     [
+      6,
+      8,
+      7,
+      7
+     ]
+    ],
+    [
+     182000,
+     183000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     183000,
+     184000,
+     [
+      4,
+      4,
+      4,
+      4
+     ]
+    ]
+   ],
+   "expect": [
+    "▂▂▂▂▂▂▂▃▃▃▃▃▃▃▃·······▅"
+   ]
+  },
+  {
+   "name": "tiers_index",
+   "width": 23,
+   "rows": 1,
+   "axis": "index",
+   "range": null,
+   "aggregate": "mean",
+   "band": false,
+   "buckets": [
+    [
+     0,
+     60000,
+     [
+      1,
+      3,
+      2,
+      2
+     ]
+    ],
+    [
+     60000,
+     120000,
+     [
+      2,
+      4,
+      3,
+      3
+     ]
+    ],
+    [
+     120000,
+     180000,
+     null
+    ],
+    [
+     180000,
+     181000,
+     [
+      5,
+      5,
+      5,
+      5
+     ]
+    ],
+    [
+     181000,
+     182000,
+     [
+      6,
+      8,
+      7,
+      7
+     ]
+    ],
+    [
+     182000,
+     183000,
+     [
+      1,
+      1,
+      1,
+      1
+     ]
+    ],
+    [
+     183000,
+     184000,
+     [
+      4,
+      4,
+      4,
+      4
+     ]
+    ]
+   ],
+   "expect": [
+    "▂▂▂▂▃▃▃···▆▆▆▆███▁▁▁▅▅▅"
+   ]
+  },
+  {
+   "name": "fixed_range_clamps",
+   "width": 6,
+   "rows": 1,
+   "axis": "time",
+   "range": [
+    0,
+    10
+   ],
+   "aggregate": "mean",
+   "band": false,
+   "buckets": [
+    [
+     0,
+     1000,
+     [
+      -5,
+      -5,
+      -5,
+      -5
+     ]
+    ],
+    [
+     1000,
+     2000,
+     [
+      0,
+      0,
+      0,
+      0
+     ]
+    ],
+    [
+     2000,
+     3000,
+     [
+      5,
+      5,
+      5,
+      5
+     ]
+    ],
+    [
+     3000,
+     4000,
+     [
+      10,
+      10,
+      10,
+      10
+     ]
+    ],
+    [
+     4000,
+     5000,
+     [
+      15,
+      15,
+      15,
+      15
+     ]
+    ],
+    [
+     5000,
+     6000,
+     [
+      20,
+      20,
+      20,
+      20
+     ]
+    ]
+   ],
+   "expect": [
+    "▁▁▅███"
+   ]
+  },
+  {
+   "name": "last_aggregate",
+   "width": 4,
+   "rows": 1,
+   "axis": "time",
+   "range": null,
+   "aggregate": "last",
+   "band": false,
+   "buckets": [
+    [
+     0,
+     1000,
+     [
+      0,
+      10,
+      5,
+      0
+     ]
+    ],
+    [
+     1000,
+     2000,
+     [
+      0,
+      10,
+      5,
+      3
+     ]
+    ],
+    [
+     2000,
+     3000,
+     [
+      0,
+      10,
+      5,
+      6
+     ]
+    ],
+    [
+     3000,
+     4000,
+     [
+      0,
+      10,
+      5,
+      10
+     ]
+    ]
+   ],
+   "expect": [
+    "▁▃▅█"
+   ]
+  }
+ ],
+ "format": [
+  {
+   "unit": "count",
+   "locale": "en",
+   "v": 0,
+   "expect": "0"
+  },
+  {
+   "unit": "count",
+   "locale": "en",
+   "v": 7,
+   "expect": "7"
+  },
+  {
+   "unit": "count",
+   "locale": "en",
+   "v": 42.5,
+   "expect": "42.5"
+  },
+  {
+   "unit": "count",
+   "locale": "en",
+   "v": 999,
+   "expect": "999"
+  },
+  {
+   "unit": "count",
+   "locale": "en",
+   "v": 1000,
+   "expect": "1.00k"
+  },
+  {
+   "unit": "count",
+   "locale": "en",
+   "v": 1234,
+   "expect": "1.23k"
+  },
+  {
+   "unit": "count",
+   "locale": "en",
+   "v": 15000,
+   "expect": "15.0k"
+  },
+  {
+   "unit": "count",
+   "locale": "en",
+   "v": 2500000,
+   "expect": "2.50M"
+  },
+  {
+   "unit": "count",
+   "locale": "en",
+   "v": 999999,
+   "expect": "1.00M"
+  },
+  {
+   "unit": "count",
+   "locale": "en",
+   "v": 3200000000.0,
+   "expect": "3.20G"
+  },
+  {
+   "unit": "count",
+   "locale": "en",
+   "v": 0.5,
+   "expect": "0.50"
+  },
+  {
+   "unit": "count",
+   "locale": "en",
+   "v": -12,
+   "expect": "-12"
+  },
+  {
+   "unit": "count",
+   "locale": "de",
+   "v": 0,
+   "expect": "0"
+  },
+  {
+   "unit": "count",
+   "locale": "de",
+   "v": 7,
+   "expect": "7"
+  },
+  {
+   "unit": "count",
+   "locale": "de",
+   "v": 42.5,
+   "expect": "42,5"
+  },
+  {
+   "unit": "count",
+   "locale": "de",
+   "v": 999,
+   "expect": "999"
+  },
+  {
+   "unit": "count",
+   "locale": "de",
+   "v": 1000,
+   "expect": "1,00k"
+  },
+  {
+   "unit": "count",
+   "locale": "de",
+   "v": 1234,
+   "expect": "1,23k"
+  },
+  {
+   "unit": "count",
+   "locale": "de",
+   "v": 15000,
+   "expect": "15,0k"
+  },
+  {
+   "unit": "count",
+   "locale": "de",
+   "v": 2500000,
+   "expect": "2,50M"
+  },
+  {
+   "unit": "count",
+   "locale": "de",
+   "v": 999999,
+   "expect": "1,00M"
+  },
+  {
+   "unit": "count",
+   "locale": "de",
+   "v": 3200000000.0,
+   "expect": "3,20G"
+  },
+  {
+   "unit": "count",
+   "locale": "de",
+   "v": 0.5,
+   "expect": "0,50"
+  },
+  {
+   "unit": "count",
+   "locale": "de",
+   "v": -12,
+   "expect": "-12"
+  },
+  {
+   "unit": "bytes",
+   "locale": "en",
+   "v": 0,
+   "expect": "0B"
+  },
+  {
+   "unit": "bytes",
+   "locale": "en",
+   "v": 1,
+   "expect": "1B"
+  },
+  {
+   "unit": "bytes",
+   "locale": "en",
+   "v": 1023,
+   "expect": "1023B"
+  },
+  {
+   "unit": "bytes",
+   "locale": "en",
+   "v": 1023.6,
+   "expect": "1.00KiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "en",
+   "v": 1024,
+   "expect": "1.00KiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "en",
+   "v": 1536,
+   "expect": "1.50KiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "en",
+   "v": 10240,
+   "expect": "10.0KiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "en",
+   "v": 1048575,
+   "expect": "1.00MiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "en",
+   "v": 1048576,
+   "expect": "1.00MiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "en",
+   "v": 5368709120,
+   "expect": "5.00GiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "en",
+   "v": 1356797348675584,
+   "expect": "1.21PiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "en",
+   "v": 2251799813685248,
+   "expect": "2.00PiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "en",
+   "v": 3458764513820540928,
+   "expect": "3072PiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "de",
+   "v": 0,
+   "expect": "0B"
+  },
+  {
+   "unit": "bytes",
+   "locale": "de",
+   "v": 1,
+   "expect": "1B"
+  },
+  {
+   "unit": "bytes",
+   "locale": "de",
+   "v": 1023,
+   "expect": "1023B"
+  },
+  {
+   "unit": "bytes",
+   "locale": "de",
+   "v": 1023.6,
+   "expect": "1,00KiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "de",
+   "v": 1024,
+   "expect": "1,00KiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "de",
+   "v": 1536,
+   "expect": "1,50KiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "de",
+   "v": 10240,
+   "expect": "10,0KiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "de",
+   "v": 1048575,
+   "expect": "1,00MiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "de",
+   "v": 1048576,
+   "expect": "1,00MiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "de",
+   "v": 5368709120,
+   "expect": "5,00GiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "de",
+   "v": 1356797348675584,
+   "expect": "1,21PiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "de",
+   "v": 2251799813685248,
+   "expect": "2,00PiB"
+  },
+  {
+   "unit": "bytes",
+   "locale": "de",
+   "v": 3458764513820540928,
+   "expect": "3072PiB"
+  },
+  {
+   "unit": "percent",
+   "locale": "en",
+   "v": 0,
+   "expect": "0.0%"
+  },
+  {
+   "unit": "percent",
+   "locale": "en",
+   "v": 5.25,
+   "expect": "5.2%"
+  },
+  {
+   "unit": "percent",
+   "locale": "en",
+   "v": 9.96,
+   "expect": "10.0%"
+  },
+  {
+   "unit": "percent",
+   "locale": "en",
+   "v": 10,
+   "expect": "10%"
+  },
+  {
+   "unit": "percent",
+   "locale": "en",
+   "v": 73.4,
+   "expect": "73%"
+  },
+  {
+   "unit": "percent",
+   "locale": "en",
+   "v": 100,
+   "expect": "100%"
+  },
+  {
+   "unit": "percent",
+   "locale": "en",
+   "v": 250,
+   "expect": "250%"
+  },
+  {
+   "unit": "percent",
+   "locale": "en",
+   "v": -3.5,
+   "expect": "-3.5%"
+  },
+  {
+   "unit": "percent",
+   "locale": "de",
+   "v": 0,
+   "expect": "0,0%"
+  },
+  {
+   "unit": "percent",
+   "locale": "de",
+   "v": 5.25,
+   "expect": "5,2%"
+  },
+  {
+   "unit": "percent",
+   "locale": "de",
+   "v": 9.96,
+   "expect": "10,0%"
+  },
+  {
+   "unit": "percent",
+   "locale": "de",
+   "v": 10,
+   "expect": "10%"
+  },
+  {
+   "unit": "percent",
+   "locale": "de",
+   "v": 73.4,
+   "expect": "73%"
+  },
+  {
+   "unit": "percent",
+   "locale": "de",
+   "v": 100,
+   "expect": "100%"
+  },
+  {
+   "unit": "percent",
+   "locale": "de",
+   "v": 250,
+   "expect": "250%"
+  },
+  {
+   "unit": "percent",
+   "locale": "de",
+   "v": -3.5,
+   "expect": "-3,5%"
+  },
+  {
+   "unit": "rate",
+   "locale": "en",
+   "v": 0,
+   "expect": "0/s"
+  },
+  {
+   "unit": "rate",
+   "locale": "en",
+   "v": 0.5,
+   "expect": "0.50/s"
+  },
+  {
+   "unit": "rate",
+   "locale": "en",
+   "v": 12,
+   "expect": "12/s"
+  },
+  {
+   "unit": "rate",
+   "locale": "en",
+   "v": 1500,
+   "expect": "1.50k/s"
+  },
+  {
+   "unit": "rate",
+   "locale": "en",
+   "v": 2000000,
+   "expect": "2.00M/s"
+  },
+  {
+   "unit": "rate",
+   "locale": "de",
+   "v": 0,
+   "expect": "0/s"
+  },
+  {
+   "unit": "rate",
+   "locale": "de",
+   "v": 0.5,
+   "expect": "0,50/s"
+  },
+  {
+   "unit": "rate",
+   "locale": "de",
+   "v": 12,
+   "expect": "12/s"
+  },
+  {
+   "unit": "rate",
+   "locale": "de",
+   "v": 1500,
+   "expect": "1,50k/s"
+  },
+  {
+   "unit": "rate",
+   "locale": "de",
+   "v": 2000000,
+   "expect": "2,00M/s"
+  },
+  {
+   "unit": "byte_rate",
+   "locale": "en",
+   "v": 0,
+   "expect": "0B/s"
+  },
+  {
+   "unit": "byte_rate",
+   "locale": "en",
+   "v": 1024,
+   "expect": "1.00KiB/s"
+  },
+  {
+   "unit": "byte_rate",
+   "locale": "en",
+   "v": 3145728,
+   "expect": "3.00MiB/s"
+  },
+  {
+   "unit": "byte_rate",
+   "locale": "en",
+   "v": 5905580032.0,
+   "expect": "5.50GiB/s"
+  },
+  {
+   "unit": "byte_rate",
+   "locale": "de",
+   "v": 0,
+   "expect": "0B/s"
+  },
+  {
+   "unit": "byte_rate",
+   "locale": "de",
+   "v": 1024,
+   "expect": "1,00KiB/s"
+  },
+  {
+   "unit": "byte_rate",
+   "locale": "de",
+   "v": 3145728,
+   "expect": "3,00MiB/s"
+  },
+  {
+   "unit": "byte_rate",
+   "locale": "de",
+   "v": 5905580032.0,
+   "expect": "5,50GiB/s"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "en",
+   "v": 0,
+   "expect": "0ms"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "en",
+   "v": 999,
+   "expect": "999ms"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "en",
+   "v": 1000,
+   "expect": "1.0s"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "en",
+   "v": 2500,
+   "expect": "2.5s"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "en",
+   "v": 9999,
+   "expect": "9.9s"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "en",
+   "v": 10000,
+   "expect": "10s"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "en",
+   "v": 59999,
+   "expect": "59s"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "en",
+   "v": 60000,
+   "expect": "1min"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "en",
+   "v": 65000,
+   "expect": "1min 5s"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "en",
+   "v": 3599999,
+   "expect": "59min 59s"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "en",
+   "v": 3600000,
+   "expect": "1h"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "en",
+   "v": 5400000,
+   "expect": "1h 30min"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "en",
+   "v": 86399999,
+   "expect": "23h 59min"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "en",
+   "v": 86400000,
+   "expect": "1d"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "en",
+   "v": 90000000,
+   "expect": "1d 1h"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "en",
+   "v": 277200000,
+   "expect": "3d 5h"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "en",
+   "v": 1500.4,
+   "expect": "1.5s"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "de",
+   "v": 0,
+   "expect": "0ms"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "de",
+   "v": 999,
+   "expect": "999ms"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "de",
+   "v": 1000,
+   "expect": "1,0s"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "de",
+   "v": 2500,
+   "expect": "2,5s"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "de",
+   "v": 9999,
+   "expect": "9,9s"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "de",
+   "v": 10000,
+   "expect": "10s"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "de",
+   "v": 59999,
+   "expect": "59s"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "de",
+   "v": 60000,
+   "expect": "1Min"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "de",
+   "v": 65000,
+   "expect": "1Min 5s"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "de",
+   "v": 3599999,
+   "expect": "59Min 59s"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "de",
+   "v": 3600000,
+   "expect": "1Std"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "de",
+   "v": 5400000,
+   "expect": "1Std 30Min"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "de",
+   "v": 86399999,
+   "expect": "23Std 59Min"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "de",
+   "v": 86400000,
+   "expect": "1T"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "de",
+   "v": 90000000,
+   "expect": "1T 1Std"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "de",
+   "v": 277200000,
+   "expect": "3T 5Std"
+  },
+  {
+   "unit": "duration_ms",
+   "locale": "de",
+   "v": 1500.4,
+   "expect": "1,5s"
+  },
+  {
+   "unit": "bytes",
+   "locale": "en",
+   "v": null,
+   "expect": "-"
+  }
+ ]
+}

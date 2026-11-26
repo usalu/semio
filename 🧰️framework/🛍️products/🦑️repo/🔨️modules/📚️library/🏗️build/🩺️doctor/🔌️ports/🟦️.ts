@@ -5,11 +5,12 @@ import {fileURLToPath} from "node:url";
 import type {ProcessFactsV1} from "../🟦️.ts";
 
 /** 📦️ Modules of sets that may not be installed on a checkout; a probe reads them only when they exist. */
-export type DoctorOptionalModuleV1="tools"|"sessions-core"|"sessions-build";
+export type DoctorOptionalModuleV1="tools"|"sessions-core"|"sessions-build"|"typecheck";
 const OPTIONAL:Readonly<Record<DoctorOptionalModuleV1,string>>={
  tools:"../../../../../../../🔨️modules/🏃️process/🧰️tools/🟦️.ts",
  "sessions-core":"../../../../../../../🔨️modules/🏃️process/🪪️agent-sessions/🟦️.ts",
  "sessions-build":"../../🪪️agent-sessions/🟦️.ts",
+ typecheck:"../../🔬️typecheck/🟦️.ts",
 };
 
 /** 🔌️ Everything a probe may touch outside the files of the checkout; tests replace each port. */

@@ -274,7 +274,7 @@ fn retained_graph_survives_typed_edits_and_keeps_foreign_objects() {
     decoded.objects.push(PdfIndirectObject { id: foreign, value: PdfObject::Dict(vec![PdfDictEntry::new("Kind", PdfObject::name("Foreign")), PdfDictEntry::new("Page", PdfObject::Ref(ObjRef { num: decoded.objects.iter().find(|o| o.value.dict_get("Type").and_then(PdfObject::as_name) == Some("Page")).unwrap().id.num, gen: 0 }))]) });
     decoded.catalog_extra = vec![PdfDictEntry::new("SemioExtra", PdfObject::Ref(foreign))];
     let mut page = PdfPage::new(100.0, 100.0);
-    page.content = vec![PdfOp::BeginText, PdfOp::SetFont { name: "F1".into(), size: 10.0 }, PdfOp::MoveText { tx: 10.0, ty: 50.0 }, PdfOp::ShowText { text: PdfTextString::text("Second") }, PdfOp::EndText];
+    page.content = vec![PdfOp::BeginText, PdfOp::SetFont { name: "F1".into(), size: 10.0 }, PdfOp::MoveText { tx: 10.0, ty: 50.0 }, PdfOp::ShowText { text: PdfTextString::text("Second") }, PdfOp::EndText].into();
     decoded.pages.insert(0, page);
     let edited = encode_pdf(&decoded).unwrap();
     let reread = decode_pdf(&edited).unwrap();
@@ -345,7 +345,7 @@ fn a_typed_page_and_info_edit_rewrites_only_what_those_lanes_own() {
     edited.pages[5].rotate = 90;
     edited.pages[15].media_box = [0.0, 0.0, 595.0, 842.0];
     edited.pages[16].crop_box = Some([10.0, 10.0, 580.0, 820.0]);
-    edited.pages[20].content = vec![PdfOp::BeginText, PdfOp::SetFont { name: "F1".into(), size: 12.0 }, PdfOp::MoveText { tx: 72.0, ty: 720.0 }, PdfOp::ShowText { text: PdfTextString::text("Replaced page content") }, PdfOp::EndText];
+    edited.pages[20].content = vec![PdfOp::BeginText, PdfOp::SetFont { name: "F1".into(), size: 12.0 }, PdfOp::MoveText { tx: 72.0, ty: 720.0 }, PdfOp::ShowText { text: PdfTextString::text("Replaced page content") }, PdfOp::EndText].into();
     edited.info = PdfInfo { title: Some("Replaced title".into()), author: Some("Replaced author".into()), ..PdfInfo::default() };
     let written = rewritten(&edited);
     assert_same_lanes(&written, &edited);
@@ -368,7 +368,7 @@ fn a_structural_page_edit_restates_the_page_tree_and_keeps_the_catalog() {
     edited.pages.insert(40, moved);
     edited.pages.remove(7);
     let mut inserted = PdfPage::new(612.0, 792.0);
-    inserted.content = vec![PdfOp::BeginText, PdfOp::SetFont { name: "F1".into(), size: 12.0 }, PdfOp::MoveText { tx: 72.0, ty: 720.0 }, PdfOp::ShowText { text: PdfTextString::text("Inserted page") }, PdfOp::EndText];
+    inserted.content = vec![PdfOp::BeginText, PdfOp::SetFont { name: "F1".into(), size: 12.0 }, PdfOp::MoveText { tx: 72.0, ty: 720.0 }, PdfOp::ShowText { text: PdfTextString::text("Inserted page") }, PdfOp::EndText].into();
     edited.pages.insert(30, inserted);
     let bytes = encode_pdf(&edited).unwrap();
     let written = decode_pdf(&bytes).unwrap();

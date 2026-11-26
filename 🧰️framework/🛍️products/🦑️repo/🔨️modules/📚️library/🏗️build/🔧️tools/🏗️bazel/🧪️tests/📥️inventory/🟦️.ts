@@ -8,7 +8,7 @@ import {minimatch} from "minimatch";
 import {Database} from "bun:sqlite";
 import corpus from "./🔣️.json";
 import schema from "./🧬️schema.json";
-import {isOpaqueSourcePathV1} from "../../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import{isOpaqueSourcePathV1}from"../../../../📥️inputs/👻️opaque-source/🟨️.mjs";
 
 const source=await readFile(new URL("../../📜️script.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("bazel.ts",source,ts.ScriptTarget.Latest,true),definition=(name:string)=>{const node=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===name);if(!node)throw Error("Bazel inventory implementation required: "+name);return node.getText(tree).replace(/^export /u,"");};
 const constant=(name:string)=>{const node=tree.statements.find(node=>ts.isVariableStatement(node)&&node.declarationList.declarations.some(row=>row.name.getText(tree)===name));if(!node)throw Error("Bazel inventory constant required: "+name);return node.getText(tree);};

@@ -87,5 +87,13 @@ name = "persisted_receiving_law"
 path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/📥️persisted-receiving/🦀️.rs"
 
 [[test]]
-name = "curation_unit"
-path = "../../🧪️tests/🧪️unit-all/🦀️.rs"
+name = "format_laws"
+path = "../../🧪️tests/🧪️format-laws/🦀️.rs"
+
+[[test]]
+name = "sqlite_snapshot"
+path = "../../🧪️tests/🪶️sqlite-snapshot/🦀️.rs"
+
+[[test]]
+name = "history_acceptance"
+path = "../../🧪️tests/⏮️history-acceptance/🦀️.rs"

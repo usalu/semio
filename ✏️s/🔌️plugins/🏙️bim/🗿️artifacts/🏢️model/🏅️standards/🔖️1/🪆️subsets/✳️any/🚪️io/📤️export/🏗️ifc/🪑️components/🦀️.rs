@@ -1,6 +1,6 @@
 //! 🪑️ Components. A placed instance of a family is an `IfcFurnishingElement` (`IfcFurniture` in IFC4) for furniture, an `IfcFlowTerminal` (`IfcSanitaryTerminal`, `IfcLightFixture` in IFC4) for plumbing and lighting fixtures and for
 //! every mechanical or electrical family whose instance is a terminal (it names a system), and an `IfcBuildingElementProxy` for the rest (equipment, casework, generic objects). Each family becomes one type object per kind of
-//! occurrence (`IfcFurnitureType`, `IfcSanitaryTerminalType`, `IfcLightFixtureType`, `IfcFlowTerminalType`, `IfcBuildingElementProxyType`) that carries the authored family, its parameters and its solids in the `Semio_Authoring`
+//! occurrence (`IfcFurnitureType`, `IfcSanitaryTerminalType`, `IfcLightFixtureType`, `IfcAirTerminalType`, `IfcElectricApplianceType`, `IfcBuildingElementProxyType`) that carries the authored family, its parameters and its solids in the `Semio_Authoring`
 //! set; the instance carries its authored record as the `Component` row, its per-instance overrides in the `Semio_ComponentOverrides` set and `Qto_ComponentBaseQuantities` (volume of the visible solids, plan area of
 //! their bounds). The placement is the inferred one (host fit, yaw, origin in the storey), the body the faceted brep or tessellation of the inferred solid in that frame (a mirror is baked into the body, IFC placements cannot mirror).
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcsharedbldgserviceelements/lexical/ifcflowterminal.htm>
@@ -32,7 +32,8 @@ pub enum Kind {
     Furniture,
     Sanitary,
     Light,
-    Terminal,
+    AirTerminal,
+    ElectricTerminal,
     Proxy,
 }
 
@@ -43,7 +44,8 @@ impl Kind {
             FamilyCategory::Furniture => Self::Furniture,
             FamilyCategory::Plumbing => Self::Sanitary,
             FamilyCategory::Lighting => Self::Light,
-            FamilyCategory::Mechanical | FamilyCategory::Electrical if terminal => Self::Terminal,
+            FamilyCategory::Mechanical if terminal => Self::AirTerminal,
+            FamilyCategory::Electrical if terminal => Self::ElectricTerminal,
             _ => Self::Proxy,
         }
     }
@@ -54,7 +56,8 @@ impl Kind {
             Self::Furniture => x.by(("IFCFURNISHINGELEMENT", Vec::new()), ("IFCFURNITURE", vec![unset()])),
             Self::Sanitary => x.by(("IFCFLOWTERMINAL", Vec::new()), ("IFCSANITARYTERMINAL", vec![unset()])),
             Self::Light => x.by(("IFCFLOWTERMINAL", Vec::new()), ("IFCLIGHTFIXTURE", vec![unset()])),
-            Self::Terminal => ("IFCFLOWTERMINAL", Vec::new()),
+            Self::AirTerminal => x.by(("IFCFLOWTERMINAL", Vec::new()), ("IFCAIRTERMINAL", vec![unset()])),
+            Self::ElectricTerminal => x.by(("IFCFLOWTERMINAL", Vec::new()), ("IFCELECTRICAPPLIANCE", vec![unset()])),
             Self::Proxy => ("IFCBUILDINGELEMENTPROXY", vec![unset()]),
         }
     }
@@ -65,7 +68,8 @@ impl Kind {
             Self::Furniture => x.by(("IFCFURNITURETYPE", vec![en("NOTDEFINED")]), ("IFCFURNITURETYPE", vec![en("NOTDEFINED"), en("NOTDEFINED")])),
             Self::Sanitary => ("IFCSANITARYTERMINALTYPE", vec![en("NOTDEFINED")]),
             Self::Light => ("IFCLIGHTFIXTURETYPE", vec![en("NOTDEFINED")]),
-            Self::Terminal => x.by(("IFCFLOWTERMINALTYPE", Vec::new()), ("IFCAIRTERMINALTYPE", vec![en("NOTDEFINED")])),
+            Self::AirTerminal => ("IFCAIRTERMINALTYPE", vec![en("NOTDEFINED")]),
+            Self::ElectricTerminal => ("IFCELECTRICAPPLIANCETYPE", vec![en("NOTDEFINED")]),
             Self::Proxy => ("IFCBUILDINGELEMENTPROXYTYPE", vec![en("NOTDEFINED")]),
         }
     }

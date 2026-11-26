@@ -75,7 +75,7 @@ describe("a running host service reloads onto a newer implementation",()=>{
  },30000);
  test("a plan that makes no progress for the stall bound is cut by the draining host",async()=>{
   let wanted="";const env=environment("stall"),implementation=digestOf("old-stall"),runtime=hostEndpointsV1(implementation,env),graph=JSON.parse(readFileSync(GRAPH,"utf8"));
-  const planner=createGraphPlannerPortV1({identify:async()=>"k".repeat(64),loadGraph:async()=>graph,loadSlice:async({signal}:any)=>{wanted=digestOf("new-stall");await sleep(4000,signal).catch(()=>undefined);signal?.throwIfAborted();return{graph};}});
+  const planner=createGraphPlannerPortV1({identify:async()=>"k".repeat(64),loadGraph:async()=>graph,loadSlice:async({signal}:any)=>{wanted=digestOf("new-stall");await sleep(4000);signal?.throwIfAborted();return{graph};}});
   const service=createHostServiceV1({runtime,implementation,ports:{planner,reload:{identify:async()=>({implementation:wanted||implementation}),replace:async()=>({started:true})}},policy:{residentCheckMilliseconds:5000,reload:reloadPolicy}});
   await service.start();
   const plan=requestPlanV1({root:workspace("w-stall"),implementation,targets:["app:test"],agent:"a",language:"en",environment:env,arguments:["run"],attempts:1,spawnService:async()=>{await service.start();}}).then(()=>"answered",()=>"cut"),began=Date.now();

@@ -28,8 +28,10 @@ const present=(pid:number|undefined):boolean=>pid!==undefined&&processPidExistsV
 export function ownedChildNoticeV1(values:Readonly<{pid:number|undefined;label:string;milliseconds:number;kind:string}>,environment:Readonly<Record<string,string|undefined>>):string{
  return firstFailureLanguagesV1(environment).map(language=>notice[language].replace("{pid}",String(values.pid??"-")).replace("{label}",values.label).replace("{milliseconds}",String(values.milliseconds)).replace("{kind}",values.kind)).join("\n")+"\n";
 }
+/** 🔌️ What settling needs of a child: its pid, its streams and its three events; a Node `ChildProcess` and the Bun-backed child both satisfy it. */
+export interface OwnedSettleableChildV1 extends Pick<ChildProcess,"pid"|"stdin"|"stdout"|"stderr">{once(event:"exit"|"close",listener:(code:number|null,signal:NodeJS.Signals|null)=>void):unknown;once(event:"error",listener:(error:Error)=>void):unknown;}
 /** 📪️ Settles one owned child by its 'close', or - when its exit was observed or its process vanished while 'close' never comes - by closing its streams after the declared grace. A lost close is reported on stderr and never waited for forever. */
-export function settleOwnedChildV1(child:ChildProcess,label:string,options:Readonly<{graceMilliseconds?:number;livenessMilliseconds?:number;present?:(pid:number|undefined)=>boolean;now?:()=>number}>={}):Promise<OwnedChildSettlementV1>{
+export function settleOwnedChildV1(child:OwnedSettleableChildV1,label:string,options:Readonly<{graceMilliseconds?:number;livenessMilliseconds?:number;present?:(pid:number|undefined)=>boolean;now?:()=>number}>={}):Promise<OwnedChildSettlementV1>{
  const grace=options.graceMilliseconds??policy.graceMilliseconds,cadence=options.livenessMilliseconds??policy.livenessMilliseconds,alive=options.present??present,now=options.now??Date.now;
  return new Promise<OwnedChildSettlementV1>(accept=>{
   let exited=false,closed=false,done=false,code:number|null=null,signal:NodeJS.Signals|null=null,exitAt=0,vanishedAt=0,timer:ReturnType<typeof setInterval>|undefined;

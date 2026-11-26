@@ -487,14 +487,14 @@ test.skipIf(!nxBinary)("a real Nx 23 client stores archives, hits the remote cac
 
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 
-test("a write whose host store does not admit it in time (the disk is critical and a collection runs) is answered `capacity` within the write budget instead of hanging until the client gives up",async()=>{
+test("host PUT distinguishes temporary failures from actual capacity and includes admission time",async()=>{
  const folder=mkdtempSync(join(tmpdir(),"rcache-budget-"));
  try{
-  const host={get:async()=>undefined,has:async()=>[false],release:async()=>undefined,pin:async()=>undefined,putChecked:(_source:unknown,_expect:unknown,signal?:AbortSignal)=>new Promise((_,fail)=>{signal?.addEventListener("abort",()=>{fail(signal.reason);});})} as unknown as NonNullable<Parameters<typeof RemoteCacheStoreV1.open>[0]["host"]>;
-  const store=await RemoteCacheStoreV1.open({directory:folder,host,maximumBytes:2**26,maximumEntryBytes:2**24,maximumAgeMilliseconds:0,writeBudgetMilliseconds:150});
-  const started=Date.now(),outcome=await store.put("main","cas",createHash("sha256").update("x").digest("hex"),(async function*(){yield new TextEncoder().encode("x");})(),{mode:"content"});
-  expect(outcome).toBe("capacity");expect(Date.now()-started).toBeLessThan(2000);
-  await store.close();
+  const {CasCapRefusalV1}=await import("../../🗄️cas/🚦️guard/🟦️.ts"),{refuseLowSpaceV1}=await import("../../../../../../../🔨️modules/🏃️process/🏗️build/💽️disk/🟦️.ts");let mode:"slow"|"timeout"|"io"|"capacity"|"low"|"enospc"="slow";
+  const host={policy:{admissionBudgetMs:250},get:async()=>undefined,has:async()=>[false],release:async()=>undefined,pin:async()=>undefined,putChecked:(_source:unknown,_expect:unknown,signal?:AbortSignal)=>new Promise((resolve,fail)=>{if(mode==="io")return fail(Error("synthetic I/O"));if(mode==="capacity")return fail(new CasCapRefusalV1(2,1));if(mode==="low")return fail(refuseLowSpaceV1({partition:"/v",freeBytes:1,totalBytes:100,limitFraction:0.99}));if(mode==="enospc")return fail(Object.assign(Error("full"),{code:"ENOSPC"}));signal?.addEventListener("abort",()=>fail(signal.reason));if(mode==="slow")setTimeout(()=>resolve({outcome:"exists"}),200);})} as unknown as NonNullable<Parameters<typeof RemoteCacheStoreV1.open>[0]["host"]>;
+  const store=await RemoteCacheStoreV1.open({directory:folder,host,maximumBytes:2**26,maximumEntryBytes:2**24,maximumAgeMilliseconds:0,writeBudgetMilliseconds:100});
+  const put=()=>store.put("main","cas",createHash("sha256").update("x").digest("hex"),(async function*(){yield new TextEncoder().encode("x");})(),{mode:"content"});
+  expect(await put()).toBe("exists");mode="timeout";const started=Date.now();expect(await put()).toBe("unavailable");expect(Date.now()-started).toBeLessThan(2000);mode="io";expect(await put()).toBe("unavailable");mode="capacity";expect(await put()).toBe("capacity");mode="low";expect(await put()).toBe("capacity");mode="enospc";expect(await put()).toBe("capacity");await store.close();
  }finally{rmSync(folder,{recursive:true,force:true});}
 });
 
@@ -538,5 +538,5 @@ test("the maintenance tick of the server collects the host store back under its 
   const deadline=Date.now()+15000;let bytes=(await casUsageV1(root)).bytes;
   while(bytes>3000&&Date.now()<deadline){await Bun.sleep(200);bytes=(await casUsageV1(root)).bytes;}
   expect(bytes).toBeLessThanOrEqual(3000);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 });

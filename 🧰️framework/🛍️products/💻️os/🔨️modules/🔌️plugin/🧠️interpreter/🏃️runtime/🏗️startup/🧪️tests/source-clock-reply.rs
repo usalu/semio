@@ -6,14 +6,8 @@ use semio_plugin_interpreter::{CoreInstanceOpening,CoreModule,ExportKind,OwnedSe
 use semio_plugin_interpreter_imports::{OriginalHostState,advance};
 use std::cell::Cell;
 use std::sync::Arc;
-thread_local!{
- static HOST_CLOCK_NOW:Cell<u64>=const {Cell::new(1000)};
- static HOST_CLOCK_OBSERVATIONS:Cell<u64>=const {Cell::new(0)};
-}
-fn counted_clock()->Option<u64>{
- HOST_CLOCK_OBSERVATIONS.with(|value|value.set(value.get()+1));
- Some(HOST_CLOCK_NOW.with(Cell::get))
-}
+thread_local!{static HOST_CLOCK_NOW:Cell<u64>=const {Cell::new(1000)};}
+fn source_clock()->Option<u64>{Some(HOST_CLOCK_NOW.with(Cell::get))}
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:10000,maximum_copy_bytes:2_000_000,maximum_capacity_bytes:2_000_000,maximum_release_bytes:2_000_000,maximum_depth:64}}
 
 fn first_core(component:&[u8])->&[u8]{
@@ -31,7 +25,7 @@ fn original_source_clock_same_callback_matches_paid_staging(){
  fn run(maximum_items:usize)->(usize,[u8;16],RetainedCloneProgress,u128){
   HOST_CLOCK_NOW.with(|clock|clock.set(1000));
   let stock=grant();
-  let mut caller=OriginalJobFixtureCaller::admit(OperationId(799),Generation(1),stock,counted_clock,1_000_000,1_000_000);
+  let mut caller=OriginalJobFixtureCaller::admit(OperationId(799),Generation(1),stock,source_clock,1_000_000,1_000_000);
   let bytes=crate::channel_fixture::owned_clock_guest(semio_os_kernel::CHANNEL_VERSION,caller.original_clock_binding());
   let module=&Arc::new(CoreModule::parse(first_core(&bytes)).unwrap());
   let mut epoch=1;
@@ -84,9 +78,8 @@ fn original_source_clock_same_callback_matches_paid_staging(){
     cx.bind_original_source_epoch(epoch)?;
     let before=cx.retained_progress();
     let work_before=cx.original_work_units_spent();
-    let reads_before=HOST_CLOCK_OBSERVATIONS.with(Cell::get);
+    if round==1{assert_eq!(cx.latest_us(),Some(1000));}
     let ready=advance(host,core,module,None,cx)?;
-    if round==1{assert!(HOST_CLOCK_OBSERVATIONS.with(Cell::get)>reads_before);}
     let after=cx.retained_progress();
     receipt.copied_items+=after.copied_items-before.copied_items;
     receipt.copied_bytes+=after.copied_bytes-before.copied_bytes;
@@ -166,7 +159,7 @@ fn original_source_clock_retirement_admits_only_actual_clock_replies() {
   let export=OwnedSemioExport::PublishActorFailure.core_name();
   let expected=instance.get_typed_func::<(),i64>(&mut store,export).unwrap().call(&mut store,()).unwrap();
   let module=&Arc::new(CoreModule::parse(&bytes).unwrap());
-  let mut caller=OriginalJobFixtureCaller::admit(OperationId(801),Generation(1),stock,counted_clock,1_000_000,1_000_000);
+  let mut caller=OriginalJobFixtureCaller::admit(OperationId(801),Generation(1),stock,source_clock,1_000_000,1_000_000);
   let mut epoch=1;
   let(mut core,mut host)=caller.turn(stock,|cx|{
    cx.bind_original_source_epoch(epoch)?;

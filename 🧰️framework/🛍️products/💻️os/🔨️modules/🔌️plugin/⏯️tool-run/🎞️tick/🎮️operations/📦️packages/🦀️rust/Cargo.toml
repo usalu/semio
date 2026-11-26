@@ -30,3 +30,6 @@ semio-os-store-replay-operation = { path = "../../../../../../🏪️store/🔁�
 semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+
+[features]
+artifact-app-testing = []

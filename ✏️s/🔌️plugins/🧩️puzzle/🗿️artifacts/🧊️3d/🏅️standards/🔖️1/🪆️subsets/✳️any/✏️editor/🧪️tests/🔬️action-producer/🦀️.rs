@@ -84,6 +84,7 @@ async fn settlement_work_ledger_is_finite_and_progresses() {
     let mut last = (start_fuel, start_progress);
     let mut trace = Vec::new();
     let mut receipts = Vec::new();
+    let mut retirement_receipts_start = None;
     let mut rungs: Vec<String> = Vec::new();
     let mut turns = 0usize;
     while (app.has_pending_typed_operations() || !app.maintenance_terminal_is_empty()) && turns < 200 {
@@ -106,6 +107,9 @@ async fn settlement_work_ledger_is_finite_and_progresses() {
                 let text = String::from_utf8_lossy(page.bytes()).into_owned();
                 let token = semio_plugin::artifact_app_laws::close_fixture_result_page(&mut page, policy.close);
                 app.acknowledge_typed_operation_result(token).expect("ack");
+                if lane == semio_plugin::app::TypedOperationResultLane::Terminal {
+                    retirement_receipts_start = Some(receipts.len());
+                }
                 if format!("{lane:?}") == "Fault" { panic!("the settlement faulted with: {text}; presentation log: {page_log:#?}"); }
                 break;
             }
@@ -129,6 +133,14 @@ async fn settlement_work_ledger_is_finite_and_progresses() {
     let tail: Vec<_> = trace.iter().rev().take(3).rev().cloned().collect();
     let (grant, progress, deadline, now) = { let cx = scope.cx(); (cx.retained_grant(), cx.retained_progress(), (cx.deadline_us(), cx.is_cancelled(), cx.should_yield()), cx.now_us()) };
     assert!(turns < 200, "settlement did not finish within 200 turns (fuel spent {spent}, distinct-progress turns {}); grant {grant:?} progress {progress:?} (deadline, cancelled, should_yield) {deadline:?} now {now:?}; diagnostic {}; rungs: {rungs:#?}; tail: {tail:#?}", trace.len(), app.typed_operation_diagnostic());
+    assert!(
+        receipts[retirement_receipts_start.expect("the terminal result is acknowledged")..].iter().any(|receipt| matches!(
+            receipt,
+            semio_plugin::artifact_app_laws::TypedOperationFixtureOwnershipReceipt::Retirement { progress, .. }
+                if progress.copied_items > 1
+        )),
+        "consecutive retirement units must fit in one Close receipt"
+    );
     assert!(spent < 32000, "settlement fuel {spent}");
     assert_eq!(target_volumes(&app), 1);
     close_registered_fixture_app(&mut *app, policy, scope.cx()).expect("close");

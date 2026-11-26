@@ -24,6 +24,14 @@ export class RemoteExecutionLoadTableV1{
  }
 
  get(origin:string):RemoteExecutionLoadEntryV1|undefined{this.expire();return this.entries.get(origin);}
+
+ /** 🧮️ The counts of every machine seen in this run, as the groups `offload.<origin>` of a counter ledger (a machine that is live counts from its entry, one that expired from the counts kept for it). */
+ counts():Readonly<Record<string,Readonly<Record<string,number>>>>{
+  const rows:Record<string,Record<string,number>>={};
+  for(const [origin,kept] of this.kept)rows[`offload.${origin}`]={offloadedIn:kept.offloadedIn,offloadedOut:kept.offloadedOut,refused:kept.refused};
+  for(const [origin,entry] of this.entries)rows[`offload.${origin}`]={offloadedIn:entry.offloadedIn,offloadedOut:entry.offloadedOut,refused:entry.refused};
+  return rows;
+ }
  all():readonly RemoteExecutionLoadEntryV1[]{this.expire();return [...this.entries.values()].sort((left,right)=>left.report.origin<right.report.origin?-1:1);}
  count(origin:string,field:"offloadedIn"|"offloadedOut"|"refused"):void{
   const entry=this.entries.get(origin);

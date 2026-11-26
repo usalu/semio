@@ -23,6 +23,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 dashboard_source_view = { path = "../../../📂️workspace/🖥️view/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-source-view" }
+dashboard_fleet = { path = "../../../📊️fleet/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-fleet" }
 dashboard_feedback = { path = "../../📣️feedback/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-feedback" }
 dashboard_keymap_editor = { path = "../../⚙️settings/⌨️keymap/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-keymap-editor" }
 semio-framework-filesystem-workspace = { path = "../../../../../../../🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust" }
@@ -39,6 +40,7 @@ dashboard_registry = { path = "../../../🎮️registry/📦️packages/🦀️r
 dashboard_wire = { path = "../../../🌀️daemon/🧵️wire/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-wire" }
 ui_locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-ui-locale" }
 ui_styling = { path = "../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
+semio-ui-tui-charts = { path = "../../../../../../../🔨️modules/🖱️ui/⌨️tui/📈️charts/📦️packages/🦀️rust" }
 semio-ui-tui-core = { path = "../../../../../../../🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/📦️packages/🦀️rust" }
 semio-ui-tui-engine = { path = "../../../../../../../🔨️modules/🖱️ui/⌨️tui/⚙️engine/📦️packages/🦀️rust" }
 semio-ui-tui-frame = { path = "../../../../../../../🔨️modules/🖱️ui/⌨️tui/🏛️frame/📦️packages/🦀️rust" }

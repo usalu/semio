@@ -87,8 +87,9 @@ fn node_drop_auto_connects_as_one_history_edit() {
     let before = fixture_of(&app);
     assert!(board_snapshot_edges(&before).is_empty(), "the seeded board starts unconnected: {before}");
     let events = json!([{ "name": "gesture", "payload": { "gestureId": "gesture-1", "kind": "drag", "targets": ["right"], "dx": -948.0, "dy": 0.0, "proximity": [] } }]).to_string();
-    let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": events })), None).expect("drop");
-    assert_eq!(committed_edits(&result), 1, "the drop and its connection are one edit");
+    let edits_before_drop = app.stores.store.envelope().vcs.edits.len();
+    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": events })), None).expect("drop");
+    assert_eq!(app.stores.store.envelope().vcs.edits.len(), edits_before_drop + 1, "the drop and its connection are one new edit");
     let dropped = fixture_of(&app);
     assert_eq!(board_snapshot_edges(&dropped).len(), 1, "the drop auto-connects the facing handles: {dropped}");
     assert_eq!(board_snapshot_edges(&dropped)[0].get("id").and_then(Value::as_str), Some("edge-left:v0-right:v0"), "the stationary peer is the source and the id is minted from the pair: {dropped}");

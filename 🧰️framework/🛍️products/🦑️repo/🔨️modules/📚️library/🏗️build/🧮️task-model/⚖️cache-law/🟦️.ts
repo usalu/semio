@@ -50,7 +50,7 @@ export function cacheLawV1(graph:BuildGraphV1,projection:CacheLawProjectionV1):C
  for(const [projectName,project] of Object.entries(graph.projects).sort(([a],[b])=>a<b?-1:1))for(const [name,target] of Object.entries(project.targets).sort(([a],[b])=>a<b?-1:1)){
   const id=`${projectName}:${name}`,effective=projection.project(target,name),decision=(target.metadata as {semio?:{cache?:{class?:string;reason?:string}}}|undefined)?.semio?.cache,why=decision?.class?`${decision.class}/${decision.reason}`:undefined;
   if(effective.cache!==true){
-   const downgraded=target.cache===true&&decision?.class==="deterministic"&&effective.cache!==true;
+   const downgraded=target.cache===true&&decision?.class==="deterministic";
    rows.push({id,state:"uncacheable",reason:downgraded?"outputs-not-restorable":why??(target.cache===false?"declared":"undeclared"),findings:[]});continue;
   }
   const exempt=target.execution.kind==="noop"||decision?.reason==="check-without-outputs"||(target.metadata as {semio?:{rustBuildIntent?:unknown;rustUnitAggregate?:unknown;hostPlatformOutputsV1?:unknown}}|undefined)?.semio?.rustBuildIntent!==undefined||(target.metadata as {semio?:{rustUnitAggregate?:unknown}}|undefined)?.semio?.rustUnitAggregate!==undefined||(target.metadata as {semio?:{hostPlatformOutputsV1?:unknown}}|undefined)?.semio?.hostPlatformOutputsV1!==undefined;

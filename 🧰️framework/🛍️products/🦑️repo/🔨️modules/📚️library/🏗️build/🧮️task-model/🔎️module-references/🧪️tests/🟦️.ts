@@ -31,11 +31,11 @@ test("the corpus is closed by the schema (Ajv as the independent validator)",()=
 });
 
 test("the own scanner reads the language-agnostic corpus rows exactly",()=>{
- for(const row of corpus)expect({name:row.name,rows:classifyModuleReferencesV1(row.source)}).toEqual({name:row.name,rows:row.references});
+ for(const row of corpus)expect<unknown>({name:row.name,rows:classifyModuleReferencesV1(row.source)}).toEqual({name:row.name,rows:row.references});
 });
 
 test("the TypeScript compiler API (the oracle) reads the same corpus rows: comments, strings, templates, regular expressions, dynamic imports, re-exports, type-only imports, URLs",()=>{
- for(const row of corpus)expect({name:row.name,rows:oracle(row.source)}).toEqual({name:row.name,rows:row.references});
+ for(const row of corpus)expect<unknown>({name:row.name,rows:oracle(row.source)}).toEqual({name:row.name,rows:row.references});
 });
 
 test("the own scanner and the compiler oracle agree on every source file of the engine closure",()=>{
@@ -62,5 +62,5 @@ test("the engine closure reads its references with the own scanner: no compiler 
  const library=readFileSync(new URL("../../../../🟨️.mjs",import.meta.url),"utf8");
  expect(library.includes("preProcessFile")).toBe(false);
  expect(/\("typescript"\)/u.test(library)).toBe(false);
- for(const row of corpus)expect(nxBuildEngineReferencesV1(row.source)).toEqual(row.references);
+ for(const row of corpus)expect<unknown>(nxBuildEngineReferencesV1(row.source)).toEqual(row.references);
 });

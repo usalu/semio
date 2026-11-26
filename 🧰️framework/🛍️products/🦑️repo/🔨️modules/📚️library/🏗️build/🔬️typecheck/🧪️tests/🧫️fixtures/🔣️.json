@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "pairs": [
+    {
+      "id": "clean",
+      "script": "export function alpha(a,b=1,...rest){return a}\nexport const beta=(x)=>x;\nexport const gamma=3;\nexport class Delta{}\nexport {alpha as omega};\n",
+      "declaration": "export function alpha(a:number,b?:number,...rest:number[]):number;\nexport const beta:(x:number)=>number;\nexport const gamma:3;\nexport class Delta{}\nexport {alpha as omega};\nexport interface OnlyType{a:1}\n",
+      "drift": []
+    },
+    {
+      "id": "undeclared",
+      "script": "export function alpha(a){}\nexport const beta=1,gamma=2;\n// export function commented(){}\n/* export const blocked=1 */\nexport default function (a,b){}\n",
+      "declaration": "export function alpha(a:number):void;\n",
+      "drift": [["beta","undeclared"],["default","undeclared"],["gamma","undeclared"]]
+    },
+    {
+      "id": "phantom",
+      "script": "export function alpha(a){}\n",
+      "declaration": "export function alpha(a:number):void;\nexport function ghost():void;\nexport const ghostValue:number;\nexport type Fine=1;\n",
+      "drift": [["ghost","phantom"],["ghostValue","phantom"]]
+    },
+    {
+      "id": "arity",
+      "script": "export function alpha(a,b){}\nexport function beta(...all){}\nexport const gamma=async(a,{b,c})=>a;\nexport function overloaded(a,b){}\n",
+      "declaration": "export function alpha(a:number):void;\nexport function beta(a:number,b:number):void;\nexport const gamma:(a:number)=>Promise<number>;\nexport function overloaded(a:number):void;\nexport function overloaded<T>(a:T,b:Map<string,T>):void;\n",
+      "drift": [["alpha","arity","2","1"],["beta","arity","0+","2"],["gamma","arity","2","1"]]
+    },
+    {
+      "id": "strings-and-regex",
+      "script": "const pattern=/\\/*[\"'`]/u;\nconst text=\"/* not a comment\";\nexport function alpha(a,b){return pattern.test(text)}\nexport const beta=\"export function hidden(){}\";\n",
+      "declaration": "export function alpha(a:number,b:number):boolean;\nexport const beta:string;\n",
+      "drift": []
+    },
+    {
+      "id": "star",
+      "script": "export * from \"./other.mjs\";\nexport function alpha(){}\n",
+      "declaration": "export * from \"./other.mjs\";\nexport function alpha():void;\n",
+      "drift": []
+    }
+  ],
+  "imports": [
+    {"file": "a/b/🟦️.ts", "text": "import {x} from \"./c/🟨️.mjs\";\nimport type {Y} from '../d.d.mts';\nexport * from \"../e/🟦️.ts\";\nconst z=await import(\"./f.ts\");\nimport w from \"pkg\";", "keys": ["a/b/c/🟨️", "a/d", "a/e/🟦️", "a/b/f"]}
+  ],
+  "diagnostics": {
+    "output": "a/b.ts(3,5): error TS2345: Argument of type 'string' is not assignable\n  to parameter of type 'number'.\nz/elsewhere.ts(1,1): error TS2304: Cannot find name 'q'.\nerror TS2688: Cannot find type definition file for 'node'.\n",
+    "checked": ["a/b.ts"],
+    "rows": [
+      {"file": "a/b.ts", "line": 3, "column": 5, "code": "TS2345", "message": "Argument of type 'string' is not assignable to parameter of type 'number'.", "checked": true},
+      {"file": "z/elsewhere.ts", "line": 1, "column": 1, "code": "TS2304", "message": "Cannot find name 'q'.", "checked": false},
+      {"file": "", "line": 0, "column": 0, "code": "TS2688", "message": "Cannot find type definition file for 'node'.", "checked": true}
+    ]
+  }
+}

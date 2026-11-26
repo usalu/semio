@@ -1,0 +1,17 @@
+import{memoryUsage}from"node:process";
+import{mkdirSync,rmSync}from"node:fs";
+import{join}from"node:path";
+const scratch=process.argv[2]!,rss=()=>(memoryUsage.rss()/1048576).toFixed(1);
+const log=(label:string)=>console.log(label.padEnd(34),rss(),"MB");
+log("bare");
+const M="/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🏗️build/📈️metrics";
+const metrics=await import(M+"/🟦️.ts");log("import metrics ring");
+const col=await import(M+"/🛰️collector/🟦️.ts");log("import collector");
+const prod=await import("/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/📈️metrics/🟦️.ts");log("import product sources");
+rmSync(scratch,{recursive:true,force:true});mkdirSync(scratch,{recursive:true});
+const h=metrics.openMetricsRingsV1({directory:join(scratch,"a")});log("open rings (fresh files)");
+metrics.recordSampleV1(h,Date.now(),{"host.cpu.busy":1});log("first sample");
+metrics.closeMetricsRingsV1(h);log("close");
+const h2=metrics.openMetricsRingsV1({directory:join(scratch,"a")});log("reopen rings (existing)");
+metrics.closeMetricsRingsV1(h2);
+Bun.gc(true);log("after gc");

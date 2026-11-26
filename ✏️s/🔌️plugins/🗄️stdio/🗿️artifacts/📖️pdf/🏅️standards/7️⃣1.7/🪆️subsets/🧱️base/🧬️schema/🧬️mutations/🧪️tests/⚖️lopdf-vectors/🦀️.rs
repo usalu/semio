@@ -97,11 +97,11 @@ fn removed<T: Clone + PartialEq>(before: &[T], after: &[T]) -> T {
 
 /// 🖋️ The first page's operator edit as `(at, removed, inserted)`: the common prefix, the operators
 /// lopdf dropped after it, and the operators it wrote in their place.
-fn content_edit(before: &PdfSnapshot, after: &PdfSnapshot) -> (usize, usize, Vec<PdfOp>) {
+fn content_edit(before: &PdfSnapshot, after: &PdfSnapshot) -> (usize, usize, PdfContent) {
     let (old, new) = (&before.pages[0].content, &after.pages[0].content);
-    let at = old.iter().zip(new).take_while(|(left, right)| left == right).count();
-    let tail = old[at..].iter().rev().zip(new[at..].iter().rev()).take_while(|(left, right)| left == right).count();
-    (at, old.len() - at - tail, new[at..new.len() - tail].to_vec())
+    let at = old.iter().zip(new.iter()).take_while(|(left, right)| left == right).count();
+    let tail = old.iter().skip(at).rev().zip(new.iter().skip(at).rev()).take_while(|(left, right)| left == right).count();
+    (at, old.len() - at - tail, new.iter().skip(at).take(new.len() - at - tail).cloned().collect())
 }
 
 /// 🗂️ The committed lopdf pairs, read when a test runs so the binary vectors stay out of the compiled source closure.

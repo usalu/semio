@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "policy": {"maximumBytes": 1000, "maximumAgeSeconds": 100, "minimumIdleSeconds": 10, "scratchGraceSeconds": 50},
+  "cases": [
+    {"name": "age", "entries": [{"name": "old", "bytes": 10, "idleSeconds": 101}, {"name": "young", "bytes": 10, "idleSeconds": 99}], "retired": ["old"]},
+    {"name": "in-use beats the cap", "entries": [{"name": "busy", "bytes": 2000, "idleSeconds": 5}], "retired": []},
+    {"name": "least recently used first", "entries": [{"name": "a", "bytes": 400, "idleSeconds": 20}, {"name": "b", "bytes": 400, "idleSeconds": 30}, {"name": "c", "bytes": 400, "idleSeconds": 40}], "retired": ["c"]},
+    {"name": "scratch only after its grace", "entries": [{"name": "s1", "bytes": 5000, "idleSeconds": 60, "scratch": true}, {"name": "s2", "bytes": 5000, "idleSeconds": 40, "scratch": true}, {"name": "f", "bytes": 100, "idleSeconds": 20}], "retired": ["s1"]},
+    {"name": "protected bytes count towards the cap", "entries": [{"name": "busy", "bytes": 900, "idleSeconds": 5}, {"name": "x", "bytes": 300, "idleSeconds": 50}, {"name": "y", "bytes": 300, "idleSeconds": 60}], "retired": ["x", "y"]},
+    {"name": "equal use retires by name", "entries": [{"name": "m", "bytes": 600, "idleSeconds": 30}, {"name": "k", "bytes": 600, "idleSeconds": 30}], "retired": ["k"]},
+    {"name": "age and cap together", "entries": [{"name": "stale", "bytes": 100, "idleSeconds": 500}, {"name": "p", "bytes": 600, "idleSeconds": 40}, {"name": "q", "bytes": 600, "idleSeconds": 20}], "retired": ["stale", "p"]},
+    {"name": "empty", "entries": [], "retired": []}
+  ]
+}

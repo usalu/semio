@@ -15,10 +15,13 @@ impl NativeTraceCursor{
  pub fn next_demands(&mut self)->Result<RetirementDemand,ValueError>{
   if self.closing{return self.close_demands(0)}if self.is_complete(){return Ok(RetirementDemand{copy_bytes:size_of::<ToolRunTracePage>(),depth:1,..Default::default()})}
   let copy=size_of::<Frame>()+size_of::<Option<Token>>()+size_of::<ToolRunTraceOp>()+size_of::<[usize;9]>();
+  if matches!(self.pending, Some(Token::Byte(_))) && !self.scalar_ready {
+   return Ok(RetirementDemand { copy_bytes: size_of::<Option<Token>>() + 2 * size_of::<usize>() + 2, depth: 1, ..Default::default() });
+  }
   if self.scalar_ready{return Ok(RetirementDemand{copy_bytes:copy,depth:1,..Default::default()})}
   if let Some(Token::Unsigned{role:Role::BytesLength,value})=self.pending{if self.depth==1&&self.frames[0].field==3{let count=usize::try_from(value).map_err(|_|malformed("native trace op extent overflow"))?;if count>TOOL_RUN_TRACE_PAGE_OPS_MAX{return Err(malformed("native trace op cap"))}return Ok(RetirementDemand{copy_bytes:copy,capacity_bytes:count*size_of::<ToolRunTraceOp>(),depth:1,..Default::default()})}}
   if self.pending.is_some(){return Ok(RetirementDemand{copy_bytes:copy,depth:1,..Default::default()})}
-  let mut demand=self.parser.as_mut().ok_or_else(||malformed("native trace parser absent"))?.record_storage_admission_demands().map_err(pack_error)?;if demand.capacity_bytes==0{demand.copy_bytes=copy;}demand.depth=demand.depth.max(1);Ok(demand)
+  let mut demand=self.parser.as_mut().ok_or_else(||malformed("native trace parser absent"))?.record_storage_admission_demands().map_err(pack_error)?;if demand.capacity_bytes==0{demand.copy_bytes=PARSER_TOKEN_COPY_BYTES;}demand.depth=demand.depth.max(1);Ok(demand)
  }
  pub fn advance(&mut self,control:&mut NativeDecodeControl<'_>,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
   let grant=effect.grant();let demand=self.next_demands()?;if !funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}if self.closing{return self.close_parser_step(effect)}if self.is_complete(){return Ok(RetainedCloneStep::Progress(Default::default()))}

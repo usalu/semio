@@ -1,0 +1,211 @@
+{
+  "policy": {
+    "externalBaseBytes": 402653184,
+    "externalBytesPerKloc": 4194304,
+    "floorBytes": 268435456,
+    "workspaceBaseBytes": 644245094,
+    "workspaceBytesPerKloc": 41943040,
+    "markers": [
+      "/registry/src/",
+      "/git/checkouts/",
+      "/vendor/"
+    ],
+    "skipDirectories": [
+      "target",
+      "node_modules",
+      "dist",
+      ".git"
+    ],
+    "manifestFile": "Cargo.toml"
+  },
+  "estimates": [
+    {
+      "id": "syn-measured-398-mib",
+      "kloc": 51.787,
+      "external": true,
+      "budgetBytes": 1610612736,
+      "measuredPeakBytes": 417333248
+    },
+    {
+      "id": "libc-large-flat-crate",
+      "kloc": 140,
+      "external": true,
+      "budgetBytes": 1610612736,
+      "measuredPeakBytes": null
+    },
+    {
+      "id": "huge-external-is-bounded-by-its-budget",
+      "kloc": 900,
+      "external": true,
+      "budgetBytes": 1610612736,
+      "measuredPeakBytes": null
+    },
+    {
+      "id": "tiny-external-keeps-the-floor",
+      "kloc": 0,
+      "external": true,
+      "budgetBytes": 1610612736,
+      "measuredPeakBytes": null
+    },
+    {
+      "id": "external-without-budget-is-unbounded",
+      "kloc": 900,
+      "external": true,
+      "budgetBytes": null,
+      "measuredPeakBytes": null
+    },
+    {
+      "id": "workspace-keeps-the-steep-model",
+      "kloc": 125.5,
+      "external": false,
+      "budgetBytes": 1610612736,
+      "measuredPeakBytes": null
+    },
+    {
+      "id": "workspace-empty",
+      "kloc": 0,
+      "external": false,
+      "budgetBytes": null,
+      "measuredPeakBytes": null
+    }
+  ],
+  "sources": [
+    {
+      "source": "/Users/u/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.119/src/lib.rs",
+      "external": true
+    },
+    {
+      "source": "C:\\Users\\u\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\libc-0.2.186\\src\\lib.rs",
+      "external": true
+    },
+    {
+      "source": "/home/u/.cargo/git/checkouts/tool-1a2b/3c4d/src/lib.rs",
+      "external": true
+    },
+    {
+      "source": "/work/repo/vendor/serde/src/lib.rs",
+      "external": true
+    },
+    {
+      "source": "/work/repo/.cache/b/r/m/cargo/home/registry/src/idx/serde-1/src/lib.rs",
+      "external": true
+    },
+    {
+      "source": "/work/repo/🧰️framework/🔨️modules/🦀️.rs",
+      "external": false
+    },
+    {
+      "source": "/work/registry-tools/src/lib.rs",
+      "external": false
+    },
+    {
+      "source": "/work/repo/src/registry/lib.rs",
+      "external": false
+    },
+    {
+      "source": "",
+      "external": false
+    }
+  ],
+  "trees": [
+    {
+      "id": "closure-follows-modules",
+      "files": [
+        [
+          "lib.rs",
+          100,
+          [
+            "a",
+            "b"
+          ]
+        ],
+        [
+          "a.rs",
+          200,
+          [
+            "c"
+          ]
+        ],
+        [
+          "a/c.rs",
+          50,
+          []
+        ],
+        [
+          "b/mod.rs",
+          30,
+          []
+        ],
+        [
+          "unreferenced.rs",
+          900,
+          []
+        ]
+      ]
+    },
+    {
+      "id": "taxonomy-siblings-are-excluded",
+      "files": [
+        [
+          "lib.rs",
+          389,
+          [
+            "inner"
+          ]
+        ],
+        [
+          "inner.rs",
+          10,
+          []
+        ],
+        [
+          "emission/lib.rs",
+          20000,
+          []
+        ]
+      ]
+    },
+    {
+      "id": "missing-module-falls-back-to-the-directory-walk",
+      "files": [
+        [
+          "lib.rs",
+          10,
+          [
+            "ghost"
+          ]
+        ],
+        [
+          "x/y.rs",
+          40,
+          []
+        ],
+        [
+          "pkg/Cargo.toml",
+          1,
+          []
+        ],
+        [
+          "pkg/z.rs",
+          5000,
+          []
+        ],
+        [
+          "target/t.rs",
+          700,
+          []
+        ],
+        [
+          "node_modules/n.rs",
+          700,
+          []
+        ],
+        [
+          "notes.md",
+          50,
+          []
+        ]
+      ]
+    }
+  ]
+}

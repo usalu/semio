@@ -40,6 +40,7 @@ semio-os-infinite-board-normal-scene = { path = "../../../🖼️scene/📦️pa
 semio-os-infinite-board-normal-gestures = { path = "../../../🕹️gestures/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-os-infinite-board-normal-host = { path = "../../../🧭️host/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

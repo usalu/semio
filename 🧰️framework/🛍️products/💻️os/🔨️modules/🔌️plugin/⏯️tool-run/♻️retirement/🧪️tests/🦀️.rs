@@ -36,13 +36,30 @@ fn tool_ledger_empty_backing_preserves_undergrant_and_exact_original_release(){
 
 #[test]
 fn tool_job_outcome_original_pages_close_under_independent_common_grants(){
- use semio_framework_job::{StepOutcome, StepContext, OperationId, Generation, StepBudget};
- use semio_framework_job_payload::{RetainedJobPayloadWriter, JobPayloadStream};
- for pages in [0,1,3]{
-  let(mut original,setup)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{
-   let mut writer=RetainedJobPayloadWriter::new(JobPayloadStream::Preview);
-   for index in 0..pages{let mut sequence=0;let mut ownership=RetainedCloneProgress::default();let mut context=StepContext::new(OperationId(95101),Generation(8),StepBudget::new(16,u64::MAX,RetainedCloneGrant{maximum_items:16,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:0,maximum_depth:64}),semio_framework_job::root_cancel_token(),semio_framework_job::default_now_us,&mut sequence,&mut ownership);let mut page=writer.admit_page(&mut context).unwrap();page.write(if index==0{b""}else{b"original\0"}).unwrap();page.commit();}
-   semio_framework_job::JobOutcomeSlot::from_outcome(StepOutcome::PreviewReady(writer.finish().unwrap()))
+ use semio_framework_job::{Generation, OperationId, OriginalJobFixtureCaller, StepOutcome, receive_original_retained_work};
+ use semio_framework_job_payload::{JobPayloadStream, RetainedPayloadBuilder};
+ for pages in [0,1,3] {
+  let stock=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:1048576,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:64};
+  let ((mut original,caller),setup)=semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
+   let mut caller=OriginalJobFixtureCaller::admit(OperationId(95101),Generation(8),stock,||Some(1),u64::MAX,100000);
+   let mut builder=RetainedPayloadBuilder::new(JobPayloadStream::Preview);
+   let bytes=&b"abc"[..pages];
+   let mut cursor=0;
+   let mut payload=None;
+   for _ in 0..64 {
+    caller.turn(RetainedCloneGrant{maximum_capacity_bytes:1,..stock},|cx| {
+     let turn=if !builder.is_initialized(){builder.advance_initialization(cx)}
+      else if cursor<bytes.len(){builder.append_original(cx,bytes,&mut cursor)}
+      else if builder.published().is_none(){builder.seal(cx)}
+      else{builder.take_finished(&mut payload,cx.retained_grant())};
+     receive_original_retained_work(cx,turn)?;
+     Ok(())
+    }).unwrap();
+    if payload.is_some(){break}
+   }
+   let payload=payload.expect("preview payload was published");
+   assert_eq!(payload.page_count(),pages);
+   (semio_framework_job::JobOutcomeSlot::from_outcome(StepOutcome::PreviewReady(payload)),caller)
   });
   let mut bank=crate::test_effect::bank();let mut physical=0;let mut turns=0;
   while !original.is_empty(){
@@ -53,6 +70,8 @@ fn tool_job_outcome_original_pages_close_under_independent_common_grants(){
    for denied in denied{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||crate::test_effect::settled(&mut bank,denied,|effect|semio_framework_value::RetainedWorkPoll::Complete(semio_framework_job::close_step_outcome_slot(&mut original,effect))).result.unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(original.original().map(|value|value as*const StepOutcome),address);assert_eq!(match original.original().unwrap(){StepOutcome::PreviewReady(payload)=>payload.page(0).map(|page|page.as_ptr()),_=>None},pointer);}
    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||crate::test_effect::settled(&mut bank,grant,|effect|semio_framework_value::RetainedWorkPoll::Complete(semio_framework_job::close_step_outcome_slot(&mut original,effect))).result.unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));physical+=heap.released_bytes;turns+=1;assert!(turns<100000);
   }
-  assert_eq!(physical,setup.requested_bytes-setup.released_bytes);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(original));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+  let (_,root_heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.retire(stock));
+  assert_eq!(physical+root_heap.released_bytes+setup.released_bytes,setup.requested_bytes+root_heap.requested_bytes);
+  let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(original));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }
 }

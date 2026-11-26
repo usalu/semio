@@ -36,7 +36,6 @@ semio-s-artifact-draw-drawing-io = { workspace = true }
 semio-s-artifact-draw-drawing-model = { workspace = true }
 semio-s-artifact-draw-drawing-scene = { workspace = true }
 semio-s-artifact-draw-drawing-scene-paint = { workspace = true }
-semio-s-artifact-stdio-deflate = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-drawing = { workspace = true }

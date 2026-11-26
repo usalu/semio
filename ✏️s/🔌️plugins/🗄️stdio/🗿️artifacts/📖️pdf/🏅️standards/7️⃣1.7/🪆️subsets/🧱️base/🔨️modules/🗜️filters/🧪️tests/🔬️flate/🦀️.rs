@@ -43,9 +43,12 @@ fn content_stream_flate_resumes_without_claiming_flat_output() {
         let idle = cursor.advance(&source, &mut [0; 7], FlateGrant::default(), false);
         assert_eq!(idle.status.unwrap(), FlateStatus::Yield);
         assert_eq!(cursor.progress(), (0, 0));
+        let born = cursor.advance(&source, &mut [0; 7], FlateGrant { work: 2, allocation_bytes: 0 }, false);
+        assert_eq!((born.status.unwrap(), born.work, born.allocated_bytes), (FlateStatus::Yield, 1, 0), "the inflater is born alone so the history reservation opens the next unit");
+        assert!(cursor.next_reserves_history());
         let initial = cursor.advance(&source, &mut [0; 7], FlateGrant { work: 2, allocation_bytes: 0 }, false);
         let FlateStatus::NeedsHistory { bytes } = initial.status.unwrap() else { panic!("expected retained history admission") };
-        assert_eq!(initial.work, 1);
+        assert_eq!(initial.work, 0);
         assert_eq!(initial.allocated_bytes, 0);
         let mut decoded = Vec::new();
         let mut last = cursor.progress();
@@ -71,6 +74,12 @@ fn content_stream_flate_resumes_without_claiming_flat_output() {
     }
 }
 
+/// 🌱️ Gives the cursor its inflater in a unit of its own, as the importer does, so the next unit is the history reservation.
+fn born(cursor: &mut PdfFlateCursor, source: &[u8]) {
+    let step = cursor.advance(source, &mut [0; 1], FlateGrant { work: 1, allocation_bytes: 0 }, false);
+    assert_eq!((step.status.unwrap(), step.work, step.allocated_bytes), (FlateStatus::Yield, 1, 0));
+}
+
 #[test]
 fn content_stream_flate_accounts_for_failure_and_cancellation() {
     let case = &fixtures()[1];
@@ -79,6 +88,7 @@ fn content_stream_flate_accounts_for_failure_and_cancellation() {
     let grant = FlateGrant { work: 1 << 20, allocation_bytes: 1 << 15 };
     let mut small = PdfFlateCursor::new(10);
     let mut output = [0; 16];
+    born(&mut small, &source);
     let failed = small.advance(&source, &mut output, grant, false);
     assert!(failed.status.is_err());
     assert_eq!(failed.written_bytes, 10);
@@ -96,6 +106,7 @@ fn content_stream_flate_accounts_for_failure_and_cancellation() {
     *source.last_mut().unwrap() ^= 1;
     let mut checksum = PdfFlateCursor::new(expected.len());
     let mut output = vec![0; expected.len()];
+    born(&mut checksum, &source);
     let failed = checksum.advance(&source, &mut output, grant, false);
     assert!(failed.status.is_err());
     assert_eq!(failed.written_bytes, expected.len());
@@ -112,6 +123,7 @@ fn content_stream_flate_refuses_truncation_and_trailing_deflate_data() {
     for invalid in [&source[..source.len() - 3], &trailing] {
         let mut cursor = PdfFlateCursor::new(expected);
         let grant = FlateGrant { work: 256, allocation_bytes: 32 * 1024 };
+        born(&mut cursor, invalid);
         let turn = cursor.advance(invalid, &mut [0; 64], grant, false);
         assert!(turn.status.is_err());
         assert!(turn.work > 0 && turn.work <= grant.work);

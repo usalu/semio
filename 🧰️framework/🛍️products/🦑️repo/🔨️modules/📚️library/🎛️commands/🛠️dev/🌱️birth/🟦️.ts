@@ -36,14 +36,15 @@ export async function rootDevMcpFreshCapabilitiesV1(root: string, argv: readonly
   return Object.freeze({ ...original, launches: Object.freeze([...launches.values()]) });
 }
 
-type PlaygroundServeRequest = Readonly<{ variant: string; renderer: "react" | "wgpu" | "native"; profile: "prototype" | "release" }>;
+type PlaygroundServeRequest = Readonly<{ variant: string; renderer: "react" | "wgpu" | "native"; profile: "prototype" | "release"; publishedEmitter?: string }>;
 
 /** 🎮️ Admits only the complete root request for the playground owner. */
 export function rootDevPlaygroundRequestV1(argv: readonly string[]): PlaygroundServeRequest | null {
-  const { prefix, operands } = schema.$defs.PlaygroundProtocol.const;
-  if (argv.length !== operands || !prefix.every((word, index) => argv[index] === word)) return null;
-  const [, , variant, renderer, profile] = argv;
-  const request = { variant, renderer, profile };
+  const { prefix, operands, publishedEmitterFlag } = schema.$defs.PlaygroundProtocol.const;
+  if (!prefix.every((word, index) => argv[index] === word)) return null;
+  const [, , variant, renderer, profile, flag, publishedEmitter] = argv;
+  if (argv.length !== operands && (argv.length !== operands + 2 || flag !== publishedEmitterFlag || renderer !== "react" || profile !== "prototype")) return null;
+  const request = { variant, renderer, profile, ...(publishedEmitter === undefined ? {} : { publishedEmitter }) };
   if (validateJsonSchemaSubset(schema.$defs.PlaygroundRequest, request).length) return null;
   return Object.freeze(request as PlaygroundServeRequest);
 }
@@ -62,6 +63,7 @@ export async function rootDevPlaygroundFreshCapabilitiesV1(root: string, argv: r
   const { tool } = parseBuildInvocationV1([], environment);
   const capabilities = createNativeBuildCallerCapabilitiesV1(root, argv, tool, { ...environment, SEMIO_BUILD_MODE: request.profile });
   const { generatedPrerequisiteArgumentsV1 } = await import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🏭️generated-owner/🟦️.ts");
-  const launches = [...capabilities.launches, ...(await generatedPrerequisiteArgumentsV1(root)).map(child => ["repo", ...child])];
+  const { generatedScanPortsV1 } = await import("../📡️scan-feed/🟦️.ts");
+  const launches = [...capabilities.launches, ...(await generatedPrerequisiteArgumentsV1(root, generatedScanPortsV1(root))).map(child => ["repo", ...child])];
   return Object.freeze({ ...capabilities, launches });
 }

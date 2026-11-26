@@ -3,7 +3,7 @@
 use semio_framework_3d_brep_construction::{circular_prism::CircularPrism,conical_frustum::ConicalFrustum,primitives::{PrimitiveEdge,SolidPrimitive}};
 use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_representation::{arena::SolidId,contract::{AnnularRevolution,BorePreviewSource,RoundedBox,rounded_box_quadrant,SphericalCaps,SphericalShell,TorusSector},topology::history::PersistentLabel};
-use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_surface::{Surface,curved_boolean::{SphericalCornerBox,SphericalTorusCut}};
 use semio_framework_3d_brep_vector::{matrix::Frame3,Pnt3,Vec3 as NativeVec3};
 use semio_framework_mesh_engine::{ComponentReferenceTable, MeshData};
 use semio_framework_value::{RetainedAllocationEffect, RetainedCloneProgress as Progress, RetirementDemand, ValueError, ValueRefusalKind};
@@ -24,6 +24,8 @@ mod sector_sampling;
 mod annular_sampling;
 #[path="🟠️rounded-box-sampling/🦀️.rs"]
 mod rounded_box_sampling;
+#[path="🧲️spherical-box-sampling/🦀️.rs"]
+mod spherical_box_sampling;
 
 const MAX_SEGMENTS: usize = 96;
 const POSITION_SCALARS_PER_TRIANGLE: usize = 9;
@@ -72,15 +74,17 @@ struct CertifiedPrimitive {
     annular:Option<AnnularRevolution>,
     inner_sphere:Option<SolidPrimitive>,
     spherical_caps:Option<SphericalCaps>,
+    spherical_torus_cut:Option<SphericalTorusCut>,
+    spherical_corner_box:Option<SphericalCornerBox>,
     rounded:Option<RoundedBox>,
 }
 
 impl CertifiedPrimitive {
-    fn face_count(self)->usize{if let Some(shape)=self.rounded{return shape.face_count();} if let Some(bore)=self.bore{return bore.source().face_count();} if let Some(shape)=self.spherical_caps{return shape.ring_sizes().len();} if let Some(shape)=self.annular{return shape.face_count();} if self.frustum.is_some()||self.sector.is_some(){return 3;} if let Some(circular_prism)=self.circular_prism{return circular_prism.ring_sizes().len();} self.solid.ring_sizes().len()+usize::from(self.inner_sphere.is_some())}
+    fn face_count(self)->usize{if self.spherical_torus_cut.is_some(){return SphericalTorusCut::RINGS.len();} if self.spherical_corner_box.is_some(){return SphericalCornerBox::RINGS.len();} if let Some(shape)=self.rounded{return shape.face_count();} if let Some(bore)=self.bore{return bore.source().face_count();} if let Some(shape)=self.spherical_caps{return shape.ring_sizes().len();} if let Some(shape)=self.annular{return shape.face_count();} if self.frustum.is_some()||self.sector.is_some(){return 3;} if let Some(circular_prism)=self.circular_prism{return circular_prism.ring_sizes().len();} self.solid.ring_sizes().len()+usize::from(self.inner_sphere.is_some())}
 
-    fn vertex_count(self)->usize{if let Some(shape)=self.rounded{return shape.vertex_count();} if let Some(shape)=self.spherical_caps{return shape.vertex_count();} if let Some(shape)=self.annular{return shape.vertex_count();} if self.frustum.is_some()||self.sector.is_some(){return 2;} if let Some(circular_prism)=self.circular_prism{return circular_prism.vertex_count();} self.solid.vertex_count()+2*usize::from(self.bore.is_some()||self.inner_sphere.is_some())}
+    fn vertex_count(self)->usize{if self.spherical_torus_cut.is_some(){return SphericalTorusCut::VERTICES;} if self.spherical_corner_box.is_some(){return SphericalCornerBox::VERTICES;} if let Some(shape)=self.rounded{return shape.vertex_count();} if let Some(shape)=self.spherical_caps{return shape.vertex_count();} if let Some(shape)=self.annular{return shape.vertex_count();} if self.frustum.is_some()||self.sector.is_some(){return 2;} if let Some(circular_prism)=self.circular_prism{return circular_prism.vertex_count();} self.solid.vertex_count()+2*usize::from(self.bore.is_some()||self.inner_sphere.is_some())}
 
-    fn edge_count(self)->usize{if let Some(shape)=self.rounded{return shape.edge_count();} if let Some(shape)=self.spherical_caps{return shape.edge_count();} if let Some(shape)=self.annular{return shape.edge_count();} if self.frustum.is_some()||self.sector.is_some(){return 3;} if let Some(circular_prism)=self.circular_prism{return circular_prism.edge_count();} self.solid.edge_count()+3*usize::from(self.bore.is_some()||self.inner_sphere.is_some())}
+    fn edge_count(self)->usize{if self.spherical_torus_cut.is_some(){return SphericalTorusCut::EDGES;} if self.spherical_corner_box.is_some(){return SphericalCornerBox::EDGES;} if let Some(shape)=self.rounded{return shape.edge_count();} if let Some(shape)=self.spherical_caps{return shape.edge_count();} if let Some(shape)=self.annular{return shape.edge_count();} if self.frustum.is_some()||self.sector.is_some(){return 3;} if let Some(circular_prism)=self.circular_prism{return circular_prism.edge_count();} self.solid.edge_count()+3*usize::from(self.bore.is_some()||self.inner_sphere.is_some())}
 
     fn cavity_at(self,face:usize)->Option<SolidPrimitive>{self.inner_sphere.filter(|_|face==self.solid.ring_sizes().len())}
 
@@ -95,6 +99,8 @@ impl CertifiedPrimitive {
     }
 
     fn edge(self,index:usize)->PrimitiveEdge {
+        if let Some(shape)=self.spherical_torus_cut{let (curve,range,vertices)=shape.edge(index);return PrimitiveEdge{curve,range,vertices};}
+        if let Some(shape)=self.spherical_corner_box{let (curve,range,vertices)=shape.edge(index);return PrimitiveEdge{curve,range,vertices};}
         if let Some(shape)=self.rounded{let (vertices,curve,range)=shape.edge(index);return PrimitiveEdge{curve,range,vertices};}
         if let Some(shape)=self.spherical_caps{
             let (curve,range,vertices)=shape.edge(index);return PrimitiveEdge{curve,range,vertices};
@@ -116,6 +122,8 @@ impl CertifiedPrimitive {
     }
 
     fn vertex(self,index:usize)->Pnt3 {
+        if let Some(shape)=self.spherical_torus_cut{return shape.vertex(index);}
+        if let Some(shape)=self.spherical_corner_box{return shape.vertex(index);}
         if let Some(shape)=self.rounded{return shape.vertex(index);}
         if let Some(shape)=self.spherical_caps{return shape.vertex(index);}
         if let Some(shape)=self.annular{return shape.vertex(index);}
@@ -214,7 +222,7 @@ impl PrimitivePreviewJob {
         let segments = segment_count(radius, tolerance, TAU);
         let tube_segments = segment_count(tube_radius, tolerance, TAU);
         let mut job = Self {
-            source, primitive: CertifiedPrimitive { solid: primitive, first_label, bore:None, circular_prism:None, frustum:None, sector:None, annular:None,inner_sphere:None,spherical_caps:None,rounded:None }, segments, tube_segments, triangle_slots: 0, edge_segments: 0, storage: 0, slot: 0, face: 0,
+            source, primitive: CertifiedPrimitive { solid: primitive, first_label, bore:None, circular_prism:None, frustum:None, sector:None, annular:None,inner_sphere:None,spherical_caps:None,spherical_torus_cut:None,spherical_corner_box:None,rounded:None }, segments, tube_segments, triangle_slots: 0, edge_segments: 0, storage: 0, slot: 0, face: 0,
             edge: 0, segment: 0, units_done: 0, vertex: 0, edge_pick: 0, references: Vec::new(),
             reference_key: String::new(), reference_labels: Vec::new(), output: MeshData::default(), done: false,
         };
@@ -242,11 +250,42 @@ impl PrimitivePreviewJob {
     pub fn is_frustum(&self)->bool{self.primitive.frustum.is_some()}
     pub fn is_sector(&self)->bool{self.primitive.sector.is_some()}
     pub fn is_annular(&self)->bool{self.primitive.annular.is_some()}
-    pub fn is_analytic_primitive(&self)->bool{!(self.is_bore()||self.is_circular_prism()||self.is_frustum()||self.is_sector()||self.is_annular()||self.is_spherical_shell()||self.is_spherical_caps()||self.is_rounded_box())}
+    pub fn is_analytic_primitive(&self)->bool{!(self.is_bore()||self.is_circular_prism()||self.is_frustum()||self.is_sector()||self.is_annular()||self.is_spherical_shell()||self.is_spherical_caps()||self.is_spherical_torus_cut()||self.is_spherical_corner_box()||self.is_rounded_box())}
 
     pub fn is_spherical_shell(&self)->bool{self.primitive.inner_sphere.is_some()}
 
     pub fn is_spherical_caps(&self)->bool{self.primitive.spherical_caps.is_some()}
+
+    pub fn is_spherical_torus_cut(&self)->bool{self.primitive.spherical_torus_cut.is_some()}
+
+    pub fn is_spherical_corner_box(&self)->bool{self.primitive.spherical_corner_box.is_some()}
+
+    /// 🧲️ Admits seven curved charts with shared corner samples and a chord margin on patch diagonals.
+    pub fn new_spherical_corner_box(source:SolidId,shape:SphericalCornerBox,label:u64,tolerance:f64)->Result<Self,ValueError>{
+        let last=SphericalCornerBox::VERTICES+SphericalCornerBox::EDGES+SphericalCornerBox::RINGS.len()-1;
+        if label.checked_add(last as u64).is_none(){return Err(invalid_preview());}
+        let mut job=Self::new(source,SolidPrimitive::Sphere{frame:shape.frame,radius:shape.radius},label,tolerance)?;
+        job.primitive.spherical_corner_box=Some(shape);
+        job.segments=(segment_count(shape.radius,tolerance/2.,FRAC_PI_2)+1).min(MAX_SEGMENTS);
+        job.triangle_slots=(0..job.primitive.face_count()).map(|face|job.chart(face).slots(job.segments)).sum();
+        job.edge_segments=(0..job.primitive.edge_count()).map(|edge|job.segments_on_edge(edge)).sum();
+        Ok(job)
+    }
+
+
+    /// 🍩️ Admits the sphere caps and inward torus patch with identical samples on both shared circles.
+    pub fn new_spherical_torus_cut(source:SolidId,shape:SphericalTorusCut,label:u64,tolerance:f64)->Result<Self,ValueError>{
+        let last = SphericalTorusCut::VERTICES + SphericalTorusCut::EDGES + SphericalTorusCut::RINGS.len() - 1;
+        if label.checked_add(last as u64).is_none() { return Err(invalid_preview()); }
+        let mut job=Self::new(source,SolidPrimitive::Sphere{frame:shape.frame,radius:shape.radius},label,tolerance)?;
+        job.primitive.spherical_torus_cut=Some(shape);
+        job.segments=segment_count(shape.radius,tolerance/2.,TAU);
+        job.tube_segments=segment_count(shape.radius,tolerance/2.,std::f64::consts::PI);
+        job.triangle_slots=(0..job.primitive.face_count()).map(|face|job.chart(face).slots(job.segments)).sum();
+        job.edge_segments=(0..job.primitive.edge_count()).map(|edge|job.segments_on_edge(edge)).sum();
+        Ok(job)
+    }
+
 
     pub fn is_rounded_box(&self)->bool{self.primitive.rounded.is_some()}
 
@@ -352,6 +391,12 @@ impl PrimitivePreviewJob {
 
     fn chart(&self, face: usize) -> Chart {
         if self.is_rounded_box(){return Chart::Explicit{slots:rounded_box_sampling::slots(face,self.segments)};}
+        if self.is_spherical_corner_box(){return Chart::Explicit{slots:spherical_box_sampling::slots(face,self.segments)};}
+        if let Some(shape)=self.primitive.spherical_torus_cut{
+            let [first,end]=shape.band(face);
+            return Chart::Wrapped{first,end,rows:self.tube_segments,low_pole:face==0,high_pole:face==1};
+        }
+
         if let Some(shape)=self.primitive.spherical_caps{
             if shape.is_disk(face){return Chart::Cap{radius:shape.rim_radius(face==2)};}
             let (first,end,low_pole,high_pole)=shape.band(face);
@@ -384,7 +429,7 @@ impl PrimitivePreviewJob {
         match spec.curve {
             Curve3::Line { dir, .. } => usize::from(dir != NativeVec3::ZERO),
             Curve3::Circle { .. } => {
-                let turns = if spec.range.1 - spec.range.0 < TAU { self.segments.div_ceil(2) } else if matches!(self.primitive.solid, SolidPrimitive::Torus { .. }) && edge == 0 { self.tube_segments } else { self.segments };
+                let turns = if self.is_spherical_corner_box(){self.segments}else if spec.range.1 - spec.range.0 < TAU { self.segments.div_ceil(2) } else if matches!(self.primitive.solid, SolidPrimitive::Torus { .. }) && edge == 0 { self.tube_segments } else { self.segments };
                 turns.max(1)
             }
             _ => unreachable!("analytic primitive edges have closed forms"),
@@ -394,6 +439,7 @@ impl PrimitivePreviewJob {
     fn triangle(&self) -> Option<[Vertex; 3]> {
         let face = self.face;
         if let Some(shape)=self.primitive.rounded{return Some(rounded_box_sampling::triangle(shape,face,self.slot,self.segments));}
+        if let Some(shape)=self.primitive.spherical_corner_box{return spherical_box_sampling::triangle(shape,face,self.slot,self.segments);}
         let primitive = self.primitive.solid;
         if let Some(shape)=self.primitive.annular{return Some(annular_sampling::triangle(shape,face,self.slot,self.segments));}
         if let Some(shape)=self.primitive.sector{return Some(sector_sampling::triangle(shape,face,self.slot,self.segments,self.tube_segments));}
@@ -409,11 +455,14 @@ impl PrimitivePreviewJob {
         }
         let inside=self.primitive.cavity_at(face);
         let caps=self.primitive.spherical_caps;
-        let surface=if let Some(shape)=caps{
+        let cut=self.primitive.spherical_torus_cut;
+        let surface=if let Some(shape)=cut.filter(|_|face==2){
+            Surface::Torus{frame:shape.frame,major_radius:shape.major,minor_radius:shape.minor}
+        }else if cut.is_some(){primitive.surface(0)}else if let Some(shape)=caps{
             let frame=shape.frame(face);
             if shape.is_disk(face){Surface::Plane{frame}}else{Surface::Sphere{frame,radius:shape.radius(face)}}
         }else{inside.map_or_else(||primitive.surface(face),|sphere|sphere.surface(0))};
-        let direction=if inside.is_some()||caps.is_some_and(|shape|shape.is_inward(face)){-1.0}else{1.0};
+        let direction=if inside.is_some()||caps.is_some_and(|shape|shape.is_inward(face))||cut.is_some()&&face==2{-1.0}else{1.0};
         let angle = |column| TAU * column as f64 / self.segments as f64;
         match self.chart(face) {
             Chart::Bore | Chart::Explicit{..}=>unreachable!("composite analytic chart dispatched above"),
@@ -464,7 +513,10 @@ impl PrimitivePreviewJob {
                             frame.to_world_vector(radial * v.cos() + NativeVec3::Z * v.sin()),
                         _ => unreachable!("wrapped primitive surface"),
                     };
-                    Vertex { point: surface.eval(u, v), normal:normal*direction }
+                    let point = if let Some(shape)=cut.filter(|_|r==0||r==rows) {
+                        shape.rim(if face==2 {r==0} else {face==1},u)
+                    } else {surface.eval(u,v)};
+                    Vertex { point, normal:normal*direction }
                 }))
             }
         }

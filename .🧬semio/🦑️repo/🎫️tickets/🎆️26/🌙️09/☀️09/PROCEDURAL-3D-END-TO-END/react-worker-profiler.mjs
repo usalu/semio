@@ -2,7 +2,7 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-export async function connectWorkerProfiler(port, directory, origin, log) {
+export async function connectWorkerProfiler(port, directory, origin, log, prefix = "worker-cpu") {
   const version = await fetch(`http://127.0.0.1:${port}/json/version`);
   if (!version.ok) throw new Error(`DevTools version endpoint returned ${version.status}`);
   const { webSocketDebuggerUrl } = await version.json();
@@ -70,7 +70,7 @@ export async function connectWorkerProfiler(port, directory, origin, log) {
         const { sessionId, url, index, startedAt } = target.value;
         try {
           const { profile } = await send("Profiler.stop", {}, sessionId);
-          const file = join(directory, `worker-cpu-${index}.json`);
+          const file = join(directory, `${prefix}-${index}.json`);
           writeFileSync(file, JSON.stringify({ url, startedAt, profile }));
           log("worker CPU profile", { file, samples: profile.samples?.length ?? 0 });
         } catch (error) {

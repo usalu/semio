@@ -14,6 +14,32 @@ import refundLaw from "./🧫️fixtures/receiving-refund.json";
 import refundSchema from "./🧫️fixtures/receiving-refund.schema.json";
 import birthLaw from "./🧫️fixtures/close-birth-ledger.json";
 import birthSchema from "./🧫️fixtures/close-birth-ledger.schema.json";
+import semanticStep from "./🧫️fixtures/semantic-step.json";
+import semanticStepSchema from "./🧫️fixtures/semantic-step.schema.json";
+
+test("single-step ceilings compose independently of original work fuel", () => {
+ expect(new Ajv().compile(semanticStepSchema)(semanticStep)).toBe(true);
+ using db = new Database(":memory:");
+ const actual = db.query(`
+   select $completed + 1 as stepLimit,
+     min($completed, $laterCompleted) + 1 as limitAfterLaterLoan,
+     min($completed, $earlierCompleted) + 1 as limitAfterEarlierLoan,
+     $physicalFuel - $physicalSpend as physicalFuelAfter
+ `).get({
+   $completed: semanticStep.completed,
+   $laterCompleted: semanticStep.laterCompleted,
+   $earlierCompleted: semanticStep.earlierCompleted,
+   $physicalFuel: semanticStep.physicalFuel,
+   $physicalSpend: semanticStep.physicalSpend,
+ });
+ expect(actual).toEqual({
+   stepLimit: semanticStep.limit,
+   limitAfterLaterLoan: semanticStep.limit,
+   limitAfterEarlierLoan: semanticStep.narrowerLimit,
+   physicalFuelAfter: semanticStep.physicalFuelAfter,
+ });
+});
+
 test("one retained item and one fuel are admitted together", () => {
  expect(new Ajv().compile(chargeSchema)(chargeCases)).toBe(true);
  using db = new Database(":memory:");

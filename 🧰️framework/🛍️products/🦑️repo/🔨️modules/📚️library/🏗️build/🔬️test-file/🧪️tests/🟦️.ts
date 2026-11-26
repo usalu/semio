@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
-import {dirname,join,resolve} from "node:path";
+import {dirname,join,relative,resolve,sep} from "node:path";
 import {CATALOG_LANGUAGES_V1,placeholdersV1,textV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 import {discoverProcessTestFilesV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🟦️.ts";
 import {requireTestToolV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
@@ -12,7 +12,7 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import texts from "../📖️texts/🔣️.json" with {type:"json"};
 import corpus from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import catalogue from "../../⚙️operations/🔣️catalog.json" with {type:"json"};
-import {readTestFilePolicyV1,readTestFileTablesV1,renderTestFilePlanV1,renderTestFileResultV1,resolveTestFilesV1,routeTestFilesV1,testFileArgumentsV1,testFileBunCountsV1,testFileEnvelopeArgumentsV1,testFileOptionNamesV1,testFileResultV1,testFileTailV1,testFileWantsPythonV1,validateTestFileDocumentV1} from "../🟦️.ts";
+import {readTestFilePolicyV1,readTestFileTablesV1,renderTestFilePlanV1,renderTestFileResultV1,resolveTestFilesV1,routeTestFilesV1,testFileArgumentsV1,testFileBunCountsV1,testFileEnvelopeArgumentsV1,testFileOptionNamesV1,testFileOracleArgumentsV1,testFileOracleOwnerV1,testFileResultV1,testFileTailV1,testFileWantsPythonV1,validateTestFileDocumentV1} from "../🟦️.ts";
 import {TEST_FILE_TEXTS_V1} from "../📖️texts/🟦️.ts";
 import {providedTestEnvironmentV1} from "../🏃️run/🟦️.ts";
 import storageSchema from "../../../🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🧬️schema/🔣️.json" with {type:"json"};
@@ -36,7 +36,7 @@ test("the policy satisfies its closed schema under the in-repo validator and und
  expect(check(policy),JSON.stringify(check.errors?.[0])).toBe(true);
  expect(validateTestFileDocumentV1("Policy",policy)).toEqual([]);
  expect(readTestFilePolicyV1()).toBe(policy as never);
- const mutations:Record<string,(value:any)=>void>={extra:value=>{value.extra=1;},noTables:value=>{value.tables=[];},badTable:value=>{value.tables[0].project="nope";},badLimit:value=>{value.limits.maximumFiles=0;},badMode:value=>{value.defaultBuildMode="debug";},missing:value=>{delete value.scrub;},badProvider:value=>{value.providers[0].provider="nope";},noProviders:value=>{delete value.providers;}};
+ const mutations:Record<string,(value:any)=>void>={extra:value=>{value.extra=1;},noTables:value=>{value.tables=[];},badTable:value=>{value.tables[0].project="nope";},badLimit:value=>{value.limits.maximumFiles=0;},noOracle:value=>{delete value.oracle;},badOracle:value=>{value.oracle.command="Check!";},badMode:value=>{value.defaultBuildMode="debug";},missing:value=>{delete value.scrub;},badProvider:value=>{value.providers[0].provider="nope";},noProviders:value=>{delete value.providers;}};
  for(const [name,mutate] of Object.entries(mutations)){
   const copy=JSON.parse(JSON.stringify(policy));mutate(copy);
   expect(check(copy),name+" ajv").toBe(false);
@@ -258,7 +258,7 @@ test("a suite row's declared nested launches reach every file under both runners
  expect(processTestSuiteLaunchesV1(testFileNarrowedSuiteV1(tableOf(true).suites[0]!,fixture),tableRoot)).toEqual([expected]);
  const suites=(await import("../../../../../../../🔨️modules/🏃️process/🧪️testing/🗂️suites/🧬️schema/🔣️.json")).default as any,accepts=ajv.compile({$schema:suites.$schema,definitions:suites.definitions,$ref:"#/definitions/Table"} as never),declaredTable=JSON.parse(readFileSync(join(root,"🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json"),"utf8"));
  expect(accepts(tableOf(true)),JSON.stringify(accepts.errors?.[0])).toBe(true);expect(accepts(declaredTable),JSON.stringify(accepts.errors?.[0])).toBe(true);
- expect(declaredTable.suites.filter((suite:any)=>suite.launches).map((suite:any)=>suite.id).sort()).toEqual(["component-reclaim","native-artifacts","native-queued-cancellation"]);
+ expect(declaredTable.suites.filter((suite:any)=>suite.launches).map((suite:any)=>suite.id).sort()).toEqual(["component-reclaim","native-artifacts","native-component-closure","native-component-failures","native-component-jobs","native-component-real","native-component-retry","native-component-seal","native-component-streaming","native-queued-cancellation"]);
  for(const suite of declaredTable.suites)for(const entry of suite.launches??[])for(const path of entry.paths)expect(existsSync(join(root,"🧰️framework/🔨️modules/🏃️process",path)),path).toBe(true);
  const bad=JSON.parse(JSON.stringify(tableOf(true)));
  for(const mutate of [(value:any)=>{value.suites[0].launches[0].command="run";},(value:any)=>{value.suites[0].launches[0].extra=1;},(value:any)=>{value.suites[0].launches[0].paths=[1];},(value:any)=>{value.suites[0].launches=[];},(value:any)=>{delete value.suites[0].launches[0].arguments;}]){const copy=JSON.parse(JSON.stringify(bad));mutate(copy);expect(()=>readProcessTestTableV1(copy)).toThrow();}
@@ -282,3 +282,48 @@ test("a suite row's declared nested launches reach every file under both runners
   expect((await byFile(false)).status).toBe("passed");
  }finally{delete process.env.SEMIO_FIXTURE_LAUNCH;}
 },900000);
+
+test("a Python oracle runs with the check arguments its own usage declares, found from its directory upwards, and a module runs as the oracle that owns it, as the independent Python reading agrees on every vector",()=>{
+ const vectors=corpus.oracleArguments as readonly {id:string;file:string;text:string;exists:string[];expected?:string[];refusal?:string}[],base=resolve("/checkout"),theirs=python(["oracle-arguments",join(import.meta.dir,"..","🔣️.json")],vectors.map(row=>({file:row.file,text:row.text,exists:row.exists}))) as unknown[];
+ const absolute=(path:string)=>resolve(base,path),relativeOf=(path:string)=>relative(base,path).split(sep).join("/");
+ for(const [at,row] of vectors.entries()){
+  const exists=(path:string)=>row.exists.includes(relativeOf(path)),failed=refusal(()=>testFileOracleArgumentsV1(base,row.file,row.text,undefined,exists));
+  expect(failed,row.id).toBe(row.refusal);
+  if(row.expected!==undefined)expect(testFileOracleArgumentsV1(base,row.file,row.text,undefined,exists),row.id).toEqual(row.expected.map((value,index)=>index===0?value:absolute(value)));
+  expect(theirs[at],row.id).toEqual(row.refusal!==undefined?{refusal:row.refusal}:row.expected as never);
+ }
+ const owners=corpus.oracleOwners as readonly {id:string;file:string;entries:string[];expected?:string;refusal?:string}[],owned=python(["oracle-owners"],owners.map(row=>({file:row.file,entries:row.entries}))) as unknown[];
+ for(const [at,row] of owners.entries()){
+  const read=(path:string)=>row.entries.includes(path)?"if __name__ == \"__main__\": pass":"x=1";
+  expect(refusal(()=>testFileOracleOwnerV1(row.file,read)),row.id).toBe(row.refusal);
+  if(row.expected!==undefined)expect(testFileOracleOwnerV1(row.file,read),row.id).toBe(row.expected);
+  expect(owned[at],row.id).toEqual(row.refusal!==undefined?{refusal:row.refusal}:row.expected as never);
+ }
+});
+
+test("Python oracles route as oracles to the owning entry point, run under the locked workspace interpreter with their declared arguments: a passing and a failing oracle give a passed and a failed row with the failure's tail, and bail leaves the rest unrun",async()=>{
+ const passing=here+"/🐍️passing/🐍️.py",failing=here+"/🐍️failing/🐍️.py",tables=new Map() as ReturnType<typeof readTestFileTablesV1>,routes=routeTestFilesV1(root,[passing,passing,failing],tables);
+ expect(routes.map(row=>[row.file,row.mode,row.suite,row.python,row.table])).toEqual([[passing,"oracle","python",true,null],[failing,"oracle","python",true,null]]);
+ expect(validateTestFileDocumentV1("Plan",{version:1,files:routes})).toEqual([]);
+ const both=await run(["--json",passing,failing]);
+ expect(both.code).toBe(1);
+ expect(validateTestFileDocumentV1("Result",both.json)).toEqual([]);
+ expect(both.json.files.map(row=>[row.status,row.mode,row.suite])).toEqual([["passed","oracle","python"],["failed","oracle","python"]]);
+ expect(both.json.files[1]!.tail).toContain("the failing oracle disagrees on purpose");
+ expect(both.json.files[1]!.error).toContain("test-file-oracle");
+ const bailed=await run(["--json","--bail",failing,passing]);
+ expect(bailed.json.files.map(row=>row.status)).toEqual(["failed","not-run"]);
+},600000);
+
+test.skipIf(process.platform==="win32")("cancelling a run of a Python oracle with SIGINT ends it with exit code 130, prints no result and leaves no oracle child behind",async()=>{
+ const sleeping=join(root,here,"🐍️sleeping","🐍️.py"),driver=join(root,here,"🚀️drive","🟦️.ts"),child=Bun.spawn([process.execPath,driver,root,"--json",sleeping],{stdout:"pipe",stderr:"pipe",env:{...process.env,SEMIO_LANGUAGE:"en"}});
+ const decoder=new TextDecoder(),reader=child.stderr.getReader();
+ let seen="";
+ while(!seen.includes("[test-file] 1/1")){const chunk=await reader.read();if(chunk.done)break;seen+=decoder.decode(chunk.value);}
+ await Bun.sleep(4000);
+ child.kill("SIGINT");
+ const code=await child.exited,output=await new Response(child.stdout).text();
+ expect(code).toBe(130);
+ expect(output).toBe("");
+ expect(spawnSync("pgrep",["-f",sleeping],{encoding:"utf8"}).status).toBe(1);
+},120000);

@@ -33,7 +33,7 @@ const mismatches:readonly [string,(value:NxNestedCustodyHeldV1)=>NxNestedCustody
 ];
 for(const [name,change,rule] of mismatches)test("a different "+name+" is refused with the rule "+rule,()=>{
  const error=refusal(()=>admitNestedNxCustodyV1(change(held("exclusive")),request("exclusive")));
- expect(error.rule).toBe(rule);expect(validate(error.toJSON())).toBe(true);expect(error.en).toContain("on "+receipt);expect(error.de).toContain("auf "+receipt);
+ expect<unknown>(error.rule).toBe(rule);expect(validate(error.toJSON())).toBe(true);expect(error.en).toContain("on "+receipt);expect(error.de).toContain("auf "+receipt);
 });
 test("the refusal without a task name in the environment says so in both languages",()=>{
  const bare={...environment,NX_TASK_TARGET_PROJECT:undefined},error=refusal(()=>admitNestedNxCustodyV1({...held("shared",[receipt]),environment:bare},{...request("exclusive"),environment:bare}));

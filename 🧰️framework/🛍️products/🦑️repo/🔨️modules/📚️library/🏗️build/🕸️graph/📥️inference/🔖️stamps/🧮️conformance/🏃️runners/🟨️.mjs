@@ -72,6 +72,7 @@ const readKindsOfV1 = (document, rule, into) => {
 
 /** 🎯️ Evaluates the input precision corpus: the engine on the authored fixtures (globs and glob dialects, command words, JSONC, Cargo package names, dispatchers, every derivation, the program walks, the router, the manager roles, the texts) and the read kinds the derivations exercised. */
 export async function runInputPrecisionV1({ main, dialects, router }) {
+  /** @type {Record<string, unknown>} */
   const cases = {}, covered = new Set(), document = readInputPrecisionV1(main.document), host = fixtureHostV1(main);
   main.globs.forEach((row, index) => { cases[`glob/${index}`] = globMatchesV1(row.pattern, row.path); });
   dialects.rows.filter((row) => row.engines.includes("input")).forEach((row, index) => { const expression = inputGlobRegExpV1(row.pattern); cases[`dialect/${index}`] = [...row.matches, ...row.rejects].map((path) => expression.test(path)); });
@@ -131,6 +132,7 @@ export async function runInputPrecisionV1({ main, dialects, router }) {
 
 /** 📦️ Evaluates the package manager corpus: the manager of every ecosystem the policy selects, every registered manager with the file names inference consumes, the environment override and its refusals. */
 export async function runPackageManagersV1({ roles, policy }) {
+  /** @type {Record<string, unknown>} */
   const cases = {}, selection = Object.keys(policy.selection).sort(), covered = { manager: new Set(), ecosystem: new Set() };
   for (const manager of packageManagerRegistryV1.all()) {
     covered.manager.add(manager.id);

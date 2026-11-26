@@ -74,6 +74,10 @@ test("project observations await asynchronous JSON computation before admission"
 });
 
 /** 🧪️ One isolated workspace whose files are older than the racy window, so the first result is persisted. */
+/** 🧪️ A fake of the overloaded `statSync` that answers the one call shape the observation reads. */
+const statFake = (fake: (...args: Parameters<typeof rawFs.statSync>) => unknown) => fake as typeof rawFs.statSync;
+/** 🧪️ A fake of the overloaded `lstatSync` that answers the one call shape the observation reads. */
+const lstatFake = (fake: (...args: Parameters<typeof rawFs.lstatSync>) => unknown) => fake as typeof rawFs.lstatSync;
 function workspace(): string {
   const root = mkdtempSync(join(artifactRoot, "io-"));
   for (const [path, content] of Object.entries(fixture.files)) { mkdirSync(join(root, path, ".."), { recursive: true }); writeFileSync(join(root, path), content); }
@@ -86,7 +90,7 @@ function recordHeader(cachePath: string): { digest: string; resultSha256: string
   const line = JSON.parse(inferenceHeaderLine(cachePath)!) as { digest: string; resultSha256: string; blocks: string[]; authorityObservations: unknown[]; observations: any[] };
   const blocked = line.blocks.flatMap((name) => { const bytes = brotliDecompressSync(readFileSync(inferenceObservationBlockPathV1(dirname(resolve(cachePath)), name))); expect(createHash("sha256").update(bytes).digest("hex")).toBe(name); return JSON.parse(bytes.toString("utf8")) as any[]; });
   const expanded = { ...line, observations: [...blocked, ...line.observations] };
-  expect(expanded.observations).toEqual(readInferenceHeaderV1(cachePath).observations);
+  expect<unknown>(expanded.observations).toEqual(readInferenceHeaderV1(cachePath).observations);
   return expanded;
 }
 
@@ -198,12 +202,12 @@ for(const vector of holdProgress)test(`verified observation prefix ${vector.mode
  const indexes=new Map(rows.map((row,index)=>[row.path,index]));
  const latest=db.query<{done:number},[number,number]>("select case when ?1<0 then ?2 else ?1 end as done").get(vector.halt,vector.rows)!.done;
  try{
-  const pending=withObservedWorldV1({...rawFs,statSync(...args:Parameters<typeof rawFs.statSync>){
+  const pending=withObservedWorldV1({...rawFs,statSync:statFake((...args)=>{
    const index=indexes.get(String(args[0]));
    if(index===undefined)return rawFs.statSync(...args);
    if(index===vector.halt){if(vector.mode==="cancelled")signal.abort(reason);else throw Object.assign(Error("fixture absent"),{code:"ENOENT"});}
    return {};
-  }},()=>observationsHold(rows,Number(vector.limit),new Set(),new Set(),signal.signal,undefined,vector.report===false?undefined:count=>verified.push(count)));
+  })},()=>observationsHold(rows,Number(vector.limit),new Set(),new Set(),signal.signal,undefined,vector.report===false?undefined:count=>verified.push(count)));
   if(vector.mode==="cancelled"){
    if(rows.length===0)signal.abort(reason);
    await expect(pending).rejects.toBe(reason);
@@ -349,12 +353,12 @@ for(const relocated of [false,true])test("shared "+(relocated?"relocated ":"")+"
  const physical=(path:string)=>relocated?live+path.slice(former.length):path;
  const touched=new Map<string,number>(),present=new Set(rows.map(({path})=>physical(path)));
  if(relocated)expect(noteFormerRootV1(former,live)).toBe(true);
- try{await withObservedWorldV1({...rawFs,statSync(...args:Parameters<typeof rawFs.statSync>){
+ try{await withObservedWorldV1({...rawFs,statSync:statFake((...args)=>{
   const path=String(args[0]);
   touched.set(path,(touched.get(path)??0)+1);
   if(!present.has(path))throw Object.assign(Error("fixture absent"),{code:"ENOENT"});
-  return {} as ReturnType<typeof rawFs.statSync>;
- }},async()=>{
+  return {};
+ })},async()=>{
   await withObservationRoundV1(async()=>{
    expect(await Promise.all(admissionPass.batches.map(batch=>observationsHoldWithinRoundV1(batch.map(at=>rows[at]!),64)))).toEqual(admissionPass.initial);
    expect(rows.map(({path})=>touched.get(physical(path)))).toEqual(admissionPass.sharedProbes);
@@ -389,8 +393,8 @@ test("typed admission shares one followed stat per path and the final seal probe
  let state:Readonly<Record<string,string>>=fixture.before,followed:string[]=[],unfollowed:string[]=[];
  const info=(type:string)=>({isFile:()=>type==="file",isDirectory:()=>type==="directory",isSymbolicLink:()=>type==="symlink"}) as ReturnType<typeof rawFs.statSync>;
  const world={...rawFs,
-   statSync(...args:Parameters<typeof rawFs.statSync>){const name=String(args[0]),type=state[name];if(type===undefined)return rawFs.statSync(...args);followed.push(name);if(type.startsWith("!"))throw Object.assign(Error(type),{code:type.slice(1)});return info(type);},
-   lstatSync(...args:Parameters<typeof rawFs.lstatSync>){const name=String(args[0]);if(name!==fixture.unfollowed.path)return rawFs.lstatSync(...args);unfollowed.push(name);return info("symlink");}
+   statSync:statFake((...args)=>{const name=String(args[0]),type=state[name];if(type===undefined)return rawFs.statSync(...args);followed.push(name);if(type.startsWith("!"))throw Object.assign(Error(type),{code:type.slice(1)});return info(type);}),
+   lstatSync:lstatFake((...args)=>{const name=String(args[0]);if(name!==fixture.unfollowed.path)return rawFs.lstatSync(...args);unfollowed.push(name);return info("symlink");})
  };
  try{await withObservedWorldV1(world,async()=>{
    await withObservationRoundV1(async()=>{

@@ -1,7 +1,7 @@
 /** 🧩️ Admits owner-authored Stdio composition contributions without a concrete roster. */
 export type CompositionAppV1 = { owner: string; order: number; variant: string; role: "editor" | "viewer"; type: string; factory: string; mutationRoster: boolean; laws: { editing: string; sqliteSnapshot: string } | null };
 export type CompositionPlaygroundV1 = { owner: string; variant: string; app: string; aliases: string[]; ports: { react: number; wgpu: number }; devContribution?: string };
-export type CompositionContributionV1 = { schema: "semio.stdio.composition-contribution/v1"; artifact: string; package: string; order: number; selections: string[]; apps: CompositionAppV1[]; nativeFactories: { factoryId: string; definitionPath: string; protocolPath: string }[]; openTargets: Record<string, string>[]; catalogPackage: string | null; symbolPackages: string[]; playgrounds: CompositionPlaygroundV1[]; mutationDescriptors: { name: string; snapshot: string; mutation: string }[]; mutationCoordinates: { artifact: string; standard: string; subset: string; surface: string; owner: string; prefix: string }[] };
+export type CompositionContributionV1 = { schema: "semio.stdio.composition-contribution/v1"; artifact: string; package: string; order: number; selections: string[]; apps: CompositionAppV1[]; nativeFactories: { factoryId: string; definitionPath: string; protocolPath: string }[]; openTargets: Record<string, string>[]; catalogPackage: string | null; runtimeHost?: string; symbolPackages: string[]; playgrounds: CompositionPlaygroundV1[]; mutationDescriptors: { name: string; snapshot: string; mutation: string }[]; mutationCoordinates: { artifact: string; standard: string; subset: string; surface: string; owner: string; prefix: string }[] };
 
 const atom = /^[a-z][a-z0-9-]*$/;
 const rust = /^[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*$/;
@@ -29,7 +29,7 @@ function array(value: unknown): unknown[] {
 
 /** 🧬️ Validates the closed contribution schema before any source or manifest publication. */
 export function admitCompositionContributionV1(value: unknown): CompositionContributionV1 {
-  const row = object(value, ["schema", "artifact", "package", "order", "selections", "apps", "nativeFactories", "openTargets", "catalogPackage", "symbolPackages", "playgrounds", "mutationDescriptors", "mutationCoordinates"]);
+  const row = object(value, ["schema", "artifact", "package", "order", "selections", "apps", "nativeFactories", "openTargets", "catalogPackage", "runtimeHost", "symbolPackages", "playgrounds", "mutationDescriptors", "mutationCoordinates"], ["runtimeHost"]);
   if (row.schema !== "semio.stdio.composition-contribution/v1") throw new Error("composition contribution schema is unsupported");
   const selections = array(row.selections).map((value) => text(value, atom));
   if (new Set(selections).size !== selections.length) throw new Error("composition contribution repeats a selection");
@@ -54,8 +54,10 @@ export function admitCompositionContributionV1(value: unknown): CompositionContr
   });
   const packageName = text(row.package, atom);
   const catalogPackage = row.catalogPackage === null ? null : text(row.catalogPackage, atom);
+  const runtimeHost = row.runtimeHost === undefined ? undefined : text(row.runtimeHost, atom);
   const symbolPackages = array(row.symbolPackages).map((value) => text(value, atom));
   if (new Set([packageName, ...symbolPackages, ...(catalogPackage === null ? [] : [catalogPackage])]).size !== symbolPackages.length + 1 + (catalogPackage === null ? 0 : 1)) throw new Error("Composition contribution repeats a package");
+  if (runtimeHost !== undefined && (catalogPackage === null || nativeFactories.length > 0 || apps.some((app) => app.owner !== runtimeHost))) throw new Error("A runtime-hosted contribution needs a catalog package, no native factory and every app owned by its runtime host");
   const playgrounds = array(row.playgrounds).map((value): CompositionPlaygroundV1 => {
     const playground = object(value, ["owner", "variant", "app", "aliases", "ports", "devContribution"], ["devContribution"]);
     const ports = object(playground.ports, ["react", "wgpu"]);
@@ -74,7 +76,7 @@ export function admitCompositionContributionV1(value: unknown): CompositionContr
     for (const field of ["surface", "prefix"]) if (typeof coordinate[field] !== "string") throw new Error("Invalid contribution mutation coordinate");
     return coordinate as CompositionContributionV1["mutationCoordinates"][number];
   });
-  return { schema: row.schema, artifact: text(row.artifact, atom), package: packageName, order: order(row.order), selections, apps, nativeFactories, openTargets, catalogPackage, symbolPackages, playgrounds, mutationDescriptors, mutationCoordinates };
+  return { schema: row.schema, artifact: text(row.artifact, atom), package: packageName, order: order(row.order), selections, apps, nativeFactories, openTargets, catalogPackage, ...(runtimeHost === undefined ? {} : { runtimeHost }), symbolPackages, playgrounds, mutationDescriptors, mutationCoordinates };
 }
 
 /** 📇️ Selects present contributions in authored order and refuses conflicting authority. */

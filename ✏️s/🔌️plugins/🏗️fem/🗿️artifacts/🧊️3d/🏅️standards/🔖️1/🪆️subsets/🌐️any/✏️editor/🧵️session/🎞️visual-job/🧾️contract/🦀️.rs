@@ -137,7 +137,7 @@ impl Fem3dNumericalStage {
             Self::SolidMeshBegin | Self::SolidMesh => "fem3d.meshing",
             Self::MountAssembly | Self::PrepareAssembly | Self::Assembly | Self::BuildCsr => "fem3d.assembly",
             Self::BeginPcg | Self::PreparePcg | Self::Pcg => "fem3d.statics",
-            Self::BeginModal | Self::PrepareModal | Self::BeginLdlt | Self::Ldlt | Self::BeginSubspace | Self::Subspace | Self::ReadModeScalar | Self::PublishModeScalar => "fem3d.modes",
+            Self::BeginBuckling | Self::Buckling | Self::BeginModal | Self::PrepareModal | Self::BeginLdlt | Self::Ldlt | Self::BeginSubspace | Self::Subspace | Self::ReadModeScalar | Self::PublishModeScalar => "fem3d.modes",
             Self::ReserveReactionRows | Self::InitializeReactionRows | Self::RecoverReaction | Self::ReadNodeScalar | Self::PublishNodeScalar | Self::RecoverStressElement | Self::PublishStressScalar | Self::PublishProgress => "fem3d.validation",
             Self::Complete => "fem3d.validated",
             _ => "fem3d.preparation",

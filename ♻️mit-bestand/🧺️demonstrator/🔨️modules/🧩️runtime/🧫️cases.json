@@ -1,9 +1,9 @@
 {
   "primary": "generator",
   "additionalBuildVariants": [
-    "generation3d",
     "cad",
     "puzzle3d",
+    "aussuchen",
     "gis2d",
     "energy",
     "fem3d"
@@ -19,7 +19,8 @@
     "procedural",
     "process",
     "puzzle",
-    "sourcing"
+    "sourcing",
+    "stdio"
   ],
   "extensionIds": [
     "cad-extension-aec-building",

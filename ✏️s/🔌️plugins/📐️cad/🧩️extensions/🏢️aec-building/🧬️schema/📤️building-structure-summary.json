@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BuildingStructureSummary",
+  "description": "Building-domain summary of a cad document: whether a building model is attached and how many `building-storey` nodes it holds.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["buildingModelPresent", "storeyCount"],
+  "properties": {
+    "buildingModelPresent": { "type": "boolean" },
+    "storeyCount": { "type": "integer", "minimum": 0 }
+  }
+}

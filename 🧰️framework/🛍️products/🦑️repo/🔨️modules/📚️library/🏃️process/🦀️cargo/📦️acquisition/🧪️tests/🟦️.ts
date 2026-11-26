@@ -11,11 +11,11 @@ test("declared Cargo acquisition separates caller selection from repository arti
  const validator=new Ajv({strict:true,allErrors:true}).addSchema(schema,"acquisition"),database=new Database(":memory:");
  try{
   expect(validator.validate("acquisition#/definitions/Declaration",fixture.declaration),JSON.stringify(validator.errors)).toBe(true);
-  for(const row of fixture.declarations){expect(validateJsonSchemaSubset(schema.definitions.Declaration,row.input).length===0,row.name).toBe(row.valid);expect(validator.validate("acquisition#/definitions/Declaration",row.input),row.name).toBe(row.valid);if(row.valid)expect(readRepositoryCargoArtifactDeclarationV1(row.input)).toEqual(row.input);else expect(()=>readRepositoryCargoArtifactDeclarationV1(row.input),row.name).toThrow();}
+  for(const row of fixture.declarations){expect(validateJsonSchemaSubset(schema.definitions.Declaration,row.input).length===0,row.name).toBe(row.valid);expect(validator.validate("acquisition#/definitions/Declaration",row.input),row.name).toBe(row.valid);if(row.valid)expect<unknown>(readRepositoryCargoArtifactDeclarationV1(row.input)).toEqual(row.input);else expect(()=>readRepositoryCargoArtifactDeclarationV1(row.input),row.name).toThrow();}
   for(const row of fixture.requests){
    const actual=validateJsonSchemaSubset(schema.definitions.Request,row.input).length===0;
    expect(actual,row.name).toBe(row.valid);expect(validator.validate("acquisition#/definitions/Request",row.input),row.name).toBe(row.valid);
-   if(row.valid){const admitted=readRepositoryCargoArtifactAcquisitionV1(row.input);expect(admitted).toEqual(row.input);expect(Object.isFrozen(admitted)&&Object.isFrozen(admitted.arguments)).toBe(true);}else expect(()=>readRepositoryCargoArtifactAcquisitionV1(row.input),row.name).toThrow();
+   if(row.valid){const admitted=readRepositoryCargoArtifactAcquisitionV1(row.input);expect<unknown>(admitted).toEqual(row.input);expect(Object.isFrozen(admitted)&&Object.isFrozen(admitted.arguments)).toBe(true);}else expect(()=>readRepositoryCargoArtifactAcquisitionV1(row.input),row.name).toThrow();
    const expected=database.query("SELECT count(*) AS count FROM json_each(?) WHERE key NOT IN ('version','project','target','configuration','arguments')").get(JSON.stringify(row.input)) as {count:number};
    if(expected.count)expect(actual,row.name).toBe(false);
   }

@@ -44,18 +44,23 @@ fn unit(a: P3) -> Option<P3> {
 pub fn area_vector(polygon: &[P3]) -> P3 {
     let mut sum = [0.0; 3];
     for (index, a) in polygon.iter().enumerate() {
-        let b = polygon[(index + 1) % polygon.len()];
-        sum[0] += (a[1] - b[1]) * (a[2] + b[2]);
-        sum[1] += (a[2] - b[2]) * (a[0] + b[0]);
-        sum[2] += (a[0] - b[0]) * (a[1] + b[1]);
+        add_edge(&mut sum, *a, polygon[(index + 1) % polygon.len()]);
     }
     sum
 }
 
+fn add_edge(sum: &mut P3, a: P3, b: P3) {
+    sum[0] += (a[1] - b[1]) * (a[2] + b[2]);
+    sum[1] += (a[2] - b[2]) * (a[0] + b[0]);
+    sum[2] += (a[0] - b[0]) * (a[1] + b[1]);
+}
+
 /// 📏️ The area of a planar polygon.
 pub fn area(polygon: &[P3]) -> f64 {
-    dot(area_vector(polygon), area_vector(polygon)).sqrt() / 2.0
+    vector_area(area_vector(polygon))
 }
+
+fn vector_area(vector: P3) -> f64 { dot(vector, vector).sqrt() / 2.0 }
 
 /// 🪟️ The frame of a surface seen from outside: `right` and `up` span its plane, `normal` points out. Up is the vertical projected into the plane (for a horizontal surface north), right is `up x normal`.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -68,7 +73,11 @@ pub struct Frame {
 impl Frame {
     /// 🪟️ The frame of a polygon, `None` for a degenerate one.
     pub fn of(polygon: &[P3]) -> Option<Self> {
-        let normal = unit(area_vector(polygon))?;
+        Self::from_area_vector(area_vector(polygon))
+    }
+
+    fn from_area_vector(vector: P3) -> Option<Self> {
+        let normal = unit(vector)?;
         let normal = if normal[0].hypot(normal[1]) < 1e-8 { [0.0, 0.0, normal[2].signum()] } else { normal };
         let vertical = [0.0, 0.0, 1.0];
         let up = unit(sub(vertical, scaled(normal, dot(vertical, normal)))).or_else(|| unit(sub([0.0, 1.0, 0.0], scaled(normal, normal[1]))))?;
@@ -104,25 +113,131 @@ pub struct Rect {
 
 /// 📦️ The bounding rectangle of `polygon` in the axes of `frame`, measured from the first vertex.
 pub fn rect_in(frame: &Frame, polygon: &[P3]) -> Rect {
-    let origin = polygon[0];
-    let (mut low, mut high) = ([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]);
+    let mut bounds = Bounds::new(polygon[0]);
     for point in polygon {
-        let offset = sub(*point, origin);
+        bounds.add(frame, *point);
+    }
+    bounds.rect(frame)
+}
+
+#[derive(Clone, Copy, Debug)]
+struct Bounds {
+    origin: P3,
+    low: [f64; 2],
+    high: [f64; 2],
+}
+
+impl Bounds {
+    fn new(origin: P3) -> Self {
+        Self { origin, low: [f64::INFINITY; 2], high: [f64::NEG_INFINITY; 2] }
+    }
+
+    fn add(&mut self, frame: &Frame, point: P3) {
+        let offset = sub(point, self.origin);
         let local = [dot(offset, frame.right), dot(offset, frame.up)];
         for axis in 0..2 {
-            low[axis] = low[axis].min(local[axis]);
-            high[axis] = high[axis].max(local[axis]);
+            self.low[axis] = self.low[axis].min(local[axis]);
+            self.high[axis] = self.high[axis].max(local[axis]);
         }
     }
-    let corner = [origin[0] + frame.right[0] * low[0] + frame.up[0] * low[1], origin[1] + frame.right[1] * low[0] + frame.up[1] * low[1], origin[2] + frame.right[2] * low[0] + frame.up[2] * low[1]];
-    Rect { corner: corner.map(round9), width: round9(high[0] - low[0]), height: round9(high[1] - low[1]) }
+
+    fn rect(&self, frame: &Frame) -> Rect {
+        let [x, y] = self.low;
+        let corner = std::array::from_fn(|axis| self.origin[axis] + frame.right[axis] * x + frame.up[axis] * y);
+        Rect { corner: corner.map(round9), width: round9(self.high[0] - x), height: round9(self.high[1] - y) }
+    }
+}
+
+/// 📐️ Shared geometry of a canonical surface.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ProjectedPolygon {
+    pub frame: Frame,
+    pub rect: Rect,
+    pub area: f64,
+}
+
+/// ⏱️ Incrementally calculates a surface frame and its bounds using only scalar state.
+#[derive(Clone, Copy, Debug)]
+pub struct PolygonProjection {
+    len: usize,
+    next: usize,
+    vector: P3,
+    frame: Option<(Frame, Bounds)>,
+    result: Option<Option<ProjectedPolygon>>,
+}
+
+impl PolygonProjection {
+    /// 🧭️ Starts one polygon with the vertex count of the borrowed committed surface.
+    pub fn new(len: usize) -> Self {
+        Self { len, next: 0, vector: [0.0; 3], frame: None, result: (len < 3).then_some(None) }
+    }
+
+    /// 🔢️ Advances up to `steps` edges or vertices. The point source must remain the same for the cursor's lifetime.
+    pub fn advance(&mut self, steps: usize, mut point: impl FnMut(usize) -> P3) -> Option<Option<ProjectedPolygon>> {
+        for _ in 0..steps {
+            if self.result.is_some() { break; }
+            if let Some((frame, bounds)) = &mut self.frame {
+                bounds.add(frame, point(self.next));
+                self.next += 1;
+                if self.next == self.len {
+                    self.result = Some(Some(ProjectedPolygon { frame: *frame, rect: bounds.rect(frame), area: vector_area(self.vector) }));
+                }
+            } else {
+                add_edge(&mut self.vector, point(self.next), point((self.next + 1) % self.len));
+                self.next += 1;
+                if self.next == self.len {
+                    if let Some(frame) = Frame::from_area_vector(self.vector) {
+                        self.frame = Some((frame, Bounds::new(point(0))));
+                        self.next = 0;
+                    } else {
+                        self.result = Some(None);
+                    }
+                }
+            }
+        }
+        self.result
+    }
 }
 
 /// 📍️ The position of `polygon`'s bounding rectangle inside the rectangle of its host surface: the offset of its corner along the host's right and up axes, from the host's corner.
 pub fn offset_in(host: &Frame, host_corner: P3, polygon: &[P3]) -> ([f64; 2], Rect) {
     let rect = rect_in(host, polygon);
+    (offset_of(host, host_corner, rect), rect)
+}
+
+fn offset_of(host: &Frame, host_corner: P3, rect: Rect) -> [f64; 2] {
     let offset = sub(rect.corner, host_corner);
-    ([round9(dot(offset, host.right)), round9(dot(offset, host.up))], rect)
+    [round9(dot(offset, host.right)), round9(dot(offset, host.up))]
+}
+
+/// 🪟️ Accumulates an opening's bounding rectangle in a known host frame.
+#[derive(Clone, Copy, Debug)]
+pub struct OpeningProjection {
+    host: Frame,
+    corner: P3,
+    bounds: Bounds,
+    next: usize,
+    extent: usize,
+}
+
+impl OpeningProjection {
+    /// 🪟️ Starts the rectangle at the first original opening vertex.
+    pub fn new(host: Frame, corner: P3, first: P3, extent: usize) -> Self {
+        Self { host, corner, bounds: Bounds::new(first), next: 0, extent }
+    }
+
+    /// 📐️ Reads a bounded slice of opening vertices in canonical order.
+    pub fn advance(&mut self, vertices: usize, mut point: impl FnMut(usize) -> P3) -> Option<([f64; 2], Rect)> {
+        let end = self.next.saturating_add(vertices).min(self.extent);
+        for index in self.next..end {
+            self.bounds.add(&self.host, point(index));
+        }
+        self.next = end;
+        (end == self.extent).then(|| {
+            let rect = self.bounds.rect(&self.host);
+            (offset_of(&self.host, self.corner, rect), rect)
+        })
+    }
 }
 
 

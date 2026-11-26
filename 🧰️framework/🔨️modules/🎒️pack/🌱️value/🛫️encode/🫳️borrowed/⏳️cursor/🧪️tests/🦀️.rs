@@ -52,12 +52,14 @@ fn owned_pack_wire_projects_and_closes_during_source_admission() {
     let value = semio_framework_value::DslValue::String(title.to_owned());
     let expected = semio_framework_pack_record_encode::encode_value_record_body_controlled(field_id, &value, &Default::default(), &mut control).unwrap();
     let policy = grant(1 << 20, 1 << 20);
+    let bucket_events=BUCKET_ROWS+2*(BUCKET_ROWS*size_of::<Bucket>()).div_ceil(4096)+1;
+    let wire_polls=1024+3*bucket_events;
     for stop in (0..18).map(Some).chain([None]) {
         let original = OwnedText { title: title.to_owned() };
         let pointer = original.title.as_ptr();
         let mut writer = OwnedProjectedPackWireCursor::new(original, field_id);
         let mut ready = None;
-        for poll in 0..1024 {
+        for poll in 0..wire_polls {
             if stop == Some(poll) { break; }
             let (step, birth, release) = drive(policy, |effect| writer.advance(effect));
             let step = step.unwrap_or_else(|error| panic!("poll {poll}: {error:?}"));
@@ -65,7 +67,7 @@ fn owned_pack_wire_projects_and_closes_during_source_admission() {
             if step.ready.is_some() { ready = step.ready; break; }
         }
         if stop.is_some() {
-            for _ in 0..1024 {
+            for _ in 0..wire_polls {
                 if writer.terminal_is_empty() { break; }
                 let (step, birth, release) = drive(policy, |effect| writer.close_step(effect));
                 let receipt = step.unwrap_or_else(|error| panic!("close after {stop:?}: {error:?}")).progress();
@@ -186,6 +188,143 @@ fn close(cursor:&mut BorrowedProjectedPackCursor) {
 }
 
 #[test]
+fn authored_paged_utf8_projects_canonical_symbols_and_inline_text() {
+    use semio_framework_dsl_record::DslField;
+    use semio_framework_pack_record_encode::BorrowedProjectedPackOperation;
+    use semio_framework_replication_codec::io::binary::operation_bytes::OperationByteOutput;
+    use semio_framework_value::paged::PagedUtf8;
+
+    struct Sink { bytes: [u8; 4096], len: usize }
+    impl OperationByteOutput for Sink {
+        fn write_bytes(&mut self, bytes: &[u8], _: &mut NativeEncodeControl<'_>) -> Result<(), semio_framework_pack_error::PackRefusal> {
+            let end = self.len + bytes.len();
+            self.bytes[self.len..end].copy_from_slice(bytes);
+            self.len = end;
+            Ok(())
+        }
+    }
+
+    struct Source([PagedUtf8<4096>; 4]);
+    impl FieldProjectionSource for Source {
+        fn projection_view(&self, path: &[usize]) -> Result<V<'_>, ValueError> {
+            match path {
+                [] => Ok(V::Record(&[1, 2, 3, 4])),
+                [field, rest @ ..] => DslField::projection_view(self.0.get(*field).ok_or_else(|| invalid("field ordinal"))?, rest),
+            }
+        }
+    }
+
+    static FIELDS: [F; 4] = [F::new(1, "first", B::Text), F::new(2, "again", B::Text), F::new(3, "unique", B::Text), F::new(4, "empty", B::Text)];
+    let law: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🧩️paged-utf8/🔣️.json")).unwrap();
+    let prefix = law["prefix"]["text"].as_str().unwrap().repeat(law["prefix"]["repeat"].as_u64().unwrap() as usize);
+    let chunks = |key: &str| std::iter::once(prefix.clone()).chain(law[key].as_array().unwrap().iter().map(|part| part.as_str().unwrap().to_owned())).collect::<Vec<_>>();
+    let shared = chunks("shared");
+    let unique = chunks("unique");
+    let original = |parts: Vec<String>| {
+        let len = parts.iter().map(String::len).sum();
+        PagedUtf8::from_retained_chunks(PagedList::try_from_iter(std::iter::once(String::new()).chain(parts)).unwrap(), len).unwrap()
+    };
+    let mut oracle = expected(law["symbolPrefixHex"].as_str().unwrap());
+    oracle.extend(shared.concat().as_bytes());
+    oracle.extend(expected(law["fieldPrefixHex"].as_str().unwrap()));
+    oracle.extend(unique.concat().as_bytes());
+    oracle.extend(expected(law["fieldSuffixHex"].as_str().unwrap()));
+    let source = Source([original(shared.clone()), PagedUtf8::try_from_str(&shared.concat()).unwrap(), original(unique), PagedUtf8::new()]);
+    let spec = BorrowedRecordSpec { keyword: None, layout: RecordLayout::Inline, fields: &FIELDS };
+    let (projected, birth, released) = semio_framework_trace_memory_testing::observe_backing(|| FieldProjectionSource::projection_view(&source, &[0]));
+    assert_eq!((birth, released), (0, 0));
+    let V::TextSource(text) = projected.unwrap() else { panic!("authored text does not own a borrowed chunk view") };
+    assert!(text.contiguous().is_none());
+    assert!(FieldProjectionSource::projection_view(&source, &[0, 0]).is_err());
+    let mut reader = TextReadCursor::default();
+    assert_eq!(reader.byte_step(text, 0).unwrap(), Poll::Pending);
+    assert_eq!(reader.byte_step(text, 0).unwrap(), Poll::Ready(Some(b'x')));
+    assert_eq!(reader.byte_step(text, prefix.len()).unwrap(), Poll::Pending);
+    assert_eq!(reader.byte_step(text, prefix.len()).unwrap(), Poll::Ready(Some(shared[1].as_bytes()[0])));
+
+    let mut sink = Sink { bytes: [0; 4096], len: 0 };
+    let mut operation = BorrowedProjectedPackOperation::from_source(&source, spec);
+    let mut allow = |_| true;
+    let mut control = NativeEncodeControl::new(64 * 1024, &mut allow);
+    assert_eq!(operation.write_body(&Default::default(), &mut sink, &mut control).unwrap(), oracle.len());
+    assert_eq!(&sink.bytes[..sink.len], oracle.as_slice());
+    let owned = operation.allocated_bytes();
+    let mut retired = 0;
+    for _ in 0..1024 {
+        let ((progressed, _, released), birth, free) = turn(grant(0, 4096), |effect| operation.retire_one(effect).unwrap());
+        assert_eq!((birth, free), (0, released));
+        retired += released;
+        if !progressed { break; }
+    }
+    assert_eq!(retired, owned);
+    assert_eq!(operation.allocated_bytes(), 0);
+
+    for window in law["outputWindows"].as_array().unwrap() {
+        let mut cursor = BorrowedProjectedPackCursor::default();
+        let mut output = [0; 64];
+        let mut bytes = Vec::new();
+        for _ in 0..16000 {
+            let demand = cursor.next_capacity_byte_demand().unwrap();
+            let policy = grant(demand, 0);
+            let (result, birth, release) = turn(policy, |effect| cursor.advance(&source, spec, &mut output[..window.as_u64().unwrap() as usize], effect));
+            let step = result.unwrap();
+            assert!(step.progress.fits(policy));
+            assert_eq!((birth, release), (step.progress.retained_capacity_bytes, 0));
+            bytes.extend_from_slice(&output[..step.written_bytes]);
+            if step.complete { break; }
+        }
+        assert!(cursor.is_complete());
+        assert_eq!(bytes, oracle);
+        close(&mut cursor);
+    }
+}
+
+#[test]
+fn paged_expression_symbol_comparison_resumes_with_its_original_byte() {
+    use semio_framework_dsl_record::{DslField, ExprValue};
+    use semio_framework_value::paged::PagedUtf8;
+
+    struct Source { label: PagedUtf8<64>, expression: ExprValue }
+    impl FieldProjectionSource for Source {
+        fn projection_view(&self, path: &[usize]) -> Result<V<'_>, ValueError> {
+            match path {
+                [] => Ok(V::Record(&[1, 2])),
+                [0] => DslField::projection_view(&self.label, &[]),
+                [1] => Ok(V::Expr(&self.expression)),
+                _ => Err(invalid("expression field ordinal")),
+            }
+        }
+    }
+
+    static FIELDS: [F; 2] = [F::new(1, "label", B::Text), F::new(2, "expression", B::Expr)];
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🧩️paged-utf8/🔣️.json")).unwrap();
+    let row = &fixture["expression"];
+    let name = row["name"].as_str().unwrap();
+    let chunks = PagedList::try_from_iter(row["chunks"].as_array().unwrap().iter().map(|part| part.as_str().unwrap().to_owned())).unwrap();
+    let source = Source { label: PagedUtf8::from_retained_chunks(chunks, name.len()).unwrap(), expression: ExprValue::Var(name.into()) };
+    let spec = BorrowedRecordSpec { keyword: None, layout: RecordLayout::Inline, fields: &FIELDS };
+    let mut cursor = BorrowedProjectedPackCursor::default();
+    let mut bytes = Vec::new();
+    let mut output = [0; 1];
+    for _ in 0..1024 {
+        let policy = RetainedCloneGrant {
+            maximum_copy_bytes: cursor.next_minimum_copy_bytes(),
+            maximum_depth: cursor.next_advance_depth_demand().unwrap(),
+            ..grant(cursor.next_capacity_byte_demand().unwrap(), 0)
+        };
+        let (result, birth, free) = turn(policy, |effect| cursor.advance(&source, spec, &mut output, effect));
+        let step = result.unwrap();
+        assert!(step.progress.fits(policy));
+        assert_eq!((birth, free), (step.progress.retained_capacity_bytes, 0));
+        bytes.extend_from_slice(&output[..step.written_bytes]);
+        if step.complete { break; }
+    }
+    assert!(cursor.is_complete());
+    assert_eq!(bytes, expected(row["bodyHex"].as_str().unwrap()));
+    close(&mut cursor);
+}
+
+#[test]
 fn borrowed_projected_pack_cursor_matches_neutral_buffer_oracle_and_exact_physical_grants() {
     let corpus=fixture();
     for (index,row) in corpus["cases"].as_array().unwrap().iter().enumerate() {
@@ -276,11 +415,11 @@ fn borrowed_pack_failure_preserves_real_comparison_and_original_symbol_backing()
         let(outcome,birth,free)=turn(policy,|effect|cursor.order.reserve_one(effect));let step=match outcome.result{Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Ready(step))=>step,_=>panic!("original symbol order reservation was refused or denied")};
         assert_eq!(birth,step.allocated_bytes);assert_eq!(free,0);assert!(birth<=policy.maximum_capacity_bytes);retained+=birth;
     }
-    cursor.symbols.push_reserved(Symbol { path:[0;64], depth:0, occurrences:usize::MAX, selected:false, forced:false,key:None,rank:0 }).unwrap();
+    cursor.symbols.push_reserved(Symbol { path:[0;64], depth:0, occurrences:usize::MAX, selected:false, forced:false,key:None,rank:0,hash:7,next:NONE }).unwrap();
     cursor.order.push_reserved(0).unwrap();
-    cursor.note=Some(Symbol { path:[0;64], depth:0, occurrences:1, selected:false, forced:false,key:None,rank:0 });
+    cursor.note=Some(Symbol { path:[0;64], depth:0, occurrences:1, selected:false, forced:false,key:None,rank:0,hash:7,next:NONE });
     cursor.phase=Phase::Find;
-    cursor.insertion=cursor.symbols.len();
+    cursor.probe=0;
     let mut output=[0xa5;64];
     let(failure,birth,free)=turn(policy,|effect|cursor.advance_intrinsic(&source,1,&mut output,effect).unwrap_err());
     let receipt=failure.reason.retained_progress();
@@ -304,7 +443,7 @@ fn borrowed_pack_flat_intrinsic_uses_only_original_actual_depth_and_receipts(){
     let row=&rows["depthProbe"];let source=DslValue::Bool(row["source"].as_bool().unwrap());let field=row["fieldId"].as_u64().unwrap()as u16;
     let p=&rows["policy"];let policy=RetainedCloneGrant{maximum_items:p["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:4096,maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:row["maximumDepth"].as_u64().unwrap()as usize};
     let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;64];let mut actual=Vec::new();
-    for _ in 0..256{
+    for _ in 0..256+BUCKET_ROWS+16{
         let(denied,requested,released)=turn(RetainedCloneGrant{maximum_depth:0,..policy},|effect|cursor.advance_intrinsic(&source,field,&mut output,effect).unwrap());
         assert_eq!(denied.progress,Default::default());assert_eq!((requested,released),(0,0));
         assert!(cursor.next_advance_depth_demand().unwrap()<=policy.maximum_depth);
@@ -312,6 +451,51 @@ fn borrowed_pack_flat_intrinsic_uses_only_original_actual_depth_and_receipts(){
         assert!(step.progress.fits(policy));assert_eq!(requested,step.progress.retained_capacity_bytes);assert_eq!(released,step.progress.released_bytes);actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}
     }
     assert!(cursor.is_complete());assert_eq!(actual,expected(row["expectedHex"].as_str().unwrap()));
-    let mut step=BorrowedProjectedPackProgress::default();for _ in 0..256{let(next,requested,released)=turn(policy,|effect|cursor.close(effect).unwrap());assert_eq!((requested,released),(next.progress.retained_capacity_bytes,next.progress.released_bytes));step=next;if step.complete{break;}}
+    let mut step=BorrowedProjectedPackProgress::default();for _ in 0..256+BUCKET_ROWS+16{let(next,requested,released)=turn(policy,|effect|cursor.close(effect).unwrap());assert_eq!((requested,released),(next.progress.retained_capacity_bytes,next.progress.released_bytes));step=next;if step.complete{break;}}
     assert!(step.complete);assert!(step.progress.fits(policy));
+}
+
+static LAW_FIELDS:[F;1]=[F::new(1,"items",B::List(text_shape))];
+struct LawSource(Vec<String>);
+impl FieldProjectionSource for LawSource {
+    fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{match path{[]=>Ok(V::Record(&[1])),[0]=>Ok(V::List(self.0.len())),[0,index]=>Ok(V::Text(&self.0[*index])),_=>Err(invalid("law source path"))}}
+}
+/// 📐️ Runs discovery and order of `count` distinct eight-byte texts; every step is funded exactly and its heap equals its receipt. Returns the copied bytes and the step count.
+fn discovery_copy(count:usize)->(usize,usize){
+    let texts:Vec<String>=(0..count).map(|index|format!("{:08x}",(index as u32).wrapping_mul(2654435761))).collect();
+    let source=LawSource(texts.clone());let spec=BorrowedRecordSpec{keyword:None,layout:RecordLayout::Inline,fields:&LAW_FIELDS};
+    let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;64];let (mut copied,mut steps)=(0,0);
+    while cursor.section()==BorrowedPackSection::Discovery {
+        let demand=cursor.next_capacity_byte_demand().unwrap();let admitted=grant(demand,0);
+        let (step,birth,free)=turn(admitted,|effect|cursor.advance(&source,spec,&mut output,effect).unwrap());
+        assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));assert!(step.progress.fits(admitted));assert_ne!(step.progress,Default::default(),"a funded discovery step makes progress");
+        copied+=step.progress.copied_bytes;steps+=1;
+    }
+    let mut sorted=texts;sorted.sort();
+    assert_eq!(cursor.symbols.len(),count);
+    for (index,text) in sorted.iter().enumerate(){let symbol=cursor.symbols[cursor.order[index] as usize];assert_eq!(&source.0[symbol.path[1]],text);}
+    close(&mut cursor);(copied,steps)
+}
+
+/// 🎟️ Page-header copy of reserving `count` elements of one paged list: the list writes one metadata step per page plus one for its root (the quote of an empty list's first reservation) and one leaf header of a `Vec` and three words per page.
+fn reservation_copy<T,const N:usize>(count:usize)->usize{let pages=count.div_ceil(4096/size_of::<T>());let metadata=PagedList::<T,N>::empty().next_reserve_copy_byte_demand().unwrap();(pages+1)*metadata+pages*(size_of::<Vec<T>>()+3*size_of::<usize>())}
+
+/// 📐️ Discovery plus order copy is at most `c N log2 N`: per symbol the eight hashed bytes, the head read, the chain probes, the symbol birth and one order slot; per merge pass and symbol one slot take and at most the 2 x 8 compared bytes; plus the fixed birth of the sixty-four frames and the 4,096-bucket index (their slots and page headers) and the page headers of the symbols and the order.
+#[test]
+fn borrowed_pack_discovery_and_order_copy_is_bounded_by_n_log_n_and_every_step_heap_equals_its_receipt() {
+    let per_symbol=8+4+size_of::<Symbol>()+2*size_of::<u32>()+size_of::<u32>()+size_of::<u32>();
+    let per_pass=size_of::<u32>()+2*8;
+    let mut costs=Vec::new();
+    for count in [1usize,2,3,17,256,1024,8192] {
+        let fixed=64*size_of::<Frame>()+reservation_copy::<Frame,64>(64)+BUCKET_ROWS*size_of::<Bucket>()+reservation_copy::<Bucket,BUCKET_ROWS>(BUCKET_ROWS)+reservation_copy::<Symbol,SYMBOL_LIMIT>(count)+reservation_copy::<u32,SYMBOL_LIMIT>(count);
+        let (copied,steps)=discovery_copy(count);
+        let passes=(count.next_power_of_two().trailing_zeros()) as usize;
+        let chain=2*size_of::<u32>()*(2+count/BUCKETS);
+        let bound=fixed+count*(per_symbol+chain)+count*passes*per_pass+count*size_of::<u32>();
+        assert!(copied<=bound,"{count} texts copied {copied} bytes over the derived bound {bound}");
+        assert!(steps<=bound,"events never exceed copied bytes");
+        costs.push((count,copied));
+    }
+    let (small,large)=(costs[costs.len()-3],costs[costs.len()-1]);
+    assert!(large.1*small.0<small.1*large.0*3,"per-symbol copy grew faster than a logarithm: {costs:?}");
 }

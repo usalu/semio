@@ -18,11 +18,11 @@ class Semaphore{
 }
 
 test("N finals run on workers while the local jobs run and the cheap units stay here: the finals-first gate, the fleet job plan and the local job plan compose without double counting or starvation",async()=>{
- const workers=3,peak=7938,spare=11000,root=fresh(),environment={SEMIO_WORKSPACE_ROOT:fresh(),SEMIO_REMOTE_EXECUTION_ENDPOINT:"grpc://192.0.2.1:8980"};
+ const workers:number=3,peak=7938,spare=11000,root=fresh(),environment={SEMIO_WORKSPACE_ROOT:fresh(),SEMIO_REMOTE_EXECUTION_ENDPOINT:"grpc://192.0.2.1:8980"};
  const remote=new Semaphore(workers),localFinals=new Semaphore(2),localSlots=new Semaphore(4);
  let remoteRunning=0,askedByCheap=0,fleetCalls=0,clock=0,remoteDuringCheap=0,cheapLocal=0,remoteFinals=0,localFinalsDone=0;
  const slotsAtPeak=()=>workers===0?0:Math.max(0,Math.floor(spare/peak)*workers-remote.held);
- const fleet=(async()=>{fleetCalls++;return new Response(JSON.stringify({slots:slotsAtPeak(),candidates:workers}),{status:200});})as typeof fetch;
+ const fleet=Object.assign(async()=>{fleetCalls++;return new Response(JSON.stringify({slots:slotsAtPeak(),candidates:workers}),{status:200});},{preconnect:()=>undefined});
  for(let index=0;index<6;index++){writeUnitPeakV1(root,`semio_hub_${index}_component`,6000,offloadDeclaredThreadsV1(true));writeUnitCostV1(root,`semio_hub_${index}_component`,900000);}
  writeUnitCostV1(root,"semio_cheap_unit",800);
  const expense=(crate:string)=>readUnitExpenseV1(root,crate,crate.endsWith("_component")?["cdylib"]:["lib"],crate.endsWith("_component")?"wasm32-wasip2":undefined);
@@ -70,7 +70,7 @@ test("with every worker busy the finals wait their short wait and compile here u
  writeUnitCostV1(root,"semio_hub_x_component",900000);
  const spend=readUnitExpenseV1(root,"semio_hub_x_component",["cdylib"],"wasm32-wasip2");
  let clock=0,calls=0;
- const busy=(async()=>{calls++;return new Response(JSON.stringify({slots:0,candidates:3}),{status:200});})as typeof fetch;
+ const busy=Object.assign(async()=>{calls++;return new Response(JSON.stringify({slots:0,candidates:3}),{status:200});},{preconnect:()=>undefined});
  const gate=await offloadGateV1({mode:"distribute",door:false,expensive:()=>spend.expense.expensive,workerFits:waitMilliseconds=>awaitFleetFitV1(environment,{fleet:{fetch:busy},peakMegabytes:spend.peak,waitMilliseconds,pollMilliseconds:OFFLOAD_POLICY_V1.finals.pollMilliseconds,now:()=>clock,sleep:async milliseconds=>{clock+=milliseconds;}}),localSlot:async()=>true,worth:()=>"worth",slotQueueMilliseconds:()=>0,host:async()=>"admit",broker:async()=>"admit"});
  expect(gate).toEqual({offload:false,queue:false,reason:"final-wait"});
  expect(clock).toBeGreaterThanOrEqual(OFFLOAD_POLICY_V1.finals.waitMilliseconds-OFFLOAD_POLICY_V1.finals.pollMilliseconds);

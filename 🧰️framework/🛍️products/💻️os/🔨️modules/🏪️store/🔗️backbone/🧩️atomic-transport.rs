@@ -23,7 +23,7 @@ fn progress(demand: RetirementDemand) -> RetainedCloneProgress {
 /// 📤️ Owns the exact retryable next frame until the attached endpoint accepts it.
 pub struct AtomicBackboneDelivery {
     binding: [u8; 32],
-    sender: AtomicBackboneSender,
+    sender: Option<AtomicBackboneSender>,
     frame: ManuallyDrop<Option<Vec<u8>>>,
     actor_wire: ManuallyDrop<Option<Vec<u8>>>,
     sent: bool,
@@ -31,8 +31,16 @@ pub struct AtomicBackboneDelivery {
 
 impl AtomicBackboneDelivery {
     pub fn begin(original: &CausalPayload, binding: [u8; 32]) -> Result<Self, ValueError> {
-        Ok(Self { binding, sender: AtomicBackboneSender::begin(original)?, frame: ManuallyDrop::new(None), actor_wire: ManuallyDrop::new(None), sent: false })
+        Ok(Self { binding, sender: Some(AtomicBackboneSender::begin(original)?), frame: ManuallyDrop::new(None), actor_wire: ManuallyDrop::new(None), sent: false })
     }
+
+    /// 📨️ Retains the bound endpoint while a canonical ungrouped body is copied into its actor wire.
+    pub fn begin_actor_message(binding: [u8; 32]) -> Self {
+        Self { binding, sender: None, frame: ManuallyDrop::new(None), actor_wire: ManuallyDrop::new(None), sent: false }
+    }
+
+    fn is_ordinary_message(&self) -> bool { self.sender.is_none() }
+    pub fn actor_message_sent(&self) -> bool { self.is_ordinary_message() && self.sent }
 
     pub fn check_binding(&self, binding: &[u8; 32]) -> Result<(), ValueError> {
         if &self.binding != binding { return Err(invalid()); }
@@ -42,14 +50,14 @@ impl AtomicBackboneDelivery {
     pub fn demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.sent { return Ok(self.frame_retirement()); }
         if self.frame.is_some() { return Ok(Default::default()); }
-        self.sender.next_demand()
+        self.sender.as_ref().ok_or_else(invalid)?.next_demand()
     }
 
     pub fn advance(
         &mut self, original: &CausalPayload, effect: &mut RetainedAllocationEffect<'_>,
     ) -> Result<RetainedCloneProgress, ValueError> {
         if self.sent { return self.retire_frame(effect); }
-        self.sender.advance(original, &mut self.frame, effect)
+        self.sender.as_mut().ok_or_else(invalid)?.advance(original, &mut self.frame, effect)
     }
 
     pub async fn send_ready(&mut self, backbone: &mut Backbones) -> Result<bool, VcsError> {
@@ -77,15 +85,15 @@ impl AtomicBackboneDelivery {
 
     pub fn close_demand(&self) -> RetirementDemand {
         if self.actor_wire.is_some() { return self.actor_wire_close_demand(); }
-        if self.frame.is_some() { self.frame_retirement() } else { self.sender.close_demand() }
+        if self.frame.is_some() { self.frame_retirement() } else { self.sender.as_ref().map_or(Default::default(), AtomicBackboneSender::close_demand) }
     }
 
     pub fn close(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
         if self.actor_wire.is_some() { return self.close_actor_wire(effect); }
-        if self.frame.is_some() { self.retire_frame(effect) } else { self.sender.close(effect) }
+        if self.frame.is_some() { self.retire_frame(effect) } else { self.sender.as_mut().map_or(Ok(Default::default()), |sender| sender.close(effect)) }
     }
 
-    pub fn terminal_is_empty(&self) -> bool { self.actor_wire.is_none() && self.frame.is_none() && self.sender.terminal_is_empty() }
+    pub fn terminal_is_empty(&self) -> bool { self.actor_wire.is_none() && self.frame.is_none() && self.sender.as_ref().is_none_or(AtomicBackboneSender::terminal_is_empty) }
 }
 
 impl Drop for AtomicBackboneDelivery {
@@ -128,13 +136,13 @@ pub fn take_atomic_front(backbone: &Backbones) -> Result<Option<CausalPayload>, 
             };
             decode_hot_backbone_message_exact(&wire)?
         }
-        Backbones::Channel(channel) => {
-            let Some(inbound) = channel.inbound.as_ref() else { return Ok(None); };
+        Backbones::Channel(crate::ChannelBackbone { inbound, .. })
+        | Backbones::Memory(crate::MemoryBackbone { inbox: inbound, .. }) => {
+            let Some(inbound) = inbound else { return Ok(None); };
             let mut queue = inbound.lock().map_err(|_| error())?;
             if !queue.front().is_some_and(atomic_message_front) { return Ok(None); }
             queue.pop_front().ok_or_else(error)?
         }
-        Backbones::Memory(_) => return Ok(None),
     };
     match message {
         BackboneMessage::Mutations { envelopes } => Ok(Some(envelopes)),

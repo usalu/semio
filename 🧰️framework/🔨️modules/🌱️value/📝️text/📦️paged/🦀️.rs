@@ -1,5 +1,6 @@
 //! 📝️ First-party UTF8 text owns separately admitted metadata and physical payload pages.
 use crate::{NativeDecodeControl,ValueError,ValueRefusalKind,ErasedSnapshotRetirement,list::{PagedList,PagedListError},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use std::task::Poll;
 
 pub use semio_framework_value_clone_source::RetainedCloneRef;
 fn done(turn:crate::RetainedWorkOutcome<RetainedCloneStep,semio_framework_value_clone_source::OriginalRetirementFailure>)->semio_framework_value_clone_source::OriginalRetirementPoll{semio_framework_value_clone_source::RetainedWorkPoll::Complete(turn)}
@@ -308,24 +309,125 @@ impl<const N:usize> Drop for PagedText<N>{fn drop(&mut self){assert!(std::thread
 #[derive(Clone,Copy)]
 pub struct TextReadView<'a>{source:TextReadRepresentation<'a>}
 #[derive(Clone,Copy)]
-enum TextReadRepresentation<'a>{Contiguous(&'a str),Paged(&'a dyn TextReadSource)}
+enum TextReadRepresentation<'a>{Contiguous(&'a str),Paged(&'a dyn TextReadSource),Chunked(&'a dyn TextChunks,usize)}
+trait TextChunks {
+    fn chunk(&self, ordinal:usize)->Option<&str>;
+}
+impl<const N:usize> TextChunks for PagedList<String,N> {
+    fn chunk(&self, ordinal:usize)->Option<&str>{self.get(ordinal).map(String::as_str)}
+}
+
+/// 🧭️ Keeps the caller's position in variable-width UTF-8 chunks without borrowing or owning their backing.
+#[derive(Default)]
+pub struct TextReadCursor{source:Option<usize>,ordinal:usize,start:usize}
+impl TextReadCursor{
+    /// 📥️ Copies from at most one chunk. A pending step advances the frontier without copying bytes.
+    pub fn copy_step(&mut self,text:TextReadView<'_>,offset:usize,output:&mut[u8])->Result<Poll<usize>,ValueError>{
+        let remaining=text.len().checked_sub(offset).ok_or_else(||ValueError::invariant("text source offset exceeds its original extent"))?;
+        let count=remaining.min(output.len());
+        if count==0{return Ok(Poll::Ready(0))}
+        match text.source{
+            TextReadRepresentation::Contiguous(source)=>output[..count].copy_from_slice(&source.as_bytes()[offset..offset+count]),
+            TextReadRepresentation::Paged(source)=>for(index,byte)in output[..count].iter_mut().enumerate(){*byte=source.byte_at(offset+index).ok_or_else(||ValueError::invariant("text source lost an original octet"))?;},
+            TextReadRepresentation::Chunked(source,_)=>{
+                let identity=source as *const dyn TextChunks as *const () as usize;
+                if self.source!=Some(identity)||offset<self.start{*self=Self{source:Some(identity),ordinal:0,start:0};}
+                let chunk=source.chunk(self.ordinal).ok_or_else(||ValueError::invariant("text source lost an original chunk"))?;
+                let local=offset-self.start;
+                if local>=chunk.len(){
+                    self.ordinal+=1;
+                    self.start+=chunk.len();
+                    return Ok(Poll::Pending);
+                }
+                let count=count.min(chunk.len()-local);
+                output[..count].copy_from_slice(&chunk.as_bytes()[local..local+count]);
+                return Ok(Poll::Ready(count));
+            }
+        }
+        Ok(Poll::Ready(count))
+    }
+
+    /// 🔎️ Observes one byte or advances past a single earlier chunk.
+    pub fn byte_step(&mut self,text:TextReadView<'_>,index:usize)->Result<Poll<Option<u8>>,ValueError>{
+        if index>=text.len(){return Ok(Poll::Ready(None))}
+        let mut output=[0];
+        Ok(self.copy_step(text,index,&mut output)?.map(|_|Some(output[0])))
+    }
+
+    /// 🎟️ Copies one caller window and accounts for each source-chunk traversal separately.
+    pub fn copy_controlled(&mut self,text:TextReadView<'_>,offset:usize,output:&mut[u8],control:&mut crate::NativeEncodeControl<'_>)->Result<usize,ValueError>{
+        let mut copied=0;
+        while copied<output.len(){
+            control.checkpoint()?;
+            if matches!(text.source,TextReadRepresentation::Chunked(_, _)){
+                control.scoped_stage(|control|{control.begin_stage(1)?;control.step()})?;
+            }
+            match self.copy_step(text,offset+copied,&mut output[copied..])?{
+                Poll::Ready(0)=>break,
+                Poll::Ready(count)=>copied+=count,
+                Poll::Pending=>{},
+            }
+        }
+        Ok(copied)
+    }
+}
 impl<'a> TextReadView<'a>{
     pub const fn from_str(source:&'a str)->Self{Self{source:TextReadRepresentation::Contiguous(source)}}
-    pub fn len(&self)->usize{match self.source{TextReadRepresentation::Contiguous(source)=>source.len(),TextReadRepresentation::Paged(source)=>source.byte_len()}}
+    /// 🧩️ Borrows the already validated chunks and byte length from their immutable owner.
+    pub fn from_chunks<const N:usize>(source:&'a PagedList<String,N>,length:usize)->Self{Self{source:TextReadRepresentation::Chunked(source,length)}}
+    pub fn len(&self)->usize{match self.source{TextReadRepresentation::Contiguous(source)=>source.len(),TextReadRepresentation::Paged(source)=>source.byte_len(),TextReadRepresentation::Chunked(_,length)=>length}}
     pub fn is_empty(&self)->bool{self.len()==0}
-    pub fn byte_at(&self,index:usize)->Option<u8>{match self.source{TextReadRepresentation::Contiguous(source)=>source.as_bytes().get(index).copied(),TextReadRepresentation::Paged(source)=>source.byte_at(index)}}
+    pub fn byte_at(&self,index:usize)->Option<u8>{let mut cursor=TextReadCursor::default();loop{if let Poll::Ready(byte)=cursor.byte_step(*self,index).ok()?{return byte}}}
     /// 🪪️ Exposes a contiguous original only when its representation already provides it.
-    pub fn contiguous(&self)->Option<&'a str>{match self.source{TextReadRepresentation::Contiguous(source)=>Some(source),TextReadRepresentation::Paged(_)=>None}}
-    /// 📥️ Copies at most the supplied output window from the same immutable original storage.
+    pub fn contiguous(&self)->Option<&'a str>{match self.source{TextReadRepresentation::Contiguous(source)=>Some(source),_=>None}}
+    /// 📥️ Copies a cold read window. Bounded callers retain a `TextReadCursor` to budget chunk traversal.
     pub fn copy_bytes(&self,offset:usize,output:&mut[u8])->Result<usize,ValueError>{
-        let remaining=self.len().checked_sub(offset).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"text source offset exceeds its original extent"))?;
-        let count=remaining.min(output.len());for(index,byte)in output[..count].iter_mut().enumerate(){*byte=self.byte_at(offset+index).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"text source lost an original octet"))?;}Ok(count)
+        let mut cursor=TextReadCursor::default();let mut copied=0;
+        loop{
+            match cursor.copy_step(*self,offset+copied,&mut output[copied..])?{
+                Poll::Ready(0)=>return Ok(copied),
+                Poll::Ready(count)=>copied+=count,
+                Poll::Pending=>{},
+            }
+        }
     }
     /// 🔤️ Advances one validated Unicode scalar, including a scalar crossing an original page boundary.
     pub fn character_at(&self,position:&mut usize)->Result<char,ValueError>{character(self,position)}
 }
-impl std::fmt::Display for TextReadView<'_>{fn fmt(&self,formatter:&mut std::fmt::Formatter<'_>)->std::fmt::Result{let mut position=0;while position<self.len(){let character=self.character_at(&mut position).map_err(|_|std::fmt::Error)?;let mut bytes=[0;4];formatter.write_str(character.encode_utf8(&mut bytes))?;}Ok(())}}
-impl TextReadSource for TextReadView<'_>{fn byte_len(&self)->usize{self.len()}fn byte_at(&self,index:usize)->Option<u8>{self.byte_at(index)}fn read_recorded(&self,reply:TextSourceByteReply<'_,'_>)->TextSourceByteComplete{match self.source{TextReadRepresentation::Contiguous(source)=>{let value=source.as_bytes().get(reply.index()).copied();reply.complete(Ok(value),1)},TextReadRepresentation::Paged(source)=>source.read_recorded(reply)}}fn finish_recorded(&self,reply:TextSourceFinishReply<'_,'_>)->TextSourceFinishComplete{match self.source{TextReadRepresentation::Contiguous(_)=>reply.complete(Ok(()),1),TextReadRepresentation::Paged(source)=>source.finish_recorded(reply)}}}
+impl std::fmt::Display for TextReadView<'_>{fn fmt(&self,formatter:&mut std::fmt::Formatter<'_>)->std::fmt::Result{
+    if let TextReadRepresentation::Chunked(source,_)=self.source{
+        for ordinal in 0..{let Some(chunk)=source.chunk(ordinal)else{break};formatter.write_str(chunk)?;}
+        return Ok(())
+    }
+    let mut position=0;while position<self.len(){let character=self.character_at(&mut position).map_err(|_|std::fmt::Error)?;let mut bytes=[0;4];formatter.write_str(character.encode_utf8(&mut bytes))?;}Ok(())
+}}
+impl TextReadSource for TextReadView<'_>{
+    fn byte_len(&self)->usize{self.len()}
+    fn byte_at(&self,index:usize)->Option<u8>{self.byte_at(index)}
+    fn read_recorded(&self,mut reply:TextSourceByteReply<'_,'_>)->TextSourceByteComplete{
+        match self.source{
+            TextReadRepresentation::Contiguous(source)=>{let value=source.as_bytes().get(reply.index()).copied();reply.complete(Ok(value),1)},
+            TextReadRepresentation::Paged(source)=>source.read_recorded(reply),
+            TextReadRepresentation::Chunked(_,_)=>{
+                let mut cursor=TextReadCursor::default();let mut work=0;
+                loop{
+                    work+=1;
+                    match reply.performed(1){
+                        Ok(true)=>{},
+                        Ok(false)=>return reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"text chunk traversal exceeded original Work")),work),
+                        Err(error)=>return reply.complete(Err(error),work),
+                    }
+                    match cursor.byte_step(*self,reply.index()){
+                        Ok(Poll::Pending)=>{},
+                        Ok(Poll::Ready(byte))=>return reply.complete(Ok(byte),work),
+                        Err(error)=>return reply.complete(Err(error),work),
+                    }
+                }
+            }
+        }
+    }
+    fn finish_recorded(&self,reply:TextSourceFinishReply<'_,'_>)->TextSourceFinishComplete{match self.source{TextReadRepresentation::Paged(source)=>source.finish_recorded(reply),_=>reply.complete(Ok(()),1)}}
+}
 impl<const N:usize> TextReadSource for PagedText<N>{fn byte_len(&self)->usize{self.byte_len()}fn byte_at(&self,index:usize)->Option<u8>{self.bytes.get(index).copied()}}
 impl<const N:usize> PagedText<N>{
     /// 🌱️ Captures the actual validated paged owner directly; partial and retiring owners refuse access.

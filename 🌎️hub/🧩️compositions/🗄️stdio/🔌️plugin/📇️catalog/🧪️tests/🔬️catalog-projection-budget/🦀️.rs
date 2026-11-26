@@ -36,10 +36,18 @@ fn catalog_projection_preflight_matches_actual_serde_payload_bytes() {
     let schema = include_str!("../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📜️artifact-definition.json");
     let authored = catalog_definition_from_schema(schema).unwrap();
     let definitions = [ProjectionDefinition { definition: &authored.definition, authored_executables: Some(&authored.executable_ids) }];
-    let expected = preflight_native_catalog_projection(&definitions, &[]).unwrap();
-    let topic = catalog_contribution(native_artifact_catalog(&definitions, Vec::new()).unwrap()).unwrap();
+    let identity = CatalogIdentity { plugin_id: "stdio", package_id: component_package_id().unwrap() };
+    let expected = preflight_native_catalog_projection(&identity, &definitions, &[]).unwrap();
+    let topic = catalog_contribution(NATIVE_ARTIFACT_CATALOG_TOPIC, native_artifact_catalog(&identity, &definitions, Vec::new()).unwrap()).unwrap();
     let json = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&topic.payload));
     let payload: serde_json::Value = serde_json::from_str(&json).unwrap();
     assert_eq!(serde_json::to_vec(&payload).unwrap().len(), expected.projection);
     assert!(expected.descriptors > 0);
+}
+
+#[test]
+fn hosted_catalog_topic_is_published_per_host_with_the_host_identity() {
+    let host = hosted_artifact_catalog_contribution_for("stdio-demo", "semio:stdio-demo", &[]);
+    assert!(host.is_err());
+    assert_eq!(hosted_artifact_catalog_topic("stdio-demo"), "stdio.artifact-catalog.stdio-demo");
 }

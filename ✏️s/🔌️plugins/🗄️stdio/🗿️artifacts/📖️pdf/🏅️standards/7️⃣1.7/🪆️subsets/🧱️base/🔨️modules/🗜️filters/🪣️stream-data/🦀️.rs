@@ -120,9 +120,10 @@ impl PdfStreamDataCursor {
     /// 📄️ Whether the next units only decode body bytes into staging or the decoder history and move staged bytes into reserved output pages: at most two bytes of copy per unit, every reservation reported as its own allocation.
     pub fn decodes_body_bytes(&self) -> bool { self.phase == Phase::Decode }
 
-    /// 🪣️ Quotes the fresh history unit before copying any staged stream bytes.
+    /// 🪣️ Quotes the next unit when it only reserves empty backing: the output page staged bytes wait for, or the fresh history before any stream bytes are decoded.
     pub fn next_reserves_history(&self) -> bool {
-        if self.phase != Phase::Decode || self.staging_start < self.staging_end || self.decoder_done { return false; }
+        if self.phase == Phase::Decode && self.staging_start < self.staging_end { return self.output.cold_free_slots() == 0 && self.output.len() < self.maximum_output; }
+        if self.phase != Phase::Decode || self.decoder_done { return false; }
         match &self.decoder {
             Decoder::Flate(cursor) => cursor.next_reserves_history(),
             Decoder::Predicted(cursor) => cursor.next_reserves_history(),
@@ -151,6 +152,7 @@ impl PdfStreamDataCursor {
             if *self.source_len.get_or_insert(source.byte_len()) != source.byte_len() {
                 return Err(ValueError::invariant("PDF stream source length changed"));
             }
+            if receipt.work > 0 && self.next_reserves_history() { return Ok(StreamDataStatus::More); }
             if self.staging_start < self.staging_end {
                 if self.output.cold_free_slots() == 0 {
                     if self.output.len() >= self.maximum_output {
@@ -164,7 +166,7 @@ impl PdfStreamDataCursor {
                     let (allocated, released) = self.output.cold_reserve_page(page)?;
                     receipt.allocated_bytes += allocated;
                     receipt.released_bytes += released;
-                    continue;
+                    return Ok(StreamDataStatus::More);
                 }
                 let count = self.staging_end - self.staging_start;
                 let count = count.min(grant.work - receipt.work).min(self.maximum_output - self.output.len());

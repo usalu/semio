@@ -103,6 +103,8 @@ pub mod editor {
                 }
             }
         }
+        #[path = "../../../../✏️editor/🗣️terminology/🦀️.rs"]
+        pub mod terminology;
         #[path = "../../../../✏️editor/👥️presence/🧬️schema/🦀️.rs"]
         pub mod schema;
         #[path = "../../../../✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]

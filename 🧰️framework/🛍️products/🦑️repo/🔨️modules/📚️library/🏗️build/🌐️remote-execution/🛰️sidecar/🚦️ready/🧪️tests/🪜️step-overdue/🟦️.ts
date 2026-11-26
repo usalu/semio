@@ -149,7 +149,7 @@ const world=(adopt:(options:Options)=>ReturnType<typeof runReadyStageV1>)=>{
 };
 
 posix("the loop turns the stop into the typed refusal and reason, not a failure, and says it in both languages",async()=>{
- const root=temp("root"),home=fakeHome(overdueRepo("en")),w=world(options=>runReadyStageV1({home,root,environment:{},stage:stageOf("workspace"),signal:new AbortController().signal,jobs:1,onLine:()=>{},tree:FAST,...options}));
+ const root=temp("root"),home=fakeHome(overdueRepo("en")),w=world(options=>runReadyStageV1({home,root,environment:{},stage:stageOf("workspace"),tree:FAST,...options}));
  await runReadyV1(w.ports,w.controller.signal);
  const refusal=w.updates.find(update=>update.refusal?.code==="stage-step-overdue")!.refusal!;
  expect(refusal.en).toContain("Stage workspace");expect(refusal.en).toContain("s-dev-composition");expect(refusal.de).toContain("Stufe workspace");expect(refusal.de).toContain("Schritt");
@@ -160,7 +160,7 @@ posix("the loop turns the stop into the typed refusal and reason, not a failure,
 
 posix("a stage process that vanishes says how: no exit file, no signal, last seen alive, no signal sent by the supervisor; the refusal says it too",async()=>{
  const root=temp("root"),home=fakeHome("#!/bin/sh\necho started\nsleep 12\nexit 0\n"),directory=join(root,".cache","f","ready"),running=join(directory,"running.json");
- const w=world(options=>{const pending=runReadyStageV1({home,root,environment:{},stage:stageOf("workspace"),signal:new AbortController().signal,jobs:1,onLine:()=>{},tree:FAST,...options});(async()=>{for(let waited=0;waited<10000&&!existsSync(running);waited+=50)await new Promise<void>(done=>setTimeout(done,50));const record=JSON.parse(readFileSync(running,"utf8")) as {pid:number};alive.push(record.pid);await new Promise<void>(done=>setTimeout(done,800));process.kill(record.pid,"SIGKILL");})();return pending;});
+ const w=world(options=>{const pending=runReadyStageV1({home,root,environment:{},stage:stageOf("workspace"),tree:FAST,...options});(async()=>{for(let waited=0;waited<10000&&!existsSync(running);waited+=50)await new Promise<void>(done=>setTimeout(done,50));const record=JSON.parse(readFileSync(running,"utf8")) as {pid:number};alive.push(record.pid);await new Promise<void>(done=>setTimeout(done,800));process.kill(record.pid,"SIGKILL");})();return pending;});
  await runReadyV1(w.ports,w.controller.signal);
  const failure=w.shared.state.failure!;
  expect(failure.exit).toBeNull();expect(failure.signal??null).toBeNull();
@@ -172,7 +172,7 @@ posix("a stage process that vanishes says how: no exit file, no signal, last see
 },90000);
 
 posix("a stage ended by a signal says which one in the refusal and in the failure",async()=>{
- const root=temp("root"),home=fakeHome("#!/bin/sh\nkill -KILL $$\n"),w=world(options=>runReadyStageV1({home,root,environment:{},stage:stageOf("workspace"),signal:new AbortController().signal,jobs:1,onLine:()=>{},tree:FAST,...options}));
+ const root=temp("root"),home=fakeHome("#!/bin/sh\nkill -KILL $$\n"),w=world(options=>runReadyStageV1({home,root,environment:{},stage:stageOf("workspace"),tree:FAST,...options}));
  await runReadyV1(w.ports,w.controller.signal);
  const failure=w.shared.state.failure!;expect(failure.exit).toBeNull();expect(failure.signal).toBe("SIGKILL");
  const refusal=w.updates.find(update=>update.refusal?.code==="stage-failed")!.refusal!;

@@ -16,6 +16,7 @@ role = "hub"
 manifest = "../../📇️publication/🔣️.json"
 
 [lib]
+name = "semio_hub_stdio_router"
 path = "../../🦀️.rs"
 
 [features]
@@ -47,6 +48,15 @@ semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-md = { workspace = true }
 semio-s-artifact-stdio-tsv = { workspace = true }
 semio-s-artifact-stdio-html = { workspace = true }
+semio-hub-stdio-html-apps = { path = "../../🗃️apps/🌐️html/📦️packages/🦀️rust" }
+semio-hub-stdio-md-apps = { path = "../../🗃️apps/📝️md/📦️packages/🦀️rust" }
+semio-hub-stdio-csv-apps = { path = "../../🗃️apps/📋️csv/📦️packages/🦀️rust" }
+semio-hub-stdio-tsv-apps = { path = "../../🗃️apps/📑️tsv/📦️packages/🦀️rust" }
+semio-hub-stdio-txt-apps = { path = "../../🗃️apps/🔤️txt/📦️packages/🦀️rust" }
+semio-hub-stdio-json-any-apps = { path = "../../🗃️apps/🧬️json/🌐️any/📦️packages/🦀️rust" }
+semio-hub-stdio-json-i-json-apps = { path = "../../🗃️apps/🧬️json/🔒️i-json/📦️packages/🦀️rust" }
+semio-hub-stdio-xml-any-apps = { path = "../../🗃️apps/🏷️xml/🌐️any/📦️packages/🦀️rust" }
+semio-hub-stdio-xml-valid-apps = { path = "../../🗃️apps/🏷️xml/✅️valid/📦️packages/🦀️rust" }
 # /🧩️ Composition Dependencies
 serde = { workspace = true }
 serde_json = { workspace = true }

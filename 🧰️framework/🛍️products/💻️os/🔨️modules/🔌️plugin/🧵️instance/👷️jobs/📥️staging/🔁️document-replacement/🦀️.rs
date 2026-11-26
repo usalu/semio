@@ -40,7 +40,7 @@ impl<A: ArtifactApp> PendingReserved<A> {
         let generation=replacement.document_generation();
         let displaced=std::mem::replace(&mut stores.window_transient_store,replacement);
         if !displaced.terminal_is_empty(){stores.retired_window_transient_stores.insert_admitted(generation,displaced);}
-        history.cache=None;
+        history.invalidate_cache();
         Ok(())
     }
 

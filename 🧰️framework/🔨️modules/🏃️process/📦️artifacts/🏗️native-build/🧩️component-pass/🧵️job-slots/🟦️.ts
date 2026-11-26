@@ -33,18 +33,29 @@ export type FleetJobsOptionsV1<T>=Readonly<{maximum:number;slots:()=>Promise<num
 /** 🛑️ Raised by the body of a pass that holds a fleet slot when the worker placement of its final failed: the runner gives the fleet slot back and queues the pass for a LOCAL slot, where it waits for its reservation instead of compiling in memory nobody reserved. */
 export class FleetPlacementFailedErrorV1 extends Error{constructor(message:string){super(message);this.name="FleetPlacementFailedErrorV1";}}
 
-/** 🧮️ The explicit memory allowance shared across every profile lane of a component build, with each pass charged until its body settles. */
+/** 🌱️ How a parent grant that may still grow tells and learns: `ceilingMegabytes` is the most it could ever hold, `waitMilliseconds` how long a requirement above the grant waits for it, `refresh` reads the allowance it holds now (megabytes, undefined when unreadable) and `declare` tells the holder what the run needs, so the class learns it even when the run is refused. */
+export type ParentComponentGrowthV1=Readonly<{ceilingMegabytes:number;waitMilliseconds:number;refresh:()=>number|undefined;declare:(megabytes:number)=>void}>;
+
+/** 🧮️ The explicit memory allowance shared across every profile lane of a component build, with each pass charged until its body settles. A grant that may still grow (`growth`) follows the allowance the holder grants now, never below what it held, so a requirement above it waits instead of refusing while it can still be carried. */
 export class ParentComponentMemoryV1{
  #heldMegabytes=0;
- constructor(readonly allowanceMegabytes:number,readonly baselineMegabytes=0){}
- get maximumPassMegabytes():number{return this.allowanceMegabytes-this.baselineMegabytes;}
+ #allowanceMegabytes:number;
+ constructor(allowanceMegabytes:number,readonly baselineMegabytes=0,readonly growth?:ParentComponentGrowthV1){this.#allowanceMegabytes=allowanceMegabytes;}
+ get allowanceMegabytes():number{return this.#allowanceMegabytes;}
+ get maximumPassMegabytes():number{return this.#allowanceMegabytes-this.baselineMegabytes;}
  get remainingMegabytes():number{return this.maximumPassMegabytes-this.#heldMegabytes;}
+ refresh():number{
+  const live=this.growth?.refresh();
+  if(live!==undefined&&Number.isFinite(live))this.#allowanceMegabytes=Math.max(this.#allowanceMegabytes,Math.floor(live));
+  return this.#allowanceMegabytes;
+ }
+ growable(megabytes:number):boolean{return this.growth!==undefined&&this.baselineMegabytes+megabytes<=this.growth.ceilingMegabytes;}
  reserve(megabytes:number):()=>void{
   if(megabytes>this.remainingMegabytes)throw this.required(megabytes);
   this.#heldMegabytes+=megabytes;
   return()=>{this.#heldMegabytes-=megabytes;};
  }
- required(megabytes:number):ParentComponentMemoryRequiredErrorV1{return new ParentComponentMemoryRequiredErrorV1(this.baselineMegabytes+megabytes,this.allowanceMegabytes);}
+ required(megabytes:number):ParentComponentMemoryRequiredErrorV1{return new ParentComponentMemoryRequiredErrorV1(this.baselineMegabytes+megabytes,this.#allowanceMegabytes);}
 }
 
 /** 🛑️ No admissible route remains and the parent allowance cannot carry the required local job. */
@@ -67,10 +78,11 @@ const pause=(milliseconds:number,wake:Iterable<Promise<void>>,signal?:AbortSigna
 /** 🧵️ Runs up to `jobs` offloadable passes. A shared `parentMemory` grant charges the first and subsequent local passes at their predicted peak plus footprint, and fleet passes at their local footprint. Without a parent grant the first pass starts locally under the host guard. Further local passes observe host memory and pressure. A fleet placement failure requeues the pass for local admission only. Non-offloadable passes run alone within the lane. The first failure calls `fail` and is thrown after running passes settle.
  * @see ./🧪️tests/🟦️.ts
  * @see ./🧪️tests/🌐️fleet/🟦️.ts */
-export async function runPassesInJobSlotsV1<T extends Pick<NativeBuildPassV1,"target">>(passes:readonly T[],options:Readonly<{jobs:number;check:()=>void;run:(pass:T,slot:PassJobSlotV1)=>Promise<void>;fail?:(error:unknown)=>void;offloadable?:(pass:T)=>boolean;fleet?:FleetJobsOptionsV1<T>;signal?:AbortSignal}>&(Readonly<{local?:LocalJobsOptionsV1<T>;parentMemory?:undefined}>|Readonly<{local:LocalJobsOptionsV1<T>;parentMemory:ParentComponentMemoryV1}>)):Promise<void>{
+export async function runPassesInJobSlotsV1<T extends Pick<NativeBuildPassV1,"target">>(passes:readonly T[],options:Readonly<{jobs:number;check:()=>void;mayStart?:()=>boolean;run:(pass:T,slot:PassJobSlotV1)=>Promise<void>;fail?:(error:unknown)=>void;offloadable?:(pass:T)=>boolean;fleet?:FleetJobsOptionsV1<T>;signal?:AbortSignal}>&(Readonly<{local?:LocalJobsOptionsV1<T>;parentMemory?:undefined}>|Readonly<{local:LocalJobsOptionsV1<T>;parentMemory:ParentComponentMemoryV1}>)):Promise<void>{
  const {parentMemory,local,fleet}=options;
  const running=new Set<Promise<void>>(),reservations=new Map<Promise<void>,number>(),footprints=new Map<Promise<void>,number>(),offloadable=options.offloadable??nativeBuildPassOffloadableV1,localMaximum=Math.max(1,local?.maximum??1),staticFleet=Math.max(0,options.jobs-localMaximum),fleetMaximum=fleet?Math.max(0,Math.min(fleet.maximum,options.jobs-(parentMemory?0:1))):staticFleet,now=local?.now??fleet?.now??Date.now,pending=[...passes],retries:T[]=[],states=new Map<T,{peak:number|undefined;waitedSince:number|undefined;reportedAt:number}>();
  let failure:{error:unknown}|undefined,localHeld=0,fleetHeld=0,idle:number|null|undefined,idleAt=-Infinity;
+ const open = (): boolean => !failure && options.mayStart?.() !== false;
  const sum=(rows:Map<Promise<void>,number>)=>{let total=0;for(const value of rows.values())total+=value;return total;};
  const idleNow=async():Promise<number|null>=>{
   if(!fleet)return Math.max(0,staticFleet-fleetHeld);
@@ -92,6 +104,7 @@ export async function runPassesInJobSlotsV1<T extends Pick<NativeBuildPassV1,"ta
   let slot:PassJobSlotV1|undefined,verdict:LocalJobAdmitDecisionV1|undefined,fleetVerdict:FleetJobAdmitDecisionV1|undefined,slots:number|null=null;
   if(parentMemory&&state.peak===undefined)state.peak=Math.ceil(await local!.peak(pass));
   const required=(state.peak??0)+(local?.footprintMegabytes??0),footprint=fleet?.footprintMegabytes??0;
+  parentMemory?.refresh();
   const remaining=()=>parentMemory?.remainingMegabytes??Infinity;
   if(localHeld===0&&required<=remaining())slot="local";
   else{
@@ -110,12 +123,12 @@ export async function runPassesInJobSlotsV1<T extends Pick<NativeBuildPassV1,"ta
      if(verdict.admit)slot="local";
     }else if(!slot&&parentMemory&&required>remaining())verdict={admit:false,reason:"parent-memory",freeMegabytes:remaining()};
   }
-  if(failure)return"settle";
+  if(!open())return"settle";
   options.signal?.throwIfAborted();
   const waited=state.waitedSince===undefined?0:now()-state.waitedSince;
   if(slot){
    if(slot==="local"&&local&&state.peak===undefined)state.peak=await local.peak(pass);
-   if(failure)return"settle";
+   if(!open())return"settle";
    const extra=slot==="local"&&localHeld>0,peak=state.peak??0;
    if(extra&&local&&verdict)local.report?.(pass,{kind:"started",running:localHeld,peakMegabytes:peak,freeMegabytes:verdict.freeMegabytes,floorMegabytes:local.floorMegabytes,reason:verdict.reason,waitedMilliseconds:waited});
    if(slot==="fleet"&&fleet)fleet.report?.(pass,{kind:"started",waitsFor:null,running:fleetHeld,slots,footprintMegabytes:fleet.footprintMegabytes,peakMegabytes:peak,freeMegabytes:fleetVerdict?.freeMegabytes??0,floorMegabytes:fleet.floorMegabytes,fleetReason:fleetVerdict?.reason??null,localReason:verdict?.reason??null,waitedMilliseconds:waited});
@@ -125,7 +138,9 @@ export async function runPassesInJobSlotsV1<T extends Pick<NativeBuildPassV1,"ta
   }
   const localFits=parentMemory===undefined||required<=parentMemory.maximumPassMegabytes;
   const fleetBusy=fleet?.waitForCompatibleSlot&&fleetVerdict?.reason==="fleet-busy"&&waited<policy.fleetBusyWaitMilliseconds;
-  if(parentMemory&&!localFits&&!fleetBusy&&!fleetVerdict?.admit)throw parentMemory.required(required);
+  const growing=parentMemory!==undefined&&!localFits&&parentMemory.growable(required)&&(state.waitedSince===undefined||waited<parentMemory.growth!.waitMilliseconds);
+  if(growing&&state.waitedSince===undefined)parentMemory.growth!.declare(parentMemory.baselineMegabytes+required);
+  if(parentMemory&&!localFits&&!growing&&!fleetBusy&&!fleetVerdict?.admit)throw parentMemory.required(required);
   if(!fleetVerdict&&!(verdict&&local))return"settle";
   const at=now();state.waitedSince??=at;
   if(at-state.reportedAt>=(local?.progressMilliseconds??fleet?.progressMilliseconds??policy.localJobsProgressMilliseconds)){
@@ -135,7 +150,7 @@ export async function runPassesInJobSlotsV1<T extends Pick<NativeBuildPassV1,"ta
   }
   return"poll";
  };
- try{while(!failure){
+ try{while(open()){
   const retry=retries[0],next=pending[0];
   if(retry===undefined&&next===undefined){if(!running.size)break;await Promise.race(running);continue;}
   options.check();
@@ -144,13 +159,13 @@ export async function runPassesInJobSlotsV1<T extends Pick<NativeBuildPassV1,"ta
   if(retry===undefined&&sequential&&!parentMemory){if(running.size){await Promise.race(running);continue;}pending.shift();await launch(next,"local",0,0);continue;}
   let outcome:"started"|"poll"|"settle"="settle";
   if(retry!==undefined)outcome=await attempt(retry,true);
-  if(failure)break;
+  if(!open())break;
   if(outcome!=="started"&&next!==undefined&&(!sequential||parentMemory&&retry===undefined&&!running.size)){
    const second=await attempt(next,false,sequential);
    if(second==="started"&&sequential&&running.size)await Promise.race(running);
    outcome=second==="started"?"started":second==="poll"||outcome==="poll"?"poll":"settle";
   }
-  if(failure)break;
+  if(!open())break;
   if(outcome==="poll"||outcome==="settle"&&!running.size)await pause(local?.pollMilliseconds??fleet?.pollMilliseconds??policy.localJobsPollMilliseconds,running,options.signal);
   else if(outcome==="settle")await Promise.race(running);
  }}catch(error){if(!failure){failure={error};options.fail?.(error);}}

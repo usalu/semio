@@ -195,14 +195,15 @@ fn measure<T,E>(bank:&mut EffectBank,g:RetainedCloneGrant,units:u64,run:&mut dyn
 fn demand_grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn fresh()->EffectBank{let mut bank=EffectBank::new(Wallet::new(RetainedCloneGrant{maximum_items:1<<30,maximum_copy_bytes:usize::MAX>>2,maximum_capacity_bytes:usize::MAX>>2,maximum_release_bytes:usize::MAX>>2,maximum_depth:1<<10},1<<50));let _=bank.run(RetainedCloneGrant::default(),0,|_|RetainedWorkPoll::Complete(RetainedWorkOutcome::<(),ValueError>{result:Ok(()),work:0}));let _=bank.take_admitted();bank}
 thread_local!{static BANK:RefCell<Option<EffectBank>>=const{RefCell::new(None)};}
+/// 🏦️ Lends the same thread-local Source and finite Work stock used by the reply and poll drivers.
+pub fn with_bank<R>(operation:impl FnOnce(&mut EffectBank)->R)->R{BANK.with(|bank|operation(bank.borrow_mut().get_or_insert_with(fresh)))}
 /// 🔥️ Builds the thread's finite Source stock and primes its original Work outside any measured region.
-pub fn warm(){BANK.with(|bank|{bank.borrow_mut().get_or_insert_with(fresh);});}
+pub fn warm(){with_bank(|_|());}
 /// 🧵️ Runs one poll-shaped call under a real original action and returns its recorded reply with the work it performed.
 pub fn drive(grant:RetainedCloneGrant,units:u64,call:impl FnMut(&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{drive_external(grant,units,&std::cell::Cell::new(0),call)}
 /// 🧱️ Drives like `drive` while the caller reports platform bytes freed outside the receipts (for example an OS lock backing).
 pub fn drive_external(grant:RetainedCloneGrant,units:u64,external:&std::cell::Cell<usize>,mut call:impl FnMut(&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{
- BANK.with(|cell|{
-  let mut slot=cell.borrow_mut();let bank=slot.get_or_insert_with(fresh);
+ with_bank(|bank|{
   let source=bank.source_witness().identity();let mut authority=OriginalEffectAuthority::new(Turn(source));let mut context=Frame{call:&mut call};
   let(mut action,mut output)=(None,None);let before=*bank.wallet().original_work();let mut heap=(0usize,0usize);
   let mut complete=false;
@@ -239,8 +240,7 @@ impl<T:'static,E:'static> OriginalEffectProducer for AnyTurn<T,E>{
 }
 /// 🧵️ Runs one reply-shaped call under a real original action, re-entering it as recovery after every Pending, and returns its recorded reply with the work it performed; a callback that refuses with a plain error records that error as the reply, so the resident action always finishes before the thread's bank drops.
 pub fn drive_reply<T:'static,E:'static+From<ValueError>>(grant:RetainedCloneGrant,units:u64,progress:impl Fn(&Result<T,E>)->RetainedCloneProgress,mut call:impl for<'r> FnMut(&mut RetainedAllocationEffect<'_>,OriginalEffectReply<'r,T,E>,bool)->Result<OriginalEffectReplyComplete<'r,T,E>,ValueError>)->RetainedWorkOutcome<T,E>{
- BANK.with(|cell|{
-  let mut slot=cell.borrow_mut();let bank=slot.get_or_insert_with(fresh);
+ with_bank(|bank|{
   let source=bank.source_witness().identity();let mut authority=OriginalEffectAuthority::new(AnyTurn::<T,E>(source,std::marker::PhantomData));let mut context=AnyFrame{call:&mut call};
   let(mut action,mut output)=(None,None);let before=*bank.wallet().original_work();let mut heap=(0usize,0usize);
   let mut complete=false;

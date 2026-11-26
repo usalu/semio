@@ -74,6 +74,20 @@ function audit(path: string, expectedDigest: string, plugin: string, live: boole
   if (exact) assert.equal(exact.length, 19);
   const clockBinding = exact?.[3] ?? 1n;
   const micros = () => BigInt(Math.floor((performance.now() - began) * 1000));
+  const clockTrace = process.env.SEMIO_OWNED_POLL_CLOCK_TRACE === "1";
+  const pause = process.env.SEMIO_OWNED_POLL_GAP?.match(/^(inside|outside|execution):([1-9]\d*):([1-9]\d*)$/u);
+  assert(!process.env.SEMIO_OWNED_POLL_GAP || (pause && lifecycleTurns && monotonicScale === 1n));
+  const wait = new Int32Array(new SharedArrayBuffer(4));
+  let pollInvocation = 0;
+  let monotonicRead = 0;
+  let executionRead = 0;
+  let executionUs = 0n;
+  let resumedAt = 0n;
+  let inPoll = false;
+  const hostGap = (location: string) => {
+    log({ stage: "[DEBUG] simulated host gap", location, pollInvocation, monotonicRead, durationMs: 5100 });
+    Atomics.wait(wait, 0, 0, 5100);
+  };
   let call: string[] | undefined;
   const view = (pointer: number, length: number) => {
     assert(memory, "Guest used memory during instantiation");
@@ -89,7 +103,20 @@ function audit(path: string, expectedDigest: string, plugin: string, live: boole
     group[entry.name] = (...args: (number | bigint)[]) => {
       seenImports.add(key);
       if (phase === "prepare" || phase === "instantiate") throw Error("Unexpected " + phase + " import: " + key);
+      if (inPoll) executionUs += micros() - resumedAt;
+      try {
       switch (key) {
+        case "semio:framework/pure@1.0.0::actor-execution-clock-us": {
+          assert(inPoll && args[0] === clockBinding);
+          const out = view(Number(args[1]), 16);
+          out.fill(0);
+          out.writeUInt32LE(1, 0);
+          out.writeBigUInt64LE(executionUs, 8);
+          executionRead++;
+          if(clockTrace)log({stage:"[DEBUG] Poll active execution sample",pollInvocation,executionRead,time:String(executionUs)});
+          if(pause?.[1]==="execution"&&Number(pause[2])===pollInvocation&&Number(pause[3])===executionRead)hostGap("actor execution reply");
+          return;
+        }
         case "semio:framework/pure@1.0.0::operation-clock-us": {
           const out = view(Number(args[1]), 16);
           out.fill(0);
@@ -106,6 +133,11 @@ function audit(path: string, expectedDigest: string, plugin: string, live: boole
         }
         case "wasi:clocks/monotonic-clock@0.2.0::now": {
           const time = micros() * 1000n * monotonicScale;
+          if (inPoll) {
+            monotonicRead++;
+            if (clockTrace) log({ stage: "[DEBUG] Poll monotonic sample", pollInvocation, monotonicRead, time: String(time) });
+            if (pause?.[1] === "inside" && Number(pause[2]) === pollInvocation && Number(pause[3]) === monotonicRead) hostGap("clock reply");
+          }
           if (call) {
             assert(call.length < 65_536, "Replay import count exceeded record bound");
             call.push(`I now ${time}`);
@@ -149,6 +181,9 @@ function audit(path: string, expectedDigest: string, plugin: string, live: boole
         default:
           throw Error("Unexpected " + phase + " import: " + key);
       }
+      } finally {
+        if(inPoll)resumedAt=micros();
+      }
     };
   }
   const guest = new WebAssembly.Instance(module, imports);
@@ -160,7 +195,17 @@ function audit(path: string, expectedDigest: string, plugin: string, live: boole
     const fn = guest.exports["semio_owned_" + name + "_v1"];
     assert.equal(typeof fn, "function", "Missing owned export " + name);
     if (transcript) call = [];
+    inPoll = name === "poll";
+    if (inPoll) {
+      pollInvocation++;
+      monotonicRead = 0;
+      executionRead = 0;
+      executionUs = 0n;
+      resumedAt = micros();
+    }
     const result = (fn as (...values: (number | bigint)[]) => number | bigint | undefined)(...args);
+    if (inPoll && pause?.[1] === "outside" && Number(pause[2]) === pollInvocation) hostGap("after Core return");
+    inPoll = false;
     if (call) {
       record("C", name, result ?? "_", memory!.buffer.byteLength, call.length, ...args);
       for (const event of call) record(event);
@@ -525,6 +570,7 @@ function audit(path: string, expectedDigest: string, plugin: string, live: boole
     let inputPending = false;
     let committed = false;
     for (let turn = 0; turn < 128 && !committed; turn++) {
+      const firstPollInvocation = pollInvocation + 1;
       let result: any;
       let ready = false;
       for (let attempt = 0; attempt < 2_048 && !ready; attempt++) {
@@ -532,7 +578,7 @@ function audit(path: string, expectedDigest: string, plugin: string, live: boole
       }
       assert(ready && ["idle", "moreWork"].includes(result.status), "Invalid Poll result: " + JSON.stringify(result));
       const receipt = result.lifecycleReceipt ?? null;
-      log({ stage: "lifecycle-turn", turn, acknowledging, status: result.status, receipt, inputPending, effects: result.effects, nextWake: result.nextWake, fuelUsed: result.fuelUsed, elapsedMs: elapsed(inputStart) });
+      log({ stage: "lifecycle-turn", turn, firstPollInvocation, acknowledging, status: result.status, receipt, inputPending, effects: result.effects, nextWake: result.nextWake, fuelUsed: result.fuelUsed, elapsedMs: elapsed(inputStart) });
       let closed = false;
       for (let attempt = 0; attempt < 2_048 && !closed; attempt++) closed = readReceipt("close_actor_output");
       assert(closed, "Poll output did not retire");

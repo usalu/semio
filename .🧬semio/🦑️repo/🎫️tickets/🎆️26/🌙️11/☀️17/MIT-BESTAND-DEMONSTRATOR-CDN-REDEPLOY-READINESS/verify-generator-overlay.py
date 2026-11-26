@@ -1,4 +1,5 @@
 """🌐️ Verify the Generator boot against exact candidate Procedural browser assets."""
+import json
 import os
 from pathlib import Path
 import socket
@@ -21,12 +22,15 @@ def main():
     with socket.socket() as probe:
         if probe.connect_ex(("127.0.0.1", port)) == 0:
             raise RuntimeError(f"Generator overlay port {port} is already in use")
-    probe_dir = generated / "generator-overlay-empty"
-    probe_dir.mkdir(parents=True, exist_ok=True)
+    probe_dir = module.parent
+    if probe_dir.name != "🔌️plugin-modules":
+        probe_dir = generated / "generator-overlay-empty"
+        probe_dir.mkdir(parents=True, exist_ok=True)
     folder = "🌀️procedural"
     prefix = f"🔌️plugin-modules/{folder}/"
-    server_env = dict(os.environ, SEMIO_OVERLAY_EXACT_MODULE="1")
-    with (generated / "generator-overlay-origin.log").open("w") as log:
+    server_env = dict(os.environ, SEMIO_OVERLAY_EXACT_MODULE="1", SEMIO_OVERLAY_FLOW_REQUESTS="1")
+    origin_log = generated / "generator-overlay-origin.log"
+    with origin_log.open("w") as log:
         server = subprocess.Popen([*node, ticket / "overlay-serve.mjs", site, probe_dir, str(port), folder, module], stdout=log, stderr=subprocess.STDOUT, env=server_env)
         try:
             for _ in range(60):
@@ -40,9 +44,10 @@ def main():
             else:
                 raise TimeoutError("Generator overlay server did not open")
             assets = ["🔣️.json", "🌉️bridge.js", "🟨️.js", "semio_hub_procedural_component.js"]
-            assets += sorted(asset.name for asset in module.glob("*.wasm"))
-            if not any(name.endswith(".core.wasm") for name in assets):
+            cores = sorted(asset.name for asset in module.iterdir() if asset.name.endswith((".wasm", ".wasm.gz.bin")))
+            if not any(name.endswith((".core.wasm", ".core.wasm.gz.bin")) for name in cores):
                 raise RuntimeError("Generator core missing")
+            assets += cores
             for name in assets:
                 subprocess.run([*node, ticket / "probe-custody.mjs", "verify", module / name, f"{origin}/{quote(prefix + name)}"], check=True)
             locate = 'const p=require("node:path"); console.log(p.join(p.dirname(require.resolve("@playwright/test/package.json")),"cli.js"))'
@@ -60,7 +65,20 @@ def main():
                 "--project", "en", "--project", "de", "--grep", "generator (boot|undo-redo)$",
                 "--output", generated / "generator-overlay-pw", "--reporter=list,json",
             ]
-            return subprocess.run(command, cwd=demo, env=env, check=False).returncode
+            result = subprocess.run(command, cwd=demo, env=env, check=False).returncode
+            flow_responses = {}
+            for line in origin_log.read_text().splitlines():
+                if line.startswith("[DEBUG] Flow HTTP "):
+                    response = json.loads(line.removeprefix("[DEBUG] Flow HTTP "))
+                    if response["status"] == 200:
+                        flow_responses[response["path"]] = Path(response["file"])
+            for path, file in sorted(flow_responses.items()):
+                file.resolve(strict=True).relative_to(site)
+                subprocess.run([*node, ticket / "probe-custody.mjs", "verify", file, origin + path], check=True)
+            if {file.suffix for file in flow_responses.values()} != {".js", ".wasm"}:
+                print("[DEBUG] Chromium did not complete both standalone Flow asset requests", file=sys.stderr)
+                return result or 1
+            return result
         finally:
             server.terminate()
             server.wait(timeout=8)

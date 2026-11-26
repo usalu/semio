@@ -22,3 +22,23 @@ test("a cancelled geometry request never enters another guest turn", async () =>
     }
   } finally { db.close(); }
 });
+
+test("preserves a paid request until its answer and bounds stalled, replayed, and explicitly capped turns", async () => {
+  const laws = (await import("./🔣️paid-progress.json")).default;
+  for (const law of laws) {
+    let calls = 0;
+    const answer = await driveInboundRequest({
+      req: 9n, capability: "mesh", payload: new Uint8Array(), originInstanceId: 1,
+      turnBudget: law.case === "explicit" ? 64 : undefined,
+      submit: async () => {
+        calls++;
+        const fuel = BigInt(1000 - (law.case === "replayed" ? 1 : calls));
+        const paid = law.case !== "parked" && (law.case !== "ends" || calls <= 6);
+        const retainedReceipt = {input:{operation:1n,generation:1n},remainingFuel:fuel,workUnitsSpent:1n,spent:{copiedItems:paid ? 1n : 0n}};
+        const effects = calls === law.answer ? [{tag:"respond",val:{req:9n,outcome:{tag:"ok",val:new Uint8Array([61])}}}] : [];
+        return { effects, status:{tag:"more-work"}, original:{retainedReceipt} };
+      },
+    });
+    expect([answer.status,answer.turns,calls], law.case).toEqual([law.status,law.turns,law.turns]);
+  }
+});

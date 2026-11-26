@@ -56,7 +56,7 @@ test("classification: the walk, the authored extensions and the names the policy
   ["README.md","name"],["a/logo.png","name"],["a/b/notes.pdf","name"],["a/c.RS","name"],["Makefile","name"],
   ["node_modules/x/index.ts","ignored"],["a/node_modules/x.json","ignored"],["a/target/debug/x.rs","ignored"],[".git/HEAD","ignored"],[".cache/b/x.json","ignored"],["a/🗑️generated/x.json","ignored"],[".🧬semio/🦑️repo/🎫️tickets/x.md","ignored"],["a/dist/x.js","ignored"],
  ];
- for(const [path,kind] of vectors)expect(classifyGraphInputV1(path),path).toBe(kind);
+ for(const [path,kind] of vectors)expect<unknown>(classifyGraphInputV1(path),path).toBe(kind);
 });
 
 test("the folds and the digest equal an independent Python model",()=>{
@@ -76,7 +76,7 @@ test("the folds and the digest equal an independent Python model",()=>{
 test("the key changes exactly when a graph-relevant file changes",()=>{
  const base=listing(7,400),original=graphStateOfV1(frame,base),contentRows=base.filter(([path])=>classifyGraphInputV1(path)==="content"),nameRows=base.filter(([path])=>classifyGraphInputV1(path)==="name"),ignoredRows=base.filter(([path])=>classifyGraphInputV1(path)==="ignored");
  expect(contentRows.length).toBeGreaterThan(50);expect(nameRows.length).toBeGreaterThan(20);expect(ignoredRows.length).toBe(4);
- const change=(edit:(rows:SharedFileV1[])=>void)=>{const rows=base.map(row=>[...row] as unknown as SharedFileV1);edit(rows);return graphStateOfV1(frame,rows).digest;};
+ const change=(edit:(rows:[path:string,sha256:string][])=>void)=>{const rows=base.map((row):[path:string,sha256:string]=>[row[0],row[1]]);edit(rows);return graphStateOfV1(frame,rows).digest;};
  for(const [path] of contentRows.slice(0,40))expect(change(rows=>{rows.find(row=>row[0]===path)![1]=sha("edited "+path);}),"edit "+path).not.toBe(original.digest);
  for(const [path] of nameRows.slice(0,40))expect(change(rows=>{rows.find(row=>row[0]===path)![1]=sha("edited "+path);}),"bytes of a name only file "+path).toBe(original.digest);
  for(const [path] of ignoredRows)expect(change(rows=>{rows.find(row=>row[0]===path)![1]=sha("edited "+path);}),"ignored "+path).toBe(original.digest);

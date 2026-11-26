@@ -12,7 +12,7 @@ use semio_ui_tui_widgets::widget::WidgetState;
 
 /// 🎬️ What activating a row does.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum RowAction { None, Files, NewTask, Settings, Help, Refresh, CancelDiscovery, Session(String), OpenReady(String), CancelOpenReady, Language, Appearance, Terminology, Renderer, Layout, SaveScope, Diagnostics, Diagnostic(usize), EditKeymap, EditPrefix, Editor(dashboard_keymap_editor::Action), CancelPreference, Back }
+pub enum RowAction { None, Files, NewTask, Settings, Help, Refresh, CancelDiscovery, Session(String), OpenReady(String), CancelOpenReady, Language, Appearance, Terminology, Renderer, Layout, SaveScope, Diagnostics, Diagnostic(usize), EditKeymap, EditPrefix, Editor(dashboard_keymap_editor::Action), CancelPreference, Back, FleetOrigin(String) }
 
 /// 🪧️ The rows of one list window and where the selection and the visible slice are.
 #[derive(Default)]
@@ -112,6 +112,7 @@ impl Dashboard {
                 ].into_iter().filter(|(_,action)|*action!=RowAction::CancelPreference||self.saving_preferences.is_some()).collect()
             }
             Body::Help => self.help_rows(),
+            Body::Fleet(_) => self.fleet_rows(index, width),
             Body::KeymapEditor(editor)=>editor.rows(text).into_iter().map(|(label,action)|(label,RowAction::Editor(action))).collect(),
             Body::Diagnostics=>{
                 let mut rows=vec![(text.diagnostics_hint.as_str().into(),RowAction::None)];
@@ -170,7 +171,7 @@ impl Dashboard {
     pub fn refresh_panes(&mut self, tui: &mut Tui) { for index in 0..self.windows.len() { self.refresh_pane(tui, index); } }
 
     pub fn refresh_pane(&mut self, tui: &mut Tui, index: usize) {
-        if !matches!(self.windows[index].body, Body::Overview | Body::Settings | Body::Help | Body::Diagnostics | Body::KeymapEditor(_)) { return; }
+        if !matches!(self.windows[index].body, Body::Overview | Body::Settings | Body::Help | Body::Diagnostics | Body::KeymapEditor(_) | Body::Fleet(_)) { return; }
         let rows = self.pane_rows(index,tui.scene.rect(self.windows[index].list).width);
         let page = usize::from(tui.scene.rect(self.windows[index].list).height).max(1);
         let window = &mut self.windows[index];
@@ -182,13 +183,16 @@ impl Dashboard {
         let (offset, selected) = (window.pane.offset, window.pane.selected);
         let items: Vec<String> = window.pane.rows.iter().skip(offset).take(page).map(|(text, _)| text.clone()).collect();
         let statuses: Vec<Option<semio_ui_tui_core::theme::Status>> = window.pane.rows.iter().skip(offset).take(page).map(|(_, action)| match action { RowAction::Session(id) => self.sessions.get(id).map(Self::status_of), _ => None }).collect();
+        let dims: Vec<bool> = self.windows[index].pane.rows.iter().skip(offset).take(page).map(|(_, action)| self.fleet_marks(action).1).collect();
+        let statuses: Vec<Option<semio_ui_tui_core::theme::Status>> = statuses.into_iter().zip(self.windows[index].pane.rows.iter().skip(offset).take(page)).map(|(status, (_, action))| status.or(self.fleet_marks(action).0)).collect();
         let node = self.windows[index].list;
-        let unchanged = matches!(&tui.scene.node(node).content, semio_ui_tui_frame::scene::NodeContent::Widget(WidgetState::List(list)) if list.items == items && list.selected == selected - offset && list.statuses == statuses);
+        let unchanged = matches!(&tui.scene.node(node).content, semio_ui_tui_frame::scene::NodeContent::Widget(WidgetState::List(list)) if list.items == items && list.selected == selected - offset && list.statuses == statuses && list.dimmed == dims);
         if unchanged { return; }
         if let Some(WidgetState::List(list)) = tui.scene.node_mut(node).widget() {
             list.marks = vec![false; items.len()];
             list.items = items;
             list.statuses = statuses;
+            list.dimmed = dims;
             list.selected = selected - offset;
             list.offset = 0;
         }
@@ -199,6 +203,7 @@ impl Dashboard {
         let Some(action) = self.windows[index].pane.current().cloned() else { return };
         match action {
             RowAction::Diagnostics=>self.set_body(tui,index,Kind::Diagnostics,None),
+            RowAction::FleetOrigin(_)=>{self.fleet_input(tui,index,&super::launcher::Input::Activate);}
             RowAction::Diagnostic(event)=>if let Some(failure)=self.diagnostics.get(event){self.effects.push(super::windows::Effect::Copy(failure.display(self.text())));},
             RowAction::EditKeymap|RowAction::EditPrefix=>{self.set_body(tui,index,Kind::KeymapEditor,None);if action==RowAction::EditPrefix{if let Body::KeymapEditor(editor)=&mut self.windows[index].body{editor.begin(dashboard_keymap_editor::Target::Prefix);}}}
             RowAction::Editor(action)=>self.editor_action(tui,index,action),

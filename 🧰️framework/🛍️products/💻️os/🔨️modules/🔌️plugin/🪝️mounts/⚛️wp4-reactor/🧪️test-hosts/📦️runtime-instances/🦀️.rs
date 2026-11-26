@@ -15,7 +15,7 @@ pub(crate) mod runtime_instances_unit_1 {
     use semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::RUNTIME_CLEANUP_FAULTS;
     use semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::RUNTIME_CLEANUP_UNMEASURED_US;
     use semio_plugin_runtime_instances::inst_cleanup_turns::runtime_close_stall_verdict;
-    use semio_plugin_runtime_instances::inst_cleanup_turns::runtime_live_cleanup_nonterminal_status;
+    use semio_plugin_runtime_instances::inst_cleanup_turns::{runtime_live_cleanup_nonterminal_status, RUNTIME_LIVE_STALL_CREDIT_US};
     use semio_plugin_runtime_instances::inst_opening::RUNTIME_CLOSE_STALL_CREDIT_US;
     use semio_plugin_runtime_instances::inst_opening::RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT;
     use semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT;

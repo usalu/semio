@@ -46,7 +46,8 @@ fn canonical_native_paged_utf8_key_and_scalar_match_serde_with_zero_heap_copy_tu
             let capacity = retirement.next_capacity_byte_demand(copy).unwrap();
             assert!(copy + capacity <= 4096);
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: retirement.next_release_byte_demand().unwrap(), maximum_depth: retirement.next_depth_demand().unwrap() };
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| retirement.step(grant).unwrap());
+            let (outcome, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_value_clone_source_testing::drive::drive_reply(grant, 1 << 20, |answer: &Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>| match answer { Ok(step) => step.progress(), Err(failure) => failure.retained_progress() }, |effect: &mut semio_framework_value::retained_clone::RetainedAllocationEffect<'_>, reply: semio_framework_value::retained_clone::OriginalEffectReply<'_, RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>, recover| if recover { retirement.recover_step_into(copy, effect, reply) } else { retirement.step_into(copy, effect, reply) }));
+            let step = outcome.result.unwrap();
             assert!(step.progress().fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
             if matches!(step, RetainedCloneStep::Complete(_)) { assert!(retirement.terminal_is_empty()); }

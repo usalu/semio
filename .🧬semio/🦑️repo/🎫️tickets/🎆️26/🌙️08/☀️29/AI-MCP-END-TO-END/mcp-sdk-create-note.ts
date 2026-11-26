@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { mcpServerEntries, takeMcpPluginCatalog, withMcpHostDriverPolicy } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
+import { artifactCreationSucceededV1, mcpServerEntries, takeMcpPluginCatalog, withMcpHostDriverPolicy } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { encodeMcpComponentModelManifestV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/📦️component-models/🟦️.ts";
 import { readNativeCatalogV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
 import { actorPreparationImageIdentityV1, actorPreparationPolicyV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/🌱️actor-preparation/🟦️.ts";
@@ -52,20 +52,29 @@ try {
       try {
         await restarted.connect(second);
         assert(first && second.pid && second.pid!==first);
-        await verifySeededNote(restarted,root,generated,true);
+        await verifySeededNote(restarted,root,generated,true,false);
       } finally { await restarted.close(); }
     }
   } else {
   const started = performance.now();
   const artifactId = "sdk-note-create";
-  const created = await client.callTool({ name: "artifact_create", arguments: { artifactId, kind: pins.artifactKind } }, undefined, { timeout: 240_000 });
+  const timeout = Number(process.env.SEMIO_NOTE_SDK_TIMEOUT_MS ?? 240_000);
+  assert(Number.isSafeInteger(timeout) && timeout > 0);
+  const created = await client.callTool({ name: "artifact_create", arguments: { artifactId, kind: pins.artifactKind } }, undefined, { timeout });
   console.log(JSON.stringify({ elapsedSeconds: (performance.now() - started) / 1000, isError: created.isError, result: created.structuredContent }));
   const snapshot = await client.callTool({ name: "artifact_snapshot", arguments: { artifactId } });
   console.log(JSON.stringify({ snapshot: snapshot.isError ? snapshot.structuredContent : "captured" }));
   await client.ping();
   console.log(JSON.stringify({ ping: "ok" }));
-  assert(created.isError !== true && created.structuredContent?.status === "SUCCEEDED", JSON.stringify(created.structuredContent));
-  assert(snapshot.isError !== true && Number(snapshot.structuredContent?.packBytes) > 0, JSON.stringify(snapshot.structuredContent));
+  assert(artifactCreationSucceededV1(created, artifactId, pins.artifactKind, pins.pluginId), JSON.stringify(created.structuredContent));
+  const body = snapshot.structuredContent;
+  assert(!snapshot.isError && body?.artifactId === artifactId, JSON.stringify(body));
+  const envelope = body.untrusted as { schema: string; content: { packBase64: string; sprBase64: string } };
+  assert.equal(envelope.schema, "semio.mcp.untrusted-content/v1");
+  for (const [encoded, length] of [[envelope.content.packBase64, body.packBytes], [envelope.content.sprBase64, body.sprBytes]] as const) {
+    const bytes = Buffer.from(encoded, "base64");
+    assert(bytes.length > 0 && bytes.length === length && bytes.toString("base64") === encoded);
+  }
   }
 } finally {
   await client.close();

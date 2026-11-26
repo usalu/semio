@@ -148,6 +148,7 @@
   ],
   "openTargets": [],
   "catalogPackage": "semio-s-artifact-stdio-ifc-catalog",
+  "runtimeHost": "stdio-bim",
   "symbolPackages": [
     "semio-s-artifact-stdio-ifc-2x3-base",
     "semio-s-artifact-stdio-ifc-2x3-base-model",

@@ -43,7 +43,8 @@ pub async fn plugin_wire_artifact_infer_cold<PA: PluginApp>(runtime: &PluginRunt
     }
 }
 /// 📨️ Encoded extension request handler owned by its guest bundle.
-enum ExtensionRequestHandler {
+#[doc(hidden)]
+pub enum ExtensionRequestHandler {
     Plain(fn(&[u8],&mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault>),
     Owned,
 }
@@ -61,7 +62,7 @@ pub struct ExtensionBundle {
     close_cancelled: bool,
     manifest_retired: bool,
     pub metadata_retirement: std::mem::ManuallyDrop<MetadataRetirement>,
-    pub inference_gateway:std::mem::ManuallyDrop<std::sync::Mutex<Option<crate::inference_gateway::ArtifactInferenceGateway>>>,
+    pub inference_gateway:std::mem::ManuallyDrop<semio_framework_value_control_contract::RetainedOwnerGate<Option<crate::inference_gateway::ArtifactInferenceGateway>>>,
 }
 /// 🌉️ `CapabilityRequirement`/`PluginDependency`/`ArtifactContributionDescriptor`/`ExecutionMode`
 /// are foreign (owned by the `semio-framework` crate's kernel/manifest vocabulary) and only
@@ -141,7 +142,7 @@ impl ExtensionBundle {
             close_cancelled: false,
             manifest_retired: false,
             metadata_retirement: std::mem::ManuallyDrop::new(MetadataRetirement::default()),
-            inference_gateway:std::mem::ManuallyDrop::new(std::sync::Mutex::new(None)),
+            inference_gateway:std::mem::ManuallyDrop::new(semio_framework_value_control_contract::RetainedOwnerGate::new(None)),
         }
     }
     /// 🔗 Declares the host app/plugin this extension extends.

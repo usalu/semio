@@ -1,0 +1,33 @@
+{
+  "root": 10,
+  "cases": [
+    {
+      "name": "paid launcher and local unit including its separate linker",
+      "launcherKiB": 131072,
+      "schedulers": [13],
+      "rows": [[10,1,65536],[11,10,102400],[12,11,51200],[13,12,2048],[14,13,3584000],[15,14,153600],[20,1,4608000]],
+      "expectedKiB": 440320
+    },
+    {
+      "name": "unreadable process table retains child overhead",
+      "launcherKiB": 128000,
+      "schedulers": [],
+      "rows": [],
+      "expectedKiB": 437248
+    },
+    {
+      "name": "previous scheduler process now outside the tree",
+      "launcherKiB": 131072,
+      "schedulers": [13],
+      "rows": [[10,1,65536],[13,20,100],[14,13,3584000],[20,1,4608000]],
+      "expectedKiB": 131072
+    },
+    {
+      "name": "an unadmitted compiler child remains part of orchestration",
+      "launcherKiB": 131072,
+      "schedulers": [],
+      "rows": [[10,1,143360],[11,10,102400],[12,11,51200],[13,12,2048],[14,13,256000]],
+      "expectedKiB": 555008
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+# Paged UTF-8 Seed Board Projection
+
+The native probe reproduced `field owner has no retained source projection` at `ConnectKindCompatibility.source` and `CreateNode.node.id`. Both are `PagedUtf8` fields. The authored genesis history reached Pack before the corresponding record could be appended.
+
+`PagedUtf8` now projects a borrowed `TextReadView` over its chunk list and exact byte length. Pack retains the ordinal and byte start at each reader until it finishes a comparison or output. One retained turn advances past at most one skipped variable-width chunk before returning progress. Each emission window copies only from the selected original chunk and respects the caller’s byte grant. The static Pack routines charge and check each chunk observation under their encoding control.
+
+The regression uses one neutral fixture in the Rust Pack cursor suite and the Bun Buffer oracle. It covers distinct chunk layouts for equal UTF-8 text, an empty leading chunk, a non-BMP scalar, a combining character, equal-prefix but unequal strings, an empty field, symbol references, inline text and output windows of 1, 7 and 64 bytes. It also covers comparing a printed expression with a symbol that pauses at chunk boundaries. The Rust regression checks that projection allocates nothing, a chunk transition reports pending, operation allocations match each receipt, and the scratch cursor fully retires.
+
+The Bun Pack oracle suite passed all 10 tests through both the capacity-managed fallback and the registered `repo test-file` route, including the independent Buffer cases. The Rust Pack cursor suite passed all 20 tests and the paged text suites passed all 35 tests. They include retained-cursor and static Pack encoding, expression comparison under exact grants, cancellation, original source handoff and exact physical retirement. The Rust commands used the capacity-managed native fallback after standard source admission refused the auxiliary publication descriptor.

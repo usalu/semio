@@ -84,12 +84,23 @@ pub fn receive_step<T>(cx:&mut semio_framework_job::StepContext<'_>,run:impl FnO
     if scope.source_refusal.is_some()||scope.call.is_err(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original history receiving scope refused").with_retained_progress(scope.retained_progress()).into_fault())}
     Ok(Some(stepped))
 }
+/// 🎟️ Like [`receive_step`], and the step also learns the grant its receiving scope issued, so a batched step never claims past it.
+pub fn receive_step_issued<T>(cx:&mut semio_framework_job::StepContext<'_>,run:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,RetainedCloneGrant,u64)->T,progress:impl FnOnce(&T)->RetainedCloneProgress)->Result<Option<T>,Fault>{
+    let mut scope=None;let mut stepped=None;
+    if !cx.with_native_receiving_work(&mut scope, Default::default(), |native,issued,work|{stepped=Some(run(native,issued,work));Ok(())}).map_err(refused)?{return Ok(None)}
+    let stepped=stepped.ok_or_else(||ValueError::invariant("original history receiving step vanished").into_fault())?;
+    let progress=progress(&stepped);match cx.receiving_issued_grant(){Some(issued)=>cx.consume_receiving_retained(issued,progress),None=>cx.consume_retained(progress)}.map_err(ValueError::into_fault)?;
+    let scope=scope.ok_or_else(||ValueError::invariant("original history receiving scope vanished").into_fault())?;
+    if scope.source_refusal.is_some()||scope.call.is_err(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original history receiving scope refused").with_retained_progress(scope.retained_progress()).into_fault())}
+    Ok(Some(stepped))
+}
 //#region 🔖️StoreState
 /// 🧹️ The store-free half of one store's history-edit owners: whether a replay runs, whether owners still retire, the
 /// terminal witness and one bounded retirement unit — callable on a composed member's erased owners without its store.
 #[doc(hidden)]
 pub trait TimeTravelOwners: Send {
     fn replaying(&self) -> bool;
+    fn preview_live(&self) -> bool;
     fn preview_progress(&self) -> Option<store::os_store::replay::ReplayProgress>;
     fn processed(&self) -> Option<u32>;
     fn has_pending_work(&self) -> bool;
@@ -215,6 +226,7 @@ pub enum TimeTravelStoreCommand {
     StepPreview { deadline_us: u64, clock: fn() -> Option<u64>,grant:RetainedCloneGrant },
     StartReplay { drafts: protocol::HistoryInputDrafts, from: MutationId },
     CancelReplay,
+    CancelPreview,
     CloseOriginalSources { grant: RetainedCloneGrant },
     CloseSessionHandoff { grant: RetainedCloneGrant },
     StepReplay { deadline_us: u64, clock: fn() -> Option<u64>,grant:RetainedCloneGrant },
@@ -441,7 +453,7 @@ where
                     let stepped=receive_step(cx,|native,_|self.preview_source.as_mut().unwrap().advance_chained(native,grant).map_err(ValueError::into_fault),|result|match result{Ok(step)=>step.progress(),Err(fault)=>fault.retained_progress,_=>Default::default()})?;
                     TimeTravelStoreOutput::Previewed(match stepped{Some(result)=>TimeTravelPreviewStep::Progress(result?.progress()),None=>TimeTravelPreviewStep::Pending})
                 }else{
-                    let stepped=receive_step(cx,|native,_|self.step_preview(store,deadline_us,clock,grant,native),|result|match result{Ok(TimeTravelPreviewStep::Progress(p)|TimeTravelPreviewStep::Completed(_,p))=>*p,Ok(TimeTravelPreviewStep::Refused(error))=>error.retained_progress(),Err(fault)=>fault.retained_progress,_=>Default::default()})?;
+                    let stepped=receive_step(cx,|native,work|self.step_preview(store,deadline_us,clock,grant,native,work),|result|match result{Ok(TimeTravelPreviewStep::Progress(p)|TimeTravelPreviewStep::Completed(_,p))=>*p,Ok(TimeTravelPreviewStep::Refused(error))=>error.retained_progress(),Err(fault)=>fault.retained_progress,_=>Default::default()})?;
                     match stepped{Some(result)=>{if let Some(work)=self.preview_job.as_mut().and_then(|job|job.take_preparation_work()){cx.consume_fuel(work)}TimeTravelStoreOutput::Previewed(result?)},None=>TimeTravelStoreOutput::Previewed(TimeTravelPreviewStep::Pending)}
                 }
             },            TimeTravelStoreCommand::StartReplay { drafts, from } => {
@@ -471,12 +483,16 @@ where
                 self.cancel_replay(store)?;
                 TimeTravelStoreOutput::Done
             }
+            TimeTravelStoreCommand::CancelPreview => {
+                self.cancel_preview(store)?;
+                TimeTravelStoreOutput::Done
+            }
             TimeTravelStoreCommand::CloseSessionHandoff { grant } => TimeTravelStoreOutput::OriginalProgress(
                 self.close_session_handoff(store, grant).map_err(ValueError::into_fault)?,
             ),
             TimeTravelStoreCommand::StepReplay { deadline_us, clock,grant } => {
                 let cx=receiving.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history replay requires its original Job receiving issuer").into_fault())?;
-                let stepped=receive_step(cx,|native,work|self.step_replay(store,deadline_us,clock,grant,native,work),|result|match result{Ok(TimeTravelReplayStep::Pending{ownership,..}|TimeTravelReplayStep::Completed(_,ownership))=>*ownership,Ok(TimeTravelReplayStep::Refused(error))=>error.retained_progress(),Err(fault)=>fault.retained_progress,_=>Default::default()})?;
+                let stepped=receive_step_issued(cx,|native,issued,work|self.step_replay(store,deadline_us,clock,grant.restricted_by(issued),native,work),|result|match result{Ok(TimeTravelReplayStep::Pending{ownership,..}|TimeTravelReplayStep::Completed(_,ownership))=>*ownership,Ok(TimeTravelReplayStep::Refused(error))=>error.retained_progress(),Err(fault)=>fault.retained_progress,_=>Default::default()})?;
                 match stepped{Some(result)=>{if let Some(work)=self.replay.as_mut().and_then(|replay|replay.take_preparation_work()){cx.consume_fuel(work)}TimeTravelStoreOutput::Stepped(result?)},None=>TimeTravelStoreOutput::Stepped(TimeTravelReplayStep::Unfunded)}
             },
             TimeTravelStoreCommand::CloseCommit=>match receiving{Some(cx)=>{self.commit_closing=true;match self.step_commit(store,cx){Ok(outcome)=>TimeTravelStoreOutput::Committed(outcome),Err(failure)=>TimeTravelStoreOutput::CommitRefused(failure)}},None=>TimeTravelStoreOutput::CommitRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"completed replay close requires its original Job continuation").into())},
@@ -603,12 +619,12 @@ where
       if let Some((owner,p))=match control.as_mut(){Some(control)=>store.retire_derived_report_replay_controlled(&mut self.replay,effect,*control),None=>store.retire_derived_report_replay(&mut self.replay,effect)}?{self.retirements.push_back(owner);return Ok(p)}Ok(self.replay.as_mut().map_or(Default::default(),|owner|owner.take_preparation_receipt()))
     }
     /// 🖼️ One bounded prefix slice; only a completed preview displaces the last complete projection.
-    fn step_preview(&mut self,store:&mut ArtifactStore<P,Mu>,deadline_us:u64,clock:fn()->Option<u64>,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<TimeTravelPreviewStep,Fault>{
+    fn step_preview(&mut self,store:&mut ArtifactStore<P,Mu>,deadline_us:u64,clock:fn()->Option<u64>,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,maximum_work:u64)->Result<TimeTravelPreviewStep,Fault>{
         self.snapshot_custody_available(2)?;
         let idle=RetainedCloneProgress::default();let mut deadline=||clock().is_none_or(|now|now>=deadline_us);
         if self.preview_cancelled{return Ok(TimeTravelPreviewStep::Pending);}
         if self.preview_base.is_none(){let Some(job)=self.preview_job.as_mut()else{return Ok(TimeTravelPreviewStep::Pending)};
-            let step=match store.step_derived_history_preview(job,grant,receiving,&mut deadline){Ok(step)=>step,Err(vcs::VcsError::InverseRefused(error))=>return Ok(TimeTravelPreviewStep::Refused(error)),Err(error)=>return Err(error.into_fault())};if !matches!(step,store::os_store::replay::ReplayStep::Finished(_)){return Ok(TimeTravelPreviewStep::Progress(job.take_preparation_receipt()));}
+            let step=match store.step_derived_history_preview(job,grant,receiving,maximum_work,&mut deadline){Ok(step)=>step,Err(vcs::VcsError::InverseRefused(error))=>return Ok(TimeTravelPreviewStep::Refused(error)),Err(error)=>return Err(error.into_fault())};if !matches!(step,store::os_store::replay::ReplayStep::Finished(_)){return Ok(TimeTravelPreviewStep::Progress(job.take_preparation_receipt()));}
             if self.snapshot_issuers.is_none(){*self.snapshot_issuers=Some((Arc::clone(store.owned_snapshot_retirement_factory().map_err(ValueError::into_fault)?),Arc::clone(store.owned_mutation_retirement_factory().map_err(ValueError::into_fault)?)));}
             self.preview_base=Some(store.finish_derived_history_preview(&mut self.preview_job).map_err(FaultFrom::into_fault)?);
             self.preview_job_closing=true;return Ok(TimeTravelPreviewStep::Progress(idle));
@@ -630,7 +646,8 @@ where
         self.snapshot_custody_available(1)?;
         let Some(replay) = self.replay.as_mut() else { return Ok(TimeTravelReplayStep::Faulted) };
         let mut deadline = || clock().is_none_or(|now| now >= deadline_us);
-        Ok(match store.step_derived_report_replay(replay, grant, receiving,work,&mut deadline) {
+        let stepped=store.step_derived_report_replay_batched(replay,grant,receiving,work,&mut deadline);
+        Ok(match stepped {
             Ok(store::os_store::replay::ReplayStep::Pending(progress)) => TimeTravelReplayStep::Pending { done: progress.done, total: progress.total,ownership:replay.take_preparation_receipt() },
             Ok(store::os_store::replay::ReplayStep::Finished(_)) => {
                 let ownership=replay.take_preparation_receipt();

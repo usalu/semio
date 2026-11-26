@@ -14,18 +14,6 @@ pub mod standards {
                     
                     #[path = "../../../../🚪️io/📥️import/🦀️.rs"]
                     pub mod import;
-                    #[path = "."]
-                    pub mod export {
-                        #[path = "."]
-                        pub mod ifc {
-                            #[path = "."]
-                            pub mod energy {
-                                #[cfg(test)]
-                                #[path = "../../../../🚪️io/📤️export/🏗️ifc/🔥️energy/🧪️tests/🔬️unit/🦀️.rs"]
-                                pub mod tests;
-                            }
-                        }
-                    }
                 }
             }
         }

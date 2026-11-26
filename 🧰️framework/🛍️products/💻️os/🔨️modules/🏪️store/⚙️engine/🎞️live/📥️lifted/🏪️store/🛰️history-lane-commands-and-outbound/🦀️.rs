@@ -361,7 +361,7 @@ where
             store_live.prefix_ring_dirty_from = store_live.prefix_ring_dirty_from.min(position);
         }
         store_live.prune_prefix_ring(store_owners)?;
-        store_owners.relieve_displaced_pressure()
+        store_owners.relieve_displaced_pressure().map(|_| ())
     }
 
     /// 🔬️ Test-build oracle of every incremental mirror on short histories ([`MIRROR_ORACLE_HISTORY`]): the persisted cursor

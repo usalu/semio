@@ -13,6 +13,7 @@ use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::{model_graph::{instance, kinds}, ModelInference};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::frame::{self, StoreyLevel};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::structure;
 pub use frame::can_emit_cold_column;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
 use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
@@ -139,12 +140,13 @@ pub struct StagedExport {
     staged: Option<Staged>,
     next: usize,
     next_column: usize,
+    cold_structure: structure::ColdColumns,
 }
 
 impl StagedExport {
     /// 🌱️ An export of `model` in `schema` that has not run a stage yet.
     pub fn new(schema: Schema, model: &ModelSnapshot) -> Self {
-        Self { staged: Some(Staged::new(schema, model)), next: 0, next_column: 0 }
+        Self { staged: Some(Staged::new(schema, model)), next: 0, next_column: 0, cold_structure: Default::default() }
     }
 
     /// 📈️ How far the stages are, from zero to one.
@@ -189,6 +191,14 @@ impl StagedExport {
                     if let Some((id, column)) = model.columns.get_index(self.next_column) {
                         frame::emit_cold_column(&mut export, id, column, levels);
                         self.next_column += 1;
+                        if self.next_column < model.columns.len() {
+                            self.staged = Some(export.suspend());
+                            return None;
+                        }
+                    }
+                }
+                ("structure", Some(levels)) => {
+                    if !self.cold_structure.step(&mut export, levels) {
                         self.staged = Some(export.suspend());
                         return None;
                     }

@@ -45,12 +45,18 @@
       }
     },
     "Models": {
-      "description": "How a gateway that relays a typed missing-model refusal from the serving native server (schema 📦️component-models, definition MissingModel) reacts: it asks its launcher to build that plugin's component model once per plugin and session (one build at a time, cancelled with the session), logs the stages with these prefixes, and, when the launcher published a changed model set, swaps a freshly handshaken server in behind the client, which sees the model through its environment. A failed build is logged and may be retried by the next refusal.",
+      "description": "How a gateway that relays a typed missing-model refusal from the serving native server (schema 📦️component-models, definition MissingModel) reacts: it asks its launcher to build that plugin's component model once per plugin and session (one build at a time, cancelled with the session), logs the stages with these prefixes, and, when the launcher published a changed model set, swaps a freshly handshaken server in behind the client, which sees the model through its environment. A failed build is logged, remembered with its reason and retried by the next refusal; until a build succeeds every relayed refusal of that plugin is rewritten so the client reads the truth (cause `model-build-failed`, the reason, en + de summary with `{pluginId}` and `{reason}` replaced, at most `maximumReasonCharacters` of the reason) instead of the promise that the launcher is preparing it.",
       "const": {
         "preparingPrefix": "[semio-os-mcp] building the component model of plugin",
         "readyPrefix": "[semio-os-mcp] component model published for plugin",
         "unchangedPrefix": "[semio-os-mcp] component model unchanged for plugin",
-        "failedPrefix": "[semio-os-mcp] component model failed for plugin"
+        "failedPrefix": "[semio-os-mcp] component model failed for plugin",
+        "failedCause": "model-build-failed",
+        "maximumReasonCharacters": 300,
+        "failedSummary": {
+          "en": "Plugin `{pluginId}` has no component model: its last build failed ({reason}); the launcher is building it again, retry in a moment.",
+          "de": "Das Plugin `{pluginId}` hat kein Komponentenmodell: der letzte Bau ist fehlgeschlagen ({reason}); der Starter baut es erneut, gleich erneut versuchen."
+        }
       }
     },
     "WarmDiscovery": {

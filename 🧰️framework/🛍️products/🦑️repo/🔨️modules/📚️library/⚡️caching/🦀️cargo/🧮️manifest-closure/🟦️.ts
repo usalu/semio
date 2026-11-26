@@ -68,7 +68,7 @@ function workspaceOfV1(directory:string,table:Table,root:string,inputs:Map<strin
    const row=readManifestV1(join(at,policy.manifest),inputs),declaration=row?.table.workspace as Table|undefined;
    if(declaration){
     const excluded=new Set(expandV1(at,declaration.exclude??[],inputs)),members=new Set<string>(expandV1(at,declaration.members??[],inputs).filter(path=>!excluded.has(path)&&existsSync(join(path,policy.manifest))));
-    if(row.table.package)members.add(at);
+    if(row?.table.package)members.add(at);
     const found:WorkspaceV1={root:at,declaration,members};workspaces.set(at,found);return found;
    }
    workspaces.set(at,null);

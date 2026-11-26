@@ -147,7 +147,7 @@ test("a cancelled refresh retains journalled waves and the next read infers only
     if(dirname(path)!==journal||!path.endsWith(".json"))return;
     const header=readBuildJournalV1(readFileSync(path));
     if(header.state==="waves"&&header.done===2){
-     completed=header.names.slice(0,header.done);
+     completed=header.names!.slice(0,header.done);
      expect(header.rows).toHaveLength(2);
      controller.abort(new Error("killed by the server"));
     }

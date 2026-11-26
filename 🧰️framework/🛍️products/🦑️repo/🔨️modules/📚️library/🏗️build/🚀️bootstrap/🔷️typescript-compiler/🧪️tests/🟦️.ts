@@ -75,9 +75,9 @@ test("an absent install and a declaration that is not exact are typed refusals",
 test("the inspection reads two package files and never loads the compiler",()=>{
  const fake=tree({root:{version:wantedVersion}});put(join(fake.root,"node_modules","typescript","lib","typescript.js"),"throw new Error('loaded');");
  const seen=inspectTypescriptCompilerV1(fake.options);
- expect(seen.ok).toBe(true);expect(seen.version).toBe(wantedVersion);
+ expect(seen.ok).toBe(true);if(seen.ok)expect(seen.version).toBe(wantedVersion);
  const bad=inspectTypescriptCompilerV1(tree({root:{version:"7.0.2",native:true}}).options);
- expect(bad.ok).toBe(false);expect(bad.refusal.code).toBe("typescript-compiler-version");
+ expect(bad.ok).toBe(false);if(!bad.ok)expect(bad.refusal.code).toBe("typescript-compiler-version");
 });
 
 test("a process whose files sit in a tree with a 7.x root derives its anchors from its own location",()=>{

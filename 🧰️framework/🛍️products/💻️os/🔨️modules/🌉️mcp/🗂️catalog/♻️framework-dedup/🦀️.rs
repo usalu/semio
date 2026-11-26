@@ -79,7 +79,7 @@ pub(super) fn framework_capabilities(apps: &[&manifest::AppDefinition], locale: 
         for action in framework_action_definitions(app) {
             let id = format!("framework.{}", action.id);
             map.entry(id.clone()).or_insert_with(|| {
-                capability_from_action(
+                let mut capability = capability_from_action(
                     &id,
                     CapabilityOwner::Framework,
                     None,
@@ -87,7 +87,10 @@ pub(super) fn framework_capabilities(apps: &[&manifest::AppDefinition], locale: 
                     CapabilitySource::Action { plugin_id: "framework".into(), app_id: "framework".into(), window_kind_id: "*".into(), action_id: action.id.clone() },
                     locale,
                     terminology,
-                )
+                );
+                let requirement = if matches!(locale, Locale::De) { "Wirkt auf genau ein Artefakt: bei action_prepare `target.artifactRef` angeben." } else { "Runs on one artifact: pass `target.artifactRef` with action_prepare." };
+                capability.description = if capability.description.is_empty() { requirement.to_string() } else { format!("{} {requirement}", capability.description) };
+                capability
             });
         }
     }

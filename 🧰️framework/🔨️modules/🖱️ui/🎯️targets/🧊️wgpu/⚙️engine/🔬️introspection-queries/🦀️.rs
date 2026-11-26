@@ -2,6 +2,10 @@
 
 use super::*;
 
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;
+
 // #region engine
 //#region 🔬️Introspection
 /// 📖️ Read-only accessors for the wgpu↔React parity structural-dump harness (see
@@ -123,7 +127,7 @@ impl Ui {
         let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
         let Some(window)=self.windows.get_token_mut(surface).filter(|window|window.closing.is_none()&&window.presented_ready)else{return Ok(None)};
         if window.presented_source.is_some(){return Ok(None)}
-        let identity=UiPresentedSourceIdentity{operation:cx.operation(),generation:cx.generation(),revision:window.presented_revision,accessibility:window.presented_accessibility_generation,interaction:window.presented_interaction_epoch,clock:cx.clock_source()as usize,deadline:cx.deadline_us()};
+        let identity=UiPresentedSourceIdentity{operation:cx.operation(),generation:cx.generation(),revision:window.presented_revision,accessibility:window.presented_accessibility_generation,interaction:window.presented_interaction_epoch,clock:cx.clock_source()as usize,deadline:cx.original_absolute_deadline_us()};
         window.presented_source=Some(identity);cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(Some(UiPresentedTreeLoan{surface,identity,active:true}))
     }
     /// 👓️ Borrows the original accepted owner without copying a tree, document or params source.
@@ -133,7 +137,7 @@ impl Ui {
     /// 🤝️ Returns the same alias before accepted-tree replacement or retirement resumes.
     pub fn return_presented_tree_source(&mut self,loan:&mut UiPresentedTreeLoan,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if !loan.active{return Ok(true)}let identity=loan.identity;
-        if(identity.operation,identity.generation,identity.clock,identity.deadline)!=(cx.operation(),cx.generation(),cx.clock_source()as usize,cx.deadline_us()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"accepted tree alias requires its original caller").into())}
+        if(identity.operation,identity.generation,identity.clock,identity.deadline)!=(cx.operation(),cx.generation(),cx.clock_source()as usize,cx.original_absolute_deadline_us()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"accepted tree alias requires its original caller").into())}
         let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
         let window=self.windows.get_token_mut(loan.surface).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"accepted tree alias lost its original surface"))?;
         if window.presented_source!=Some(identity){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"accepted tree alias owner changed before return").into())}

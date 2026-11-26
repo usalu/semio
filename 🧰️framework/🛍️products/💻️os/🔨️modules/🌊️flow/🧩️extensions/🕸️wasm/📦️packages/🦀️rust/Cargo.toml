@@ -31,7 +31,8 @@ semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
-semio-plugin = { path = "../../../../../🔌️plugin/📦️packages/🦀️rust" }
+semio-plugin-extension = { path = "../../../../../🔌️plugin/🧩️extension/📦️packages/🦀️rust" }
+semio-plugin-ownership = { path = "../../../../../🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 neural_engine = { path = "../../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-os-kernel-neural-engine" }
 serde_json = "1"

@@ -44,6 +44,7 @@ fn model() -> ModelSnapshot {
 }
 
 fn text(snapshot: &ModelSnapshot, elements: &[&str], library: &[&str], locale: Locale) -> String {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let own = |ids: &[&str]| ids.iter().map(|id| id.to_string()).collect::<Vec<_>>();
     let view = ViewModel::new(locale, Terminology::Native);
     let node = render(snapshot, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &own(elements), &own(library), &TreeWindows::for_body(&view, BODY_KEY)).expect("the classification browser renders");

@@ -79,8 +79,9 @@ function shapesOf(asset: Asset): Record<(typeof VIEWPOINTS)[number], { readonly 
 const SNAPS = [1e-5, 1e-4, 5e-4];
 let SNAP = SNAPS[0]!;
 const ringArea = (ring: Polygon): number => { let s = 0; for (let k = 0; k < ring.length; k++) { const [a, b] = [ring[k]!, ring[(k + 1) % ring.length]!]; s += a[0] * b[1] - b[0] * a[1]; } return Math.abs(s / 2); };
+const lattice = (v: number): number => Number((Math.round(v / SNAP) * SNAP).toFixed(10));
 const orient = (ring: Polygon): Polygon => {
-  const snapped = ring.map(([x, y]) => [Math.round(x / SNAP) * SNAP, Math.round(y / SNAP) * SNAP] as P).filter((p, i, all) => i === 0 || p[0] !== all[i - 1]![0] || p[1] !== all[i - 1]![1]);
+  const snapped = ring.map(([x, y]) => [lattice(x), lattice(y)] as P).filter((p, i, all) => i === 0 || p[0] !== all[i - 1]![0] || p[1] !== all[i - 1]![1]);
   return snapped.length >= 3 && ringArea(snapped) > 4 * SNAP * SNAP ? snapped : [];
 };
 const area = (multi: polygonClipping.MultiPolygon): number => multi.reduce((sum, poly) => sum + poly.reduce((a, ring, i) => { let s = 0; for (let k = 0; k < ring.length - 1; k++) s += ring[k]![0] * ring[k + 1]![1] - ring[k + 1]![0] * ring[k]![1]; return a + (i === 0 ? 1 : -1) * Math.abs(s / 2); }, 0), 0);
@@ -329,7 +330,7 @@ it("retains the measured horn stations at print scales and detects deformed subs
 
 it("measures the load-bearing and working sections of the household models at every scale", () => {
   const fixture = new URL("../../🧫️fixtures/🧊️catalog-silhouette/🔣️.json",import.meta.url);
-  const {workingDimensions} = JSON.parse(readFileSync(fixture,"utf8")) as {workingDimensions: {asset:string;solid:string;axis:number;metres:number}[]};
+  const {workingDimensions} = JSON.parse(readFileSync(fixture,"utf8")) as {workingDimensions: {asset:string;solid:string;axis:number;metres:number;at?:Record<string,number>}[]};
   const assets = new Map<string,Asset>();
   for (const expected of workingDimensions) {
     let asset = assets.get(expected.asset);
@@ -344,7 +345,7 @@ it("measures the load-bearing and working sections of the household models at ev
       if (!piece) throw new Error(`Missing ${expected.solid} at 1:${scale}`);
       const mesh = copyMesh(piece,{chordM:.0002,minSegments:32,maxSegments:32});
       const width = new Box3().setFromArray(mesh.positions).getSize(new Vector3()).getComponent(expected.axis);
-      expect(width,`${expected.asset} ${piece.id} at 1:${scale}`).toBeCloseTo(expected.metres,5);
+      expect(width,`${expected.asset} ${piece.id} at 1:${scale}`).toBeCloseTo(expected.at?.[scale] ?? expected.metres,5);
     }
   }
 });

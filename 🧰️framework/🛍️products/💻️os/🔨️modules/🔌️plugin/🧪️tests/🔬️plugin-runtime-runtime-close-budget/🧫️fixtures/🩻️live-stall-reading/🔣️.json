@@ -1,0 +1,22 @@
+{
+  "zeroProgressLimit": 256,
+  "stallCreditUs": 8000,
+  "cases": [
+    { "step": "empty", "starved": false, "reading": "fruitless" },
+    { "step": "empty", "starved": true, "reading": "starved" },
+    { "step": "none", "starved": true, "reading": "starved" },
+    { "step": "none", "starved": false, "reading": "progress" },
+    { "step": "progress", "starved": true, "reading": "progress" },
+    { "step": "complete", "starved": false, "reading": "progress" },
+    { "step": "blocked", "starved": false, "reading": "waiting" },
+    { "step": "blocked", "starved": true, "reading": "waiting" },
+    { "step": "awaiting", "starved": false, "reading": "waiting" }
+  ],
+  "sequences": [
+    { "name": "stage 14 replacement or archive wait across many turns and frames", "step": "awaiting", "starved": false, "count": 2048, "spanUs": 500000, "faults": false },
+    { "name": "blocked behind another owner for a whole archive load", "step": "blocked", "starved": false, "count": 2048, "spanUs": 500000, "faults": false },
+    { "name": "unfunded repeat pumps and stock below the archive reserve", "step": "empty", "starved": true, "count": 2048, "spanUs": 500000, "faults": false },
+    { "name": "funded runnable step that moves nothing", "step": "empty", "starved": false, "count": 2048, "spanUs": 500000, "faults": true },
+    { "name": "fruitless count reached inside one frame", "step": "empty", "starved": false, "count": 2048, "spanUs": 1000, "faults": false }
+  ]
+}

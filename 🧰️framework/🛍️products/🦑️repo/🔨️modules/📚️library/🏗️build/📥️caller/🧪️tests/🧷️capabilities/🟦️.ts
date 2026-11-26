@@ -13,7 +13,7 @@ test("actual native caller constructors retain closed capabilities for dependenc
  for(const mode of fixture.modes)for(const args of fixture.commands){
   const original=createNativeBuildCallerCapabilitiesV1(process.cwd(),args,"nx",{SEMIO_BUILD_MODE:mode});
   expect(original.arguments).toEqual(["repo",...args]);expect(original.selection).toEqual(original.arguments);
-  expect(original.launches).toEqual([original.arguments]);expect(original.buildMode).toBe(mode);
+  expect(original.launches).toEqual([original.arguments]);expect<unknown>(original.buildMode).toBe(mode);
   for(const row of fixture.rows){
    const value=applyPatch(structuredClone(original),row.patch as Operation[],true).newDocument;
    expect(ajv(value),row.id).toBe(row.valid);

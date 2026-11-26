@@ -47,7 +47,7 @@ posix("a stage adopted by a second supervisor after the first was killed fails w
  expect(validateJsonSchemaSubset(schema.definitions.Inflight,record,schema),"running.json follows its schema").toEqual([]);
  expect(record.supervisor).toBe(first.pid);
  process.kill(first.pid!,"SIGKILL");expect(await until(()=>{try{process.kill(first.pid!,0);return false;}catch{return true;}},5000)).toBe(true);
- const w=world(options=>runReadyStageV1({home,root,environment:{},stage:stageOf("workspace"),signal:new AbortController().signal,jobs:1,onLine:()=>{},...options}));
+ const w=world(options=>runReadyStageV1({home,root,environment:{},stage:stageOf("workspace"),...options}));
  await runReadyV1(w.ports,w.controller.signal);
  const failure=w.shared.state.failure!;
  expect(failure.stage).toBe("workspace");expect(failure.exit).toBe(1);

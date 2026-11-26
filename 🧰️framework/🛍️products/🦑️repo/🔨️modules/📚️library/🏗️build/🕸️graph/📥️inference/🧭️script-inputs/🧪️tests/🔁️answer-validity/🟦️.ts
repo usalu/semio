@@ -8,7 +8,7 @@ import{dirname,join}from"node:path";
 import{privateRepositoryWorkspaceV1}from"../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 import{declareLibraryBuildTestEnvelopeV1}from"../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 const repository=await privateRepositoryWorkspaceV1("graph");
-declareLibraryBuildTestEnvelopeV1({suite:"build-inference",scratch:"checkout"});
+declareLibraryBuildTestEnvelopeV1({suite:"build-inference-script-inputs"});
 
 const inference=await import("../../../🟨️.mjs"),{createScriptInputCache,libraryBootstrap}=inference as any;
 await libraryBootstrap;
@@ -35,7 +35,7 @@ async function prepare(scenario:Scenario,mode:"stale"|"absent"){
  scriptInputs.resetClosureEntriesV1();scriptInputs.bindClosureStoreV1(root,join(root,".ce"),true);scriptInputs.closureApiV1(scripts,root);
  const walks={count:0};
  const port=async(workspaceRoot:string,recipe:unknown)=>{walks.count++;return scriptInputs.deriveClosureRecipeV1(workspaceRoot,recipe,scripts);};
- const verify=(reask:unknown,signal?:AbortSignal)=>{
+ const verify=(reask:unknown,signal?:AbortSignal):Promise<{holds:boolean;failures:{why?:string}[]}>=>{
   const failures:{why?:string}[]=[];
   const holds=scriptInputs.runClosureTakeV1(()=>observation.projectRowsHoldV1(rows,{closureRecipes:{[handle.key]:handle.recipe}},()=>true,(_row:unknown,why?:string)=>failures.push({why})),signal,reask===undefined?{}:{reask});
   return holds.then((value:boolean)=>({holds:value,failures}));

@@ -19,7 +19,7 @@ use semio_framework_value::retained_clone::RetainedCloneClose;
    for index in 0..200_000{
     if canceled&&index==17{caller.cancel().cancel_now();break}
     if field.ready(){turn(&mut caller,&mut decoder,grant,|cx|{let taken=field.take(cx.retained_grant())?;if let Some((value,progress))=taken{output=Some(value);cx.consume_retained(progress)?;cx.consume_fuel(1);}Ok(())});break}
-    let demand=field.demands(wire.as_str(),4096,1<<20).unwrap();
+    let demand=field.demands(wire.as_str(),4096,1<<20).unwrap();if index<6||index%50000==0{eprintln!("[DEBUG] json idx={index} demand={demand:?} receipt={:?} fuel={}",caller.receipt(),caller.fuel_remaining());}
     turn(&mut caller,&mut decoder,RetainedCloneGrant{maximum_items:0,..grant},|cx|field.step(wire.as_str(),cx));assert_eq!(caller.receipt(),RetainedCloneProgress::default());assert_eq!(field.demands(wire.as_str(),4096,1<<20).unwrap(),demand);
     turn(&mut caller,&mut decoder,grant,|cx|field.step(wire.as_str(),cx));
     assert!(index+1<200_000,"original JSON field did not finish its bounded source");

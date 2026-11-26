@@ -49,6 +49,20 @@ export async function replayCachedUnitV1(environment:Environment,facts:AdmitFact
  return row?.admitted===true;
 }
 
+/** ⏳️ Waits for the broker's headroom BEFORE the compile slot is taken: a wrapper that held the single slot while its scheduler waited for admission froze every other unit behind it (one stuck admission, 28 queued units). Polls the broker's `probe` (never joins its queue) every `headroomPauseMilliseconds` until it would admit the unit or `headroomMaximumWaitMilliseconds` passed; `"none"` when no broker answers, `"timeout"` when the bound passed (the caller then goes on, and the broker's own bounds end the wait).
+ * @see ./../🧪️tests/⌛️headroom-first/🟦️.ts */
+export async function awaitBrokerHeadroomV1(environment:Environment,facts:AdmitFactsV1,options:Readonly<{maximumWaitMilliseconds?:number;pauseMilliseconds?:number}>={}):Promise<"admit"|"timeout"|"none">{
+ const broker=compilerBrokerOfV1(environment);if(!broker)return"none";
+ const started=Date.now(),limit=options.maximumWaitMilliseconds??policy.headroomMaximumWaitMilliseconds,pause=options.pauseMilliseconds??policy.headroomPauseMilliseconds;
+ for(;;){
+  const row=await exchange(broker.endpoint,{v:1,op:"probe",pass:broker.pass,pid:process.pid,...facts},"headroom");
+  if(typeof row?.wait!=="boolean"||row.fleetOnly===true)return"none";
+  if(!row.wait)return"admit";
+  const waited=Date.now()-started;if(waited>=limit)return"timeout";
+  await new Promise(done=>setTimeout(done,Math.min(pause,limit-waited)));
+ }
+}
+
 /** 🔭️ Asks the build's admission broker whether a unit with these facts would queue behind its memory budget right now, without joining the queue: `true` for wait, `false` for admit, `undefined` when no broker answers in time. */
 export async function brokerWouldWaitV1(environment:Environment,facts:AdmitFactsV1,localInputKey?:string):Promise<boolean|undefined>{
  const broker=localInputKey?compilerBrokerOfV1(environment):brokerOfV1(environment);if(!broker)return undefined;

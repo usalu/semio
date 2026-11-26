@@ -220,7 +220,7 @@ impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                 let window_config = window_ownership::config_from_snapshot(window_config_snapshot);
                 let window_transient = window_ownership::transient_from_snapshot(window_transient_snapshot);
                 let runtime = window_ownership::runtime(config, &window_config, &window_transient, Some(view));
-                let window_id = puzzle3d_addressed_window_id(Some(view), None, command.window_id(), &runtime.window_ids);
+                let window_id = view.window_id.as_deref().ok_or_else(|| Fault::from("puzzle3d-precompute-window-context-required"))?;
                 self.prologue.scene_step(snapshot, &runtime, Some(view), Some(window_id));
                 self.stage = Puzzle3dPrecomputeCommandStage::PrologueSync;
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-action-scene", "Reading the artifact", "Artefakt wird gelesen"))
@@ -230,7 +230,7 @@ impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                 let window_config = window_ownership::config_from_snapshot(window_config_snapshot);
                 let window_transient = window_ownership::transient_from_snapshot(window_transient_snapshot);
                 let runtime = window_ownership::runtime(config, &window_config, &window_transient, Some(view));
-                let window_id = puzzle3d_addressed_window_id(Some(view), None, command.window_id(), &runtime.window_ids);
+                let window_id = view.window_id.as_deref().ok_or_else(|| Fault::from("puzzle3d-precompute-window-context-required"))?;
                 let session = self.session();
                 let owed = with_puzzle3d_session_for(session, &runtime, |app| self.prologue.sync_step(app, command.action_id(), &runtime, Some(view), Some(window_id)));
                 if !owed {
@@ -249,7 +249,7 @@ impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                 let window_transient = window_ownership::transient_from_snapshot(window_transient_snapshot);
                 let runtime = window_ownership::runtime(config, &window_config, &window_transient, Some(view));
                 let snapshot_interaction = Puzzle3dInteractionSnapshot::from_state(interaction, hover);
-                let window_id = puzzle3d_addressed_window_id(Some(view), None, command.window_id(), &runtime.window_ids);
+                let window_id = view.window_id.as_deref().ok_or_else(|| Fault::from("puzzle3d-precompute-window-context-required"))?;
                 let session = self.session();
                 let instance_owner = self.instance_owner.as_ref();
                 let (emit, ephemeral) = with_puzzle3d_session_for(session, &runtime, |app| self.prologue.dispatch_step(app, instance_owner, if self.tool_id=="engagementAbort"{context.and_then(|context|context.original_tool_run())}else{None}, "", command, Some(window_id), &runtime, Some(view), &snapshot_interaction));

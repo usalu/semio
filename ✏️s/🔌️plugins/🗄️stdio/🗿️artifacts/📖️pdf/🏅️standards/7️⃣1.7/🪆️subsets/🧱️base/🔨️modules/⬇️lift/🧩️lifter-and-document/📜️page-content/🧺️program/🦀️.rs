@@ -1,20 +1,18 @@
-//! 📦️ Collects a controlled page's qualified program into the native vector lane.
+//! 📦️ Collects a controlled page's qualified program into the native paged lane.
 
 use super::{controlled::{signal, worked}, ObjRef, ObjectSource, PageContentBarrier, PageContentCursor, PageContentEvent as Event, PageContentReceipt};
 use crate::standards::v1_7::subsets::base::modules::{content::{ContentProgramCursor, FontTable, NoFonts}, lexer::CosGrant};
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfPropertyList, PdfTextString, PdfTextArrayItem};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfContent, PdfOp, PdfPropertyList, PdfTextString, PdfTextArrayItem};
 use std::mem::{size_of, take};
-use std::vec::IntoIter;
 
-enum Stage { Read, Collect, Migrate, Finish, Ready, Fallback, Failed(&'static str), Cancelled, Closing, Closed }
+enum Stage { Read, Collect, Finish, Ready, Fallback, Failed(&'static str), Cancelled, Closing, Closed }
 
 /// 📦️ Holds a complete native page content program or retires a deferred partial one.
 #[must_use]
 pub struct PageProgramCursor {
     source: PageContentCursor,
     stage: Stage,
-    commands: Vec<PdfOp>,
-    old: Option<(IntoIter<PdfOp>, usize)>,
+    commands: PdfContent,
     source_closed: bool,
     fallback: Option<PageContentBarrier>,
 }
@@ -25,8 +23,7 @@ impl PageProgramCursor {
         Self {
             source: PageContentCursor::new(page),
             stage: Stage::Read,
-            commands: Vec::new(),
-            old: None,
+            commands: PdfContent::default(),
             source_closed: false,
             fallback: None,
         }
@@ -64,23 +61,21 @@ impl PageProgramCursor {
                 turn
             }
             Stage::Collect => self.collect(fonts, grant),
-            Stage::Migrate => self.migrate(grant),
             Stage::Finish => self.finish(grant),
         }
     }
 
-    /// 📦️ Whether the next unit reserves the empty, doubled operator vector the collected operators then migrate into one by one: an empty reservation that copies nothing, bounded by the host's release grant rather than its copy grant.
-    pub fn reserving_empty_backing(&self) -> bool { matches!(self.stage, Stage::Collect) && self.commands.len() == self.commands.capacity() }
+    /// 📦️ Whether the next unit reserves one empty page of the operator list (4,096 bytes, never the whole program): an empty reservation that copies nothing, bounded by the host's release grant rather than its copy grant.
+    pub fn reserving_empty_backing(&self) -> bool { matches!(self.stage, Stage::Collect) && !self.commands.has_reserved_slot() }
 
     /// 📏️ The most one unit of the program copies beside its allocation: an operand move or an operator write.
     pub const UNIT_COPY_MAXIMUM: usize = if ContentProgramCursor::UNIT_COPY_MAXIMUM > size_of::<PdfOp>() { ContentProgramCursor::UNIT_COPY_MAXIMUM } else { size_of::<PdfOp>() };
 
-    /// 📏️ The bytes the next unit copies beside its allocation, or `None` when it moves source bytes one per unit of its grant: collecting or migrating moves one operator, reserving the doubled vector copies nothing.
+    /// 📏️ The bytes the next unit copies beside its allocation, or `None` when it moves source bytes one per unit of its grant: collecting moves one operator, reserving a page copies nothing.
     pub fn unit_copy(&self) -> Option<usize> {
         match self.stage {
             Stage::Read => self.source.unit_copy(),
             Stage::Collect if !self.reserving_empty_backing() => Some(size_of::<PdfOp>()),
-            Stage::Migrate => Some(size_of::<PdfOp>()),
             _ => Some(0),
         }
     }
@@ -88,8 +83,8 @@ impl PageProgramCursor {
     /// 👀️ Borrows a ready operator before the collector accepts its page resource binding.
     pub fn pending_operator(&self) -> Option<&PdfOp> { self.source.peek_operator() }
 
-    /// 🫴️ Transfers the native page content vector after all input and migration backing settles.
-    pub fn take_program(&mut self) -> Option<Vec<PdfOp>> {
+    /// 🫴️ Transfers the native paged page content after all input backing settles.
+    pub fn take_program(&mut self) -> Option<PdfContent> {
         if !matches!(self.stage, Stage::Ready) { return None; }
         self.stage = Stage::Closed;
         Some(take(&mut self.commands))
@@ -103,7 +98,7 @@ impl PageProgramCursor {
         }
     }
 
-    /// 🧹️ Retires input, output and any in-flight migration without recursive output drops.
+    /// 🧹️ Retires input and output, one operator or one page per unit, without recursive output drops.
     pub fn close_step(&mut self, grant: CosGrant) -> PageContentReceipt {
         if matches!(self.stage, Stage::Closed) { return signal(Event::Closed); }
         if !matches!(self.stage, Stage::Closing) || grant.work == 0 { return signal(Event::More); }
@@ -117,39 +112,19 @@ impl PageProgramCursor {
         if unmapped_text || operator_bytes(operator).is_none() {
             return self.begin_fallback(PageContentBarrier::ResourceContext, worked());
         }
-        if self.commands.len() == self.commands.capacity() {
-            let Some(capacity) = self.commands.capacity().max(4).checked_mul(2)
-                .filter(|count| *count <= isize::MAX as usize / size_of::<PdfOp>()) else {
-                return self.fail("PDF page operator capacity overflow", worked());
-            };
-            let bytes = capacity * size_of::<PdfOp>();
+        if !self.commands.has_reserved_slot() {
+            let Ok(bytes) = self.commands.next_allocation_bytes() else { return self.fail("PDF page operator capacity overflow", worked()) };
             if bytes > grant.allocation_bytes { return signal(Event::NeedsAllocation { bytes }); }
-            let mut incoming = Vec::new();
-            if incoming.try_reserve_exact(capacity).is_err() {
-                return self.fail("cannot allocate retained PDF page operators", worked());
-            }
-            let backing = std::mem::replace(&mut self.commands, incoming);
-            let previous = backing.capacity() * size_of::<PdfOp>();
-            self.old = Some((backing.into_iter(), previous));
-            self.stage = Stage::Migrate;
-            return PageContentReceipt { allocated_bytes: bytes, ..worked() };
+            return match self.commands.reserve_one_cold(bytes) {
+                Ok(progress) if progress.progressed => PageContentReceipt { allocated_bytes: progress.allocated_bytes, ..worked() },
+                _ => self.fail("cannot allocate retained PDF page operators", worked()),
+            };
         }
-        self.commands.push(self.source.take_operator().expect("ready page operator custody"));
+        if self.commands.push_reserved(self.source.take_operator().expect("ready page operator custody")).is_err() {
+            return self.fail("PDF page operator page lost its reserved slot", worked());
+        }
         self.stage = Stage::Read;
         worked()
-    }
-
-    fn migrate(&mut self, grant: CosGrant) -> PageContentReceipt {
-        let (items, bytes) = self.old.as_mut().expect("retained page program backing");
-        if let Some(item) = items.next() {
-            self.commands.push(item);
-            return worked();
-        }
-        if *bytes > grant.release_bytes { return signal(Event::NeedsRelease { bytes: *bytes }); }
-        let released_bytes = *bytes;
-        self.old = None;
-        self.stage = Stage::Collect;
-        PageContentReceipt { released_bytes, ..worked() }
     }
 
     fn fail(&mut self, reason: &'static str, turn: PageContentReceipt) -> PageContentReceipt {
@@ -186,21 +161,20 @@ impl PageProgramCursor {
 
     fn retire(&mut self, grant: CosGrant) -> PageContentReceipt {
         if !self.source_closed { return self.close_source(grant); }
-        if let Some((old, capacity)) = self.old.as_mut() {
-            let bytes = old.as_slice().first().map_or(Some(*capacity), operator_bytes).expect("controlled operator ownership");
-            if bytes > grant.release_bytes { return signal(Event::NeedsRelease { bytes }); }
-            if old.next().is_none() { self.old = None; }
-            return PageContentReceipt { released_bytes: bytes, ..worked() };
-        }
         if let Some(op) = self.commands.last() {
             let bytes = operator_bytes(op).expect("controlled operator ownership");
             if bytes > grant.release_bytes { return signal(Event::NeedsRelease { bytes }); }
             self.commands.pop();
             return PageContentReceipt { released_bytes: bytes, ..worked() };
         }
-        let bytes = self.commands.capacity() * size_of::<PdfOp>();
-        if bytes > grant.release_bytes { return signal(Event::NeedsRelease { bytes }); }
-        self.commands = Vec::new();
+        if !self.commands.terminal_is_empty() {
+            let Ok(bytes) = self.commands.next_release_allocation_bytes() else { return self.fail("PDF page operator page release is not quotable", worked()) };
+            if bytes > grant.release_bytes { return signal(Event::NeedsRelease { bytes }); }
+            return match self.commands.release_empty_page_leased(grant.release_bytes) {
+                Ok(progress) if progress.progressed => PageContentReceipt { released_bytes: progress.released_allocation_bytes, ..worked() },
+                _ => self.fail("cannot release retained PDF page operators", worked()),
+            };
+        }
         let event = match (&self.stage, self.fallback) {
             (Stage::Finish, Some(reason)) => {
                 self.stage = Stage::Fallback;
@@ -211,7 +185,7 @@ impl PageProgramCursor {
                 Event::Closed
             }
         };
-        PageContentReceipt { released_bytes: bytes, event: Ok(event), ..worked() }
+        PageContentReceipt { event: Ok(event), ..worked() }
     }
 }
 

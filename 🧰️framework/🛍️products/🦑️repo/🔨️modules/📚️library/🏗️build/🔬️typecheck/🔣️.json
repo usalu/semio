@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "projects": [
+    {
+      "id": "library",
+      "roots": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+        "🧰️framework/🔨️modules/🏃️process"
+      ],
+      "tsconfig": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/tsconfig.json"
+    },
+    {
+      "id": "server-next",
+      "roots": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎫️ticket",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧾️diff",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚠️warnings",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🪝️webhook",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📚️repository",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎯️scope",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🚨️breaches",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📡️event",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🔐️authentication",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/next-env.d.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library"
+      ],
+      "tsconfig": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/tsconfig.next.json"
+    },
+    {
+      "id": "server-build",
+      "roots": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server"],
+      "tsconfig": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/tsconfig.json"
+    }
+  ],
+  "ambient": [
+    {
+      "id": "next",
+      "declaration": "node_modules/next/types/global.d.ts",
+      "projects": ["server-next"]
+    }
+  ],
+  "fallback": {
+    "id": "workspace",
+    "tsconfig": "tsconfig.json"
+  },
+  "scanRoots": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+    "🧰️framework/🔨️modules/🏃️process"
+  ],
+  "skipDirectories": ["node_modules", "target", "🎯️target", "🗑️generated", "🤖️generated", "📤️dist", "dist", ".nx", "⚡️cache", "📁️some"],
+  "checkExtensions": [".ts", ".tsx", ".mts"],
+  "declarationExtensions": [".d.mts"],
+  "scriptExtensions": [".mjs"],
+  "compiler": {
+    "script": "node_modules/typescript/lib/tsc.js",
+    "typeRoots": "node_modules/@types",
+    "heap": {"maximumMegabytes": 12000, "minimumMegabytes": 4096, "hostShare": 0.6}
+  },
+  "cache": {
+    "directory": "typecheck",
+    "variable": "SEMIO_TYPECHECK_CACHE"
+  },
+  "report": {
+    "file": "library-report.json",
+    "project": "library",
+    "maximumAgeSeconds": 86400,
+    "maximumAreas": 60,
+    "testSegments": ["/🧪️tests/"],
+    "areaRoots": [
+      {"prefix": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build", "label": "build"},
+      {"prefix": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching", "label": "caching"},
+      {"prefix": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library", "label": "library"},
+      {"prefix": "🧰️framework/🔨️modules/🏃️process", "label": "process"}
+    ]
+  },
+  "budgetMs": 600000,
+  "limits": {
+    "maximumFiles": 256,
+    "maximumImporters": 400,
+    "maximumDiagnostics": 200,
+    "errorCharacters": 400
+  }
+}

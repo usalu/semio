@@ -1,7 +1,7 @@
 //! 📥️ Deserialize `stdio.dxf` from stdio.txt.
 
 use crate::DxfSnapshot;
-use semio_s_artifact_stdio_txt::TxtSnapshot;
+use semio_s_artifact_stdio_txt_schema::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register deserializer hooks.

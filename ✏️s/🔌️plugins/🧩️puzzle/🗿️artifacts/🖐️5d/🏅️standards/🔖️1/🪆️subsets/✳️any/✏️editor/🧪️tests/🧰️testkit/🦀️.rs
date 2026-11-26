@@ -12,7 +12,8 @@ use semio_s_artifact_puzzle_5d_puzzle5d::editor::puzzle5d::modes::edit;
 /// `ArtifactApp` — `EditorApp<Puzzle5dPlayApp>` (SDK adapter, contract §2.1) is the real
 /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
 /// `PluginBuilder::editor::<Puzzle5dPlayApp>` builds it.
-pub type Puzzle5dApp = VcsArtifactApp<EditorApp<Puzzle5dPlayApp>>;
+type Puzzle5dMembers = <Puzzle5dPlayApp as semio_plugin::ArtifactEditor>::Members;
+pub type Puzzle5dApp = VcsArtifactApp<EditorApp<Puzzle5dPlayApp>, Puzzle5dMembers>;
 
 /// 🧯️ Projects a fixture dispatch failure onto the diagnostic `Fault` the drivers' callers assert on: the original fault when that is the primary, else the complete debug form.
 pub fn fault_of(app: &mut Puzzle5dTestApp, failure: impl Into<semio_framework_job::OriginalTurnFailure>) -> Fault {
@@ -104,7 +105,7 @@ pub const FIXTURE_INSTANCE_ID: u32 = 1;
 /// utility contract are enforced exactly as in production.
 pub fn app_with_registry() -> Puzzle5dTestApp {
     let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle5dPlayApp>>(puzzle5d_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut identity)));
+    let mut app = semio_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<Puzzle5dPlayApp>, Puzzle5dMembers>(puzzle5d_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut identity)));
     ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(FIXTURE_INSTANCE_ID));
     Puzzle5dTestApp(app, scope)
 }

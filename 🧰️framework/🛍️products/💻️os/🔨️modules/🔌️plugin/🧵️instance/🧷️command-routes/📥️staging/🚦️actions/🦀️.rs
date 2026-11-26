@@ -191,8 +191,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             return Box::pin(X::dispatch_action(&mut self.as_extension(), action, args, meta, identity, cx)).await.map(Some).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if is_framework_reserved_action_id(action) {
-            let slot=if source.assembled.is_some(){&mut source.assembled}else if source.prepared.is_some(){&mut source.prepared}else{&mut source.args};
-            return self.dispatch_framework_reserved_action(action,slot,meta,cx).await;
+            return self.dispatch_framework_reserved_action(action, source.original_arguments_mut(), meta, cx).await;
         }
         if action == CATALOGUE_EXAMPLE_ACTION_ID && self.tools.registry.get(action).is_none() {
             let example_id = args.and_then(|value| value.get("exampleId")).and_then(DslValue::as_str).unwrap_or("");
@@ -396,9 +395,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             self.ingress.action_ingress_sources.get_mut(slot).unwrap().return_source(std::mem::ManuallyDrop::into_inner(source),terminal);
             if terminal{self.ingress.pending_action_ingress_identity=None;}
             if !prepared?{return Ok(None)}
-            let (Some(command),Some(admission))=(self.original_typed_command.command.take(),self.original_typed_command.admission.take())else{return Err(plugin_sdk_fault("original preview source lost its produced command or admission").into())};
-            self.media.require_complete_tool_operation_pipeline(&admission)?;
-            self.begin_agent_lane_preview(command,admission,meta,cx).await?;
+            self.begin_agent_lane_preview(meta, cx).await?;
             return Ok(None)
         }
         self.finish_agent_lane_preview(&address.action_id, kind, meta, cx).await
@@ -433,9 +430,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             self.ingress.action_ingress_sources.get_mut(slot).unwrap().return_source(ManuallyDrop::into_inner(source), terminal);
             if terminal { self.ingress.pending_action_ingress_identity = None; }
             if !prepared? { return Ok(None) }
-            let (Some(command), Some(admission)) = (self.original_typed_command.command.take(), self.original_typed_command.admission.take()) else { return Err(plugin_sdk_fault("command preview lost its original typed command or admission").into()) };
-            self.media.require_complete_tool_operation_pipeline(&admission)?;
-            self.begin_agent_lane_preview(command, admission, meta, cx).await?;
+            self.begin_agent_lane_preview(meta, cx).await?;
             return Ok(None)
         }
         self.finish_agent_lane_preview(command_id, kind, meta, cx).await
@@ -539,9 +534,19 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         Ok(state.lease.is_some())
     }
 
-    async fn begin_agent_lane_preview(&mut self, command: Box<A::Command>, admission: AdmittedToolCommand, meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
+    async fn begin_agent_lane_preview(&mut self, meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
+        if !self.original_typed_command.input_ready() {
+            return Err(plugin_sdk_fault("preview requires its original typed command and admission").into());
+        }
+        let admission = self.original_typed_command.admission.as_ref().unwrap();
+        self.media.require_complete_tool_operation_pipeline(admission)?;
         let verb = admission.verb.clone();
-        let roots = self.as_dispatch().capture_typed_command_roots(command.as_ref(), meta).await?;
+        let tool_key = admission.proof.key();
+        let contract = admission.proof.contract();
+        let payload_schema_id = admission.proof.schema_id();
+        let decoded_items = admission.decoded_items;
+        let (mut dispatch, source) = self.dispatch_with_original_typed_command();
+        let roots = dispatch.capture_typed_command_roots(source.command.as_deref().unwrap(), meta).await?;
         let state=self.tools.agent_lane_preview.as_ref().ok_or_else(||plugin_sdk_fault("original preview admission source is absent"))?;
         let key=state.key.as_ref().ok_or_else(||plugin_sdk_fault("original preview operation key is absent"))?;
         if !state.starting||state.lease.is_none()||key.base_revision!=roots.base_revision||key.generation!=roots.generation{return Err(plugin_sdk_fault("original preview roots no longer match their admitted operation key").into())}
@@ -572,28 +577,29 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let (context, birth) = ArtifactOwnedContextHandle::admit(original.take().expect("original context awaits its admission"), artifact_owned_tool_birth_grant(), cx);
         cx.consume_retained(birth)?;
         let context = context.admitted().map_err(|error| error.into_fault())?;
-        let key = admission.proof.key();
-        let contract = admission.proof.contract();
+        let snapshot_read = self.stores.store.snapshot_read().map_err(FaultFrom::into_fault)?;
+        let window_config = roots.window_config_authority.as_ref().map(|authority| authority.snapshot.try_duplicate()).transpose().map_err(|error| error.into_fault())?;
+        let (command, raw_wire) = self.original_typed_command.take_preview_input();
         let request = ArtifactOwnedToolJobRequest::new(ArtifactOwnedToolJobInputs {
             source_binding: semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx),
                 retained:self.mounted_policy.maintenance,
-            command: semio_plugin_decl_app::tool_contract::ArtifactOriginalToolCommand::from_admitted_op_binary(command,&admission.raw_wire,semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx)),
-            input: Some(admission.raw_wire),
+            command: semio_plugin_decl_app::tool_contract::ArtifactOriginalToolCommand::from_admitted_op_binary(command,&raw_wire,semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx)),
+            input: Some(raw_wire),
             checkpoint: None,
             operation,
-            controller_id: key.controller_id,
-            tool_id: key.tool_id,
-            payload_schema_id: admission.proof.schema_id(),
+            controller_id: tool_key.controller_id,
+            tool_id: tool_key.tool_id,
+            payload_schema_id,
             contract,
-            decoded_items: admission.decoded_items,
+            decoded_items,
             app_instance_id: meta.instance_id,
             parent_document_id: self.stores.store.envelope().id.clone(),
             canonical_base_revision: roots.canonical_base_revision,
             authoring_seed: self.stores.authoring_seed(&meta.actor),
             snapshot: roots.snapshot,
-            snapshot_read: self.stores.store.snapshot_read().map_err(FaultFrom::into_fault)?,
+            snapshot_read,
             config: roots.config,
-            window_config: roots.window_config_authority.as_ref().map(|authority| authority.snapshot.try_duplicate()).transpose().map_err(|error| error.into_fault())?,
+            window_config,
             history: roots.history,
             interaction_state: roots.interaction_state,
             interaction_hover: std::sync::Arc::new(roots.interaction_hover),

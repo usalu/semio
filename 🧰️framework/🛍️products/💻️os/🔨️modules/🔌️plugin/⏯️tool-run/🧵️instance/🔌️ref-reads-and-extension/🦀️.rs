@@ -101,10 +101,11 @@ impl InstanceExtension for ToolRunExtension {
             return Ok(false);
         }
         let before = cx.retained_progress();
+        let reserved_before = cx.reserved_return_progress();
         ctx.drive_tool_run_turn(cx, identity).await?;
         if cx.retained_progress() != before {
             if !ctx.tool_runs.has_original_receipt() {
-                let progress = semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before, cx.retained_progress())?;
+                let progress = cx.fresh_retained_progress_since(before, reserved_before)?;
                 ctx.tool_runs.retain_original_receipt(*retained, progress)?;
             }
             return Ok(true);

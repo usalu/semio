@@ -212,21 +212,6 @@ macro_rules! tool_roster {
     };
 }
 
-macro_rules! tool_proofs {
-    ($($id:literal as $key:literal => $module:ident :: $payload:ident, [$($lane:ident),+]; $kind:ident, $label:ident, $describe:ident;)+) => {
-        semio_plugin::bounded_first_step_tool_proofs! {
-            owner: EditorApp<BimModelApp>,
-            owner_file: "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-            controller: "s.bim.model@1/*#editor",
-            artifact_schema: "s.bim.model@1",
-            factory: "BimCommandJobFactory",
-            factory_type: BimCommandJobFactory,
-            contract: semio_plugin::ToolExecutionContract::bounded_first_step(BIM_BOUNDED_RAW_BYTES, BIM_BOUNDED_WORK_ITEMS, 1, 262_144, 7_500),
-            tools: [$($id),+]
-        }
-    };
-}
-
 macro_rules! manifest_actions {
     ($($id:literal as $key:literal => $module:ident :: $payload:ident, [$($lane:ident),+]; $kind:ident, $label:ident, $describe:ident;)+) => {
         /// 📇️ The manifest action of every command row.

@@ -25,7 +25,7 @@ def kind(n):
 print(json.dumps([kind(n) for n in names]))`,JSON.stringify(policy),JSON.stringify(names)],{encoding:"utf8"});
  expect(run.status,run.stderr).toBe(0);
  const expected=JSON.parse(run.stdout) as string[];
- expect(names.map(name=>dependencyNameKindV1(name,policy))).toEqual(expected);
+ expect<unknown>(names.map(name=>dependencyNameKindV1(name,policy))).toEqual(expected);
  expect(expected.filter(kind=>kind==="ignorable").length).toBe(7);
  expect(expected.filter(kind=>kind==="unknown").length).toBeGreaterThanOrEqual(6);
 });
@@ -85,5 +85,5 @@ test("the container check ignores foreign names and times, and names a changed r
  expect(lost).toEqual({kind:"roster",added:[],gone:[CAPSULE]});
  expect(dependencyContainerChangeV1([GEN,CAPSULE].sort(),stamp("100","7"),plan,policy)).toEqual({kind:"identity"});
  const oracle=spawnSync(requireTestToolV1("python"),["-c","import json,sys;a=set(json.loads(sys.argv[1]));b=set(json.loads(sys.argv[2]));print(json.dumps([sorted(b-a),sorted(a-b)]))",JSON.stringify(plan.names),JSON.stringify([GEN,CAPSULE,"fedcba9876543210fedc"])],{encoding:"utf8"});
- expect(JSON.parse(oracle.stdout)).toEqual([grown && (grown as {added:string[]}).added,[]]);
+ expect(JSON.parse(oracle.stdout)).toEqual([grown?.kind==="roster"?grown.added:undefined,[]]);
 });

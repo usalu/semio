@@ -1,5 +1,6 @@
 import{createMemoryPortsV1,selectGraphMemoryLanguagesV1}from"../🟨️.mjs";
 import{planStageLimitBytesV1}from"../🪜️plan-stage/🟨️.mjs";
+import{profileHeapOnceV1}from"./🔭️heap-profile/🟨️.mjs";
 import{boundedCacheStatsV1}from"../../🧊️bounded/🟨️.mjs";
 import{collectSliceCollectionsV1,registerSliceCollectionsV1}from"../📋️slice-report/🟨️.mjs";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
@@ -50,15 +51,18 @@ let registeredV1=false;
 export async function registerRetainedCollectionsV1(){
  if(registeredV1)return;registeredV1=true;
  try{
-  const[{observationCollectionsV1},{graphStringInternerV1},{closureCollectionsV1}]=await Promise.all([import("../../👁️observation/🟨️.mjs"),import("../🟨️.mjs"),import("../../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs")]);
+  const[{observationCollectionsV1},{graphStringInternerV1},{closureCollectionsV1},{rowLogCollectionsV1},{inputCollectionsV1}]=await Promise.all([import("../../👁️observation/🟨️.mjs"),import("../🟨️.mjs"),import("../../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs"),import("../../🕸️graph/🕰️generations/🗃️row-log/🟨️.mjs"),import("../../📥️inputs/🟨️.mjs")]);
   registerSliceCollectionsV1("observation",()=>observationCollectionsV1());
   registerSliceCollectionsV1("interner",()=>{const row=graphStringInternerV1.stats();return[{name:"memory:graphStringInterner",entries:row.entries,bytes:row.characters*2+row.entries*48}];});
   registerSliceCollectionsV1("closure",()=>closureCollectionsV1());
+  registerSliceCollectionsV1("rowlogs",()=>rowLogCollectionsV1());
+  registerSliceCollectionsV1("inputs",()=>inputCollectionsV1());
  }catch{registeredV1=false;}
 }
 
 /** 🔎️ Logs, between two waves of one read, the managed and resident megabytes and the bounded caches that hold the most bytes, so the log names what a wave leaves behind; quiet on a machine without a plan limit. */
 export function reportRetainedGraphMemoryV1({ports=createMemoryPortsV1(),resident=()=>process.memoryUsage().rss,environment=process.env,report=stderrLine,limitBytes=planStageLimitBytesV1(environment),stats=retainedCollectionsV1}={}){
+ const managed=ports.sample();profileHeapOnceV1({managedMegabytes:megabytes(managed)});
  const caches=stats().filter(row=>row.entries>0).sort((a,b)=>b.bytes-a.bytes||b.entries-a.entries).slice(0,SETTLE_POLICY_V1.censusCaches).map(row=>row.name+" "+row.entries+" entries "+megabytes(row.bytes)+" MB").join(", ")||"-";
- for(const line of renderSettleMessageV1("retained",{managed:megabytes(ports.sample()),resident:megabytes(resident()),caches},environment))report(line);
+ for(const line of renderSettleMessageV1("retained",{managed:megabytes(managed),resident:megabytes(resident()),caches},environment))report(line);
 }

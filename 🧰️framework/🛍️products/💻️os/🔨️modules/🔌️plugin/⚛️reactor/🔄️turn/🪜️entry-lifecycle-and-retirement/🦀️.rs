@@ -81,7 +81,8 @@ pub(super) fn admit_lifecycle_focus<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
 /// playback (a coalesced window-config amend per frame, three displaced owners each) outran the
 /// single step's one owner per 26-stage rotation and saturated its 1 024-slot queue after
 /// ~340 frames (ticket 26/09/16/FEM-3D-INTERACTIVE-FEATURE-COMPLETE).
-pub(super) fn drive_turn_retirement<PA: PluginApp>(runtime: &PluginRuntime<PA>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+/// An ingress-free turn can also repeat the live pump for a funded document archive.
+pub(super) fn drive_turn_retirement<PA: PluginApp>(runtime: &PluginRuntime<PA>, idle_ingress: bool, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
     cx.with_original_retirement(|cx|{
     retire_while_progress_fallible(cx, REACTOR_CLOSE_UNITS_PER_TURN, step_reactor_close)?;
     retire_while_progress_bounded(cx, REACTOR_CLOSE_UNITS_PER_TURN, || COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().advance_close_one()));
@@ -117,13 +118,18 @@ pub(super) fn drive_turn_retirement<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
     with_pending_patches(|pending| pending.borrow_mut().advance_rejection(|surface, generation| PATCHES.with(|patches| patches.mark_rejected(surface, generation))));
     step_pending_patch_close(cx)?;
     let close_cleanup_work=semio_plugin_runtime_instances::inst_cleanup_turns::plugin_step_close_cleanup(runtime,cx)?;
-    for _ in 0..semio_plugin_runtime_instances::inst_cleanup_turns::LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN {
-        if cx.retirement_should_yield(){break}
-        cx.consume_fuel(1);
-        let _ = semio_plugin_runtime_instances::inst_cleanup_turns::plugin_step_live_cleanup(runtime,cx)?;
-        if !semio_plugin_runtime_instances::inst_cleanup_turns::plugin_live_cleanup_under_pressure(runtime) || cx.retirement_should_yield() {
-            break;
+    use semio_plugin_runtime_instances::inst_cleanup_turns as cleanup;
+    let archive_started = idle_ingress.then(guest_turn_executing_us).flatten();
+    for pump in 0..cleanup::LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN {
+        if cx.retirement_should_yield() { break; }
+        if pump != 0 && !cleanup::plugin_live_cleanup_under_pressure(runtime) {
+            if archive_started.is_none() || !archive_maintenance_slice_open(
+                idle_ingress, cx.is_cancelled(), cx.should_yield(), archive_started, guest_turn_executing_us(),
+                || semio_plugin_runtime_ops::ops_document::plugin_document_archive_maintenance_is_runnable(runtime, cx.retained_grant()),
+            )? { break; }
         }
+        cx.consume_fuel(1);
+        if !cleanup::plugin_step_live_cleanup(runtime, cx)? { break; }
     }
     Ok(close_cleanup_work)
     })

@@ -97,7 +97,7 @@
       "Pset_SlabCommon": {
         "ThermalTransmittance": [
           "IFCTHERMALTRANSMITTANCEMEASURE",
-          0.169068596
+          0.169031793
         ]
       }
     },
@@ -113,7 +113,7 @@
       "Pset_SlabCommon": {
         "ThermalTransmittance": [
           "IFCTHERMALTRANSMITTANCEMEASURE",
-          0.795094883
+          0.795110836
         ]
       }
     },

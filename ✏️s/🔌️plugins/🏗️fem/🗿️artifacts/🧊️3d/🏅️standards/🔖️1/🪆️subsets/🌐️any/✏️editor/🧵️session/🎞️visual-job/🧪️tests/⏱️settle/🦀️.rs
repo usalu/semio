@@ -4,9 +4,8 @@ use semio_framework_job::OperationId;
 use semio_framework_job::RevisionId;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
-/// ⏱️ Drives the production numerical child over `value` until it is terminal, returning the turns spent, the turns per stage and any fault.
-fn settle(value: Fem3dSnapshotValue, request: Fem3dResultRequest, budget: usize) -> (bool, usize, std::collections::BTreeMap<String, usize>, Option<String>) {
-    let doc = Doc::new(Fem3dSnapshot::from_reference(value).expect("sealed settle snapshot"));
+/// ⏱️ Drives the production numerical child over `doc` until it is terminal, returning the turns spent, the turns per stage and any fault.
+fn settle(doc: Doc, request: Fem3dResultRequest, budget: usize) -> (bool, usize, std::collections::BTreeMap<String, usize>, Option<String>) {
     let operation = semio_framework_job::Operation::new(OperationId(13), RevisionId(11), Generation(19), 23);
     let mut child = Fem3dNumericalChild::new();
     child.request = request;
@@ -28,9 +27,9 @@ fn settle(value: Fem3dSnapshotValue, request: Fem3dResultRequest, budget: usize)
     (terminal, turns, stages, failure)
 }
 
-/// ⏱️ LAW: the browser's default Add Solid slab (4 × 2 × 0.5, mesh 0.5, one layer) and the bundled House example each reach a terminal static solve within an interactive turn budget, so the results caption never sticks at "Preparing analysis".
+/// ⏱️ LAW: the browser's default Add Solid slab (4 × 2 × 0.5, mesh 0.5, one layer) and the demo document each reach a terminal static and modal solve within an interactive turn budget, so the results caption never sticks at "Preparing analysis" or "Computing modes".
 #[test]
-fn a_default_slab_and_the_house_settle_within_an_interactive_turn_budget() {
+fn a_default_slab_and_the_demo_settle_within_an_interactive_turn_budget() {
     use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::{FemAxis, FemDof, FemLoadCase, FemSolid, FemSupport};
     use semio_s_fem_material::volumetric::FemMaterialValue;
     use semio_s_fem_node::volumetric::FemNodeValue;
@@ -42,10 +41,11 @@ fn a_default_slab_and_the_house_settle_within_an_interactive_turn_budget() {
         load_cases: vec![FemLoadCase { id: "dead".into(), name: "Dead".into(), loads: vec![], self_weight: true }],
         ..Default::default()
     };
-    for (name, value) in [("slab", slab), ("house", semio_s_artifact_fem_3d_io::examples::house::build_rows())] {
-        let (terminal, turns, stages, failure) = settle(value, Fem3dResultRequest::default(), 400_000);
+    let slab = Doc::new(Fem3dSnapshot::from_reference(slab).expect("sealed slab"));
+    let demo = || Doc::new(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo"));
+    for (name, doc, request) in [("slab", slab, Fem3dResultRequest::default()), ("demo", demo(), Fem3dResultRequest::default()), ("demo-modal", demo(), Fem3dResultRequest { mode: Some(0), ..Fem3dResultRequest::default() })] {
+        let (terminal, turns, stages, failure) = settle(doc, request, 60_000);
         let busiest = stages.iter().max_by_key(|(_, count)| **count).map(|(stage, count)| format!("{stage}×{count}"));
-        eprintln!("[DEBUG] settle {name}: terminal={terminal} turns={turns} busiest={busiest:?} stages={stages:?} failure={failure:?}");
-        assert!(failure.is_none() && terminal, "{name} did not settle in {turns} turns, busiest stage {busiest:?}: {failure:?}");
+        assert!(failure.is_none() && terminal, "{name} did not settle in {turns} turns, busiest stage {busiest:?}, stages {stages:?}: {failure:?}");
     }
 }

@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GltfInferenceLeafEnvelope",
+  "description": "Canonical JSON result of one glTF inference leaf. `value` is that leaf's `GltfMeasure` (its own `value` payload type differs per leaf: number, integer, boolean, vec3, bounds, statistics, direction scores or principal frame).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "algorithmVersion", "policyHash", "dependencyHashes", "cacheKey", "validity", "quality", "diagnosticIds", "provenance", "value"],
+  "properties": {
+    "id": { "type": "string", "description": "The leaf's inference schema id." },
+    "algorithmVersion": { "type": "integer", "minimum": 0 },
+    "policyHash": { "type": "string" },
+    "dependencyHashes": { "type": "array", "items": { "type": "string" } },
+    "cacheKey": { "type": "string" },
+    "validity": { "type": "string", "enum": ["valid", "invalid", "indeterminate"] },
+    "quality": { "type": "string", "description": "The measure's quality record as canonical JSON text." },
+    "diagnosticIds": { "type": "array", "items": { "type": "string" } },
+    "provenance": { "type": "array", "items": { "type": "string" } },
+    "value": {
+      "type": "object",
+      "required": ["unit", "availability", "validity", "diagnosticIds", "quality", "provenance"],
+      "properties": {
+        "value": { "description": "Absent when the measure is unavailable." },
+        "unit": { "type": "string", "enum": ["unitless", "metre", "squareMetre", "cubicMetre", "radian", "inverseMetre", "inverseSquareMetre"] },
+        "availability": { "type": "string", "enum": ["available", "approximate", "unavailable", "invalidInput", "unsupportedPrimitive", "openSurface", "nonManifold", "degenerate", "unresolvedResource"] },
+        "validity": { "type": "string", "enum": ["valid", "invalid", "indeterminate"] },
+        "diagnosticIds": { "type": "array", "items": { "type": "string" } },
+        "quality": { "type": "object" },
+        "provenance": { "type": "object" }
+      }
+    }
+  }
+}

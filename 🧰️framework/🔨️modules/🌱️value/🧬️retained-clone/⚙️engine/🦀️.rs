@@ -29,4 +29,4 @@ pub use native_prefix::NativeArrayPrefix;
 pub use semio_framework_value_native_array_backing::NativeArrayBacking;
 
 #[path="📦️allocation/🦀️.rs"]mod native_allocation;
-pub use native_allocation::allocate_clone_storage;
+pub use native_allocation::{CloneBacking,allocate_clone_storage};

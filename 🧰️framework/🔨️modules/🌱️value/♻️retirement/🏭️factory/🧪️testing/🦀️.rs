@@ -16,7 +16,7 @@ impl FactoryPayloadRetirement for OwnedFactory {
     fn prepare_close_state(&self)->Self::CloseState {None}
     fn transfer_payload(value:Self,state:&mut Self::CloseState) {*state=Some(ControlledRetirement::new(value.payload).unwrap_or_else(|_|panic!("Vec payload supports controlled retirement")));}
     fn close_state_demands(state:&Self::CloseState,copy:usize)->Result<RetirementDemand,ValueError> {
-        state.as_ref().map_or(Ok(RetirementDemand::default()),|owner|Ok(RetirementDemand {copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?}))
+        state.as_ref().map_or(Ok(RetirementDemand::default()),|owner|owner.selected_demand(copy))
     }
     fn close_state_work_demand(state:&Self::CloseState,body:usize)->Result<u64,ValueError> {state.as_ref().map_or(Ok(0),|owner|if owner.terminal_is_empty(){Ok(1)}else{owner.next_computational_work(body)})}
     fn close_state_step(state:&mut Self::CloseState,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll {

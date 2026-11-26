@@ -1,0 +1,11 @@
+# Native Poll Output Decoder Deadline
+
+The freshly authored Note component returned a real TurnOutput at pointer 19,912,048 with 744 bytes after 3,186 guest work units and 169,468,080 interpreter fuel. The SDK requested cancellation only after positive LoadingDocument progress. The run stopped before reaching that phase. The host reported `INTERNAL phase ParserClose; output decoding refused native decoding canceled` from the output receiver's stored primary, then retired the guest Source.
+
+The original native job Source checked its current turn deadline at semantic turn admission, during quoted Work admission, and again through the decoder's cancellation callback and original allocation port. A turn could pass the first check and then reach its deadline while publishing a paid operation. The decoder treated the elapsed turn as caller cancellation and stored a terminal refusal instead of allowing bounded Work to resume.
+
+The native Source now uses the actual caller token for decoder and allocation cancellation. Deadline and fuel remain enforced before Source work and through the authentic Work quote. Allocation coordinates, reservation and settlement, and cancellation during normal decoding retain their original checks. Paid cleanup continues under its own retirement authority.
+
+The independent expectation in the language-neutral JSON output corpus is the exact compact projection with message `original` and values `[0, 255]`. Serde JSON validates the projection from the authentic bytes. The native test interrupts the clock at 24 cut points while the accepted output's receiver retires. Every turn uses the real native Source and observes that copied and freed allocation bytes exactly match the physical receipt. Native red reproduced the inline `Canceled` primary at cut 1, the same stored primary as the live SDK at cut 5, and the allocation-quote compound refusal at cut 8. Native green preserved the expected payload at each cut and the Source reached terminal empty after cancellation and paid retirement.
+
+The targeted red and green used the pinned compiler and exact native dependency identities from a private copy of the warm gateway graph. A full decoder suite and a definitive gateway replay are tracked separately.

@@ -1,8 +1,8 @@
-/** 🌾️ Draws the slender parts of a plant (blades, plume strokes, culms, twigs) as the bodies they already have, in the place of flat sheets on depth plates: `bun tube.ts <id|file.json> [--save ops.json | --ops ops.json] [--out file] [--write] [--scales 50,100] [--views front,plan] [--only bone,bone] [--keep bone,bone]`.
+/** 🌾️ Draws the slender parts of a plant (blades, plume strokes, culms, twigs) as the bodies they already have, in the place of flat sheets on depth plates: `bun tube.ts <id|file.json> [--save ops.json | --ops ops.json] [--out file] [--write] [--scales 50,100] [--views front,plan] [--only bone,bone] [--keep bone,bone] [--flat 50:front:id,…] [--plates] [--trace]`.
  *
- * `carry.ts` laid flat plates `mvc-*` under the front and plan strokes of the bones the wind turns and renamed the strokes to `-mvs`; in a wind pose the plates show as boxes, horns and clots beside the strokes. Every such stroke has its body in the volume of the scale: a polyhedron of the same id on the same bone, a tube of rings along the stroke. This tool sets, for every sheet `<id>-mvs` of a front or plan view whose polyhedron is such a tube, ONE `loft` shape `<id>` in the place of the sheet (same paint order, role, tone, region, material and pen): one section per ring of the tube, the ellipse over the two principal half extents of the ring about its centre, in the plane of the ring. The engine turns that body itself, so the stroke is the true projection of its body in every pose, clip instant and transition, and no plate is needed: the plates of a bone are removed when every sheet of the bone in that view became a loft (a bone of `--keep`, or one with a sheet that has no tube, keeps its plates and sheets and is named).
+ * `carry.ts` laid flat plates `mvc-*` under the front and plan strokes of the bones the wind turns and renamed the strokes to `-mvs`; in a wind pose the plates show as boxes, horns and clots beside the strokes. Every such stroke has its body in the volume of the scale: a polyhedron of the same id on the same bone, a tube of rings along the stroke. This tool sets, for every sheet `<id>-mvs` of a front or plan view whose polyhedron is such a tube, ONE `loft` shape `<id>` in the place of the sheet (same paint order, role, tone, region, material and pen): one section per ring of the tube, over the two principal half extents of the ring about its centre, in the plane of the ring: an ellipse, or for a ring of four vertices (a blade: two edges and two faces) the rhombus itself (`exponent` 1), so that the loft is the tube and not a rounder body around it (as ellipses the blades of `pampas-grass` drew up to 1.4 mm more and the silhouette guard read 24.4 mm for 5.3 mm in the 1:50 front). The engine turns that body itself, so the stroke is the true projection of its body in every pose, clip instant and transition, and no plate is needed: the plates of a bone are removed when every sheet of the bone in that view became a loft (a bone of `--keep`, or one with a sheet that has no tube, keeps its plates and sheets and is named). A stroke of `--flat` (scale:view:id) stays the sheet it is while the plates of its bone go: the closed-pocket rule of `🧊️catalog-silhouette` decides one raster cell otherwise where the loft draws a millimetre beside the sheet (`flip.ts` finds such strokes). With `--plates` no plate is removed: the bones also draw foliage outlines, whose body `../MV-3/body.ts` finds from the plates as the next step (and removes them).
  * Tube layouts read from the triangles (both generators of the catalog): rings of m vertices in order, with or without two lid centres after the last ring.
- * The run prints per scale and view the lofts, the bones left, and how far the box of a loft is from the box of the sheet it replaces in the default pose (the largest over the view). `--save` writes the lofts as absolute values; `--ops` applies such a file: it sets every saved loft in the place of the shape of the same bone and id (with or without `-mvs`) and removes the `mvc-*` plates of the saved bones, so the step is idempotent.
+ * The run prints per scale and view the lofts, the bones left, and how far a loft is from the sheet it replaces in the default pose (its box, and its outline either way; the largest over the view, every loft beyond 8 mm with `--trace`). `--save` writes the lofts as absolute values; `--ops` applies such a file: it sets every saved loft in the place of the shape of the same bone and id (with or without `-mvs`) and removes the `mvc-*` plates of the saved bones, so the step is idempotent.
  * @see ../MV-2/carry.ts — the plates and sheets this tool replaces
  * @see ../MV-3/body.ts — the same for foliage masses, whose outline is not a tube
  * @see ../../🧰️silhouette/R4-P/preserve.ts — the writer that keeps every untouched byte */
@@ -28,6 +28,7 @@ const asset = next.asset;
 const only = flag("only")?.split(",");
 const keep = new Set(flag("keep")?.split(",") ?? []);
 const scales = flag("scales")?.split(",");
+const flat = new Set(flag("flat")?.split(",") ?? []);
 const VIEWS: readonly View[] = (flag("views")?.split(",") as View[] | undefined) ?? ["front", "plan"];
 const [PLATE, SHEET, TINY] = ["mvc-", "-mvs", 5e-4];
 const COMMON = ["role", "z", "filled", "tone", "region", "regions", "material", "hatch", "penMm"];
@@ -103,7 +104,7 @@ function sectionsOf(rings: V3[][]): any[] {
     if (dot(normal, entry.tangent) < 0) { y = [-y[0], -y[1], -y[2]]; normal = [-normal[0], -normal[1], -normal[2]]; }
     const at = entry.c.map(round);
     if (sections.length > 0 && Math.hypot(...sub(at as V3, sections[sections.length - 1].at)) < 1e-5) continue;
-    sections.push({ at, rx: round(Math.max(TINY, ...entry.ring.map((p) => Math.abs(dot(sub(p, entry.c), x))))), ry: round(Math.max(TINY, ...entry.ring.map((p) => Math.abs(dot(sub(p, entry.c), y))))), rotation: quaternion(x, y, normal) });
+    sections.push({ at, rx: round(Math.max(TINY, ...entry.ring.map((p) => Math.abs(dot(sub(p, entry.c), x))))), ry: round(Math.max(TINY, ...entry.ring.map((p) => Math.abs(dot(sub(p, entry.c), y))))), ...(entry.ring.length === 4 ? { exponent: 1 } : {}), rotation: quaternion(x, y, normal) });
   }
   return sections;
 }
@@ -124,6 +125,19 @@ function applyOps(target: any, ops: any): number {
     }
   }
   return count;
+}
+
+/** 🎯️ How far a point lies outside the rings of one outline (0 inside). */
+function outside(p: { x: number; y: number }, rings: { x: number; y: number }[][]): number {
+  let nearest = Infinity, inside = false;
+  for (const ring of rings) for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [u, v] = [ring[i]!, ring[j]!];
+    if ((u.y > p.y) !== (v.y > p.y) && p.x < u.x + ((v.x - u.x) * (p.y - u.y)) / (v.y - u.y)) inside = !inside;
+    const [dx, dy] = [v.x - u.x, v.y - u.y];
+    const t = dx * dx + dy * dy === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - u.x) * dx + (p.y - u.y) * dy) / (dx * dx + dy * dy)));
+    nearest = Math.min(nearest, Math.hypot(p.x - u.x - t * dx, p.y - u.y - t * dy));
+  }
+  return inside ? 0 : nearest;
 }
 
 const box = (rings: { x: number; y: number }[][]): number[] => { const points = rings.flat(); return [Math.min(...points.map((p) => p.x)), Math.max(...points.map((p) => p.x)), Math.min(...points.map((p) => p.y)), Math.max(...points.map((p) => p.y))]; };
@@ -147,6 +161,7 @@ else {
         const found: any[] = [], reasons: string[] = [];
         for (const sheet of sheets) {
           const id = baseId(String(sheet.id));
+          if (flat.has(`${key}:${view}:${id}`)) continue;
           const solid = solids.get(`${bone}|${id}`);
           const rings = solid === undefined ? "no solid of this id on the bone" : ringsOf(solid);
           if (typeof rings === "string") { reasons.push(`${id}: ${rings}`); continue; }
@@ -158,7 +173,7 @@ else {
           else found.push(shape);
         }
         if (reasons.length > 0) console.log(`left ${key} ${view} ${bone}: ${reasons.length} of ${sheets.length} sheets have no tube (${reasons.slice(0, 3).join("; ")})${found.length > 0 ? `; its ${found.length} tubes are set, its plates stay` : ""}`);
-        else if (sheets.length > 0 || list.some((shape) => shape.bone === bone && String(shape.id).startsWith(PLATE))) bones.push(bone);
+        else if (!args.includes("--plates") && (sheets.length > 0 || list.some((shape) => shape.bone === bone && String(shape.id).startsWith(PLATE)))) bones.push(bone);
         lofts.push(...found);
       }
       ops[key][view] = { bones, lofts };
@@ -174,10 +189,11 @@ else {
         const now = after.shapes[view].find((entry: any) => entry.shape.bone === shape.bone && entry.shape.id === shape.id);
         if (was === undefined || now === undefined || now.rings.flat().length === 0) { console.log(`ISSUE ${key} ${view} ${shape.id}: not drawn`); continue; }
         const [a, b] = [box(was.rings), box(now.rings)];
-        const off = Math.max(...a.map((value, i) => Math.abs(value - b[i]!)));
+        const off = Math.max(...a.map((value, i) => Math.abs(value - b[i]!)), ...now.rings.flat().map((p: any) => outside(p, was.rings)), ...was.rings.flat().map((p: any) => outside(p, now.rings)));
+        if (args.includes("--trace") && off > 0.008) console.log(`[DEBUG] ${key} ${view} ${shape.id} on ${shape.bone}: ${(off * 1000).toFixed(1)} mm, ${shape.sections.length} sections`);
         if (off > worst) { worst = off; where = `${shape.id} on ${shape.bone}`; }
       }
-      console.log(`${key} ${view}: ${ops[key][view].lofts.length} lofts, plates of ${ops[key][view].bones.length} bones removed; box of a loft at most ${(worst * 1000).toFixed(1)} mm from the box of its sheet in the default pose${where === "" ? "" : ` (${where})`}`);
+      console.log(`${key} ${view}: ${ops[key][view].lofts.length} lofts, plates of ${ops[key][view].bones.length} bones removed; a loft at most ${(worst * 1000).toFixed(1)} mm from its sheet in the default pose (box and outline, either way)${where === "" ? "" : ` (${where})`}`);
     }
   }
   console.log(`${asset.id}: ${total} lofts`);

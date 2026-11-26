@@ -69,7 +69,10 @@ export function nativeStorageHostMountsVolumesV1(platform:string=nativeStorageSe
 /** 🔎️ Finds the backend whose backing file lies in a directory, else the one the given selection (default: the effective one) chooses. */
 export function nativeStorageBackendOfDirectoryV1(directory:string,selection:NativeStorageSelectionV1={}):NativeStorageBackendDeclarationV1{return nativeStorageBackendsV1.find(row=>existsSync(join(directory,row.backingFilename)))??selectedNativeStorageDeclarationV1(selection);}
 
-const geometry=(id:string)=>{declaration(id);const value=geometries.get(id);if(!value)throw Error(refusals.unbound+": "+id);return value;};
+const geometryScopes=new AsyncLocalStorage<ReadonlyMap<string,NativeStorageGeometryV1>>();
+const geometry=(id:string)=>{declaration(id);const value=geometryScopes.getStore()?.get(id)??geometries.get(id);if(!value)throw Error(refusals.unbound+": "+id);return value;};
+/** 🔁️ Runs a body, including everything it awaits, with another adapter answering the volume measurements of one declared backend (the port is the same, a measurement that must not depend on other writers of the host volume is injected here); concurrent bodies keep their own. */
+export function withNativeStorageGeometryV1<T>(id:string,value:NativeStorageGeometryV1,body:()=>T):T{declaration(id);return geometryScopes.run(new Map([...(geometryScopes.getStore()??[]),[id,Object.freeze({...value})]]),body);}
 const ofImage=(image:string)=>nativeStorageBackendsV1.find(row=>row.backingFilename===image.split(/[\\/]/u).pop())??selectedNativeStorageDeclarationV1();
 /** 🧲️ Tells whether the root shows the attached volume of the backing file, by the backend that owns that file. */
 export const nativeStorageAttachedV1=(image:string,root:string):boolean=>geometry(ofImage(image).id).attached(image,root);

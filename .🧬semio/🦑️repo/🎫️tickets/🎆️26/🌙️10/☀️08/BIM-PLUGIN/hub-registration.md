@@ -12,7 +12,7 @@ Independent Python JSON decoding verified the published pair of application IDs 
 
 The hub surface law also checks all 13 foreign IO hops at exact artifact, standard, subset, and direction, against the same committed publication. Python confirmed the fixture and published contributions agree. The package test depends on the managed BIM component target and hashes its receipt and actual Wasm bytes, including the override when used.
 
-The production stage helpers resolved the native component and receipt under `dist/components/prototype` and `dist/components/release` and the browser deployment directory as `🏬️bim`. The selected browser command is `repo run @semio-tech/framework-os-dev:dev-bim-react-prototype`. It stages the BIM session and app-scoped boot components from the runtime catalog before starting the React renderer.
+The production model stage publishes its observed component and receipt under the managed browser products tree. Direct diagnostic builds use an explicit staged path under `dist/components/prototype`. The browser deployment directory is `🏬️bim`. The normal workspace launch `repo ./📜️script.ts dev playground bim react prototype` stages the BIM session and app-scoped boot components from the runtime catalog.
 
 An initial repository Cargo invocation failed before compilation while a concurrent change moved a stdio BRep dependency. The updated path appeared afterward. The next invocation advanced to Rust source admission and refused the 1 MiB descriptor as an embedded compiler input. The surface law now reads that descriptor at test runtime, keeping the file in the test target's cache key. The next repository invocation cleared the hub crates and refused the model snapshot dependency at 265,063 bytes against the 262,144-byte source limit. Both packages were resubmitted with the pinned native Cargo already used for the BIM artifact tests, reusing their build cache.
 
@@ -48,15 +48,103 @@ The independent Ajv validator resolved all 216 aggregate payload schemas and acc
 
 The repository's native descriptor emitter built and reported actor preparation support. The committed-descriptor smoke compiled against the current native `WasmtimeNodeHost`, including the current host relay, clock, and shard identity contract. Both are ready for the staged BIM component.
 
-The managed prototype browser support and `session-bim` targets completed. The target reads the published catalog and creates a BIM-only session with `s.bim.model@1/*#editor`, React port 6302, and WGPU port 6402. Normal preparation requires the declared fonts and component publications. The canonical fonts tool built and generated an independently validated 8,757,072-byte pack containing 17 fonts. The managed prototype fonts target published byte-identical content under `infinite:fonts` with SHA-256 `05c4bbb7d07a3ee0c77274d546a3a4c5942366ccbc82eedad18b4885aa21fc5a`. The BIM component remains in flight through its owning target. Managed component publication requires repository compiler custody.
+The managed prototype browser support and `session-bim` targets completed. The target reads the published catalog and creates a BIM-only session with `s.bim.model@1/*#editor`, React port 6302, and WGPU port 6402. Normal preparation requires the declared fonts and component publications. The canonical fonts tool built and generated an independently validated 8,757,072-byte pack containing 17 fonts. The managed prototype fonts target published byte-identical content under `infinite:fonts` with SHA-256 `05c4bbb7d07a3ee0c77274d546a3a4c5942366ccbc82eedad18b4885aa21fc5a`. The BIM component remains in flight through its owning target. Managed component publication requires repository compiler custody. The normal workspace command is `repo ./📜️script.ts dev playground bim react prototype`. Its initial scan required nine existing generated graph owners. The repository generator rendered all 47 files from the authored catalogs and verified their exact names and bytes. The repeated scan reported zero missing owners and the launch reached its managed descriptor emitter. The package test now selects and hashes the managed component model and its receipt. An absolute guest component override supports the independent host proof.
 
-The isolated browser worker harness now uses the production app command codec, shard command page encoding and shell frame decoder to check a correlated `ReadConfig` response from each role before codec checks and retirement. The modified worker and scenario sources passed the Bun bundle check. Browser execution awaits the actual guest assembly.
+The repository target `@semio-tech/bim-plugin:guest-instance-check` uses the prepared BIM browser module and the tool registry’s Chromium setup. It launches a real module Worker and checks both BIM application lifetimes using the shared descriptor fixture. It requires the production command page and a correlated `ReadConfig` reply before it checks terminal close. The isolated ticket harness adds codec checks for genesis and mirrors. The worker and repository route passed Bun bundling and a strict TypeScript check. Repository-managed Chromium 156.0.8078.4 launched successfully and exposed WebAssembly JSPI in a module Web Worker served over loopback. Browser execution awaits the actual guest assembly.
 
 ## Energy envelope
 
-Wall and horizontal construction findings retain the material identity returned by the thermal stack. Missing conductivity leaves the surface U-value empty. The room fixture has five missing values across four walls and the ceiling, with valid floor and window values. The heating setpoint edit has a five-node recomputation bound covering the envelope, two totals, diagnostics and their index. Independent complex-plane rotation confirmed clockwise-from-north compass results of 90°, 270° and 180° for building rotation alone, site north rotation alone and both rotations, respectively. The mounted energy suite rerun is queued with the shared native tests.
+Wall and horizontal construction findings retain the material identity returned by the thermal stack. Missing conductivity leaves the surface U-value empty. The room fixture has five missing values across four walls and the ceiling, with valid floor and window values. The heating setpoint edit has a five-node recomputation bound covering the envelope, two totals, diagnostics and their index. Independent complex-plane rotation confirmed clockwise-from-north compass results of 90°, 270° and 180° for building rotation alone, site north rotation alone and both rotations, respectively. The fresh mounted native energy suite passed all 16 laws.
 
 
 ## Mounted viewer window law
 
-The archived native test reproduced a default debug test stack overflow. With a larger stack, it also reproduced the action boundary rejecting a fixture camera sent as a JSON string. The mounted test now owns its debug stack and submits the same structured camera bodies used by the public action endpoint. It continues to verify camera isolation, restorable independent packs and stable document bytes. A coherent fresh Cargo graph is required to rerun after concurrent framework dependency changes.
+The archived native test reproduced a default debug test stack overflow. With a larger stack, it also reproduced the action boundary rejecting a fixture camera sent as a JSON string. The mounted test now owns its debug stack and submits the same structured camera bodies used by the public action endpoint. It continues to verify camera isolation, restorable independent packs and stable document bytes. The independent native viewer target passed the persisted camera and Plan law with the same bounded client used by the framework Window law. The framed packs required 28,847 and 62,614 original turns, followed by command and instance retirement. Viewer and IFC energy are exposed as separate integration targets. All 19 viewer laws passed in the refreshed native suite.
+
+
+## Mounted editor laws
+
+The fresh v1 executable passed four selected tests covering demo reference birth, storey undo and redo, a mounted wall split and flip with undo, and sheet SVG and PDF downloads. The refreshed native schedule CSV law passed with byte-identical paged output, progress, cancellation cleanup, and instance retirement through a separately funded original caller. The refreshed mounted IFC end-to-end law cold-loaded the authored house through the real app ingress, opened and analyzed its default Plan, and downloaded both IFC dialects. All nine focused export laws passed, including full rectangular-column IFC graphs, bounded progress, and cancellation between writing families.
+
+## React playground
+
+The BIM component declares its own React contribution. The catalog resolves the BIM entry and its matching production Vite configuration. The receipt-free diagnostic server serves the same React entry and framework shell from a ticket-local Vite cache. It exposes the real repository shard worker, vendor and fonts assets, the raw linked browser bridge, and the descriptor emitted from that same guest. The entry, format catalog, and supporting runtime routes passed loopback preflight. BIM's Vite owner supplies the format catalog directly from the existing generator, so it can boot without a separate generated claims file. The resolved virtual JSON was served by Vite and contained the IFC4 format claim. The browser runner awaits the component and then opens the house and invokes its IFC4 download from the visible editor.
+
+## Main edited product files
+
+Each line is relative to the repository root.
+
+```text
+🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust/📋️project.json
+🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust/📜️script.ts
+🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust/🪪️guest-digest.ts
+🌎️hub/🧩️compositions/🏙️bim/🧩️component/📦️packages/🦀️rust/Cargo.toml
+🌎️hub/🧩️compositions/🏙️bim/🧪️tests/🔬️surface/🦀️.rs
+🌎️hub/🧩️compositions/🏙️bim/🧪️tests/🛂️committed-descriptor/🦀️.rs
+🌎️hub/🧩️compositions/🏙️bim/🧪️tests/🧫️fixtures/🛂️committed-descriptor/🔣️.json
+🌎️hub/🧩️compositions/🏙️bim/🧪️tests/🌐️guest/🟦️.ts
+🌎️hub/🧩️compositions/🏙️bim/🧪️tests/🌐️guest/👷️worker/🟦️.ts
+✏️s/🧑‍💻dev/🎭️variants/🏙️bim/🧬️schema/🔣️.json
+✏️s/🧑‍💻dev/🎭️variants/🏙️bim/🏗️builder/🌐️vite/🟦️.ts
+✏️s/🧑‍💻dev/🎭️variants/🏙️bim/🚀️entry/🟦️.ts
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/📦️packages/🦀️rust/🪞️mirror/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📏️cells/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️schema/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🪶️sqlite/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📊️export-schedule-csv/🧵️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📊️export-schedule-csv/🧪️tests/🔬️unit/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖥️play-app/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📊️csv/🧵️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/⌨️completeness/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️model-graph/🧳️instance/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌡️energy-envelope/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌡️energy-envelope/🧪️tests/🔬️unit/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪜️stair-runs/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔙️cascade-restore/📦️packages/🦀️rust/Cargo.toml
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔙️cascade-restore/📦️packages/🦀️rust/🪞️mirror/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔙️cascade-restore/🧪️tests/🔬️unit/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️unit/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏡️house/🧪️tests/🧩️example/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️office/🧪️tests/🧩️example/🦀️.rs
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏡️house/🗣️.dsl.semio
+✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏢️office/🗣️.dsl.semio
+🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🗄️cache-and-session/🦀️.rs
+🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧰️test-support/📦️packages/🦀️rust/Cargo.toml
+```
+
+## Managed descriptor emitter selection
+
+The graph-free React prototype command accepts an explicit `--published-emitter <binary:receipt:index>` after its variant and mode. The repository schema and the emitter contract both admit the exact triple. The model driver holds its existing managed emitter and validates the compiler observation and index before publishing the component. The raw diagnostic build stays outside that custody. The independent Ajv test and the original parser agreed on all eight command cases. The managed launch validated the genuine 585-unit emitter publication and reached the first component pass.
+
+The command path changes are listed below.
+
+```text
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🛠️dev/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🛠️dev/🎮️playground/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🛠️dev/🌱️birth/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🛠️dev/🌱️birth/🧬️schema/🔣️.json
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🛠️dev/🌱️birth/🧫️fixtures/playground-pinned.json
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🛠️dev/🌱️birth/🧪️tests/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🗂️registry/🔣️.json
+```
+
+## Compiler storage admission
+
+The first managed component pass needed 19,258 MiB and had 19,245 MiB after normal reclamation. The React prototype owner can now obtain the measured pass minimum after its build lease closes, run the existing in-place image grow under an exclusive lease if the mounted Rust cache needs room, and retry the same original command once. The recovery preserves the 72 GiB host reserve, Rust image capacity limits, existing contents, and native receipt ownership. The focused suite passed 12 laws and 420 assertions, including its independent Python oracle.
+
+```text
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/💾️storage-gate/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/💾️storage-gate/🧪️tests/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts
+```
+
+## Linked diagnostic readiness
+
+`verify-hosted-bim.py` verifies the streamed digest of the physical guest against the completed link marker both before and after native descriptor emission. The official descriptor decoder checks the staged Pack against its JSON and the test checks applications, IO routes and exact authored examples before publishing the verified pair. The retained `bim-shell-modules.ts` requires matching link, browser preparation and descriptor digests before either diagnostic shell navigates. The React shell launcher and browser preflight remain at the ticket root alongside the native verification source.

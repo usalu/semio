@@ -3,11 +3,25 @@
  * @see ../../../👁️observation/🟨️.mjs */
 import {expect,test} from "bun:test";
 import {readFileSync} from "node:fs";
+import Ajv from "ajv";
+import {Database} from "bun:sqlite";
 import {createSlicePoolV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
 import {HOST_POLICY_V1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
+import peak from "./📊️peak.json";
+import peakSchema from "./📐️peak.json";
 
 const elasticity=HOST_POLICY_V1.sliceHostElasticity as {maximumMegabytes:number;hostCapBasisPoints:number;minimumMegabytes:number},guard=HOST_POLICY_V1.slicePlanGuard as {reserveMegabytes:number;ceilingBasisPoints:number;settleWaitMilliseconds:number},MiB=1048576;
 const wait=(milliseconds:number)=>new Promise<void>(resolve=>setTimeout(resolve,milliseconds));
+
+test("cancelled worker retains its observed tree peak without learning unrelated host growth",async()=>{
+ expect(new Ajv().validate(peakSchema,peak)).toBe(true);const db=new Database(":memory:");try{expect(db.query("select ? as expected").get(peak.treeMegabytes)).toEqual({expected:peak.expectedMegabytes});}finally{db.close();}
+ const learned:number[]=[],controller=new AbortController();let observed=false,reads=0;
+ const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,hostMegabytes:0,heartbeatMilliseconds:20,sampleMilliseconds:10,graceMilliseconds:50,headroom:()=>({limitBytes:Infinity,currentBytes:(reads++?peak.hostGrowthMegabytes:0)*MiB}),observe:async()=>{observed=true;return peak.treeMegabytes;},learned:{read:()=>0,write:(value:number)=>learned.push(value)},createWorker:()=>({pid:4242,on:()=>undefined,send:()=>true,terminate:async()=>0})});
+ const run=pool.run({root:"/tmp/peak"},{signal:controller.signal});
+ for(let tries=0;!observed&&tries<300;tries++)await wait(10);
+ expect(observed).toBe(true);await wait(20);controller.abort();await expect(run).rejects.toBeDefined();await pool.close();
+ expect(learned).toEqual([peak.expectedMegabytes]);
+});
 
 test("the next worker of a cut starts only after the stopped worker's termination has completed",async()=>{
  const created:number[]=[],listeners:Record<string,(value:unknown)=>void>[]=[];let release!:()=>void,terminated=0;const gate=new Promise<void>(resolve=>{release=resolve;});

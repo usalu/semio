@@ -1,8 +1,9 @@
 //! 🎮️ Borrowed create semantics validate one native field before bounded duplicate lookup.
 
 use crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode;
-use crate::{Puzzle2dSnapshot, standards::v1::subsets::any::schema::lookup::{Puzzle2dLookupCursor, Puzzle2dLookupScope, Puzzle2dLookupStep, pay}};
-use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetirementPollExit, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBinding, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
+use crate::{Puzzle2dSnapshot, standards::v1::subsets::any::schema::lookup::{Puzzle2dLookupStep, pay}};
+use crate::standards::v1::subsets::any::schema::lookup::borrowed::{BorrowedIdentity,BorrowedNodeLookup};
+use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetirementPollExit, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Puzzle2dCreateNodeDisposition { Changed, DuplicateId, NonfiniteX, NonfiniteY, InvalidShape, InvalidRadius, InvalidWidth, InvalidHeight, InvalidScale, InvalidHandleAngle, InvalidHandleRadius, InvalidHandleScale }
@@ -17,9 +18,9 @@ pub struct Puzzle2dCreateNodePlan {
 pub enum Puzzle2dCreateNodePreparationStep { Pending(RetainedCloneProgress), Complete { plan: Puzzle2dCreateNodePlan, progress: RetainedCloneProgress } }
 
 pub struct Puzzle2dCreateNodePreparationCursor {
-    source: Option<RetainedCloneBinding>,
-    mutation: Option<RetainedCloneBinding>,
-    lookup: Puzzle2dLookupCursor,
+    source: BorrowedIdentity,
+    mutation: BorrowedIdentity,
+    lookup: BorrowedNodeLookup,
     phase: u8,
     handle: usize,
     handle_field: u8,
@@ -30,7 +31,7 @@ pub struct Puzzle2dCreateNodePreparationCursor {
 }
 
 impl Default for Puzzle2dCreateNodePreparationCursor {
-    fn default() -> Self { Self { source: None, mutation: None, lookup: Puzzle2dLookupCursor::new(Puzzle2dLookupScope::Node), phase: 0, handle: 0, handle_field: 0, disposition: Puzzle2dCreateNodeDisposition::Changed, output: None, spent: false, closing: false } }
+    fn default() -> Self { Self { source: Default::default(), mutation: Default::default(), lookup: BorrowedNodeLookup::default(), phase: 0, handle: 0, handle_field: 0, disposition: Puzzle2dCreateNodeDisposition::Changed, output: None, spent: false, closing: false } }
 }
 
 impl Puzzle2dCreateNodePreparationCursor {
@@ -38,8 +39,8 @@ impl Puzzle2dCreateNodePreparationCursor {
         let grant = effect.grant();
         if self.closing || self.spent { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "create preparation is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(Puzzle2dCreateNodePreparationStep::Pending(Default::default())); }
-        if let Some(progress)=source.bind(&mut self.source,effect).result?{return Ok(Puzzle2dCreateNodePreparationStep::Pending(progress))}
-        if let Some(progress)=mutation.bind(&mut self.mutation,effect).result?{return Ok(Puzzle2dCreateNodePreparationStep::Pending(progress))}
+        if let Some(progress)=self.source.bind(source,effect)?{return Ok(Puzzle2dCreateNodePreparationStep::Pending(progress))}
+        if let Some(progress)=self.mutation.bind(mutation,effect)?{return Ok(Puzzle2dCreateNodePreparationStep::Pending(progress))}
         if let Some(plan) = self.output { return Ok(Puzzle2dCreateNodePreparationStep::Complete { plan, progress: Default::default() }); }
         let node = &mutation.get().node;
         if self.phase < 7 || self.phase == 7 && self.handle < node.handles.len() {
@@ -80,10 +81,10 @@ impl Puzzle2dCreateNodePreparationCursor {
 
     pub fn begin_close(&mut self) { self.closing = true; self.lookup.begin_close(); }
 
-    pub fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { if self.output.is_some(){return Ok(size_of_val(&self.output));}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_copy_byte_demand();}RetainedCloneBinding::copy_demand(if self.source.is_some(){&self.source}else{&self.mutation}) }
-    pub fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { if self.output.is_some(){return Ok(0);}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_capacity_byte_demand(body);}RetainedCloneBinding::capacity_demand(if self.source.is_some(){&self.source}else{&self.mutation},body) }
-    pub fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { if self.output.is_some(){return Ok(0);}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_release_byte_demand();}RetainedCloneBinding::release_demand(if self.source.is_some(){&self.source}else{&self.mutation}) }
-    pub fn next_close_depth_demand(&self) -> Result<usize, ValueError> { if self.output.is_some(){return Ok(1);}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_depth_demand();}RetainedCloneBinding::depth_demand(if self.source.is_some(){&self.source}else{&self.mutation}) }
+    pub fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { if self.output.is_some(){return Ok(size_of_val(&self.output));}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_copy_byte_demand();}Ok((if self.source.is_empty(){&self.mutation}else{&self.source}).close_demand().copy_bytes) }
+    pub fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { if self.output.is_some(){return Ok(0);}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_capacity_byte_demand(body);}Ok(0) }
+    pub fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { if self.output.is_some(){return Ok(0);}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_release_byte_demand();}Ok(0) }
+    pub fn next_close_depth_demand(&self) -> Result<usize, ValueError> { if self.output.is_some(){return Ok(1);}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_depth_demand();}Ok((if self.source.is_empty(){&self.mutation}else{&self.source}).close_demand().depth) }
     pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { let result = self.close_stepped(effect); RetirementPollExit::settle(effect, result) }
 
     fn close_stepped(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, RetirementPollExit> {
@@ -92,10 +93,10 @@ impl Puzzle2dCreateNodePreparationCursor {
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.output.is_some(){let bytes=size_of_val(&self.output);if grant.maximum_copy_bytes<bytes||!pay(effect)?{return Ok(RetainedCloneStep::Progress(Default::default()));}self.output=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));}
         if !self.lookup.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(RetirementPollExit::resume(self.lookup.close_step(effect))?.progress()));}
-        let step=RetirementPollExit::resume(RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation},grant.maximum_copy_bytes,effect))?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+        let progress=(if self.source.is_empty(){&mut self.mutation}else{&mut self.source}).close(effect)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
     }
 
-    pub fn terminal_is_empty(&self) -> bool { self.closing && self.output.is_none() && self.lookup.terminal_is_empty() && self.source.is_none() && self.mutation.is_none() }
+    pub fn terminal_is_empty(&self) -> bool { self.closing && self.output.is_none() && self.lookup.terminal_is_empty() && self.source.is_empty() && self.mutation.is_empty() }
 }
 
 

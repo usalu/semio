@@ -6,7 +6,7 @@ import Ajv from"ajv";
 import authoritySchema from"../../../../../../../../../🏗️build/🧬️schema/📥️authority.json";
 
 const hex="a".repeat(64),seal={version:1,mode:"quiet",rounds:0,sealedWithLaterChanges:0,laterChangedOwners:[] as string[],membershipMoved:false,admissionMoved:false,owners:{workspace:hex}};
-const authority=(extra:object={})=>({version:4,module:{implementation:hex,publication:hex},membership:hex,graph:hex,observations:[],...extra});
+const authority=(extra:{seal?:object;observations?:readonly unknown[]}={})=>({version:4,module:{implementation:hex,publication:hex},membership:hex,graph:hex,observations:[],...extra});
 const source=(path:string)=>readFileSync(new URL(path,import.meta.url),"utf8");
 
 test("the authority schema admits an authority with and without its seal and refuses a malformed seal, with the validator of the worker and an independent one",()=>{

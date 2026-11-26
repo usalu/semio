@@ -686,6 +686,21 @@ impl<T, const N: usize> PagedList<T, N> {
         Ok(())
     }
 
+    /// 📋️ Copies a prefix into already reserved leaves without allocating or exceeding the logical capacity.
+    pub fn extend_reserved_from_slice(&mut self, source: &[T]) -> usize where T: Copy {
+        let count = source.len().min(self.capacity - self.length);
+        let page_items = self.page_items();
+        let mut written = 0;
+        while written < count {
+            let length = (page_items - self.length % page_items).min(count - written);
+            self.leaf_mut(self.length).expect("reserved leaf owns its next range")
+                .extend_from_slice(&source[written..written + length]);
+            self.length += length;
+            written += length;
+        }
+        count
+    }
+
     /// ❄️ Appends one cold owner while admitting every backing allocation before it is made.
     pub fn try_push(&mut self, value: T) -> Result<(), PagedListError> {
         while !self.has_reserved_slot() {

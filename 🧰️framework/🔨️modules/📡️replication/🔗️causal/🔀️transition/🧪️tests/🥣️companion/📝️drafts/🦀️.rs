@@ -17,6 +17,9 @@ fn original(law:&serde_json::Value)->HistoryInputDrafts {
 fn pointers(owner:&HistoryInputDrafts)->Vec<Option<(*const u8,*const u8,usize,usize)>> {
     owner.rows().iter().map(|row|match row {Some(InputReplacement::Input {schema,payload})=>Some((schema.as_ptr(),payload.as_ptr(),schema.capacity(),payload.capacity())),_=>None}).collect()
 }
+fn drive_turn(cursor:&mut ControlledRetirement<(HistoryInputDrafts,Vec<(MutationId,InputReplacement)>)>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::OriginalRetirementFailure> {
+    semio_framework_value_clone_source_testing::drive::warm();semio_framework_value_clone_source_testing::drive::drive(grant,1<<20,|effect|cursor.step(effect.grant().maximum_copy_bytes,effect))
+}
 fn close(owner:(HistoryInputDrafts,Vec<(MutationId,InputReplacement)>),held:usize,copy:usize) {
     let(cursor,heap)=observe_heap_allocations_on_this_thread(||ControlledRetirement::new(owner).unwrap_or_else(|_|panic!("original draft controlled authority")));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut cursor=cursor;let(mut allocated,mut released)=(0,0);
     for turn in 0..100000 {
@@ -24,9 +27,9 @@ fn close(owner:(HistoryInputDrafts,Vec<(MutationId,InputReplacement)>),held:usiz
         let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy.max(work),maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};
         for below in [RetainedCloneGrant {maximum_items:0,..grant},RetainedCloneGrant {maximum_copy_bytes:work.saturating_sub(1),..grant},RetainedCloneGrant {maximum_capacity_bytes:capacity.saturating_sub(1),..grant},RetainedCloneGrant {maximum_release_bytes:release.saturating_sub(1),..grant},RetainedCloneGrant {maximum_depth:depth.saturating_sub(1),..grant}] {
             if below.maximum_items!=0&&below.maximum_copy_bytes>=work&&below.maximum_capacity_bytes>=capacity&&below.maximum_release_bytes>=release&&below.maximum_depth>=depth {continue;}
-            let(step,heap)=observe_heap_allocations_on_this_thread(||cursor.step(below));match step {Ok(step)=>assert_eq!(step.progress(),RetainedCloneProgress::default()),Err(error)=>assert!(matches!(error.kind,semio_framework_value::ValueRefusalKind::DepthLimit|semio_framework_value::ValueRefusalKind::OwnershipLimit|semio_framework_value::ValueRefusalKind::WorkLimit))}assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0),"undergrant turn{turn}");
+            let step=drive_turn(&mut cursor,below);match step.result {Ok(step)=>assert_eq!(step.progress(),RetainedCloneProgress::default()),Err(error)=>assert!(matches!(error.primary().expect("original refusal").kind,semio_framework_value::ValueRefusalKind::DepthLimit|semio_framework_value::ValueRefusalKind::OwnershipLimit|semio_framework_value::ValueRefusalKind::WorkLimit))}
         }
-        let(step,heap)=observe_heap_allocations_on_this_thread(||cursor.step(grant).unwrap());assert_eq!(step.progress().retained_capacity_bytes,heap.requested_bytes,"birth turn{turn}");assert_eq!(step.progress().released_bytes,heap.released_bytes,"release turn{turn}");assert!(step.progress().fits(grant));allocated+=heap.requested_bytes;released+=heap.released_bytes;
+        let progress=drive_turn(&mut cursor,grant).result.unwrap().progress();assert!(progress.fits(grant));allocated+=progress.retained_capacity_bytes;released+=progress.released_bytes;
         if cursor.terminal_is_empty(){break;}assert!(turn<99999,"original draft cleanup stalled");
     }
     assert_eq!(released,held+allocated);let(_,heap)=observe_heap_allocations_on_this_thread(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));

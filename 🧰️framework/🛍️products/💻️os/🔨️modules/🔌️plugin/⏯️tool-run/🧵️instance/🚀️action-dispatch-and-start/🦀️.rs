@@ -93,7 +93,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             Err(rejection) => return Ok(ToolRunActionOutcome::Rejected(rejection)),
         };
         match (effect, selected_entry_mut!(self.tool_runs)) {
-            (ToolRunEffect::DriveOneUnit, Some(entry)) => entry.pending_step = true,
+            (ToolRunEffect::DriveOneUnit, Some(entry)) => {
+                if !entry.pending_step {
+                    entry.step_start = entry.native.borrowed_view(entry.identity, entry.slot.state).map_or(entry.completed, |view| view.progress.completed);
+                    entry.pending_step = true;
+                }
+            }
             (ToolRunEffect::StopScheduling, Some(entry)) => entry.pending_step = false,
             (ToolRunEffect::BeginFinalize, Some(entry)) => entry.finalize = Some(ToolRunFinalize { phase: ToolRunFinalizePhase::Pending, publication: None, ingress:Default::default(),rejected:false,retracted: 0, published: false }),
             (ToolRunEffect::CloseJob, _) => self.tool_runs.close_current_job(),
@@ -183,8 +188,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             rate_origin: None,
             units_per_second: 0.0,
             job: None,
-            checkpoint: None,
+            checkpoint: Default::default(),
             pending_step: false,
+            step_start: 0,
             finalize: None,
             announced: None,
             port: ToolRunJobPort::default(),

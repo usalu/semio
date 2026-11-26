@@ -1,0 +1,41 @@
+import json,os
+M="/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🏗️build/📈️metrics"
+cat={m['id']:m for m in json.load(open(M+'/📇️catalogue/🔣️.json'))['metrics']}
+def T(en,de):return {"en":en,"de":de}
+col=[
+("cpu","tick","host-sampler",["host.cpu.busy","host.cpu.load","host.cpu.cores"],T("CPU busy share, load and cores from two processor time readings","CPU-Auslastung, Last und Kerne aus zwei Prozessorzeit-Ablesungen")),
+("memory","tick","host-sampler",["host.memory.total","host.memory.available","host.memory.compressed","host.memory.pressure","host.swap.used","host.swap.rate"],T("Memory and swap from the warden state, the gate sample or the operating system","Speicher und Swap aus dem Wächterzustand, der Gate-Probe oder dem Betriebssystem")),
+("warden","tick","warden",["warden.level","warden.subjects.count","warden.subjects.memory","warden.headroom","warden.cancelled"],T("The state file of the memory warden","Die Zustandsdatei des Speicherwächters")),
+("process-tree","tick","process-tree",["process.repo.count","process.repo.memory","process.repo.cpu","build.tasks.running"],T("The classified repo process tree as the warden counts it","Der klassifizierte Repo-Prozessbaum, wie der Wächter ihn zählt")),
+("self","tick","self",sorted(i for i in cat if i.startswith("metrics.self.")),T("This collector measuring itself","Dieser Sammler misst sich selbst")),
+("volumes","slow","host-sampler",["host.disk.free","host.disk.total","host.files.open","host.images.attached"],T("Free space of the volumes of the worktree and its cache images; open files and attached images from the gate sample","Freier Platz der Datenträger des Arbeitsbaums und seiner Cache-Images; offene Dateien und angehängte Images aus der Gate-Probe")),
+("queue","slow","scheduler",["build.tasks.queued"],T("The waiters of the fair build queue of the machine","Die Wartenden der fairen Build-Warteschlange der Maschine")),
+("unit-counters","slow","unit-counters",[i for i in cat if i.startswith("build.units.")],T("The monotonic unit cache counter files","Die monotonen Zählerdateien des Einheiten-Caches")),
+("local-cache","slow","local-cache",["cache.local.hit","cache.local.miss","cache.local.bytes"],T("The hit and miss counter files of the host content store","Die Treffer- und Fehlzugriffszähler des Host-Inhaltsspeichers")),
+("remote-cache","slow","remote-cache",[i for i in cat if i.startswith("cache.remote.")],T("The persisted counter ledger of the remote cache server of this machine","Das persistierte Zählerbuch des Remote-Cache-Servers dieser Maschine")),
+("offload-counters","slow","offload-counters",[i for i in cat if i.startswith("exec.offload.") or i=="exec.refused"],T("The offload counter files","Die Auslagerungszähler-Dateien")),
+("remote-execution","slow","remote-execution",["exec.queue.running","exec.queue.queued"],T("The remote execution service of this machine","Der Remote-Ausführungsdienst dieser Maschine")),
+("owner-pool","slow","owner-pool",["graph.read.owners","graph.read.owners.done","graph.pool.claimed","graph.pool.published","graph.pool.failed","graph.pool.memory"],T("The owner pool status and the slice phase of the graph read","Der Status des Eigentümer-Pools und die Scheibenphase des Graphlesens")),
+("graph-service","slow","graph-service",["graph.read.facts"],T("The fact index of the graph service","Der Faktenindex des Graphdienstes")),
+("ready","slow","ready",[i for i in cat if i.startswith("ready.")],T("The readiness status file","Die Bereitschaftsstatus-Datei")),
+("journal","slow","journal",[i for i in cat if i.startswith("replica.journal.")],T("The head of the shared worktree journal","Der Kopf des Journals des geteilten Arbeitsbaums")),
+]
+for n,c,s,ids,_ in col:
+  for i in ids:assert cat[i]['source']==s,(n,i,cat[i]['source'])
+allids=[i for _,_,_,ids,_ in col for i in ids];assert sorted(allids)==sorted(cat),set(cat)^set(allids);assert len(allids)==len(set(allids))
+unsourced=["process.repo.cpu","build.tasks.queued"][:0]+["process.repo.cpu","exec.offload.in","exec.queue.running","exec.queue.queued","graph.read.facts","cache.local.bytes","cache.remote.entries","cache.remote.bytes"]
+d={
+"$schema":"http://json-schema.org/draft-07/schema#",
+"$id":"https://semio.tech/framework/process/metrics/collector/v1",
+"title":"Metrics collector: the cadences, the collectors of the catalogue, the baseline file and the publication into the fleet store",
+"definitions":{
+ "Policy":{"description":"The authored numbers of the collector. `tickMilliseconds` is the cadence of the host gauges (the finest bucket of tier t0), `slowMilliseconds` the cadence of the counter files and status files. `baselineMaximumAgeMilliseconds`: a persisted counter baseline older than this is only a new baseline (a long downtime is not one huge delta). `liveMilliseconds`: how often the publisher looks for changed ring files. The published t0 is a live snapshot ring of `liveBuckets` seconds kept in `liveDirectory` (a copy of the full t0 every 5 s would write 150 KB/s per machine); every tier is copied at most every `publishMinimumMilliseconds[tier]` and only when its file changed (a coarser tier changes once per closed bucket). The finer tier always covers the delay of the next coarser one, so a reader sees no hole. `fileBytesMaximum` bounds one published file. `lockFile` makes one collector the writer of a ring directory; `wardenFreshMilliseconds` is how old a warden state may be.","const":{"tickMilliseconds":1000,"slowMilliseconds":10000,"liveMilliseconds":5000,"liveBuckets":60,"liveDirectory":"live","publishMinimumMilliseconds":{"t0":5000,"t1":30000,"t2":300000,"t3":1800000,"t4":3600000},"baselineMaximumAgeMilliseconds":120000,"fileBytesMaximum":16777216,"wardenFreshMilliseconds":15000,"sampleFreshMilliseconds":120000,"lockFile":"collector.lock","baselineFile":"baseline.json","temporaryPattern":"^(.+)\\.([0-9]{1,10})\\.tmp$","volumeChildrenMaximum":32}},
+ "Collectors":{"description":"One entry per feeding collector: its cadence, the catalogue `source` of its metrics and the metric ids it feeds. Every catalogue id belongs to exactly one collector (a law test proves it, and that the source of each id is the source of its collector).","const":[{"name":n,"cadence":c,"source":s,"ids":ids,"label":l} for n,c,s,ids,l in col]},
+ "Unsourced":{"description":"The ids whose collector has no cheap per-machine data source yet: the collector declares them and feeds them as soon as its port answers, until then they have no sample (a gap in the series, never a zero). The law test pins this list, so it can only shrink.","const":unsourced},
+ "Enums":{"description":"The numbers of the state metrics.","const":{"pressure":{"normal":0,"warn":1,"critical":2},"wardenLevel":{"calm":0,"guard":1,"danger":2},"readyState":{"absent":0,"waiting":1,"backoff":1,"observing":1,"running":2,"ready":3,"server":3}}},
+ "Baseline":{"description":"`baseline.json` in the local ring directory: the last cumulative reading of every counter metric, so a restart of the collector (every code change restarts it) continues the deltas instead of losing the count since the last tick.","type":"object","additionalProperties":False,"required":["version","atMs","readings"],"properties":{"version":{"const":1},"atMs":{"type":"integer","minimum":0},"readings":{"type":"object","additionalProperties":{"type":"number","minimum":0}}}},
+ "Lock":{"description":"`collector.lock` in the local ring directory: the process that writes the rings (one writer per directory).","type":"object","additionalProperties":False,"required":["pid","startMs"],"properties":{"pid":{"type":"integer","minimum":1},"startMs":{"type":"integer","minimum":0}}},
+ "Texts":{"const":{"en":{"locked":"Another collector writes the rings in {directory}.","failed":"The collector {name} failed: {reason}","publication":"Publishing {file} failed: {reason}"},"de":{"locked":"Ein anderer Sammler schreibt die Ringe in {directory}.","failed":"Der Sammler {name} ist gescheitert: {reason}","publication":"Das Veröffentlichen von {file} ist gescheitert: {reason}"}}}
+}}
+p=M+"/🛰️collector/🧬️schema/🔣️.json"
+tmp=p+".tmp";open(tmp,"w",encoding="utf-8").write(json.dumps(d,ensure_ascii=False,indent=2)+"\n");os.replace(tmp,p);print("ok",len(allids))

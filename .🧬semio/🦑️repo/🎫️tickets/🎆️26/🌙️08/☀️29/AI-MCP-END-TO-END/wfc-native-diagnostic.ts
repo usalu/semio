@@ -24,21 +24,23 @@ const generated = resolve(import.meta.dirname, "🗑️generated");
 const directory = join(generated, "wfc");
 const diskReserveGiB = 5;
 const diskReserve = diskReserveGiB * 1024 ** 3;
-const [operation, emitter, linkedComponent] = process.argv.slice(2);
+const [operation, option, linkedComponent] = process.argv.slice(2);
 type Owner = "wfc" | "note";
 if (operation === "emit" || operation === "emit-note") {
-  if (!emitter) throw Error("Repository descriptor emitter required");
-  await emitModel(operation === "emit-note" ? "note" : "wfc", resolve(emitter), linkedComponent && resolve(linkedComponent));
+  if (!option) throw Error("Repository descriptor emitter required");
+  await emitModel(operation === "emit-note" ? "note" : "wfc", resolve(option), linkedComponent && resolve(linkedComponent));
   process.exit(0);
 }
 if (operation === "compare-lock") {
-  if (!emitter) throw Error("An earlier Hub lock is required");
-  compareLocks(await readFile(emitter), await readFile("🌎️hub/Cargo.lock"));
+  if (!option) throw Error("An earlier Hub lock is required");
+  compareLocks(await readFile(option), await readFile("🌎️hub/Cargo.lock"));
   process.exit(0);
 }
 if (!["plan", "plan-note", "plan-all", "inventory", "resolve-lock", "build", "build-note", "build-all"].includes(operation)) {
   throw Error("Use plan, plan-note, plan-all, inventory, compare-lock, resolve-lock, build, build-note, build-all, emit, or emit-note");
 }
+if (option !== undefined && (!["build", "build-note"].includes(operation) || option !== "--jobs=2")) throw Error("Single-component builds accept --jobs=2");
+const jobs = option === "--jobs=2" ? 2 : 1;
 const toolchain = readFileSync("rust-toolchain.toml", "utf8").match(/^channel\s*=\s*"([^"]+)"/m)?.[1];
 const registry = Bun.spawnSync(["repo", "tools", "list", "--json"], { stderr: "inherit" });
 if (registry.exitCode) process.exit(registry.exitCode);
@@ -72,8 +74,7 @@ if (effective.exitCode) process.exit(effective.exitCode);
 verifyCargoProfileConfigurationV1(profile, JSON.parse(effective.stdout.toString()));
 const args = (owners: readonly Owner[]) => [...cargoProfileInvocationArgumentsV1([
   "-Ztrim-paths", "build", "--locked", "--offline", "--manifest-path", manifest,
-  "--target", target, "-j", "1", ...owners.flatMap(owner => ["-p", `semio-hub-${owner}-component`]),
-  ...(owners.length > 1 ? ["--keep-going"] : []),
+  "--target", target, "-j", String(jobs), ...owners.flatMap(owner => ["-p", `semio-hub-${owner}-component`]),
 ], profile)];
 console.log(`[DEBUG] WFC diagnostic with profile digest ${profile.digest} at ${directory}`);
 type Unit = { pkg_id: string; mode: string; dependencies: ({ index: number } & Record<string, unknown>)[] };
@@ -125,8 +126,13 @@ if (operation === "resolve-lock") {
   const label = owners.join(" and ");
   const disk = statfsSync(directory);
   if (disk.bavail * disk.bsize < diskReserve) throw Error(`Less than ${diskReserveGiB} GiB free for isolated ${label} build`);
+  const started = performance.now();
   const child = Bun.spawn(cargo(args(owners)), { env: environment, stdout: "inherit", stderr: "inherit" });
-  for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, () => child.kill(signal));
+  console.log(`[DEBUG] Started ${label} Cargo at ${new Date().toISOString()} (pid ${child.pid}, supervisor ${process.pid}, jobs ${jobs})`);
+  for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, () => {
+    console.error(`[DEBUG] ${label} supervisor received ${signal}, forwarding to Cargo pid ${child.pid}`);
+    child.kill(signal);
+  });
   const diskMonitor = setInterval(() => {
     const disk = statfsSync(directory);
     if (disk.bavail * disk.bsize < diskReserve) {
@@ -136,6 +142,7 @@ if (operation === "resolve-lock") {
   }, 5000);
   process.exitCode = await child.exited;
   clearInterval(diskMonitor);
+  console.log(`[DEBUG] ${label} Cargo finished after ${Math.round(performance.now() - started)} ms (exit ${process.exitCode}, signal ${child.signalCode ?? "none"})`);
 }
 
 /** 🧬️ Compares complete Cargo unit identities across two package closures. */

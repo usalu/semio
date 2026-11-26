@@ -67,14 +67,14 @@ test("a directory that vanishes inside one owner is named, and the follow-up obs
  expect(sealed.value).toBe("sealed");
  expect(third.sort()).toEqual(modelUnfinished.sort());
  expect([...new Set(first)]).toEqual(names.slice(0,READER+1));
- const rows=(sealed.observations as {kind:string;path:string}[]).filter(row=>row.path===corners&&(row.kind==="readdir"));
+ const rows=[...sealed.observations].filter(row=>row.path===corners&&(row.kind==="readdir"));
  expect(rows.length).toBeGreaterThan(0);
 }));
 
 test("a failure that names no moved path of the tree, a stale implementation and a foreign path stay fatal",()=>world(async({root,corners})=>{
  const denied=Object.assign(new Error("denied"),{code:"EACCES",path:corners});
  const outside=Object.assign(new Error("gone"),{code:"ENOENT",path:join(tmpdir(),"elsewhere-"+Math.random())});
- const stale=Object.assign(staleImplementationV1("moved"),{path:corners,code:staleImplementationV1("x").code});
+ const stale=Object.assign(staleImplementationV1("moved"),{path:corners});
  expect(followedPathsV1(root,denied)).toEqual([]);
  expect(followedPathsV1(root,outside)).toEqual([]);
  expect(followedPathsV1(root,stale)).toEqual([]);

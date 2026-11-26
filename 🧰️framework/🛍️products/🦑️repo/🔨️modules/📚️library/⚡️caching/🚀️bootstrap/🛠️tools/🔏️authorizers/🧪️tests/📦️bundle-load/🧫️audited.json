@@ -1,6 +1,11 @@
 {
  "reads": [
   {
+   "module": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts",
+   "reader": "readFileSync",
+   "reason": "Digests the warden's own sources to detect stale code; only the warden daemon calls it, never the compiler program."
+  },
+  {
    "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/🟨️.mjs",
    "reader": "readFileSync",
    "reason": "Reads its own module file by the module URL: the bundle serves the module's own captured bytes, nothing else is named."
@@ -24,11 +29,6 @@
    "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🌐️remote-exchange/🧳️portable/🟦️.ts",
    "reader": "readFileSync",
    "reason": "The files come from a constant array of relative path literals in the same module (served from the captured images) and a failed read answers undefined."
-  },
-  {
-   "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🛰️plan/🟦️.ts",
-   "reader": "readFileSync",
-   "reason": "A failed read hashes the word absent; the compiler program never plans an invocation."
   },
   {
    "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",

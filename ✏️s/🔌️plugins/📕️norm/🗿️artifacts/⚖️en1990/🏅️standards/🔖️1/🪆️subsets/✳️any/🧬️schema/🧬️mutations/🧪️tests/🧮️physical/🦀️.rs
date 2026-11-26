@@ -1,6 +1,6 @@
 //! 🧮️ Real EN 1990 public replay preparation pays nested owners under its original caller.
 use semio_framework_job::{original_receiving_scope_headroom, Generation, OperationId, OriginalJobDecodeOwner, OriginalJobFixtureCaller};
-use semio_framework_os_store_one_item_batch::paged_one_item::ColdMutationApplyFactory;
+use semio_framework_os_store_one_item_batch::paged_one_item::RetainedColdMutationApplyFactory;
 use semio_framework_value::{
     factory::ArcRootRetirement,
     retained_clone::{retained_clone_grant_admits, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep},
@@ -242,7 +242,7 @@ fn en1990_public_factory_pays_nested_projection_and_semantics() {
             let lease = registry.try_issue(Arc::clone(&root)).unwrap_or_else(|_| panic!("original EN 1990 read lease"));
             let context = ArtifactReplayPreparationContext { mode: ArtifactReplayPreparationMode::Prefix, operation_index: index, generation: 1, base_revision: [7; 32] };
             let request = ArtifactReplayPreparationRequest { base: SnapshotRead::new(Arc::clone(&root), lease), input: input.take().unwrap(), context, snapshots: Arc::clone(&snapshots), mutations: Arc::clone(&mutations) };
-            let factory = ColdMutationApplyFactory::<En1990Snapshot, En1990Mutation>::default();
+            let factory = RetainedColdMutationApplyFactory::<En1990Snapshot, En1990Mutation>::default();
             let birth = retained(ArtifactReplayPreparationFactory::preparation_birth_demand(&factory));
             let mut owner = probe.run(birth, |control| {
                 assert!(control.prepare_work(1).unwrap());

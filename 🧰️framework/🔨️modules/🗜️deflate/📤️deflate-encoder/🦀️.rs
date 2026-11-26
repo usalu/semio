@@ -36,10 +36,10 @@ pub fn deflate_controlled<C:DeflateEncodeControl>(raw:&[u8],control:&mut C)->Res
     control.checkpoint(DeflateEncodeProgress{phase:DeflateEncodePhase::WriteOutput,completed:0,total:output_limit})?;
     let mut bytes=Vec::new();bytes.try_reserve_exact(output_limit).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"Deflate output allocation"))?;
     let mut writer=BitWriter{bytes,buffer:0,bits:0};writer.write_bits(1,1);writer.write_bits(1,2);
-    let mut searched=0usize;let mut emitted=0usize;let mut i=0usize;
+    let mut searched=0usize;let mut emitted=0usize;let mut i=0usize;let mut misses=0usize;let mut skip=0usize;
     while i<raw.len(){
-        let mut best_len=0usize;let mut best_dist=0usize;
-        if raw.len()-i>=MIN_MATCH{
+        let mut best_len=0usize;let mut best_dist=0usize;let skipping=skip>0;
+        if !skipping&&raw.len()-i>=MIN_MATCH{
             let h=hash3(raw[i],raw[i+1],raw[i+2]);let mut candidate=head[h];let mut chain=0usize;
             while candidate!=u32::MAX&&chain<MAX_CHAIN{
                 controlled_search_step(control,&mut searched)?;
@@ -62,7 +62,8 @@ pub fn deflate_controlled<C:DeflateEncodeControl>(raw:&[u8],control:&mut C)->Res
             let extra=DIST_EXTRA[di];if extra>0{writer.write_bits(best_dist as u32-DIST_BASE[di],extra as u32);}best_len
         }else{writer.write_huffman_code(codes[raw[i] as usize],lengths[raw[i] as usize]);1};
         if writer.bytes.len()-emitted>=256{emitted=writer.bytes.len();control.checkpoint(DeflateEncodeProgress{phase:DeflateEncodePhase::WriteOutput,completed:emitted,total:output_limit})?;}
-        let end=i+consumed;let inserted=if consumed>MAX_INSERT{i+1}else{end};while i<end{
+        if best_len>=MIN_MATCH{misses=0;skip=0;}else if skipping{skip-=1;misses+=1;}else{misses+=1;skip=misses>>SKIP_SHIFT;}
+        let end=i+consumed;let inserted=if skipping{i}else if consumed>MAX_INSERT{i+1}else{end};while i<end{
             if i<inserted&&raw.len()-i>=MIN_MATCH{let h=hash3(raw[i],raw[i+1],raw[i+2]);prev[i]=head[h];head[h]=i as u32;}
             i+=1;if i%256==0{control.checkpoint(DeflateEncodeProgress{phase:DeflateEncodePhase::ScanInput,completed:i,total:raw.len()})?;}
         }
@@ -108,11 +109,14 @@ const HASH_BITS: u32 = 15;
 
 pub(super) const HASH_SIZE: usize = 1 << HASH_BITS;
 
-pub(super) const MAX_CHAIN: usize = 16;
+pub(super) const MAX_CHAIN: usize = 4;
 
-pub(super) const NICE_MATCH: usize = 32;
+pub(super) const NICE_MATCH: usize = 8;
 
-pub(super) const MAX_INSERT: usize = 16;
+pub(super) const MAX_INSERT: usize = 4;
+
+/// 🏃️ After a searched position emits a literal, the next `misses >> SKIP_SHIFT` positions are literals without a search or a chain insert (`misses` counts the literals since the last match): incompressible runs cost two bytes of work per input byte instead of forty.
+pub(super) const SKIP_SHIFT: u32 = 6;
 
 pub(super) fn hash3(a: u8, b: u8, c: u8) -> usize {
     let value = (a as u32) | (b as u32) << 8 | (c as u32) << 16;
@@ -120,7 +124,7 @@ pub(super) fn hash3(a: u8, b: u8, c: u8) -> usize {
 }
 
 /// 🗜️ One fixed-Huffman (`BTYPE=1`) block over the whole input, found via a greedy hash-chain
-/// LZ77 match finder (min match 3, max 258, 32 KiB window, at most `MAX_CHAIN` probes, none after a match of `NICE_MATCH`, and only the first position of a match longer than `MAX_INSERT` enters the chains) — a real matcher,
+/// LZ77 match finder (min match 3, max 258, 32 KiB window, at most `MAX_CHAIN` probes, none after a match of `NICE_MATCH`, and only the first position of a match longer than `MAX_INSERT` enters the chains, and after a literal run the next `misses >> SKIP_SHIFT` positions are bare literals) — a real matcher,
 /// not a stored-block passthrough, so segment payloads still shrink.
 pub fn deflate(raw: &[u8]) -> Vec<u8> {
     let lit_len_lengths = fixed_literal_length_lengths();
@@ -140,10 +144,13 @@ pub fn deflate(raw: &[u8]) -> Vec<u8> {
         }
     };
     let mut i = 0usize;
+    let mut misses = 0usize;
+    let mut skip = 0usize;
     while i < raw.len() {
         let mut best_len = 0usize;
         let mut best_dist = 0usize;
-        if i + MIN_MATCH <= raw.len() {
+        let skipping = skip > 0;
+        if !skipping && i + MIN_MATCH <= raw.len() {
             let h = hash3(raw[i], raw[i + 1], raw[i + 2]);
             let mut candidate = head[h];
             let mut chain = 0usize;
@@ -182,6 +189,8 @@ pub fn deflate(raw: &[u8]) -> Vec<u8> {
             if extra_dist > 0 {
                 writer.write_bits(best_dist as u32 - DIST_BASE[dist_index], extra_dist as u32);
             }
+            misses = 0;
+            skip = 0;
             let end = i + best_len;
             let inserted = if best_len > MAX_INSERT { i + 1 } else { end };
             while i < end {
@@ -192,7 +201,13 @@ pub fn deflate(raw: &[u8]) -> Vec<u8> {
             }
         } else {
             writer.write_huffman_code(lit_len_codes[raw[i] as usize], lit_len_lengths[raw[i] as usize]);
-            insert(i, raw, &mut head, &mut prev);
+            misses += 1;
+            if skipping {
+                skip -= 1;
+            } else {
+                insert(i, raw, &mut head, &mut prev);
+                skip = misses >> SKIP_SHIFT;
+            }
             i += 1;
         }
     }

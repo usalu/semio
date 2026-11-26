@@ -1,0 +1,13 @@
+{
+ "version": 1,
+ "origin": "g1-m02",
+ "platform": "linux",
+ "state": "running",
+ "ready": false,
+ "stage": "workspace",
+ "stageIndex": 3,
+ "stageCount": 5,
+ "refusal": null,
+ "updatedMs": 1800000060000,
+ "beatMilliseconds": 30000
+}

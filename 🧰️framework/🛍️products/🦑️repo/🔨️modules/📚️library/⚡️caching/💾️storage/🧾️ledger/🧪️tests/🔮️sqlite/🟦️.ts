@@ -32,7 +32,7 @@ test("aged fleet state is measured and preserved while the generic aged neighbor
   const ages=ledger.roots.native,expected=database.query("SELECT name FROM homes WHERE name != ?1 AND age >= MAX(?2,?3) ORDER BY name").values(fixture.home,ages.undeclaredUnusedAgeMs,ages.undeclaredQuietMs).flat();
   expect(expected).toEqual([fixture.agedNeighbor]);
   const result=await collectCacheV1(workspace,ledger,{only,dryRun:false},ports,{language:"en",write:()=>{}});
-  expect(result.removed.map(row=>row.name)).toEqual(expected);
+  expect<unknown>(result.removed.map(row=>row.name)).toEqual(expected);
   expect(result.failed).toEqual([]);
   for(const home of fixture.homes)for(const file of home.files)expect(existsSync(join(root,home.name,file))).toBe(!expected.includes(home.name));
   expect(()=>requireDeclaredCacheSegmentsV1([fixture.home,"state.wal"],ledger,"native")).not.toThrow();

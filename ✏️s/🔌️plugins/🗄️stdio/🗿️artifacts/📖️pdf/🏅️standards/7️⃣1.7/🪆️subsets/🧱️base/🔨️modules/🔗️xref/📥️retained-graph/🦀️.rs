@@ -1377,6 +1377,8 @@ mod tests {
     }
 
     /// 🪙️ What one browser turn grants a decode step, and the contract's token and body-byte costs the importer charges per unit: the copy grant, the retained items, the fuel (one unit per token, one per 64 body bytes).
+    /// 📏️ Bytes the interpreted-stream pass may copy per decoded stream beyond two bytes per decoded body byte: the inflate history and every output page only reserve empty backing, each as a unit of its own, and copy nothing; the walk record (about 9 KiB), the sanitized dictionary and its retirement; the inflate history and output pages only reserve empty backing and copy nothing (institution diagram: 85 KB per stream while the history reservation shared a call with decoding).
+    const INTERPRET_COPY_PER_STREAM: usize = 20 << 10;
     const TURN_COPY: usize = 1_048_463;
     const TURN_ITEMS: usize = 63;
     const TURN_FUEL: usize = 4096;
@@ -1436,6 +1438,10 @@ mod tests {
             let interpreted: usize = passes.iter().filter(|(pass, _)| pass.starts_with("interpret")).map(|(_, (_, copy, _))| copy).sum();
             report.push((name.to_owned(), turns, interpreted.div_ceil(TURN_COPY)));
             assert!(turns <= bound, "{name}: prepared in {turns} turns, above {bound}: {passes:?}");
+            let streams = passes.get("interpret/swap").map_or(0, |(calls, ..)| *calls);
+            let (_, decode_copy, decode_work) = passes.get("interpret/decode").copied().unwrap_or_default();
+            let overhead = interpreted - (2 * decode_work).min(decode_copy);
+            assert!(overhead <= INTERPRET_COPY_PER_STREAM * (streams + 1), "{name}: the interpreted-stream pass copies {overhead} bytes beyond its body bytes for {streams} streams, above {INTERPRET_COPY_PER_STREAM} each: {passes:?}");
             assert!(3 * interpreted.div_ceil(TURN_COPY) <= turns + 3, "{name}: the interpreted-stream pass copies {interpreted} bytes of the {turns} turns: {passes:?}");
         }
         println!("prepare turns (name, turns, interpreted-stream pass copy in turns): {report:?}");

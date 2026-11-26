@@ -108,7 +108,8 @@ export function writeRecordV1(directory, record) {
   } catch { try { rmSync(temporary, { force: true }); } catch { return false; } return false; }
 }
 
-/** 🛰️ Resolves the stamp of a derived inferrer: the local record of its closure key, else the fleet's (re-checked here), else one evaluation of the corpus within `timeoutMilliseconds`; unavailable (never an error) when none of them works, which makes the files of the inferrer count as content again. */
+/** 🛰️ Resolves the stamp of a derived inferrer: the local record of its closure key, else the fleet's (re-checked here), else one evaluation of the corpus within `timeoutMilliseconds`; unavailable (never an error) when none of them works, which makes the files of the inferrer count as content again.
+ * @param {{ id: string, declared: string, root: string, directory: string, runners: any, fleet?: any, provider?: any, timeoutMilliseconds?: number, signal?: AbortSignal, now?: () => number, read?: (path: string) => string, shaOf?: (path: string) => string, codeFiles?: readonly string[] }} options */
 export async function resolveStampV1({ id, declared, root, directory, runners, fleet, provider = CONFORMANCE_CORPUS_V1.providers[id], timeoutMilliseconds = 20000, signal, now = Date.now, read = (path) => readFileSync(path, "utf8"), shaOf = (path) => sha256V1(readFileSync(resolve(root, path))), codeFiles = [] }) {
   try {
     const files = [...new Set([...closureFilesV1(provider.entries, root, read), ...provider.schemas, ...Object.values(provider.fixtures), ...codeFiles])].sort(), key = closureKeyV1(id, files, shaOf);
@@ -147,7 +148,8 @@ export function coverageViolationsV1(declared, covered) {
 /** 🎲️ A deterministic sample of `count` names: the names with the smallest digest of `seed` and the name, so the same seed samples the same projects and a new seed another set. */
 export const sampleNamesV1 = (names, count, seed) => [...names].map((name) => [sha256V1(seed + "\n" + name), name]).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).slice(0, Math.max(0, count)).map(([, name]) => name);
 
-/** 🔍️ The periodic full audit: infers the sampled projects completely again and compares the result with the stored record, so a behaviour change on an input shape the corpus lacks is found by the fleet's capable machine instead of by a developer. `infer(project)` and `stored(project)` answer JSON; progress and cancellation are honoured between projects. */
+/** 🔍️ The periodic full audit: infers the sampled projects completely again and compares the result with the stored record, so a behaviour change on an input shape the corpus lacks is found by the fleet's capable machine instead of by a developer. `infer(project)` and `stored(project)` answer JSON; progress and cancellation are honoured between projects.
+ * @param {{ projects: readonly string[], infer: (project: string) => Promise<unknown>, stored: (project: string) => Promise<unknown>, signal?: AbortSignal, progress?: (row: { checked: number, total: number }) => void }} options */
 export async function runConformanceAuditV1({ projects, infer, stored, signal, progress }) {
   const differing = [], failed = [];
   let same = 0, checked = 0;

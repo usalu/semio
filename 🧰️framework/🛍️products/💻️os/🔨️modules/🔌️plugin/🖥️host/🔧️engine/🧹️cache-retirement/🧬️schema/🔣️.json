@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:os:plugin:host:engine:compiled-cache-retirement:v1",
+  "title": "How the compiled Wasmtime cache retires its entries",
+  "description": "The compiled cache `<home>/.semio/cache/wasmtime/<engine-config-hash>/<package-hash>.cwasm` is derivable (a miss recompiles) and must not grow without bound. At engine start, and then at most every `minimumIntervalSeconds` (the stamp file of the cache root records the last run), complete `.cwasm` files go when their last use (modification time; a cache hit refreshes it every `touchIntervalSeconds` at most) is older than `maximumAgeSeconds`, and then, least recently used first, until the complete files together fit `maximumBytes`. A complete file used within `minimumIdleSeconds` is never retired, whatever the cap says (it may be open, or just written); a `.scratch` staging file of a writer goes only after `scratchGraceSeconds` (writes are temp + rename, so a complete file is never half written). At most `maximumEntries` files are looked at per run; deletions are single `remove_file` calls, a refusal (a file still mapped on Windows) leaves the file for the next run.",
+  "type": "object",
+  "required": ["version", "maximumBytes", "maximumAgeSeconds", "minimumIdleSeconds", "scratchGraceSeconds", "minimumIntervalSeconds", "touchIntervalSeconds", "maximumEntries", "stampFile"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {"const": 1},
+    "maximumBytes": {"type": "integer", "minimum": 1},
+    "maximumAgeSeconds": {"type": "integer", "minimum": 1},
+    "minimumIdleSeconds": {"type": "integer", "minimum": 0},
+    "scratchGraceSeconds": {"type": "integer", "minimum": 1},
+    "minimumIntervalSeconds": {"type": "integer", "minimum": 0},
+    "touchIntervalSeconds": {"type": "integer", "minimum": 0},
+    "maximumEntries": {"type": "integer", "minimum": 1},
+    "stampFile": {"type": "string", "pattern": "^[A-Za-z0-9._-]+$"}
+  }
+}

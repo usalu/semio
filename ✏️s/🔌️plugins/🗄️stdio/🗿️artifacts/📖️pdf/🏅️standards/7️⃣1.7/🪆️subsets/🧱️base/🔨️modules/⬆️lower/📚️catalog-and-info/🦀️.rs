@@ -266,8 +266,8 @@ pub fn lower_info_with(info: &PdfInfo, encode_text: impl Fn(&str) -> Vec<u8>) ->
     push_opt(&mut dict, "Keywords", text(&info.keywords));
     push_opt(&mut dict, "Creator", text(&info.creator));
     push_opt(&mut dict, "Producer", text(&info.producer));
-    push_opt(&mut dict, "CreationDate", info.creation_date.as_ref().map(|d| PdfObject::Str(crate::standards::v1_7::subsets::base::io::text::snapshot::date::print_pdf_date(d).into_bytes())));
-    push_opt(&mut dict, "ModDate", info.modification_date.as_ref().map(|d| PdfObject::Str(crate::standards::v1_7::subsets::base::io::text::snapshot::date::print_pdf_date(d).into_bytes())));
+    push_opt(&mut dict, "CreationDate", info.creation_date.clone().map(PdfObject::Date));
+    push_opt(&mut dict, "ModDate", info.modification_date.clone().map(PdfObject::Date));
     push_opt(&mut dict, "Trapped", info.trapped.as_ref().map(PdfObject::name));
     dict.extend(info.extra.iter().cloned());
     dict

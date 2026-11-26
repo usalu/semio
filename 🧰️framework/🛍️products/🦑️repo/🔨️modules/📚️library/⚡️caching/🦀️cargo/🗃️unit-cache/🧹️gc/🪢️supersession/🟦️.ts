@@ -19,7 +19,7 @@ export type UnitRetirementV1=Readonly<{mode:StalenessModeV1;scanned:number;decla
 
 type Row={key:string;storedAt:number;accessed:number;directory:string;newest:string;files:string[];refs:string[];declaration:DeclarationV1|undefined};
 
-const none:CasReclaimV1={entries:0,bytes:0,pinned:0,held:0,recent:0,shared:0,missing:0};
+const none:CasReclaimV1={entries:0,bytes:0,pinned:0,held:0,recent:0,shared:0,missing:0,leased:0};
 const yielding=()=>new Promise<void>(done=>setImmediate(done));
 const refsOf=(entry:{outputs?:{sha256?:unknown}[];stdout?:unknown;stderr?:unknown}):string[]=>[...(entry.outputs??[]).map(row=>row.sha256),entry.stdout,entry.stderr].filter((sha):sha is string=>typeof sha==="string"&&/^[0-9a-f]{64}$/u.test(sha));
 

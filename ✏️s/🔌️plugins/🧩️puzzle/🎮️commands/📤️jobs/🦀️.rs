@@ -37,7 +37,7 @@ use semio_framework_value::ValueError;
 #[path="🧪️tests/♻️retirement/🦀️.rs"]
 mod original_work_close_tests;
 
-/// ♻️ Moves a work's remaining owners into one derived bundle and retires it through the controlled owner, one granted turn at a time.
+/// ♻️ Moves the work's remaining owners into one controlled retirement bundle.
 pub struct WorkClosing<T: RetireOwned + 'static> {
     staged: std::mem::ManuallyDrop<Option<T>>,
     retirement: RetainedCloneClose,
@@ -60,21 +60,46 @@ impl<T: RetireOwned + 'static> WorkClosing<T> {
         self.staged.is_none() && self.retirement.is_empty()
     }
 
-    /// 📏️ Quotes the single turn the next close step spends.
+    /// 📏️ Quotes the next controlled retirement step.
     pub fn demands(&self, copy: usize) -> Result<RetirementDemand, ValueError> {
         self.retirement.next_owner_demands::<T>(self.staged.is_some(), &None, copy)
     }
 
+    /// 🧹️ Retires a bounded batch of individually granted actions under the current caller turn.
+    pub fn close_batch(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        if self.retirement.is_empty() { return self.close_step(cx); }
+        let started_us = cx.now_us();
+        let mut progress = RetainedCloneProgress::default();
+        for _ in 0..64 {
+            let step = match self.close_step(cx) {
+                Ok(step) => step,
+                Err(mut failure) => {
+                    failure.effects = progress.saturating_add(failure.effects);
+                    return Err(failure);
+                }
+            };
+            let step_progress = step.progress();
+            progress = progress.checked_add(step_progress)?;
+            if self.is_empty() || step_progress == RetainedCloneProgress::default()
+                || cx.retirement_should_yield()
+                || started_us.is_some_and(|started| cx.now_us().is_some_and(|now| now.saturating_sub(started) >= semio_framework_job::INTERACTIVE_LANE_WALL_US))
+            {
+                break;
+            }
+        }
+        Ok(if self.is_empty() { InteractiveJobCloseStep::Complete { progress } } else { InteractiveJobCloseStep::Pending { progress } })
+    }
+
+    /// 🧾️ Performs one controlled owner action against the current retained grant.
     pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
         if self.is_empty() { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }); }
         let demand = self.demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step = semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+        semio_framework_job::close_original_effect_step(cx, demand, |effect| {
             if self.retirement.is_empty(){
                 let turn=self.retirement.begin_granted(&mut self.staged,effect);
                 semio_framework_value::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default()))).map_err(Into::into),work:turn.work})
             }else{self.retirement.step_granted(effect.grant().maximum_copy_bytes,effect)}
-        })?;
-        Ok(if self.is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
+        })
     }
 }
 

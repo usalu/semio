@@ -45,19 +45,19 @@ test("a membership that moved names every moved member once, as an independent f
  try{
   for(const name of ["a","b","c","d"])await mkdir(join(root,name,"src"),{recursive:true});
   for(const name of ["a","b","c","d"])for(const file of ["manifest","src/x.ts","src/y.ts"])await writeFile(join(root,name,file),name+file);
-  const walk=async()=>(await independentGlobV1("**/*",{cwd:root,dot:true})).map(path=>path.replaceAll("\\","/")).sort();
+  const walk=async()=>(await independentGlobV1("**/*",{cwd:root,dot:true})).map((path:string)=>path.replaceAll("\\","/")).sort();
   const files=await walk();
   expect(files).toHaveLength(12);
   const before=await buildGraphMembershipV1(root,files);
   expect(await buildGraphMembershipV1(root,files)).toBe(before);
   await rm(join(root,"a/manifest"));await rm(join(root,"c/src/y.ts"));await rm(join(root,"d/src/x.ts"));
   await rm(join(root,"b/src/y.ts"));await mkdir(join(root,"b/src/y.ts"));
-  const alive=new Set(await walk()),moved=files.filter(file=>!alive.has(file)).sort();
+  const alive=new Set(await walk()),moved=files.filter((file:string)=>!alive.has(file)).sort();
   expect(moved).toHaveLength(4);
   const failure=await buildGraphMembershipV1(root,files).then(()=>undefined,error=>error as {code:string;paths:string[]});
   expect(failure?.code).toBe("BUILD_MEMBERSHIP_CHANGED");
   expect([...failure!.paths].sort()).toEqual(moved);
-  const rest=files.filter(file=>alive.has(file));
+  const rest=files.filter((file:string)=>alive.has(file));
   expect(await buildGraphMembershipV1(root,rest)).not.toBe(before);
   expect(await buildGraphMembershipV1(root,rest)).toBe(await buildGraphMembershipV1(root,rest));
  }finally{await rm(root,{recursive:true,force:true});}

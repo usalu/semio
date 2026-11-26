@@ -346,10 +346,10 @@ pub struct ArtifactStoreOneItemSeal {
 /// value. The store publication turn only validates fixed authorities and moves these owners.
 pub struct ArtifactStoreOneItemPrepared<P, Mutation> {
     outcome_messages: Option<semio_os_spr::command::MutationMessagePublication>,
-    pub edit: Box<Edit<Mutation>>,
+    edit: Box<Edit<Mutation>>,
     pub post_snapshot: Arc<P>,
     pub next_clock: HybridLogicalTimestamp,
-    pub edit_digest: [u8; 32],
+    edit_digest: [u8; 32],
     pub foreign_step_presence: Option<bool>,
     pub local_actor: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>,
     pub applied_edit_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,

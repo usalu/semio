@@ -170,7 +170,7 @@ export function retryOnConcurrentEditSyncV1<T>(profile:ChurnProfileNameV1,body:(
 
 /** 🧱️ The failure of a process whose own implementation changed on disk after it loaded it (a peer edited a reader it runs): the outermost command starts again with the current implementation, bounded by the declared format stamp protocol, instead of failing. The code is the one the stamp table recognises.
  * @see ../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🔄️reexec/🟨️.mjs */
-export function staleImplementationV1(message:string):Error{return Object.assign(new Error(message),{name:"StaleImplementationErrorV1",code:protocol.staleImplementationCode,moved:Object.freeze([])});}
+export function staleImplementationV1(message:string):Error&Readonly<{code:string;moved:readonly string[]}>{return Object.assign(new Error(message),{name:"StaleImplementationErrorV1",code:protocol.staleImplementationCode,moved:Object.freeze([])});}
 
 const restartableHandlerKeyV1=Symbol.for("semio.restartableFailureHandler.v1");
 /** 🪝️ Installs the one handler that turns a failure a fresh process cures (stale implementation, half-edited module, escaped concurrent edit) into the declared exit code of the process; the repository library installs it, a script entry point calls {@link handleRestartableFailureV1} without depending on the library. */

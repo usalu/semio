@@ -2566,37 +2566,44 @@
     {
       "mode": "success",
       "failed": false,
-      "aborted": false
+      "aborted": false,
+      "poisonsOriginal": false
     },
     {
       "mode": "undefined",
       "failed": true,
-      "aborted": true
+      "aborted": true,
+      "poisonsOriginal": true
     },
     {
       "mode": "frozen",
       "failed": true,
-      "aborted": true
+      "aborted": true,
+      "poisonsOriginal": false
     },
     {
       "mode": "accepted-drain",
       "failed": false,
-      "aborted": false
+      "aborted": false,
+      "poisonsOriginal": false
     },
     {
       "mode": "accepted-failure",
       "failed": true,
-      "aborted": true
+      "aborted": true,
+      "poisonsOriginal": false
     },
     {
       "mode": "release-failure",
       "failed": true,
-      "aborted": true
+      "aborted": true,
+      "poisonsOriginal": false
     },
     {
       "mode": "reader-frozen",
       "failed": true,
-      "aborted": true
+      "aborted": true,
+      "poisonsOriginal": false
     }
   ],
   "sourceOwnerStoreProducerCases": [

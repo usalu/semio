@@ -6,7 +6,7 @@ import { activationFilesDigest } from "../../../../../../../🧰️framework/�
 import { developmentRuntimeRoot } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 
 const base = "semio_hub_procedural_component";
-const required = [base + ".js",base + ".core.wasm","🌉️bridge.js","🟨️.js","🛂️.descriptor.semio","🔣️.json"];
+const required = [base + ".js",base + ".core.wasm","🌉️bridge.js","🟨️.js","🛂️.descriptor.semio","🔣️.json","🧾️receipt.json"];
 const renderer = process.argv[2];
 if (renderer !== "react" && renderer !== "wgpu") throw Error("Expected react or wgpu");
 if (!process.argv[3]) throw Error("Expected a probed procedural browser module directory");

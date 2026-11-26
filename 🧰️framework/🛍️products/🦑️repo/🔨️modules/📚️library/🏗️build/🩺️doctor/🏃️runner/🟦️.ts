@@ -54,7 +54,7 @@ export function selectDoctorProbesV1(probes:readonly DoctorProbeV1[],only:Readon
 /** 📸️ Reads the facts of a machine: phase 1 probes run with bounded parallelism, then the process probe sees the pids they found. */
 export async function collectDoctorFactsV1(ports:DoctorPortsV1,options:DoctorRunOptionsV1={}):Promise<DoctorFactsV1>{
  const policy=options.policy??DOCTOR_POLICY_V1,probes=selectDoctorProbesV1(options.probes??DOCTOR_PROBES_V1,options.only),sections:Record<string,unknown>={},rows:DoctorProbeRowV1[]=[];
- const base:DoctorProbeContextV1={policy,known:new Set(),libraryRoot:options.libraryRoot??LIBRARY_ROOT,deadlineMs:0};
+ const base:DoctorProbeContextV1={policy,known:new Set(),libraryRoot:options.libraryRoot??LIBRARY_ROOT,deadlineMs:0,requested:options.only??new Set()};
  let started=0;
  const phase=async(group:readonly DoctorProbeV1[],context:DoctorProbeContextV1):Promise<void>=>{
   let next=0;

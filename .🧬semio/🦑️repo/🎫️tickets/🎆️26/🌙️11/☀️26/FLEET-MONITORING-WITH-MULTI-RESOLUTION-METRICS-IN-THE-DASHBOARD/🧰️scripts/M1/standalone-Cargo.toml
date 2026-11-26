@@ -1,0 +1,21 @@
+[package]
+name = "semio-ui-tui-charts"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[lib]
+path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/⌨️tui/📈️charts/🦀️.rs"
+
+[[test]]
+name = "charts"
+path = "tests/charts.rs"
+
+[dependencies]
+semio-ui-tui-core = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧱️cell-model/📦️packages/🦀️rust" }
+ui_locale = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-ui-locale" }
+
+[dev-dependencies]
+serde_json = "1"
+ui_styling = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }

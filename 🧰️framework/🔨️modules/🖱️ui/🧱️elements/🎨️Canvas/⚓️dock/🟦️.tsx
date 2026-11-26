@@ -225,12 +225,39 @@ interface ModeDockStackProps {
   mobile?: boolean;
 }
 
-/** 🛟️ Keeps a stack's top-left tab chips (title, Focus, Close) clear of the anchored chrome panels that float over the canvas region: the chips step inline past a panel instead of hiding under it. */
+/** 🧭️ How far the top-left tab chips must step down to clear the navbar band painted over the first row of every stack that touches the top edge. Left under the band, Focus, Unfocus and Close of those windows were covered by the navbar controls and unreachable by pointer; the chips now start where the band ends (the window body follows the chips, which it already measures), while stacks below the band keep their own row. */
+function useNavbarBandShift(hostRef: React.RefObject<HTMLElement | null>): number {
+  const [shift, setShift] = reactHostPort.useState(0);
+  reactHostPort.useLayoutEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    const measure = () => {
+      const stackTop = host.getBoundingClientRect().top;
+      const bandBottom = Math.max(0, ...[...host.ownerDocument.querySelectorAll<HTMLElement>('[data-layout-band="start"]')].map((band) => band.getBoundingClientRect().bottom));
+      const next = stackTop < bandBottom ? Math.ceil(bandBottom - stackTop) : 0;
+      setShift((previous) => (previous === next ? previous : next));
+    };
+    measure();
+    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(measure) : undefined;
+    observer?.observe(host);
+    host.ownerDocument.querySelectorAll<HTMLElement>('[data-layout-band="start"]').forEach((band) => observer?.observe(band));
+    window.addEventListener("resize", measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  });
+  return shift;
+}
+
+/** 🛟️ Keeps a stack's top-left tab chips (title, Focus, Close) clear of the anchored chrome panels that float over the canvas region (inline) and of the navbar band above it (block): the chips step past them instead of hiding under them. */
 const ModeDockTabsClear: React.FC<{ readonly hostRef: React.RefObject<HTMLElement | null>; readonly children: React.ReactNode }> = ({ hostRef, children }) => {
   const affordanceRef = reactHostPort.useRef<HTMLDivElement>(null);
   const safeArea = useChromePanelSafeArea({ hostRef, affordanceRef, anchor: "top-left", yieldAxis: "inline" });
+  const bandShift = useNavbarBandShift(hostRef);
+  const style: React.CSSProperties | undefined = safeArea.inlinePx > 0 || bandShift > 0 ? { marginInlineStart: safeArea.inlinePx > 0 ? safeArea.inlinePx : undefined, marginBlockStart: bandShift > 0 ? bandShift : undefined } : undefined;
   return (
-    <div ref={affordanceRef} data-slot="mode-dock-tabs-clear" data-safe-area-inline={safeArea.inlinePx || undefined} className="flex min-w-0" style={safeArea.inlinePx > 0 ? { marginInlineStart: safeArea.inlinePx } : undefined}>
+    <div ref={affordanceRef} data-slot="mode-dock-tabs-clear" data-safe-area-inline={safeArea.inlinePx || undefined} data-band-shift={bandShift || undefined} className="flex min-w-0" style={style}>
       {children}
     </div>
   );

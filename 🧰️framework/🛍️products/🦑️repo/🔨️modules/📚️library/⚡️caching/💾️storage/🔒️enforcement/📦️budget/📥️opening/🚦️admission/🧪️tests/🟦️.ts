@@ -56,7 +56,7 @@ test("a waiting submission gives up with the wait text after the bounded wait an
  try{
  let clock=0;const ports:PartitionSlotPortsV1={now:()=>clock,sleep:async()=>{clock+=schema.definitions.Protocol.const.maximumWaitMilliseconds/4;},write:line=>{lines.push(line);}};
  const wait=awaitPartitionSlotV1({id:"graph",busy:()=>partitionOperationSlotsV1,recheck:()=>{},onSettled:()=>()=>{}},control(),ports);
- await expect(wait).rejects.toMatchObject({kind:"waitTimeout"});const error=await wait.catch(caught=>caught as{texts:{en:string;de:string}});
+ await expect(wait).rejects.toMatchObject({kind:"waitTimeout"});const error=await wait.then(()=>{throw Error("The bounded wait must refuse");},(caught:{texts:{en:string;de:string}})=>caught);
  expect(error.texts.en).toContain("Gave up after 600 s");expect(error.texts.de).toContain("aufgegeben");expect(lines.length).toBeGreaterThan(0);expect(lines.join("")).toContain("Waiting for a free cache operation slot");expect(lines.join("")).toContain("Warte auf einen freien Cache-Operationsplatz");
  }finally{languageNames.forEach((name,index)=>{if(saved[index]===undefined)delete process.env[name];else process.env[name]=saved[index];});}
 });

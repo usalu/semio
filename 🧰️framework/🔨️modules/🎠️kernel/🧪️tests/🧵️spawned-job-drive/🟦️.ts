@@ -68,6 +68,7 @@ interface DriveFixture {
   readonly budget: { readonly stepCeiling: number; readonly fuel: string; readonly deadlineMs: number };
   readonly placements: { readonly wire: readonly string[]; readonly refusals: readonly string[] };
   readonly transcripts: readonly TranscriptFixture[];
+  readonly renewedAdmission: TranscriptFixture;
   readonly refusals: readonly RefusalFixture[];
   readonly completedEvent: {
     readonly kind: string;
@@ -173,6 +174,29 @@ export async function testSpawnedJobDriveContract(): Promise<void> {
       (error: unknown) => error instanceof SpawnedJobDriveError && error.reason === "stalled" && error.steps === SPAWNED_JOB_STEP_CEILING,
     );
     assert.equal(log.stepped.length, SPAWNED_JOB_STEP_CEILING, "the ceiling is the number of round trips, not a guess");
+  }
+
+  {
+    const row = fixture.renewedAdmission;
+    const log = { started: [] as { job: bigint; kind: string; input: Uint8Array }[], stepped: [] as bigint[] };
+    const boundaries: number[] = [];
+    const port = scriptedPort(transcript(row), log);
+    const completion = await driveSpawnedJob({
+      job: 64n, kind: FRAMEWORK_RESERVED_JOB_KIND, input: new Uint8Array(), port,
+      continueAfterAdmission: async () => { boundaries.push(log.stepped.length); },
+    });
+    assert.deepEqual(completion, { steps: row.completion.steps, outcome: outcomeOf(row.completion.outcome) });
+    assert.deepEqual(boundaries, [32, 64, 96]);
+    assert.equal(log.started.length, 1);
+    let cancelled = 0;
+    const abort = new AbortController();
+    await assert.rejects(driveSpawnedJob({
+      job: 65n, kind: FRAMEWORK_RESERVED_JOB_KIND, input: new Uint8Array(), signal: abort.signal,
+      port: { ...scriptedPort([{ status: "running" }], log), cancelJob: async () => { cancelled++; } },
+      continueAfterAdmission: async () => { abort.abort(); },
+    }));
+    assert.equal(cancelled, 1);
+    assert.equal(log.stepped.length, row.completion.steps + SPAWNED_JOB_STEP_CEILING);
   }
 
   const ajv = new Ajv({ strict: true });

@@ -32,7 +32,13 @@ for parent in [Path("."), Path(".cache/g3d-native/s")]:
                 del result[name]["fuelUsed"]
                 for widget in result[name]["widgets"]:
                     del widget["dep"]
+            del result["complete"]["computed"]
+            del result["faulted"]["computed"]
+            del result["stepped"]["progress"]["fraction"]
             return result
+        transition = (current["complete"]["computed"], observed["complete"]["computed"], current["faulted"]["computed"], observed["faulted"]["computed"])
+        if transition != (1, 2, 2, 1) or not 0.25 <= observed["stepped"]["progress"]["fraction"] < 0.5:
+            raise ValueError("Unexpected checkpoint computation or first partial-widget progress")
         if logical(current) != logical(observed):
             raise ValueError("Observed geometry differs beyond cache fingerprints and measured work")
         import re

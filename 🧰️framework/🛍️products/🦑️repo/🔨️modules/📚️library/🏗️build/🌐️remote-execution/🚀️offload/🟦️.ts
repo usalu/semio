@@ -14,14 +14,14 @@ import {OFFLOAD_POLICY_V1,offloadActionSecondsV1,offloadDeadlineMillisecondsV1,o
 import {remoteExecutionOriginV1} from "../🌡️load/🟦️.ts";
 import {bumpOffloadCountersV1} from "./📊️counters/🟦️.ts";
 import {awaitBeyondHostV1} from "./🚛️beyond-host/🟦️.ts";
-import {eligibleFleetWorkersV1,fleetWorkersV1,offloadDeclaredThreadsV1,readOffloadMemoV1,readUnitCostV1,readUnitExpenseV1,readUnitPeakV1,writeOffloadMemoV1,writeOffloadOverheadV1,writeUnitPeakV1} from "./🚦️admission/🟦️.ts";
+import {eligibleFleetWorkersV1,fleetQueueV1,fleetWorkersV1,offloadDeclaredThreadsV1,readOffloadMemoV1,readUnitCostV1,readUnitExpenseV1,readUnitPeakV1,writeOffloadMemoV1,writeOffloadOverheadV1,writeUnitPeakV1} from "./🚦️admission/🟦️.ts";
 import type {FleetWorkerV1} from "./🚦️admission/🟦️.ts";
 import {releaseImplicitTokenV1} from "./🎟️token/🟦️.ts";
 import {offloadLinkerIdentityV1,offloadSdkIdentityV1,offloadSysrootV1,rustcVersionTextV1} from "./🧰️toolchain/🟦️.ts";
 import {COMMAND_POLICY_V1,commandProgramV1,commandTextsV1,commandToolPeakMegabytesV1,commandToolPropertyV1,commandToolSourceV1} from "./🧰️command/📐️policy/🟦️.ts";
 
 export {offloadModeV1,offloadPinV1,offloadSettingV1,offloadTextsV1,OFFLOAD_POLICY_V1} from "./📐️policy/🟦️.ts";
-export {localUnitAdmissionV1,sharedUnitAdmissionV1,slotQueueMillisecondsV1,worthARoundTripV1,readOffloadOverheadV1,writeOffloadOverheadV1,readUnitCostV1,writeUnitCostV1,offloadDeclaredThreadsV1,readUnitPeakV1,readUnitPeaksV1,writeUnitPeakV1,readFamilyPeakV1,readFamilyCostV1,readUnitExpenseV1,awaitFleetFitV1,offloadFanOutJobsV1,offloadGateV1,fleetQueueV1} from "./🚦️admission/🟦️.ts";
+export {localFinalPeakMegabytesV1,localUnitAdmissionV1,sharedUnitAdmissionV1,slotQueueMillisecondsV1,worthARoundTripV1,readOffloadOverheadV1,writeOffloadOverheadV1,readUnitCostV1,writeUnitCostV1,offloadDeclaredThreadsV1,readUnitPeakV1,readUnitPeaksV1,writeUnitPeakV1,readFamilyPeakV1,readFamilyCostV1,readUnitExpenseV1,awaitFleetFitV1,offloadFanOutJobsV1,offloadGateV1,fleetQueueV1} from "./🚦️admission/🟦️.ts";
 export {detectWorkerRustcV1} from "./🧰️toolchain/🟦️.ts";
 export {COMMAND_POLICY_V1,commandProgramV1,commandToolKeyV1,commandToolPropertyV1} from "./🧰️command/📐️policy/🟦️.ts";
 

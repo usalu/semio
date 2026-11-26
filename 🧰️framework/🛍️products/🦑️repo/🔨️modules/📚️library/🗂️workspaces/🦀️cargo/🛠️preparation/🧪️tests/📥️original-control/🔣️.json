@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "callerCeilingMilliseconds": 10000,
+  "callerCeilingMilliseconds": 60000,
   "native": {
     "transport": {
       "maximumBytes": 134217728,

@@ -45,13 +45,28 @@ pub async fn restore_fixture_window_config<P: crate::PluginApp>(
         WindowConfigPackSource::Framed(bytes) => bytes,
     };
     let mut entry = semio_os_kernel::WindowConfigPackEntry { window_id: pack.window_id, window_kind_id: pack.window_kind_id, envelope_pack };
-    let mut load = Default::default();
-    let grant = cx.retained_grant();
-    for _ in 0..OriginalFixtureCaller::maximum_turns() {
+    let mut load = semio_plugin_window_config::WindowConfigCommandLoad::default();
+    let (grant, _) = cx.original_turn_ceiling();
+    for _ in 0..262_144 {
         fixture_renew_turn(cx, OriginalFixtureCaller::turn_fuel(), grant)?;
-        if app.advance_window_config_load(&mut load, &mut entry, cx)? { return Ok(()); }
+        if app.advance_window_config_load(&mut load, &mut entry, cx)? {
+            assert!(load.terminal_is_empty(), "the mounted Window command completed with live custody");
+            return Ok(());
+        }
     }
-    Err(semio_framework_value::ValueError::invariant("the window config restore exceeded its fixture turn bound").into())
+    cx.observe_original_cancellation()?;
+    for _ in 0..OriginalFixtureCaller::maximum_close_turns() {
+        fixture_renew_turn(cx, OriginalFixtureCaller::turn_fuel(), grant)?;
+        if cx.with_original_retirement(|cx| app.advance_window_config_load(&mut load, &mut entry, cx))? {
+            assert!(load.terminal_is_empty(), "the mounted Window command completed cancellation with live custody");
+            break;
+        }
+    }
+    assert!(load.terminal_is_empty(), "the mounted Window command exceeded its fixture closure bound");
+    Err(semio_framework_value::ValueError::literal(
+        semio_framework_value::ValueRefusalKind::WorkLimit,
+        "the window config restore exceeded its fixture turn bound",
+    ).into())
 }
 //#endregion ⚖️AppLaws
 

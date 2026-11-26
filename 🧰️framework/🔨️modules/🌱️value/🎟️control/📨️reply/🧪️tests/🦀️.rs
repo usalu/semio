@@ -10,11 +10,11 @@ fn fixture()->serde_json::Value{serde_json::from_str(semio_framework_test_fixtur
  assert!(matches!(output,Some(Ok(RetainedCloneStep::Progress(_)))));assert_eq!(key.is_none(),law["completionClearsKey"].as_bool().unwrap())
 }
 #[test]fn nested_completed_reply_clears_every_original_key_before_producer_unwind(){
- let law=fixture();let error=law["error"].as_str().unwrap().to_owned();let pointer=error.as_ptr();let mut output=None;let(mut parent,mut child)=(None,None);
- {let reply=OriginalEffectReply::<(),String>::borrow(&mut output).unwrap();let mut outer=reply.scope(&mut parent,1u64).unwrap();let interrupted=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||{
+ let law=fixture();let error=law["error"].as_str().unwrap().to_owned();let pointer=error.as_ptr();let mut output=None;let(mut parent,mut child)=(None,None);let mut mapped=0;
+ {let reply=OriginalEffectReply::<(),String>::borrow(&mut output).unwrap();let mut outer=reply.scope_mapped(&mut parent,1u64,|result|{mapped+=1;result}).unwrap();let interrupted=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||{
   let reply=outer.borrow().unwrap();let mut inner=reply.scope(&mut child,1u64).unwrap();let recorded=inner.borrow().unwrap().complete(Err(error));assert!(recorded.is_recorded());drop(recorded);panic!("native child after actual reply deposit")
  }));assert!(interrupted.is_err());assert!(outer.is_recorded());assert!(outer.forwarded().is_recorded())}
- assert_eq!(output.as_ref().unwrap().as_ref().unwrap_err().as_ptr(),pointer);assert!(parent.is_none()&&child.is_none());assert_eq!(law["nestedKeys"],2)
+ assert_eq!(output.as_ref().unwrap().as_ref().unwrap_err().as_ptr(),pointer);assert!(parent.is_none()&&child.is_none());assert_eq!(mapped,1);assert_eq!(law["nestedKeys"],2)
 }
 
 #[test]

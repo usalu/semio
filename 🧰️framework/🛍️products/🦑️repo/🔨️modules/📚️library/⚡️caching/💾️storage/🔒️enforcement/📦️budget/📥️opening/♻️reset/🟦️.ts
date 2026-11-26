@@ -34,6 +34,8 @@ import {formatDiskBytesV1} from "../../../../../../../../../../🔨️modules/�
 import {createNativeImageKickPortV1,kickNativeImageV1,nativeImageKickDueV1,nativeImageKickIneffectiveTextV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/👟️kick/🟦️.ts";
 import {measureNativeImageShardV1,nativeImageShardFoldV1,nativeImageShardLayoutsV1,readNativeImageShardLedgerV1,reclaimNativeImageShardsV1,type NativeImageShardLayoutV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧩️shard/🟦️.ts";
 import {createNativeImageDarwinGrowPortV1,growNativeImageV1,nativeImageGrownReceiptV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📈️grow/🟦️.ts";
+import {COMPONENT_STORAGE_GATE_POLICY_V1,storageGrowDecisionV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/💾️storage-gate/🟦️.ts";
+import cachePolicy from "../../🔣️policy.json" with {type:"json"};
 import {existsSync,lstatSync,statfsSync,statSync,readdirSync,readFileSync,writeFileSync,renameSync} from "node:fs";
 import {dirname,basename,join,resolve,sep} from "node:path";
 const protocol=schema.$defs.InactivePublicationProtocol.const;
@@ -192,21 +194,38 @@ export function imageRecoverySkipReasonV1(measured:ImageRecoveryMeasurementV1,re
  return slack>=floor?undefined:"recovery-slack-insufficient";
 }
 /** 📈️ Stretches a pressed elastic image in place (macOS: detach, `hdiutil resize` of the sparse backing, attach, receipt rewritten) under one exclusive non-waiting lease, so the stored data survives; `false` when the platform has no in-place growth, the image cannot grow, a command holds it or the stretch failed (the caller then falls back to the recreation). @see ../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📈️grow/🟦️.ts */
-export async function growElasticImageInPlaceV1(workspace:string,control:ResourceLeaseControl,partition:"graph"|"rust"|"products",directory:string):Promise<boolean|"held">{
+export async function growElasticImageInPlaceV1(workspace:string,control:ResourceLeaseControl,partition:"graph"|"rust"|"products",directory:string,minimumFreeBytes?:number):Promise<boolean|"held">{
  if(process.platform!=="darwin")return false;
- const target=repositoryPartitionGrowthTargetV1(workspace,partition),image=join(directory,"fixed.dmg"),receiptPath=join(directory,"image.json");
- if(target===0||!existsSync(image))return false;
+ const target=minimumFreeBytes===undefined?repositoryPartitionGrowthTargetV1(workspace,partition):0,image=join(directory,"fixed.dmg"),receiptPath=join(directory,"image.json");
+ if((minimumFreeBytes===undefined&&target===0)||!existsSync(image))return false;
  let lease:Awaited<ReturnType<typeof acquireResourceLease>>;
  try{lease=await acquireResourceLease({directory:repositoryLeaseDirectoryV1(workspace),resource:"native-fixed-image:"+directory,mode:"exclusive",signal:control.signal,control,timeoutMs:0});}catch{checkResourceLeaseControl(control);return "held";}
  try{
-  const receipt=JSON.parse(readFileSync(receiptPath,"utf8")) as Record<string,unknown>,filesystemBytes=target-1048576;
-  if(typeof receipt.filesystemBytes!=="number"||filesystemBytes<=receipt.filesystemBytes)return false;
+  const receipt=JSON.parse(readFileSync(receiptPath,"utf8")) as Record<string,unknown>,mount=nativeImageRootV1(directory);
+  if(typeof receipt.filesystemBytes!=="number")return false;
+  let filesystemBytes=target-1048576;
+  if(minimumFreeBytes!==undefined){
+   if(partition!=="rust"||!Number.isSafeInteger(minimumFreeBytes)||minimumFreeBytes<=0||statSync(mount).dev===statSync(directory).dev)return false;
+   const owned=statfsSync(mount),host=statfsSync(directory),needBytes=minimumFreeBytes-owned.bavail*owned.bsize;
+   if(needBytes<=0)return true;
+   const {growHostReserveBytes,growAlignBytes,growInitialBytes}=COMPONENT_STORAGE_GATE_POLICY_V1;
+   const growth=storageGrowDecisionV1({needBytes,running:0,imageBytes:receipt.filesystemBytes,hostFreeBytes:host.bavail*host.bsize,hostReserveBytes:growHostReserveBytes,alignBytes:growAlignBytes,initialBytes:growInitialBytes});
+   if(growth.kind!=="grow"||growth.targetBytes+1048576>cachePolicy.elastic.rust.maximumBytes)return false;
+   filesystemBytes=growth.targetBytes;
+  }
+  if(filesystemBytes<=receipt.filesystemBytes)return false;
   const output={maximumBytes:1048576,maximumLines:32768},port=createNativeImageDarwinGrowPortV1({image,cwd:directory,mountPoint:nativeImageRootV1(directory),run:(program,args)=>captureOwnedCommandV1(program,args,directory,{control,output}),cleanupRun:(program,args)=>captureOwnedCommandV1(program,args,directory,{output}),signal:control.signal});
   await growNativeImageV1(port,{check:()=>checkResourceLeaseControl(control),backingBytes:()=>lstatSync(image).size},filesystemBytes);
   const temporary=receiptPath+".grow";writeFileSync(temporary,JSON.stringify(nativeImageGrownReceiptV1(receipt,filesystemBytes)),{mode:0o600});renameSync(temporary,receiptPath);
   return true;
  }catch{checkResourceLeaseControl(control);return false;}
  finally{lease.release();}
+}
+/** 🧰️ Satisfies a pass's measured minimum in the quiescent Rust image using in-place growth. */
+export function recoverRepositoryRustPassStorageV1(invocation:ScriptInvocation,control:ResourceLeaseControl,minimumFreeBytes:number):Promise<boolean|"held">{
+ requireIssuedResourceControlInvocationV1(control,invocation);
+ const workspace=callerRepositoryRootV1(invocation.capabilities),directory=repositoryCacheBudgetV1(workspace).partitions.rust.directory;
+ return growElasticImageInPlaceV1(workspace,control,"rust",directory,minimumFreeBytes);
 }
 /** 🌱️ Recreates an elastic image (the graph, compiler or products image) at the first quiescent moment: it resumes an interrupted retirement, or - only when the journal admits whole retirement - after a cheap precheck (an image that is `pressed` by the volume, or whose size and pressure from the image receipt and its mounted free space make it due) makes one non-waiting exclusive try that any holder ends silently (`held`), then the yielding reset; the next opener creates the image at the elastic size. A refusal inside the reset would close the whole process admission, so a journal that cannot be retired never enters it. It never fails the caller. */
 export async function regrowElasticImageOutcomeV1(invocation:ScriptInvocation,control:ResourceLeaseControl,partition:"graph"|"rust"|"products",pressed:boolean=false,recovery?:ImageRecoveryVolumeV1):Promise<ElasticRegrowOutcomeV1>{

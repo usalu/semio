@@ -20,6 +20,7 @@ component-kind = "plugin"
 [[package.metadata.semio.playground]]
 variant = "bim"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+devContribution = "✏️s/🧑‍💻dev/🎭️variants/🏙️bim/🧬️schema/🔣️.json"
 app = "s.bim.model@1/*#editor"
 ports = { react = 6302, wgpu = 6402 }
 

@@ -58,7 +58,7 @@ test("neutral consumed Cargo native interpreter and accounting profiles select t
     const rendered=renderCargoProfileConfigurationV1(request,row.workspaceOwner,"repository");
     const selectors=rendered.selectors.join("\n"),parsed=TOML.parse(selectors) as {profile:Record<string,{"opt-level":number;package?:Record<string,{"opt-level":number}>}>};
     expect(Bun.TOML.parse(selectors)).toEqual(parsed);
-    expect(rendered.plan.role).toBe(row.role);
+    expect<unknown>(rendered.plan.role).toBe(row.role);
     const selected=parsed.profile[mode]!;
     const actual=database.query(`
       select value as name, coalesce(
@@ -101,7 +101,7 @@ registerBuildTestLawV1("neutral consumed Cargo workspace selection retries a cha
     if(escaped)expect(escaped).toThrow("Original Cargo workspace selection released");
     escaped=read;
     expect(captured).toBe(expected);
-    expect(TOML.parse(captured)).toEqual(Bun.TOML.parse(expected));
+    expect<unknown>(TOML.parse(captured)).toEqual(Bun.TOML.parse(expected));
     expect(view.inputs.find(input=>input.path===view.scope.manifest)).toEqual({path:"Cargo.toml",bytes:Buffer.byteLength(captured),digest:createHash("sha256").update(captured).digest("hex")});
     if(row.expected==="retry")await view.recheck();
     return calls;

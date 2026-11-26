@@ -1,0 +1,1 @@
+[{"name":"negative-since","path":"ledger.sinceMs","value":-1},{"name":"negative-restarts","path":"ledger.restarts","value":-1},{"name":"unknown-ledger-field","path":"ledger.extra","value":1},{"name":"bad-session-counter","path":"session.ac.hits","value":"1"},{"name":"unknown-session-key","path":"session.extra","value":{}}]

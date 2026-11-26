@@ -1,5 +1,6 @@
 //! 🌐️ Canonical Value traits encode the actual downward immutable ordered producer.
 use crate::ordered::*;
+use semio_framework_value_native_ordered_engine::{Entry,Node};
 /// 🌱️ First-party replacement for the `#[cfg(test)]`-only `Serialize`/`Deserialize` above — see [Design notes](README.md#source-notes-3).
 #[path = "../🚦️native/🦀️.rs"]
 mod native_controlled;
@@ -22,6 +23,20 @@ impl<V: super::FromValue> super::FromValue for OrderedMap<V> {
         }
         Ok(map.take())
     }
+    fn from_value_controlled(value:&super::DslValue,control:&mut crate::NativeDecodeControl<'_>)->Result<Self,super::ValueError>{control.scoped_depth(64,|control|control.scoped_stage(|control|{
+        let entries=value.object_controlled(control)?;control.begin_stage(entries.len())?;
+        let row=SharedOwner::<Entry<V>>::allocation_bytes()+SharedOwner::<Node<V>>::allocation_bytes()+SharedOwner::<String>::allocation_bytes()+SharedOwner::<V>::allocation_bytes();
+        let mut map=<Self as super::FromValue>::guard_decoded(OrderedMap::<V>::new());
+        for (key,entry) in entries{
+            let key=<String as super::FromValue>::from_object_key_controlled(key,control)?;
+            let child=<V as super::FromValue>::from_value_controlled(entry,control)?;
+            if let Err(error)=control.charge(row){<String as super::FromValue>::retire_decoded(key);<V as super::FromValue>::retire_decoded(child);return Err(error)}
+            if let Some(previous)=map.get_mut().insert(key,child){<V as super::FromValue>::retire_decoded(previous);return Err(super::ValueError::literal(crate::ValueRefusalKind::InvalidValue,"duplicate ordered-map key"))}
+            control.step()?;
+        }
+        Ok(map.take())
+    }))}
+    fn default_value_controlled(control:&mut crate::NativeDecodeControl<'_>)->Result<Self,super::ValueError>{control.checkpoint()?;Ok(Self::new())}
     fn retire_decoded(self) { self.retire_cold(); }
 }
 //#endregion 🔁️Value

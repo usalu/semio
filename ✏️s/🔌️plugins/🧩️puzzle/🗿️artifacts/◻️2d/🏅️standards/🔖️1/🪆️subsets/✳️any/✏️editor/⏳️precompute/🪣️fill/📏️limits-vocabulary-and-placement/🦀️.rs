@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🔖️Limits
 /// 🚰️ Estimated pending tick bytes past which a run job flushes, so one tick stays within one job payload page.
-pub const FILL_RUN_TICK_FLUSH_BYTES: usize = 8 * 1024;
+pub const FILL_RUN_TICK_FLUSH_BYTES: usize = 4 * 1024;
 
 /// 🧬️ Provisional ops one placement appends: `create_node` then `connect_handles`.
 pub const FILL_RUN_OPS_PER_PLACEMENT: usize = 2;

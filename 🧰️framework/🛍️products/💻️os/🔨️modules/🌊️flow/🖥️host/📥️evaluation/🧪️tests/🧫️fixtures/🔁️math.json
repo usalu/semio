@@ -1,0 +1,23 @@
+{
+  "request": {
+    "neuronId": "extrusion-axis",
+    "operatorId": "math.vector",
+    "inputJson": "{\"z\":{\"$schema\":\"number\",\"value\":6.0}}",
+    "dependencyJson": "{\"widgets\":{\"extrusion-axis\":{\"operatorId\":\"math.vector\",\"params\":{}},\"height\":{\"number\":6.0}},\"synapses\":{\"e1\":{\"id\":\"e1\",\"from\":\"height\",\"to\":\"extrusion-axis\",\"fromPort\":\"number\",\"toPort\":\"z\"}}}",
+    "operatorVersion": "registry:1;geometry:1;policy:1",
+    "nodeHash": 17647890481751977919,
+    "resume": false,
+    "windowId": "procedural-preview",
+    "windowKindId": "procedural-preview",
+    "extensionId": "flow-extension-math"
+  },
+  "wireHex": "010c696e7075742d7265746972650101111006070b63616e63656c6c61626c65020704646f6e650107066f7574707574120705706861736506000709756e697473446f6e65048002070a756e697473546f74616c048102",
+  "reply": {
+    "cancellable": true,
+    "done": false,
+    "output": null,
+    "phase": "input-retire",
+    "unitsDone": 256,
+    "unitsTotal": 257
+  }
+}

@@ -18,9 +18,9 @@ import type {FleetBazelSlotFactV1,FleetCapacityWaiterFactV1,FleetCasFactV1,Fleet
 const policy=schema.definitions.Policy.const;
 export const REPOSITORY_LEASE_DIRECTORY_FLEET_V1=".cache/b/l/m/data";
 /** 🔌️ What a reader may use from its surroundings; tests replace it. */
-export type FleetReaderContextV1=Readonly<{root:string;environment:NodeJS.ProcessEnv;language:FleetLanguageV1;now:()=>number}>;
+export type FleetReaderContextV1=Readonly<{root:string;environment:NodeJS.ProcessEnv;language:FleetLanguageV1;now:()=>number;signal?:AbortSignal;publish?:(facts:Partial<FleetFactsV1>)=>void}>;
 export type FleetReaderV1=(context:FleetReaderContextV1)=>Promise<Partial<FleetFactsV1>>;
-export type FleetReadersV1=Readonly<Record<FleetSourceV1["id"],FleetReaderV1>>;
+export type FleetReadersV1=Readonly<Partial<Record<FleetSourceV1["id"],FleetReaderV1>>>;
 
 const standingOf=(row:NonNullable<LeaseHolderV1["standing"]>):FleetStandingFactV1=>({state:row.state,...row.priority===undefined?{}:{priority:row.priority},...row.phase===undefined?{}:{phase:row.phase},...row.done===undefined?{}:{done:row.done},...row.total===undefined?{}:{total:row.total},...row.etaMinutes===undefined?{}:{etaMinutes:row.etaMinutes},...row.etaOverdue?{etaOverdue:true}:{},...row.implementationDigest===undefined?{}:{implementationDigest:row.implementationDigest},...row.implementationAgeSeconds===undefined?{}:{implementationAgeSeconds:row.implementationAgeSeconds},...row.parentPid===undefined?{}:{parentPid:row.parentPid},...row.chain===undefined?{}:{chain:[...row.chain]},...row.silentSeconds===undefined?{}:{silentSeconds:row.silentSeconds},...row.staleIds===undefined?{}:{staleIds:[...row.staleIds]}});
 
@@ -87,7 +87,7 @@ export const readFleetStorageV1:FleetReaderV1=async context=>{
  const {cacheLedgerV1}=await import("../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts");
  const {machineHostFloorV1,machinePolicyV1,planMachineBudgetV1,resolveMachineTotalV1}=await import("../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts");
  const {cacheRunnerPortsV1,machineHostFreeBytesV1,machineHostTotalBytesV1,machineUsesV1,reportCacheLedgerV1}=await import("../../🧹️cache-gc/🏃️runner/🟦️.ts");
- const ledger=cacheLedgerV1(),ports=cacheRunnerPortsV1({signal:new AbortController().signal,progress:async()=>{},exclusive:async()=>undefined}),report=await reportCacheLedgerV1(context.root,ledger,ports),declared=machinePolicyV1();
+ const ledger=cacheLedgerV1(),ports=cacheRunnerPortsV1({signal:context.signal??new AbortController().signal,progress:async()=>{},exclusive:async()=>undefined}),report=await reportCacheLedgerV1(context.root,ledger,ports),declared=machinePolicyV1();
  const fileText=(()=>{try{return readFileSync(join(context.root,...ledger.roots.repository.directory.split("/"),declared.file),"utf8");}catch{return undefined;}})(),total=resolveMachineTotalV1({environment:context.environment,...fileText===undefined?{}:{fileText}},declared);
  const plan=planMachineBudgetV1({totalBytes:total.bytes,hostFreeBytes:machineHostFreeBytesV1(context.root),hostTotalBytes:machineHostTotalBytesV1(context.root),uses:machineUsesV1(report)},declared);
  return {storage:{hostFreeBytes:machineHostFreeBytesV1(context.root),hostFreeFloorBytes:machineHostFloorV1(declared,machineHostTotalBytesV1(context.root)),images:report.partitions.map(row=>({id:row.id,kind:row.kind,state:row.state,usedBytes:row.usedBytes,capacityBytes:row.capacityBytes,budgetBytes:row.budgetBytes,source:row.source})),overAreas:report.areas.filter(row=>row.over).map(row=>row.id),machine:{totalBytes:plan.totalBytes,effectiveTotalBytes:plan.effectiveTotalBytes,usedBytes:plan.usedBytes,footprintBytes:plan.footprintBytes,overBytes:plan.overBytes,evictBytes:plan.evictBytes,blockedBytes:plan.blockedBytes,source:total.source}}};
@@ -158,8 +158,15 @@ export async function readFleetWorkersV1(context:FleetReaderContextV1):Promise<P
  if(store===undefined||store==="")return {};
  const rows=readReadyWorkersV1({store,nowMs:context.now()});
  if(rows.length===0)return {};
- const trees=await readWorkerTreesV1(store,context),at=context.now(),hosts=await readFleetHostNamesV1(store,rows.map(row=>row.origin));
- return {workers:{offlineSeconds:READY_OFFLINE_SECONDS_V1,rows:rows.map(row=>{const mapping=readWorkerMappingV1(join(store,"v1","origins",row.origin,"slice-memory.json"),at,policy.readers.maximumMemoryRecordBytes,policy.readers.mappingFreshSeconds);return{...row,...trees?.has(row.origin)?{tree:trees.get(row.origin)!}:{},hostName:hosts.get(row.origin)!,...mapping===undefined?{}:{mapping}};})}};
+ const at=context.now(),hosts=await readFleetHostNamesV1(store,rows.map(row=>row.origin));
+ const ready=rows.map(row=>{
+  const mapping=readWorkerMappingV1(join(store,"v1","origins",row.origin,"slice-memory.json"),at,policy.readers.maximumMemoryRecordBytes,policy.readers.mappingFreshSeconds);
+  return {...row,hostName:hosts.get(row.origin)!,...mapping===undefined?{}:{mapping}};
+ });
+ const workers={offlineSeconds:READY_OFFLINE_SECONDS_V1,rows:ready};
+ context.publish?.({workers});
+ const trees=await readWorkerTreesV1(store,context);
+ return {workers:trees===undefined?workers:{...workers,rows:ready.map(row=>trees.has(row.origin)?{...row,tree:trees.get(row.origin)!}:row)}};
 }
 
 /** 🔒️ The mapping grant queue a worker's graph read published in its `slice-memory.json` (`sources.owners.presence.mappingQueue`, the owners taken beside it): undefined for a missing, oversized, torn, stale or unrelated file, never throws. @see ../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔒️mapping/🟦️.ts */
@@ -184,9 +191,9 @@ export function treeDifferenceV1(onlyThere:readonly string[],onlyHere:readonly s
 export async function readWorkerTreesV1(store:string,context:FleetReaderContextV1):Promise<ReadonlyMap<string,FleetWorkerTreeV1|null>|undefined>{
  try{
   const [{viewDiffV1,readAttestationsV1,fleetReportV1},{remoteExecutionOriginV1}]=await Promise.all([import("../../../../🤝️shared-worktree/🩺️attest/🟦️.ts"),import("../../🌐️remote-execution/🌡️load/🟦️.ts")]);
-  const reference=remoteExecutionOriginV1(context.root,context.environment),report=await viewDiffV1(store,reference);
+  const reference=remoteExecutionOriginV1(context.root,context.environment),report=await viewDiffV1(store,reference,context.signal);
   if(report.here===null)return undefined;
-  const [attestations,fleet]=await Promise.all([readAttestationsV1(store),fleetReportV1(store,context.now())]),stale=attestations[reference]?.view?.stale===true,verdicts=new Map(fleet.rows.map(row=>[row.originId,row.verdict])),found=new Map<string,FleetWorkerTreeV1|null>();
+  const [attestations,fleet]=await Promise.all([readAttestationsV1(store,context.signal),fleetReportV1(store,context.now(),context.signal)]),stale=attestations[reference]?.view?.stale===true,verdicts=new Map(fleet.rows.map(row=>[row.originId,row.verdict])),found=new Map<string,FleetWorkerTreeV1|null>();
   for(const [origin,attestation] of Object.entries(attestations))if(origin!==reference&&attestation.view!==null)found.set(origin,Object.freeze({reference,files:0,onlyThere:0,onlyHere:0,stale,verdict:verdicts.get(origin)??"missing"}));
   for(const row of report.differing)found.set(row.originId,Object.freeze({reference,...treeDifferenceV1(row.onlyThere,row.onlyHere),stale,verdict:verdicts.get(row.originId)??"missing"}));
   for(const origin of report.unavailable)found.set(origin,null);
@@ -245,17 +252,30 @@ export const readFleetOffloadV1:FleetReaderV1=async context=>{
 };
 
 /** 🏭️ The readers of the real workspace. */
-export const FLEET_READERS_V1:FleetReadersV1=Object.freeze({leases:readFleetLeasesV1,capacity:readFleetCapacityV1,bazel:readFleetBazelV1,storage:readFleetStorageV1,sealed:readFleetSealedV1,generation:readFleetGenerationV1,scheduler:readFleetSchedulerV1,fleet:readFleetLoadV1,workers:readFleetWorkersV1,memory:readFleetMemoryV1,cas:readFleetCasV1,offload:readFleetOffloadV1});
+export const FLEET_READERS_V1:Required<FleetReadersV1>=Object.freeze({leases:readFleetLeasesV1,capacity:readFleetCapacityV1,bazel:readFleetBazelV1,storage:readFleetStorageV1,sealed:readFleetSealedV1,generation:readFleetGenerationV1,scheduler:readFleetSchedulerV1,fleet:readFleetLoadV1,workers:readFleetWorkersV1,memory:readFleetMemoryV1,cas:readFleetCasV1,offload:readFleetOffloadV1});
 
 /** 🧺️ Runs every reader at once, times it and merges what it returned; a reader that throws is a failed source, never a failed command. */
-export async function collectFleetFactsV1(context:FleetReaderContextV1,readers:FleetReadersV1=FLEET_READERS_V1,timeoutMilliseconds:number=policy.readers.timeoutMilliseconds):Promise<FleetFactsV1>{
+export async function collectFleetFactsV1(context:Omit<FleetReaderContextV1,"signal"|"publish">,readers:FleetReadersV1=FLEET_READERS_V1,timeoutMilliseconds:number=policy.readers.timeoutMilliseconds):Promise<FleetFactsV1>{
  const ids=Object.keys(readers) as FleetSourceV1["id"][],sources:FleetSourceV1[]=[],parts:Partial<FleetFactsV1>[]=[];
  await Promise.all(ids.map(async id=>{
-  const started=performance.now(),limit=timeoutMilliseconds;
+  const started=performance.now(),controller=new AbortController();
+  let partial:Partial<FleetFactsV1>|undefined;
   let timer:ReturnType<typeof setTimeout>|undefined;
-  try{parts.push(await Promise.race([readers[id](context),new Promise<never>((_resolve,reject)=>{timer=setTimeout(()=>reject(Error(fleetTextV1(context.language,"error.timeout",{seconds:limit/1000}))),limit);})]));sources.push({id,ok:true,milliseconds:Math.round(performance.now()-started)});}
-  catch(error){sources.push({id,ok:false,milliseconds:Math.round(performance.now()-started),error:String((error as Error).message??error).slice(0,200)});}
-  finally{if(timer!==undefined)clearTimeout(timer);}
+  const deadline=new Promise<never>((_resolve,reject)=>{
+   timer=setTimeout(()=>{
+    const error=Error(fleetTextV1(context.language,"error.timeout",{seconds:timeoutMilliseconds/1000}));
+    reject(error);
+    controller.abort(error);
+   },timeoutMilliseconds);
+  });
+  try{
+   const reader=readers[id]!({...context,signal:controller.signal,publish:facts=>{partial=facts;}});
+   parts.push(await Promise.race([reader,deadline]));
+   sources.push({id,ok:true,milliseconds:Math.round(performance.now()-started)});
+  }catch(error){
+   if(partial!==undefined)parts.push(partial);
+   sources.push({id,ok:false,milliseconds:Math.round(performance.now()-started),error:String((error as Error).message??error).slice(0,200)});
+  }finally{if(timer!==undefined)clearTimeout(timer);}
  }));
  const merged:Record<string,unknown>={};
  for(const part of parts)Object.assign(merged,part);

@@ -71,6 +71,12 @@
   "batchedRetirement": {
     "uiPatches": []
   },
+  "batchedEncoding": {
+    "expectedBytes": 751,
+    "tinyGrantItems": 1,
+    "cancelAfterTurns": [0, 1, 3],
+    "minimumTurnReduction": 4
+  },
   "states": [
     {
       "event": "publish",

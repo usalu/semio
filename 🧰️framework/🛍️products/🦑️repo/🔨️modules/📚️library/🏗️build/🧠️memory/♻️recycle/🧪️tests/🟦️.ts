@@ -7,7 +7,7 @@ import {SLICE_RECYCLE_POLICY_V1 as policy,sliceRecycleCarriedV1,sliceRecycleDeci
 const MiB=1048576,environment=sliceRecycleEnvironmentV1(undefined);
 
 test("the policy is the schema, with both languages in every description",()=>{
- expect(policy).toEqual(schema.definitions.Policy.const);expect(policy.heapMegabytes).toBe(2048);
+ expect<unknown>(policy).toEqual(schema.definitions.Policy.const);expect(policy.heapMegabytes).toBe(2048);
  for(const text of[schema.description,schema.definitions.Policy.description,schema.definitions.State.description])expect(text).toMatch(/^EN: .+ DE: .+/su);
 });
 

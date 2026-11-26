@@ -19,13 +19,20 @@ function within(root:string,path:string):boolean{
   return !!distance&&!isAbsolute(distance)&&distance!==".."&&!distance.startsWith(".."+sep);
 }
 
-async function readAnnouncedFile(path:string,physical:FileObservationControlV1):Promise<Uint8Array|undefined>{
+async function readAnnouncedFile(path:string,physical:FileObservationControlV1,sinceMs?:number):Promise<Uint8Array|undefined>{
   const stat=()=>lstat(path).catch(error=>{
     if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;
   });
   const before=await stat();
-  if(!before||before.size>physical.maxBytes)return;
-  try{return (await readPhysicalFileV1(path,physical)).bytes;}
+  if(!before||before.size>physical.maxBytes||sinceMs!==undefined&&before.mtimeMs<sinceMs)return;
+  try{
+    const {bytes}=await readPhysicalFileV1(path,physical);
+    if(sinceMs!==undefined){
+      const after=await stat();
+      if(!after||after.dev!==before.dev||after.ino!==before.ino||after.mtimeMs!==before.mtimeMs||after.ctimeMs!==before.ctimeMs)return;
+    }
+    return bytes;
+  }
   catch(error){
     if(concurrentEditOfV1(error)||error instanceof FileObservationErrorV1&&(error.code==="changed"||error.code==="byte-capacity"))return;
     if(error instanceof FileObservationErrorV1&&error.code==="io"&&!await stat())return;
@@ -33,8 +40,11 @@ async function readAnnouncedFile(path:string,physical:FileObservationControlV1):
   }
 }
 
+/** 🎯️ The exact target and workspace of a fresh Cargo artifact message. */
+export type CargoSourceAnnouncementV1=Readonly<{cargoWorkspace:string;targetSource:string;sinceMs:number}>;
+
 /** 📥️ Reads bounded dep-info bytes associated with Cargo's announced artifact paths. */
-export async function* announcedCargoSourceChecksumsV1(filenames:readonly string[],roots:readonly string[],physical:FileObservationControlV1,control:ResourceLeaseControl,executable?:string):AsyncGenerator<CargoDepInfoChecksumV1>{
+export async function* announcedCargoSourceChecksumsV1(filenames:readonly string[],roots:readonly string[],physical:FileObservationControlV1,control:ResourceLeaseControl,executable?:string,announcement?:CargoSourceAnnouncementV1):AsyncGenerator<CargoDepInfoChecksumV1>{
   checkResourceLeaseControl(control);
   const candidates=new Set<string>();
   for(const filename of filenames){
@@ -46,12 +56,20 @@ export async function* announcedCargoSourceChecksumsV1(filenames:readonly string
     candidates.add(join(dirname(stem),basename(stem).replace(/^lib/u,"")+".d"));
   }
   for(const candidate of candidates){
-    const info=await readAnnouncedFile(candidate,physical);
+    const info=await readAnnouncedFile(candidate,physical,announcement?.sinceMs);
     checkResourceLeaseControl(control);
     if(info===undefined)continue;
-    for(const claim of cargoDepInfoChecksumsV1(new TextDecoder().decode(info))){
+    const text=new TextDecoder().decode(info),claims=cargoDepInfoChecksumsV1(text);
+    if(announcement){
+      const {cargoWorkspace,targetSource}=announcement;
+      const rule=text.split(/\r?\n/u,1)[0]!,delimiter=rule.indexOf(": ");
+      if(delimiter<0||resolve(cargoWorkspace,rule.slice(0,delimiter).replace(/\\ /gu," "))!==candidate||
+        !claims.some(claim=>resolve(cargoWorkspace,claim.path)===targetSource))continue;
+    }
+    for(const claim of claims){
       checkResourceLeaseControl(control);
-      if(isAbsolute(claim.path)&&Number.isSafeInteger(claim.length)&&claim.length<=physical.maxBytes)yield {...claim,path:resolve(claim.path)};
+      if((announcement||isAbsolute(claim.path))&&Number.isSafeInteger(claim.length)&&claim.length<=physical.maxBytes)
+        yield {...claim,path:announcement?resolve(announcement.cargoWorkspace,claim.path):resolve(claim.path)};
     }
   }
 }
@@ -65,6 +83,17 @@ export class CargoSourceAttemptV1 {
   constructor(admitted:ReadonlyMap<string,string>){this.admitted=admitted;}
 
   get conflict():CargoSourceDriftV1|undefined{return this.disagreement;}
+
+  /** 📣️ Records physically witnessed checksums for one announced compilation unit. */
+  async recordArtifact(unit:string,filenames:readonly string[],roots:readonly string[],physical:FileObservationControlV1,control:ResourceLeaseControl,observe?:(claim:CargoDepInfoChecksumV1)=>void,executable?:string,announcement?:CargoSourceAnnouncementV1):Promise<CargoSourceDriftV1|undefined>{
+    for await(const claim of announcedCargoSourceChecksumsV1(filenames,roots,physical,control,executable,announcement)){
+      this.record(unit,claim);
+      if(this.conflict)return this.conflict;
+      observe?.(claim);
+    }
+    return this.conflict;
+  }
+
 
   record(unit:string,claim:CargoDepInfoChecksumV1):void{
     const {path,length,blake3}=claim;
@@ -170,6 +199,13 @@ export class CargoSourceWitnessV1 implements CargoSourceAdmissionWitnessV1 {
     return blob!==undefined&&blob.blake3===expected.blake3&&blob.length===expected.length;
   }
 
+  /** ⚖️ Reports a fresh compiler claim that contradicts the exact retained admitted body. */
+  admittedDrift(expected:CargoDepInfoChecksumV1,sha256:string):CargoSourceDriftV1|undefined{
+    const blob=this.paths.get(expected.path)?.get(sha256);
+    if(blob&&(blob.blake3!==expected.blake3||blob.length!==expected.length))
+      return {path:expected.path,expected:blob.blake3+":"+blob.length,observed:expected.blake3+":"+expected.length};
+  }
+
   /** 📌️ Resolves only a source version already selected under compiler input custody. */
   selectedPath(path:string,sha256:string):string|undefined{
     const blob=this.selected.get(path);
@@ -219,7 +255,7 @@ export class CargoSourceWitnessV1 implements CargoSourceAdmissionWitnessV1 {
       sha256=blob.sha256;
     }else{
       const {bytes,claim}=await readPhysicalFileV1(path,physical);
-      if(bytes.byteLength!==expected.length||checksum(bytes)!==expected.blake3)throw concurrentEditV1("bytes",path,"Compiler consumed bytes have no matching retained source witness","snapshot");
+      if(bytes.byteLength!==expected.length||checksum(bytes)!==expected.blake3)throw concurrentEditV1("bytes",path,"Compiler consumed bytes have no matching retained source witness","build");
       sha256=claim.sha256;
     }
     this.checkVersion(path,sha256,expected.length);

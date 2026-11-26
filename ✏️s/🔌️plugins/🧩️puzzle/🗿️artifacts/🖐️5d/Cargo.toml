@@ -3,6 +3,7 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🔨️modules/♻️rewriting/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎬️dispatch/📌️panel-mounts/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎬️dispatch/📦️packages/🦀️rust",

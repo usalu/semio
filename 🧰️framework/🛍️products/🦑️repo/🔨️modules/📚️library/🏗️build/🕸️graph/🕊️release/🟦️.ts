@@ -32,6 +32,15 @@ export async function releaseBuildGraphV1(...graphs:readonly BuildGraphV1[]):Pro
 }
 
 
+/** 🌊️ Drops what one wave of a long read filled and its owners persisted: the interned and verified rows, the project and analysis images, the settled reads, the input memos, the interned strings, the parsed shared source files and the verdicts of the rounds of the wave. The closure entries and the generation carry stay: the next wave needs them.
+ * @see ../🧪️tests/🌊️wave-retention */
+export async function releaseWaveStateV1():Promise<void>{
+  (await import("../../👁️observation/🟨️.mjs")).releaseInferenceMemoryV1();(await import("../../📥️inputs/🟨️.mjs")).releaseInputMemoryV1();graphStringInternerV1.clear();
+  (await import("../📥️inference/🧭️script-inputs/♨️reuse/🟨️.mjs")).sharedSourceFilesV1.clear();
+  (await import("../📥️inference/🧭️script-inputs/🟨️.mjs")).forgetRoundVerdictsV1();
+}
+
+
 /** 🔨️ Refuses a graph whose content was released. */
 export function requireLiveBuildGraphV1(graph:BuildGraphV1):BuildGraphV1{
   if(releasedBuildGraphsV1.has(graph))throw refuseBuildV1("stale","graph.released-read");

@@ -17,6 +17,7 @@ pub struct AppPresenter {
     pub(super) pending: Option<AppPresentCursor>,
     pub(super) retirement: Option<AppPresentedRetirement>,
     pub retained_fault: Option<String>,
+    pub(super) input_pending: bool,
     pub(super) surface_resize: Option<AppSurfaceResizeCursor>,
     pub stall: AppPresentStallWatch,
 }
@@ -152,6 +153,11 @@ impl AppPresentPhase {
 }
 
 
+/// 🎞️ Media step for input.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]pub enum MediaInputStep{Collect,Release,Hold}
+pub fn media_input_step(pending:bool,released:&mut bool,donated:bool)->MediaInputStep{use MediaInputStep::*;if donated||!pending{*released=false;Collect}else if *released{Hold}else{Release}}
+pub fn media_holds_input_barrier(released:bool,donated:bool)->bool{!released&&!donated}
+
 pub(super) struct AppPresentCursor {
     pub(super) media_collect:semio_renderer_wgpu_media_slots::original_collect::OriginalPresentedRoster,
     pub(super) media_input_released:bool,
@@ -227,6 +233,7 @@ impl AppPresenter {
             pending: None,
             retirement: None,
             retained_fault: None,
+            input_pending: false,
             surface_resize: None,
             stall: Default::default(),
         }

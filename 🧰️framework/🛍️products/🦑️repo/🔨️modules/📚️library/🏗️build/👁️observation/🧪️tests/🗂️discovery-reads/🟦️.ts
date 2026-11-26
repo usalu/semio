@@ -28,7 +28,7 @@ const walk=(base:string)=>{
  return seen.sort();
 };
 const ask=(base:string,scenario:Scenario)=>{
- const host=observedTypeScriptHost({fileExists:(path:string)=>fs.statSync(path,{throwIfNoEntry:false})?.isFile()===true,directoryExists:(path:string)=>fs.statSync(path,{throwIfNoEntry:false})?.isDirectory()===true} as never);
+ const host=observedTypeScriptHost({fileExists:(path:string)=>fs.statSync(path,{throwIfNoEntry:false})?.isFile()===true,directoryExists:(path:string)=>fs.statSync(path,{throwIfNoEntry:false})?.isDirectory()===true,readFile:()=>undefined,getDirectories:()=>[]});
  return scenario.asks.map(([kind,path])=>kind==="exists"?observedFs.existsSync(join(base,path)):kind==="fileExists"?host.fileExists(join(base,path)):host.directoryExists(join(base,path)));
 };
 const expected=(()=>{

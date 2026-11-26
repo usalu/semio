@@ -31,7 +31,7 @@ test("a real build reports its sealing stages after the facts and fragments, in 
  try{
   await seed(dir,ringFiles(12));
   const world=createWorld(dir),phases:string[]=[];
-  await world.refresh({progress:event=>{const phase=(event as{phase?:string}).phase;if(phase&&phases.at(-1)!==phase)phases.push(phase);}} as never);
+  await world.refresh({progress:(event:unknown)=>{const phase=(event as{phase?:string}).phase;if(phase&&phases.at(-1)!==phase)phases.push(phase);}} as never);
   const seen=phases.filter(phase=>STAGES.includes(phase));
   expect(seen.filter((phase,at)=>seen.indexOf(phase)===at)).toEqual(STAGES.filter(stage=>seen.includes(stage)));
   for(const stage of["fragments","patching","packing","publishing"])expect(phases,"stage "+stage).toContain(stage);

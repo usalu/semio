@@ -104,7 +104,13 @@ def build():
     extra=CODEGEN["extraMegabytesPerThread"]
     sample_sets=[{},{"1":4011},{"4":3787},{"1":4011,"4":4500},{"1":1000,"8":1200},{"2":2000,"6":2100},{"1":300,"2":5000}]
     thread_rows=[{"samples":samples,"threads":threads,"extra":extra,"peak":peak_at_threads(samples,threads,extra)} for samples in sample_sets for threads in (1,2,3,4,6,8)]
-    return {"threads":thread_rows,"gates":gates,"admissions":admissions,"peaks":peaks,"learns":learns,"kills":kills,"families":families,"familyKills":kills_in_family,"observed":observed}
+    local_final_rows=[]
+    for samples in ({"1":2720},{"1":4100},{"1":3294,"4":6000},{"4":6000},{}):
+        for managed in (True,False):
+            count=1 if managed else CODEGEN["fairShareThreads"]
+            peak=samples.get("1") if managed else peak_at_threads(samples,count,extra)
+            local_final_rows.append({"samples":samples,"managed":managed,"localPeak":peak,"fleetPeak":peak_at_threads(samples,CODEGEN["fairShareThreads"],extra),"beyond16g":peak is not None and peak>4096})
+    return {"localFinals":local_final_rows,"threads":thread_rows,"gates":gates,"admissions":admissions,"peaks":peaks,"learns":learns,"kills":kills,"families":families,"familyKills":kills_in_family,"observed":observed}
 
 if __name__=="__main__":
     text=json.dumps(build(),ensure_ascii=False,indent=1)+"\n"

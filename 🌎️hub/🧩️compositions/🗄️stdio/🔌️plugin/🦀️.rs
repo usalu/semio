@@ -8,24 +8,123 @@ use semio_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ The present owner-authored runtime app contributions.
     pub enum StdioApps: PluginApp {
-        HtmlEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_html::editor::html::HtmlEditor>>),
-        HtmlViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_html::viewer::html::HtmlViewer>>),
-        MdEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_md::editor::md::MdEditor>>),
-        MdViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_md::viewer::md::MdViewer>>),
-        CsvEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_csv::editor::csv::CsvEditor>>),
-        CsvViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_csv::viewer::csv::CsvViewer>>),
-        TsvEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_tsv::editor::tsv::TsvEditor>>),
-        TsvViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_tsv::viewer::tsv::TsvViewer>>),
-        TxtEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_txt::editor::txt::TxtEditor>>),
-        TxtViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_txt::viewer::txt::TxtViewer>>),
-        JsonAnyEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_json::editor::json_any::JsonAnyEditor>>),
-        JsonAnyViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_json::viewer::json_any::JsonAnyViewer>>),
-        JsonIJsonEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_json::editor::json_i_json::JsonIJsonEditor>>),
-        JsonIJsonViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_json::viewer::json_i_json::JsonIJsonViewer>>),
-        XmlAnyEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_xml::editor::xml_any::XmlAnyEditor>>),
-        XmlAnyViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_xml::viewer::xml_any::XmlAnyViewer>>),
-        XmlValidEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_xml::editor::xml_valid::XmlValidEditor>>),
-        XmlValidViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_xml::viewer::xml_valid::XmlValidViewer>>),
+        StdioHtmlApps(semio_hub_stdio_html_apps::StdioHtmlApps),
+        StdioMarkdownApps(semio_hub_stdio_md_apps::StdioMarkdownApps),
+        StdioCsvApps(semio_hub_stdio_csv_apps::StdioCsvApps),
+        StdioTsvApps(semio_hub_stdio_tsv_apps::StdioTsvApps),
+        StdioTextApps(semio_hub_stdio_txt_apps::StdioTextApps),
+        StdioJsonApps(semio_hub_stdio_json_any_apps::StdioJsonApps),
+        StdioIJsonApps(semio_hub_stdio_json_i_json_apps::StdioIJsonApps),
+        StdioXmlApps(semio_hub_stdio_xml_any_apps::StdioXmlApps),
+        StdioValidXmlApps(semio_hub_stdio_xml_valid_apps::StdioValidXmlApps),
+    }
+}
+
+impl From<VcsArtifactApp<EditorApp<semio_s_artifact_stdio_html::editor::html::HtmlEditor>>> for StdioApps {
+    fn from(app: VcsArtifactApp<EditorApp<semio_s_artifact_stdio_html::editor::html::HtmlEditor>>) -> Self {
+        Self::StdioHtmlApps(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_html::viewer::html::HtmlViewer>>> for StdioApps {
+    fn from(app: VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_html::viewer::html::HtmlViewer>>) -> Self {
+        Self::StdioHtmlApps(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<EditorApp<semio_s_artifact_stdio_md::editor::md::MdEditor>>> for StdioApps {
+    fn from(app: VcsArtifactApp<EditorApp<semio_s_artifact_stdio_md::editor::md::MdEditor>>) -> Self {
+        Self::StdioMarkdownApps(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_md::viewer::md::MdViewer>>> for StdioApps {
+    fn from(app: VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_md::viewer::md::MdViewer>>) -> Self {
+        Self::StdioMarkdownApps(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<EditorApp<semio_s_artifact_stdio_csv::editor::csv::CsvEditor>>> for StdioApps {
+    fn from(app: VcsArtifactApp<EditorApp<semio_s_artifact_stdio_csv::editor::csv::CsvEditor>>) -> Self {
+        Self::StdioCsvApps(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_csv::viewer::csv::CsvViewer>>> for StdioApps {
+    fn from(app: VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_csv::viewer::csv::CsvViewer>>) -> Self {
+        Self::StdioCsvApps(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<EditorApp<semio_s_artifact_stdio_tsv::editor::tsv::TsvEditor>>> for StdioApps {
+    fn from(app: VcsArtifactApp<EditorApp<semio_s_artifact_stdio_tsv::editor::tsv::TsvEditor>>) -> Self {
+        Self::StdioTsvApps(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_tsv::viewer::tsv::TsvViewer>>> for StdioApps {
+    fn from(app: VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_tsv::viewer::tsv::TsvViewer>>) -> Self {
+        Self::StdioTsvApps(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<EditorApp<semio_s_artifact_stdio_txt::editor::txt::TxtEditor>>> for StdioApps {
+    fn from(app: VcsArtifactApp<EditorApp<semio_s_artifact_stdio_txt::editor::txt::TxtEditor>>) -> Self {
+        Self::StdioTextApps(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_txt::viewer::txt::TxtViewer>>> for StdioApps {
+    fn from(app: VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_txt::viewer::txt::TxtViewer>>) -> Self {
+        Self::StdioTextApps(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<EditorApp<semio_s_artifact_stdio_json::editor::json_any::JsonAnyEditor>>> for StdioApps {
+    fn from(app: VcsArtifactApp<EditorApp<semio_s_artifact_stdio_json::editor::json_any::JsonAnyEditor>>) -> Self {
+        Self::StdioJsonApps(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_json::viewer::json_any::JsonAnyViewer>>> for StdioApps {
+    fn from(app: VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_json::viewer::json_any::JsonAnyViewer>>) -> Self {
+        Self::StdioJsonApps(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<EditorApp<semio_s_artifact_stdio_json::editor::json_i_json::JsonIJsonEditor>>> for StdioApps {
+    fn from(app: VcsArtifactApp<EditorApp<semio_s_artifact_stdio_json::editor::json_i_json::JsonIJsonEditor>>) -> Self {
+        Self::StdioIJsonApps(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_json::viewer::json_i_json::JsonIJsonViewer>>> for StdioApps {
+    fn from(app: VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_json::viewer::json_i_json::JsonIJsonViewer>>) -> Self {
+        Self::StdioIJsonApps(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<EditorApp<semio_s_artifact_stdio_xml::editor::xml_any::XmlAnyEditor>>> for StdioApps {
+    fn from(app: VcsArtifactApp<EditorApp<semio_s_artifact_stdio_xml::editor::xml_any::XmlAnyEditor>>) -> Self {
+        Self::StdioXmlApps(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_xml::viewer::xml_any::XmlAnyViewer>>> for StdioApps {
+    fn from(app: VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_xml::viewer::xml_any::XmlAnyViewer>>) -> Self {
+        Self::StdioXmlApps(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<EditorApp<semio_s_artifact_stdio_xml::editor::xml_valid::XmlValidEditor>>> for StdioApps {
+    fn from(app: VcsArtifactApp<EditorApp<semio_s_artifact_stdio_xml::editor::xml_valid::XmlValidEditor>>) -> Self {
+        Self::StdioValidXmlApps(app.into())
+    }
+}
+
+impl From<VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_xml::viewer::xml_valid::XmlValidViewer>>> for StdioApps {
+    fn from(app: VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_xml::viewer::xml_valid::XmlValidViewer>>) -> Self {
+        Self::StdioValidXmlApps(app.into())
     }
 }
 

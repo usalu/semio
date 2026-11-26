@@ -52,7 +52,7 @@ pub use commit_encoder_and_payload::{BoardFillCommitEncoder, BOARD_FILL_COMMIT_B
 
 #[path = "📥️fill-job-and-snapshot-capture/🦀️.rs"]
 mod fill_job_and_snapshot_capture;
-use fill_job_and_snapshot_capture::BoardFillOffer;
+pub use fill_job_and_snapshot_capture::BoardFillTransition;
 pub use fill_job_and_snapshot_capture::{begin_board_fill_snapshot, BoardFillJob};
 
 #[path = "🚪️snapshot-ingress/🦀️.rs"]
@@ -76,7 +76,7 @@ mod job_close_and_interactive;
 
 impl BoardFillJob {
     pub fn admission_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        let bytes = BoardFillFixedPages::<BoardFillSource, { BOARD_FILL_SOURCE_CAPACITY.div_ceil(BOARD_FILL_PAGE_ITEMS) }>::descriptor_bytes()
+        let bytes = size_of::<BoardFillJobState>() + BoardFillFixedPages::<BoardFillSource, { BOARD_FILL_SOURCE_CAPACITY.div_ceil(BOARD_FILL_PAGE_ITEMS) }>::descriptor_bytes()
             + BoardFillFixedPages::<BoardFillCandidate, { BOARD_FILL_CANDIDATE_CAPACITY / BOARD_FILL_PAGE_ITEMS }>::descriptor_bytes()
             + BoardFillFixedPages::<BoardFillVirtualNode, { BOARD_FILL_PLACEMENT_CAPACITY.div_ceil(BOARD_FILL_PAGE_ITEMS) }>::descriptor_bytes()
             + BoardFillFixedPages::<BoardFillVirtualHandle, { (BOARD_FILL_PLACEMENT_CAPACITY * BOARD_FILL_KIND_HANDLE_CAPACITY).div_ceil(BOARD_FILL_PAGE_ITEMS) }>::descriptor_bytes();
@@ -97,7 +97,7 @@ impl BoardFillJob {
             let mut original = snapshot.take().expect("original snapshot retained until admitted construction");
             original.original_source = Some(binding);
             let mut job = Self::from_original_state(original, max_count, semantic_operation, binding);
-            let mut progress = RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Self>(), ..Default::default() };
+            let mut progress = RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Self>() + size_of::<BoardFillJobState>(), retained_capacity_bytes: size_of::<BoardFillJobState>(), ..Default::default() };
             let state = job.state.as_mut().expect("original board fill construction state");
             macro_rules! descriptor {
                 ($field:ident) => {

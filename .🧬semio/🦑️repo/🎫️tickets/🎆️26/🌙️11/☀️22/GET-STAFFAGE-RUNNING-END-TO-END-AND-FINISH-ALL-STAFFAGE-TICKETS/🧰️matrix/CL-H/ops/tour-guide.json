@@ -1,0 +1,90 @@
+[
+ {
+  "set": "volumes.200.structure[humerus-l].sections.0.rx",
+  "was": 0.0155,
+  "value": 0.0124
+ },
+ {
+  "set": "volumes.200.structure[humerus-l].sections.0.ry",
+  "was": 0.0155,
+  "value": 0.0124
+ },
+ {
+  "set": "volumes.200.structure[humerus-l].sections.1.rx",
+  "was": 0.0155,
+  "value": 0.0111
+ },
+ {
+  "set": "volumes.200.structure[humerus-l].sections.1.ry",
+  "was": 0.0155,
+  "value": 0.0111
+ },
+ {
+  "set": "volumes.200.structure[humerus-l].sections.2.rx",
+  "was": 0.0155,
+  "value": 0.0107
+ },
+ {
+  "set": "volumes.200.structure[humerus-l].sections.2.ry",
+  "was": 0.0155,
+  "value": 0.0107
+ },
+ {
+  "set": "volumes.200.structure[humerus-l].sections.3.rx",
+  "was": 0.0155,
+  "value": 0.0128
+ },
+ {
+  "set": "volumes.200.structure[humerus-l].sections.3.ry",
+  "was": 0.0155,
+  "value": 0.0128
+ },
+ {
+  "set": "volumes.200.structure[humerus-r].sections.0.rx",
+  "was": 0.0155,
+  "value": 0.0124
+ },
+ {
+  "set": "volumes.200.structure[humerus-r].sections.0.ry",
+  "was": 0.0155,
+  "value": 0.0124
+ },
+ {
+  "set": "volumes.200.structure[humerus-r].sections.1.rx",
+  "was": 0.0155,
+  "value": 0.0111
+ },
+ {
+  "set": "volumes.200.structure[humerus-r].sections.1.ry",
+  "was": 0.0155,
+  "value": 0.0111
+ },
+ {
+  "set": "volumes.200.structure[humerus-r].sections.2.rx",
+  "was": 0.0155,
+  "value": 0.0107
+ },
+ {
+  "set": "volumes.200.structure[humerus-r].sections.2.ry",
+  "was": 0.0155,
+  "value": 0.0107
+ },
+ {
+  "set": "volumes.200.structure[humerus-r].sections.3.rx",
+  "was": 0.0155,
+  "value": 0.0128
+ },
+ {
+  "set": "volumes.200.structure[humerus-r].sections.3.ry",
+  "was": 0.0155,
+  "value": 0.0128
+ },
+ {
+  "set": "volumes.200.structure[humerus-l].slender",
+  "value": true
+ },
+ {
+  "set": "volumes.200.structure[humerus-r].slender",
+  "value": true
+ }
+]

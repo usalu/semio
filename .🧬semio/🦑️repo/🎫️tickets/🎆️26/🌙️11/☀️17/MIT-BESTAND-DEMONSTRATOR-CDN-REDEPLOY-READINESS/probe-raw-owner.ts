@@ -2,9 +2,8 @@ import { createHash } from "node:crypto";
 import { copyFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
-import { authoredReleaseDigestsV1, workspace } from "./authored-release-descriptors.ts";
+import { authoredReleaseTargetsV1, authoredTargetDigestV1, workspace } from "./authored-release-descriptors.ts";
 import { demonstratorRuntimeAssetSources } from "../../../../../../../♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📦️assets/🟦️.ts";
-import { componentStageTargetsV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts";
 import { copyBrowserArtifacts } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/🟦️.ts";
 import { finalizePluginDescriptor, PLUGIN_DESCRIPTOR_PROBE_SOURCE } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts";
 import { MODULE_BRIDGE_FILE } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
@@ -17,11 +16,11 @@ const [overlay, plugin, raw, expectedRaw, prepared, auditOnly] = process.argv.sl
 if (!overlay || !plugin || !raw || !expectedRaw || !/^[0-9a-f]{64}$/.test(expectedRaw)) throw Error("Exact diagnostic component input required");
 const digest = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 if (digest(readFileSync(raw)) !== expectedRaw) throw Error("Raw WASI input differs");
-const expectedSemantic = authoredReleaseDigestsV1([plugin])[plugin];
 if (auditOnly !== undefined && auditOnly !== "--audit-only") throw Error("Unknown raw probe argument");
-const owner = componentStageTargetsV1(workspace).filter(target => target.pluginId === plugin);
+const owner = authoredReleaseTargetsV1().filter(target => target.pluginId === plugin);
 if (owner.length !== 1 || !owner[0]!.directoryName) throw Error("Diagnostic needs one authored deployment owner");
 const target = owner[0]!, base = target.packageName.replaceAll("-", "_");
+const expectedSemantic = authoredTargetDigestV1(target);
 const all = demonstratorRuntimeAssetSources(workspace, "release");
 const support = all.filter(source => ["browser-support:preview2", "browser-support:shard"].includes(source.owner));
 const vendor = support.find(source => source.owner === "browser-support:preview2");
@@ -44,6 +43,11 @@ if (prepared) {
     copyFileSync(join(prepared, file), destination);
   }
 } else await transpilePluginComponentModulesAsync(resolve(raw), module, base, {repoRoot: workspace, mode: "release", cores: 1, preview2VendorDir: ""});
+const verifiedCores = spawnSync("repo", ["tools", "exec", "--light", "python", "--", "-I",
+  join(import.meta.dirname,"verify-transpiled-component.py"), raw, module],
+  {cwd:workspace, encoding:"utf8", maxBuffer:65536, timeout:30000});
+if (verifiedCores.status !== 0 || verifiedCores.error) throw Error("Unbound transpiled core inventory: " + (verifiedCores.error ?? verifiedCores.stderr));
+writeFileSync(join(dirname(destination), "raw-cores.json"), verifiedCores.stdout);
 const factory = join(module, base + ".js");
 writeFileSync(join(module, PLUGIN_HOST_SHIM_FILE), hostShimSource());
 rewritePreview2ShimImports(factory, join(staged, vendor.destination));

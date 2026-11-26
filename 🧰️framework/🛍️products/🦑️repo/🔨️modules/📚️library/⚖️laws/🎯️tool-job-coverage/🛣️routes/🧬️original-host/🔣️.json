@@ -70,6 +70,20 @@
       "accepted": false
     },
     {
+      "name": "refuse-unverified-producer-copy-bound",
+      "gate": "workerBudget",
+      "needle": "issued.maximum_copy_bytes>producer.maximum_copy_bytes",
+      "replacement": "false",
+      "accepted": false
+    },
+    {
+      "name": "refuse-detached-producer-items",
+      "gate": "workerBudget",
+      "needle": "maximum_items:cx.retained_grant().maximum_items,..grant",
+      "replacement": "maximum_items:usize::MAX,..grant",
+      "accepted": false
+    },
+    {
       "name": "refuse-pendingCustody",
       "gate": "pendingCustody",
       "needle": "rejected.admit_pending(config,&mut self.session,cx)",

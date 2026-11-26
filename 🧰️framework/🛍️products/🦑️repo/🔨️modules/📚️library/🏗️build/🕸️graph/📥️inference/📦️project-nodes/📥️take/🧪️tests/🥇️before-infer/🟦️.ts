@@ -2,7 +2,7 @@
  * @see ../../🟨️.mjs `takeBeforeInferV1` */
 import{expect,test}from"bun:test";
 import{createAdoptCountersV1,takeBeforeInferV1,takeAdmittedV1,takeFetchFirstV1,TAKE_POLICY_V1}from"../../🟨️.mjs";
-import source from"../../../🟨️.mjs"with{type:"text"};
+const source=await Bun.file(new URL("../../../🟨️.mjs",import.meta.url)).text();
 
 type Outcome="present"|"fetched"|"stale"|"miss"|"fault"|"incomplete";
 const farm=(children:number,milliseconds:number)=>{let busy=0;const waiting:(()=>void)[]=[];return async<T,>(work:()=>T)=>{while(busy>=children)await new Promise<void>(resolve=>waiting.push(resolve));busy++;try{await Bun.sleep(milliseconds);return work();}finally{busy--;waiting.shift()?.();}};};
@@ -61,7 +61,7 @@ test("the adopt lane has a gate of its own: with the pass lane blocked at the me
  void takeFetchFirstV1({lanes:[names],heavy:[],concurrency:2,attempt:pass,adoptAttempt:adopt,hot:()=>new Set(names),queue:()=>names.filter(name=>!decided.has(name)),arrived:name=>{decided.set(name,"fetched");},stop:()=>decided.size===names.length,policy,mark:()=>{}});
  const begun=performance.now();while(decided.size<names.length&&performance.now()-begun<1500)await Bun.sleep(10);
  expect(decided.size,"the pass lane never moved, the adopt lane took all twelve").toBe(12);expect(performance.now()-begun).toBeLessThan(1000);
- const control=new Map<string,string>(),stuck=takeAdmittedV1(async name=>{control.set(name,"x");return"fetched";},()=>blocked,undefined,{flying:1});void stuck("a");await Bun.sleep(50);expect(control.size,"control: the same look behind the blocked gate never starts").toBe(0);
+ const control=new Map<string,string>(),stuck=takeAdmittedV1<string,string>(async name=>{control.set(name,"x");return"fetched";},()=>blocked,undefined,{flying:1});void stuck("a");await Bun.sleep(50);expect(control.size,"control: the same look behind the blocked gate never starts").toBe(0);
 });
 
 test("the read wires it: the owner loop decides before every inference, the adopt and poll looks have no footprint gate, the pass counts its waits, the line is printed",()=>{

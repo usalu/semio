@@ -12,3 +12,5 @@ extern crate semio_os_kernel as store;
 pub mod archive_load_tests;
 #[path = "../🔬️unit/🦀️.rs"]
 pub mod unit_tests;
+#[path = "../../🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️window/🦀️.rs"]
+pub mod window_ownership_tests;

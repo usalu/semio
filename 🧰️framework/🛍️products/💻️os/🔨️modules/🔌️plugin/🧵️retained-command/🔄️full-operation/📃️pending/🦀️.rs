@@ -93,6 +93,19 @@ impl PendingPublicationPage{
    _=>self.cursor.next_demands(TYPED_OPERATION_RESULT_PAGE_BYTES-self.written,body.saturating_sub(metadata()))?,
   };d.copy_bytes+=metadata();Ok(d)
  }
+ fn compact_bound(&self, source: &PublicationPageSource<'_>, grant: RetainedCloneGrant, maximum_work: u64) -> Option<usize> {
+     if !self.backing.is_ready() || self.framed || self.refused || self.written != 0 || !self.cursor.terminal_is_empty() || grant.maximum_depth < 3 { return None; }
+     let bound = self.plan?.intent.wire(source).ok()?.compact_byte_bound()?;
+     (bound <= TYPED_OPERATION_RESULT_PAGE_BYTES && bound + metadata() <= grant.maximum_copy_bytes
+         && (2 * bound + 64) as u64 <= maximum_work).then_some(bound)
+ }
+ /// 🎟️ Quotes the admitted compact source or the next resumable cursor effect.
+ pub fn write_admission_demands(&self, source: &PublicationPageSource<'_>, grant: RetainedCloneGrant, maximum_work: u64) -> Result<RetirementDemand, ValueError> {
+     if let Some(bound) = self.compact_bound(source, grant, maximum_work) {
+         return Ok(RetirementDemand { copy_bytes: bound + metadata(), depth: 3, ..Default::default() });
+     }
+     self.write_demands(grant.maximum_copy_bytes)
+ }
  /// ✍️ Bridges only the actual original receiving authority; copied-items and CPU work remain independent.
  pub fn write_step(&mut self,source:&PublicationPageSource<'_>,grant:RetainedCloneGrant,maximum_work:u64,decode:&mut NativeDecodeControl<'_>)->PublicationPageWrite{self.write_encoded(source,grant,maximum_work,decode)}
  /// ♻️ Accepted custody borrows the same original receiver's retirement authorization after cancellation.
@@ -100,10 +113,11 @@ impl PendingPublicationPage{
  fn write_encoded<R:PageEncodingReceiver>(&mut self,source:&PublicationPageSource<'_>,grant:RetainedCloneGrant,maximum_work:u64,decode:&mut R)->PublicationPageWrite{
   let before=self.written;let was_framed=self.framed;let mut progress=RetainedCloneProgress::default();let mut work=0;let mut primary=None;
   if maximum_work==0||grant.maximum_items==0{return PublicationPageWrite{written_bytes:0,progress,work,result:Ok(false)}}
-  let demand=match self.write_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return PublicationPageWrite{written_bytes:0,progress,work:1,result:Err(PublicationPageWriteFailure{primary:Some(error),forwarding:None,context:None})}};
+  let demand=match self.write_admission_demands(source,grant,maximum_work){Ok(d)=>d,Err(error)=>return PublicationPageWrite{written_bytes:0,progress,work:1,result:Err(PublicationPageWriteFailure{primary:Some(error),forwarding:None,context:None})}};
   if maximum_work==0||!fits(demand,grant){return PublicationPageWrite{written_bytes:0,progress,work,result:Ok(false)}}
   if self.written==TYPED_OPERATION_RESULT_PAGE_BYTES&&self.cursor.pending_bytes()!=0{self.refused=true;return PublicationPageWrite{written_bytes:0,progress:RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()},work:1,result:Err(PublicationPageWriteFailure{primary:Some(ValueError::literal(ValueRefusalKind::OwnershipLimit,"encoded result exceeds fixed original page backing")),forwarding:None,context:None})}}
   let Some(plan)=self.plan else{return PublicationPageWrite{written_bytes:0,progress,work:1,result:Err(PublicationPageWriteFailure{primary:Some(invalid()),forwarding:None,context:None})}};let intent=plan.intent;
+  let compact_bound = self.compact_bound(source, grant, maximum_work);
   let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-metadata(),..grant};
   let bridge=decode.encode(|remaining,observer,allocation|{
    let mut control=NativeEncodeControl::new_forwarded(remaining,observer,allocation);
@@ -119,8 +133,17 @@ impl PendingPublicationPage{
     (PublicationPageIntent::Raw{..},_)=>{work=1;primary=Some(invalid());},
     _=>{
      work=1;let wire=match intent.wire(source){Ok(wire)=>wire,Err(error)=>{primary=Some(error);return Ok(())}};let output=&mut self.backing.initialized_bytes().ok_or_else(invalid)?[self.written..];
-     let turn=self.cursor.step(&wire,output,child,maximum_work,&mut control);work=u64::try_from(turn.work).unwrap_or(u64::MAX);
-     match turn.result{Ok(step)=>{progress=step.progress;if step.written_bytes!=0{self.written+=step.written_bytes;}if step.complete{self.framed=true;}},Err(error)=>{progress=error.retained_progress();self.written=self.cursor.written_bytes();primary=Some(error);}}
+     if let Some(bound) = compact_bound {
+         let write = wire.write_into(&mut output[..bound], 3, 16, &mut control);
+         work = write.work.max(1);
+         progress = RetainedCloneProgress { copied_items: 1, copied_bytes: write.written, ..Default::default() };
+         self.written = write.written;
+         self.framed = write.result.is_ok();
+         primary = write.result.err();
+     } else {
+         let turn=self.cursor.step(&wire,output,child,maximum_work,&mut control);work=u64::try_from(turn.work).unwrap_or(u64::MAX);
+         match turn.result{Ok(step)=>{progress=step.progress;if step.written_bytes!=0{self.written+=step.written_bytes;}if step.complete{self.framed=true;}},Err(error)=>{progress=error.retained_progress();self.written=self.cursor.written_bytes();primary=Some(error);}}
+     }
      progress.copied_bytes+=usize::from(self.written!=before)*size_of::<usize>()+usize::from(self.framed!=was_framed)*size_of::<bool>();
     }
    }

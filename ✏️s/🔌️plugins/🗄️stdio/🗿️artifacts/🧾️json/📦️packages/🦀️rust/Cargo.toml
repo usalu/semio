@@ -44,7 +44,6 @@ semio-framework-action-bus = { path = "../../../../../../../🧰️framework/�
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
-semio-s-artifact-stdio-txt = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]

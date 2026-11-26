@@ -11,7 +11,7 @@ import {advanceProgressV1,askReasonV1,currentHolderV1,doorSuffixV1,holderSuffixV
 
 const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️oracle/🐍️.py"),roots:string[]=[];
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
-const policy=schema.definitions.Policy.const as Record<string,number>,sha="a".repeat(64),other="b".repeat(64);
+const policy=schema.definitions.Policy.const,sha="a".repeat(64),other="b".repeat(64);
 const holder=(overrides={})=>({pid:4242,command:"script.ts repo show projects",startedMs:Date.UTC(2026,10,17,16,0,0),digest:sha,...overrides});
 const progress=(overrides={})=>({phase:"owners",done:120,total:482,advancedMs:1_000_000,...overrides});
 

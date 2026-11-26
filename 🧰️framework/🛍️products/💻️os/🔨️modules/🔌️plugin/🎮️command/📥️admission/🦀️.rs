@@ -248,9 +248,8 @@ pub struct PendingLatestWinsCommand<A: ArtifactApp> {
     pub original_body:usize,
     pub original_decoder:(NativeAllocationIdentity,u64),
     pub metadata_retirement:RetainedCloneClose,
-    pub context_metadata:ManuallyDrop<Option<ActionMeta>>,
     pub context_view:ManuallyDrop<Option<semio_plugin_decl_emission::ViewLease>>,
-    pub context_phase:u8,
+    pub context_ready:bool,
     pub operation: semio_framework_job::Operation,
     pub source_identity:semio_framework_job::OriginalSourceBinding,
     pub revision: [u8; 32],
@@ -274,28 +273,24 @@ pub struct PendingLatestWinsCommand<A: ArtifactApp> {
 impl<A: ArtifactApp> PendingLatestWinsCommand<A> {
     pub fn metadata(&self)->Result<&ActionMeta,ValueError>{self.meta.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"pending command lost its original metadata"))}
     pub fn validate_original(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if !self.source_identity.matches(cx)||cx.native_receiving_identity()!=Some(self.original_decoder){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"pending command requires its original receiving continuation").into())}if let Some(caller)=self.original_caller.as_ref(){caller.validate_retirement_context(cx)?}Ok(())}
-    /// 🪪️ Routing metadata and its view lease are prepared in four funded phases before the command may dispatch.
+    /// 🪪️ Admits the exact view alias the command context will consume.
     pub fn prepare_context_metadata(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         self.validate_original(cx)?;
-        match self.context_phase{
-            0=>{
-                if self.context_metadata.is_none(){self.meta.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"pending command lost its original metadata"))?.admit_routing_alias(&mut self.construction,&mut self.context_metadata,cx)?;return Ok(false)}
-                stepped(cx,self,|owner|&mut owner.construction,fixed::<u8>(),|owner|{owner.context_phase=1;Ok(receipt(fixed::<u8>()))})?;
-            },
-            1=>{let d=RetirementDemand{copy_bytes:2*size_of::<Option<semio_plugin_decl_emission::ViewLease>>()+size_of::<u8>(),depth:1,..Default::default()};stepped(cx,self,|owner|&mut owner.construction,d,|owner|{*owner.context_view=owner.context_metadata.as_mut().unwrap().view_state.take().map(semio_plugin_decl_emission::ViewLease::new);owner.context_phase=2;Ok(receipt(d))})?;},
-            2=>{let body=self.original_body;if !self.metadata_retirement.is_empty(){let d=self.metadata_retirement.demands(body)?;retired_poll(cx,d,|effect|self.metadata_retirement.step_granted(body,effect))?;}else if self.context_metadata.is_some(){let d=self.metadata_retirement.next_owner_demands::<ActionMeta>(true,&None,body)?;begun(cx,d,|effect|self.metadata_retirement.begin_granted(&mut self.context_metadata,effect))?;}else{stepped(cx,self,|owner|&mut owner.construction,fixed::<u8>(),|owner|{owner.context_phase=3;Ok(receipt(fixed::<u8>()))})?;}},
-            3=>return Ok(true),
-            _=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original command metadata phase changed").into())
-        }
-        Ok(self.context_phase==3)
+        if self.context_ready { return Ok(true); }
+        let view = RetirementDemand { copy_bytes: 2 * size_of::<Option<semio_plugin_decl_emission::ViewLease>>() + size_of::<bool>(), depth: 1, ..Default::default() };
+        stepped(cx, self, |owner| &mut owner.construction, view, |owner| {
+            *owner.context_view = owner.metadata()?.view_state.clone().map(semio_plugin_decl_emission::ViewLease::new);
+            owner.context_ready = true;
+            Ok(receipt(view))
+        })?;
+        Ok(self.context_ready)
     }
-    pub fn context_metadata_is_empty(&self)->bool{self.context_metadata.is_none()&&self.context_view.is_none()&&self.metadata_retirement.is_empty()}
-    pub fn context_metadata_close_demands(&self)->Result<RetirementDemand,ValueError>{if !self.metadata_retirement.is_empty(){return self.metadata_retirement.demands(self.original_body)}if self.context_metadata.is_some(){return self.metadata_retirement.next_owner_demands::<ActionMeta>(true,&None,self.original_body)}if self.context_view.is_some(){return self.metadata_retirement.next_owner_demands::<semio_plugin_decl_emission::ViewLease>(true,&None,self.original_body)}Ok(Default::default())}
+    pub fn context_metadata_is_empty(&self)->bool{self.context_view.is_none()&&self.metadata_retirement.is_empty()}
+    pub fn context_metadata_close_demands(&self)->Result<RetirementDemand,ValueError>{if !self.metadata_retirement.is_empty(){return self.metadata_retirement.demands(self.original_body)}if self.context_view.is_some(){return self.metadata_retirement.next_owner_demands::<semio_plugin_decl_emission::ViewLease>(true,&None,self.original_body)}Ok(Default::default())}
     pub fn close_context_metadata(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         self.validate_original(cx)?;if self.context_metadata_is_empty(){return Ok(true)}
         let d=self.context_metadata_close_demands()?;let body=self.original_body;
         if !self.metadata_retirement.is_empty(){retired_poll(cx,d,|effect|self.metadata_retirement.step_granted(body,effect))?;}
-        else if self.context_metadata.is_some(){begun(cx,d,|effect|self.metadata_retirement.begin_granted(&mut self.context_metadata,effect))?;}
         else{begun(cx,d,|effect|self.metadata_retirement.begin_granted(&mut self.context_view,effect))?;}
         Ok(false)
     }

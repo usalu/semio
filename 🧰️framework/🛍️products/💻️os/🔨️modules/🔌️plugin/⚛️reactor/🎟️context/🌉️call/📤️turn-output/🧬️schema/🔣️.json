@@ -4,6 +4,8 @@
   "required": [
     "result",
     "grant",
+    "batchedRetirement",
+    "batchedEncoding",
     "states"
   ],
   "additionalProperties": false,
@@ -13,6 +15,30 @@
     },
     "grant": {
       "type": "object"
+    },
+    "batchedRetirement": {
+      "type": "object",
+      "required": ["uiPatches"],
+      "additionalProperties": false,
+      "properties": {
+        "uiPatches": { "type": "array" }
+      }
+    },
+    "batchedEncoding": {
+      "type": "object",
+      "required": ["expectedBytes", "tinyGrantItems", "cancelAfterTurns", "minimumTurnReduction"],
+      "additionalProperties": false,
+      "properties": {
+        "expectedBytes": { "type": "integer", "minimum": 1 },
+        "tinyGrantItems": { "type": "integer", "minimum": 1 },
+        "cancelAfterTurns": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "minimumTurnReduction": { "type": "integer", "minimum": 2 }
+      }
     },
     "states": {
       "type": "array",

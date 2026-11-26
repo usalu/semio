@@ -17,7 +17,7 @@ pub struct ResourceMap {
 
 /// 🔁 Rewrites every resource name in `ops` through `map` (names the map does not know stay).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn rename_content(ops: Vec<PdfOp>, map: &ResourceMap) -> Vec<PdfOp> {
+pub fn rename_content<C: FromIterator<PdfOp>>(ops: impl IntoIterator<Item = PdfOp>, map: &ResourceMap) -> C {
     ops.into_iter()
         .map(|mut op| {
             if let Some((name, id)) = rename_target(&mut op, map) { *name = id.to_owned(); }

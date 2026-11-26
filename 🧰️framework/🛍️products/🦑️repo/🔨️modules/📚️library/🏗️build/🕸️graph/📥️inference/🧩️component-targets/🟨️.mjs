@@ -1,4 +1,4 @@
-import {isOpaqueSourcePathV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import{isOpaqueSourcePathV1}from"../../../📥️inputs/👻️opaque-source/🟨️.mjs";
 /** 🧩️ Projects Cargo, component, release-pipeline, print and root-command targets. */
 import managersV1 from "../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs";
 const javascriptManagerV1 = managersV1.selectedManagerV1("javascript");

@@ -34,7 +34,7 @@ for(const vector of corpus)test("an ordinary slice exit preserves worker evidenc
  const directory=mkdtempSync(join(tmpdir(),"slice-exit-")),logs:string[]=[],{pool,run,started}=harness([{exit:vector.exit,tail:vector.stderr}]);
  try{
   const error=await run(directory).then(()=>undefined,reason=>reason);
-  const refusal=failureRefusalV1(error,{log:(_event:string,text:string)=>logs.push(text),logPath:"/fixture/host.log",environment:{SEMIO_FLEET_STORE_ROOT:directory,SEMIO_FLEET_ORIGIN:"fixture"}});
+  const refusal=failureRefusalV1(error,{log:(_event:string,text?:string)=>{logs.push(String(text));},logPath:"/fixture/host.log",environment:{SEMIO_FLEET_STORE_ROOT:directory,SEMIO_FLEET_ORIGIN:"fixture"}});
   const block=readFileSync(join(directory,"v1","origins","fixture","service-failure.txt"),"utf8");
   expect(error.exit).toBe(vector.exit);expect(error.restart).toBe(false);expect(error.message).toBe("Slice worker exited with code "+vector.exit);
   expect(started).toHaveLength(1);expect(refusal.key).toBe("internal");

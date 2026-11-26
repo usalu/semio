@@ -25,8 +25,7 @@ use semio_plugin_operation::TOOL_CANCELLATION_SLOTS;
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_ui_contract::*;
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure;
-use semio_framework_value::{admit_owned_retirement, close_factory_ticket, factory_ticket_demands, owned_retirement_birth_bytes, RetirementDemand, ValueError};
-use semio_framework_value::retirement::arc_custody::ArcLease;
+use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_plugin_instance_docs::docs_maintenance_ladder::idle;
 use semio_plugin_instance_jobs::jobs_close_ladder::{handoff, handoff_demand, release_demand};
@@ -35,12 +34,6 @@ use crate::ladders_lifecycle_stores::ORIGINAL_STORE_LANES;
 
 #[path = "🧺️empty-backings/🦀️.rs"]
 mod empty_backings;
-
-type ProjectionCacheRetirement<A> = (
-    ArcLease<<A as ArtifactApp>::Snapshot>,
-    ArcLease<<A as ArtifactApp>::Config>,
-    ArcLease<semio_plugin_decl_views::history_view::HistoryView>,
-);
 
 #[doc(hidden)]
 pub fn released(bytes: usize) -> RetainedCloneProgress {
@@ -88,22 +81,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if self.history.history_view.take().is_some() {
             return done(handoff());
         }
-        if self.history.cache_retirement.is_some() {
-            let poll = close_factory_ticket(&mut self.history.cache_retirement, grant.maximum_copy_bytes, effect);
-            let step = semio_plugin_ownership::bounded_ownership::plugin_settle_value(poll).map_err(ValueError::into_fault)?;
-            return done(step.progress());
-        }
-        if let Some((key, snapshot, config, history)) = self.history.cache.take() {
-            let mut roots = Some((ArcLease::new(snapshot), ArcLease::new(config), ArcLease::new(history)));
-            let admission = admit_owned_retirement(&mut roots, effect);
-            if let Some((ArcLease(snapshot), ArcLease(config), ArcLease(history))) = roots {
-                self.history.cache = Some((key, snapshot.unwrap(), config.unwrap(), history.unwrap()));
-            }
-            if let Some((owner, progress)) = admission.result.map_err(ValueError::into_fault)? {
-                self.history.cache_retirement = Some(owner);
-                return done(progress);
-            }
-            return done(idle);
+        if self.history.cache_retirement.is_some() || self.history.cache.is_some() || !self.history.cache_parked.is_empty() {
+            let progress = self.history.retire_cache_step(true, effect).map_err(value_fault)?.unwrap_or(idle);
+            return done(progress);
         }
         if !self.history.command_log.terminal_is_empty() {
             return self.history.command_log.close_step(child).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(value_fault);
@@ -241,17 +221,8 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
         if self.history.history_view.is_some() {
             return Ok(handoff_demand());
         }
-        if let Some(owner) = self.history.cache_retirement.as_ref() {
-            return factory_ticket_demands(owner, body);
-        }
-        if self.history.cache.is_some() {
-            let bytes = owned_retirement_birth_bytes::<ProjectionCacheRetirement<A>>();
-            return Ok(RetirementDemand {
-                copy_bytes: std::mem::size_of::<Option<ProjectionCacheRetirement<A>>>() + bytes,
-                capacity_bytes: bytes,
-                depth: 1,
-                ..Default::default()
-            });
+        if let Some(demand) = self.history.cache_retirement_demand(true, body)? {
+            return Ok(demand);
         }
         if !self.history.command_log.terminal_is_empty() {
             return nested(self.history.command_log.retirement_demands()?);
@@ -322,6 +293,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
     /// 🪹️ Every field owner the retained-field rung releases is empty.
     pub fn retained_fields_own_terminal_is_empty(&self) -> bool {
         self.history.cache.is_none()
+            && self.history.cache_parked.is_empty()
             && self.history.cache_retirement.is_none()
             && self.history.history_view.is_none()
             && self.history.command_log.terminal_is_empty()
@@ -586,6 +558,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
         [
             (self.history.history_view.is_none(), "history_view"),
             (self.history.cache_retirement.is_none(), "cache_retirement"),
+            (self.history.cache_parked.is_empty(), "cache_parked"),
             (self.history.cache.is_none(), "cache"),
             (self.history.command_log.terminal_is_empty(), "command_log"),
             (self.history.history_dirty_sequences.is_empty(), "history_dirty_sequences"),

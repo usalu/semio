@@ -1,0 +1,17 @@
+{
+  "source": "Measured peaks of third-party crates from the build telemetry ledgers (units-<platform>.jsonl rows with a recorded size and units.jsonl for syn, profile release/prototype, host target); lines are the recorded source lines (syn: about 51 kloc).",
+  "measured": [
+    { "crate": "unicode-ident", "lines": 976, "peakMiB": 94 },
+    { "crate": "quote", "lines": 2708, "peakMiB": 124 },
+    { "crate": "proc-macro2", "lines": 6030, "peakMiB": 157 },
+    { "crate": "serde_core", "lines": 12037, "peakMiB": 254 },
+    { "crate": "syn", "lines": 51000, "peakMiB": 365 }
+  ],
+  "budgetMiB": 4096,
+  "overestimateLimit": 2.2,
+  "sibling": [
+    { "name": "an external crate takes the size-free ledger rows of its other profile", "key": "syn@syn|host|prototype|lib", "lines": 51000, "external": true, "rows": [{ "key": "syn@syn|host|release|lib", "peakMiB": 345 }, { "key": "syn@syn|host|release|lib", "peakMiB": 365 }], "expectedPeaksMiB": [345, 365] },
+    { "name": "a workspace crate never takes rows without a recorded size", "key": "semio_x@semio_x|host|prototype|lib", "lines": 5000, "external": false, "rows": [{ "key": "semio_x@semio_x|host|release|lib", "peakMiB": 900 }], "expectedPeaksMiB": [] },
+    { "name": "an external crate still follows rows with a comparable recorded size", "key": "serde_core@serde_core|host|prototype|lib", "lines": 12000, "external": true, "rows": [{ "key": "serde_core@serde_core|host|release|lib", "peakMiB": 254, "lines": 12037 }, { "key": "serde_core@serde_core|host|release|lib", "peakMiB": 700, "lines": 90000 }], "expectedPeaksMiB": [254] }
+  ]
+}

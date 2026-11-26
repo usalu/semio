@@ -189,6 +189,13 @@ impl BooleanShape {
             if matches!((a,b),(SolidPrimitive::Sphere{..},SolidPrimitive::Cylinder{..})|(SolidPrimitive::Cylinder{..},SolidPrimitive::Sphere{..})){
                 return sphere_cylinder::combine(a,b,operation);
             }
+            if let (SolidPrimitive::Sphere { frame: stock, radius }, SolidPrimitive::Torus { frame, major, minor }, BooleanOp::Cut) = (a, b, operation) {
+                if stock.origin == frame.origin {
+                    if radius <= major - minor { return Ok(SolidBoundary::Analytic(a)); }
+                    return SphericalTorusCut::new(frame, radius, major, minor, Tol::DEFAULT.value())
+                        .map(SolidBoundary::SphericalTorusCut).ok_or_else(unsupported);
+                }
+            }
             if let (SolidPrimitive::Sphere{frame:a_frame,radius:r},SolidPrimitive::Sphere{frame:b_frame,radius:s})=(a,b){
                 let tol=Tol::DEFAULT.value();
                 if matches!(operation,BooleanOp::Cut){

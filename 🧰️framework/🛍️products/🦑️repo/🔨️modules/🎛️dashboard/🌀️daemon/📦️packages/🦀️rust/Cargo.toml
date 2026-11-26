@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+dashboard_fleet = { path = "../../../📊️fleet/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-fleet" }
 dashboard_labels = { path = "../../../🖥️terminal/🌐️labels/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-labels" }
 dashboard_wire = { path = "../../🧵️wire/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-wire" }
 semio-ui-tui-terminal = { path = "../../../../../../../🔨️modules/🖱️ui/⌨️tui/📺️terminal/📦️packages/🦀️rust", features = ["native"] }

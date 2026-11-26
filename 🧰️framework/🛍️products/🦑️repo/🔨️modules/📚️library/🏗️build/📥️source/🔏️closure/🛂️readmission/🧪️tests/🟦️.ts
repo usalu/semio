@@ -97,7 +97,7 @@ test("an error that is not a torn capture ends the task at once without a pause,
 
 test("cancellation ends the wait: an aborted signal stops the next attempt without another capture",async()=>{
  const controller=new AbortController();let calls=0;const log:number[]=[];
- const failure=await readmitMovedClosureV1<string>({capture:async()=>{calls++;throw torn();},moved:async()=>["a.ts"],sleep:async ms=>{log.push(ms);controller.abort(new Error("cancelled"));},say:()=>undefined,signal:controller.signal}).catch(error=>error as Error);
+ const failure=await refusedV1(readmitMovedClosureV1<string>({capture:async()=>{calls++;throw torn();},moved:async()=>["a.ts"],sleep:async ms=>{log.push(ms);controller.abort(new Error("cancelled"));},say:()=>undefined,signal:controller.signal}));
  expect(failure.message).toBe("cancelled");expect(calls).toBe(1);expect(log).toEqual([250]);
 });
 
@@ -111,6 +111,8 @@ test("the parent classifies what a task prints when the closure still moved: an 
 });
 
 type Run=(sources:unknown,resolutions:unknown,fresh:boolean)=>Promise<string>;
+/** 🧪️ The error a promise rejects with; a promise that resolves fails the test. */
+const refusedV1=<E extends Error>(run:Promise<unknown>)=>run.then(value=>{throw Error("Refusal required, got "+String(value));},(error:E)=>error);
 const moved=()=>refuseBuildV1("stale","closure.source-differs",{path:"a/x.ts",expectedSha256:"a",observedSha256:"b"});
 const movable=(entry:string,run:Run,scope:{kind:"closure"}|{kind:"static";roots:string[];leaves:string[]}={kind:"closure"})=>{
  const log={fresh:[] as string[][],sleeps:[] as number[],said:[] as string[]};
@@ -132,13 +134,13 @@ test("a moved closure is admitted again from the disk with the seeds of its scop
 });
 
 test("a fresh admission that moves again under its own capture is retried with the declared pauses and then refused as `unserved`; a different error ends the task at once",async()=>{
- const task=movable("e/never.ts",async()=>{throw moved();}),failure=await task.call().catch(error=>error as Error&{code:string;key:string});
+ const task=movable("e/never.ts",async()=>{throw moved();}),failure=await refusedV1<Error&{code:string;key:string}>(task.call());
  expect(failure.key).toBe("build.closure.moving");expect(failure.code).toBe("unserved");expect(task.log.fresh).toHaveLength(policy.maximumAttempts);expect(task.log.sleeps).toEqual([...policy.backoffMs]);
  expect(task.log.said.filter(key=>key==="closure.readmit-retry")).toHaveLength(policy.maximumAttempts-1);
  let calls=0;const settles=movable("e/settles.ts",async(sources)=>{calls++;if(sources==="baked-sources"||calls<=3)throw moved();return "ok";});
  expect(await settles.call()).toBe("ok");expect(settles.log.fresh).toHaveLength(3);expect(settles.log.sleeps).toEqual(policy.backoffMs.slice(0,2));
  const other=movable("e/other.ts",async()=>{throw new Error("External implementation runtime dependency refused: node_modules/x");});
- expect((await other.call().catch(error=>error as Error)).message).toContain("External");expect(other.log.fresh).toEqual([]);expect(other.log.sleeps).toEqual([]);
+ expect((await refusedV1(other.call())).message).toContain("External");expect(other.log.fresh).toEqual([]);expect(other.log.sleeps).toEqual([]);
 });
 
 test("a vanished file during the fresh admission is a torn capture and is retried, while an error of the fresh admission that names no movement ends the task at once",async()=>{

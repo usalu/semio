@@ -6,12 +6,11 @@
 #[semio_framework_async_macros::async_test]
 async fn spr_round_trip_preserves_state_dependent_error_codes() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let initial = DemoSnapshot { n: Some(0) };
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "state-dependent-codes", initial.clone(), None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     store.set_merge_policy(semio_os_spr::MergePolicy::LaissezFaire);
-    let receipt = store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetWarningN(SetWarningN { n: 2 })], transaction: None }, &mut identity).await.expect("warning is accepted");
+    let receipt = store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetWarningN(SetWarningN { n: 2 })], transaction: None }, identity).await.expect("warning is accepted");
     let edit_id = receipt.edit_ids.first().expect("one durable edit").clone();
     let edit = store.envelope().vcs.edits.iter().find(|edit| edit.id == edit_id).expect("durable edit");
     let mutation_ids = stable_mutation_ids_for_edit(edit).await.expect("durable edit carries operation identity");
@@ -37,7 +36,7 @@ async fn spr_round_trip_preserves_state_dependent_error_codes() {
     let error = print_document_spr(store.envelope()).await.expect_err("a state-dependent code is an Error, never Fatal");
     assert!(matches!(&error, VcsError::ValidationFailed(detail) if detail.contains("malformed mutation message")), "{error:?}");
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 /// 📖️ The persisted-message gate walks the language-agnostic outcome vocabulary (`📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/

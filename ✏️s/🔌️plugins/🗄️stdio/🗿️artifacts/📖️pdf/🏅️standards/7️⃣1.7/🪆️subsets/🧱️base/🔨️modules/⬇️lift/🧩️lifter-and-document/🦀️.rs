@@ -11,6 +11,7 @@ use crate::standards::v1_7::subsets::base::io::text_string::decode_text_string;
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources;
 use crate::standards::v1_7::subsets::base::schema::stream_roles::{PdfAdmittedStreamRole, PdfGraphIdentity, PdfGraphPath, PdfStreamRoleValue};
 use crate::standards::v1_7::subsets::base::schema::content_mapping::{ResourceMap, rename_content};
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfContent;
 use crate::standards::v1_7::subsets::base::modules::lift::*;
 
 use semio_s_artifact_stdio_pdf_page_content::project_content_bytes;
@@ -203,7 +204,7 @@ impl Lifter<'_> {
         Some(self.source.deref(&value))
     }
 
-    pub fn lift_page(&mut self, index: u32, leaf: PageTreeLeaf, prepared: Option<Vec<PdfOp>>) -> PdfPage {
+    pub fn lift_page(&mut self, index: u32, leaf: PageTreeLeaf, prepared: Option<PdfContent>) -> PdfPage {
         let PageTreeLeaf { reference: page_ref, inheritance } = leaf;
         let dict = match self.source.get(page_ref) {
             Some(PdfObject::Dict(dict) | PdfObject::Stream { dict, .. }) => dict,
@@ -226,14 +227,14 @@ impl Lifter<'_> {
             None => {
                 let fonts = MappedFonts { map: &map.fonts, codecs: &self.font_codecs };
                 let artifacts = &mut self.artifacts;
-                project_content_bytes(self.source, dict_get(&dict, "Contents"), |data| parse_content(data, &fonts, artifacts))
+                project_content_bytes(self.source, dict_get(&dict, "Contents"), |data| parse_content(data, &fonts, artifacts).map(|operators| operators.into_iter().collect::<PdfContent>()))
             }
         };
         let operators = match program {
             Ok(operators) => operators,
-            Err(error) => { self.admission_error = Some(error); Vec::new() }
+            Err(error) => { self.admission_error = Some(error); PdfContent::default() }
         };
-        page.content = rename_content(operators.clone(), &map);
+        page.content = rename_content(operators.iter().cloned(), &map);
         if dict_get(&dict, "Contents").is_some() {
             let identity = PdfGraphIdentity { owner: page_ref, path: vec![PdfGraphPath::Entry { key: "Contents".into() }] };
             let mut dependencies = self.source.role_dependencies(&identity);
@@ -289,7 +290,7 @@ impl Lifter<'_> {
     /// 🖋️ Parses a content stream against `map` and rewrites its resource names to ids.
     pub(crate) fn parse_and_rename(&mut self, owner: &PdfObject, content: &[u8], map: &ResourceMap) -> Vec<PdfOp> {
         let ops = match parse_content(content, &MappedFonts {map:&map.fonts,codecs:&self.font_codecs},&mut self.artifacts){Ok(ops)=>ops,Err(error)=>{self.admission_error=Some(error);Vec::new()}};
-        self.source.record_role(owner, PdfStreamRoleValue::Operators { content: ops.clone() });
+        self.source.record_role(owner, PdfStreamRoleValue::Operators { content: ops.iter().cloned().collect() });
         let mut dependencies = Vec::new();
         for font in self.font_owners() { dependencies.extend(self.source.role_dependencies(&PdfGraphIdentity { owner: font, path: Vec::new() })); }
         self.source.record_role_dependencies(owner, crate::standards::v1_7::subsets::base::schema::stream_roles::PdfStreamRoleKind::Operators, &dependencies);

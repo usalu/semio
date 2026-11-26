@@ -156,7 +156,7 @@ async function openAdoptionScope(root:string,origin:string,storeRoot:string,loca
       host.scope(true);
       const candidate=await host.withShared(async(store,phase)=>{
        const options=host.storeOptions(store,phase),local=await createGenerationStoreV1(options).read(signal);
-       if(local?.manifest.identity===identity&&local.manifest.implementation===implementation){
+       if(local?.manifest?.identity===identity&&local.manifest.implementation===implementation){
         if(local.pointer.manifest!==null)await recoverWholeGenerationAdoptionReceiptV1({...receiptLocation,local:{generation:local.pointer.generation,localManifest:local.pointer.manifest}});
         return undefined;
        }

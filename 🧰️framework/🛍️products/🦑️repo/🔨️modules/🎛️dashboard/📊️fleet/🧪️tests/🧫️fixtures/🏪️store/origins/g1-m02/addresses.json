@@ -1,0 +1,11 @@
+{
+ "version": 1,
+ "origin": "g1-m02",
+ "advertise": {
+  "enabled": false,
+  "duplicates": [
+   "g1-m03"
+  ],
+  "namedAs": null
+ }
+}

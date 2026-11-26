@@ -35,9 +35,9 @@ test("buckets follow the uptime and the sampler reports through the slice report
  const engine={startSamplingProfiler(){},samplingProfilerStackTraces(){drains++;return{interval:0.001,traces:drains<=3?traces:[]};}};
  const stop=startSliceSamplerV1({engine,environment:{SEMIO_SLICE_SAMPLER:"on"},uptime:()=>uptime,setTimer:(run:()=>void)=>{tick=run;return{unref(){}};},clearTimer:()=>{cleared=true;}} as never);
  tick!();uptime=200;tick!();uptime=500;tick!();
- const report=buildSliceReportV1({reason:"test"}) as {sources:{profile:{books:{samples:number}[];buckets:number[]}}};
+ const report=buildSliceReportV1({reason:"interval"}) as {sources:{profile:{books:{samples:number}[];buckets:number[]}}};
  expect(report.sources.profile.books.map(book=>book.samples)).toEqual([traces.length,traces.length,traces.length]);expect(report.sources.profile.buckets).toEqual([150,400]);
- stop();expect(cleared).toBe(true);expect((buildSliceReportV1({reason:"test"}) as {sources:Record<string,unknown>}).sources.profile).toBeUndefined();
+ stop();expect(cleared).toBe(true);expect((buildSliceReportV1({reason:"interval"}) as {sources:Record<string,unknown>}).sources.profile).toBeUndefined();
  const off=startSliceSamplerV1({engine,environment:{}});expect(typeof off).toBe("function");
  expect(startSliceSamplerV1({engine:{},environment:{SEMIO_SLICE_SAMPLER:"on"}})).toBeInstanceOf(Function);
 });

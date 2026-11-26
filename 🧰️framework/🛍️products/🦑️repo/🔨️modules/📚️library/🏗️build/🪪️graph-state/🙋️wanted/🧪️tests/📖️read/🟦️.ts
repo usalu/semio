@@ -47,7 +47,7 @@ test("a 16 GB shape publishes its 4 700 stale projects, takes the answer of a se
   expect(lines[0]).toBe(wantedTextV1("plan","en",{stale:4700,taken:0,local:72,wave:18,wanted:4700}));
   expect(lines.filter(line=>line.startsWith("graph: waiting"))).toEqual([wantedTextV1("waiting","en",{arrived:0,wanted:4700}),wantedTextV1("waiting","en",{arrived:2000,wanted:4700}),wantedTextV1("waiting","en",{arrived:4660,wanted:4700})]);
   expect((await readWantedV1({client:serving,requester:"g1-m06",now:time.now}))?.projects).toHaveLength(4700);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("a retried read finds the answer to its earlier request: the projects already served are taken, not asked for again",async()=>{
@@ -58,7 +58,7 @@ test("a retried read finds the answer to its earlier request: the projects alrea
   expect((await readServedV1({client:reader,requester:"g1-m06"}))?.generation).toBe(3);
   const result=await fleetReadV1({stale,admittedMegabytes:4096,client:reader,requester:"g1-m06",platform:PLATFORM,graphKey:KEY,language:"de",say:()=>{}});
   expect(result.outcome).toBe("local");expect(result.plan.takenProjects).toBe(850);expect(result.arrived).toBe(850);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("nothing from a silent server within the silence bound: the read says in English and German what it waited for and refuses with the designed class and exit status instead of hanging",async()=>{
@@ -68,11 +68,11 @@ test("nothing from a silent server within the silence bound: the read says in En
    const lines:string[]=[],time=clock();
    const error=await fleetReadV1({stale:names(4700),admittedMegabytes:2048,client:client("reader-"+language),requester:"g1-m06",platform:PLATFORM,graphKey:KEY,language,say:line=>lines.push(line),sleep:time.sleep,now:time.now}).then(()=>undefined,reason=>reason as Error&{code:string;key:string;values:Record<string,number>});
    expect(error?.code).toBe(wantedRefusalV1.code);expect(error?.key).toBe(wantedRefusalV1.key);expect(wantedRefusalV1.exitStatus).toBe(75);
-   expect(error?.values).toEqual({wanted:4700,arrived:0,seconds:wantedPolicyV1.silenceMilliseconds/1000,missing:4700,local:0,heavy:""});
+   expect<unknown>(error?.values).toEqual({wanted:4700,arrived:0,seconds:wantedPolicyV1.silenceMilliseconds/1000,missing:4700,local:0,heavy:""});
    expect(lines.at(-1)).toBe(wantedTextV1("refused",language,error!.values));
   }
   expect(wantedTextV1("refused","de",{wanted:1,arrived:0,seconds:2,missing:1,local:0})).toContain("veraltete Projekte");
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("an unreachable fleet refuses at once when the machine cannot run even the smallest wave, and goes on locally when it can; cancellation ends the wait",async()=>{
@@ -86,7 +86,7 @@ test("an unreachable fleet refuses at once when the machine cannot run even the 
   const controller=new AbortController();
   const waiting=fleetReadV1({stale:names(4700),admittedMegabytes:4096,client:client("cancel"),requester:"g1-m06",platform:PLATFORM,graphKey:KEY,language:"en",say:()=>{},signal:controller.signal,sleep:async()=>{controller.abort();}});
   await expect(waiting).rejects.toThrow();
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("a breaker that one transient fault opened is waited out before the read decides the fleet cannot be reached: the fleet answering again is used, a breaker that stays open for longer than the patience is not waited for",async()=>{
@@ -103,7 +103,7 @@ test("a breaker that one transient fault opened is waited out before the read de
   expect(short.slept[0]).toBe(9050);expect(short.unreachable).toBe(false);
   const long=await run(60000);
   expect(long.slept).not.toContain(60050);expect(long.unreachable).toBe(true);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 const kindOf=(name:string)=>name==="workspace"?"root:language:cargo":undefined;
@@ -124,7 +124,7 @@ test("a heavy workspace root is refused with the typed owner-too-heavy refusal, 
    expect(lines.at(-1)).toBe(ownerCostTextV1("exceeds",language,{named:String(error?.values.named),grant:LIMIT(NOTHING)}));
    expect(lines.at(-1)).toContain(language==="en"?"even when nothing else":"auch dann");
   }
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("a heavy workspace root above even the tight solo grant is attempted alone, never refused by its learned cost",async()=>{
@@ -153,7 +153,7 @@ test("the wait ends without delivery of the heavy workspace root: it stays a sol
   expect(time.now()-START).toBeGreaterThanOrEqual(wantedPolicyV1.silenceMilliseconds);
   expect(lines[0]).toContain("workspace");expect(lines.at(-1)).toContain("one at a time");
   expect((await readWantedV1({client:reader,requester:"g1-m02",now:time.now}))?.heavy).toEqual(["workspace"]);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("the heavy project arrives and the light remainder fits: the read goes on locally with the light ones only; a light remainder alone never waits",async()=>{
@@ -167,7 +167,7 @@ test("the heavy project arrives and the light remainder fits: the read goes on l
   expect(result.solo).toBeUndefined();
   const light=await fleetReadV1({stale:lights,admittedMegabytes:8192,client:reader,requester:"g1-m02",platform:PLATFORM,graphKey:KEY,language:"en",estimate:estimator(),say:()=>{}});
   expect(light.outcome).toBe("local");
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("a heavy project already served is taken, not asked for again; the same stale set on a serving machine and on a machine without estimates behaves as before",async()=>{
@@ -178,7 +178,7 @@ test("a heavy project already served is taken, not asked for again; the same sta
   expect((await fleetReadV1({stale,admittedMegabytes:8192,client:reader,requester:"g1-m02",platform:PLATFORM,graphKey:KEY,language:"en",estimate:estimator(),say:()=>{}})).outcome).toBe("local");
   expect((await fleetReadV1({stale,admittedMegabytes:16384,client:undefined,requester:"g1-server",platform:PLATFORM,graphKey:KEY,language:"en",estimate:estimator(),say:()=>{}})).outcome).toBe("local");
   expect((await fleetReadV1({stale,admittedMegabytes:8192,client:undefined,requester:"g1-m05",platform:PLATFORM,graphKey:KEY,language:"en",say:()=>{}})).outcome).toBe("local");
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("an unreachable fleet refuses a single heavy project at once, while the same single project when light stays local",async()=>{
@@ -214,7 +214,7 @@ test("Law: the read waits as long as the server's progress record advances: a se
    const waiting=lines.filter(line=>language==="en"?/server last progressed \d+ s ago, estimated time left: (about \d+ min|about \d+ h \d+ min|unknown|under a minute)$/u.test(line):/Server kam zuletzt vor \d+ s voran, geschätzte Restzeit: (etwa \d+ min|etwa \d+ h \d+ min|unbekannt|unter einer Minute)$/u.test(line));
    expect(waiting.length).toBeGreaterThan(20);expect(waiting.some(line=>line.includes(language==="en"?"estimated time left: about 2":"Restzeit: etwa 2"))).toBe(true);
   }
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },120000);
 
 test("Law: no progress for the bound is a typed refusal even though the server's sign of life never stops, and it names the cause in both languages; a silent fleet names the other cause; exit status 75 in both",async()=>{
@@ -234,7 +234,7 @@ test("Law: no progress for the bound is a typed refusal even though the server's
    const text=cause==="stalled"?wantedTextV1("causeStalled",language,{minutes:30}):wantedTextV1("causeSilent",language,{minutes:5});
    expect(lines).toContain(text);expect(lines.indexOf(text)).toBeLessThan(lines.length-1);
   }
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },120000);
 
 test("what arrived is used: the fleet delivered all but k projects within the capacity of this machine, so the read stops waiting at once and infers the k itself instead of refusing",async()=>{
@@ -244,7 +244,7 @@ test("what arrived is used: the fleet delivered all but k projects within the ca
   const sleep=async(milliseconds:number)=>{await time.sleep(milliseconds);if(!sent){sent=true;const request=(await readWantedV1({client:serving,requester:"g1-m06",now:time.now}))!;await publishServedV1({client:serving,server:"g1-server",request,projects:stale.slice(0,600-70),generation:null,progress:{total:600,progressAtMs:time.now(),remainingMilliseconds:120_000},now:time.now});}};
   const result=await fleetReadV1({stale,admittedMegabytes:4096,client:reader,requester:"g1-m06",platform:PLATFORM,graphKey:KEY,language:"en",say:()=>{},sleep,now:time.now});
   expect(result.outcome).toBe("served");expect(result.missing).toHaveLength(70);expect(result.plan.localProjects).toBe(72);expect(time.now()-START).toBeLessThan(10_000);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 /** 🤝️ Contract: while the fleet request is outstanding the machine infers the light remainder itself in ONE continuous run, lightest first (the server works heaviest first), asks `skip` before every project so what the fleet delivered meanwhile is dropped, narrows its request by what it inferred and ends when the served and the inferred projects cover every stale project. */
@@ -268,7 +268,7 @@ async function cooperation(options:Readonly<{language:"en"|"de";serve:number;sta
   };
   const result=await fleetReadV1({stale,admittedMegabytes:4096,client:reader,requester:"g1-m06",platform:PLATFORM,graphKey:KEY,language:options.language,estimate:name=>({megabytes:name===heavy?99999:weight(name)+1,source:"recorded"}),infer,say:line=>lines.push(line),sleep,now:time.now,...options.signal===undefined?{}:{signal:options.signal}}).catch(error=>({error:error as Error}));
   return{result,lines,runs,calls,inferred,dropped,stepPublished,narrowed,order,stale,heavy};
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 }
 
 test("a slow fleet and this machine finish the read together in one run: lightest first here, heaviest first there, arrivals dropped mid-run, no project both inferred and taken, narrowed request, both counts told in English",async()=>{
@@ -302,7 +302,7 @@ test("a run that is still going when the wait ends by its bounds drops the rest 
   const reader=client("reader"),time=clock(),stale=names(150);let calls=0,inferred=0,cut=0;
   const result=await fleetReadV1({stale,admittedMegabytes:4096,client:reader,requester:"g1-m06",platform:PLATFORM,graphKey:KEY,language:"en",estimate:name=>({megabytes:Number(name.slice(1))/10+1,source:"recorded"}),infer:async run=>{calls++;for(const name of run.names){if(run.skip(name)){cut++;continue;}inferred++;time.sleep(60_000*40);await new Promise<void>(resolve=>setTimeout(resolve,2));run.done(name);}},say:()=>{},sleep:async milliseconds=>{time.sleep(milliseconds);await new Promise<void>(resolve=>setTimeout(resolve,1));},now:time.now,policy:{...wantedPolicyV1,silenceMilliseconds:60_000*60*10,waitMaximumMilliseconds:60_000*60*10}});
   expect(calls).toBe(1);expect(result.outcome).toBe("served");expect(inferred+cut).toBe(150);expect(result.inferred).toBe(inferred);expect(result.missing.length).toBe(cut);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("a failing local inference is told and the read goes on waiting for the fleet only; cancellation ends it",async()=>{
@@ -321,7 +321,7 @@ test("a reachable fleet that advertises no graph builder is neither asked nor wa
    expect(lines.some(line=>line.includes(language==="en"?"advertises a graph builder":"Graph-Builder")||line.includes(language==="en"?"no fleet machine":"keine Flottenmaschine"))||lines.length===0).toBe(true);
    expect(await readWantedV1({client:reader,requester:"g1-m07"})).toBeUndefined();
   }
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("a graph builder is advertised while its table of owner costs is fresh in the fleet, and not when it is absent or old",async()=>{
@@ -333,7 +333,7 @@ test("a graph builder is advertised while its table of owner costs is fresh in t
   expect(await publishOwnerCostsV1({client:reader,server:"s1",table})).toBe(true);
   expect(await fleetBuilderAdvertisedV1({client:reader,withinMilliseconds:wantedPolicyV1.ttlMilliseconds})).toBe(true);
   expect(await fleetBuilderAdvertisedV1({client:reader,withinMilliseconds:wantedPolicyV1.ttlMilliseconds,now:()=>Date.now()+2*wantedPolicyV1.ttlMilliseconds})).toBe(false);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("a zero-wave reader accepts a fully served request and refuses only if owners remain",async()=>{
@@ -356,5 +356,5 @@ test("a zero-wave reader accepts a fully served request and refuses only if owne
    if(row.remaining===0)await expect(result).resolves.toMatchObject({outcome:"served",plan:{waveProjects:0},arrived:row.served.length,missing:[]});
    else await expect(result).rejects.toMatchObject({code:wantedRefusalV1.code,values:{missing:row.remaining,arrived:row.served.length}});
   }
- }finally{db.close();await server.stop(true);}
+ }finally{db.close();await server.stop();}
 },60000);

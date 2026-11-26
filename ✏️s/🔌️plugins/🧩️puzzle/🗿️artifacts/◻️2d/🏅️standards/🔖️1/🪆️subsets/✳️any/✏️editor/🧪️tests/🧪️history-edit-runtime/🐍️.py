@@ -41,14 +41,6 @@ def load(path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def validator(kind, cache={}):
-    if kind != CONNECT:
-        return SELECT_TOOL.leaf_validator(kind)
-    if kind not in cache:
-        cache[kind] = jsonschema.Draft7Validator(load(SELECT_TOOL.MUTATIONS / "🪢️connect-handles" / "🧬️schema" / "🔣️.json"))
-    return cache[kind]
-
-
 def edited_log(scenario, head):
     edits = {edit["index"]: edit for edit in head["edits"]}
     for index, leaf in enumerate(scenario["log"]):
@@ -94,10 +86,12 @@ def fold(board, log):
 
 
 def main():
-    corpus = load(pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else EDITOR / "🧫️fixtures" / "🧫️history-edit-runtime" / "🔣️.json")
+    corpus = load(pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else pathlib.Path(__file__).resolve().parents[1] / "🧫️fixtures" / "🧫️history-edit-runtime" / "🔣️.json")
     domain = load(EDITOR / "🧮️history" / "🧬️schema" / "🔣️.json")
-    documents = [load(SELECT_TOOL.MUTATIONS / "🔣️.json"), *[load(path) for path in SELECT_TOOL.MUTATIONS.glob("*/🧬️schema/🔣️.json")]]
+    mutations = load(SELECT_TOOL.MUTATIONS / "🔣️.json")
+    documents = [mutations, *(load(path) for path in SELECT_TOOL.MUTATIONS.rglob("🧬️schema/🔣️.json"))]
     registry = Registry().with_resources((document["$id"], Resource.from_contents(document)) for document in documents)
+    validator = jsonschema.Draft7Validator(mutations, registry=registry)
     for scenario in corpus["scenarios"]:
         for head in scenario["heads"].values():
             for edit in head["edits"]:
@@ -114,7 +108,7 @@ def main():
     for scenario in corpus["scenarios"]:
         name = scenario["id"]
         for leaf in leaves(scenario):
-            validator(leaf["mutation"]).validate(leaf)
+            validator.validate(leaf)
         folded = {head_name: fold(scenario.get("board", corpus["board"]), list(edited_log(scenario, head))) for head_name, head in scenario["heads"].items()}
         for step in scenario["steps"]:
             expect = step.get("expect", {})

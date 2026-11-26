@@ -106,7 +106,7 @@ pub fn nested_retained_clone_close_demands<T:RetainedClone>(child:&impl Retained
 /// 📤️ Quotes the actual child output move under one enclosing cursor frame.
 pub fn nested_retained_clone_take_demands<T:RetainedClone>(child:&impl RetainedCloneCursor<T>)->Result<RetirementDemand,ValueError>{let mut demand=child.take_demand()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"nested clone take depth overflow"))?;Ok(demand)}
 
-use semio_framework_value_native_clone_engine::allocate_clone_storage;
+use semio_framework_value_native_clone_engine::{CloneBacking,allocate_clone_storage};
 
 /// 🧷️ An advance outcome cannot carry an unresolved producer reply, so a child scaffold close that left its reply pending refuses typed.
 /// 🧮️ Narrows the u128 work already spent in a step to the u64 limit arithmetic of its original quote.

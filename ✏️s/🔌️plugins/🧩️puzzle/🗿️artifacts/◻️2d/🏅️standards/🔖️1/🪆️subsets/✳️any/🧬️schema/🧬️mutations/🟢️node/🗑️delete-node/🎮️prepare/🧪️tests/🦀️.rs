@@ -75,7 +75,9 @@ fn history_edit_puzzle2d_borrowed_delete_preparation_streams_cascade_ordinals_wi
             close(&mut cancelled);
         }
         let mut swapped = Puzzle2dDeleteNodePreparationCursor::default();
-        test_source_custody::run(grant, |effect| swapped.advance(source.borrow(&snapshot), mutation.borrow(&payload), effect)).unwrap();
+        for _ in 0..2 {
+            assert!(matches!(test_source_custody::run(grant, |effect| swapped.advance(source.borrow(&snapshot), mutation.borrow(&payload), effect)).unwrap(), Puzzle2dDeleteNodePreparationStep::Pending(progress) if progress.copied_items == 1));
+        }
         let other = payload.clone();
         assert!(test_source_custody::run(grant, |effect| swapped.advance(source.borrow(&snapshot), mutation.borrow(&other), effect)).is_err());
         close(&mut swapped);

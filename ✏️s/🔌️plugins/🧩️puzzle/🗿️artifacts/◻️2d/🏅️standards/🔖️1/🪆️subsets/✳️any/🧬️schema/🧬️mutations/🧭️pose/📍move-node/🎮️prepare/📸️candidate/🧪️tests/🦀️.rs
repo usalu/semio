@@ -16,7 +16,19 @@ use crate::standards::v1::subsets::any::schema::preparation::move_node_preparati
 use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
 use semio_framework_test_fixtures::fixture_text;
 
-fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 128), 1 => RetainedCloneGrant::one_payload_turn(4096, 128), _ => RetainedCloneGrant::one_release_turn(4096, 128) } }
+fn exact(demand:semio_framework_value::RetirementDemand)->RetainedCloneGrant {
+    assert!(demand.copy_bytes+demand.capacity_bytes+demand.release_bytes<=4096,"{demand:?}");
+    RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:demand.copy_bytes, maximum_capacity_bytes:demand.capacity_bytes, maximum_release_bytes:demand.release_bytes, maximum_depth:demand.depth }
+}
+
+fn grant(cursor:&Puzzle2dMoveNodeCandidateCursor,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,turn:usize)->RetainedCloneGrant {
+    match turn%4 {
+        0=>RetainedCloneGrant::one_capacity_turn(4096,128),
+        1=>RetainedCloneGrant::one_payload_turn(4096,128),
+        2=>RetainedCloneGrant::one_release_turn(4096,128),
+        _=>cursor.advance_test_demand(source,4096).unwrap().map_or_else(||RetainedCloneGrant::one_payload_turn(4096,128),exact),
+    }
+}
 
 fn observed(permit: RetainedCloneGrant, action: impl FnOnce() -> Result<RetainedCloneStep, ValueError>) -> RetainedCloneStep {
     let (result, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(action);
@@ -41,7 +53,7 @@ fn retire(snapshot: Puzzle2dSnapshot) {
     assert_eq!(allocation.requested_bytes, 0);
     assert_eq!(allocation.released_bytes, 0);
     let mut owner = match result { Ok(owner) => owner, Err((error, _)) => panic!("{error:?}") };
-    for turn in 0..1_000_000 { if owner.terminal_is_empty() { return; } let permit = grant(turn); observed(permit, || test_source_custody::close_turn(permit, |effect| owner.step(4096, effect))); }
+    for _ in 0..1_000_000 { if owner.terminal_is_empty() { return; } let permit = exact(owner.selected_demand(4096).unwrap()); observed(permit, || test_source_custody::close_turn(permit, |effect| owner.step(4096, effect))); }
     panic!("returned native snapshot did not retire every physical page");
 }
 
@@ -64,8 +76,8 @@ fn history_edit_puzzle2d_native_move_candidate_preserves_untouched_owners_and_co
         assert!(!allocation.overflowed);assert_eq!(allocation.requested_bytes,0);assert_eq!(allocation.released_bytes,0);
         assert_eq!(observed(RetainedCloneGrant::default(), || test_source_custody::run(RetainedCloneGrant::default(), |effect| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect))).progress(), RetainedCloneProgress::default());
         let mut complete = false;
-        for turn in 0..1_000_000 { let permit = grant(turn); if matches!(observed(permit, || test_source_custody::run(permit, |effect| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect))), RetainedCloneStep::Complete(_)) { complete = true; break; } }
-        assert!(complete);
+        for turn in 0..1_000_000 { let permit = grant(&cursor,source.borrow(&snapshot),turn); if matches!(observed(permit, || test_source_custody::run(permit, |effect| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect))), RetainedCloneStep::Complete(_)) { complete = true; break; } }
+        assert!(complete,"move candidate did not complete for {} at phase {}",case["id"],cursor.phase);
         let result = cursor.take().unwrap();
         assert_eq!(result.snapshot.is_some(), case["status"] == "changed");
         assert_eq!(result.plan.node_index, case["index"].as_u64().map(|value| value as usize));
@@ -84,7 +96,7 @@ fn history_edit_puzzle2d_native_move_candidate_preserves_untouched_owners_and_co
         if case["id"] == "large-prefix" {
             let mut cancelled = Puzzle2dMoveNodeCandidateCursor::default();
             let mut copied = 0;
-            for turn in 0..1_000_000 { let copying = cancelled.phase == 2; let permit = grant(turn); let step = observed(permit, || test_source_custody::run(permit, |effect| cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect))); assert!(!matches!(step, RetainedCloneStep::Complete(_))); if copying { copied += step.progress().copied_bytes; } if copied >= corpus["forwardOwnership"]["cancelAfterBodyBytes"].as_u64().unwrap() as usize { break; } }
+            for turn in 0..1_000_000 { let copying = cancelled.phase == 2; let permit = grant(&cancelled,source.borrow(&snapshot),turn); let step = observed(permit, || test_source_custody::run(permit, |effect| cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect))); assert!(!matches!(step, RetainedCloneStep::Complete(_))); if copying { copied += step.progress().copied_bytes; } if copied >= corpus["forwardOwnership"]["cancelAfterBodyBytes"].as_u64().unwrap() as usize { break; } }
             assert!(copied > 0);
             close(&mut cancelled);
             assert!(cancelled.take().is_none());

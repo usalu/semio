@@ -11,7 +11,7 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[value(rename_all = "camelCase")]
 pub struct AppendPageContent {
     pub index: usize,
-    pub content: Vec<PdfOp>,
+    pub content: PdfContent,
 }
 
 impl<Op> MutationKind<PdfSnapshot, Op> for AppendPageContent

@@ -235,8 +235,12 @@ fn cold_pair_ingress_is_an_exact_retained_native_close_participant() {
     let foreign = semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey::fixture(exact_header.lifetime.instance_id, exact_header.lifetime.guest_lifetime + 1);
     let mut ingress = ColdDocumentPairIngressRegistry::<1>::new();
     assert!(matches!(ingress.accept_page(&page(&exact_header, &pack, &spr, 0), Some(exact_header.lifetime)), ColdPairIngressStatus::PageAccepted(_)));
+    assert!(!ingress.advance_close_one());
     ingress.preflight_close_instance(key).unwrap();
     ingress.reserve_close_instance(key).unwrap();
+    ingress.reserve_close_instance(key).unwrap();
+    assert_eq!(ingress.reserved_closes, 1);
+    assert!(!ingress.advance_close_one());
     assert!(ingress.reserve_close_instance(foreign).is_err());
     assert!(matches!(ingress.accept_page(&page(&exact_header, &pack, &spr, 1), Some(exact_header.lifetime)), ColdPairIngressStatus::Fault { ref fault, .. } if fault == b"cold-pair.not-live"));
     ingress.activate_close_instance(key).unwrap();
@@ -248,6 +252,8 @@ fn cold_pair_ingress_is_an_exact_retained_native_close_participant() {
     }
     assert!(!ingress.is_mounted(exact_header.lifetime));
     ingress.release_close_instance(key).unwrap();
+    assert_eq!(ingress.reserved_closes, 0);
+    assert!(!ingress.advance_close_one());
 }
 
 #[test]

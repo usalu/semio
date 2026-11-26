@@ -1,5 +1,5 @@
 {
-  "control": {"maximumItems":1,"maximumBytes":4,"largePrefix":"😀\u0000界","largeRepeats":2050},
+  "control": {"maximumItems":1,"maximumComparisonBytes":4,"largePrefix":"😀\u0000界","largeRepeats":2050},
   "cases": [
     {"id":"empty","scope":"node","nodes":[],"handles":[],"edges":[],"regions":[],"target":"missing","expected":null},
     {"id":"first-duplicate","scope":"node","nodes":["same","same"],"handles":[[],[]],"edges":[],"regions":[],"target":"same","expected":{"outer":0,"inner":null}},

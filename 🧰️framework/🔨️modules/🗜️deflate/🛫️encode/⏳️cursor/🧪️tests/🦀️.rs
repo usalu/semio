@@ -1,5 +1,5 @@
 use super::*;
-use super::retained_encoding::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use super::retained_encoding::{HeadSlot, HISTORY, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use std::io::Write;
 use std::process::{Command, Stdio};
 #[path="../../../../🌱️value/♻️retirement/📦️owner/🧪️work/effect.rs"]
@@ -59,6 +59,8 @@ fn encode(raw: &[u8], reject: bool) -> Vec<u8> {
 fn deflate_controlled_retained_exact_oracles_and_grants() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     assert!(size_of::<RetainedDeflateEncoder>() <= fixture["maximumInlineBytes"].as_u64().unwrap() as usize);
+    let policy = &fixture["policy"];
+    assert_eq!((MAX_CHAIN as u64, NICE_MATCH as u64, MAX_INSERT as u64, u64::from(SKIP_SHIFT)), (policy["maximumChain"].as_u64().unwrap(), policy["niceMatch"].as_u64().unwrap(), policy["maximumInsert"].as_u64().unwrap(), policy["skipShift"].as_u64().unwrap()), "the compressor runs the policy of the shared schema");
     let mut inputs = Vec::new();
     for vector in fixture["vectors"].as_array().unwrap() {
         let raw: Vec<u8> = vector["raw"].as_array().unwrap().iter().map(|byte| byte.as_u64().unwrap() as u8).collect();
@@ -129,17 +131,18 @@ fn deflate_retained_batch_depth_and_retirement_grants(){
  assert_eq!(depth,expected,"reserved append depth");assert_eq!(quoted,initialized,"Copy collection payload quote");assert_eq!(refused,RetainedCloneProgress::default());assert!(unchanged);assert_eq!((allocated,released),(0,0));
 }
 
-/// 📏️ Drives one segment under exact grants and returns its stored bytes with the work the Pack charges for it: every quoted copy byte plus one bookkeeping byte per step.
-fn counted(raw: &[u8]) -> (Vec<u8>, usize) {
+/// 📏️ Drives one segment under exact grants and returns its stored bytes with the work the Pack charges for it: every quoted copy byte plus one bookkeeping byte per step once the matching pages are initialized (a fixed cost of a first segment, shared by every later one).
+fn counted(raw: &[u8]) -> (Vec<u8>, usize, usize, std::collections::BTreeMap<usize, usize>) {
     let mut cursor = RetainedDeflateEncoder::default();
-    let (mut pending, mut read, mut output, mut stored, mut work) = (None, 0, [0], Vec::new(), 0usize);
+    let (mut pending, mut read, mut output, mut stored, mut work, mut init, mut steps) = (None, 0, [0], Vec::new(), 0usize, 0usize, std::collections::BTreeMap::new());
     for _ in 0..20_000_000 {
         if pending.is_none() && read < raw.len() { pending = Some(raw[read]); read += 1; }
         let grant = exact(&cursor);
+        let initializing = cursor.phase() == RetainedDeflatePhase::Initialize;
         let step = eff(grant, |effect| cursor.advance(&mut pending, read == raw.len(), &mut output, effect)).unwrap();
-        work += step.progress.copied_bytes + 1;
+        if initializing { init += step.progress.copied_bytes + 1; *steps.entry(step.progress.copied_bytes + 1).or_insert(0) += 1; } else { work += step.progress.copied_bytes + 1; }
         stored.extend_from_slice(&output[..step.written_bytes]);
-        if step.complete { close(&mut cursor); return (stored, work); }
+        if step.complete { close(&mut cursor); return (stored, work, init, steps); }
     }
     close(&mut cursor);
     panic!("retained Deflate producer did not terminate");
@@ -157,19 +160,30 @@ fn record_like(count: usize) -> Vec<u8> {
     body
 }
 
-/// 🔮️ The work per input byte is bounded by the chain, nice-length and insert limits alone, never by how repetitive the input is: a probe of at most `NICE_MATCH` compared bytes costs `3` per byte plus its `6` of bookkeeping and Search step, a position costs the `24` of its input and insert, the `12` of its first Search and its Token, and a probe that ends a token consumes at least what it compared; real inputs stay under five bytes of work per chain probe and input byte.
+/// 🔮️ The work per input byte follows from the cost of one token, never from how repetitive the input is. A position that is searched and found no match costs its input (2), Search (12), Token (2), insert (24), at most `MAX_CHAIN` probes of a mismatching first byte (3 Compare, 5 chain advance) and its output (3): `SEARCHED_LITERAL`. A position skipped after a literal run costs its input, Token and output only: `SKIPPED_LITERAL`. A match costs one Search, probes that each ended below `NICE_MATCH` (so at most `3 * NICE_MATCH + 5` each), its own compare at 3 per byte, and at most `MAX_INSERT` inserts, over at least three bytes, which stays under `SEARCHED_LITERAL` per byte. So no input costs more than `SEARCHED_LITERAL` per byte, an input without matches costs what the skip schedule searches (one position per `1 + misses >> SKIP_SHIFT`), and the matching pages cost their initialization once.
 #[test]
 fn deflate_retained_work_per_input_byte_is_bounded_by_the_chain_and_nice_limits() {
-    let probe = 3 * NICE_MATCH + 6;
-    let worst = MAX_CHAIN * probe + 40;
+    const SEARCHED_LITERAL: usize = 2 + 12 + 2 + 24 + 8 * MAX_CHAIN + 3;
+    const SKIPPED_LITERAL: usize = 2 + 2 + 3;
     let inputs = [b"A".repeat(70_000), b"abc".repeat(30_000), b"abcabcabbcabc".repeat(5_000), super::tests::lcg_bytes(11, 40_000), record_like(4_000), (0..60_000u32).map(|index| (index % 251) as u8).collect()];
-    let mut typical = 0usize;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let initialization = fixture["initializationCopyBytes"].as_u64().unwrap() as usize;
+    let tables = HASH_SIZE * size_of::<HeadSlot>() + WINDOW_SIZE * size_of::<u32>() + HISTORY;
+    assert!(initialization > tables, "initialization writes at least every table byte ({tables}) and pays for its page headers");
+    let mut costs = Vec::new();
     for raw in &inputs {
-        let (stored, work) = counted(raw);
+        let (stored, work, init, steps) = counted(raw);
+        assert_eq!(init, initialization, "initializing the matching pages costs the schema-pinned copy (every table byte plus the page reservations); charged steps (bytes, count): {steps:?}");
         assert_eq!(stored, deflate(raw));
         assert_eq!(miniz_oxide::inflate::decompress_to_vec_with_limit(&stored, raw.len()).unwrap(), *raw);
-        assert!(work <= raw.len() * worst, "{} B of work for {} input bytes", work, raw.len());
-        typical = typical.max(work.div_ceil(raw.len()));
+        assert!(work <= raw.len() * SEARCHED_LITERAL, "{work} B of work for {} input bytes, above {SEARCHED_LITERAL} per byte", raw.len());
+        costs.push(work);
     }
-    assert!(typical <= 5 * MAX_CHAIN, "the heaviest corpus input costs {typical} B per input byte, above five bytes per chain probe");
+    assert!(!costs.is_empty());
+    let (mut position, mut searched) = (0usize, 0usize);
+    while position < inputs[3].len() { searched += 1; position += 1 + ((position + 1) >> SKIP_SHIFT); }
+    let model = searched * SEARCHED_LITERAL + (inputs[3].len() - searched) * SKIPPED_LITERAL;
+    let (random_stored, ..) = counted(&inputs[3]);
+    assert!(random_stored.len() >= inputs[3].len(), "the incompressible input holds no match, so the skip schedule is never reset");
+    assert!(costs[3] <= model, "incompressible input costs {} B, above the {model} B its skip schedule searches ({searched} positions of {})", costs[3], inputs[3].len());
 }

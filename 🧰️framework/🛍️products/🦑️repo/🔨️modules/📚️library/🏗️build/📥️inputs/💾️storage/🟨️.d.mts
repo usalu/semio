@@ -36,7 +36,7 @@ export function withBuildGraphOptionalPublicationV1(path:string,plan:BuildGraphO
 /** 📦️ Reserves the summed peak of several optional leaves as one publication. */
 export function withBuildGraphOptionalPublicationsV1(paths:readonly string[],plan:BuildGraphOptionalPublicationV1,write:()=>void,onDecline?:(reason:BuildGraphOptionalPublicationRefusalV1)=>void):boolean;
 /** 🛰️ Runs a body whose graph fact directories are private staging directories adopted later by the parent that holds the writer custody. */
-export function withBuildGraphStagingV1<T>(staging:Readonly<{root:string;published?:(path:string)=>void}>,body:()=>Promise<T>|T):Promise<T>|T;
+export function withBuildGraphStagingV1<R>(staging:Readonly<{root:string;published?:(path:string)=>void}>,body:()=>R):R;
 /** 📌️ Tells the running staged body that a leaf outside the optional publication gate was written. */
 export function noteBuildGraphStagedLeafV1(path:string):void;
 /** 🔌️ Closes cache handles before the original writer leaves image custody. */
@@ -71,7 +71,7 @@ export type BuildGraphScopedOptionalRecoveryResultV1=Readonly<{consumed:true;acq
 export function recoverBuildGraphOptionalScopesHeadroomV1(workspace:string,image:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts").NativeImageStorageV1,control:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl,request:Readonly<{minimumAvailableBytes:number}>):Promise<BuildGraphScopedOptionalRecoveryResultV1>;
 
 /** 🧪️ Exposes only an exact Original fixed disposable diagnostic Graph and its retained owner operations. */
-export interface BuildGraphFixtureV1{readonly root:string;readonly sourceRoot:string;readonly image:RepositoryCacheStoreV1["image"];optionalPublications():Readonly<{attempts:number;declined:number}>;probeMaintenanceDeferral():Promise<Readonly<{consumed:true;acquired:false}>>;withConsumer<T>(body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;withWriter<T>(body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;withMaintenance<T>(body:(image:RepositoryCacheStoreV1["image"],custody:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts").NativeImageMaintenanceCustodyV1)=>Promise<T>):Promise<T>}
+export interface BuildGraphFixtureV1{readonly root:string;readonly sourceRoot:string;readonly image:RepositoryCacheStoreV1["image"];optionalPublications():Readonly<{attempts:number;declined:number}>;probeMaintenanceDeferral():Promise<Readonly<{consumed:true;acquired:false}>>;withConsumer<T>(body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;withWriter<T>(body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;withMaintenance<T>(body:(image:RepositoryCacheStoreV1["image"],custody:Extract<import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts").NativeImageMaintenanceCustodyV1,{kind:"kernel-ex"}>)=>Promise<T>):Promise<T>}
 
 /** 🔐️ Checks exact managed observation custody without accepting caller authority. */
 export function requireRepositoryBuildGraphObservationPathV1(path:string,mode:"read"|"write"):Readonly<{kind:"managed"|"ordinary";root?:string;control?:ResourceLeaseControl}>;

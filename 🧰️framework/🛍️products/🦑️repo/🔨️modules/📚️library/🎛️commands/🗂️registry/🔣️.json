@@ -178,7 +178,7 @@
           }
         }
       ],
-      "synopsis": "dev playground <variant> <react|wgpu|native> <prototype|release> | dev storybook|time-travel|mcp …",
+      "synopsis": "dev playground <variant> <react|wgpu|native> <prototype|release> [--published-emitter <binary:receipt:index> for React prototype] | dev storybook|time-travel|mcp …",
       "summary": {
         "en": "Starts browser and native playgrounds, development servers, and the time-travel browser gate.",
         "de": "Startet Browser- und native Playgrounds, Entwicklungsserver und die Zeitreise-Browserprüfung."

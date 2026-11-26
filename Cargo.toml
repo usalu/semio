@@ -612,6 +612,7 @@ members = [
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🏛️repo-domain/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📂️workspace/🖥️view/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📊️fleet/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📚️inventory/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/⚙️settings/⌨️keymap/📦️packages/🦀️rust",

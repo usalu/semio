@@ -155,6 +155,22 @@ test("a reader that fails or hangs leaves only its own section out; the rest of 
  expect(validateFleetReportV1(summary)).toEqual([]);
 });
 
+test("worker readiness survives a timed out tree comparison and its reader is cancelled",async()=>{
+ const base=cases.find(row=>row.facts.workers?.rows.length)!.facts.workers!;
+ let cancelled=false;
+ const workers:FleetReadersV1["workers"]=async context=>{
+  context.publish?.({workers:base});
+  return new Promise((_resolve,reject)=>context.signal?.addEventListener("abort",()=>{cancelled=true;reject(context.signal?.reason);},{once:true}));
+ };
+ const readers:FleetReadersV1={workers};
+ const facts=await collectFleetFactsV1({root:"/w",environment:{},language:"en",now:()=>1},readers,20);
+ expect(facts.workers).toEqual(base);
+ expect(validator("Facts")(facts)).toBe(true);
+ expect(validateFleetFactsV1(facts)).toEqual([]);
+ expect(facts.sources.find(row=>row.id==="workers")?.ok).toBe(false);
+ expect(cancelled).toBe(true);
+});
+
 test("the command prints text or schema-valid JSON, refuses unknown options in both languages and exits 0",async()=>{
  const good=cases.find(row=>row.id==="graph-custody")!.facts;
  const readers:FleetReadersV1={leases:async()=>({leases:good.leases!}),capacity:async()=>({}),bazel:async()=>({}),storage:async()=>({}),sealed:async()=>({}),generation:async()=>({}),scheduler:async()=>({})};
@@ -529,7 +545,7 @@ test("fleet status shows the host name state per origin: ok, duplicate (naming t
   expect(lines.find(line=>line.startsWith("  g1-server "))).toContain(", host name semio-g1-m08 belongs to g1-m08: run `repo fleet hostname apply` on this machine");
   const german2=formatFleetReportV1("de",german,40);
   expect(german2.find(line=>line.startsWith("  g1-m08 "))).toContain(", Rechnername uelis-mac-mini liegt auch auf g1-m10, g1-m13: auf dieser Maschine `repo fleet hostname apply` ausführen");
-  expect(english.workers!.rows.find(row=>row.origin==="g1-server")).toMatchObject({hostName:{state:"named-as",others:["g1-m08"]}});
+  expect(english.workers!.rows.find((row:{origin:string})=>row.origin==="g1-server")).toMatchObject({hostName:{state:"named-as",others:["g1-m08"]}});
   expect(lines.join("\n")).not.toMatch(/\{[a-zA-Z]+\}/u);
   const file=join(root,"facts.json");writeFileSync(file,JSON.stringify(facts));
   for(const language of ["en","de"] as const){

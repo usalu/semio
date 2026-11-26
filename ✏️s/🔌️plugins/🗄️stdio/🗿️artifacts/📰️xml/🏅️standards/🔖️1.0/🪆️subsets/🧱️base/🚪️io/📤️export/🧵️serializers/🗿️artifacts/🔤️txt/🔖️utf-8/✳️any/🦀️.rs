@@ -1,7 +1,7 @@
 //! 📤️ Serialize `stdio.xml` to stdio.txt.
 
 use crate::XmlSnapshot;
-use semio_s_artifact_stdio_txt::TxtSnapshot;
+use semio_s_artifact_stdio_txt_schema::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register serializer hooks.

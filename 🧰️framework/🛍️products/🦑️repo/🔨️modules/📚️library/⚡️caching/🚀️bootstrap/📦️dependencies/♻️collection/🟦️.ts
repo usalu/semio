@@ -1,4 +1,5 @@
 import {chmodSync,existsSync,lstatSync,mkdirSync,readdirSync,readFileSync,readlinkSync,realpathSync,renameSync,rmdirSync,statSync,unlinkSync,writeFileSync} from "node:fs";
+import {processPidExistsV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
 import {readFreeSpaceV1} from "../../../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts";
 import {processTableSnapshot} from "../../../../🏃️process/📋️process-table/🟦️.ts";
@@ -25,7 +26,7 @@ export function planDependencyGenerationRetirementV1(input:DependencyGenerationP
  return input.generations.filter(row=>!current.has(row.key)&&!held.has(row.key)&&!bound.has(row.key)&&due(row)).map(row=>({key:row.key,reason:row.ready?"superseded" as const:"unfinished" as const})).sort((left,right)=>left.key<right.key?-1:left.key>right.key?1:0);
 }
 
-const processAlive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
+const processAlive=(pid:number):boolean=>processPidExistsV1(pid);
 const announced=new Set<string>();
 
 /** 🤝️ Records that this process uses the given generations: one small file per generation and process in the hold directory of the store, removed when the process ends and ignored once its process is gone. Best effort, never throws: a hold that cannot be written only means the generation may be retired earlier than ideal, and the grace period still protects fresh ones. */

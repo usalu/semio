@@ -23,8 +23,8 @@ const gate=(item:(typeof fixture.cases)[number])=>{
  return {verdict:row.verdict,jobs:row.jobs,reason:row.reason};
 };
 
-test("the authored verdicts hold for every host of the matrix",()=>{for(const item of fixture.cases)expect(gate(item),item.name).toEqual(item.expected);});
-test("the gate agrees with the independent oracle for every host of the matrix",()=>{expect(fixture.cases.map(gate)).toEqual(oracle(fixture.cases));});
+test("the authored verdicts hold for every host of the matrix",()=>{for(const item of fixture.cases)expect<unknown>(gate(item),item.name).toEqual(item.expected);});
+test("the gate agrees with the independent oracle for every host of the matrix",()=>{expect<unknown>(fixture.cases.map(gate)).toEqual(oracle(fixture.cases));});
 test("the matrix covers every way a cargo run is held back and every width it is granted",()=>{
  const reasons=new Set(fixture.cases.map(item=>item.expected.reason)),widths=new Set(fixture.cases.filter(item=>item.expected.verdict==="admit").map(item=>item.expected.jobs));
  for(const reason of ["fits","reduced","memory","pressure-critical","pressure-warn","swap","swap-activity","files","attaches"])expect(reasons.has(reason),reason).toBe(true);

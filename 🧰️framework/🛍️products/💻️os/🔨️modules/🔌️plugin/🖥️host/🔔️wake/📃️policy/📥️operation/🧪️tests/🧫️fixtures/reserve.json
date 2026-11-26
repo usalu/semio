@@ -1,0 +1,12 @@
+{
+  "axes": ["items", "copy", "capacity", "release", "depth"],
+  "cases": [
+    {"axis": "items", "available": 4, "reserved": 5, "runtime": "workLimit", "static": "invalidValue"},
+    {"axis": "copy", "available": 7, "reserved": 8, "runtime": "workLimit", "static": "invalidValue"},
+    {"axis": "capacity", "available": 2, "reserved": 3, "runtime": "workLimit", "static": "invalidValue"},
+    {"axis": "release", "available": 5, "reserved": 6, "runtime": "workLimit", "static": "invalidValue"},
+    {"axis": "depth", "available": 8, "reserved": 9, "runtime": "invalidValue", "static": "invalidValue"},
+    {"axis": "copy", "available": 9, "reserved": 9, "runtime": null, "static": null},
+    {"axis": "copy", "available": 10, "reserved": 9, "runtime": null, "static": null}
+  ]
+}

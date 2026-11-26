@@ -57,7 +57,7 @@ export async function fetchClosureGraphV1(input:Readonly<{client:GraphFleetClien
   for(const[at,file]of files.entries()){
    input.signal?.throwIfAborted();
    const target=join(directory,file.path),local=input.known===undefined?undefined:await readFile(join(input.known,file.path)).catch(()=>undefined);
-   let bytes=local!==undefined&&sha(local)===file.digest.hash?local:undefined;
+   let bytes:Uint8Array|undefined=local!==undefined&&sha(local)===file.digest.hash?local:undefined;
    if(bytes===undefined){requests++;bytes=await client.getBlob(file.digest.hash,Number(file.digest.size_bytes),input.signal);if(bytes===undefined||sha(bytes)!==file.digest.hash)return"fault";downloaded++;}
    await writeFile(target,bytes);
    await input.progress?.({done:at+1,total:files.length});

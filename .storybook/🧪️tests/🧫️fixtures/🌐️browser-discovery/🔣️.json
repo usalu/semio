@@ -10,8 +10,9 @@
     "✏️s/🔌️plugins/🧩️puzzle/🧪️tests/◻️storybook-2d/🟦️.ts",
     "✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🧊️storybook-spatial/🟦️.ts",
     "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🎨️storybook/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🖼️storybook-frame-visuals/🟦️.ts",
     "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📚️storybook-new-stories/🟦️.ts",
     "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📚️storybook-uncovered-components/🟦️.ts"
   ],
-  "minimumTests": 135
+  "minimumTests": 144
 }

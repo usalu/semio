@@ -36,7 +36,7 @@ async function workspace(){
  symlinkSync("store/one",join(dir,"node_modules"));
  const world=createWorld(dir,{
   holdsWrap:base=>async(rows,signal)=>{const own=rows.filter(row=>row.kind==="typescriptRealpath");return await hold(own)&&base(rows.filter(row=>row.kind!=="typescriptRealpath"),signal);},
-  computeWrap:base=>async(spec,signal)=>{const result=await base(spec,signal);for(const owner of result.owners){if(!owner.rows)continue;if(owner.name==="b")owner.rows=[...owner.rows,realpathRow(dir)];emitted.set(owner.name,owner.rows);}emitted.set(GENERATION_POLICY_V1.envOwner,result.env.rows);return result;},
+  computeWrap:base=>async(spec,signal)=>{const result=await base(spec,signal);for(const owner of result.owners){if(!owner.rows)continue;const rows=[...owner.rows,...owner.name==="b"?[realpathRow(dir)]:[]];if(owner.name==="b")owner.rows=rows;emitted.set(owner.name,rows);}emitted.set(GENERATION_POLICY_V1.envOwner,result.env.rows);return result;},
  });
  return{dir,world,emitted,relink:(to:string)=>{unlinkSync(join(dir,"node_modules"));symlinkSync(to,join(dir,"node_modules"));}};
 }

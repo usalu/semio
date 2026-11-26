@@ -40,7 +40,7 @@ export function fleetWarmV1(input:Readonly<{published:number;hits:number}>):Flee
 }
 
 /** 🪞️ Counts the divergent writes of one unit built twice: every output whose bytes differ between the two builds and every write the cache refused as a divergence of its own action key. */
-export function fleetTwinV1(input:Readonly<{outputs:readonly Readonly<{name:string;left:string;right:string}>[];answers:readonly (boolean|"diverged")[]}>):FleetValuesV1{
+export function fleetTwinV1(input:Readonly<{outputs:readonly Readonly<{name:string;left:string;right:string}>[];answers:readonly (boolean|"diverged"|"stale")[]}>):FleetValuesV1{
  if(!input.outputs.length)throw Error(both("A unit with outputs is required","Eine Einheit mit Ausgaben wird benötigt"));
  return Object.freeze({divergentWrites:input.outputs.filter(row=>row.left!==row.right).length+input.answers.filter(answer=>answer==="diverged").length});
 }

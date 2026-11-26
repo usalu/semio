@@ -1,5 +1,5 @@
 import {existsSync,readFileSync,realpathSync,statSync} from "node:fs";
-import {isAbsolute,relative,resolve,sep} from "node:path";
+import {dirname,isAbsolute,posix as unix,relative,resolve,sep} from "node:path";
 import policy from "./🔣️.json" with {type:"json"};
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -14,11 +14,11 @@ export type TestFileTableV1=TestFilePolicyV1["tables"][number];
 /** 📝️ The closed arguments of `repo test-file`. */
 export type TestFileOptionsV1=Readonly<{files:readonly string[];json:boolean;bail:boolean;dryRun:boolean;language:TestFileLanguageV1|undefined}>;
 /** 🎯️ Where one test file runs: the suite that owns it (or the plain route) and how its runner treats it. */
-export type TestFileRouteV1=Readonly<{file:string;mode:"suite"|"plain";table:string|null;suite:string;owner:string;typecheck:"none"|"strict"|"strict-indexed";budgetMs:number;python:boolean;launcher:string|null;runsOnHost:boolean}>;
+export type TestFileRouteV1=Readonly<{file:string;mode:"suite"|"plain"|"oracle";table:string|null;suite:string;owner:string;typecheck:"none"|"strict"|"strict-indexed";budgetMs:number;python:boolean;launcher:string|null;runsOnHost:boolean}>;
 /** 📋️ What a dry run prints: every route and nothing executed. */
 export type TestFilePlanV1=Readonly<{version:1;files:readonly TestFileRouteV1[]}>;
 /** 🧾️ The outcome of one file. */
-export type TestFileRowV1=Readonly<{file:string;mode:"suite"|"plain";table:string|null;suite:string;status:"passed"|"failed"|"skipped"|"not-run";seconds:number;pass?:number;fail?:number;error?:string;tail?:string}>;
+export type TestFileRowV1=Readonly<{file:string;mode:"suite"|"plain"|"oracle";table:string|null;suite:string;status:"passed"|"failed"|"skipped"|"not-run";seconds:number;pass?:number;fail?:number;error?:string;tail?:string}>;
 /** 📤️ The structured result of one run. */
 export type TestFileResultV1=Readonly<{version:1;status:"passed"|"failed";seconds:number;bail:boolean;counts:Readonly<{passed:number;failed:number;skipped:number;notRun:number}>;files:readonly TestFileRowV1[]}>;
 
@@ -65,7 +65,8 @@ export function resolveTestFilesV1(root:string,directory:string,files:readonly s
   const real=realpathSync(candidate),inside=relative(base,real);
   if(inside===""||inside===".."||inside.startsWith(".."+sep)||isAbsolute(inside))throw refuseTestFileV1("invalid","file.outside",{file});
   if(!statSync(real).isFile())throw refuseTestFileV1("invalid","file.not-file",{file});
-  if(!rules.extensions.some(extension=>real.endsWith(extension)))throw refuseTestFileV1("invalid","file.not-test",{file,extensions:rules.extensions.join(", ")});
+  const accepted=[...rules.extensions,...rules.oracle.extensions];
+  if(!accepted.some(extension=>real.endsWith(extension)))throw refuseTestFileV1("invalid","file.not-test",{file,extensions:accepted.join(", ")});
   const posix=inside.split(sep).join("/");
   if(!found.includes(posix))found.push(posix);
  }
@@ -82,10 +83,42 @@ export function readTestFileTablesV1(root:string,rules:TestFilePolicyV1=toolPoli
 /** 🐍️ Tells whether a source asks for the managed Python interpreter, by the names its text carries. */
 export function testFileWantsPythonV1(text:string,rules:TestFilePolicyV1=toolPolicy):boolean{return rules.pythonHints.some(hint=>text.includes(hint));}
 
+/** 🔮️ Tells whether a file is a Python third-party oracle, by its extension. */
+export function testFileIsOracleV1(file:string,rules:TestFilePolicyV1=toolPolicy):boolean{return rules.oracle.extensions.some(extension=>file.endsWith(extension));}
+
+/** 🪢️ Finds the oracle a Python file runs as: itself when it has an entry point (`__main__`), else the nearest oracle with one in a directory above it (a module the oracle imports is checked by running that oracle); a module with no oracle above it is refused. */
+export function testFileOracleOwnerV1(file:string,read:(file:string)=>string|null,rules:TestFilePolicyV1=toolPolicy):string{
+ const entry=(path:string)=>read(path)?.includes("__main__")===true;
+ if(entry(file))return file;
+ for(let directory=unix.dirname(unix.dirname(file));;directory=unix.dirname(directory)){
+  const candidate=unix.join(directory,unix.basename(file));
+  if(entry(candidate))return candidate;
+  if(directory==="."||directory==="/")throw refuseTestFileV1("invalid","oracle.orphan",{file});
+ }
+}
+
+/** 🏺️ Reads the arguments an oracle runs with from the usage its own text declares (`<script> check <path to 🧫️fixtures/...>`): the declared fixtures path is looked up from the oracle's directory upwards to the checkout and passed after the check command; an oracle that declares no check usage runs bare, its exit code being the verdict. A declared path that exists nowhere above the oracle is refused.
+ * @see ./🧬️schema/🔣️.json */
+export function testFileOracleArgumentsV1(root:string,file:string,text:string,rules:TestFilePolicyV1=toolPolicy,exists:(path:string)=>boolean=existsSync):readonly string[]{
+ const declared=new RegExp("🐍️\\.py "+rules.oracle.command+" "+rules.oracle.usage,"u").exec(text)?.[1];
+ if(declared===undefined)return Object.freeze([]);
+ const base=resolve(root);
+ for(let directory=dirname(resolve(root,file));;directory=dirname(directory)){
+  const candidate=resolve(directory,...declared.split("/"));
+  if(exists(candidate))return Object.freeze([rules.oracle.command,candidate]);
+  if(directory===base||dirname(directory)===directory)throw refuseTestFileV1("invalid","oracle.fixtures-missing",{file,fixtures:declared});
+ }
+}
+
 /** 🧭️ Routes each file to the suite that owns it in the table whose root holds it, exactly as the suite runner's own routing does (explicit file first, else the deepest tree, name-filtered suites besides); a declared helper (child program) is refused as no test; a file no suite owns runs the plain route. A suite declared for other hosts is routed and reported as not running here. */
 export function routeTestFilesV1(root:string,files:readonly string[],tables:ReadonlyMap<string,ProcessTestTableV1>,rules:TestFilePolicyV1=toolPolicy,platform:string=process.platform,read:(file:string)=>string=file=>readFileSync(resolve(root,file),"utf8")):readonly TestFileRouteV1[]{
  const routes:TestFileRouteV1[]=[],source=(path:string):string|null=>{try{return read(relative(root,path).split(sep).join("/"));}catch{return null;}};
  for(const file of files){
+  if(testFileIsOracleV1(file,rules)){
+   const owned=testFileOracleOwnerV1(file,path=>{try{return read(path);}catch{return null;}},rules);
+   if(!routes.some(route=>route.file===owned))routes.push(Object.freeze({file:owned,mode:"oracle",table:null,suite:rules.oracle.id,owner:rules.oracle.owner,typecheck:"none",budgetMs:rules.oracle.budgetMs,python:true,launcher:null,runsOnHost:true}));
+   continue;
+  }
   const owner=rules.tables.find(row=>file.startsWith(row.root+"/")),table=owner===undefined?undefined:tables.get(owner.id),module=owner===undefined?"":file.slice(owner.root.length+1);
   if(owner!==undefined&&table?.helpers.includes(module))throw refuseTestFileV1("invalid","file.helper",{file,table:owner.id});
   const suites:readonly ProcessTestSuiteV1[]=table===undefined?[]:table.suites.filter(suite=>expandProcessTestSuiteV1(suite,[module],table).includes(module));

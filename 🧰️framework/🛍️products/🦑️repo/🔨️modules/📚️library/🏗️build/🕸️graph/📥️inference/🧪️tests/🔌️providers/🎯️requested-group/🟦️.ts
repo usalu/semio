@@ -50,7 +50,7 @@ test("eager source observation resolves only demanded provider and tool groups",
   let generated=false;
   project.namedInputs=demand.aliases;
   project.targets={observe:{executor:"repo:noop",cache:false,outputs:[],inputs:demand.targetInputs}};
-  const assemble=(selected:string[]|undefined,requested:unknown[]=[],representation="source")=>observeInferenceSnapshotV1(()=>{
+  const assemble=(selected:string[]|undefined,requested:string[]=[],representation:"source"|"hash"="source")=>observeInferenceSnapshotV1(()=>{
    const scripts=createScriptInputCache({workspaceRoot:root,scriptProviderDesignation:join(root,toolCorpus.designation),lateClosures:false});
    if(generated)scripts.generatedOutput=(path:string)=>path.endsWith("/lib/gen.ts")?{target:"fixture:generate",output:"lib/gen.ts"}:undefined;
    return projectWithDefaults(project,owner,join(root,owner),root,{},new Map(),undefined,scripts,undefined,representation,selected,requested);

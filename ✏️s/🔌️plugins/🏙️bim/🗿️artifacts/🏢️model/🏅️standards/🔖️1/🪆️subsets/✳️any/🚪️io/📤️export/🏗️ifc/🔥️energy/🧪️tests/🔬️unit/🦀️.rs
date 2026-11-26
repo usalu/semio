@@ -145,7 +145,7 @@ fn roof_transmittance_is_preserved_when_authored_and_derived_only_in_ifc4() {
         assert_eq!(property, authored);
         assert!(!derived.contains("Pset_RoofCommon.ThermalTransmittance"));
     }
-    model.properties.get_mut("rf-main").unwrap().get_mut("Pset_RoofCommon").unwrap().remove("ThermalTransmittance");
+    model.properties.get_mut("rf-main").unwrap().get_mut("Pset_RoofCommon").unwrap().cold_remove("ThermalTransmittance");
     let (property, derived) = roof(Schema::Ifc2x3, &model);
     assert!(property.is_null());
     assert!(!derived.contains("Pset_RoofCommon.ThermalTransmittance"));

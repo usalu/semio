@@ -46,6 +46,7 @@ where
             outcome_terminal: None,
             terminal_target: None,
             resume_pending: false,
+            worker_idle_since_us: None,
             initializer_step_demand: Default::default(),
             retained_store: ManuallyDrop::new(None),
             retained_disposer: ManuallyDrop::new(None),

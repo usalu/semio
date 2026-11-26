@@ -3,6 +3,16 @@
   "title": "Remote execution",
   "description": "Closed shapes of the in-house remote execution service: policy, worker protocol, status and message catalogue. The protocol towards build tools (the Remote Execution API over gRPC) is generated from Bazel's own descriptors into the wire schema of the module and is not repeated here.",
   "definitions": {
+    "LinkedFinal": {
+      "description": "A linked final's target and exact linker identity required by a fleet idle probe.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "linker"],
+      "properties": {
+        "target": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]{0,127}$"},
+        "linker": {"type": "string", "pattern": "^[0-9a-f]{16}$"}
+      }
+    },
     "Digest": {
       "description": "A content digest: lowercase SHA-256 and the size in bytes.",
       "type": "object",

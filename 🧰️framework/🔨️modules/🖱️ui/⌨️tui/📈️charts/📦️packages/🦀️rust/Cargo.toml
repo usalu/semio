@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-ui-tui-charts"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio tui charts: sparkline, line chart, gauge and stat cell as pure functions from multi-resolution series to a cell grid"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-tui-charts"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-ui-tui-core = { path = "../../../🧱️cell-model/📦️packages/🦀️rust" }
+ui_locale = { path = "../../../../🌐️locale/📦️packages/🦀️rust", package = "semio-ui-locale" }

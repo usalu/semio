@@ -67,7 +67,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
             let progress=match &stepped{Ok(step)=>step.progress().unwrap_or_default(),Err(failure)=>failure.retained_progress()};
             spent=spent.checked_add(progress)?;
             if let Err(fault)=stepped{failure=Some(fault);break;}
-            if progress.copied_items==0||semio_plugin_reactor_app::remaining_plugin_turn_grant(turn_grant,spent).maximum_items==0{break;}
+            if progress==RetainedCloneProgress::default()||semio_plugin_reactor_app::remaining_plugin_turn_grant(turn_grant,spent).maximum_items==0{break;}
             if cx.should_yield()||started_us.is_some_and(|started_us|cx.now_us().is_some_and(|now_us|now_us.saturating_sub(started_us)>=INTERACTIVE_TURN_WORKER_WALL_US)){break;}
         }
         if spent!=RetainedCloneProgress::default(){
@@ -88,16 +88,15 @@ impl<A: ArtifactApp> ToolOperations<A> {
     /// have one (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B16).
     /// 🚫️async: E1 pure census over an already-owned fixed table — see R9.
     pub fn next_advanceable_typed_operation(&self) -> Option<(usize, u64)> {
-        (0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset| {
-            let index = (self.typed_publication_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-            self.tool_operations.entry(index).filter(|(_, operation)| operation.stage != MountedTypedCommandFullOperationStage::AwaitingAck).map(|(id, _)| (index, *id))
-        })
+        self.tool_operations.entries_from(self.typed_publication_cursor)
+            .find(|(_, (_, operation))| operation.stage != MountedTypedCommandFullOperationStage::AwaitingAck)
+            .map(|(index, (id, _))| (index, *id))
     }
 
     /// 🧭️ Whether any mounted operation owes the guest a step: every operation except one that waits for the host's acknowledgement of its already presented result page, which no guest unit can move.
     /// 🚫️async: E1 pure census over an already-owned fixed table — see R9.
     pub fn has_runnable_tool_operation(&self) -> bool {
-        (0..ARTIFACT_LIVE_OUTPUT_SLOTS).any(|index| self.tool_operations.entry(index).is_some_and(|(_, operation)| operation.stage.owes_guest_step(operation.result_page_presented)))
+        self.tool_operations.entries_from(0).any(|(_, (_, operation))| operation.stage.owes_guest_step(operation.result_page_presented))
     }
 
     /// 🩺️ What the publication cursor is about to advance, as the four facts that decide whether the

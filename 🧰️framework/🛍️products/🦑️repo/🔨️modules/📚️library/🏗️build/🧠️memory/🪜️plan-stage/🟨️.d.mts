@@ -21,7 +21,9 @@ export function leanSliceV1(input?:{environment?:Readonly<Record<string,string|u
 export function reserveFarmV1(input:{kind:string;workerMegabytes:number;wanted?:number;residentMegabytes?:number;environment?:Readonly<Record<string,string|undefined>>;hostMegabytes?:number;policy?:PlanStagePolicyV1;yield?:()=>void}):Readonly<{workers:number;release():void}>;
 export function farmReservationsV1():{kind:string;megabytes:number}[];
 export interface PlanStageGuardV1{mark(stage:string):void;operation(name:string):void;run<T>(work:()=>Promise<T>|T):Promise<T>}
-export function createPlanStageGuardV1(options?:{limitBytes?:number;ports?:{sample:()=>number;collect:()=>void};environment?:Readonly<Record<string,string|undefined>>;report?:(line:string)=>void;now?:()=>number;resident?:()=>number;usage?:()=>Readonly<Record<string,number>>;heap?:()=>Readonly<Record<string,any>>|undefined;resources?:()=>readonly string[]|undefined;stageMegabytes?:Readonly<Record<string,number>>;refuse?:(detail:{stage:string;operation:string;megabytes:number;limit:number})=>Error}):PlanStageGuardV1;
+export function createPlanStageGuardV1(options?:{limitBytes?:number;ports?:{sample:()=>number;collect:()=>void};environment?:Readonly<Record<string,string|undefined>>;report?:(line:string)=>void;now?:()=>number;resident?:()=>number;usage?:()=>Readonly<Record<string,number>>;heap?:()=>Readonly<{heapSize:number;extraMemorySize:number;objectCount:number;objectTypeCounts?:Readonly<Record<string,number>>}>|undefined;resources?:()=>readonly string[]|undefined;stageMegabytes?:Readonly<Record<string,number>>;refuse?:(detail:{stage:string;operation:string;megabytes:number;limit:number})=>Error}):PlanStageGuardV1;
 
 /** 🛑️ Registers a listener that is told when the plan guard of this process stops a plan; returns the function that removes it. */
 export function onPlanStopV1(listener:(event:{stage:string;operation:string;usedMegabytes:number;budgetMegabytes:number})=>void):()=>boolean;
+
+export function farmAloneCapV1(hostMegabytes: number, policy?: PlanStagePolicyV1): number;

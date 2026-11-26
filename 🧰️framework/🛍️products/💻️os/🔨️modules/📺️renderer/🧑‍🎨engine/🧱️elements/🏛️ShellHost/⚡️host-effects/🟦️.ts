@@ -153,7 +153,7 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
           continue;
         }
         if ("dispatchAction" in effect) {
-          applyDispatchActionEffect({ loadedPluginsRef, isCurrentEffectOwner, resolvedTargetViewState, effect, baseSession, applyDeferredResponse, effectOwner });
+          applyDispatchActionEffect({ loadedPluginsRef, documentLoadGateRef: core.documentLoadGateRef, isCurrentEffectOwner, resolvedTargetViewState, effect, baseSession, applyDeferredResponse, effectOwner });
           continue;
         }
         if ("requestServiceOperation" in effect) {

@@ -27,7 +27,7 @@ test("staged graph leaf admission reports the writer’s original refusal",async
   await withRepositoryBuildGraphPublicationFixtureV1(repository.root,original,control,async graph=>graph.withWriter(async()=>{
    let held=0;
    for(const [index,row] of cases.entries()){
-    const name=String(index+1).padStart(24,"0")+".json",leaf=join(staging,"inference","np",name),space=nativeStatfsSyncV1(graph.root),free=space.bavail*space.bsize,bytes=row.bytes==="physical"?free+1:row.bytes;
+    const name=String(index+1).padStart(24,"0")+".json",leaf=join(staging,"inference","np",name),space=nativeStatfsSyncV1(graph.root),free=space.bavail*space.bsize,bytes=typeof row.bytes==="number"?row.bytes:free+1;
     writeFileSync(leaf,"");
     truncateSync(leaf,bytes);
     using gate=new Database(join(graph.root,component.definitions.OptionalLedger.definitions.Protocol.const.gateFilename),{readwrite:true,create:false});

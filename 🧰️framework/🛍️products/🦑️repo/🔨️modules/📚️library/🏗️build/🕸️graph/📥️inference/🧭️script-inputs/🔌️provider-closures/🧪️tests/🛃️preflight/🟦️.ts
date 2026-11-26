@@ -12,7 +12,7 @@ const observation=await import("../../../../../../👁️observation/🟨️.mjs
 const designationSchema=join(import.meta.dir,"../../../../../../../🏃️process/🔌️providers/🧬️schema/🔣️.json"),roots:string[]=[];
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
 const workspace=()=>{const root=realpathSync(mkdtempSync(join(tmpdir(),"pf-law-")));roots.push(root);for(const[path,text]of Object.entries(corpus.files as Record<string,string>)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}mkdirSync(dirname(join(root,corpus.schemaCopy)),{recursive:true});copyFileSync(designationSchema,join(root,corpus.schemaCopy));return root;};
-const infer=<T>(body:()=>Promise<T>)=>observation.observeInferenceSnapshotV1(body) as Promise<T>;
+const infer=(body:()=>Promise<any>):Promise<any>=>observation.observeInferenceSnapshotV1(body);
 const fixtureCache=(root:string,generated:boolean)=>{
  const cache=scriptInputs.createScriptInputCache({workspaceRoot:root,scriptProviderDesignation:join(root,corpus.designation)});
  cache.toolGroups=new Map(Object.keys(policy.tools.closures).filter(name=>name!=="cargo-command").map(name=>[name,new Set<string>()]));

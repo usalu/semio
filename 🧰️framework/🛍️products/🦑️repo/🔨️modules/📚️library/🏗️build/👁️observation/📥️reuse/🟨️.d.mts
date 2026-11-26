@@ -27,3 +27,6 @@ export function inventoryNamesSettledV1<T>(run:(names:readonly string[])=>Promis
 export function inventoryAncestryV1(storeRoot:string,directory:string,check:()=>void):Readonly<{rows:readonly Readonly<{path:string;dev:bigint;ino:bigint;mode:bigint}>[];device:bigint;absent?:string}>;
 /** 🫙️ Rechecks that ancestry: an absent namespace directory must still be absent. */
 export function recheckInventoryAncestryV1(parents:Readonly<{rows:readonly Readonly<{path:string;dev:bigint;ino:bigint;mode:bigint}>[];device:bigint;absent?:string}>,check:()=>void):void;
+export function prefetchInferenceInventoryPresenceV1(root: string, names: Iterable<string>, control: ResourceLeaseControl, withdraw?: AbortSignal): Promise<Readonly<{asked:number;present:number}>>;
+/** 🎟️ Runs `work` as one take pass of verified-once presence: inside it every look answers a name that a session of this process found present by one stat of its leaf (a pass is one snapshot of the store, as a validation round is one of the tree); outside it every ask goes to a session as before, so a look whose store changes while it looks is still refused by that session. */
+export function withTakePassPresenceV1<T>(work: () => T): T;

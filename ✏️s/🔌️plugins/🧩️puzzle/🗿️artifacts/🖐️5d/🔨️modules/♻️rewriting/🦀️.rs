@@ -1,16 +1,16 @@
 //! 🧩️ Projects a Puzzle 5D document into Jack and admits a rewrite as typed Puzzle mutations.
 
-use crate::Puzzle5dSnapshot;
-use crate::standards::v1::subsets::any::schema::document_records::{
+use semio_s_artifact_puzzle_5d_snapshot::Puzzle5dSnapshot;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::{
     Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dKindCatalogs,
     Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPartAnchor, Puzzle5dPart3d, Puzzle5dScale,
 };
-use crate::standards::v1::subsets::any::schema::mutations::{self, Puzzle5dMutation};
-use protocol::{ColdMutation, DiffAlgebra, MutationAdmission, MutationDiff, apply_diff_cold_into};
+use semio_s_artifact_puzzle_5d_mut_any_5::standards::v1::subsets::any::schema::mutations::{self, Puzzle5dMutation};
+use semio_os_kernel::{ColdMutation, DiffAlgebra, MutationAdmission, MutationDiff, apply_diff_cold_into};
 use semio_framework_graph_manifest::{PortDirection, PropertyBag, PropertyDef, PropertyKind, PropertyValue};
 use semio_framework_value::{FromValue, ToValue, ValueType};
 use semio_s_artifact_puzzle_5d_kind_catalogs::standards::v1::subsets::any::schema::graph_manifest::puzzle5d_default::puzzle5d_default_manifest;
-pub(crate) use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::executor::QueryExecution;
+pub use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::executor::QueryExecution;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::{
     graph::{Camera, Edge, EntityRef, GraphEffect, Node, Port, parse_port_key, port_key},
     manifest::{EdgeKindDef, Manifest, NodeKindDef, PortKindDef},
@@ -530,7 +530,7 @@ pub fn prepare_puzzle5d_effects(
 }
 
 /// ♻️ Starts Jack rule execution over the Puzzle graph for a caller that drives it in turns.
-pub(crate) fn start_puzzle5d_rewrite(
+pub fn start_puzzle5d_rewrite(
     snapshot: &Puzzle5dSnapshot,
     catalog: &Puzzle5dKindCatalogs,
     rule: &Rule,

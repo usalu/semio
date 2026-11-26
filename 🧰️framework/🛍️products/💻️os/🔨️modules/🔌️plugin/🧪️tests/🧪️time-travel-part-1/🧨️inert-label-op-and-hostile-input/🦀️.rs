@@ -42,7 +42,7 @@ impl ::protocol::OpBinary for InertLabelOp {
 }
 
 store::original_decoded_operation_receiving!(InertLabelOp);
-store::artifact_persisted_binary_operation!(InertLabelOp);
+store::artifact_persisted_encoded_binary_operation!(InertLabelOp);
 
 impl ::protocol::OpText for InertLabelOp {
     fn print_op(&self) -> String {
@@ -109,8 +109,7 @@ impl store::ColdMutation<TestSnapshot> for InertLabelOp {
 
 /// 🎟️ One renewed original host turn funding one replay slice of `owners` under `grant`.
 fn replay_turn(owners: &mut time_travel::TimeTravelStoreState<TestSnapshot, InertLabelOp>, document: &mut ArtifactStore<TestSnapshot, InertLabelOp>, grant: semio_framework_value::RetainedCloneGrant, cx: &mut semio_framework_job::StepContext<'_>) -> time_travel::TimeTravelStoreOutput {
-    let (ceiling, _) = cx.original_turn_ceiling();
-    artifact_app_laws::fixture_renew_turn(cx, semio_plugin_testing_laws::OriginalFixtureCaller::turn_fuel(), ceiling).expect("a renewed replay turn");
+    artifact_app_laws::fixture_renew_turn(cx, semio_plugin_testing_laws::OriginalFixtureCaller::turn_fuel(), grant).expect("a renewed replay turn");
     owners.run(document, time_travel::TimeTravelStoreCommand::StepReplay { deadline_us: u64::MAX, clock: semio_framework_job::default_now_us, grant }, Some(cx)).expect("a replay slice")
 }
 
@@ -119,6 +118,15 @@ fn replayed_report(owners: &mut time_travel::TimeTravelStoreState<TestSnapshot, 
     let (policy,_)=original_time_travel_fixture_caller();let grant=policy.preparation;
     let started = owners.run(document, time_travel::TimeTravelStoreCommand::StartReplay { drafts: drafts.clone(), from: from.clone() },None).expect("the replay starts");
     assert!(matches!(started, time_travel::TimeTravelStoreOutput::ReplayStarted(true)), "the store starts the Report replay");
+    for _ in 0..65_536 {
+        let (ceiling,_)=cx.original_turn_ceiling();
+        artifact_app_laws::fixture_renew_turn(cx,semio_plugin_testing_laws::OriginalFixtureCaller::turn_fuel(),ceiling).expect("a renewed source retirement turn");
+        match owners.run(document, time_travel::TimeTravelStoreCommand::CloseOriginalSources { grant: policy.close }, Some(cx)).expect("the replaced replay retires") {
+            time_travel::TimeTravelStoreOutput::OriginalProgress(progress) if progress == Default::default() => break,
+            time_travel::TimeTravelStoreOutput::OriginalProgress(_) => {}
+            _ => panic!("the source retirement answered another output"),
+        }
+    }
     let starved=semio_framework_value::RetainedCloneGrant{maximum_items:0,..grant};
     let idle=replay_turn(owners, document, starved, cx);
     assert!(matches!(idle, time_travel::TimeTravelStoreOutput::Stepped(time_travel::TimeTravelReplayStep::Unfunded)), "an underfunded turn defers the replay without consuming it");
@@ -126,7 +134,8 @@ fn replayed_report(owners: &mut time_travel::TimeTravelStoreState<TestSnapshot, 
         match replay_turn(owners, document, grant, cx) {
             time_travel::TimeTravelStoreOutput::Stepped(time_travel::TimeTravelReplayStep::Completed(report,_)) => return report,
             time_travel::TimeTravelStoreOutput::Stepped(time_travel::TimeTravelReplayStep::Pending { .. }|time_travel::TimeTravelReplayStep::Unfunded) => {}
-            _ => panic!("the replay faulted"),
+            time_travel::TimeTravelStoreOutput::Stepped(time_travel::TimeTravelReplayStep::Refused(error)) => panic!("the replay faulted: {error:?}"),
+            _ => panic!("the replay answered another output"),
         }
     }
     panic!("the replay never completed");
@@ -158,13 +167,19 @@ async fn an_unfunded_replay_step_defers_without_consuming_the_replay() {
         match replay_turn(&mut owners, &mut document, grant, cx) {
             TimeTravelStoreOutput::Stepped(TimeTravelReplayStep::Completed(done,_)) => { report = Some(done); break }
             TimeTravelStoreOutput::Stepped(TimeTravelReplayStep::Pending { .. }|TimeTravelReplayStep::Unfunded) => {}
-            _ => panic!("the replay faulted"),
+            time_travel::TimeTravelStoreOutput::Stepped(time_travel::TimeTravelReplayStep::Refused(error)) => panic!("the replay faulted: {error:?}"),
+            _ => panic!("the replay answered another output"),
         }
     }
     let report = report.expect("the funded turns complete the deferred replay");
     assert!(!report.blocks_finalize() && !report.outcomes.is_empty(), "the deferred replay reports every operation: {report:?}");
     close_inert(owners, document,mounted_policy,cx);
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
+}
+
+/// 🪪️ The persisted operation wire of the [`InertLabelOp`] documents, as the app ingress installs it.
+fn inert_wire() -> store::ArtifactOperationWire<InertLabelOp> {
+    <InertLabelOp as store::ArtifactPersistedOperation>::install_persisted_receiving(store::ArtifactOperationWire::canonical().with_batch_digest()).with_original_target(store::whole_document_target::<InertLabelOp>)
 }
 
 /// 🌰️ The schema id of the [`InertLabelOp`] documents.
@@ -175,11 +190,11 @@ const INERT_SCHEMA: &str = "semio.test.inert-label/v1";
 async fn inert_document(mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> (ArtifactStore<TestSnapshot, InertLabelOp>, Vec<MutationId>) {
     let genesis = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, InertLabelOp>(INERT_SCHEMA, "inert-label", TestSnapshot::default(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut document = Box::pin(ArtifactStore::new::<::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer>(genesis, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("the document store");
-    document.install_operation_wire(store::ArtifactOperationWire::canonical());
-    let (mut catalog, receipt)=bounded_document_store_owners::<TestSnapshot, InertLabelOp>(mounted_policy.preparation).unwrap_or_else(|_|panic!("original inert catalog admission")); let mut catalog_receipts=vec![(mounted_policy.preparation,receipt)]; while !catalog.constructor_is_complete(){let grant=mounted_policy.preparation;let (ceiling,_)=cx.original_turn_ceiling();artifact_app_laws::fixture_renew_turn(cx,semio_plugin_testing_laws::OriginalFixtureCaller::turn_fuel(),ceiling).expect("a renewed catalog turn");let (result,_)=cx.with_original_effect(grant,|_,effect|catalog.admit_constructor(effect)).expect("the catalog construction effect").expect("the turn funds the catalog construction");let receipt=result.unwrap_or_else(|_|panic!("original inert catalog construction")); assert!(receipt.fits(grant)); catalog_receipts.push((grant,receipt));} assert!(catalog_receipts.iter().all(|(grant,receipt)|receipt.fits(*grant))); document.install_document_store_owners_exact(catalog);
+    document.install_operation_wire(inert_wire());
+    let (mut catalog, receipt)=semio_plugin_store_lifecycle::store_lifecycle::cold_replay_document_store_owners::<TestSnapshot, InertLabelOp>(mounted_policy.preparation).unwrap_or_else(|_|panic!("original inert catalog admission")); catalog.operation_wire=inert_wire(); let mut catalog_receipts=vec![(mounted_policy.preparation,receipt)]; while !catalog.constructor_is_complete(){let grant=mounted_policy.preparation;let (ceiling,_)=cx.original_turn_ceiling();artifact_app_laws::fixture_renew_turn(cx,semio_plugin_testing_laws::OriginalFixtureCaller::turn_fuel(),ceiling).expect("a renewed catalog turn");let (result,_)=cx.with_original_effect(grant,|_,effect|catalog.admit_constructor(effect)).expect("the catalog construction effect").expect("the turn funds the catalog construction");let receipt=result.unwrap_or_else(|_|panic!("original inert catalog construction")); assert!(receipt.fits(grant)); catalog_receipts.push((grant,receipt));} assert!(catalog_receipts.iter().all(|(grant,receipt)|receipt.fits(*grant))); document.install_document_store_owners_exact(catalog);
     assert_eq!(document.local_actor_id(), &protocol::ActorId("local".into()));
     for operation in [TestMutation::SetCount(SetCount { value: 1 }), TestMutation::SetLabel(SetLabel { value: "a".into() }), TestMutation::SetSlotChildren(SetSlotChildren { children: Vec::new() }), TestMutation::SetCount(SetCount { value: 5 })] {
-        Box::pin(document.dispatch(ArtifactCommand::Apply { mutations: vec![InertLabelOp(operation)], transaction: None }, identity)).await.expect("a seed edit applies");
+        Box::pin(document.dispatch(ArtifactCommand::Apply { mutations: vec![InertLabelOp(operation)], transaction: None }, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("a seed edit applies");
     }
     let ids = document.mutation_ops().expect("applied operations").iter().map(|op| op.mutation_id.clone()).collect();
     (document, ids)
@@ -211,10 +226,16 @@ fn close_inert(mut owners: time_travel::TimeTravelStoreState<TestSnapshot, Inert
     use time_travel::TimeTravelOwners;
     owners.settle(&document, TimeTravelStage::Inactive).expect("the owners settle");
     for _ in 0..65_536 {
+        if !owners.original_sources_close_pending() { break }
+        let (ceiling,_)=cx.original_turn_ceiling();
+        artifact_app_laws::fixture_renew_turn(cx,semio_plugin_testing_laws::OriginalFixtureCaller::turn_fuel(),ceiling).expect("a renewed source close turn");
+        owners.run(&mut document, time_travel::TimeTravelStoreCommand::CloseOriginalSources { grant: mounted_policy.close }, Some(cx)).expect("the original sources close");
+    }
+    for _ in 0..65_536 {
         let grant=mounted_policy.close;
         let (ceiling,_)=cx.original_turn_ceiling();
         artifact_app_laws::fixture_renew_turn(cx,semio_plugin_testing_laws::OriginalFixtureCaller::turn_fuel(),ceiling).expect("a renewed retirement turn");
-        let Some((step,_))=cx.with_original_effect(grant,|_,effect|owners.retire_step(effect)).expect("the retirement effect") else {continue};
+        let Some((step,_))=cx.with_original_retirement(|cx|Ok(cx.with_original_effect(grant,|cx,effect|if owners.requires_original_control(){cx.with_native_retirement(|control|Ok(owners.retire_step_controlled(effect,control))).map_err(semio_framework_value::ValueError::into_fault)?}else{owners.retire_step(effect)})?)).expect("the retirement effect") else {continue};
         if step.expect("the owners retire").inspect(|step|assert!(step.progress().fits(grant))).is_none() {
             break;
         }

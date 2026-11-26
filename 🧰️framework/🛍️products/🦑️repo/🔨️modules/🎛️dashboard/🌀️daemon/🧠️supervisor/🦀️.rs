@@ -173,6 +173,7 @@ pub struct Supervisor {
     shutdown_at: Option<Instant>,
     shutdown: bool,
     behind: bool,
+    fleet: super::fleet::Feed,
 }
 
 impl Supervisor {
@@ -196,7 +197,7 @@ impl Supervisor {
         let poller = Poller::new()?;
         let waker = poller.waker();
         let (probe_send, probe_results) = mpsc::channel();
-        Ok(Self { root: root.to_path_buf(), log_dir, journal, sessions, clients: BTreeMap::new(), groups: BTreeMap::new(), listener, poller, waker, next_client: 1, probe_send, probe_results, probing: 0, next_probe: 1, shutdown_at: None, shutdown: false, behind: false })
+        Ok(Self { root: root.to_path_buf(), log_dir, journal, sessions, clients: BTreeMap::new(), groups: BTreeMap::new(), listener, poller, waker, next_client: 1, probe_send, probe_results, probing: 0, next_probe: 1, shutdown_at: None, shutdown: false, behind: false, fleet: Default::default() })
     }
 
     /// 📋 The sessions in the order they were created.
@@ -225,6 +226,7 @@ impl Supervisor {
         self.read_sessions();
         self.maintain();
         self.advance_groups();
+        self.fleet.pump(&mut self.clients, &self.root, &self.waker);
         self.write_clients();
         Ok(())
     }
@@ -319,6 +321,8 @@ impl Supervisor {
             ClientMsg::Hello { protocol, env, .. } => self.hello(id, protocol, env),
             ClientMsg::Attach { .. } => { self.attach(id); Ok(()) }
             ClientMsg::Watch {} => { self.watch(id); Ok(()) }
+            ClientMsg::FleetWatch { request } => { if let Some(client) = self.clients.get_mut(&id) { client.fleet = Some(super::fleet::Watch::new(request.clamped())); } Ok(()) }
+            ClientMsg::FleetUnwatch {} => { if let Some(client) = self.clients.get_mut(&id) { client.fleet = None; } Ok(()) }
             ClientMsg::Subscribe { session_id } => self.subscribe(id, &session_id),
             ClientMsg::Unsubscribe { session_id } => { if let Some(client) = self.clients.get_mut(&id) { client.unfollow(&session_id); } Ok(()) }
             ClientMsg::Detach {} => { self.detach(id); Ok(()) }

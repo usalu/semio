@@ -17,10 +17,10 @@ test("a declared unbuilt artifact package resolves through native paths",()=>{
  const oracle=ts.resolveModuleName(law.specifier,containing,options,host,undefined,undefined,ts.ModuleKind.ESNext).resolvedModule?.resolvedFileName;
  expect(oracle && resolve(oracle)).toBe(output);
  const unbuilt={...ts.sys,fileExists:(name:string)=>resolve(name)===output?false:ts.sys.fileExists(name)};
- expect(resolve(workspacePackageModuleV1(containing,law.specifier,root,ts,unbuilt,ts.ModuleKind.ESNext))).toBe(output);
+ expect(resolve(workspacePackageModuleV1(containing,law.specifier,root,ts,unbuilt,ts.ModuleKind.ESNext)!)).toBe(output);
 });
 
 test("relative resolver answers remain outside workspace authority",()=>{
- const compiler={...ts,resolveModuleName:()=>({resolvedModule:{resolvedFileName:"relative.js"},affectingLocations:[]})};
+ const compiler={...ts,resolveModuleName:()=>({resolvedModule:{resolvedFileName:"relative.js",extension:ts.Extension.Js,isExternalLibraryImport:false},affectingLocations:[]})};
  expect(workspacePackageModuleV1(resolve("example.ts"),"external",resolve("."),compiler,ts.sys,ts.ModuleKind.ESNext)).toBeUndefined();
 });

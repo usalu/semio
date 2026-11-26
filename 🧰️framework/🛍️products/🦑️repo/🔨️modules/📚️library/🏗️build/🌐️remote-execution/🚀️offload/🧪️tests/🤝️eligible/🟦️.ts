@@ -36,10 +36,22 @@ test("a unit that no worker can take is declined at once with its own reason and
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
-test("the linked slots a build sizes its final jobs to never exceed the free slots of the workers that advertise this compiler's linker, and stay the scheduler's count when the linker or the worker list is unknown",async()=>{
+test("explicit linked slots require a matching sized scheduler response and distinguish busy from unavailable",async()=>{
  const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"offload-linked-")));
- let sizedSlots=7,eligibleStatus=true;
- const server=Bun.serve({port:0,hostname:"127.0.0.1",fetch(request){const path=new URL(request.url).pathname;if(path==="/v1/fleet/idle")return Response.json({candidates:5,slots:sizedSlots});if(eligibleStatus&&path==="/status")return Response.json({workers:[{origin:"g1-m01",properties:[{name:"semio-linker",value:"abcdabcdabcdabcd"},{name:"semio-rustc-target-wasm32-wasip2",value:"1"}],concurrency:2,running:1},{origin:"g1-m02",properties:[{name:"semio-linker",value:"1111111111111111"}],concurrency:8,running:0}]});return new Response("no",{status:404});}});
+ const link={linker:"abcdabcdabcdabcd",target:"wasm32-wasip2"};
+ let linkedSlots=1,filtered=true,unavailable=false;
+ const server=Bun.serve({port:0,hostname:"127.0.0.1",fetch(request){
+  const {pathname,searchParams}=new URL(request.url);
+  if(pathname==="/v1/fleet/idle"){
+   if(unavailable)return new Response("no",{status:503});
+   const target=searchParams.get("target"),linker=searchParams.get("linker");
+   if(!filtered||target===null||linker===null)return Response.json({candidates:5,slots:7});
+   const compatible=Number(target===link.target&&linker===link.linker);
+   return Response.json({compatible,slots:compatible*linkedSlots,link:{target,linker}});
+  }
+  if(pathname==="/status")return Response.json({workers:[{origin:"g1-m01",properties:[{name:"semio-linker",value:link.linker}],concurrency:2,running:1},{origin:"g1-m02",properties:[{name:"semio-linker",value:"1111111111111111"}],concurrency:8,running:0}]});
+  return new Response("no",{status:404});
+ }});
  try{
   const environment={SEMIO_UNIT_CACHE_ROOT:root},ports={fleet:{fetch:((input:string|URL|Request)=>fetch(String(input).replace(/^https?:\/\/[^/]+/u,`http://127.0.0.1:${server.port}`)))as typeof fetch}};
   expect(await fleetLinkedSlotsV1(environment,ports)).toBe(7);
@@ -47,14 +59,16 @@ test("the linked slots a build sizes its final jobs to never exceed the free slo
   expect(await fleetLinkedSlotsV1(environment,ports)).toBe(1);
   await Bun.write(join(root,"offload-linker.json"),JSON.stringify({sysroot:"/x",signature:"",identity:"ffffffffffffffff"}));rmSync(join(root,"offload-workers.json"),{force:true});
   expect(await fleetLinkedSlotsV1(environment,ports)).toBe(0);
-  const link={linker:"abcdabcdabcdabcd",target:"wasm32-wasip2"};
-  expect(await fleetLinkedSlotsV1(environment,ports,link)).toBe(1);
-  expect(await fleetLinkedSlotsV1(environment,ports,{...link,target:"wasm32-unknown-unknown"})).toBeNull();
-  sizedSlots=0;
-  expect(await fleetLinkedSlotsV1(environment,ports,link)).toBe(0);
-  expect(await fleetLinkedSlotsV1(environment,ports,{...link,linker:"ffffffffffffffff"})).toBeNull();
-  eligibleStatus=false;rmSync(join(root,"offload-workers.json"),{force:true});
-  expect(await fleetLinkedSlotsV1(environment,ports,link)).toBeNull();
+  const sized={...ports,peakMegabytes:5357};
+  expect(await fleetLinkedSlotsV1(environment,sized,link)).toBe(1);
+  expect(await fleetLinkedSlotsV1(environment,sized,{...link,target:"wasm32-unknown-unknown"})).toBeNull();
+  expect(await fleetLinkedSlotsV1(environment,sized,{...link,linker:"ffffffffffffffff"})).toBeNull();
+  linkedSlots=0;
+  expect(await fleetLinkedSlotsV1(environment,sized,link)).toBe(0);
+  filtered=false;
+  expect(await fleetLinkedSlotsV1(environment,sized,link)).toBeNull();
+  unavailable=true;
+  expect(await fleetLinkedSlotsV1(environment,sized,link)).toBeNull();
  }finally{server.stop(true);rmSync(root,{recursive:true,force:true});}
 });
 

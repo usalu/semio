@@ -27,11 +27,11 @@ export type DoctorPolicyV1=Readonly<{
  capacity:Readonly<{waitWarnSeconds:number;waitErrorSeconds:number;idleGrantSeconds:number;idleObservedPercent:number}>;
  host:Readonly<{lowMemoryHeadroomPercent:number;swapWarnMegabytes:number;swapOutWarnMegabytesPerSecond:number;loadPerCoreWarn:number;loadPerCoreError:number;openFilesWarnPercent:number;imagesWarn:number;imagesError:number}>;
  storage:Readonly<{freePercentWarn:number;freePercentError:number;floorBytes:Readonly<Record<string,number>>;hostFreeWarnBytes:number;hostFreeErrorBytes:number;publicationErrorSeconds:number;imageTrailerBytes:number;imageUnitBytes:number}>;
- tools:Readonly<{essential:readonly string[]}>;sessions:Readonly<{crowdedLive:number}>;
+ tools:Readonly<{essential:readonly string[]}>;sessions:Readonly<{crowdedLive:number}>;typecheck:Readonly<{areasShown:number;freshSeconds:number;staleSeconds:number}>;
  graph:Readonly<{implementationRoots:readonly string[];implementationSkip:readonly string[];walkEntries:number}>;
  dependencies:Readonly<{orphanCountWarn:number;unreadyAgeSeconds:number}>;
  caches:Readonly<{deadPublications:readonly Readonly<{partition:string;path:readonly string[];prefix:string}>[];deadPublicationWarnBytes:number;deadPublicationQuietSeconds:number;walkEntries:number;retiredNamesShown:number}>;
- processes:Readonly<{patterns:readonly string[];exclude:readonly string[];orphanAgeSeconds:number;idleHolderSeconds:number;idleCpuPercent:number}>;
+ processes:Readonly<{patterns:readonly string[];exclude:readonly string[];services:readonly string[];orphanAgeSeconds:number;idleHolderSeconds:number;idleCpuPercent:number}>;
  repairs:readonly DoctorRepairDeclarationV1[];
 }>;
 
@@ -59,12 +59,14 @@ export type GraphFactsV1=Readonly<{pointer:"present"|"absent"|"damaged";generati
 export type DependencyScopeFactsV1=Readonly<{scope:string;generation:string;directory:"ready"|"unready"|"missing";inputsNewer:string|null}>;
 export type DependenciesFactsV1=Readonly<{pointers:"present"|"absent";scopes:readonly DependencyScopeFactsV1[];orphans:number;orphanEstimatedBytes:number;unready:number;unreadyOldestSeconds:number|null}>;
 export type CachesFactsV1=Readonly<{deadPublications:number;deadPublicationBytes:number;deadPublicationPartial:boolean;retired:readonly string[];undeclared:readonly string[]}>;
+/** 🔬️ The last whole-library type check: errors in total, in product code and in tests, how old the measurement is and the errors per area, largest first. */
+export type TypecheckFactsV1=Readonly<{errors:number;product:number;tests:number;ageSeconds:number;areas:readonly Readonly<{area:string;errors:number;product:number}>[]}>;
 export type ProcessFactsV1=Readonly<{pid:number;parent:number;ageSeconds:number;rssMegabytes:number;cpuPercent:number;command:string}>;
 
 /** 📸️ Everything a probe run read from one machine; a section is absent when its probe had nothing to read. */
 export type DoctorFactsV1=Readonly<{
  version:1;atMs:number;platform:"darwin"|"linux"|"win32";probes:readonly DoctorProbeRowV1[];
- host?:HostFactsV1;storage?:StorageFactsV1;tools?:ToolsFactsV1;leases?:LeasesFactsV1;capacity?:CapacityFactsV1;sessions?:SessionsFactsV1;graph?:GraphFactsV1;dependencies?:DependenciesFactsV1;caches?:CachesFactsV1;processes?:readonly ProcessFactsV1[];
+ host?:HostFactsV1;storage?:StorageFactsV1;tools?:ToolsFactsV1;leases?:LeasesFactsV1;capacity?:CapacityFactsV1;sessions?:SessionsFactsV1;typecheck?:TypecheckFactsV1;graph?:GraphFactsV1;dependencies?:DependenciesFactsV1;caches?:CachesFactsV1;processes?:readonly ProcessFactsV1[];
 }>;
 
 export type DoctorFindingV1=Readonly<{id:string;area:DoctorAreaV1;owner:string;severity:DoctorSeverityV1;subject:string;data:DoctorDataV1;title:DoctorTextV1;detail:DoctorTextV1;fix:DoctorFixV1}>;

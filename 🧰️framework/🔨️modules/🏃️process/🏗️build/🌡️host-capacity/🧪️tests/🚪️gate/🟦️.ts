@@ -331,6 +331,21 @@ test("A waiting process that still has a child process is not lent, one that los
  });
 },30000);
 
+test("An exact reservation is still charged when its childless owner waits past the ramp",async()=>{
+ const directory=fresh(),durable=readHostCapacityPolicyV1({...policy,memory:{...policy.memory,rampMilliseconds:20000},wait:{...policy.wait,lendAfterMilliseconds:1000}});
+ let skew=0;
+ const now=()=>Date.now()+skew;
+ await withHostCapacityV1(options(directory,{policy:durable,request:request({retainReservation:true}),observe:async()=>100,waited:()=>40000,children:()=>[],now}),async handle=>{
+  skew=40000;
+  await sleep(150);
+  const status=await readHostCapacityStatusV1({directory,policy:durable,control:control().value,sample:sampler(()=>({})),now});
+  expect(status.grants).toEqual([expect.objectContaining({id:handle.id,retainReservation:true,observedMegabytes:100})]);
+  expect(status.grants[0]!.lentSinceMs).toBeUndefined();
+  expect(status.evaluation.unrealizedMegabytes).toBe(7900);
+ });
+ expect(readdirSync(join(directory,"grants"))).toEqual([]);
+});
+
 /** 🛡️ An unreadable process table counts as a live child, so a grant is never lent on a guess (the host cannot run `ps`, as inside the macOS `sandbox-exec` seal of the mirror tool). */
 test("A waiting process whose process table cannot be read is never lent",async()=>{
  const directory=fresh();let skew=0;

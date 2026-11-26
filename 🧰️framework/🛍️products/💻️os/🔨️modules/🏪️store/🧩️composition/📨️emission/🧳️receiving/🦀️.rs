@@ -71,11 +71,11 @@ impl<M:Send+Sync+'static> OriginalMemberBatchReceiving<M>{
    *work=1;
    return (self.codec.original_receiving.as_ref().ok_or_else(invalid)?.admit)(&mut self.wire,&mut self.receiver,self.factory.as_ref().ok_or_else(invalid)?,control,grant).map(RetainedCloneStep::Progress);
   }
-  if let Some(receiver)=self.receiver.as_mut(){if !(receiver.ready()||receiver.owned_handoff_pending())&&self.input.is_none(){
+  if let Some(receiver)=self.receiver.as_mut(){if !(receiver.ready_for_owned()||receiver.owned_handoff_pending())&&self.input.is_none(){
    let poll=receiver.advance(control,self.body,maximum_work_units,grant);
    return match poll{RetainedWorkPoll::Pending{work:pending}=>{*work=pending;Ok(RetainedCloneStep::Progress(Default::default()))},RetainedWorkPoll::Complete(turn)=>{*work=turn.work;turn.result.map_err(refused)}};
   }}
-  let quote=match self.source_admission.as_ref(){Some(admission)=>match admission.phase(){"ready"=>admission.take_output_work_demand(),"projectionStart"=>1,_=>admission.advance_work_demand()?},None=>if self.receiver.is_none()&&self.wire.is_none()&&self.source.is_some(){maximum_work_units}else if let Some(receiver)=self.receiver.as_ref().filter(|receiver|receiver.ready()||receiver.owned_handoff_pending()){receiver.take_owned_work_demand(self.body,maximum_work_units)?}else{1}};
+  let quote=match self.source_admission.as_ref(){Some(admission)=>match admission.phase(){"ready"=>admission.take_output_work_demand(),"projectionStart"=>1,_=>admission.advance_work_demand()?},None=>if self.receiver.is_none()&&self.wire.is_none()&&self.source.is_some(){maximum_work_units}else if let Some(receiver)=self.receiver.as_ref().filter(|receiver|receiver.ready_for_owned()||receiver.owned_handoff_pending()){receiver.take_owned_work_demand(self.body,maximum_work_units)?}else{1}};
   if quote>maximum_work_units{return Ok(RetainedCloneStep::Progress(Default::default()))}
   let Some((result,spent))=control.with_allocated_effect(d,quote,|control,effect|{
    let result=self.advance_local(control,d,grant,effect);
@@ -120,7 +120,7 @@ impl<M:Send+Sync+'static> MemberOriginalBatchReceiving for OriginalMemberBatchRe
   if self.source_admission.is_some()||self.source.is_none(){let admission=self.source_admission.as_ref().ok_or_else(invalid)?;return if admission.phase()=="projectionStart"{admission.owned_projection_demand()}else{admission.next_demand()}}
   if self.wire.is_none()&&self.receiver.is_none(){return retained_alias_demand(self.source.as_ref().ok_or_else(invalid)?.try_borrow()?)}
   if self.receiver.is_none(){return Ok((self.codec.original_receiving.as_ref().ok_or_else(invalid)?.demands)())}
-  let receiver=self.receiver.as_ref().unwrap();if receiver.ready()||receiver.owned_handoff_pending(){receiver.take_owned_demands(self.body)}else{receiver.demands(self.body)}
+  let receiver=self.receiver.as_ref().unwrap();if receiver.ready_for_owned()||receiver.owned_handoff_pending(){receiver.take_owned_demands(self.body)}else{receiver.demands(self.body)}
  }
  fn advance(&mut self,control:&mut NativeDecodeControl<'_>,maximum_work_units:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<RetainedCloneStep,OriginalReceivingPrimary>{
   let mut work=0;let result=self.advance_turn(control,maximum_work_units,grant,&mut work);RetainedWorkPoll::Complete(RetainedWorkOutcome{result:result.map_err(Into::into),work})

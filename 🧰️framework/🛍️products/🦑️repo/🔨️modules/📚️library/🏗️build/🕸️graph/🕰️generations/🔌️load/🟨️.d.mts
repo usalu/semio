@@ -23,11 +23,11 @@ export function scopeImplementationRowsV1(rows:readonly GenerationRowV1[]):Scope
 /** 🪪️ Digest that stamps a generation. */
 export function implementationDigestV1(rows:readonly GenerationRowV1[]):string;
 /** 🧩️ What one partial inference produced, in repository terms. */
-export interface GenerationPartV1{inferred?:number;phases?:Record<string,number>;owners:{name:string;root:string;nativeRoot?:string;config?:string;tag?:string;node?:unknown;unavailable?:unknown;nodeRows?:GenerationRowSourceV1;reads?:import("../🧵️edge-reads/🟨️.mjs").EdgeReadsV1}[];edgeOnly:{name:string;streamed?:true}[];reEdge?:(name:string,fragment:{node?:unknown})=>Promise<unknown[]>|unknown[];readsOf?:(name:string)=>import("../🧵️edge-reads/🟨️.mjs").EdgeReadsV1|undefined;carried?:readonly string[];derived?:import("../✂️cutoff/🟨️.mjs").DerivedFactV1[];edges:{source:string;target:string;[key:string]:unknown}[];externalNodes?:Record<string,unknown>;parseUnavailable?:unknown[];rows:GenerationRowSourceV1;env:{digest:string;rows:GenerationRowV1[];parts?:import("../🧵️edge-reads/🟨️.mjs").EnvironmentPartsV1};replaceTags?:string[];dispose?:()=>void}
+export interface GenerationPartV1{dispose?:()=>void|Promise<void>;inferred?:number;phases?:Record<string,number>;owners:{name:string;root:string;nativeRoot?:string;config?:string;tag?:string;node?:unknown;unavailable?:unknown;nodeRows?:GenerationRowSourceV1;reads?:import("../🧵️edge-reads/🟨️.mjs").EdgeReadsV1}[];edgeOnly:{name:string;streamed?:true}[];reEdge?:(name:string,fragment:{node?:unknown})=>Promise<unknown[]>|unknown[];readsOf?:(name:string)=>import("../🧵️edge-reads/🟨️.mjs").EdgeReadsV1|undefined;carried?:readonly string[];derived?:import("../✂️cutoff/🟨️.mjs").DerivedFactV1[];edges:{source:string;target:string;[key:string]:unknown}[];externalNodes?:Record<string,unknown>;parseUnavailable?:unknown[];rows:GenerationRowSourceV1;env:{digest:string;rows:GenerationRowV1[];parts?:import("../🧵️edge-reads/🟨️.mjs").EnvironmentPartsV1};replaceTags?:string[];dispose?:()=>void}
 export function shapeComputeResultV1(input:{workspaceRoot:string;part:GenerationPartV1;stubs:GenerationComputeSpecV1["stubs"];separator?:string;implementation?:ScopedImplementationRowsV1}):GenerationComputeResultV1;
 /** 🫀️ Hands every counted phase event of a build also to the claim that holds it. */
 export function custodyProgressV1<E extends{phase:string;done:number;total:number;running?:unknown}>(builder:unknown,emit:(event:E)=>unknown):(event:E)=>unknown;
-export function createGenerationProgressV1(clock:{begin(phase:string,total:number):unknown;advance(phase:string,done:number):unknown;end(phase:string):unknown}):(event:{phase:string;done:number;total:number})=>Promise<void>;
+export function createGenerationProgressV1(clock:{begin(phase:string,total:number):unknown;advance(phase:string,done:number):unknown;end(phase:string):unknown;running?(phase:string,running:unknown,decision?:unknown):unknown}):(event:{phase:string;done:number;total:number;running?:unknown;decision?:unknown})=>Promise<void>;
 export interface GenerationHostV1{
  /** 🧭️ Words, in the language of the host, how far the whole read of this machine is; called only when a question about every project finds no sealed generation. */
  wholeReadProgress?():Promise<string|undefined>|string|undefined;
@@ -64,7 +64,7 @@ export interface GenerationHostV1{
  /** 🚪️ Lets one machine of the fleet read the whole workspace while the others wait and fetch what it sealed; absent while no fleet cache is configured. `release` ends the claim after the generation was offered. */
  wholeGate?(request:{identity:string;look():Promise<import("../🌐️remote-exchange/🟦️.ts").GenerationLookV1|undefined>;signal?:AbortSignal}):Promise<{outcome:string;waitedMilliseconds:number;release():Promise<void>}>;
  /** 📍️ Told after every wave the build published, with the generation number, so a build that is cut off keeps a cursor for the newest wave and the next read verifies from it instead of the whole tree; optional. */
- published?(generation:number,info?:{done:number;total:number}):void|Promise<void>;
+ published?(generation:number,info:{done:number;total:number;phases?:Record<string,number>}):void|Promise<void>;
  /** 🌊️ Told after every wave that was derived but not published (a read publishes one generation, at its end), so the progress row and the memory of the inference are settled between the waves; optional. */
  waveDone?(info:{generation:number;done:number;total:number}):void|Promise<void>;
  sealed?(record:{generation:number;manifest:string;owners:readonly string[];covered:ReadonlySet<string>|undefined;atMs:number}):void;
@@ -94,3 +94,8 @@ export function survivingStubsV1<T>(stubs:Readonly<Record<string,T>>,removed:Ite
 
 /** 🪶️ The part of a fragment the slice closure reads (target edges; per target the projects of its inputs, its `dependsOn` and its declared orchestration children). */
 export function sliceViewV1(fragment:{edges:readonly {target:string}[];node?:{targets?:Record<string,{inputs?:readonly unknown[];dependsOn?:unknown;metadata?:unknown}>;namedInputs?:Record<string,readonly unknown[]>}}):{edges:{target:string}[];node:{targets:Record<string,{inputs:(string|{input?:string;projects?:unknown;dependencies?:boolean})[];dependsOn:unknown;metadata?:{semio:{execution:{kind:"orchestration";children:{project:string;target:string}[]}}}}>;namedInputs?:Record<string,(string|{input?:string;projects?:unknown;dependencies?:boolean})[]>}};
+/** 📡️ Subscribes to the counted phase events of every load of this process; returns the unsubscribe. */
+export function onGenerationProgressV1(listener:(event:{phase:string;done:number;total:number;running?:unknown;decision?:unknown})=>unknown):()=>boolean;
+
+/** 🔎️ The key of the build input closure leaf a failure says is missing: the `missingClosure` tag, else the `closure-missing:<key>` text or the leaf path of an ENOENT message, on the error or one of its causes (a failure that crossed a boundary keeps its text, not its properties). */
+export function missingClosureOfV1(error: unknown, depth?: number): string|undefined;

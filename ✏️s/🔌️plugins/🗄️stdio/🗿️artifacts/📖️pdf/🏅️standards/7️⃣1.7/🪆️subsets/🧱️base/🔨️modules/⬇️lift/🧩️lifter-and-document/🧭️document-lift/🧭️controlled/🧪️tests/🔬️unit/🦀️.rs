@@ -355,13 +355,16 @@ fn reference_glyph_programs_depend_on_every_claimed_font_in_object_order() {
     let glyphs: Vec<_> = first.iter().filter(|role| matches!(role.value, PdfStreamRoleValue::Operators { .. }) && role.identity.path.is_empty()).collect();
     assert_eq!(glyphs.len(), 42, "one role per glyph program of the pdfTeX Type 3 font");
     for glyph in glyphs {
-        let mut expected = graph.dependencies_of(&glyph.identity);
+        let mut generators = graph.generators_of(&glyph.identity);
+        let mut inputs = graph.dependencies_of(&glyph.identity);
         for font in &sorted {
-            for dependency in graph.dependencies_of(&PdfGraphIdentity { owner: *font, path: Vec::new() }) {
-                if !expected.contains(&dependency) { expected.push(dependency); }
-            }
+            let root = PdfGraphIdentity { owner: *font, path: Vec::new() };
+            for generator in graph.generators_of(&root) { if !generators.contains(&generator) { generators.push(generator); } }
+            for dependency in graph.dependencies_of(&root) { if !inputs.contains(&dependency) { inputs.push(dependency); } }
         }
-        assert_eq!(glyph.dependencies, expected, "glyph {:?}", glyph.identity.owner);
+        assert_eq!(glyph.dependencies, generators, "glyph {:?} stores its own identity and every claimed font root once, in object order", glyph.identity.owner);
+        let derived = graph.closure_of(&glyph.dependencies);
+        assert_eq!((derived.len(), derived.iter().all(|input| inputs.contains(input))), (inputs.len(), true), "glyph {:?} derives every input the full dependency list named", glyph.identity.owner);
     }
 }
 
@@ -540,4 +543,47 @@ fn real_world_documents_lift_within_half_of_their_route_turn_bound() {
         assert!(turns <= bound, "{name}: lifted in {turns} turns, above {bound}: {stages:?}");
     }
     println!("lift turns (name, turns): {report:?}");
+}
+
+/// 🧵️ The objects a value references directly.
+fn direct_references(value: &crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject, found: &mut Vec<(u32, u16)>) {
+    use crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
+    match value {
+        PdfObject::Ref(owner) => found.push((owner.num, owner.gen)),
+        PdfObject::Array(items) => items.iter().for_each(|item| direct_references(item, found)),
+        PdfObject::Dict(entries) | PdfObject::Stream { dict: entries, .. } => entries.iter().for_each(|entry| direct_references(&entry.value, found)),
+        _ => {}
+    }
+}
+
+/// 🧬️ LAW: a role stores only the generators of its inputs (its identity, the inherited font dictionary, every claimed font root), so the stored lists stay linear in roles plus fonts instead of roles times the fonts' object closures (the thesis stored about 500 identities in each of its 770 glyph programs, 11 MB of its 55 MB); and the objects derived from those generators are exactly the objects the independent reader lopdf reaches from them, so nothing a role consumed went missing.
+#[test]
+fn stored_role_dependencies_are_generators_and_derive_exactly_what_lopdf_reaches() {
+    use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_reachable_objects;
+    let ledger: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🌍️real-world/🔣️.json")).unwrap();
+    let (mut checked, mut stored) = (0, 0);
+    for case in ledger["documents"].as_array().unwrap() {
+        let name = case["name"].as_str().unwrap();
+        let input = fixture_bytes!(format!("../../../../{}", case["path"].as_str().unwrap()));
+        let retained = decode_pdf(input).unwrap();
+        let Ok(snapshot) = controlled_lift(&retained) else { continue };
+        let graph = GraphSource::new(&retained.objects);
+        let bound = 2 + snapshot.fonts.len();
+        for role in &snapshot.admitted_stream_roles {
+            assert!(role.dependencies.len() <= bound, "{name}: role {:?} stores {} dependencies, above identity, font dictionary and {} fonts", role.identity.owner, role.dependencies.len(), snapshot.fonts.len());
+            assert!(role.dependencies.iter().all(|dependency| graph.resolve(dependency).is_some()), "{name}: every stored generator resolves");
+            let mut seeds = Vec::new();
+            for generator in &role.dependencies {
+                if generator.path.is_empty() { seeds.push((generator.owner.num, generator.owner.gen)); } else if let Some(value) = graph.resolve(generator) { direct_references(value, &mut seeds); }
+            }
+            let derived: std::collections::BTreeSet<(u32, u16)> = graph.closure_of(&role.dependencies).iter().filter(|input| input.path.is_empty()).map(|input| (input.owner.num, input.owner.gen)).collect();
+            let reached = reference_reachable_objects(input, &seeds).unwrap();
+            assert_eq!(derived.difference(&reached).collect::<Vec<_>>(), Vec::<&(u32, u16)>::new(), "{name}: role {:?} derives objects lopdf does not reach", role.identity.owner);
+            assert_eq!(reached.difference(&derived).collect::<Vec<_>>(), Vec::<&(u32, u16)>::new(), "{name}: role {:?} misses objects lopdf reaches", role.identity.owner);
+            stored += role.dependencies.len();
+        }
+        checked += snapshot.admitted_stream_roles.len();
+    }
+    assert!(checked > 100, "the ledger lifts hundreds of roles, not {checked}");
+    println!("roles {checked}, stored dependencies {stored}");
 }

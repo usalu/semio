@@ -64,7 +64,7 @@ for (const entry of settlement.default.cases) test(`setup records the typed veri
  const rows = entry.reports as readonly import("../../🟦️.ts").ToolReportV1[];
  const lines = refusals.toolSetupRefusalLinesV1(rows);
  const decoded = lines.map(refusals.readToolSetupRefusalLineV1);
- expect(decoded).toEqual(entry.expected);
+ expect<unknown>(decoded).toEqual(entry.expected);
  expect(decoded.every(row => validate(row))).toBe(true);
  expect(lines.every(line => !/[\r\n]/u.test(line))).toBe(true);
 });

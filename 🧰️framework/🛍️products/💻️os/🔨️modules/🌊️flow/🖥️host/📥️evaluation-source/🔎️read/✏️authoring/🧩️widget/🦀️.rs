@@ -7,7 +7,7 @@ use semio_framework_value::retained_clone::{RetainedCloneClose,retained_clone_gr
 use semio_framework_artifact_flow_flow::{Widget,WidgetDescriptor,widget_id_for};
 use semio_framework_value_ordered::ordered::OrderedSet;
 use neural_engine::{Dictionary,OperatorInfo,BudgetedOwnedEntry,Value as NeuralValue};
-use super::storage::Construction;
+use super::storage::{Construction,vacant};
 use std::mem::{ManuallyDrop,size_of};
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original widget authoring changed its retained fields")}
 fn fixed(bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()}}
@@ -18,6 +18,7 @@ pub(super) enum WidgetPlan<'a>{New(&'a WidgetDescriptor),Insert{widget:&'a Widge
 #[derive(semio_framework_value::RetireOwned)]
 struct Fields{id:Option<String>,text:Option<String>,aux:Option<String>,key:Option<String>,word:Option<String>,params:Option<Dictionary>,value:Option<NeuralValue>,inputs:Vec<String>,outputs:Vec<String>,output:Option<Widget>}
 pub(super) struct WidgetWork{construction:Construction,fields:ManuallyDrop<Fields>,text:Option<FundedText>,value:Option<ValueCopy>,entry:Option<BudgetedOwnedEntry>,retirement:RetainedCloneClose,phase:u8,param:usize,port:usize,side:bool,number:[u8;32],number_len:usize,closing:bool}
+vacant!(WidgetWork,WidgetWork::new());
 impl WidgetWork{
  pub(super) fn new()->Self{Self{construction:Default::default(),fields:ManuallyDrop::new(Fields{id:None,text:None,aux:None,key:None,word:None,params:Some(Dictionary::new()),value:None,inputs:Vec::new(),outputs:Vec::new(),output:None}),text:None,value:None,entry:None,retirement:Default::default(),phase:0,param:0,port:0,side:true,number:[0;32],number_len:0,closing:false}}
  fn paid(cx:&mut StepContext<'_>,bytes:usize)->Result<bool,OriginalTurnFailure>{let d=fixed(bytes);if cx.should_yield()||!retained_clone_grant_admits(cx.retained_grant(),d){return Ok(false)}cx.consume_retained(progress(d))?;cx.consume_fuel(1);Ok(true)}
@@ -119,3 +120,4 @@ impl WidgetWork{
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.text.is_none()&&self.value.is_none()&&self.entry.is_none()&&self.retirement.is_empty()&&self.fields.id.is_none()&&self.fields.text.is_none()&&self.fields.aux.is_none()&&self.fields.key.is_none()&&self.fields.word.is_none()&&self.fields.params.is_none()&&self.fields.value.is_none()&&self.fields.inputs.capacity()==0&&self.fields.outputs.capacity()==0&&self.fields.output.is_none()}
 }
 impl Drop for WidgetWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original authoring widget fields require explicit terminal custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+

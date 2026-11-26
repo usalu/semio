@@ -30,7 +30,7 @@ beforeAll(async()=>{
   if(!existsSync(join(residentRepository.root,"🧰️framework")))fs.symlinkSync(join(checkout,"🧰️framework"),join(residentRepository.root,"🧰️framework"),process.platform==="win32"?"junction":"dir");
   fs.copyFileSync(join(checkout,"rust-toolchain.toml"),join(residentRepository.root,"rust-toolchain.toml"));
   const remaining=parent.control.remainingMilliseconds(),budget=Math.floor(Math.min(300000,remaining??300000));if(budget<=0)throw Error("Original compiler preparation budget exhausted");
-  await residentRepository.invoke(original=>withScriptInvocationSignalV1(original,parent.control.signal,actual=>withAdmittedCompilerStoreV1(residentRepository.root,readBuildMode(actual.capabilities.buildMode),createIssuedResourceControlV1(actual,"resident:compiler-preparation",0),scriptInvocationEnvironment(actual,process.env),async store=>{await store.storage.recheck();})),{owner:"resident:compiler-preparation",maximumElapsedMilliseconds:budget});
+  await residentRepository.invoke(original=>withScriptInvocationSignalV1(original,parent.control.signal,actual=>withAdmittedCompilerStoreV1(residentRepository.root,readBuildMode("buildMode" in actual.capabilities?actual.capabilities.buildMode:undefined),createIssuedResourceControlV1(actual,"resident:compiler-preparation",0),scriptInvocationEnvironment(actual,process.env),async store=>{await store.storage.recheck();})),{owner:"resident:compiler-preparation",maximumElapsedMilliseconds:budget});
  }));
 },300000);
 const frame='{"v":1,"t":"version","name":"semio-repo-watch","protocol":1,"os":"test"}';

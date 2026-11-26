@@ -93,6 +93,8 @@ use semio_plugin_decl_app::tool_contract::ArtifactToolPublicationLane;
 use semio_plugin_decl_app::tool_contract::ArtifactToolRawInput;
 use semio_plugin_decl_app::tool_contract::TYPED_OPERATION_FAULT_PAGE_BYTES;
 use semio_plugin_decl_app::tool_contract::TypedOperationResultLane;
+#[path="📃️mounted/🖼️view-retirement/🦀️.rs"]
+mod view_retirement;
 use semio_plugin_job::TypedOperationResultPage;
 use semio_plugin_job::TypedOperationResultToken;
 #[cfg(test)]
@@ -409,6 +411,10 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         if self.terminal_seen{
             if session.terminal_is_empty(){
                 drop(self.session.take());self.stage=MountedTypedCommandFullOperationStage::Publishing;
+                return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));
+            }
+            if self.terminal_fault.is_some(){
+                self.stage=MountedTypedCommandFullOperationStage::Publishing;
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));
             }
             if let Some(step)=return_session_cancel_alias(session,&self.cancellation_lease,cx,grant){return step.map_err(semio_framework_job::OriginalTurnFailure::from);}
@@ -742,6 +748,14 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
         if self.publication_retirement.is_none()&&(self.meta.view_state.is_some()||self.window_config_authority.is_some()||self.window_transient_authority.is_some()) {
+            if let Some((demand, work)) = view_retirement::compact_demands(&self.meta.view_state).filter(|(demand, work)| {
+                plugin_grant_funds(*demand, grant) && cx.fuel_remaining() >= *work
+            }) {
+                return semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx,grant,demand,|_,effect| {
+                    let progress = view_retirement::compact_close(&mut self.meta.view_state, demand, work, effect)?;
+                    Ok((PluginLifecycleStep::Progress(progress),false))
+                }).map_err(semio_framework_job::OriginalTurnFailure::from);
+            }
             return semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx,grant,demand,|_,effect|{
                 let step=if self.meta.view_state.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.meta.view_state,&mut self.publication_retirement,effect)}
                     else if self.window_config_authority.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.window_config_authority,&mut self.publication_retirement,effect)}

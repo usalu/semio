@@ -229,6 +229,7 @@
         "test-build-task-view",
         "test-build-test-file",
         "test-build-tool-setup",
+        "test-build-typed-fixture",
         "test-build-typescript-compiler",
         "test-build-workers",
         "test-build-workspace-graph-laws",
@@ -4183,7 +4184,9 @@
     "test-build-preflight": {
       "executor": "repo:script",
       "cache": false,
-      "dependsOn": ["workspace:deps-python"],
+      "dependsOn": [
+        "workspace:deps-python"
+      ],
       "inputs": [
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*"
       ],
@@ -4195,8 +4198,15 @@
       },
       "metadata": {
         "semio": {
-          "execution": {"version": 1, "kind": "source"},
-          "cache": {"version": 1, "class": "live", "reason": "exercises-host-resources"}
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
         }
       }
     },
@@ -5771,6 +5781,34 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites",
         "command": "repo ./📜️script.ts test build-browser-preparation",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-build-typed-fixture": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧾️typed-fixture/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites",
+        "command": "repo ./📜️script.ts test build-typed-fixture",
         "forwardAllArgs": false
       },
       "metadata": {

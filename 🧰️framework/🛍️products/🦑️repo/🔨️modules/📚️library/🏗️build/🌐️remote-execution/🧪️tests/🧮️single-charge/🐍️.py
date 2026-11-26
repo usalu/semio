@@ -31,4 +31,15 @@ for _ in range(60):
     wanted=sorted(rand.sample([1,100,200,300,4242],rand.randrange(1,4)))
     tables.append({"table":table,"groups":wanted,"megabytes":groups(table,set(wanted))})
 peaks=[{"megabytes":m,"text":str(max(1,math.ceil(m)))} for m in (0.2,1,17,6550.4,7938)]
-print(json.dumps({"lifetime":lifetime,"ramps":ramps,"tables":tables,"peaks":peaks}))
+linked=[]
+for ready_mb in (4500,5400,10714):
+    peak=5357
+    workers=[
+        {"origin":"right","target":True,"linker":True,"free":ready_mb},
+        {"origin":"wrong-linker","target":True,"linker":False,"free":12000},
+        {"origin":"wrong-target","target":False,"linker":True,"free":10000},
+    ]
+    general=sum(min(4,row["free"]//peak) for row in workers)
+    exact=sum(min(4,row["free"]//peak) for row in workers if row["target"] and row["linker"])
+    linked.append({"peak":peak,"workers":workers,"linked":exact,"general":general})
+print(json.dumps({"lifetime":lifetime,"ramps":ramps,"tables":tables,"peaks":peaks,"linked":linked}))

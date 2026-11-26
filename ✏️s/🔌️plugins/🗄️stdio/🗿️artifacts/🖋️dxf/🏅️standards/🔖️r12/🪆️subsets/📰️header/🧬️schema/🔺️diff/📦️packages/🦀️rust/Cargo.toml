@@ -39,7 +39,6 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-dxf-diff-algebra = { path = "../../🧮️collection-algebra-core/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-dxf-snapshot = { path = "../../../📸️snapshot/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-txt = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]

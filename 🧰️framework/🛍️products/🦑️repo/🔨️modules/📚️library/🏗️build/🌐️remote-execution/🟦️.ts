@@ -8,6 +8,9 @@ export type RemoteExecutionDigestV1=Readonly<{hash:string;size:number}>;
 /** 🏷️ One name/value property of a platform. */
 export type RemoteExecutionPropertyV1=Readonly<{name:string;value:string}>;
 
+/** 🔗️ The target and linker identity required by a linked final's fleet idle probe. */
+export type RemoteExecutionLinkedFinalV1=Readonly<{target:string;linker:string}>;
+
 /** 📜️ The authored remote execution section of the build policy. */
 export type RemoteExecutionPolicyV1=Readonly<typeof buildPolicy.remoteExecution>;
 
@@ -15,7 +18,7 @@ export type RemoteExecutionPolicyV1=Readonly<typeof buildPolicy.remoteExecution>
 export type RemoteExecutionSandboxV1="darwin-sandbox"|"linux-sandbox"|"isolated-root";
 
 /** 📡️ A worker's announcement when it joins (`POST /v1/workers`). */
-export type RemoteExecutionWorkerRegistrationV1=Readonly<{version:1;name:string;host:string;platform:string;properties:readonly RemoteExecutionPropertyV1[];concurrency:number;sandbox:RemoteExecutionSandboxV1;runtime:string;origin:string;capacity:Readonly<{cores:number;memoryMegabytes:number;resumed?:readonly Readonly<{task:string;instance:string;action:RemoteExecutionDigestV1}>[]}>;confinement:RemoteExecutionConfinementV1;network:RemoteExecutionNetworkV1}>;
+export type RemoteExecutionWorkerRegistrationV1=Readonly<{version:1;name:string;host:string;platform:string;properties:readonly RemoteExecutionPropertyV1[];concurrency:number;sandbox:RemoteExecutionSandboxV1;runtime:string;origin:string;capacity:Readonly<{cores:number;memoryMegabytes:number}>;resumed?:readonly Readonly<{task:string;instance:string;action:RemoteExecutionDigestV1}>[];confinement:RemoteExecutionConfinementV1;network:RemoteExecutionNetworkV1}>;
 
 /** 🧱️ Whether a sandbox confines the file system of an action: `none` is the private input root alone. */
 export type RemoteExecutionConfinementV1="full"|"none";

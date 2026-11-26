@@ -1,0 +1,42 @@
+[
+  {
+    "id": "clean",
+    "failed": false,
+    "linked": 1,
+    "browserRelease": true,
+    "mutate": false,
+    "expected": true
+  },
+  {
+    "id": "linked-after-neighbor-failed",
+    "failed": true,
+    "linked": 1,
+    "browserRelease": true,
+    "mutate": false,
+    "expected": true
+  },
+  {
+    "id": "no-survivor",
+    "failed": true,
+    "linked": 0,
+    "browserRelease": true,
+    "mutate": false,
+    "expected": false
+  },
+  {
+    "id": "complete-consumer",
+    "failed": true,
+    "linked": 1,
+    "browserRelease": false,
+    "mutate": false,
+    "expected": false
+  },
+  {
+    "id": "changed-successful-input",
+    "failed": true,
+    "linked": 1,
+    "browserRelease": true,
+    "mutate": true,
+    "expected": false
+  }
+]

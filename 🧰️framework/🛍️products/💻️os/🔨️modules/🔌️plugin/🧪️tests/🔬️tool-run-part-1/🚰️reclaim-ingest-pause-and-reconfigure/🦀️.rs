@@ -170,6 +170,8 @@ async fn tool_run_pause_then_step_drives_exactly_one_unit_per_step() {
         pump_until(&mut app, "single step settles", |app| !app.tool_runs.has_pending_work(), &mut caller).await;
         let after = app.tool_runs.provisional().len() as u64;
         assert_eq!(after - provisional, number(&expected["opsPerStep"]), "one step is exactly one algorithm unit");
+        let checkpoint = app.tool_runs.checkpoint().expect("a settled step preserves its checkpoint");
+        assert_eq!(u64::from(u32::from_le_bytes(checkpoint.try_into().expect("checkpoint unit"))), after / number(&expected["opsPerStep"]));
         provisional = after;
         for _ in 0..8 {
             advance_toy(&mut app, &mut caller).await.expect("paused turn");

@@ -53,7 +53,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             Err(store::VcsError::ValidationFailed(detail)) => return Err(document_load_fault(DOCUMENT_LOAD_OTHER_DOCUMENT_CODE, detail)),
             Err(error) => return Err(error.into_fault()),
         };
-        self.history.cache = None;
+        self.history.invalidate_cache();
         if self.stores.store.generation() != generation {
             self.as_dispatch().queue_base_moved();
         }

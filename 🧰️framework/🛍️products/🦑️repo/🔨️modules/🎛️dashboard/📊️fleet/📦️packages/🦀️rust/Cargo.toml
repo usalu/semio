@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-repo-dashboard-fleet"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "repo dashboard fleet: the request, the compact snapshot and the reader of the shared store rings behind the Fleet window"
+
+[package.metadata.semio]
+role = "tool"
+id = "repo-dashboard-fleet"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-process-metrics = { path = "../../../../../../../🔨️modules/🏃️process/🏗️build/📈️metrics/📦️packages/🦀️rust" }
+serde = { workspace = true }
+serde_json = { workspace = true }

@@ -98,6 +98,7 @@ pub struct StepContext<'a> {
     operation: OperationId,
     generation: Generation,
     fuel_remaining: u64,
+    semantic_step_limit: Option<u64>,
     work_units_spent:u128,
     deadline_us: u64,
     now_us: fn() -> Option<u64>,
@@ -149,11 +150,11 @@ impl Drop for OriginalRetirementLoan<'_>{fn drop(&mut self){unsafe{if self.ident
 impl OriginalRetainedLoan<'_>{fn matches_original(&self)->bool{unsafe{self.identity.matches(&*self.target)}}}
 impl Drop for OriginalRetainedLoan<'_>{fn drop(&mut self){if self.matches_original(){unsafe{(*self.target).retained=self.original}}}}
 pub type OriginalBirthBaseline=(u128,RetainedCloneProgress,u64,RetainedCloneProgress);
-struct OriginalWorkLoan<'a>{target:*mut StepContext<'a>,fuel:u64,deadline:u64,loaned:Option<u64>,issued:u64,spent:u128,reserved:u64,cancel:usize,identity:OriginalRetainedLoanIdentity}
+struct OriginalWorkLoan<'a>{target:*mut StepContext<'a>,fuel:u64,semantic_step_limit:Option<u64>,deadline:u64,loaned:Option<u64>,issued:u64,spent:u128,reserved:u64,cancel:usize,identity:OriginalRetainedLoanIdentity}
 impl OriginalWorkLoan<'_>{fn matches_source(&self)->bool{let cx=unsafe{&*self.target};self.identity.matches(cx)&&self.cancel==cx.original_cancel_token()as*const CancelToken as usize&&cx.work_units_spent>=self.spent&&cx.reserved_return_work>=self.reserved}fn matches_original(&self)->bool{if !self.matches_source(){return false}let cx=unsafe{&*self.target};let physical=cx.work_units_spent-self.spent;let reserved=u128::from(cx.reserved_return_work-self.reserved);physical.checked_sub(reserved).is_some_and(|work|work<=u128::from(self.issued))&&cx.fuel_remaining<=self.issued}}
 /// 🗣️ Says whether the loan lost its context or which stage overspent its issued work.
 impl OriginalWorkLoan<'_>{fn refusal_message(&self)->std::borrow::Cow<'static,str>{if !self.matches_source(){return "original work loan callback replaced its initiating context".into()}let cx=unsafe{&*self.target};format!("original work loan callback spent {} of {} issued work units with {} reserved and {} left (stage {})",cx.work_units_spent-self.spent,self.issued,cx.reserved_return_work-self.reserved,cx.fuel_remaining,cx.stage).into()}}
-impl Drop for OriginalWorkLoan<'_>{fn drop(&mut self){if self.matches_source(){let cx=unsafe{&mut*self.target};let physical=cx.work_units_spent-self.spent;let reserved=cx.reserved_return_work.saturating_sub(self.reserved);let spent=physical.saturating_sub(u128::from(reserved));cx.fuel_remaining=self.fuel.saturating_sub(u64::try_from(spent).unwrap_or(u64::MAX));cx.deadline_us=self.deadline;cx.loan_deadline_us=self.loaned;}}}
+impl Drop for OriginalWorkLoan<'_>{fn drop(&mut self){if self.matches_source(){let cx=unsafe{&mut*self.target};let physical=cx.work_units_spent-self.spent;let reserved=cx.reserved_return_work.saturating_sub(self.reserved);let spent=physical.saturating_sub(u128::from(reserved));cx.fuel_remaining=self.fuel.saturating_sub(u64::try_from(spent).unwrap_or(u64::MAX));cx.semantic_step_limit=self.semantic_step_limit;cx.deadline_us=self.deadline;cx.loan_deadline_us=self.loaned;}}}
 
 /// 🔗️ The clock, payload page and stage a parked wallet carries between contexts; only the context can read or install them.
 #[derive(Clone,Copy)]
@@ -254,7 +255,7 @@ impl<'a> StepContext<'a> {
         assert!(retained_progress.fits(budget.retained),"original job recipient exceeds its incoming retained grant");
         let turn_retained_start=*retained_progress;
         StepContext { original_decoder:None,receiving:Default::default(),retained:budget.retained, retained_progress, operation, generation, fuel_remaining: budget.fuel,original_total_fuel:budget.fuel,issued_ceiling:(budget.retained,budget.fuel),issued_start:RetainedCloneProgress::default(),original_total_work_start:0,original_absolute_deadline:budget.deadline_us,original_total_retained:budget.retained,
-            work_units_spent:0, loan_deadline_us:None, deadline_us: budget.deadline_us, now_us, clock: std::cell::Cell::new(clock), cancel, stage: "initial", preview_sequence, payload_ledger, source_parent:None,source_turn:None,return_budget:None,reserved_return_progress:Default::default(),reserved_return_work:0,birth_work:0,reserved_observer:None,native_weak_parent:None,source_epoch:None,original_retirement:false,original_clock_binding:None,original_work_recipient:None,original_total_retained_start:turn_retained_start,original_total_retained_bound:false,retained_policy:None,original_physical_recipient:None,replacement_current:None, payload_page_granted: false }
+            work_units_spent:0, semantic_step_limit:None, loan_deadline_us:None, deadline_us: budget.deadline_us, now_us, clock: std::cell::Cell::new(clock), cancel, stage: "initial", preview_sequence, payload_ledger, source_parent:None,source_turn:None,return_budget:None,reserved_return_progress:Default::default(),reserved_return_work:0,birth_work:0,reserved_observer:None,native_weak_parent:None,source_epoch:None,original_retirement:false,original_clock_binding:None,original_work_recipient:None,original_total_retained_start:turn_retained_start,original_total_retained_bound:false,retained_policy:None,original_physical_recipient:None,replacement_current:None, payload_page_granted: false }
     }
 
     pub fn with_payload_authority(operation:OperationId,generation:Generation,budget:StepBudget,cancel:&'a CancelToken,now_us:fn()->Option<u64>,preview_sequence:&'a mut u64,retained_progress:&'a mut RetainedCloneProgress,authority:&'a JobPayloadAuthority)->Result<Self,ValueError>{
@@ -293,9 +294,23 @@ impl<'a> StepContext<'a> {
         replaced_context(result,"original retained loan callback replaced its initiating context".into())
     }
     pub fn with_original_work_loan<R:Copy>(&mut self,requested_fuel:u64,absolute_deadline_us:u64,run:impl FnOnce(&mut Self)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{
+        self.with_work_loan(requested_fuel, absolute_deadline_us, self.semantic_step_limit, run)
+    }
+
+    /// 👣️ Funds original work for one user-requested unit beyond the tool's published progress.
+    pub fn with_original_work_loan_for_step<R: Copy>(&mut self, requested_fuel: u64, absolute_deadline_us: u64, completed: u64, run: impl FnOnce(&mut Self) -> Result<R, OriginalTurnFailure>) -> Result<R, OriginalTurnFailure> {
+        let limit = completed.saturating_add(1);
+        self.with_work_loan(requested_fuel, absolute_deadline_us, Some(self.semantic_step_limit.map_or(limit, |outer| outer.min(limit))), run)
+    }
+
+    /// 🎯️ Absolute completed-unit ceiling for a tool's current single step.
+    pub fn semantic_step_limit(&self) -> Option<u64> { self.semantic_step_limit }
+
+    fn with_work_loan<R: Copy>(&mut self, requested_fuel: u64, absolute_deadline_us: u64, semantic_step_limit: Option<u64>, run: impl FnOnce(&mut Self) -> Result<R, OriginalTurnFailure>) -> Result<R, OriginalTurnFailure> {
         self.with_retained_loan(self.retained_grant(),|cx|{
             let fuel=cx.fuel_remaining;let deadline=cx.deadline_us;let loaned=cx.loan_deadline_us;let issued=requested_fuel.min(cx.fuel_remaining());cx.fuel_remaining=issued;cx.deadline_us=absolute_deadline_us.min(deadline);cx.loan_deadline_us=Some(loaned.map_or(absolute_deadline_us,|held|held.min(absolute_deadline_us)));
-            let restore=OriginalWorkLoan{target:std::ptr::addr_of_mut!(*cx),fuel,deadline,loaned,issued,spent:cx.work_units_spent,reserved:cx.reserved_return_work,cancel:cx.original_cancel_token()as*const CancelToken as usize,identity:OriginalRetainedLoanIdentity::capture(cx)};let result=run(cx);
+            let previous_step_limit = std::mem::replace(&mut cx.semantic_step_limit, semantic_step_limit);
+            let restore=OriginalWorkLoan{target:std::ptr::addr_of_mut!(*cx),fuel,semantic_step_limit:previous_step_limit,deadline,loaned,issued,spent:cx.work_units_spent,reserved:cx.reserved_return_work,cancel:cx.original_cancel_token()as*const CancelToken as usize,identity:OriginalRetainedLoanIdentity::capture(cx)};let result=run(cx);
             if restore.matches_original(){return result}
             let message=restore.refusal_message();drop(restore);
             replaced_context(result,message)

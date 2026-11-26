@@ -136,7 +136,7 @@ impl PdfFlateCursor {
                 self.inflater = Some(Inflater::try_new_retained(window, window).map_err(inflate_error)?);
                 self.source_len = Some(source.byte_len());
                 self.source_offset = offset;
-                continue;
+                return Ok(FlateStatus::Yield);
             };
             if let Some(bytes) = inflater.next_retained_allocation_bytes() {
                 let available = grant.allocation_bytes - step.allocated_bytes;

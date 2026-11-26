@@ -8,7 +8,11 @@ impl SubspaceIterationJob {
         if context.is_cancelled() { return Ok(NumericalRun::Cancelled); }
         if context.should_yield() { return Ok(NumericalRun::Yield); }
         let before = context.original_work_units_spent();
+        self.branch = 0;
         let result = self.run_admitted(context);
+        let spent = context.original_work_units_spent().saturating_sub(before).max(1);
+        let pace = &mut self.state.pace;
+        match self.branch { 1 => pace.checkpoint_spent += spent, 2 => pace.preview_spent += spent, _ => pace.work += spent }
         if matches!(result, Ok(NumericalRun::Yield)) && context.original_work_units_spent() == before { context.consume_fuel(1); }
         result
     }
@@ -35,12 +39,16 @@ impl SubspaceIterationJob {
             if let Some((row,value))=self.state.k_factor.column_entry(column,entry){if !value.is_finite()||row as usize<=column||row as usize>=self.state.n{return Ok(NumericalRun::Fault)}self.state.work.second+=1;}else{self.state.work.second=0;self.state.factor_validation_cursor+=1;}
             return Ok(NumericalRun::Yield);
         }
-        if self.state.checkpoint_due || self.checkpoint_writer.is_some() {
+        if (self.state.checkpoint_due && self.state.pace.checkpoint_affordable()) || self.checkpoint_writer.is_some() {
+            self.branch = 1;
             context.set_stage("fem.subspace.checkpoint-page");
             if self.checkpoint_writer.is_some() && self.checkpoint_cursor.field == u16::MAX {
                 if !numerical_finish_writer(&mut self.checkpoint_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
                 let payload = self.desk.lent.take().expect("finished numerical writer retained its original payload");
                 self.checkpoint_cursor = NumericalPageCursor::new();
+                let pace = &mut self.state.pace;
+                pace.checkpoint_cost = std::mem::take(&mut pace.checkpoint_spent);
+                pace.checkpoint_mark = pace.work;
                 return Ok(self.desk.lend_checkpoint(payload, self.state.iteration as u64));
             }
 
@@ -64,12 +72,16 @@ impl SubspaceIterationJob {
             }
             return Ok(NumericalRun::Yield);
         }
-        if self.state.preview_due {
+        if self.state.preview_due && (self.state.pace.preview_affordable() || self.preview_writer.is_some()) {
+            self.branch = 2;
             context.set_stage("fem.subspace.preview-entry");
             if self.preview_writer.as_ref().is_some_and(|writer| writer.staged_page_len().is_none()) && self.state.publication_stage == 4 {
                 if !numerical_finish_writer(&mut self.preview_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
                 self.state.preview_due = false;
                 let payload = self.desk.lent.take().expect("finished numerical writer retained its original payload");
+                let pace = &mut self.state.pace;
+                pace.preview_cost = std::mem::take(&mut pace.preview_spent);
+                pace.preview_mark = pace.work;
                 return Ok(self.desk.lend_preview(payload));
             }
 
@@ -319,7 +331,7 @@ impl NumericalStep for SubspaceIterationJob {
         }
         let run = match self.desk.take_pending() {
             Some(run) => run,
-            None => self.run(cx)?,
+            None => run_turn(cx, |cx| self.run(cx))?,
         };
         Ok(self.desk.admit(cx, run)?)
     }

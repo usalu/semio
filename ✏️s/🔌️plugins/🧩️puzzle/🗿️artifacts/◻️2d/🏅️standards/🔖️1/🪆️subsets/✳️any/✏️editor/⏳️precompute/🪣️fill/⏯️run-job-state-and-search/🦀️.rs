@@ -6,6 +6,7 @@ use super::*;
 /// 🔎️ How one engine search batch settled, short of a plain yield.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum FillSearch {
+    Pending,
     Cancelled,
     Checkpoint,
     Fault,
@@ -64,6 +65,7 @@ pub struct Puzzle2dFillRunJob {
     pub(super) capture: Option<FillCapture>,
     pub(super) search: Option<BoardFillJob>,
     pub(super) construction: semio_framework_job::OriginalConstructionAdmission,
+    pub(super) search_admitted: bool,
     pub(super) closing_search: Option<BoardFillJob>,
     pub(super) pending_snapshot: Option<BoardFillSnapshot>,
     pub(super) pending_search_serial: u64,
@@ -80,7 +82,7 @@ pub struct Puzzle2dFillRunJob {
     pub(super) finished: bool,
     settled: bool,
     pub(super) owed: Option<FillRunOwed>,
-    progress_sequence: u64,
+    pub(super) progress_sequence: u64,
     pub(super) closing: bool,
     /// 🎯️ Normalized `[min_x, min_y, max_x, max_y]` of every VISIBLE target region the run's base
     /// document declared, read once at construction. Empty means unconstrained — the same rule
@@ -114,6 +116,7 @@ impl Puzzle2dFillRunJob {
             capture: Some(FillCapture::new(suggestion_offset)),
             search: None,
             construction: Default::default(),
+            search_admitted: false,
             closing_search: None,
             pending_snapshot: None,
             pending_search_serial: 0,
@@ -177,14 +180,8 @@ impl Puzzle2dFillRunJob {
         ToolRunTraceSubject::Placement2d { shape: event.kind_index as u32, position: [event.position[0] as f32, event.position[1] as f32], rotation: 0.0 }
     }
 
-    /// ⏯️ Records ONE candidate's verdict. It deliberately spends no fuel: this run declares its unit as
-    /// `placements` (`🗣️terminology` `fill_unit`) and reports `completed = placements.len()`, so a unit of
-    /// fuel has to BE a placement or the tool-run panel's `Step` lies. It used to charge a unit per
-    /// decided candidate, and on a crowded board almost every candidate is a `host-collision` rejection —
-    /// so `Step` burned its single unit of fuel (`⏯️tool-run` grants exactly 1 while `Paused`) on a
-    /// rejection and the census never moved: measured 2026-09-17 as `atPause=29 after=29 waitedMs=30131`.
-    /// The tick is still bounded without this charge, by `deadline_exceeded()` and by the trace writer's
-    /// `FILL_RUN_TICK_FLUSH_BYTES` — a rejection costs bytes, and the loop yields on them.
+    /// ⏯️ Records a candidate verdict. A successful placement advances the tool's reported unit and
+    /// produces its checkpoint. The original work grant, deadline and trace page size bound search turns.
     fn decide(&mut self, context: &mut StepContext<'_>, live: FillRunLive, reason: FillRunReason) {
         let _ = context;
         if !self.replaying() {
@@ -366,25 +363,23 @@ impl Puzzle2dFillRunJob {
     }
 
     /// 🔎️ Engine transitions until a candidate event, a non-preview outcome, a stall or the wall deadline.
-    pub(super) fn search_batch(search: &mut BoardFillJob, context: &mut StepContext<'_>, claim: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> Result<(Option<FillSearch>, Option<BoardFillCandidateEvent>), semio_framework_job::OriginalTurnFailure> {
-        for _ in 0..FILL_RUN_SEARCH_BATCH {
+    pub(super) fn search_batch(search: &mut BoardFillJob, context: &mut StepContext<'_>, remaining: &mut usize) -> Result<(Option<FillSearch>, Option<BoardFillCandidateEvent>), semio_framework_job::OriginalTurnFailure> {
+        use crate::editor::puzzle2d::engine::BoardFillTransition;
+        while *remaining > 0 {
+            *remaining -= 1;
             if search.stage() == BoardFillStage::Complete || context.should_yield() { return Ok((None, None)); }
-            let outcome = match InteractiveJob::step(search, context, claim) {
-                semio_framework_job::InteractiveJobStep::Outcome(outcome) => outcome,
-                semio_framework_job::InteractiveJobStep::Continuation(failure) => return Err(failure),
+            let settled = match search.advance_search(context)? {
+                BoardFillTransition::Advanced => None,
+                BoardFillTransition::Yield => Some(FillSearch::Pending),
+                BoardFillTransition::Cancelled => Some(FillSearch::Cancelled),
+                BoardFillTransition::Checkpoint(_) => Some(FillSearch::Checkpoint),
+                BoardFillTransition::Fault => Some(FillSearch::Fault),
+                BoardFillTransition::Complete => Some(FillSearch::Complete),
             };
-            let settled = match outcome {
-                None | Some(JobOutcomeBorrow::Yield { .. } | JobOutcomeBorrow::PreviewReady { .. }) => None,
-                Some(JobOutcomeBorrow::Cancelled { .. }) => Some(FillSearch::Cancelled),
-                Some(JobOutcomeBorrow::CheckpointReady { .. }) => Some(FillSearch::Checkpoint),
-                Some(JobOutcomeBorrow::Fault { .. }) => Some(FillSearch::Fault),
-                Some(JobOutcomeBorrow::Complete { .. }) => Some(FillSearch::Complete),
-            };
-            let _ = search.take_preview();
             let event = search.take_candidate_event();
             match settled { None if event.is_some() => return Ok((None, event)), None => {}, settled => return Ok((settled, event)) }
         }
-        Ok((None, None))
+        Ok((Some(FillSearch::Pending), None))
     }
 }
 //#endregion ⏯️RunJob

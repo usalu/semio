@@ -12,8 +12,10 @@ import { pluginStagedGuestSource } from "../../../🎚️staged-guest/🟦️.ts
 import { originalOperationWorkerSource } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts";
 import { PLUGIN_HOST_SHIM_FILE } from "../../🧾️contract/🟦️.ts";
 import { pluginComponentBridgeSource } from "../../🌉️component-bridge-source/🟦️.ts";
+import { hostShimSource } from "../../🪢️host-shim-source/🟦️.ts";
 import { browserActorModuleSource } from "../../../🧩️actor-module/🟦️.ts";
 import { guestFactorySource, hostFactorySource, noCoreModule } from "../../../../🧪️tests/✂️worker-vm-source/🟦️.ts";
+import { evaluateGeneratedSourceV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 
 type Member = { readonly name: string; readonly optional: boolean; readonly type: string };
 type Oracle = { readonly records: Map<string, Member[]>; readonly functions: Map<string, string[]>; readonly files: Map<string, string> };
@@ -25,7 +27,7 @@ async function witOracle(): Promise<Oracle> {
   const files = new Map<string, string>(Object.entries(generated).map(([name, bytes]) => [name, new TextDecoder().decode(bytes)]));
   const records = new Map<string, Member[]>();
   const functions = new Map<string, string[]>();
-  for (const name of ["reactor", "jobs", "checkpoint", "describe", "codec"]) {
+  for (const name of ["reactor", "jobs", "checkpoint", "describe", "codec", "pure"]) {
     const source = ts.createSourceFile(name + ".d.ts", files.get(`interfaces/semio-framework-${name}.d.ts`)!, ts.ScriptTarget.Latest, true);
     for (const node of source.statements) {
       if (ts.isInterfaceDeclaration(node)) records.set(node.name.text, node.members.filter(ts.isPropertySignature).map((member) => ({ name: member.name.getText(source), optional: member.questionToken !== undefined, type: member.type!.getText(source) })));
@@ -97,6 +99,7 @@ export const jobs = {
   readJobOutput: async (job) => { const budget = stagedJob; record("jobs", "readJobOutput", [job]); return call(budget.input, { sourceClosed: false, chunk: { tag: "some", val: { offset: 0n, bytes: { tag: "some", val: new Uint8Array([1, 2, 3]) }, outputClosed: true } } }); },
   acknowledgeJobOutput: async (job) => { const budget = stagedJob; record("jobs", "acknowledgeJobOutput", [job]); return call(budget.input, { acknowledged: true, sourceClosed: false }); },
   cancelJob: async (job) => { const budget = stagedJob; record("jobs", "cancelJob", [job]); return call(budget.input, { admitted: true }); },
+  closeJobs: async () => { const budget = stagedJob; record("jobs", "closeJobs", []); return call(budget.input, { admitted: true }); },
   takeSegmentedDownloadChunk: async () => ({ tag: "none" }),
 };
 export const checkpoint = {
@@ -114,6 +117,16 @@ const budgetOf = (calls: readonly (readonly [string, string, readonly unknown[]]
 const SHAPE = { maxEffects: 1, maxPatchBytes: 2, maxFrames: 3 };
 const u = (value: number) => packUInt(BigInt(value));
 const decodedWire = (call: readonly [string, string, readonly unknown[]]): PackValue => decodePackValue(call[2][0] as Uint8Array);
+
+test("the component host links the optional owned execution clock without lending it browser wall time", async () => {
+  const oracle = await witOracle();
+  expect(oracle.functions.get("pure.actorExecutionClockUs")).toEqual(["bigint"]);
+  const create = evaluateGeneratedSourceV1(hostShimSource().replace("export function createActorHost", "function createActorHost"), "createActorHost");
+  const host = create("actor-clock-test", 1n);
+  host.__bindOriginalClock(() => 1_234n);
+  expect(host.operationClockUs()).toBe(1_234n);
+  expect(host.actorExecutionClockUs(1n)).toBeUndefined();
+});
 
 test("the generated component bridge calls the reactor and jobs exports with exactly the WIT parameters", async () => {
   const oracle = await witOracle();
@@ -136,13 +149,13 @@ test("the generated component bridge calls the reactor and jobs exports with exa
     await api.describe!();
     await api.codec!({ operation: "pack-schema-hash", artifactKind: "cad" });
     await api.closeOriginal!();
-    expect(calls.map(([owner, name]) => `${owner}.${name}`)).toEqual(sequence(["reactor.admitActorContext", "reactor.admitActorInput", "reactor.poll", "reactor.admitActorInput", "jobs.startJob", "jobs.stepJob", "jobs.readJobOutput", "jobs.acknowledgeJobOutput", "jobs.cancelJob", "checkpoint.checkpoint", "reactor.admitActorInput", "checkpoint.restore", "describe.describe", "reactor.admitActorInput", "codec.packSchemaHash", "reactor.closeActorContext"]));
+    expect(calls.map(([owner, name]) => `${owner}.${name}`)).toEqual(sequence(["reactor.admitActorContext", "reactor.admitActorInput", "reactor.poll", "reactor.admitActorInput", "jobs.startJob", "jobs.stepJob", "jobs.readJobOutput", "jobs.acknowledgeJobOutput", "jobs.cancelJob", "checkpoint.checkpoint", "reactor.admitActorInput", "checkpoint.restore", "describe.describe", "reactor.admitActorInput", "codec.packSchemaHash", "jobs.closeJobs", "reactor.closeActorContext"]));
     for (const call of calls) conformsCall(oracle, call);
     for (const { index } of consumed(calls)) expect(calls[index - 1]![1]).toStartWith("stage");
     const poll = budgetOf(calls, calls.findIndex(([, name]) => name === "poll"));
     expect(poll.input.work).toEqual({ clockBinding: 3n, absoluteDeadlineUs: 60_000_005n, fuel: 1000n });
     expect(poll.retainedPolicy).toEqual(poll.input.grant);
-    expect(poll.fuel).toBe(1000n);
+    expect(poll.fuel).toBe(968n);
     expect(poll.cancelled).toBe(false);
     const wires = calls.filter(([, name]) => name === "admitActorInput").map(decodedWire);
     expect(wires).toEqual([
@@ -165,7 +178,7 @@ test("the document browser actor driver issues its own turns and job crossings w
   try {
     writeFileSync(join(directory, "guest.mjs"), guestSource(APP_CHANNEL_VERSION));
     const guest = await import(pathToFileURL(join(directory, "guest.mjs")).href);
-    const { OriginalSelfIssuedTurns, pluginStagedGuest } = new Function(originalOperationWorkerSource() + pluginStagedGuestSource() + ";return {OriginalSelfIssuedTurns, pluginStagedGuest}")() as { pluginStagedGuest: (guest: unknown) => unknown; OriginalSelfIssuedTurns: new (guest: unknown, clock: () => bigint) => { poll(events: unknown[], shape: unknown): Promise<unknown>; startJob(...args: unknown[]): Promise<unknown>; stepJob(...args: unknown[]): Promise<unknown>; cancelJob(...args: unknown[]): Promise<unknown> } };
+    const { OriginalSelfIssuedTurns, pluginStagedGuest } = evaluateGeneratedSourceV1(originalOperationWorkerSource() + pluginStagedGuestSource(), "{OriginalSelfIssuedTurns, pluginStagedGuest}") as { pluginStagedGuest: (guest: unknown) => unknown; OriginalSelfIssuedTurns: new (guest: unknown, clock: () => bigint) => { poll(events: unknown[], shape: unknown): Promise<unknown>; startJob(...args: unknown[]): Promise<unknown>; stepJob(...args: unknown[]): Promise<unknown>; cancelJob(...args: unknown[]): Promise<unknown> } };
     let now = 10n;
     const turns = new OriginalSelfIssuedTurns(pluginStagedGuest(guest), () => now++);
     await turns.poll([], SHAPE);

@@ -1,6 +1,6 @@
 //! ⏱️ The strict lifecycle authority must price the guest's own work, never the browser's or the
 //! operating system's descheduling of a suspended turn.
-use semio_plugin_reactor_turn::{guest_turn_executing_us, with_turn_execution};
+use semio_plugin_reactor_turn::{guest_turn_executing_us, with_turn_execution,with_turn_execution_clock};
 use std::future::Future as _;
 
 #[doc(hidden)]
@@ -10,6 +10,55 @@ pub fn law() -> serde_json::Value {
 
 fn drive_with_suspension(suspension_us: u64) -> (u64, u64) {
     drive_with_suspension_executing(suspension_us, 0)
+}
+
+#[test]
+fn owned_lifecycle_clock_decides_only_from_active_execution_intervals() {
+    use std::{cell::Cell,future::poll_fn,task::{Context,Poll,Waker}};
+    thread_local! { static ACTIVE:Cell<u64>=const{Cell::new(0)}; }
+    fn clock()->Option<u64>{Some(ACTIVE.get())}
+    let law:serde_json::Value=serde_json::from_str(include_str!("actor-clock.json")).unwrap();
+    assert_eq!(law["strictCeilingUs"].as_u64(),Some(semio_framework_trace::GUEST_LIFECYCLE_TURN_CEILING_US));
+    for probe in law["cases"].as_array().unwrap(){
+        ACTIVE.set(0);
+        let [first,second]=serde_json::from_value::<[u64;2]>(probe["activeUs"].clone()).unwrap();
+        let host_gap=probe["parkedUs"].as_u64().unwrap();
+        let mut wall=0;
+        let mut phase=false;
+        let mut turn=std::pin::pin!(poll_fn(|_|{
+            let active=if phase{second}else{first};
+            wall+=active;
+            ACTIVE.set(ACTIVE.get()+active);
+            if phase {return Poll::Ready((guest_turn_executing_us().unwrap(),wall))}
+            wall+=host_gap;
+            phase=true;
+            Poll::Pending
+        }));
+        let mut measured=std::pin::pin!(with_turn_execution_clock(turn.as_mut(),clock));
+        let mut cx=Context::from_waker(Waker::noop());
+        assert!(measured.as_mut().poll(&mut cx).is_pending());
+        let Poll::Ready((active,observed_wall))=measured.as_mut().poll(&mut cx)else{panic!("actor must finish")};
+        assert_eq!(Some(active),probe["expectedActiveUs"].as_u64(),"{probe}");
+        assert_eq!(observed_wall,active+host_gap);
+        assert_eq!(Some(semio_framework_trace::guest_lifecycle_turn_contract_violated(active)),probe["refused"].as_bool());
+    }
+}
+
+#[test]
+fn owned_lifecycle_clock_refuses_wall_time_spent_executing_the_actor() {
+    let limit=semio_framework_trace::GUEST_LIFECYCLE_TURN_CEILING_US;
+    let clock=semio_framework_job::default_now_us;
+    let mut turn=std::pin::pin!(std::future::poll_fn(|_|{
+        let started=std::time::Instant::now();
+        let work_duration=std::time::Duration::from_micros(limit+10_000);
+        while started.elapsed()<work_duration {std::hint::spin_loop()}
+        std::task::Poll::Ready(guest_turn_executing_us().expect("active executor clock"))
+    }));
+    let mut measured=std::pin::pin!(with_turn_execution_clock(turn.as_mut(),clock));
+    let mut cx=std::task::Context::from_waker(std::task::Waker::noop());
+    let std::task::Poll::Ready(active)=measured.as_mut().poll(&mut cx)else{panic!("active actor must finish")};
+    assert!(active>limit);
+    assert!(semio_framework_trace::guest_lifecycle_turn_contract_violated(active));
 }
 
 /// 🔥️ The same harness with a turn that really executes: after the suspension it spins until its own

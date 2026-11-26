@@ -88,7 +88,7 @@ test("real processes: a declared small machine, both farms start real children t
   const children=sizes.map(megabytes=>spawn(process.execPath,["-e",`const n=${ballast(megabytes)}*1048576,b=Buffer.allocUnsafe(n);const r=new Uint8Array(65536);crypto.getRandomValues(r);for(let o=0;o<n;o+=65536)b.set(r.subarray(0,Math.min(65536,n-o)),o);process.stdout.write("ready\\n");setInterval(()=>{b[0]=1},100);`],{stdio:["ignore","pipe","ignore"]}));
   await Promise.all(children.map(child=>new Promise<void>(done=>{child.stdout!.once("data",()=>done());child.once("exit",()=>done());setTimeout(done,60000);})));
   let peak=0;
-  for(let sample=0;sample<3;sample++){peak=Math.max(peak,await observeHostTreeMegabytesV1(process.pid));await new Promise(done=>setTimeout(done,300));}
+  for(let sample=0;sample<3;sample++){peak=Math.max(peak,(await observeHostTreeMegabytesV1(process.pid))??0);await new Promise(done=>setTimeout(done,300));}
   for(const child of children)child.kill("SIGKILL");
   return peak;
  };

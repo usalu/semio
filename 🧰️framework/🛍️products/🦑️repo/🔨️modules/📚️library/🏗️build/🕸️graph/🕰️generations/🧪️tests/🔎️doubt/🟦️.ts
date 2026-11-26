@@ -2,9 +2,9 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import packedStampFixture from "./🪶️packed-stamps.json";
-import {createFactIndexV1,createFrontierV1,createGenerationStoreV1} from "../../🟨️.mjs";
+import {createFactIndexV1,createFrontierV1,createGenerationStoreV1,type GenerationRowV1} from "../../🟨️.mjs";
 import {createMemoryFilePort,IDENTITY,IMPLEMENTATION} from "../🏃️world/🟦️.ts";
-import {encodeFactIndexV1,openFactIndexV1} from "../../🧮️fact-codec/🟨️.mjs";
+import {encodeFactIndexV1,openFactIndexV1,type FactCodecOpenIndexV1} from "../../🧮️fact-codec/🟨️.mjs";
 import {mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join,relative} from "node:path";
@@ -131,7 +131,7 @@ test("settling forgets exactly the directories the full row walk forgot, over ra
 
 /** 🪶️ Checks that the real binary view decodes only rows that can affect directory stamps. */
 test("directory stamp passes skip packed content-only rows without losing structural dependencies",async()=>{
- const root=join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"packed-rows"),at=(scope:string,name?:string)=>name?join(root,scope,name):join(root,scope),rows=[];
+ const root=join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"packed-rows"),at=(scope:string,name?:string)=>name?join(root,scope,name):join(root,scope),rows:GenerationRowV1[]=[];
  for(let id=0;id<packedStampFixture.files;id++)rows.push({kind:"file",path:at("contents","f"+id),fact:{size:id,mtimeMs:7,ctimeMs:8,ino:id,sha256:"0".repeat(64)}});
  for(let id=0;id<packedStampFixture.digests;id++)rows.push({kind:"digest",path:at("contents","d"+id),fact:{size:id,mtimeMs:7,sha256:"a".repeat(64)}});
  for(const kind of packedStampFixture.contentOnly.kinds)for(let id=0;id<packedStampFixture.contentOnly.rowsPerKind;id++)rows.push({kind,path:at("contents",kind+id),fact:{nestedObservations:[{kind:"readdir",path:at("irrelevant"),fact:[]}],ordinal:id}});
@@ -159,7 +159,7 @@ test("directory stamp passes skip packed content-only rows without losing struct
   expect(settled.rowsRead()).toBe(packedStampFixture.settledReads);
 
   let coldReads:number|undefined;
-  const store=createGenerationStoreV1({root:join(root,"store"),fs:createMemoryFilePort().port,holds:async()=>true,resources:{facts:"fixture"},durableAnswers:false,doubt:{...doubt,async published(input){
+  const store=createGenerationStoreV1({root:join(root,"store"),fs:createMemoryFilePort().port,holds:async()=>true,resources:{facts:"fixture"},doubt:{...doubt,async published(input:Parameters<typeof doubt.published>[0]&{index:FactCodecOpenIndexV1}){
    const before=input.index.rowsRead();
    const saved=await doubt.published(input);
    coldReads=input.index.rowsRead()-before;

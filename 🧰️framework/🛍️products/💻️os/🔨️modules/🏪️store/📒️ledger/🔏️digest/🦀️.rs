@@ -12,6 +12,8 @@ use semio_framework_hash::Sha256;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 
 pub struct NativeEditDigest{record:ArtifactCanonicalRecordDigest,chains:[[u8;32];3],lane:usize,row:usize,phase:u8,offset:usize,hash:Sha256,result:Option<[u8;32]>}
+/// 🎟️ The most framed digest bytes one edit digest unit hashes inside its 64-byte demand.
+const NATIVE_EDIT_DIGEST_UNIT_BYTES:usize=64;
 impl Default for NativeEditDigest{fn default()->Self{Self{record:Default::default(),chains:[[0;32];3],lane:0,row:0,phase:0,offset:0,hash:Sha256::new(),result:None}}}
 pub(crate) fn framed_byte(domain:&[u8],parts:&[&[u8]],mut at:usize)->Option<u8>{
  for bytes in [b"semio.artifact.cursor.v2".as_slice(),&(domain.len()as u64).to_be_bytes(),domain]{if at<bytes.len(){return Some(bytes[at])}at-=bytes.len()}
@@ -33,12 +35,15 @@ impl NativeEditDigest{
   }
   let demand=RetirementDemand{copy_bytes:64,depth:1,..Default::default()};if !permits(grant,demand){return Ok(Default::default())}work=1;
   let actor=[u8::from(edit.actor.is_some())];let finished=[u8::from(edit.finished_at.is_some())];let forwards=(edit.forwards.len()as u64).to_be_bytes();let inverse=(inverse.len()as u64).to_be_bytes();let meta=(edit.mutation_meta.len()as u64).to_be_bytes();let line=[u8::from(edit.line.is_some())];
+  for _ in 0..NATIVE_EDIT_DIGEST_UNIT_BYTES{
   let current=self.chains[0];let byte=match self.phase{
    1=>framed_byte(b"edit-chained",&[edit.id.as_bytes(),&actor,edit.actor.as_deref().unwrap_or_default().as_bytes(),edit.started_at.as_bytes(),&finished,edit.finished_at.as_deref().unwrap_or_default().as_bytes(),&forwards,&self.chains[0],&inverse,&self.chains[1],&meta,&self.chains[2]],self.offset),
    2=>framed_byte(b"edit-verb",&[&current,edit.verb.as_deref().unwrap_or_default().as_bytes()],self.offset),
    _=>framed_byte(b"edit-line",&[&current,&line,edit.line.as_deref().unwrap_or_default().as_bytes()],self.offset),
   };
   if let Some(byte)=byte{self.hash.update(&[byte]);self.offset+=1}else{self.chains[0]=self.hash.clone().finalize();self.hash=Sha256::new();self.offset=0;self.phase=match self.phase{1 if edit.verb.is_some()=>2,1|2=>3,_=>4};if self.phase==4{self.result=Some(self.chains[0])}}
+   if self.phase==4||self.offset==0{break}
+  }
   Ok(RetainedCloneProgress{copied_items:1,copied_bytes:64,..Default::default()})
   })();semio_framework_value::RetainedWorkOutcome{result,work}
  }

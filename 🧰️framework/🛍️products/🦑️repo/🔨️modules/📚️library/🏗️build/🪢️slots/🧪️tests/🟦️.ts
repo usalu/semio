@@ -27,7 +27,7 @@ test.skipIf(!python)("classification equals an independent Python model on 400 s
  requests.forEach((request,index)=>{
   const ours=classifySlotsV1(request.rows,{now:request.now,graceMilliseconds:request.grace}),expected=model[index]!;
   expect(ours.size,`round ${index}`).toBe(Object.keys(expected).length);
-  for(const[key,[state,superseded,reclaim]]of Object.entries(expected)){const verdict=ours.get(key)!;states.add(state);expect(verdict,`round ${index} ${key}`).toEqual({state,supersededAt:superseded,reclaimableAt:reclaim});}
+  for(const[key,[state,superseded,reclaim]]of Object.entries(expected)){const verdict=ours.get(key)!;states.add(state);expect<unknown>(verdict,`round ${index} ${key}`).toEqual({state,supersededAt:superseded,reclaimableAt:reclaim});}
   const bySlot=new Map<string,number>();for(const row of request.rows)if(row.slot!==null&&ours.get(row.key)!.state==="current")bySlot.set(row.slot,(bySlot.get(row.slot)??0)+1);
   for(const row of request.rows)if(row.slot!==null)expect(bySlot.get(row.slot),"exactly one current key per slot").toBe(1);
  });

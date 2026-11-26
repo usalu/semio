@@ -1,6 +1,6 @@
 //! ↩️ Optional text inverses clone only original paged identifiers and prior values.
-use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::{controlled_step, cursor_advance, cursor_retire, cursor_taken, edit_progress, edit_step, list_reserve, pay, settled_step};
-use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetirementPollExit};
+use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::{controlled_step, cursor_advance, cursor_retire, cursor_retire_demand, cursor_taken, edit_progress, edit_step, list_reserve, pay, settled_step};
+use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetirementDemand, RetirementPollExit};
 use crate::standards::v1::subsets::any::schema::mutations::{ChangeNodeIcon,EditTargetRegionLabel,Puzzle2dMutation};
 use crate::standards::v1::subsets::any::schema::preparation::text_preparation::{Puzzle2dTextIntent,Puzzle2dTextPlan,Puzzle2dTextPreparationCursor,Puzzle2dTextPreparationStep};
 use crate::Puzzle2dSnapshot;
@@ -30,6 +30,23 @@ impl<T:Puzzle2dTextInverse>Deref for Puzzle2dTextInverseCursor<T>{type Target=Pu
 impl<T:Puzzle2dTextInverse>DerefMut for Puzzle2dTextInverseCursor<T>{fn deref_mut(&mut self)->&mut Self::Target{&mut self.state}}
 impl<T:Puzzle2dTextInverse>Default for Puzzle2dTextInverseCursor<T>{fn default()->Self{Self{state:ManuallyDrop::new(Puzzle2dTextInverseState{source:None,mutation:None,preparation:Default::default(),plan:None,identifier:Text::retained_clone_cursor(),previous:Option::<Text>::retained_clone_cursor(),pending:None,inverse:Default::default(),pending_close:None,inverse_close:None,phase:0,closing:false})}}}
 impl<T:Puzzle2dTextInverse>Puzzle2dTextInverseCursor<T>{
+ #[cfg(feature="testkit")]
+ #[doc(hidden)]
+ pub fn advance_diagnostic(&self,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,body:usize)->(u8,Option<semio_framework_value::RetirementDemand>){
+  let index=self.plan.and_then(|plan|plan.index);
+  let demand=match self.phase{
+   1=>index.and_then(|index|self.identifier.advance_demands(source.project(11,|snapshot|T::retained_id(snapshot,index)),body,u64::MAX).ok()),
+   2=>index.and_then(|index|self.previous.advance_demands(source.project(12,|snapshot|T::previous(snapshot,index)),body,u64::MAX).ok()),
+   5 if !self.inverse.has_reserved_slot()=>(||Some(semio_framework_value::RetirementDemand{
+    copy_bytes:self.inverse.next_reserve_copy_byte_demand().ok()?,
+    capacity_bytes:self.inverse.next_allocation_bytes().ok()?,
+    depth:self.inverse.next_reserve_depth_demand().ok()?,
+    ..Default::default()
+   }))(),
+   _=>None,
+  };
+  (self.phase,demand)
+ }
  pub fn advance(&mut self,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,mutation:RetainedCloneRef<'_,T>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
         let grant=effect.grant();
   if self.closing||self.phase==9{return Err(refusal("optional text inverse is closing or spent"))}
@@ -49,50 +66,28 @@ impl<T:Puzzle2dTextInverse>Puzzle2dTextInverseCursor<T>{
  }
  pub fn take(&mut self)->Option<Inverse>{if self.closing||self.phase!=8{return None}self.phase=9;Some(std::mem::take(&mut self.inverse))}
  pub fn begin_close(&mut self){self.closing=true;self.preparation.begin_close();}
- pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{
-  if !self.preparation.terminal_is_empty(){return self.preparation.next_close_copy_byte_demand()}
-  if !self.identifier.terminal_is_empty(){return self.identifier.next_close_copy_byte_demand()}
-  if !self.previous.terminal_is_empty(){return self.previous.next_close_copy_byte_demand()}
-  if let Some(owner)=self.pending_close.as_ref(){return owner.next_copy_byte_demand()}
-  if self.pending.is_some(){return Ok(size_of::<Puzzle2dMutation>())}
-  if let Some(owner)=self.inverse_close.as_ref(){return owner.next_copy_byte_demand()}
-  if !self.inverse.terminal_is_empty(){return Ok(size_of::<Inverse>())}
-  if self.plan.is_some(){return Ok(size_of::<Option<Puzzle2dTextPlan>>())}
-  RetainedCloneBinding::copy_demand(if self.source.is_some(){&self.source}else{&self.mutation})
+ fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+  if !self.preparation.terminal_is_empty(){
+   return Ok(RetirementDemand{
+    copy_bytes:self.preparation.next_close_copy_byte_demand()?,
+    capacity_bytes:self.preparation.next_close_capacity_byte_demand(body)?,
+    release_bytes:self.preparation.next_close_release_byte_demand()?,
+    depth:self.preparation.next_close_depth_demand()?,
+   });
+  }
+  if !self.identifier.terminal_is_empty(){return cursor_retire_demand(&self.identifier,body)}
+  if !self.previous.terminal_is_empty(){return cursor_retire_demand(&self.previous,body)}
+  if let Some(owner)=self.pending_close.as_ref(){return owner.selected_demand(body)}
+  if self.pending.is_some(){return Ok(copied::<Puzzle2dMutation>())}
+  if let Some(owner)=self.inverse_close.as_ref(){return owner.selected_demand(body)}
+  if !self.inverse.terminal_is_empty(){return Ok(copied::<Inverse>())}
+  if self.plan.is_some(){return Ok(copied::<Option<Puzzle2dTextPlan>>())}
+  RetainedCloneBinding::close_demand(if self.source.is_some(){&self.source}else{&self.mutation},body)
  }
- pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{
-  if !self.preparation.terminal_is_empty(){return self.preparation.next_close_capacity_byte_demand(body)}
-  if !self.identifier.terminal_is_empty(){return self.identifier.next_close_capacity_byte_demand(body)}
-  if !self.previous.terminal_is_empty(){return self.previous.next_close_capacity_byte_demand(body)}
-  if let Some(owner)=self.pending_close.as_ref(){return owner.next_capacity_byte_demand(body)}
-  if self.pending.is_some(){return Ok(0)}
-  if let Some(owner)=self.inverse_close.as_ref(){return owner.next_capacity_byte_demand(body)}
-  if !self.inverse.terminal_is_empty(){return Ok(0)}
-  if self.plan.is_some(){return Ok(0)}
-  RetainedCloneBinding::capacity_demand(if self.source.is_some(){&self.source}else{&self.mutation},body)
- }
- pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{
-  if !self.preparation.terminal_is_empty(){return self.preparation.next_close_release_byte_demand()}
-  if !self.identifier.terminal_is_empty(){return self.identifier.next_close_release_byte_demand()}
-  if !self.previous.terminal_is_empty(){return self.previous.next_close_release_byte_demand()}
-  if let Some(owner)=self.pending_close.as_ref(){return owner.next_release_byte_demand()}
-  if self.pending.is_some(){return Ok(0)}
-  if let Some(owner)=self.inverse_close.as_ref(){return owner.next_release_byte_demand()}
-  if !self.inverse.terminal_is_empty(){return Ok(0)}
-  if self.plan.is_some(){return Ok(0)}
-  RetainedCloneBinding::release_demand(if self.source.is_some(){&self.source}else{&self.mutation})
- }
- pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{
-  if !self.preparation.terminal_is_empty(){return self.preparation.next_close_depth_demand()}
-  if !self.identifier.terminal_is_empty(){return self.identifier.next_close_depth_demand()}
-  if !self.previous.terminal_is_empty(){return self.previous.next_close_depth_demand()}
-  if let Some(owner)=self.pending_close.as_ref(){return owner.next_depth_demand()}
-  if self.pending.is_some(){return Ok(1)}
-  if let Some(owner)=self.inverse_close.as_ref(){return owner.next_depth_demand()}
-  if !self.inverse.terminal_is_empty(){return Ok(1)}
-  if self.plan.is_some(){return Ok(1)}
-  RetainedCloneBinding::depth_demand(if self.source.is_some(){&self.source}else{&self.mutation})
- }
+ pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+ pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
+ pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
+ pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
  pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let result=self.close_stepped(effect);RetirementPollExit::settle(effect,result)}
     fn close_stepped(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
         let grant=effect.grant();
@@ -110,6 +105,7 @@ impl<T:Puzzle2dTextInverse>Puzzle2dTextInverseCursor<T>{
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.preparation.terminal_is_empty()&&self.identifier.terminal_is_empty()&&self.previous.terminal_is_empty()&&self.pending.is_none()&&self.inverse.terminal_is_empty()&&self.pending_close.is_none()&&self.inverse_close.is_none()&&self.plan.is_none()&&self.source.is_none()&&self.mutation.is_none()}
 }
 impl<T:Puzzle2dTextInverse>Drop for Puzzle2dTextInverseCursor<T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"optional text inverse abandoned before controlled closure");if empty{unsafe{ManuallyDrop::drop(&mut self.state)}}}}
+fn copied<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
 fn refusal(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvariantViolated,message)}
 pub fn payload(bytes:usize)->RetainedCloneStep{RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:0,released_bytes:0})}
 

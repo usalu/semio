@@ -24,6 +24,10 @@ name = "editor_app_2"
 path = "../../🧪️tests/🔬️app-2/🦀️.rs"
 
 [[test]]
+name = "editor_live_cleanup"
+path = "../../🧪️tests/🔁️live-cleanup/🦀️.rs"
+
+[[test]]
 name = "statik_pane_smoke"
 path = "../../🧪️tests/🪧️pane-smoke-target/🦀️.rs"
 

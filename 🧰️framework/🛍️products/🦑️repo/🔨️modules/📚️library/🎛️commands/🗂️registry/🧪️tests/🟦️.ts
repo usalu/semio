@@ -47,7 +47,7 @@ test("the registry satisfies its schema for the independent validator and for ou
 test("the registry declares exactly the expected commands and the expected requirements", () => {
   expect(registry.commands.map((command) => command.id)).toEqual(fixture.expectedIds);
   for (const requires of ["none", "dependencies", "staged"] as const) expect(registry.commands.filter((command) => command.requires === requires).map((command) => command.id)).toEqual(fixture.expectedRequires[requires]);
-  expect(Object.fromEntries(registry.commands.filter((command) => command.routes !== undefined).map((command) => [command.id, command.routes!.map((route) => ({ segments: route.segments, requires: route.requires }))]))).toEqual(fixture.expectedRoutes);
+  expect<unknown>(Object.fromEntries(registry.commands.filter((command) => command.routes !== undefined).map((command) => [command.id, command.routes!.map((route) => ({ segments: route.segments, requires: route.requires }))]))).toEqual(fixture.expectedRoutes);
 });
 
 const reasonOf = (reason: RootCommandRouteV1["reason"] = { en: "x", de: "x" }) => reason;
@@ -165,13 +165,13 @@ for (const row of fixture.gate) {
     let clock = 0;
     const ports: DependencyProvisionPortsV1 = {
       ...dependencyProvisionPortsV1,
-      available: () => "available" in row ? row.available : true,
+      available: () => "available" in row && row.available !== undefined ? row.available : true,
       run: async (command, args, cwd, label, environment) => { calls.push({ command, args, cwd, label, environment }); clock += 2500; if ("fail" in row && row.fail) throw new Error("boom"); },
       write: (line) => { lines.push(line); },
       now: () => clock,
     };
     const environment = { PATH: "/bin", SEMIO_LANGUAGE: "en", SEMIO_SCRIPT_PROCESS_INVOCATION: "{}", ...("environment" in row ? row.environment : {}) };
-    const command = { ...registry.commands.find((candidate) => candidate.id === "verify")!, requires: row.requires, routes: ("routes" in row ? row.routes : []).map((route: { segments: string[]; requires: string }) => ({ ...route, reason: reasonOf() })) } as RootCommandV1;
+    const command = { ...registry.commands.find((candidate) => candidate.id === "verify")!, requires: row.requires, routes: (("routes" in row ? row.routes : undefined) ?? []).map((route: { segments: string[]; requires: string }) => ({ ...route, reason: reasonOf() })) } as RootCommandV1;
     const capabilities = JSON.parse(JSON.stringify(row.capabilities).replaceAll("@root", root.replaceAll("\\", "\\\\")));
     const gate = dependencyGateV1(root, registry, environment, ports);
     const attempt = run(capabilities, (invocation) => gate(command, row.segments, invocation));

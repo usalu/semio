@@ -92,6 +92,27 @@ mod puzzle5dscale_receiving_tests{
             assert!(source.is_some());
         }
     }
+
+    #[test]
+    fn bounded_scale_projection_preserves_committed_axes() {
+        use semio_framework_dsl_record::native_encoding::FieldProjectionView;
+        let before = include_str!("../../🧪️tests/🧫️fixtures/🧬️mutations/📐scale-target-volume/📏️per-axis-to-uniform/📸️snapshot/⬅️before/🔣️.json");
+        let after = include_str!("../../🧪️tests/🧫️fixtures/🧬️mutations/📐scale-target-volume/📏️per-axis-to-uniform/📸️snapshot/➡️after/🔣️.json");
+        for text in [before, after] {
+            let document: serde_json::Value = serde_json::from_str(text).unwrap();
+            let raw_scale = &document["targetVolumes"][0]["scale"];
+            let expected: Vec<_> = match raw_scale {
+                serde_json::Value::Array(axes) => axes.iter().map(|axis| axis.as_f64().unwrap()).collect(),
+                scale => vec![scale.as_f64().unwrap()],
+            };
+            let scale: Puzzle5dScale = serde_json::from_value(raw_scale.clone()).unwrap();
+            assert!(matches!(scale.projection_view(&[]).unwrap(), FieldProjectionView::List(len) if len == expected.len()));
+            for (index, value) in expected.iter().enumerate() {
+                assert!(matches!(scale.projection_view(&[index]).unwrap(), FieldProjectionView::Float(axis) if axis == *value));
+            }
+            assert!(scale.projection_view(&[expected.len()]).is_err());
+        }
+    }
 }
 
 
@@ -182,6 +203,15 @@ impl semio_framework_dsl_record::BorrowedDslField for Puzzle5dScale {
 }
 
 impl semio_framework_dsl_record::DslField for Puzzle5dScale {
+    fn projection_view(&self, path: &[usize]) -> Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>, semio_framework_value::ValueError> {
+        use semio_framework_dsl_record::native_encoding::{FieldProjectionView, projection_path_error};
+        let axes = match self { Self::Uniform(value) => std::slice::from_ref(value), Self::Vec3(axes) => axes.as_slice() };
+        match path.split_first() {
+            None => Ok(FieldProjectionView::List(axes.len())),
+            Some((ordinal, tail)) => semio_framework_dsl_record::DslField::projection_view(axes.get(*ordinal).ok_or_else(projection_path_error)?, tail),
+        }
+    }
+
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::List(Box::new(semio_framework_dsl_record::Shape::Float))
     }

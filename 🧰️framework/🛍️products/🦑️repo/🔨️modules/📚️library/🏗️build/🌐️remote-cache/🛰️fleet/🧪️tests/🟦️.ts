@@ -265,7 +265,7 @@ test("round trip: facts written by the publisher are read by the cache resolver,
  const stale={SEMIO_WORKSPACE_ROOT:root,SEMIO_REMOTE_CACHE_ENDPOINT:`http://${new URL(endpoint).hostname}:6090`};
  const resolved=resolveRemoteCacheV1(stale,{root})!;
  expect(resolved,"a leftover pointer on the same machine is superseded by the facts").toMatchObject({endpointFrom:"fleet-facts",tokenFrom:"fleet-identity"});expect(resolved.contract.endpoint).toBe(endpoint);
- const lines:string[]=[],context:RemoteCacheCommandContextV1={root,environment:{SEMIO_WORKSPACE_ROOT:root,...stale},signal:new AbortController().signal,progress:async()=>{},write:line=>lines.push(line),tools:async()=>[bazelRemoteCacheToolV1()]};
+ const lines:string[]=[],context:RemoteCacheCommandContextV1={root,environment:{...stale},signal:new AbortController().signal,progress:async()=>{},write:line=>lines.push(line),tools:async()=>[bazelRemoteCacheToolV1()]};
  const status=await remoteCacheStatusV1(["--lang","en"],context) as {remote:{authorised:boolean;entries:number|null;bytes:number|null;maximumBytes:number|null;hits:number|null;misses:number|null};server:{fleet:{transport:{inGroup:string}}}|null;serverFault:null;resolution:{tokenFrom:string};renderings:{bazel:{applied:string[]}}};
  expect(status.remote.authorised).toBe(true);expect(status.resolution.tokenFrom).toBe("fleet-identity");
  expect(statusValidator(status),JSON.stringify(statusValidator.errors)).toBe(true);

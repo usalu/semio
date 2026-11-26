@@ -33,6 +33,7 @@ const manifestOf=(tag:string,megabytes:number,createdMs:number):OwnerPoolManifes
  return{head:{...partial,id:ownerPoolIdV1(partial,units),createdMs},session:Buffer.from(JSON.stringify({tag,rss:megabytes})),units};
 };
 
+const wavesOf=(pointer:Awaited<ReturnType<typeof readOwnerPoolPointerV1>>)=>typeof pointer==="object"?pointer.waves:undefined;
 test("control: writing one wave id from two machines by the plain entry publisher is a divergence the cache refuses (head, session and cost sheet differ by machine)",async()=>{
  const {a,b,client,divergences}=await world(),first=manifestOf("a",100,Date.now()),second=manifestOf("b",900,Date.now()+5);
  expect(second.head.id).toBe(first.head.id);
@@ -49,7 +50,7 @@ test("one writer per wave: a second machine that publishes the same owners write
  const read=await readOwnerPoolV1(client(b),first.head.id);
  expect(read?.head.publisher).toBe("p:a");expect(read?.units.length).toBe(12);
  const pointer=await readOwnerPoolPointerV1(client(b),()=>now);
- expect(pointer?.waves.map(wave=>wave.id)).toEqual([first.head.id]);
+ expect(wavesOf(pointer)?.map(wave=>wave.id)).toEqual([first.head.id]);
 });
 
 test("two machines that publish the same owners at the same moment end with one manifest, both report success and the cache counts no divergence",async()=>{
@@ -57,7 +58,7 @@ test("two machines that publish the same owners at the same moment end with one 
  const both=await Promise.all([publishOwnerPoolV1({client:client(a),owner:"g1-m01:1",manifest:first,now:()=>now}),publishOwnerPoolV1({client:client(b),owner:"g1-m02:1",manifest:second,now:()=>now})]);
  expect(both).toEqual([true,true]);
  expect(await divergences()).toMatchObject({count:0});
- expect((await readOwnerPoolPointerV1(client(a),()=>now))?.waves.length).toBe(1);
+ expect(wavesOf(await readOwnerPoolPointerV1(client(a),()=>now))?.length).toBe(1);
 });
 
 test("a machine that renews its own wave writes it again (the manifest keeps its age) and a wave whose claim cannot be taken is published as before",async()=>{

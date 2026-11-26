@@ -23,14 +23,25 @@ use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
 use crate::standards::v1::subsets::any::schema::{empty_puzzle2d_snapshot,mutations::{delete_node,inverse_puzzle2d_mutation}};
 use semio_framework_test_fixtures::repo_text;
 
-fn grant(turn:usize)->RetainedCloneGrant {match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096,64), 1 => RetainedCloneGrant::one_payload_turn(4096,64), _ => RetainedCloneGrant::one_release_turn(4096,64) }}
+fn exact(demand:semio_framework_value::RetirementDemand)->RetainedCloneGrant{
+    assert!(demand.copy_bytes+demand.capacity_bytes+demand.release_bytes<=4096,"{demand:?}");
+    RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}
+}
+fn grant(cursor:&Puzzle2dDeleteNodeInverseCursor,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,turn:usize)->RetainedCloneGrant{
+    match turn%4{
+        0=>RetainedCloneGrant::one_capacity_turn(4096,64),
+        1=>RetainedCloneGrant::one_payload_turn(4096,64),
+        2=>RetainedCloneGrant::one_release_turn(4096,64),
+        _=>cursor.advance_test_demand(source,4096).unwrap().map_or_else(||RetainedCloneGrant::one_payload_turn(4096,64),exact),
+    }
+}
 fn observed(grant:RetainedCloneGrant,action:impl FnOnce()->Result<RetainedCloneStep,ValueError>)->RetainedCloneStep {
     let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(action);
     let step=result.unwrap();
     assert!(!heap.overflowed);assert!(step.progress().fits(grant));
-    assert!(step.progress().copied_bytes+step.progress().retained_capacity_bytes<=4096);
+    assert!(step.progress().copied_bytes+step.progress().retained_capacity_bytes+step.progress().released_bytes<=4096);
     assert!(heap.requested_bytes<=step.progress().retained_capacity_bytes,"delete inverse unadmitted allocation: {heap:?}, {step:?}");
-    assert!(heap.released_bytes<=step.progress().copied_bytes,"delete inverse unadmitted release: {heap:?}, {step:?}");
+    assert!(heap.released_bytes<=step.progress().released_bytes,"delete inverse unadmitted release: {heap:?}, {step:?}");
     step
 }
 fn close(cursor:&mut Puzzle2dDeleteNodeInverseCursor) {
@@ -44,9 +55,9 @@ fn retire(inverse:PagedList<Puzzle2dMutation,{usize::MAX}>) {
     let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ControlledRetirement::new(inverse));
     assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     let mut owner=match result{Ok(owner)=>owner,Err((error,_))=>panic!("{error:?}")};
-    for turn in 0..2_000_000 {
+    for _ in 0..2_000_000 {
         if owner.terminal_is_empty(){return;}
-        let permit=grant(turn);observed(permit,||test_source_custody::close_turn(permit, |effect| owner.step(4096, effect)));
+        let permit=exact(owner.selected_demand(4096).unwrap());observed(permit,||test_source_custody::close_turn(permit, |effect| owner.step(4096, effect)));
     }
     panic!("delete inverse output retained native ownership");
 }
@@ -75,7 +86,7 @@ fn history_edit_puzzle2d_owned_delete_inverse_preserves_exact_cascade_and_grante
         assert_eq!(observed(RetainedCloneGrant::default(),||test_source_custody::run(RetainedCloneGrant::default(), |effect| cursor.advance(source.borrow(&base),mutation.borrow(&payload), 4096, effect))).progress(),Default::default());
         let mut complete=false;
         for turn in 0..2_000_000 {
-            let permit=grant(turn);
+            let permit=grant(&cursor,source.borrow(&base),turn);
             if matches!(observed(permit,||test_source_custody::run(permit, |effect| cursor.advance(source.borrow(&base),mutation.borrow(&payload), 4096, effect))),RetainedCloneStep::Complete(_)){complete=true;break;}
         }
         assert!(complete,"deletion inverse did not finish {}",case["id"]);
@@ -90,11 +101,25 @@ fn history_edit_puzzle2d_owned_delete_inverse_preserves_exact_cascade_and_grante
         retire(inverse);
         for pause in [0,1,3,11,97,257,1021] {
             let mut cancelled=Puzzle2dDeleteNodeInverseCursor::default();
-            for turn in 0..pause {let permit=grant(turn);if matches!(observed(permit,||test_source_custody::run(permit, |effect| cancelled.advance(source.borrow(&base),mutation.borrow(&payload), 4096, effect))),RetainedCloneStep::Complete(_)){break;}}
+            for turn in 0..pause {let permit=grant(&cancelled,source.borrow(&base),turn);if matches!(observed(permit,||test_source_custody::run(permit, |effect| cancelled.advance(source.borrow(&base),mutation.borrow(&payload), 4096, effect))),RetainedCloneStep::Complete(_)){break;}}
             close(&mut cancelled);assert!(cancelled.take().is_none());
         }
-        let mut swapped=Puzzle2dDeleteNodeInverseCursor::default();observed(grant(0),||test_source_custody::run(grant(0), |effect| swapped.advance(source.borrow(&base),mutation.borrow(&payload), 4096, effect)));
-        let other=payload.clone();assert!(test_source_custody::run(grant(1), |effect| swapped.advance(source.borrow(&base),mutation.borrow(&other), 4096, effect)).is_err());close(&mut swapped);
+        if case["id"]=="both-endpoints" {
+            let mut cancelled=Puzzle2dDeleteNodeInverseCursor::default();
+            let mut swapped=false;
+            for turn in 0..2_000_000 {
+                let reversing=cancelled.phase==16;
+                let permit=grant(&cancelled,source.borrow(&base),turn);
+                let step=observed(permit,||test_source_custody::run(permit,|effect|cancelled.advance(source.borrow(&base),mutation.borrow(&payload),4096,effect)));
+                assert!(!matches!(step,RetainedCloneStep::Complete(_)));
+                if reversing && step.progress().copied_items==1 {swapped=true;break;}
+            }
+            assert!(swapped);close(&mut cancelled);assert!(cancelled.take().is_none());
+        }
+        let mut swapped=Puzzle2dDeleteNodeInverseCursor::default();
+        let permit=RetainedCloneGrant::one_payload_turn(4096,64);
+        for _ in 0..2 {assert_eq!(observed(permit,||test_source_custody::run(permit,|effect|swapped.advance(source.borrow(&base),mutation.borrow(&payload),4096,effect))).progress().copied_items,1);}
+        let other=payload.clone();assert!(test_source_custody::run(permit, |effect| swapped.advance(source.borrow(&base),mutation.borrow(&other), 4096, effect)).is_err());close(&mut swapped);
         assert_eq!(serde_json::to_value(&base).unwrap(),original);assert_eq!(serde_json::to_value(&payload).unwrap(),original_payload);
     }
     test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
@@ -112,9 +137,9 @@ async fn the_prepared_family_inverse_sums_to_the_negative_diff() {
         };
     }
     for (before, mutation) in [
-    vector!("🗑️delete-node", "🗑️removes-middle-node"),
-    vector!("🗑️delete-node", "🚫️deletes"),
-    vector!("🗑️delete-node", "🚫️removes"),
+    vector!("🟢️node/🗑️delete-node", "🗑️removes-middle-node"),
+    vector!("🟢️node/🗑️delete-node", "🚫️deletes"),
+    vector!("🟢️node/🗑️delete-node", "🚫️removes"),
     ] {
         let before: crate::Puzzle2dSnapshot = semio_framework_pack_json::from_json_str(before, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
         let mutation: crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation = semio_framework_pack_json::from_json_str(mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes");

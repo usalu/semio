@@ -19,7 +19,8 @@ const run=async(environment:Record<string,string>,reason:"request"|"refresh")=>{
 };
 
 test("a refresh read names the policy fresh, with an empty environment and against an inherited current",async()=>{
- for(const environment of[{},{SEMIO_BUILD_GRAPH_POLICY:"current"}]){
+ const environments:Record<string,string>[]=[{},{SEMIO_BUILD_GRAPH_POLICY:"current"}];
+ for(const environment of environments){
   const{result,seen}=await run(environment,"refresh");
   expect(result.ok).toBe(true);expect(seen).toBe("fresh|show projects");
  }

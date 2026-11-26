@@ -20,3 +20,27 @@ export * from "./🔄️reload/🟨️.mjs";
 export * from "./📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
 export * from "./🔐️consent/🟨️.mjs";
 export * from "./🔐️consent/🧷️responsibility/🟨️.mjs";
+
+/** 🧾️ The members of the resident service, re-exported from the module that declares each one. */
+export {scanListingV1} from "./🔌️ports/📋️listing/🟨️.mjs";
+export {runHostForegroundV1, spawnHostServiceV1} from "./🏗️composition/🌐️host/🟨️.mjs";
+export {runHostCommandV1} from "./⌨️command/🌐️host/🟨️.mjs";
+export {journalGraphSeamsV1, relativeFactPathV1} from "./🕰️graph-hooks/🔌️host/🟨️.mjs";
+export {hostEndpointsV1, workspaceIdV1} from "./📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
+export {createWatchSupervisorV1} from "./🔭️watch/🟨️.mjs";
+export {createResponsibilityWatchV1, responsiblePidV1} from "./🔐️consent/🧷️responsibility/🟨️.mjs";
+export {createIndexPoolV1} from "./🏛️service/🌐️host/🧊️pool/🟨️.mjs";
+export {createHostReloadV1, replaceHostServiceV1} from "./🔄️reload/🟨️.mjs";
+export {createFilterV1, createOwnerIndexV1, createWorkspaceStateV1, outputSignatureV1} from "./🗃️state/🟨️.mjs";
+export {createBuildGraphPortV1, stateConfigurationFromBuildGraphV1} from "./🔌️ports/🗺️graph/🟨️.mjs";
+export {canonicalRootV1, endpointsV1, worktreeIdV1} from "./📨️protocol/📍️endpoint/🟨️.mjs";
+export {attenuateCapabilityV1, authorizeCapabilityV1, createRootKeyV1, mintCapabilityV1, verifyCapabilityV1} from "./📨️protocol/🔑️capability/🟨️.mjs";
+export {UnknownTargetErrorV1, createGraphPlannerPortV1, graphDigestV1} from "./🔌️ports/🧭️plan/🟨️.mjs";
+export {RESIDENT_EXCLUDES_V1, RESIDENT_FENCE_DIRECTORY_V1, runResidentCommandV1} from "./⌨️command/🟨️.mjs";
+export {ProtocolErrorV1, compileSchemaV1, createFrameDecoderV1, encodeFrameV1} from "./📨️protocol/🟨️.mjs";
+export {HostUnavailableErrorV1, PlanRefusedErrorV1, connectHostV1, holdHostV1, lastAccessDenialV1, requestHostStatusV1, requestPlanV1, resolvePlanV1, retireHostServiceV1, withRestartOwnerV1} from "./🚪️client/🛰️plan/🟨️.mjs";
+export {HostRunningErrorV1, createHostServiceV1} from "./🏛️service/🌐️host/🟨️.mjs";
+export {HOST_POLICY_V1, POLICY_V1, SCHEMA_V1, renderBothV1, renderTextV1, validatorV1} from "./📨️protocol/🎚️policy/🟨️.mjs";
+export {GRAPH_HOOKS_POLICY_V1, advanceFrontierByDirtySetV1, classifyChangesV1, dirtyIndexV1, dirtySetFromRowsV1, renderGraphHooksNoticeV1} from "./🕰️graph-hooks/🟨️.mjs";
+export {BusyErrorV1, createGovernorV1} from "./🏛️service/🚦️governor/🟨️.mjs";
+export {ACCESS_PROOF_VERSION_V1, PROTECTED_FOLDERS_V1, RESET_MARKER_V1, accessDirectoryV1, accessReceiptsLackingV1, consentIdentityV1, consentRefusalV1, createMountReproofV1, forgetLaunchdRefusalV1, invalidateLauncherMarkerV1, launchdRefusalV1, launcherConsentedV1, launcherDigestV1, launcherMarkerPathV1, launcherStateV1, mountSignatureV1, probeConsentV1, protectedFolderOfV1, readAccessReceiptsV1, rememberLaunchdRefusalV1, sampleAccessInChildV1, sampleAccessV1, writeAccessReceiptV1, writeLauncherMarkerV1} from "./🔐️consent/🟨️.mjs";

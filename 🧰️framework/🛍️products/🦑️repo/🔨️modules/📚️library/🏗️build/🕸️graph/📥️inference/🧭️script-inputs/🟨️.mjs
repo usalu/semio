@@ -479,6 +479,7 @@ async function boundedScriptInputsV1(entries, workspaceRoot, cache = createScrip
   const question = { roots: [...new Set(entries.map(entry => resolve(entry)))].sort(), requiredSources: Boolean(requiredSources), resources: [...new Set(resourceEntries.map(path => resolve(path)))].sort(), selectors: [...commands].map(([path, words]) => [resolve(path), [...new Set(words)].sort()]).sort(byNameV1), stops, view: closureViewScopeV1.getStore() };
   const pass = closureWalkPassV1(cache), key = memoDigestV1(resolve(workspaceRoot), question.roots, question.requiredSources, question.resources, question.selectors, ...(stops.length ? [stopDigestV1(stops)] : []));
   let answered;
+  throwIfInferenceCancelledV1(cache.context);
   try {
     answered = (await observeDetachedV1(async () => {
       const fact = await closureGraphAnswerV1(cache, workspaceRoot, question, pass);
@@ -495,6 +496,7 @@ async function boundedScriptInputsV1(entries, workspaceRoot, cache = createScrip
       return { fact, value: held.value, segments: closureGraphSegmentsV1(cache, workspaceRoot, question) };
     })).value;
   } catch (error) { retainDetachedFailureV1(error); throw error; }
+  throwIfInferenceCancelledV1(cache.context);
   observeGlobalFactV1(CLOSURE_GRAPH_FACT_V1, resolve(workspaceRoot), answered.segments, answered.fact);
   return answered.value;
 }
@@ -1403,14 +1405,19 @@ const closureStoreBindingsV1 = createBoundedCacheV1({ name: "inference:closure-s
 /** 📁️ The directory of the durable closure entries of a workspace: the graph's inference data directory of the running writer, or undefined where no graph writer is running (the entries then live in this process only). */
 export function closureStoreDirectoryV1(workspaceRoot) { try { return join(workspaceDataDirectory(workspaceRoot), "ce"); } catch { return undefined; } }
 /** 🔗️ Binds the directory a worker process reads the closure entries of its parent from; a worker never writes there, its parent persists the entries it derives itself. `writable` lets a long-lived pool child persist what it derives for the next child of its machine; `limits` (a part of the declared inference limits) bounds that store on disk. */
-export function bindClosureStoreV1(workspaceRoot, directory, writable = false, limits = undefined) { closureStoreBindingsV1.set(workspaceRoot, { directory, writable, ...limits === undefined ? {} : { limits: { ...INFERENCE_LIMITS_V1, ...limits } } }); closureStoresV1.delete(workspaceRoot); }
+export function bindClosureStoreV1(workspaceRoot, directory, writable = false, limits = undefined) { closureStoreBindingsV1.set(workspaceRoot, { directory, writable, ...limits === undefined ? {} : { limits: { ...INFERENCE_LIMITS_V1, ...limits } } }); for (const key of closureStoresV1.keys()) if (key.startsWith(workspaceRoot + "\0")) closureStoresV1.delete(key); }
+
+/** 🔑️ The name of one open closure store: the directory it reads and whether it may write, so a store opened where the directory resolved differently (outside the selection of a read, or after its lifetime ended) is never handed to a caller that resolves another directory. */
+export const closureStoreKeyV1 = (workspaceRoot, directory, bound) => [workspaceRoot, directory, bound !== undefined && !bound.writable, bound?.limits === undefined ? null : JSON.stringify(bound.limits)].join("\0");
 
 const closureStoreOfV1 = workspaceRoot => {
-  let store = closureStoresV1.get(workspaceRoot);
-  if (store !== undefined) return store;
   const bound = closureStoreBindingsV1.get(workspaceRoot), directory = bound?.directory ?? closureStoreDirectoryV1(workspaceRoot);
-  store = directory === undefined ? null : createClosureStoreV1({ directory, readOnly: bound !== undefined && !bound.writable, ...bound?.limits === undefined ? {} : { limits: bound.limits } });
-  closureStoresV1.set(workspaceRoot, store);
+  if (directory === undefined) return null;
+  const key = closureStoreKeyV1(workspaceRoot, directory, bound);
+  let store = closureStoresV1.get(key);
+  if (store !== undefined) return store;
+  store = createClosureStoreV1({ directory, readOnly: bound !== undefined && !bound.writable, ...bound?.limits === undefined ? {} : { limits: bound.limits } });
+  closureStoresV1.set(key, store);
   return store;
 };
 
@@ -1588,7 +1595,7 @@ const verdictMapsV1 = createWeakCollectionTrackerV1(), trackVerdictsV1 = round =
 /** 🧮️ The layer verdict maps of the live validation rounds, for the slice memory report. */
 export function closureCollectionsV1() { let entries = 0, alive = 0, largest; for (const map of verdictMapsV1) { alive++; entries += map.size; if (largest === undefined || map.size > largest.size) largest = map; } const spread = (cache, map) => { const keys = cache.keys(), step = Math.max(1, Math.floor(keys.length / 16)); return { entries: keys.length, sample: () => keys.filter((_key, at) => at % step === 0).slice(0, 16).map(key => map(cache.peek(key))) }; };
   const part = key => ({ name: "closure:entries." + key, ...spread(closureEntriesV1, entry => key === "answers" ? [...entry.answers ?? []] : entry[key]) }), once = (name, cache, pick) => { const seen = new Set(); let bytes = 0, entries = 0; for (const key of cache.keys()) { const value = cache.peek(key); if (value === undefined) continue; entries++; bytes += 8 + sharedBytesV1(pick(value), seen); } return { name, entries, bytes }; }, real = [part("value"), part("rows"), once("closure:entries.digests", closureEntriesV1, entry => entry.digests), once("closure:entries.sidecar", closureEntriesV1, entry => entry.sidecar), part("answers"), part("recipe"), part("layers"), { name: "closure:walkFacts (real)", ...spread(walkFactsByDigestV1, fact => fact) }, { name: "closure:recipes (real)", ...spread(knownClosureRecipesV1, recipe => recipe) }];
-  return [...real, ...alive === 0 ? [] : [{ name: "closure:layerVerdicts (" + alive + " rounds)", entries, bytes: entries * 96 }]]; }
+  return [...real, { name: "closure:verdictSeen (verdict files of finished rounds)", entries: verdictSeenV1.size, bytes: verdictSeenV1.size * 240 }, { name: "typescript:sharedSourceFiles (parsed trees, estimated 32 B per text character)", entries: sharedSourceFilesV1.size(), bytes: sharedSourceFilesV1.textBytes() * 32 }, ...alive === 0 ? [] : [{ name: "closure:layerVerdicts (" + alive + " rounds)", entries, bytes: entries * 96 }]]; }
 /** 🗂️ The verdicts of one read, shared by every process of it: the first process that verifies a stored closure layer or entry writes a small verdict file named by its digest into a directory of the validation round it ran in, every other look of that round (the parent, farm children, pool children) reads the file instead of probing the rows again; a round is one snapshot of the tree, so a new round has a new directory and sees an edit at once. Without a round there is no directory and nothing is shared. A child joins the round of its parent with \`withClosurePassV1(compute, { verdicts })\`.
  * @see ./🧪️tests/🧬️read-verdicts */
 const verdictOverrideV1 = new AsyncLocalStorage(), verdictDirsV1 = new WeakMap(), verdictSeenV1 = new Map(), verdictOwnedV1 = new Set(), verdictCountsV1 = { read: 0, written: 0, waited: 0 };
@@ -1857,7 +1864,7 @@ export function firstMovedRowOfEntryV1(entry, budgetMilliseconds = INFERENCE_LIM
  * @see ./🧪️tests/🧭️moved-row */
 export function closureFailureWhyV1(error, key) {
   const recipe = String(key).slice(0, 12), moved = error?.movedRow;
-  if (error?.code === "BUILD_TAKE_MISS" && error.absent === true) return "closure-entry-absent (recipe " + recipe + (moved === undefined ? ", never shipped or taken here" : ", refused at the intake, moved " + moved.kind + " " + String(moved.path).slice(-120)) + ")";
+  if (error?.code === "BUILD_TAKE_MISS" && error.absent === true) return "closure-entry-absent (recipe " + recipe + (moved === undefined ? ", never shipped or taken here" : ", refused at the intake, moved " + moved.kind + " " + String(moved.path).slice(-120)) + (error.storeWhy === undefined ? "" : "; store: " + error.storeWhy) + ")";
   if (error?.code === "BUILD_TAKE_MISS") return "closure-entry-stale (recipe " + recipe + (moved === undefined ? ", no moved row found" : ", moved " + moved.kind + " " + String(moved.path).slice(-120)) + ")";
   return "closure-probe " + String(error?.code ?? error?.name ?? "Error") + ": " + String(error?.message ?? error).split("\n")[0].slice(0, 160) + " (recipe " + recipe + ")";
 }
@@ -1869,7 +1876,7 @@ const movedTakesV1 = new WeakMap();
 async function takenClosureEntryV1(workspaceRoot, id, recipe) {
   const scripts = closureScriptsV1.get(workspaceRoot), store = closureStoreOfV1(workspaceRoot);
   if (!scripts) throw refuseBuildV1("missing", "closure.scripts-unbound", { workspace: String(workspaceRoot) });
-  const miss = (movedRow, absent = false) => Object.assign(new Error("A closure entry is not stored here or no longer holds: the owner is inferred by the owner loop, not taken"), { code: "BUILD_TAKE_MISS", movedRow, absent });
+  const miss = (movedRow, absent = false, storeWhy = undefined) => Object.assign(new Error("A closure entry is not stored here or no longer holds: the owner is inferred by the owner loop, not taken"), { code: "BUILD_TAKE_MISS", movedRow, absent, storeWhy });
   const round = closurePassV1 ?? observationRoundV1(), stamp = round !== null && typeof round === "object" && store ? await store.stamp(id) : undefined, judged = stamp === undefined ? undefined : staleTakesV1.get(round) ?? staleTakesV1.set(round, new Map()).get(round), moves = stamp === undefined ? undefined : movedTakesV1.get(round) ?? movedTakesV1.set(round, new Map()).get(round);
   if (stamp !== undefined && judged?.get(id) === stamp) throw miss(moves?.get(id));
   const stored = store ? await store.load(id) : undefined, entry = stored && { ...stored, layers: undefined, store, answers: new Map(), checked: null };
@@ -1879,7 +1886,7 @@ async function takenClosureEntryV1(workspaceRoot, id, recipe) {
   if (reasked) return reasked;
   let movedRow;
   if (entry) { judged?.set(id, stamp); movedRow = firstMovedRowOfEntryV1(entry); if (movedRow !== undefined) moves?.set(id, movedRow); }
-  if (!entry) throw miss(importRefusalsV1.get(id) ?? undefined, true);
+  if (!entry) throw miss(importRefusalsV1.get(id) ?? undefined, true, store ? typeof store.why === "function" ? await store.why(id).catch(() => undefined) : undefined : "no closure store bound for this workspace");
   throw miss(movedRow);
 }
 
@@ -2095,6 +2102,8 @@ export async function answeredAgainstFreshProvidersV1(answer, refresh, attempts 
   }
 }
 
+/** 🌊️ Forgets the verdicts this process saw in the rounds of the waves that are over: a round has its own directory, so a later wave never asks for them again and each is read from its file when it is. */
+export function forgetRoundVerdictsV1() { verdictSeenV1.clear(); }
 const forgetVerdictV1 = file => { if (file === undefined) return; verdictSeenV1.delete(file); try { vRmV1(file, { force: true }); } catch {} };
 /** 🫚️ Drops what a read holds of a lost layer: its verdicts (this round and the verdict files of the read, so the next look judges the layer by what the store holds then), and every in-memory entry of the workspace that names it (or whose layers are not known), so that the next ask loads the stored entry, finds it stale and derives it or takes it from the fleet. Answers how many entries were dropped. */
 function forgetLostLayerV1(workspaceRoot, error) {
@@ -2332,6 +2341,10 @@ function closureTargetOfV1({ inputsDigest, ...rest }) {
   if (!inputs) throw refuseBuildV1("invalid", "closure.literal-inputs-unknown", { digest: String(inputsDigest) });
   return { ...rest, inputs };
 }
+
+/** 🛑️ Throws the reason of a cancelled Original (or of the owner the memory governor stopped) at once, so an answer taken from stored nodes or from an equal-digest walk, which never reaches a {@link yieldInferenceV1} yield point, is never returned to a caller whose command was cancelled.
+ * @see ./🧪️tests */
+export function throwIfInferenceCancelledV1(context) { context?.ownerSignal?.throwIfAborted(); context?.invocation?.control.signal.throwIfAborted(); }
 
 /** ⏳️ Delegates bounded inference work to the caller's original progress and continuation control, and is the point where the inference of an owner that grew past what the machine can give one project stops (`throwIfOwnerExceededV1`, set by the memory governor); durable progress is published at most every 200 ms so its cost never scales with the number of inferred facts. */
 export async function yieldInferenceV1(context,phase,index,force=false){

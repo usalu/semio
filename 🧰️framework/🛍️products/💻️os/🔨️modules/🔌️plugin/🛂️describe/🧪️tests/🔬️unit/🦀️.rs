@@ -25,8 +25,9 @@ async fn package_descriptor_lists_its_io_mechanism_rows_with_their_native_side()
     let value = store::pack_rt::decode_wire_value(&describe_plugin(&runtime).await).expect("descriptor wire decodes");
     let descriptor: PackageDescriptor = serde_json::from_value(value.into()).expect("descriptor shape decodes");
     let (native, foreign) = (semio_framework_artifact_reference::ArtifactDialect::from(NATIVE), semio_framework_artifact_reference::ArtifactDialect::from(FOREIGN));
+    let own_rows: Vec<IoEntryDescriptor> = descriptor.contributions.io_entries.into_iter().filter(|row| row.owner == native).collect();
     assert_eq!(
-        descriptor.contributions.io_entries,
+        own_rows,
         vec![
             IoEntryDescriptor { owner: native.clone(), counterpart: foreign.clone(), direction: IoEntryDirection::Import },
             IoEntryDescriptor { owner: native, counterpart: foreign, direction: IoEntryDirection::Export },
@@ -78,4 +79,34 @@ async fn native_descriptor_topic_payload_matches_canonical_emission() {
         assert_eq!(bytes, store::pack_rt::encode_wire_value(&expected));
         assert_eq!(semio_plugin_runtime_instances::inst_descriptor::canonical_semantic_descriptor_bytes(&bytes).expect("native freshness bytes"), bytes);
     }
+}
+
+/// 🛣️ LAW: a guest that is the only runtime of a kind another plugin owns lists that kind's io rows in its own descriptor
+/// once it declares the kind runtime-hosted, and lists none of them before; inference rows share the same kind filter.
+#[semio_framework_async_macros::async_test]
+async fn a_runtime_host_lists_the_io_rows_of_the_kind_it_alone_runs() {
+    use semio_os_kernel::io::io_mechanism::{io_register, IoEntry, IoEntryDirection as Side};
+    use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
+    const HOSTED: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.describe-hosted.kind", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") };
+    const FOREIGN: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.describe-hosted-foreign.format", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") };
+    #[allow(clippy::unnecessary_wraps, reason = "IoEntry test doubles implement its fallible function-pointer contract")]
+    fn passthrough(payload: &IoPayload, _: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+        Ok(IoOutcome::clean(payload.clone()))
+    }
+    static ENTRIES: [IoEntry; 1] = [IoEntry { owned_serializer: None, from: HOSTED, into: FOREIGN, fidelity: IoFidelity::Lossy, direction: Side::Export, sniff: None, run: passthrough }];
+    io_register(&ENTRIES).expect("the entries register");
+    let describe = || async {
+        let plugin = semio_plugin_builder::PluginBuilder::<_, semio_plugin_reactor_app::NoPluginApp>::new("describe-hosted-runtime").label("Describe Hosted Runtime").version("0.1.0").package_id("semio:describe-hosted-runtime").try_build().expect("hosting plugin assembles");
+        let runtime = semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        semio_plugin_runtime_instances::inst_descriptor::install_plugin_bundle(&runtime, plugin);
+        let value = store::pack_rt::decode_wire_value(&describe_plugin(&runtime).await).expect("descriptor wire decodes");
+        let descriptor: PackageDescriptor = serde_json::from_value(value.into()).expect("descriptor shape decodes");
+        descriptor
+    };
+    let hosted = semio_framework_artifact_reference::ArtifactDialect::from(HOSTED);
+    let hosted_rows = |descriptor: PackageDescriptor| -> Vec<IoEntryDescriptor> { descriptor.contributions.io_entries.into_iter().filter(|row| row.owner == hosted).collect() };
+    assert!(hosted_rows(describe().await).is_empty());
+    io::register_runtime_hosted_artifact_kind(HOSTED.artifact_kind);
+    assert!(io::runtime_hosted_artifact_kinds().contains(&HOSTED.artifact_kind.to_owned()));
+    assert_eq!(hosted_rows(describe().await), vec![IoEntryDescriptor { owner: HOSTED.into(), counterpart: FOREIGN.into(), direction: IoEntryDirection::Export }]);
 }

@@ -19,7 +19,7 @@ impl SourceCompare{
   let push=!self.started||self.frames.last().is_some_and(|frame|frame.phase==3);
   let birth=push&&!self.frames.has_reserved_slot();
   let path=if birth{self.frames.next_reserve_depth_demand()}else if push{self.frames.next_push_depth_demand()}else if self.frames.last().is_some_and(|frame|frame.phase==4){self.frames.next_pop_depth_demand()}else if !self.frames.is_empty(){self.frames.next_get_depth_demand(self.frames.len()-1)}else{Ok(1)}.map_err(ValueError::from)?;
-  Ok(RetirementDemand{copy_bytes:if birth{0}else if push{size_of::<Frame>()}else{self.frames.len().saturating_mul(2*size_of::<usize>()).saturating_add(2*size_of::<Node>())},capacity_bytes:if birth{self.frames.next_allocation_bytes().map_err(ValueError::from)?}else{0},depth:(self.frames.len()+usize::from(push)).max(path).max(1),..Default::default()})
+  Ok(RetirementDemand{copy_bytes:if birth{self.frames.next_reserve_copy_byte_demand().map_err(ValueError::from)?}else if push{size_of::<Frame>()}else{self.frames.len().saturating_mul(2*size_of::<usize>()).saturating_add(2*size_of::<Node>())},capacity_bytes:if birth{self.frames.next_allocation_bytes().map_err(ValueError::from)?}else{0},depth:(self.frames.len()+usize::from(push)).max(path).max(1),..Default::default()})
  }
  fn at<'a>(&self,mut source:&'a dyn Canonical)->Result<&'a dyn Canonical,ValueError>{for frame in self.frames.iter().skip(1){source=source.canonical_tree_child(frame.ordinal)?;}Ok(source)}
  fn text_pair(frame:&mut Frame,a:Text<'_>,b:Text<'_>)->Result<Option<bool>,ValueError>{

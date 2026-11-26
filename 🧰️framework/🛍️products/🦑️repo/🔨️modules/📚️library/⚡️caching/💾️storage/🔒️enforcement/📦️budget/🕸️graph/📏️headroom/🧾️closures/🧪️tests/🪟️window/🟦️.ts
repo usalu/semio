@@ -5,8 +5,9 @@ import{Database}from"bun:sqlite";
 import{readFileSync}from"node:fs";
 import{test,expect}from"bun:test";
 import Ajv from"ajv";
-import{closureCaptureWithinBudgetV1,closureRetirementWindowDueV1}from"../../🟦️.ts";
+import{IncompleteClosureRefusalV1,closureCaptureWithinBudgetV1,closureRetirementWindowDueV1}from"../../🟦️.ts";
 import storage from"../../../../../../../../../🏗️build/📥️inputs/💾️storage/🧬️schema/🔣️.json"with{type:"json"};
+import headroomSchema from"../../../🧬️schema/🔣️.json"with{type:"json"};
 import protocol from"../../🧬️schema/🔣️.json"with{type:"json"};
 import cases from"./🧫️cases.json"with{type:"json"};
 
@@ -62,3 +63,23 @@ test("retirement windows preserve current control and exact primary failures",as
   }
  }finally{db.close();}
 },60000);
+
+test("a retained leaf linking a missing leaf skips the optional retirement with a bilingual refusal and keeps everything, while any other failure stays fatal",async()=>{
+ const tree=ts.createSourceFile("closures.ts",readFileSync(sources,"utf8"),ts.ScriptTarget.Latest,true),row=tree.statements.find(value=>ts.isFunctionDeclaration(value)&&value.name?.text==="retireBuildGraphOptionalGroupsHeadroomV1");if(!row)throw Error("Actual retirement owner required");
+ const code=row.getText(tree).replace(/^export /u,""),image=Object.freeze({root:"controlled"}),custody=Object.freeze({kind:"kernel-ex",control:{}});
+ const run=(failure:unknown)=>Function("requireNativePlatformImageWriterV1","schema","validateJsonSchemaSubset","optionalPolicy","checkResourceLeaseControl","nativeImageFreshSpaceV1","closureRetirementWindowDueV1","Date","captureClosureProof","IncompleteClosureRefusalV1","annotateRetirementFailureV1",ts.transpileModule(code,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText+";return retireBuildGraphOptionalGroupsHeadroomV1")(()=>{},protocol,()=>[],storage.definitions.OptionalQuota,()=>{},async()=>({bavail:0,bsize:1}),()=>false,{now:()=>0},async()=>{throw failure;},IncompleteClosureRefusalV1,(error:unknown)=>error);
+ const dangling="/image/inference/contexts/g/mr/pk-1-"+"e".repeat(16)+".idx",result=await run(new IncompleteClosureRefusalV1(dangling))(image,custody,{minimumAvailableBytes:1});
+ expect(result.retiredBytes).toBe(0);expect(result.retiredFiles).toBe(0);expect(result.partial).toBeUndefined();expect(result.refusal.en).toContain(dangling);expect(result.refusal.de).toContain(dangling);expect(result.refusal.en).not.toBe(result.refusal.de);
+ const other=Error("Authenticated closure record index required");await expect(run(other)(image,custody,{minimumAvailableBytes:1})).rejects.toBe(other);
+ expect(new Ajv({strict:true}).compile({definitions:headroomSchema.definitions,$ref:"#/definitions/OptionalRetirement"})(result)).toBe(true);expect(new IncompleteClosureRefusalV1(dangling).message).toBe("Complete retained closure publication required");
+},60000);
+
+test("a directory whose only changed stamp field is its ctime is metadata noise, every other stamp field still counts",()=>{
+ const tree=ts.createSourceFile("closures.ts",readFileSync(sources,"utf8"),ts.ScriptTarget.Latest,true),row=tree.statements.find(value=>ts.isFunctionDeclaration(value)&&value.name?.text==="metadataOnlyDriftV1");if(!row)throw Error("Actual drift owner required");
+ const drift=Function(ts.transpileModule(row.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText+";return metadataOnlyDriftV1")()as(before:string,after:string)=>boolean,base=[1,20,16877,2,64,1000,2000];
+ const at=(index:number,value:number)=>base.map((part,place)=>place===index?value:part).join(":");
+ expect(drift(base.join(":"),at(6,3000))).toBe(true);expect(drift(base.join(":"),base.join(":"))).toBe(false);
+ for(const index of[0,1,2,3,4,5])expect(drift(base.join(":"),at(index,base[index]!+1)),String(index)).toBe(false);
+ expect(drift("a:b","a:c")).toBe(false);
+ const db=new Database(":memory:");try{const oracle=db.query("select substr(?1,1,length(?1)-length(?3)-1)=substr(?2,1,length(?2)-length(?4)-1) and ?3<>?4 same").get(base.join(":"),at(6,3000),"2000","3000")as{same:number};expect(Boolean(oracle.same)).toBe(true);}finally{db.close();}
+});

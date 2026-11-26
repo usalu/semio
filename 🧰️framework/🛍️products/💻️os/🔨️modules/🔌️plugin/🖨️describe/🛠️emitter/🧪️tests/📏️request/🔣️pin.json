@@ -1,0 +1,18 @@
+{
+  "pin": {
+    "version": 1,
+    "mode": "prototype",
+    "platform": "darwin",
+    "binarySha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "receiptSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "indexSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "cases": [
+    { "change": {}, "accepted": true },
+    { "change": { "mode": "release" }, "accepted": false },
+    { "change": { "platform": "plan9" }, "accepted": false },
+    { "change": { "indexSha256": "3333333333333333333333333333333333333333333333333333333333333333\n" }, "accepted": false },
+    { "change": { "receiptSha256": null }, "accepted": false },
+    { "change": { "path": "/unmanaged" }, "accepted": false }
+  ]
+}

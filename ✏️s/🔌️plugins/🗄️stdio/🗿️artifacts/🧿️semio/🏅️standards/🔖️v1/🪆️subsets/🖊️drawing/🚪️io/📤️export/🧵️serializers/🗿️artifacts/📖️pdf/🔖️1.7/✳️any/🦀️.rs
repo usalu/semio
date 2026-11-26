@@ -166,7 +166,7 @@ pub fn drawing_to_pdf(drawing: &SemioDrawingSnapshot) -> Result<PdfSnapshot, Str
     }
     painter.ops.push(PdfOp::Restore);
     let mut page = PdfPage::new(width, height);
-    page.content = painter.ops;
+    page.content = painter.ops.into_iter().collect();
     let mut snapshot = PdfSnapshot { pages: vec![page], ext_g_states: painter.states, ..PdfSnapshot::default() };
     if painter.uses_text {
         snapshot.fonts.push(PdfFont::standard(TEXT_FONT, "Helvetica"));

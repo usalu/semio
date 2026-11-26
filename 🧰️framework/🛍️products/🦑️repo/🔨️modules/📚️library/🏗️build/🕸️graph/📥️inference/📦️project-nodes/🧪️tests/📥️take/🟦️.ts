@@ -178,7 +178,7 @@ test("the provider ports of tool scripts are among the ids a taker registered, s
  expect(ports).toBeDefined();
  const host=hostOfRootV1("/work/a"),local={digest:"d",authority:[],observations:[{kind:"analysis",path:"/work/a/x.ts",fact:{provider:ports,revision:"r",source:{size:1,mtimeMs:0,ctimeMs:0,ino:0,sha256:"s"}}}],image:"{}"},neutral=neutralRecordV1(local,host).record;
  expect(JSON.stringify(neutral)).toContain("\u27e6analysis-owner\u27e7");
- expect((localRecordV1(neutral,host,{providers:ids}).record.observations[0]!.fact as {provider:string}).provider).toBe(ports);
+ expect((localRecordV1(neutral,host,{providers:ids}).record.observations[0]!.fact as {provider:string}).provider).toBe(ports!);
  expect((localRecordV1(neutral,host,{providers:ids.filter(id=>id!==ports)}).record.observations[0]!.fact as {provider:string}).provider).toContain("\u27e6");
 });
 

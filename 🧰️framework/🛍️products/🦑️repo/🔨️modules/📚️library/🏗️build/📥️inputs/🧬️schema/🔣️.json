@@ -7,6 +7,7 @@
       "const": {
         "inventoryMemoLimit": 4096,
         "chunkCutsLimit": 131072,
+        "verifiedClosureLimit": 131072,
         "closureChunkMinimum": 16,
         "closureChunkModulus": 128
       }
@@ -16,12 +17,14 @@
         "en": {
           "inventoryMemoLimit": "The most captured inventories the process remembers at once.",
           "chunkCutsLimit": "The most verified closure stamps the process remembers at once.",
+          "verifiedClosureLimit": "The most verified closure leaf stamps the process remembers at once; at the maximum the memo starts again.",
           "closureChunkMinimum": "The fewest paths a closure chunk holds before the content-defined cut may end it.",
           "closureChunkModulus": "A closure chunk ends after a path whose hash is zero modulo this number."
         },
         "de": {
           "inventoryMemoLimit": "Die meisten erfassten Inventare, die der Prozess gleichzeitig merkt.",
           "chunkCutsLimit": "Die meisten verifizierten Abschluss-Stempel, die der Prozess gleichzeitig merkt.",
+          "verifiedClosureLimit": "Die meisten verifizierten Stempel von Abschluss-Blättern, die der Prozess gleichzeitig merkt; am Maximum beginnt der Speicher neu.",
           "closureChunkMinimum": "Die wenigsten Pfade eines Abschluss-Blocks, bevor der inhaltsbestimmte Schnitt ihn beenden darf.",
           "closureChunkModulus": "Ein Abschluss-Block endet nach einem Pfad, dessen Hash modulo dieser Zahl null ist."
         }

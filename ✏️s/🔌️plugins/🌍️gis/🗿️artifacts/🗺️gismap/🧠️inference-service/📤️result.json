@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GisMapInference",
+  "description": "Whole-map summary: feature counts and the lon/lat bounding box over every position, route and region (null when the map holds no coordinate).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["positionCount", "routeCount", "regionCount", "bounds"],
+  "properties": {
+    "positionCount": { "type": "integer", "minimum": 0 },
+    "routeCount": { "type": "integer", "minimum": 0 },
+    "regionCount": { "type": "integer", "minimum": 0 },
+    "bounds": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["lonMin", "lonMax", "latMin", "latMax"],
+          "properties": { "lonMin": { "type": "number" }, "lonMax": { "type": "number" }, "latMin": { "type": "number" }, "latMax": { "type": "number" } }
+        }
+      ]
+    }
+  }
+}

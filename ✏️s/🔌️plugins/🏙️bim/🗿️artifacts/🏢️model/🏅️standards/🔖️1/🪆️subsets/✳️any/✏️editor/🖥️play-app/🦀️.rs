@@ -157,11 +157,26 @@ impl ArtifactEditor for BimModelApp {
     const DIALECT: Dialect = BIM_MODEL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BIM_MODEL_DOCUMENT_SCHEMA;
 
-    bim_command_table!(tool_proofs);
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
+        type Owner = EditorApp<BimModelApp>;
+        BIM_TOOL_IDS.iter().map(|&id| {
+            let model_export = is_model_export_tool(id);
+            let proof = semio_plugin::ArtifactBoundedFirstStepProof::new::<Owner>(
+                "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+                BIM_EDITOR_APP_ID, "BimCommandJobFactory", id, "s.bim.model@1", bim_bounded_contract(model_export),
+            );
+            if model_export {
+                proof.with_factory_type::<Owner, BimCommandJobFactory<true>>()
+            } else {
+                proof.with_factory_type::<Owner, BimCommandJobFactory<false>>()
+            }
+        }).collect()
+    }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
-        registry.register(BimCommandJobFactory::new(&controller))
+        registry.register(BimCommandJobFactory::<false>::new(&controller))?;
+        registry.register(BimCommandJobFactory::<true>::new(&controller))
     }
 
     fn build_instance_operation_owner() -> Box<dyn semio_plugin::ArtifactInstanceOperationOwner> {
@@ -184,6 +199,7 @@ impl ArtifactEditor for BimModelApp {
         }
         semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, BimCommand::command_id, BIM_BOUNDED_RAW_BYTES, BIM_BOUNDED_WORK_ITEMS, false, |request| -> Box<dyn ArtifactCommandWork<EditorApp<Self>>> { match &*request.command {
             BimCommand::AnalyseModel(_) => Box::new(analyse_model::AnalyseWork::new(tool_id, request.instance_operation_owner.clone())),
+            BimCommand::ExportModel(command) if command.format == "gbxml" => Box::new(export_model::GbxmlExportWork::new(tool_id, request.instance_operation_owner.clone())),
             BimCommand::ExportModel(_) => Box::new(export_model::ModelExportWork::new(tool_id, request.instance_operation_owner.clone())),
             BimCommand::ExportSheets(_) => Box::new(export_sheets::SheetsExportWork::new(tool_id, request.instance_operation_owner.clone())),
             _ => Box::new(BimCommandWork::new(tool_id, request.instance_operation_owner.clone())),

@@ -338,6 +338,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         self.backfill_command_log().await;
         let key = (self.stores.store.generation(), self.stores.config_store.generation(), self.history.log_generation, self.history.history_filter);
+        if self.history.cache.as_ref().is_some_and(|(cached, snapshot, _, _)| (cached.0 != key.0 && std::sync::Arc::strong_count(snapshot) == 1)) {
+            self.history.invalidate_cache();
+        }
         let (snapshot, config) = match self.history.cache.take() {
             Some((cached_key, snapshot, config, history)) => {
                 drop(history);

@@ -189,6 +189,6 @@ test("the Bazel collector acquires storage before taking its exclusive session l
   const scope={machinePathV1:()=>"",bazelLimits:{cacheCollectionThrottleMilliseconds:0},withBazelStorageV1:async(_r:unknown,_i:unknown,_c:unknown,run:Function)=>{events.push("image");try{return await run({paths:{}},{})}finally{events.push("release-image")}},acquireResourceLease:async()=>{events.push("collector");return name==="busy"?undefined:{release(){events.push("release-collector")}}},bazelSessionMessageV1:(key:string)=>key,bazelSlotPortV1:()=>({}),bazelHostServersV1:()=>[],bazelWorkspaceReclaimV1:()=>({}),collectBazelSessionsV1:async()=>{events.push("scan");return {packages:[],outputBases:[],temporaries:[]}}};
   const collect=new Function(...Object.keys(scope),"let lastCacheCollectionV1;"+js+";return collectBazelCacheV1;")(...Object.values(scope));
   await collect("",{},{},{dryRun:true,language:"en",signal:new AbortController().signal});
-  expect(events).toEqual(expected);
+  expect<unknown>(events).toEqual(expected);
  }
 });

@@ -3,7 +3,7 @@ use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources;
 use crate::standards::v1_7::subsets::base::modules::content::{parse_content, NoFonts};
 use crate::standards::v1_7::subsets::base::modules::lexer::CosGrant;
-use crate::standards::v1_7::subsets::base::schema::snapshot::{stream_bytes, ObjRef, PdfDictEntry, PdfObject, PdfOp};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{stream_bytes, ObjRef, PdfContent, PdfDictEntry, PdfObject, PdfOp};
 
 struct BorrowedContent(Vec<PdfObject>);
 
@@ -100,7 +100,7 @@ fn split_page(left: &[u8], right: &[u8]) -> BorrowedContent {
     ])
 }
 
-fn project(source: &mut BorrowedContent) -> (Vec<PdfOp>, Account) {
+fn project(source: &mut BorrowedContent) -> (PdfContent, Account) {
     let mut cursor = PageProgramCursor::new(reference(0));
     let mut account = Account::default();
     assert!(cursor.take_program().is_none());
@@ -126,14 +126,15 @@ fn controlled_page_projection_matches_reference_across_borrowed_and_split_stream
     let (single_ops, single_account) = project(&mut single);
     let mut resources = NativePdfArtifactResources::from_objects(&[]);
     let reference_ops = parse_content(joined.as_bytes(), &NoFonts, &mut resources).unwrap();
-    assert_eq!(split_ops, reference_ops);
-    assert_eq!(single_ops, reference_ops);
+    let reference_content: PdfContent = reference_ops.iter().cloned().collect();
+    assert_eq!(split_ops, reference_content);
+    assert_eq!(single_ops, reference_content);
     assert!(split_ops.iter().any(|op| matches!(op, PdfOp::MoveTo { x: 20.0, y: 10.0 })));
     assert!(split_ops.iter().any(|op| matches!(op, PdfOp::SetDash { array, phase } if array == &[6., 2.] && *phase == 1.)));
     assert_eq!(split_account.acquired, single_account.acquired, "paged stream octets are copied once into the joined backing whether the page holds one stream or two");
     assert_eq!(split_account.released, single_account.released);
     assert!(single_account.acquired >= joined.len());
-    let transferred = split_ops.capacity() * std::mem::size_of::<PdfOp>() + split_ops.iter().map(|op| match op {
+    let transferred = split_ops.allocated_bytes() + split_ops.iter().map(|op| match op {
         PdfOp::SetDash { array, .. } | PdfOp::SetFillColor { components: array } => array.capacity() * std::mem::size_of::<f64>(),
         PdfOp::SetFillColorSpace { name } => name.capacity(),
         _ => 0,

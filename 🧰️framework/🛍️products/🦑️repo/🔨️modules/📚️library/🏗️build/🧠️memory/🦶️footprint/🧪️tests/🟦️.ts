@@ -314,7 +314,7 @@ test("without the settling the same read keeps all waves and its managed heap gr
 
 test("the closure settle asks the gate of the process before every derivation, registers a reliever that drops the pass round while it runs and removes it afterwards",async()=>{
  const asked:string[]=[],relievers=new Set<()=>unknown>();let dropped=0;
- const gate={admit:async()=>{asked.push("admit");return"run" as const;},relieve:(reliever:()=>unknown)=>{relievers.add(reliever);return()=>relievers.delete(reliever);},settle:async()=>0,headroomBytes:()=>Infinity,footprintBytes:()=>0,grantBytes:()=>undefined,stats:()=>({admitted:0,settled:0,waits:0,waitedMilliseconds:0,peakBytes:0})};
+ const gate={admit:async()=>{asked.push("admit");return"run" as const;},relieve:(reliever:()=>unknown)=>{relievers.add(reliever);return()=>relievers.delete(reliever);},watch:()=>undefined,stop:()=>undefined,settle:async()=>0,headroomBytes:()=>Infinity,footprintBytes:()=>0,grantBytes:()=>undefined,stats:()=>({admitted:0,settled:0,waits:0,waitedMilliseconds:0,peakBytes:0})};
  useFootprintGateV1(gate);
  try{
   const rows:GenerationRowV1[]=Array.from({length:6},(_,index)=>({kind:"derived",path:`q${index}`,fact:"answer"})),names=rows.map(derivedOwnerNameV1);
@@ -632,7 +632,7 @@ test("R57 law: a regular sample waits for the census quiet time instead of walki
 });
 
 test("R57 law: a forced release is bounded to releaseDutyPercent of the wall time, never runs below the soft limit of the grant, and runs from it",()=>{
- const P=FOOTPRINT_POLICY_V1,state={quietUntil:-Infinity};let at=1_000_000,used=0,released=0,spent=0;
+ const P=FOOTPRINT_POLICY_V1,state={quietUntil:-Infinity,releasedAt:0};let at=1_000_000,used=0,released=0,spent=0;
  const call=(more:Record<string,unknown>={})=>releaseIfGrownV1({usage:()=>used,release:()=>{released++;spent+=3000;at+=3000;},threshold:100*MB,now:()=>at,decision:()=>"settle",state,...more});
  const began=at;
  for(;at-began<600_000;at+=1000){used+=200*MB;call();}
@@ -664,8 +664,8 @@ test("a slice worker told its plan ceiling gates the whole tree it holds against
  let tree=300*MB;const asked:number[]=[],scripts=createScriptInputCache({workspaceRoot:"/w"}) as any,fill=()=>{scripts.files.set("a",1);scripts.closures.set("b",1);scripts.commandDependencies.set("c",1);};
  const gate=useSliceCeilingGateV1({[name]:"1000"},{pid:4242,read:async pid=>{asked.push(pid);return tree;},bind:(grant,ports)=>bindProcessGateV1(grant,{...ports,trace:()=>undefined,write:()=>undefined})})!;
  try{
-  expect(gate).toBe(footprintGateV1());expect(gate.grantBytes()).toBe(1000*MB);expect(useSliceCeilingGateV1({[name]:"2000"})).toBe(gate);
-  for(const held of[300,599,600,849,850,1200]){tree=held*MB;await gate.settle(false);expect(gate.footprintBytes()).toBe(held*MB);expect(decideFootprintV1({footprintBytes:gate.footprintBytes(),grantBytes:gate.grantBytes()!})).toBe(shareOracle(held*MB,1000*MB));}
+  expect<unknown>(gate).toBe(footprintGateV1());expect(gate.grantBytes()).toBe(1000*MB);expect(useSliceCeilingGateV1({[name]:"2000"})).toBe(gate);
+  for(const held of[300,599,600,849,850,1200]){tree=held*MB;await gate.settle(false);expect(gate.footprintBytes()).toBe(held*MB);expect<string>(decideFootprintV1({footprintBytes:gate.footprintBytes(),grantBytes:gate.grantBytes()!})).toBe(shareOracle(held*MB,1000*MB));}
   expect(new Set(asked)).toEqual(new Set([4242]));
   tree=900*MB;await gate.settle(false);fill();releaseOwnerStateV1(scripts);
   expect([scripts.files.size,scripts.closures.size,scripts.commandDependencies.size]).toEqual([0,0,0]);

@@ -206,7 +206,7 @@ test("an offloaded action that a worker refuses for lack of headroom goes to ano
  const run=submit(scheduler,memory.action(control,"refused-1"));await Bun.sleep(30);
  const first=await Promise.race([polled(scheduler,one.id,300),polled(scheduler,two.id,300)]),taker=first.task===null?undefined:(await polled(scheduler,one.id,10).then(()=>undefined)),given=first.task;
  expect(given).not.toBeNull();
- const holder=[one,two].find(worker=>scheduler.status().workers.find(row=>row.id===worker.id)!.running>0)!,other=holder.id===one.id?two:one;
+ const holder=[one,two].find(worker=>Number(scheduler.status().workers.find(row=>row.id===worker.id)!.running)>0)!,other=holder.id===one.id?two:one;
  scheduler.report(holder.id,given!.id,{version:1,outcome:"refused",refusal:"memory",status:{code:0,message:""},actionResult:null} as never);
  const next=await polled(scheduler,other.id,2000);expect(next.task,"the other machine got it").not.toBeNull();expect(taker).toBeUndefined();
  scheduler.report(other.id,next.task!.id,{version:1,outcome:"refused",refusal:"memory",status:{code:0,message:""},actionResult:null} as never);
@@ -431,7 +431,7 @@ test("an operation leases its whole input root when it is accepted, renews the l
  expect(leasing.released).toEqual([]);
  const worker=scheduler.register(profile("w")),task=(await polled(scheduler,worker.id)).task!;
  scheduler.report(worker.id,task.id,resultOf());await run.done;
- expect(leasing.released).toHaveLength(1);expect(leasing.released[0]!.lease).toBe(first.lease);expect(new Set(leasing.released[0]!.hashes)).toEqual(built.blobs);
+ expect(leasing.released).toHaveLength(1);expect<unknown>(leasing.released[0]!.lease).toBe(first.lease);expect(new Set(leasing.released[0]!.hashes)).toEqual(built.blobs);
 });
 
 test("an operation whose input blobs are missing is answered at submission with every missing blob, never queued, and holds no lease",async()=>{

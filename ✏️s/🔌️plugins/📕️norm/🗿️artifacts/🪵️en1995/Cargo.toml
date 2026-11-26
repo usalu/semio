@@ -63,6 +63,7 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️diaphragm-sheathing/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛰️proto-twin/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️typescript-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️entity-rows-more/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️entity-rows/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️panel-layers/📦️packages/🦀️rust",
@@ -302,6 +303,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 
 [workspace.dependencies.semio-s-artifact-norm-en1995-mutations]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-mutations-edit-rules]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-en1995-scene]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/📦️packages/🦀️rust"

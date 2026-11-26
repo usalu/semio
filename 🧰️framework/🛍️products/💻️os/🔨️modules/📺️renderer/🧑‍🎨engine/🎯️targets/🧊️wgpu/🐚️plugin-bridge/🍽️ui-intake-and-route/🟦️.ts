@@ -1,5 +1,5 @@
 import type { BuiltNode, Component, Effect } from "@semio-tech/framework";
-import { decodePackWire, packWireNatural } from "@semio-tech/framework-os";
+import { decodePackWire, packWireNatural } from "@semio-tech/framework/packs";
 import { OwnedUiPatchIntake, RETAINED_UI_INTAKE_SLICE_STEPS, retainedUiIntakeStepCeiling } from "@semio-tech/framework-os/modules/renderer/engine/elements/UiDocumentStore/intake";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "@semio-tech/ui-contract/limits";
 import { WORKER_STEP_BUDGET_MS } from "../../⏱️turn-budget/🟦️.ts";

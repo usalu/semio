@@ -319,8 +319,7 @@ pub mod context {
     }
 
     pub async fn canvas_scene(app: &mut BimApp, body_key: &str, view: &ViewModel) -> semio_plugin::Canvas2dScene {
-        let json = render_text(app, body_key, view).await;
-        semio_plugin::artifact_app_laws::decode_fixture_scene(&json).expect("assembled canvas scene")
+        semio_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, body_key, view, app.1.cx(), |root| semio_plugin::artifact_app_laws::built_surface_scene(root)).await.expect("render canvas").expect("assembled canvas scene")
     }
 
     pub async fn world_scene(app: &mut BimApp, view: &ViewModel) -> semio_plugin::World3dScene {

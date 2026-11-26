@@ -1,5 +1,7 @@
 //! 🧩️ Typed runtime assembly published from artifact-owned composition contributions.
 
+#![recursion_limit = "512"]
+
 use semio_plugin::__semio_dispatch_PluginApp;
 use semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_plugin::plugin_app_close_prelude::*;

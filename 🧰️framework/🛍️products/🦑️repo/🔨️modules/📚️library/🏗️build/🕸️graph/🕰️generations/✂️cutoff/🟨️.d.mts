@@ -1,6 +1,6 @@
 import type {FactIndexV1,GenerationRowV1} from "../🟨️.mjs";
 /** ✂️ The declared constants of the derived fact cutoff. */
-export interface CutoffPolicyV1{readonly version:1;readonly kind:"derived";readonly ownerPrefix:string;readonly nameDigestCharacters:number;readonly deriveConcurrency:number;readonly maximumSuspects:number}
+export interface CutoffPolicyV1{readonly version:1;readonly kind:"derived";readonly ownerPrefix:string;readonly nameDigestCharacters:number;readonly deriveConcurrency:number;readonly collectEveryClosures:number;readonly settleChunkClosures:number;readonly manifestSaveMilliseconds:number;readonly manifestSaveSpendRatio:number;readonly vouchConcurrency:number;readonly maximumSuspects:number;readonly partRowBatchRows:number;readonly partProgressMilliseconds:number}
 /** 📐️ The declared constants of the derived fact cutoff. */
 export const CUTOFF_POLICY_V1:CutoffPolicyV1;
 /** 🧵️ What a computation answers when it is asked again: the digest of the answer and every raw row it read. */

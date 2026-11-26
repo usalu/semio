@@ -8,7 +8,11 @@
  * SEMIO_PROBE_MATH_DIR and SEMIO_PROBE_BREP_DIR optionally supply locally built component files at the installed extension URLs.
  * SEMIO_PROBE_MOUNT_MS sets the editor mount deadline. SEMIO_PROBE_BASELINE_MS sets the initial geometry deadline. SEMIO_PROBE_MAX_MS sets the overall cap.
  * SEMIO_PROBE_GEOMETRY_EXAMPLE=rectangle runs the same geometry and history assertions on Rectangle Wire Preview.
+ * SEMIO_PROBE_REQUESTER_CORE_SHA256 verifies the real served requester before Chromium launches and checks its browser download.
+ * SEMIO_PROBE_CONTRIBUTION_TRACE logs contribution dispatch, returned effects and their apply owner.
+ * SEMIO_PROBE_NATIVE_DIAGNOSTICS enables the existing WASI typed-operation diagnostics for a diagnostic replay.
  * SEMIO_PROBE_CPU_PORT selects a loopback DevTools listener for the optional worker profile. Use with SEMIO_PROBE_WORKER_TRACE=1.
+ * SEMIO_PROBE_CPU_AFTER_COMPLETED_MS captures an additional worker profile after the first normal Math delivery.
  * @see 🐍️journey-probe.mjs, 🐍️interaction-matrix-probe.mjs, 🐍️editor-verbs-keyboard-probe.mjs, 🐍️io-surface-probe.mjs
  */
 import { chromium } from "playwright";
@@ -36,12 +40,22 @@ const lines = [];
 const rows = [];
 const artifacts = new Map();
 const log = (...a) => console.log("[DEBUG]", ...a);
+const contributionTrace = process.env.SEMIO_PROBE_CONTRIBUTION_TRACE === "1";
+const nativeDiagnostics = process.env.SEMIO_PROBE_NATIVE_DIAGNOSTICS === "1";
+const requesterSha256 = process.env.SEMIO_PROBE_REQUESTER_CORE_SHA256;
+const requesterPath = "/🔌️plugin-modules/🌀️procedural/semio_hub_procedural_component.core.wasm";
+const requesterUrl = new URL(requesterPath, URL_).href;
+let requesterReceipt;
+let requesterDownload;
 let browser;
 let browserServer;
 let page;
 let progressTimer;
 let workerProfiler;
 let profileStopper;
+let completionProfiler;
+let completionProfileStopper;
+let completionProfileStarted = false;
 let shuttingDown = false;
 
 const flush = () => {
@@ -53,7 +67,9 @@ const finishBrowser = async (code) => {
   shuttingDown = true;
   clearInterval(progressTimer);
   clearTimeout(profileStopper);
+  clearTimeout(completionProfileStopper);
   workerProfiler?.close();
+  completionProfiler?.close();
   const forceExit = setTimeout(() => {
     void browserServer?.kill().catch(() => {});
     setTimeout(() => process.exit(code), 1000);
@@ -67,6 +83,38 @@ const watchdog = setTimeout(async () => {
   console.log(JSON.stringify(rows));
   await finishBrowser(2);
 }, HARD_MS);
+const stopProbe = () => {
+  if (shuttingDown) return;
+  rows.push({ id: "interrupted", ok: false, status: "fail", ms: Date.now() - T0, detail: "probe interrupted locally", screenshot: null });
+  flush();
+  void finishBrowser(2);
+};
+process.once("SIGTERM", stopProbe);
+process.once("SIGINT", stopProbe);
+
+if (requesterSha256) {
+  try {
+    if (!/^[0-9a-f]{64}$/.test(requesterSha256)) throw Error("expected a lowercase requester SHA-256");
+    const response = await fetch(requesterUrl, { redirect: "error", signal: AbortSignal.timeout(45000) });
+    if (response.status !== 200 || !response.body) throw Error(`requester preflight received HTTP ${response.status}`);
+    const hash = createHash("sha256");
+    let bytes = 0;
+    for await (const chunk of response.body) {
+      bytes += chunk.byteLength;
+      hash.update(chunk);
+    }
+    requesterReceipt = { url: requesterUrl, bytes, sha256: hash.digest("hex") };
+    if (requesterReceipt.sha256 !== requesterSha256) throw Error(`served requester SHA-256 ${requesterReceipt.sha256} differs from ${requesterSha256}`);
+    artifacts.set(requesterUrl, requesterReceipt);
+    log("verified requester core", requesterReceipt);
+  } catch (error) {
+    clearTimeout(watchdog);
+    rows.push({ id: "requester-core", ok: false, status: "fail", ms: Date.now() - T0, detail: { expected: requesterSha256, actual: requesterReceipt, error: String(error) }, screenshot: null });
+    flush();
+    log("requester preflight failed", String(error));
+    process.exit(1);
+  }
+}
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 /** ⏳️ Poll `read` every `step` ms until `done(value)`; never a fixed sleep. Returns the last value and whether it was reached. */
@@ -245,10 +293,11 @@ const row = async (id, fn) => {
 
 const profilerPort = Number(process.env.SEMIO_PROBE_CPU_PORT ?? 0);
 const profileDuration = Number(process.env.SEMIO_PROBE_CPU_DURATION_MS ?? 25000);
+const completionProfileDuration = Number(process.env.SEMIO_PROBE_CPU_AFTER_COMPLETED_MS ?? 0);
 const captureTick = process.env.SEMIO_PROBE_CAPTURE_TICK === "1";
 let tickCaptureOrdinal = 0;
 const profilerArguments = profilerPort ? [`--remote-debugging-port=${profilerPort}`, "--remote-debugging-address=127.0.0.1"] : [];
-browserServer = await chromium.launchServer({ host: "127.0.0.1", port: 0, headless: process.env.SEMIO_PROBE_HEADED !== "1", args: ["--js-flags=--max-old-space-size=1024", "--renderer-process-limit=1", "--enable-unsafe-webgpu", "--ignore-gpu-blocklist", ...(process.platform === "darwin" ? ["--use-angle=metal"] : []), ...profilerArguments] });
+browserServer = await chromium.launchServer({ host: "127.0.0.1", port: 0, headless: process.env.SEMIO_PROBE_HEADED !== "1", args: [(process.env.SEMIO_PROBE_SINGLE_COMPILER === "1" ? "--js-flags=--max-old-space-size=768 --wasm-num-compilation-tasks=1" : "--js-flags=--max-old-space-size=1024"), "--renderer-process-limit=1", "--enable-unsafe-webgpu", "--ignore-gpu-blocklist", ...(process.platform === "darwin" ? ["--use-angle=metal"] : []), ...profilerArguments] });
 browserServer.on("close", (code, signal) => {
   if (shuttingDown) return;
   lines.push(`${Date.now() - T0} pagecrash Chromium exited (${code ?? "no code"}, ${signal ?? "no signal"})`);
@@ -272,11 +321,17 @@ const componentFiles = new Map(extensionModules.flatMap(([extension, component, 
     return [`/🧩️extension-modules/${extension}/${name}`, join(directory, name)];
   })));
 const probeOrigin = new URL(URL_).origin;
-if (profilerPort) workerProfiler = await connectWorkerProfiler(profilerPort, OUT, probeOrigin, log);
+if (profilerPort && profileDuration > 0) workerProfiler = await connectWorkerProfiler(profilerPort, OUT, probeOrigin, log);
 const componentFile = (url) => url.origin === probeOrigin ? componentFiles.get(decodeURIComponent(url.pathname)) : undefined;
 context.on("requestfinished", (request) => {
   const url = new URL(request.url());
   const path = decodeURIComponent(url.pathname);
+  if (requesterReceipt && url.origin === probeOrigin && path === requesterPath && [...url.searchParams.keys()].every((key) => key === "v")) {
+    void request.response().then((response) => {
+      requesterDownload = { url: url.href, status: response?.status() };
+      log("Chromium downloaded requester core", requesterDownload);
+    }).catch(() => {});
+  }
   if (url.origin !== probeOrigin || !/^\/🧩️extension-modules\/(?:🧮️flow-extension-math|🧊️flow-extension-brep)\/[^/]+\.core\.wasm$/.test(path)) return;
   void request.sizes().then(({ responseBodySize }) => log("downloaded extension core", responseBodySize, path)).catch(() => {});
 });
@@ -294,6 +349,34 @@ const observe = (suffix, rewrite) => context.route((url) => url.origin === probe
   log("browser observation", { suffix, matched: body !== before });
   await route.fulfill({ response, body });
 });
+if (nativeDiagnostics) {
+  await observe("/🔌️plugin-modules/🌀️procedural/🌉️bridge.js", (source) => source.replace(
+    "const instance = await factory.instantiate((name) => coreModule(versionedUrl(\"./\" + name)), { ...factory.wasiImports, \"./🟨️.js\": hostShim });",
+    `for (const level of ["debug", "info", "log", "warn", "error"]) {
+       const original = console[level].bind(console);
+       console[level] = (...args) => {
+         const message = args.find(arg => typeof arg === "string" && arg.includes("[TRACE]"));
+         if (message && !/cleanup continuation for instance|maintenance stage=.*outcome=Err|runtime live cleanup faulted/i.test(message)) return;
+         original(...args);
+       };
+     }
+     const originalEnvironment = factory.wasiImports["wasi:cli/environment"];
+     const guestEnvironment = { ...originalEnvironment, getEnvironment: () => [...originalEnvironment.getEnvironment().filter(([name]) => name !== "SEMIO_RUNTIME_DIAGNOSTICS"), ["SEMIO_RUNTIME_DIAGNOSTICS", "1"]] };
+     const instance = await factory.instantiate((name) => coreModule(versionedUrl("./" + name)), { ...factory.wasiImports, "wasi:cli/environment": guestEnvironment, "./🟨️.js": hostShim });`,
+  ));
+}
+if (contributionTrace) {
+  await observe("/🔁️contributions-refresh/🟦️.ts", (source) => source
+    .replace("const contributionResponse = await pluginEntry.handle.handleCommand(instanceId, wire, environment.targetViewState);", `
+      console.info("[DEBUG] CONTRIBUTION_START " + JSON.stringify({ plugin: pluginEntry.handle.pluginId, app: targetApp.id, instanceId, jsonBytes: json.length, loaded: environment.loadedPlugins.map(({ handle }) => handle.pluginId), mode: environment.targetViewState.activeModeId, windows: environment.targetViewState.windowInstances }));
+      $&
+      console.info("[DEBUG] CONTRIBUTION_RESULT " + JSON.stringify({ plugin: pluginEntry.handle.pluginId, instanceId, uiScope: contributionResponse.uiScope, effects: (contributionResponse.requestedEffects ?? []).map((effect) => typeof effect === "string" ? effect : { kind: Object.keys(effect)[0], action: effect.dispatchAction?.action, window: effect.dispatchAction?.args?.windowId }) }));
+    `)
+    .replace("const target = contributionsReceiverSessionV1(receiver, live);", `
+      $&
+      console.info("[DEBUG] CONTRIBUTION_APPLY " + JSON.stringify({ receiver: [receiver.pluginId, receiver.instanceId], target: [target.pluginId, target.instanceId], live: [live.pluginId, live.instanceId], effects: deferredEffects.length }));
+    `));
+}
 if (process.env.SEMIO_PROBE_PICKER_TRACE === "1") {
   await observe("/🧭️input-funnel/🟦️.ts", (source) => source.replace(/const outcome = directOutcome \?\? await dispatchProgramAction\([^\n]*\);/, `
     if (action.action === "setActiveExample") console.info("[DEBUG] PICK_INPUT " + JSON.stringify({ inputSeq: entry.provenance.inputSeq, causedBy: entry.provenance.causedBy, target: targetSession.instanceId, args: action.args }));
@@ -357,6 +440,7 @@ if (process.env.SEMIO_PROBE_WORKER_TRACE === "1") {
     if (["setContributions", "flowEvalTick", "noteShellCommand", "interactionSelect"].includes(inspected.actionId) && (continuations < 8 || continuations % 16 === 0)) {
       console.info("[DEBUG] WORKER_CONTINUATION " + JSON.stringify({ actorId, action: inspected.actionId, continuation: continuations + 1, status: wireTurnStatusTag(continued.status), effects: continued.effects.length, patches: continued.uiPatches.length }));
     }
+    if (${contributionTrace} && inspected.actionId === "setContributions" && continued.effects.length > 0) console.info("[DEBUG] CONTRIBUTION_WIRE " + JSON.stringify({ continuation: continuations + 1, result: continued.commandIngress?.tag, effects: continued.effects.map((effect) => effect.tag ?? effect.kind ?? Object.keys(effect)[0]) }));
     $&`));
 }
 if (captureTick) {
@@ -373,6 +457,10 @@ if (captureTick) {
 page = await context.newPage();
 page.on("console", (m) => {
   const message = m.text();
+  if (nativeDiagnostics && message.includes("[TRACE]")) {
+    if (message.includes("typed-operation silent units=")) log(Date.now() - T0, message);
+    else if (!/cleanup continuation for instance|maintenance stage=.*outcome=Err|runtime live cleanup faulted/i.test(message)) return;
+  }
   for (const kind of ["OPEN", "SURFACE", "VIEW", "PACK"]) {
     const prefix = `[DEBUG] WORKER_TICK_${kind} `;
     if (!captureTick || !message.startsWith(prefix)) continue;
@@ -387,11 +475,21 @@ page.on("console", (m) => {
     return;
   }
   lines.push(`${Date.now() - T0} ${m.type()} ${message.slice(0, 1200)}`);
-  if (/^\[DEBUG\] (?:PICK|HISTORY|EXT|WORKER)_/.test(message)) log(Date.now() - T0, message);
+  if (/^\[DEBUG\] (?:PICK|HISTORY|EXT|WORKER|CONTRIBUTION)_/.test(message)) log(Date.now() - T0, message);
   if (workerProfiler && message.startsWith("[DEBUG] WORKER_CONTINUATION ") && message.includes('"action":"setContributions"')) workerProfiler.start();
   if (workerProfiler && !profileStopper && message.startsWith("[DEBUG] WORKER_TICK_INGRESS ") && message.includes('"windowId":"procedural-preview"')) {
     workerProfiler.start();
     profileStopper = setTimeout(() => void workerProfiler.stop().catch((error) => log("worker profiler failed", String(error))), profileDuration);
+  }
+  if (profilerPort && completionProfileDuration > 0 && !completionProfileStarted
+      && message.startsWith("[DEBUG] EXT_DELIVERED ") && message.includes('"extensionId":"flow-extension-math"')) {
+    completionProfileStarted = true;
+    void connectWorkerProfiler(profilerPort, OUT, probeOrigin, log, "worker-after-completed").then((profiler) => {
+      if (shuttingDown) { profiler.close(); return; }
+      completionProfiler = profiler;
+      profiler.start();
+      completionProfileStopper = setTimeout(() => void profiler.stop().catch((error) => log("completion profiler failed", String(error))), completionProfileDuration);
+    }).catch((error) => log("completion profiler could not attach", String(error)));
   }
 });
 page.on("pageerror", (e) => lines.push(`${Date.now() - T0} pageerror ${String(e).slice(0, 1200)}`));
@@ -1019,6 +1117,10 @@ await row("8-locale-keyboard-a11y", async () => {
 //#endregion
 
 clearTimeout(watchdog);
+if (requesterReceipt) {
+  const ok = requesterDownload?.status === 200;
+  rows.push({ id: "requester-core", ok, status: ok ? "pass" : "fail", ms: Date.now() - T0, detail: { receipt: requesterReceipt, browser: requesterDownload }, screenshot: null });
+}
 if (componentFiles.size) {
   const served = new Set([...artifacts.keys()].map((url) => decodeURIComponent(new URL(url).pathname)));
   const missing = [...componentFiles.keys()].filter((path) => (path.endsWith(".js") || path.endsWith(".core.wasm")) && !served.has(path));

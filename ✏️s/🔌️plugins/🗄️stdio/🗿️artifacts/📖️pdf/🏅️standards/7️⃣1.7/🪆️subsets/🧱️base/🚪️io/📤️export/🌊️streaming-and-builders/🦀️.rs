@@ -189,7 +189,7 @@ pub fn text_document(pages: &[(f64, f64, &str)]) -> PdfSnapshot {
         if !text.is_empty() {
             let margin = (width.min(*height) * 0.1).min(72.0);
             let (ops, _) = layout.show_paragraph(text, margin, height - margin, width - 2.0 * margin, height - 2.0 * margin);
-            page.content = ops;
+            page.content = ops.into_iter().collect();
         }
         snapshot.pages.push(page);
     }

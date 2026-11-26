@@ -81,6 +81,22 @@ impl JsonWriteSource for PublicationWire<'_>{
 }
 
 impl PublicationWire<'_>{
+    /// 📏️ Bounds the canonical bytes of a small page before any source text is encoded.
+    pub(super) fn compact_byte_bound(&self) -> Option<usize> {
+        match self {
+            Self::LaneReceipt { .. } => Some(96),
+            Self::Accepted(_) => Some(40),
+            Self::Ui(UiDirtyScope::Full | UiDirtyScope::None) => Some(16),
+            Self::Ui(UiDirtyScope::Partial { window_bodies, panel_bodies, .. }) => {
+                if window_bodies.len().checked_add(panel_bodies.len())? > 16 { return None; }
+                window_bodies.iter().chain(panel_bodies.iter()).try_fold(224usize, |bound, key| {
+                    bound.checked_add(key.len().checked_mul(6)?.checked_add(3)?)
+                }).filter(|bound| *bound <= 2048)
+            }
+            Self::Download { .. } => None,
+        }
+    }
+
     /// ✍️ Writes a bounded prefix into already-admitted storage under the caller's original control.
     pub fn write_into(&self,output:&mut[u8],maximum_depth:usize,maximum_items:u64,control:&mut NativeEncodeControl<'_>)->PublicationWireWrite{
         let maximum=output.len()as u64;

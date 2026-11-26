@@ -4,11 +4,13 @@
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as vcs;
 
+#[path = "../🚀️initialized-manifest/🦀️.rs"]
+mod initialized_manifest;
 
 pub mod context {
     use semio_plugin::artifact_app_laws::{new_app_with_registry, FixtureUiArena, OriginalFixtureScope};
-    use semio_plugin::{App, EditorApp, PluginApp as _, VcsArtifactApp};
-    use semio_s_artifact_fem_3d_editor::editor::fem3d::{create_fem3d_app, Fem3dPlayApp};
+    use semio_plugin::{EditorApp, PluginApp as _, VcsArtifactApp};
+    use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dPlayApp;
 
     /// 🏗️ The mounted fixture app and its one original caller scope.
     pub struct Fem3dApp(pub VcsArtifactApp<EditorApp<Fem3dPlayApp>>, pub OriginalFixtureScope, FixtureUiArena);
@@ -28,9 +30,7 @@ pub mod context {
         }
     }
 
-    fn manifest() -> App {
-        App { definition: create_fem3d_app(), examples: Vec::new() }
-    }
+    use crate::initialized_manifest::manifest;
 
     /// 🧪️ A MOUNTED app bound to instance 1, booting on the concrete-forest example.
     pub fn fem3d_app() -> Fem3dApp {

@@ -1,5 +1,5 @@
 import buildPolicy from "../🔣️policy.json" with {type:"json"};
-import {adoptUpgradedHostPlanV1,attachHostCapacityProcessV1,currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,wholeHostProbeV1,hostClassBoundV1,hostClassCeilingV1,hostLearnCeilingV1,hostProfileV1,createHostPhaseResizerV1,estimateHostPhasesV1,forecastHostQuietV1,formatHostCapacityV1,hostCapacityDirectoryV1,hostEstimateLineageV1,hostFloorMegabytesV1,hostRebuildSlotsV1,hostRequestPriorityV1,learnableHostRunV1,newHostCapacityIdV1,quietHostRequestV1,rampHostRequestV1,readHostEstimateStoreV1,recordHostForecastV1,recordHostPhasesV1,requestHostCapacityUpgradeV1,resolveHostCapacityLanguageV1,scaleHostRequestV1,sizeHostRequestV1,updateHostEstimateStoreV1,withHostCapacityV1,type HostActionKindV1,type HostRunV1,type HostCapacityHandleV1,type HostCapacityPolicyV1,type HostCapacityPortsV1,type HostRequestV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
+import {hostRunAfterNeedV1,adoptUpgradedHostPlanV1,attachHostCapacityProcessV1,currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,wholeHostProbeV1,hostClassBoundV1,hostClassCeilingV1,hostLearnCeilingV1,hostProfileV1,createHostPhaseResizerV1,estimateHostPhasesV1,forecastHostQuietV1,formatHostCapacityV1,hostCapacityDirectoryV1,hostEstimateLineageV1,hostFloorMegabytesV1,hostRebuildSlotsV1,hostRequestPriorityV1,learnableHostRunV1,newHostCapacityIdV1,quietHostRequestV1,rampHostRequestV1,readHostEstimateStoreV1,recordHostForecastV1,recordHostPhasesV1,requestHostCapacityUpgradeV1,resolveHostCapacityLanguageV1,scaleHostRequestV1,sizeHostRequestV1,updateHostEstimateStoreV1,withHostCapacityV1,type HostActionKindV1,type HostRunV1,type HostCapacityHandleV1,type HostCapacityPolicyV1,type HostCapacityPortsV1,type HostRequestV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type {HostUpgradeOutcomeV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {readdirSync,readFileSync} from "node:fs";
@@ -196,7 +196,7 @@ export function reserveGraphPlanCapacityV1(input:HostCapacityPortsV1&Readonly<{m
  const policy=input.policy??BUILD_HOST_CAPACITY_POLICY_V1,environment:NodeJS.ProcessEnv={...(input.environment??process.env)},none=Object.freeze({megabytes:Math.max(0,Math.ceil(input.megabytes)),attach:()=>undefined,release:()=>undefined});
  delete environment["SEMIO_HOST_CAPACITY_GRANT"];delete environment["SEMIO_HOST_CAPACITY_PLAN"];delete environment["SEMIO_HOST_CAPACITY_HANDOVER"];
  if(!policy.enabled||environment["SEMIO_HOST_CAPACITY"]==="off")return Promise.resolve(none);
- const request:HostRequestV1=Object.freeze({id:newHostCapacityIdV1(),operation:"graph-plan",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:Math.max(0,Math.ceil(input.megabytes)),perJobMegabytes:0,cpuPerJob:1,...input.minimumMegabytes===undefined?{}:{minimumMegabytes:Math.min(Math.max(0,Math.ceil(input.minimumMegabytes)),Math.max(0,Math.ceil(input.megabytes)))},label:"graph-plan"}),session=currentAgentSessionV1({environment}),controller=new AbortController();
+ const request:HostRequestV1=Object.freeze({id:newHostCapacityIdV1(),operation:"graph-plan",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:Math.max(0,Math.ceil(input.megabytes)),perJobMegabytes:0,cpuPerJob:1,retainReservation:true,...input.minimumMegabytes===undefined?{}:{minimumMegabytes:Math.min(Math.max(0,Math.ceil(input.minimumMegabytes)),Math.max(0,Math.ceil(input.megabytes)))},label:"graph-plan"}),session=currentAgentSessionV1({environment}),controller=new AbortController();
  const control:ResourceLeaseControl=Object.freeze({signal:controller.signal,remainingMilliseconds:()=>null,publish:()=>undefined,yieldContinuation:()=>new Promise<void>(done=>setImmediate(done))});
  let worker:number|undefined,release=()=>{};const held=new Promise<void>(done=>{release=done;});
  const cancelWait=()=>controller.abort(input.signal?.reason??refuseCapacityV1("cancelled","graph-plan-wait-cancelled"));
@@ -235,13 +235,13 @@ export async function withBuildCapacityV1<T>(args:readonly string[],environment:
  const hostSession={address:agentSessionAddressV1(session),weight:session.budget.weight};
  const runWithFleet=async()=>{
   const waiting=ports.control?undefined:createCapacityControlV1(),control=ports.control??waiting!.control,minimum=policy.operations.find(row=>row.name===base.operation)!.fixedMegabytes;
-  const request:HostRequestV1={id:newHostCapacityIdV1(),operation:"cargo-orchestration",priority:base.priority,minimumJobs:1,preferredJobs:1,fixedMegabytes:minimum,minimumMegabytes:minimum,perJobMegabytes:0,cpuPerJob:1,label:base.label};
+  const request:HostRequestV1={id:newHostCapacityIdV1(),operation:"cargo-orchestration",priority:base.priority,minimumJobs:1,preferredJobs:1,fixedMegabytes:minimum,minimumMegabytes:minimum,perJobMegabytes:0,cpuPerJob:1,retainReservation:true,label:base.label};
   try{
    return await withHostCapacityV1({park:parkGrantForRestartV1,...ports,directory,policy,request,control,environment,session:hostSession},async handle=>{
     control.signal.throwIfAborted();
     if(!handle.bypassed){
      const held=readLiveHostCapacityReservationV1({...environment,...handle.environment,SEMIO_HOST_CAPACITY_DIRECTORY:directory},policy);
-     if(held?.id!==handle.id||held.reservedMegabytes<minimum||held.cpu<request.cpuPerJob)throw refuseCapacityV1("refused","cargo-orchestration-grant",{minimum,reserved:held?.reservedMegabytes??0});
+     if(held?.id!==handle.id||held.retainReservation!==true||held.reservedMegabytes<minimum||held.cpu<request.cpuPerJob)throw refuseCapacityV1("refused","cargo-orchestration-grant",{minimum,reserved:held?.reservedMegabytes??0});
     }
     if(!handle.inherited)write(resolveHostCapacityLanguageV1(environment)==="de"?"[capacity] Cargo hat lokale Kapazität für die Koordination. Die Flotte kann einzelne Compiler-Einheiten übernehmen.":"[capacity] Cargo has local orchestration capacity. The fleet can take individual compiler units.");
     const carried={...handle.environment,SEMIO_UNIT_CACHE_SLOTS:"1",SEMIO_OFFLOAD_PRESSURE:"door"},before=Object.fromEntries(Object.keys(carried).map(key=>[key,environment[key]]));
@@ -263,7 +263,7 @@ export async function withBuildCapacityV1<T>(args:readonly string[],environment:
  if(quiet&&!client)write(forecast!.followUpMilliseconds===undefined?formatHostCapacityV1(resolveHostCapacityLanguageV1(environment),"quiet",{operation:ask.operation,samples:forecast!.samples,percent:Math.round(forecast!.shareBasisPoints/100),reserved:admission.fixedMegabytes,full:growth.fixedMegabytes+growth.preferredJobs*growth.perJobMegabytes}):formatHostCapacityV1(resolveHostCapacityLanguageV1(environment),"quietFollowUp",{operation:ask.operation,seconds:Math.round(forecast!.followUpMilliseconds/1000),reserved:admission.fixedMegabytes,full:growth.fixedMegabytes+growth.preferredJobs*growth.perJobMegabytes}));
  let breached:JobOutcomeV1|undefined;
  const learn=async(run:HostRunV1)=>{
-  run=learnedRunAfterOutcomeV1(run,breached);
+  run=hostRunAfterNeedV1(learnedRunAfterOutcomeV1(run,breached),run.needMegabytes);
   const code=(ports.exitCode??(()=>process.exitCode))(),status=run.status==="ok"&&code!==undefined&&code!==null&&Number(code)!==0?"failed" as const:run.status,defaultMegabytes=Math.max(1,base.fixedMegabytes+run.jobs*base.perJobMegabytes);
   const forecasted=run.executed===undefined?undefined:{executed:run.executed||!client&&forecast!==undefined&&run.peakMegabytes>forecast.megabytes,peakMegabytes:run.peakMegabytes,activeMilliseconds:run.activeMilliseconds,peakAtMilliseconds:run.peakAtMilliseconds,endedAtMs:run.endedAtMs};
   if(forecasted!==undefined&&!forecasted.executed){if(status==="ok")await updateHostEstimateStoreV1(directory,policy,store=>recordHostForecastV1(policy,store,leaf,forecasted),{now});return;}

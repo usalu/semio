@@ -2,7 +2,7 @@
  * deferred inputs replay in arrival order exactly once the last load settles, never earlier and never past their capacity. */
 import { describe, expect, test } from "bun:test";
 import fixture from "./🔣️.json" with { type: "json" };
-import { createDocumentLoadGateV1, documentLoadRefusalDetailV1, documentLoadRunningV1, documentLoadWaitPolicyV1, noteDocumentLoadEndV1 } from "../../🧱️elements/🏛️ShellHost/⏳️document-load-gate/🟦️.ts";
+import { dispatchAfterDocumentLoadV1, createDocumentLoadGateV1, documentLoadRefusalDetailV1, documentLoadRunningV1, documentLoadWaitPolicyV1, noteDocumentLoadEndV1 } from "../../🧱️elements/🏛️ShellHost/⏳️document-load-gate/🟦️.ts";
 
 describe("document load wait policy", () => {
   for (const row of fixture.policy) test(`${row.action} (${row.kind ?? "undeclared"}) ${row.expect}`, () => {
@@ -108,4 +108,24 @@ describe("document load cancel", () => {
   test("only a pending or running status shows the loading band", () => {
     expect(["pending", "running", "ready", "cancelled", "fault"].map(documentLoadRunningV1)).toEqual([true, true, false, false, false]);
   });
+});
+
+
+test("scheduled document work waits for its own load and retries only a refused pre-dispatch", async () => {
+  for (const row of fixture.scheduled) {
+    const gate = createDocumentLoadGateV1(), release = gate.begin("procedural", 9);
+    let calls = 0, current = true;
+    const loading = new Error("document.loading"), fatal = new Error("unrelated");
+    const task = dispatchAfterDocumentLoadV1(gate, "procedural", 9, () => current, async () => {
+      calls++;
+      if (row.case === "refusal" && calls === 1) throw loading;
+      if (row.case === "fatal") throw fatal;
+    }, error => error === loading);
+    expect(calls).toBe(0);
+    current = row.live;
+    release();
+    if (row.case === "fatal") await expect(task).rejects.toBe(fatal);
+    else await task;
+    expect(calls).toBe(row.attempts);
+  }
 });

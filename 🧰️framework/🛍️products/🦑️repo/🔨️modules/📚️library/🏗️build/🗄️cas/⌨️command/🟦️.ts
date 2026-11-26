@@ -2,7 +2,7 @@ import {homedir} from "node:os";
 import {adoptCasV1,casPlacesOfWorkspaceV1,type CasAdoptionV1} from "../🧲️adopt/🟦️.ts";
 import {casAreasOfWorkspaceV1} from "../📂️areas/🟦️.ts";
 import {collectCasV1,formatCasCollectionV1,readCasCensusV1,readCasUsageHintV1} from "../🧹️collector/🟦️.ts";
-import {casEffectiveCapBytesV1,casPartitionUsedFractionV1,casReserveStateV1,measureCasPartitionV1,type CasPartitionV1} from "../🌡️partition/🟦️.ts";
+import {casPartitionPolicyForV1,casPartitionUsedFractionV1,casReserveStateV1,measureCasPartitionV1,type CasPartitionV1} from "../🌡️partition/🟦️.ts";
 import {CAS_POLICY_V1,casTextV1} from "../🧬️schema/🟦️.ts";
 import {casRootV1} from "../🗃️store/🟦️.ts";
 
@@ -26,11 +26,15 @@ export async function runCasCommandV1(args:readonly string[],context:CasCommandC
  if(unreferenced&&operation!=="gc")throw Error("--unreferenced belongs to gc / --unreferenced gehört zu gc");
  if(language!=="en"&&language!=="de")throw Error("Language en or de required / Sprache en oder de erforderlich");
  const home=context.home??casHomeOfV1(context.environment)??homedir(),root=casRootV1(context.environment,process.platform,home),policy=CAS_POLICY_V1,gib=(bytes:number):number=>Math.round(bytes/1073741824*100)/100;
+ const partition=operation==="adopt"?undefined:(context.partition??measureCasPartitionV1)(root);
+ const [census,hint]=operation==="adopt"?[undefined,undefined]:await Promise.all([readCasCensusV1(root),readCasUsageHintV1(root)]);
+ const latestUsage=hint&&(!census||hint.atMs>=census.atMs)?hint:census;
+ const selected=casPartitionPolicyForV1(policy,partition,latestUsage?.bytes);
  if(operation==="status"){
-  const census=await readCasCensusV1(root),hint=await readCasUsageHintV1(root),at=Date.now(),partition=(context.partition??measureCasPartitionV1)(root),percent=(fraction:number):number=>Math.round(fraction*1000)/10;
+  const at=Date.now(),percent=(fraction:number):number=>Math.round(fraction*1000)/10;
   const usage={objects:census?.objects??0,bytes:census?.bytes??hint?.bytes??0};
-  const partitionLine=partition?casTextV1("statusPartition",language,{partition:partition.partition,usedPercent:percent(casPartitionUsedFractionV1(partition)),freeGib:gib(partition.freeBytes),highPercent:percent(policy.partition.highUsedFraction),lowPercent:percent(policy.partition.lowUsedFraction),criticalPercent:percent(policy.partition.criticalUsedFraction)}):undefined;
-  const effective=partition?casEffectiveCapBytesV1(policy,partition,usage.bytes):policy.capBytes,transient={leased:census?.classes.leased.objects??0,expired:census?.classes.expired.objects??0};
+  const partitionLine=partition?casTextV1("statusPartition",language,{partition:partition.partition,usedPercent:percent(casPartitionUsedFractionV1(partition)),freeGib:gib(partition.freeBytes),highPercent:percent(selected.partition.highUsedFraction),lowPercent:percent(selected.partition.lowUsedFraction),criticalPercent:percent(selected.partition.criticalUsedFraction)}):undefined;
+  const effective=selected.capBytes,transient={leased:census?.classes.leased.objects??0,expired:census?.classes.expired.objects??0};
   const referencedBytes=census?census.classes.pinned.bytes+census.classes.held.bytes+census.classes.leased.bytes:0,unreferencedBytes=census?census.classes.expired.bytes+census.classes.unreferenced.bytes:0;
   const holders=census?[...census.holders.map(row=>({kind:row.kind,holder:row.holder,label:row.label,entries:row.entries,digests:row.objects,bytes:row.bytes})),{kind:"inputs" as const,holder:"transient-inputs",label:"transient-inputs",entries:0,digests:census.classes.leased.objects,bytes:census.classes.leased.bytes}]:[];
   const censusLine=census?casTextV1("statusCensus",language,{age:Math.max(0,Math.round((at-census.atMs)/1000)),...Object.fromEntries(Object.entries(census.classes).map(([kind,row])=>[kind,gib(row.bytes)]))}):casTextV1("statusNoCensus",language);
@@ -52,7 +56,7 @@ export async function runCasCommandV1(args:readonly string[],context:CasCommandC
   context.write(json?JSON.stringify({version:1,places:rows,total},null,2):[...Object.entries(rows).map(([id,row])=>id+": "+formatCasAdoptionV1(row,language)),formatCasAdoptionV1(total,language)].join("\n"));
   return 0;
  }
- const areas=unreferenced?[]:await casAreasOfWorkspaceV1(context.workspace,home),result=await collectCasV1({root,policy,areas,role:"operator",waitMs:policy.lockWaitMs,unreferencedOnly:unreferenced,externalBytes:unreferenced?undefined:context.externalBytes,partition:(context.partition??measureCasPartitionV1)(root),signal:ports.signal,dryRun,progress:event=>ports.progress(casTextV1(dryRun?"previewProgress":"progress",language,{entries:event.entries,usedGib:gib(event.usedBytes),capGib:gib(policy.capBytes),freedMib:Math.round(event.freedBytes/1048576*10)/10}))});
- context.write(json?JSON.stringify({version:1,...result},null,2):formatCasCollectionV1(result,policy,language));
+ const areas=unreferenced?[]:await casAreasOfWorkspaceV1(context.workspace,home),result=await collectCasV1({root,policy:selected,areas,role:"operator",waitMs:policy.lockWaitMs,unreferencedOnly:unreferenced,externalBytes:unreferenced?undefined:context.externalBytes,partition,signal:ports.signal,dryRun,progress:event=>ports.progress(casTextV1(dryRun?"previewProgress":"progress",language,{entries:event.entries,usedGib:gib(event.usedBytes),capGib:gib(selected.capBytes),freedMib:Math.round(event.freedBytes/1048576*10)/10}))});
+ context.write(json?JSON.stringify({version:1,...result},null,2):formatCasCollectionV1(result,selected,language));
  return result.status==="locked"?1:0;
 }

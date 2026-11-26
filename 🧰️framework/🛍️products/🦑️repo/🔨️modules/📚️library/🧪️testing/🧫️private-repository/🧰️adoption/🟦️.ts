@@ -1,8 +1,9 @@
 import {createHash} from "node:crypto";
-import {copyFileSync,constants,existsSync,readdirSync,readFileSync,realpathSync,statSync} from "node:fs";
-import {isAbsolute,join,relative,resolve,sep} from "node:path";
+import {copyFileSync,constants,existsSync,mkdirSync,readdirSync,readFileSync,realpathSync,statSync,writeFileSync} from "node:fs";
+import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
 import {adoptMaterializedReadOnlyDirectoriesV1} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🎛️control/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {captureNxAuthorizerSourcesV1,nxAuthorizerCapturedBytesV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
 import {adoptRustToolchainReadOnlyV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🧰️adoption/🟦️.ts";
 const policy=schema.definitions.Policy.const;
 type KindV1=keyof typeof policy.kinds;
@@ -41,4 +42,22 @@ export function adoptInstalledRustToolchainForV1(workspace:string,checkout:strin
 export function adoptInstalledNxToolkitIdentityV1(checkout:string,environment:NodeJS.ProcessEnv=process.env):string|undefined{
  const granted=environment.SEMIO_NX_TOOLING_IDENTITY;
  try{const toolkit=adoptInstalledToolV1(checkout,"nx-toolkit","en",granted||undefined);try{adoptInstalledToolV1(checkout,"nx-sdk","en",JSON.parse(readFileSync(join(toolkit.directory,".semio-sdk-material.json"),"utf8")).snapshot);}catch{}return environment.SEMIO_NX_TOOLING_IDENTITY=toolkit.identity;}catch{return granted||undefined;}
+}
+/** 📜️ Gives one private repository the checkout's authored Nx configuration, which the repository Nx storage reads before it binds a namespace; an existing file or a checkout without one is left as it is. */
+export function adoptAuthoredNxConfigurationForV1(workspace:string,checkout:string):void{
+ try{copyFileSync(join(resolve(checkout),"nx.json"),join(resolve(workspace),"nx.json"),constants.COPYFILE_EXCL);}catch(error){const code=(error as NodeJS.ErrnoException).code;if(code!=="EEXIST"&&code!=="ENOENT")throw error;}
+}
+/** 🗂️ Gives one private repository the checkout's build owner registry, which every build invocation read inside it resolves before it admits a grant; an existing file or a checkout without one is left as it is. */
+export function adoptBuildOwnerRegistryForV1(workspace:string,checkout:string):void{
+ try{copyFileSync(join(resolve(checkout),"📋️build-owners.json"),join(resolve(workspace),"📋️build-owners.json"),constants.COPYFILE_EXCL);}catch(error){const code=(error as NodeJS.ErrnoException).code;if(code!=="EEXIST"&&code!=="ENOENT")throw error;}
+}
+/** 📦️ Gives one private repository the captured Source closure of one authorizer entry (the compiler code a sealed Rust generation is built from), byte for byte as the checkout holds it, so the private repository seals the same code inside its own store; an existing file is left as it is and the number of written files is returned. */
+export async function adoptAuthorizerSourcesForV1(workspace:string,checkout:string,entry:string,signal:AbortSignal=new AbortController().signal):Promise<number>{
+ const captured=await captureNxAuthorizerSourcesV1(resolve(checkout),entry,signal),bytes=nxAuthorizerCapturedBytesV1(captured);let written=0;
+ for(const row of captured.manifest.sources){const target=join(resolve(workspace),row.path),content=bytes.get(row.path);if(content===undefined)throw Error("Captured authorizer bytes required: "+row.path);mkdirSync(dirname(target),{recursive:true});try{writeFileSync(target,content,{flag:"wx",mode:0o644});written++;}catch(error){if((error as NodeJS.ErrnoException).code!=="EEXIST")throw error;}}
+ return written;
+}
+/** 🧭️ Gives one private repository the paired build and package markers of a package workspace, so a script started inside it resolves the private repository as its own workspace root; an existing marker is left as it is. */
+export function adoptWorkspaceMarkersForV1(workspace:string):void{
+ for(const[name,text]of[["package.json",'{"name":"private-repository","private":true,"workspaces":[]}\n'],["📋️project.json","{}\n"]]as const){try{writeFileSync(join(resolve(workspace),name),text,{flag:"wx"});}catch(error){if((error as NodeJS.ErrnoException).code!=="EEXIST")throw error;}}
 }

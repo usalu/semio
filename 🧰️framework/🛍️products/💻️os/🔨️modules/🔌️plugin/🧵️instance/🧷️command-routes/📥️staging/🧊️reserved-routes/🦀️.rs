@@ -264,7 +264,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     None=>Ok(None),
                     Some(true)=>{commit.total=commit.total.saturating_add(1);Ok(None)},
                     Some(false)=>{
-                        self.history.cache=None;
+                        self.history.invalidate_cache();
                         self.tools.record_command(&mut *self.history,REVERT_TO_COMMAND_ACTION_ID,ActionKind::History,None,None,Vec::new(),None);
                         Ok(Some(ToolOperations::<A>::empty_result(REVERT_TO_COMMAND_ACTION_ID,commit.meta.get(),Vec::new(),vec![history_changed_event().await],UiDirtyScope::Full).await))
                     }
@@ -274,7 +274,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 let outcome=self.stores.checkpoint_composition_pins_unit(&mut pins,&mut publication,&mut retirement,&mut resident,&mut closing,changed,4096,cx);
                 commit.stage=FrameworkReservedCommitStage::Repin{pins,publication,retirement,resident,changed,closing};
                 if !outcome?{return Ok(None)}
-                self.history.cache=None;
+                self.history.invalidate_cache();
                 if changed{self.tools.record_command(&mut *self.history,&commit.action,ActionKind::History,None,None,Vec::new(),None);}
                 Ok(Some(ToolOperations::<A>::empty_result(&commit.action,commit.meta.get(),Vec::new(),if changed{vec![history_changed_event().await]}else{Vec::new()},if changed{UiDirtyScope::Full}else{UiDirtyScope::None}).await))
             }
@@ -361,7 +361,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         match self.stores.store.dispatch(command, identity).await {
             Ok(_) => {
                 if defer_receipt{return Ok(FrameworkHistoryRouteOutcome::Pins{changed:true})}
-                self.history.cache = None;
+                self.history.invalidate_cache();
                 if self.stores.store.local_step_pending() {
                     self.as_time_travel().defer_history_step_row(action);
                 } else {

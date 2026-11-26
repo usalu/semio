@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_value::FromValue;
 fn grant(demand:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
-fn close(work:&mut FlowInferenceDependencyWork){work.begin_close();for _ in 0..100000{if work.terminal_is_empty(){return}let demand=work.next_close_demands(4096).unwrap();work.close_step(grant(demand)).unwrap();}panic!("original dependency did not close")}
+fn close(work:&mut FlowInferenceDependencyWork){work.begin_close();for _ in 0..100000{if work.terminal_is_empty(){return}let demand=work.next_close_demands(4096).unwrap();let g=grant(demand);crate::effect::fx(g,|effect|work.close_step(g,effect)).unwrap();}panic!("original dependency did not close")}
 #[test]
 fn original_dependency_work_matches_genuine_cold_and_neutral_ancestry(){
  let cases=semio_framework_pack_json::parse(include_str!("📁️cases.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

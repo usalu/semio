@@ -52,6 +52,7 @@
     "tools_list",
     "tools_setup",
     "tools_verify",
+    "typecheck",
     "units_plan",
     "units_run"
   ],
@@ -860,6 +861,66 @@
       "id": "test-file-no-files",
       "tool": "test_file",
       "arguments": {},
+      "valid": false
+    },
+    {
+      "id": "typecheck-basic",
+      "tool": "typecheck",
+      "arguments": {
+        "files": [
+          "a/one.ts"
+        ]
+      },
+      "valid": true,
+      "argv": [
+        "typecheck",
+        "--json",
+        "--",
+        "a/one.ts"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "typecheck-flags",
+      "tool": "typecheck",
+      "arguments": {
+        "files": [
+          "a.ts",
+          "b.mjs"
+        ],
+        "dry_run": true,
+        "no_importers": true,
+        "all_errors": true,
+        "declarations": true
+      },
+      "valid": true,
+      "argv": [
+        "typecheck",
+        "--json",
+        "--dry-run",
+        "--no-importers",
+        "--all-errors",
+        "--declarations",
+        "--",
+        "a.ts",
+        "b.mjs"
+      ],
+      "environment": {},
+      "agent": ""
+    },
+    {
+      "id": "typecheck-no-files",
+      "tool": "typecheck",
+      "arguments": {},
+      "valid": false
+    },
+    {
+      "id": "typecheck-empty-files",
+      "tool": "typecheck",
+      "arguments": {
+        "files": []
+      },
       "valid": false
     }
   ]

@@ -15,7 +15,7 @@ pub trait ObjectSource {
 
     /// 🪪️ Finds a logical graph identity without parsing its representation.
     fn identity_of(&self, value: &PdfObject) -> Option<PdfGraphIdentity> { value.as_ref().map(|owner| PdfGraphIdentity { owner, path: Vec::new() }) }
-    /// 🧵️ Names the transitive logical inputs consumed by native admission.
+    /// 🧵️ Names the generating logical inputs of a native admission; the transitive inputs are derived from them on demand and never stored.
     fn role_dependencies(&self, identity: &PdfGraphIdentity) -> Vec<PdfGraphIdentity> { vec![identity.clone()] }
     /// 🧷️ Records semantic admission performed by native IO.
     fn record_role(&mut self, _value: &PdfObject, _role: PdfStreamRoleValue) {}
@@ -89,8 +89,33 @@ impl<'a> GraphSource<'a> {
         for object in self.objects { let mut paths = Vec::new(); locate(&object.value, value, &mut Vec::new(), 0, &mut paths); identities.extend(paths.into_iter().map(|path| PdfGraphIdentity { owner: object.id, path })); }
         identities
     }
-    /// 🧵️ Captures exact structural inputs and transitive logical references consumed by admission.
-    pub fn dependencies_of(&self, identity: &PdfGraphIdentity) -> Vec<PdfGraphIdentity> {
+    /// 🧬️ The minimal generating inputs of one admission: the identity itself and, for a page's `Contents`, the inherited font dictionary its text codecs came from. Roles store these; every other input is derived through [`Self::closure_of`].
+    pub fn generators_of(&self, identity: &PdfGraphIdentity) -> Vec<PdfGraphIdentity> {
+        let mut generators = vec![identity.clone()];
+        if identity.path != [PdfGraphPath::Entry { key: "Contents".into() }] { return generators; }
+        let mut page = identity.owner;
+        let mut visited = Vec::new();
+        while !visited.contains(&page) && visited.len() < 64 {
+            visited.push(page);
+            let Some(value) = self.object(page) else { break; };
+            if let Some(resources) = value.dict_get("Resources") {
+                let (owner, path, dictionary) = match resources {
+                    PdfObject::Ref(owner) => (*owner, Vec::new(), self.object(*owner)),
+                    value => (page, vec![PdfGraphPath::Entry { key: "Resources".into() }], Some(value)),
+                };
+                if dictionary.is_some_and(|value| value.dict_get("Font").is_some()) {
+                    let mut path = path; path.push(PdfGraphPath::Entry { key: "Font".into() });
+                    generators.push(PdfGraphIdentity { owner, path });
+                }
+                break;
+            }
+            let Some(parent) = value.dict_get("Parent").and_then(PdfObject::as_ref) else { break; }; page = parent;
+        }
+        generators
+    }
+
+    /// 🧵️ Derives every exact structural input and transitive logical reference the `generators` consume: each generator's own inputs, then the root of every object a consumed value references.
+    pub fn closure_of(&self, generators: &[PdfGraphIdentity]) -> Vec<PdfGraphIdentity> {
         fn references(value: &PdfObject, output: &mut Vec<ObjRef>) {
             match value {
                 PdfObject::Ref(owner) => output.push(*owner),
@@ -99,27 +124,8 @@ impl<'a> GraphSource<'a> {
                 _ => {}
             }
         }
-        let mut dependencies = vec![identity.clone()];
-        if identity.path == [PdfGraphPath::Entry { key: "Contents".into() }] {
-            let mut page = identity.owner;
-            let mut visited = Vec::new();
-            while !visited.contains(&page) && visited.len() < 64 {
-                visited.push(page);
-                let Some(value) = self.object(page) else { break; };
-                if let Some(resources) = value.dict_get("Resources") {
-                    let (owner, path, dictionary) = match resources {
-                        PdfObject::Ref(owner) => (*owner, Vec::new(), self.object(*owner)),
-                        value => (page, vec![PdfGraphPath::Entry { key: "Resources".into() }], Some(value)),
-                    };
-                    if dictionary.is_some_and(|value| value.dict_get("Font").is_some()) {
-                        let mut path = path; path.push(PdfGraphPath::Entry { key: "Font".into() });
-                        dependencies.push(PdfGraphIdentity { owner, path });
-                    }
-                    break;
-                }
-                let Some(parent) = value.dict_get("Parent").and_then(PdfObject::as_ref) else { break; }; page = parent;
-            }
-        }
+        let mut dependencies: Vec<PdfGraphIdentity> = Vec::new();
+        for generator in generators { for input in self.generators_of(generator) { if !dependencies.contains(&input) { dependencies.push(input); } } }
         let mut visited_roots: HashSet<_> = dependencies.iter().filter(|identity| identity.path.is_empty()).map(|identity| identity.owner).collect();
         let mut index = 0;
         while index < dependencies.len() {
@@ -138,6 +144,16 @@ impl<'a> GraphSource<'a> {
         dependencies
     }
 
+    /// 🧵️ Captures exact structural inputs and transitive logical references consumed by admission.
+    pub fn dependencies_of(&self, identity: &PdfGraphIdentity) -> Vec<PdfGraphIdentity> {
+        self.closure_of(std::slice::from_ref(identity))
+    }
+
+    /// 🎯️ Resolves an exact generation and structural path in this graph.
+    pub fn resolve(&self, identity: &PdfGraphIdentity) -> Option<&PdfObject> {
+        crate::standards::v1_7::subsets::base::schema::stream_roles::resolve_object_path(self.object(identity.owner)?, &identity.path)
+    }
+
 }
 
 impl ObjectSource for GraphSource<'_> {
@@ -145,7 +161,7 @@ impl ObjectSource for GraphSource<'_> {
         read(self.object(reference));
     }
 
-    fn role_dependencies(&self, identity: &PdfGraphIdentity) -> Vec<PdfGraphIdentity> { self.dependencies_of(identity) }
+    fn role_dependencies(&self, identity: &PdfGraphIdentity) -> Vec<PdfGraphIdentity> { self.generators_of(identity) }
     fn admitted_roles(&self) -> &[PdfAdmittedStreamRole] { &self.admitted_roles }
     fn take_admitted_roles(&mut self) -> Vec<PdfAdmittedStreamRole> { std::mem::take(&mut self.admitted_roles) }
     fn get(&mut self, reference: ObjRef) -> Option<PdfObject> {
@@ -157,7 +173,7 @@ impl ObjectSource for GraphSource<'_> {
     }
     fn record_role(&mut self, value: &PdfObject, role: PdfStreamRoleValue) {
         for identity in self.identities_of(value) {
-            let dependencies = self.dependencies_of(&identity);
+            let dependencies = self.generators_of(&identity);
             if let Some(current) = self.admitted_roles.iter_mut().find(|current| current.identity == identity && current.value.kind() == role.kind()) { current.value = role.clone(); current.dependencies = dependencies; }
             else { self.admitted_roles.push(PdfAdmittedStreamRole { dependencies, identity, value: role.clone() }); }
         }

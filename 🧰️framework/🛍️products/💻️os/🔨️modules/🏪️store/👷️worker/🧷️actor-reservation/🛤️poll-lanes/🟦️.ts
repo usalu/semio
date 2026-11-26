@@ -1,3 +1,4 @@
+import { FRAMEWORK_RESERVED_JOB_KIND } from "@semio-tech/framework-kernel";
 import type { ReservationSession } from "../🗃️state/🟦️.ts";
 import type { ReservationHub } from "../🧩️hub/🟦️.ts";
 import type { BrowserActorChildValue } from "@semio-tech/framework-plugin/browser-bundle/child";
@@ -66,6 +67,10 @@ export class ReservationPollLanes {
             ...spawned,
             signal,
             onStep,
+            continueAfterAdmission: spawned.kind === FRAMEWORK_RESERVED_JOB_KIND ? async () => {
+              await new Promise<void>((resume) => globalThis.setTimeout(resume, 0));
+              assertCurrent();
+            } : undefined,
             port: {
               startJob: async (job, kind, input) => void (await this.invokeJobs(child, "startJob", [job, kind, input], assertCurrent)),
               stepJob: (job, budget) => this.invokeJobs(child, "stepJob", [job, { deadlineMs: budget.deadlineMs }], assertCurrent),

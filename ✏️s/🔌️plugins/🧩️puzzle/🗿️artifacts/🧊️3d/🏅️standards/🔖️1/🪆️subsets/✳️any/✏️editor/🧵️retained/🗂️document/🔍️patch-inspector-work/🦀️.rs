@@ -114,15 +114,15 @@ impl Puzzle3dPatchInspectorWork {
             .and_then(|id| id.strip_prefix(object)).and_then(|id| id.strip_prefix(':')) == Some(vortex))
     }
 
-    fn first_stage(entity: &str) -> Puzzle3dPatchInspectorStage {
-        match entity {
+    fn first_stage(entity: &str) -> Option<Puzzle3dPatchInspectorStage> {
+        Some(match entity {
             "object" => Puzzle3dPatchInspectorStage::Objects,
             "vortex" => Puzzle3dPatchInspectorStage::Vortices,
             "attraction" => Puzzle3dPatchInspectorStage::Attractions,
             "reference" => Puzzle3dPatchInspectorStage::References,
             "targetVolume" => Puzzle3dPatchInspectorStage::Volumes,
-            _ => Puzzle3dPatchInspectorStage::Complete,
-        }
+            _ => return None,
+        })
     }
 
     pub(super) fn push(&mut self, mutation: Puzzle3dMutation) -> Result<(), Fault> {
@@ -334,7 +334,8 @@ impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                     self.selection_cursor += 1;
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-patch-inspector-selection", "Reading inspector target", "Inspektionsziel wird gelesen"));
                 }
-                self.stage = Self::first_stage(Self::entity(command));
+                let Some(stage) = Self::first_stage(Self::entity(command)) else { return Ok(self.complete()); };
+                self.stage = stage;
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-patch-inspector-scan", "Finding inspector target", "Inspektionsziel wird gesucht"))
             }
             Puzzle3dPatchInspectorStage::Objects => {

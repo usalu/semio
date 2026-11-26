@@ -14,7 +14,7 @@ import {loadedGraphAdmissionFormatV1} from "../../../🔐️authority/🟦️.ts
 import {canonicalTestAggregatePolicyV1 as aggregate,deriveCanonicalTestAggregateV1,readCanonicalTestRoutesV1,requireCanonicalTestAggregateV1} from "../../../../../⚡️caching/🗂️suites/🧮️aggregate/🟦️.ts";
 import {isOwnerFailureV1,joinOwnerFailuresV1,observeOwnerWithRetryV1,heavyQuestionCancelledV1,ownerFailureDecisionV1,ownerFailureV1,ownerIsolationPolicyV1,registryPendingFailureV1,stableOwnerFailureHoldsV1} from "../🟦️.ts";
 import {isClosedOwnerRegistryInvalidationV1,registryFaultTextV1,withOwnerRegistryCustodyV1} from "../../🧭️registry-follow/🟦️.ts";
-import {revalidatedWithheldOwnersV1,withheldRevalidationV1} from "../🔁️revalidation/🟨️.mjs";
+import {revalidatedWithheldOwnersV1,transientWithheldReasonV1,withheldRevalidationV1} from "../🔁️revalidation/🟨️.mjs";
 
 const sha=(text:string)=>createHash("sha256").update(text).digest("hex");
 const placeholders=(text:string)=>[...text.matchAll(/\{(\w+)\}/gu)].map(match=>match[1]).sort();
@@ -76,7 +76,7 @@ test("a pause grows with the round, never past the declared ceiling, and waits o
 test("the named failure carries the owner and both languages",async()=>{
  const failure=await observeOwnerWithRetryV1({owner:"@semio-tech/repo",racyMilliseconds:0,hold:async()=>true,attempt:async onFailure=>{onFailure([]);throw Error("route-undeclared:test-x");}}).catch(error=>error);
  expect(isOwnerFailureV1(failure)).toBe(true);
- expect(failure.owners.map(owner=>owner.name)).toEqual(["@semio-tech/repo"]);
+ expect(failure.owners.map((owner:{name:string})=>owner.name)).toEqual(["@semio-tech/repo"]);
  expect(failure.owners[0]).toEqual({name:"@semio-tech/repo",code:"Error",reason:"route-undeclared:test-x"});
  expect(failure.stable).toBe(true);
  expect(failure.text.en).toContain("@semio-tech/repo");
@@ -150,7 +150,7 @@ test("the same pair left half edited is the named stable failure of that owner, 
   expect(isOwnerFailureV1(failure)).toBe(true);
   expect(failure.stable).toBe(true);
   expect(failure.rounds).toBe(1);
-  expect(failure.owners.map(owner=>owner.name)).toEqual(["repo"]);
+  expect(failure.owners.map((owner:{name:string})=>owner.name)).toEqual(["repo"]);
   expect(typeof failure.owners[0].path).toBe("string");
   expect(String(failure.cause.message)).toContain("route-targets");
  }finally{state.cleanup();}
@@ -174,7 +174,7 @@ test("a needed owner that fails deterministically ends the closure with its name
  const scope="owner-isolation-needed",reports:{owner:string;needed:boolean}[]=[],state=walk(table,"bad",scope,failure=>reports.push({owner:failure.owner,needed:failure.needed}));
  const failure=await state.run().catch(error=>error);
  expect(isOwnerFailureV1(failure)).toBe(true);
- expect(failure.owners.map(owner=>owner.name)).toEqual(["bad"]);
+ expect(failure.owners.map((owner:{name:string})=>owner.name)).toEqual(["bad"]);
  expect(failure.text.de).toContain("bad");
  expect(reports).toEqual([{owner:"bad",needed:true}]);
  expect(selectedAdmissionFactsV1.entries(scope).map(entry=>entry.suffix).sort()).toEqual(["app","core","lib"]);
@@ -227,18 +227,19 @@ test("the memoized observer observes a failed owner again when the rows it read 
 test("the decision table shared by every inference path equals the hand-stated cases and the Python oracle over its whole domain",()=>{
  expect(fixture.revalidation.attempts).toBe(ownerIsolationPolicyV1.revalidateAttempts);
  expect(fixture.revalidation.cooldownMilliseconds).toBe(ownerIsolationPolicyV1.revalidateCooldownMilliseconds);
- for(const row of fixture.decisionCases)expect(ownerFailureDecisionV1(row as never),row.name).toBe(row.expect);
+ for(const row of fixture.decisionCases)expect<unknown>(ownerFailureDecisionV1(row as never),row.name).toBe(row.expect);
  const oracle=pythonOracle().decisions;
  for(const foreign of [0,1])for(const moved of [0,1])for(const young of [0,1])for(let round=1;round<=ownerIsolationPolicyV1.retryRounds;round++){
-  expect(ownerFailureDecisionV1({foreign:foreign===1,moved:moved===1,young:young===1,round}),`${foreign}${moved}${young}${round}`).toBe(oracle[`${foreign}${moved}${young}${round}`]!);
-  expect(ownerFailureDecisionV1({foreign:foreign===1,moved:moved===1,young:young===1,round,cancelled:true}),`${foreign}${moved}${young}${round}c`).toBe(oracle[`${foreign}${moved}${young}${round}c`]!);
+  expect<unknown>(ownerFailureDecisionV1({foreign:foreign===1,moved:moved===1,young:young===1,round}),`${foreign}${moved}${young}${round}`).toBe(oracle[`${foreign}${moved}${young}${round}`]!);
+  expect<unknown>(ownerFailureDecisionV1({foreign:foreign===1,moved:moved===1,young:young===1,round,cancelled:true}),`${foreign}${moved}${young}${round}c`).toBe(oracle[`${foreign}${moved}${young}${round}c`]!);
  }
 });
 
 test("the re-validation of a withheld owner equals the hand-stated cases and the Python oracle",()=>{
  const oracle=pythonOracle().revalidation;
  for(const row of fixture.revalidationCases){
-  const seen=withheldRevalidationV1({entry:(row as {entry?:{fragment:string;attempts:number;at:number}}).entry,fragment:row.fragment,now:row.now});
+  const extra=row as {entry?:{fragment:string;attempts:number;at:number;implementation?:string};implementation?:string;transient?:boolean};
+  const seen=withheldRevalidationV1({entry:extra.entry,fragment:row.fragment,now:row.now,implementation:extra.implementation,transient:extra.transient});
   expect(seen,row.name).toEqual(row.expect);
   expect(oracle[row.name],row.name).toEqual(row.expect);
  }
@@ -372,10 +373,10 @@ test("a joined failure whose owners all failed on a pending native root is follo
 
 test("a heavy question whose child the host warden cancelled is asked again until the declared rounds are used up, then the failure is the owner's own; a foreign failure stays foreign",async()=>{
  const rounds=ownerIsolationPolicyV1.retryRounds;
- for(let round=1;round<rounds;round++)expect(ownerFailureDecisionV1({foreign:false,moved:false,young:false,round,cancelled:true}),String(round)).toBe("retry");
- expect(ownerFailureDecisionV1({foreign:false,moved:false,young:false,round:rounds,cancelled:true})).toBe("stable");
- expect(ownerFailureDecisionV1({foreign:false,moved:true,young:false,round:rounds,cancelled:true})).toBe("unsettled");
- expect(ownerFailureDecisionV1({foreign:true,moved:false,young:false,round:1,cancelled:true})).toBe("foreign");
+ for(let round=1;round<rounds;round++)expect<unknown>(ownerFailureDecisionV1({foreign:false,moved:false,young:false,round,cancelled:true}),String(round)).toBe("retry");
+ expect<unknown>(ownerFailureDecisionV1({foreign:false,moved:false,young:false,round:rounds,cancelled:true})).toBe("stable");
+ expect<unknown>(ownerFailureDecisionV1({foreign:false,moved:true,young:false,round:rounds,cancelled:true})).toBe("unsettled");
+ expect<unknown>(ownerFailureDecisionV1({foreign:true,moved:false,young:false,round:1,cancelled:true})).toBe("foreign");
  const cancelled=Object.assign(new Error("x"),{key:"build.graph.heavy-question-cancelled"}),plain=Object.assign(new Error("x"),{key:"build.graph.heavy-question-failed"});
  expect(heavyQuestionCancelledV1(cancelled)).toBe(true);expect(heavyQuestionCancelledV1(new Error("y",{cause:cancelled}))).toBe(true);
  expect(heavyQuestionCancelledV1(plain)).toBe(false);expect(heavyQuestionCancelledV1(undefined)).toBe(false);expect(heavyQuestionCancelledV1("graph.heavy-question-cancelled")).toBe(false);
@@ -388,4 +389,28 @@ test("a heavy question whose child the host warden cancelled is asked again unti
  expect(value).toBe("ok");expect(calls).toBe(3);
  const crash=await observeOwnerWithRetryV1({owner:"o",attempt:async()=>{throw plain;},hold:async()=>true,pause:async()=>{},now:()=>1000000}).then(()=>undefined,(error:unknown)=>error as {rounds:number});
  expect(crash?.rounds).toBe(1);
+});
+
+test("the reason a withholding recorded is transient exactly when it names a resource, capacity, timeout, cancellation or a source changed during the read, in both languages",()=>{
+ for(const reason of ["Owner p failed: JavaScript heap out of memory / Eigentümer p scheiterte: Speicher erschöpft","the farm child timed out after 60 s","ENOMEM: not enough memory","The read was cancelled","Eigentümer p: Zeitüberschreitung","Quelle während des Lesens geändert","source changed during the read","capacity of the worker pool exhausted","Kapazität erschöpft"])expect(transientWithheldReasonV1(reason),reason).toBe(true);
+ for(const reason of ["Cannot find module './x.ts'","Invalid Build project metadata a/project.json: Unexpected token","",undefined,null])expect(transientWithheldReasonV1(reason as never),String(reason)).toBe(false);
+});
+
+test("a read infers an exhausted withholding again when its recorded reason is transient or the inference implementation changed, and keeps it otherwise",async()=>{
+ let book:unknown,clock=1_000_000,reason="Cannot find module './x.ts'";
+ const owners={a:{kind:"unavailable",config:"a/project.json",fragment:"f1"}};
+ const port=(implementation?:string)=>({ledger:{read:async()=>book,write:async(next:unknown)=>{book=next;}},now:()=>clock,reasonOf:async()=>reason,...implementation?{implementation}:{}});
+ book={a:{fragment:"f1",attempts:ownerIsolationPolicyV1.revalidateAttempts,at:clock,implementation:"i1"}};
+ clock+=100*ownerIsolationPolicyV1.revalidateCooldownMilliseconds;
+ expect(await revalidatedWithheldOwnersV1(owners,port("i1"))).toEqual([]);
+ expect(await revalidatedWithheldOwnersV1(owners,port("i2"))).toEqual(["a"]);
+ expect((book as {a:{implementation:string;attempts:number}}).a).toMatchObject({implementation:"i2",attempts:1});
+ book={a:{fragment:"f1",attempts:ownerIsolationPolicyV1.revalidateAttempts,at:clock,implementation:"i1"}};
+ clock+=ownerIsolationPolicyV1.revalidateCooldownMilliseconds;
+ reason="JavaScript heap out of memory / Speicher erschöpft";
+ expect(await revalidatedWithheldOwnersV1(owners,port("i1"))).toEqual(["a"]);
+ expect((book as {a:{attempts:number}}).a.attempts).toBe(1);
+ book={a:{fragment:"f1",attempts:ownerIsolationPolicyV1.revalidateAttempts,at:clock,implementation:"i1"}};
+ clock+=ownerIsolationPolicyV1.revalidateCooldownMilliseconds;
+ expect(await revalidatedWithheldOwnersV1(owners,{...port("i1"),reasonOf:async()=>{throw Error("fragment unreadable");}})).toEqual([]);
 });

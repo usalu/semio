@@ -208,3 +208,25 @@ fn paged_iter_skip_and_nth_land_on_the_logical_position_from_both_ends() {
     assert_eq!(iter.nth(usize::MAX), None);
     assert_eq!(iter.next(), None);
 }
+
+#[test]
+fn reserved_slice_stops_at_the_exact_physical_page_frontier() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️owner-page-ceiling.json")).unwrap();
+    for count in fixture["boundaryCounts"].as_array().unwrap() {
+        let data: Vec<u64> = (0..count.as_u64().unwrap()).collect();
+        let mut list = PagedList::<u64, 200>::with_page_items(3);
+        assert_eq!(list.extend_reserved_from_slice(&data), 0);
+        while list.len() < data.len() {
+            if !list.has_reserved_slot() {
+                let bytes = list.next_allocation_bytes().unwrap();
+                list.reserve_one_cold(bytes).unwrap();
+            }
+            let offset = list.len();
+            let available = list.capacity() - offset;
+            let allocated = list.allocated_bytes();
+            assert_eq!(list.extend_reserved_from_slice(&data[offset..]), available.min(data.len() - offset));
+            assert_eq!(list.allocated_bytes(), allocated);
+        }
+        assert_eq!(list.iter().copied().collect::<Vec<_>>(), data);
+    }
+}

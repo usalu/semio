@@ -4,7 +4,7 @@ use semio_framework_dsl_record::{BorrowedShape as B,BorrowedRecordSpec as S};
 use semio_framework_dsl_record::native_encoding::{FieldProjectionSource,FieldProjectionView as V};
 use super::retained_symbols::{ProjectedSymbolScratch,SourceTextLocator,SourceTextKind};
 use semio_framework_value_persistent::list::PagedList;
-use semio_framework_value_paged_text::paged_text::TextReadView;
+use semio_framework_value_paged_text::paged_text::{TextReadCursor,TextReadView};
 const ORDER_CAPACITY:usize=isize::MAX as usize;
 
 fn mismatch()->PackRefusal{ValueError::new(ValueRefusalKind::InvariantViolated,"borrowed Pack source disagrees with declared field").into()}
@@ -98,7 +98,17 @@ impl Discover<'_>{
 
 struct BorrowedEncoder<'a,'c,'d,T:FieldProjectionSource>{source:&'a T,symbols:&'a InlineSymbols,options:&'a EncodeOptions,control:&'c mut NativeEncodeControl<'d>,order:&'c mut InlineOrder}
 impl<T:FieldProjectionSource> BorrowedEncoder<'_,'_,'_,T>{
-    fn source_bytes(&mut self,text:TextReadView<'_>,output:&mut Output<'_>)->Result<(),PackRefusal>{for offset in(0..text.len()).step_by(256){self.control.checkpoint()?;let mut buffer=[0;256];let count=text.copy_bytes(offset,&mut buffer)?;output.bytes(&buffer[..count],self.control)?;}Ok(())}
+    fn source_bytes(&mut self,text:TextReadView<'_>,output:&mut Output<'_>)->Result<(),PackRefusal>{
+        let mut reader=TextReadCursor::default();
+        for offset in (0..text.len()).step_by(256){
+            let mut buffer=[0;256];
+            let requested=(text.len()-offset).min(buffer.len());
+            let count=reader.copy_controlled(text,offset,&mut buffer[..requested],self.control)?;
+            if count!=requested{return Err(mismatch())}
+            output.bytes(&buffer[..count],self.control)?;
+        }
+        Ok(())
+    }
     fn source_text(&mut self,text:TextReadView<'_>,inline:bool,output:&mut Output<'_>)->Result<(),PackRefusal>{if !inline{if let Some(index)=self.symbols.index(self.source,text,self.control)?{output.byte(TAG_STR,self.control)?;return output.varint(index,self.control)}}output.byte(TAG_STR_INLINE,self.control)?;output.varint(text.len()as u64,self.control)?;self.source_bytes(text,output)}
     fn text(&mut self,text:&str,inline:bool,output:&mut Output<'_>)->Result<(),PackRefusal>{self.source_text(TextReadView::from_str(text),inline,output)}
     fn forced(&mut self,text:&str,output:&mut Output<'_>)->Result<(),PackRefusal>{let index=self.symbols.index(self.source,TextReadView::from_str(text),self.control)?.ok_or_else(mismatch)?;output.varint(index,self.control)}

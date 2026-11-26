@@ -1,0 +1,15 @@
+# Puzzle5D Window Config Restore Investigation
+
+The current 5D test `exact_window_cameras_isolate_render_and_reload_without_document_or_app_config_changes` fails when the restore command is dropped while it still owns retained state. The guard fires before the fixture can show the refusal or unfinished phase. The fixture now issues a fresh original event grant for each exact window pack.
+
+The `current-5d-relink.py --window` app probe logs command phase, primary failure, and closure failure. Two full-app links were externally terminated with SIGTERM before producing an executable. The second attempt ran through a ticket-local capacity scope, with a 420-second timeout, and ended after 108 seconds. Disk had more than 60 GB free.
+
+The smaller `current-5d-relink.py --window-registry` probe authors camera config through the real mounted 5D `setCamera2d` action, saves its Pack/SPR pair, and feeds it to the same `WindowConfigCommandLoad` on a fresh registry. It uses the fixture's original event stock. The one-camera probe passed in 1.36 seconds. It finished command retirement at turn 21,996, restored `x = 12.5`, `y = -6.5`, `zoom = 3.5`, and closed the registry. The available broad 5D test executable still reproduced the old Drop panic in 11.93 seconds. Its dependency fingerprint selects the cached `semio_plugin` from 20:47, before the per-restore event fix at 21:22.
+
+The three-pack probe reloads the actual two camera packs and one world pack on the same reopened caller. The board restores finished at turns 22,002 and 22,007. The world command was still advancing in `StoreHydration` as the ordinary 32,768-turn fixture allowance expired. The last sample showed cumulative copies below 12 MB and capacity below 5 MB, within the fixture's issued original stock. The fixture's early return dropped the unfinished command and produced the misleading retirement panic.
+
+The fixture schema now gives complete window replay its own turn allowance while continuing to apply ordinary original fuel and retained grant accounting. `SEMIO_UI_WINDOW_REUSE_EVENT=1` selects the previous shared-event behavior for comparison. `SEMIO_UI_WINDOW_MAXIMUM_TURNS` selects the native probe's replay turn allowance. The registered original caller TypeScript suite passed all 11 tests, covering the separate replay allowance and confirming that the ordinary settlement wrapper forwards the same caller context to the implementation that mounts the owner.
+
+The original cached test fingerprint was superseded during the clean native rebuild. Replaying its previously successful rustc inputs no longer produced matched crate identities.
+
+The first canonical native attempt reached its 45-minute timeout while waiting for Cargo's shared artifact-directory lock. The subsequent clean 111-case 5D unit binary built with the new allowance and production member configuration passed `exact_window_cameras_isolate_render_and_reload_without_document_or_app_config_changes` in 16.04 seconds. It restored the two camera windows and world window, checked their rendered state, and preserved the document and app configuration. The same binary passed all nine media cases.

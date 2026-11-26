@@ -24,7 +24,7 @@ test("every case gets the code and the flags of the fixture",()=>{
 
 test("every refusal says its reason in English and German, and a status keeps the first words of the body",()=>{
  for(const row of GRAPH_REFUSAL_POLICY_V1.rows){expect(row.en.length).toBeGreaterThan(10);expect(row.de.length).toBeGreaterThan(10);expect(codes.has(row.code)).toBe(true);}
- const found=graphRefusalOfV1(413,"Entry exceeds the maximum entry size "+"x".repeat(500));
+ const found=graphRefusalOfV1(413,"Entry exceeds the maximum entry size "+"x".repeat(1000));
  expect(found.status).toBe(413);expect(found.detail.length).toBe(GRAPH_REFUSAL_POLICY_V1.bodyCharacters);expect(found.text).toContain(" / ");
 });
 

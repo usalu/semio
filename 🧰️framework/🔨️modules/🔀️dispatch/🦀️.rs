@@ -342,10 +342,32 @@ fn build_typed_delegation(item: &ItemTrait) -> syn::Result<TokenStream> {
 /// 🔎️ Target identity cannot silently become the distinct owner's Self type.
 fn contains_self_type(tokens:TokenStream)->bool{tokens.into_iter().any(|token|match token{proc_macro2::TokenTree::Ident(name)=>name=="Self",proc_macro2::TokenTree::Group(group)=>contains_self_type(group.stream()),_=>false})}
 
+/// 🧼️ Rewrites every path that starts with the `crate` keyword into `$crate`, so a signature captured from the trait's own crate names the same item wherever the closing enum is declared.
+fn hygienic_crate_paths(tokens: TokenStream) -> TokenStream {
+    use proc_macro2::{Group, Punct, Spacing, TokenTree};
+    let mut output = Vec::new();
+    let mut iterator = tokens.into_iter().peekable();
+    while let Some(token) = iterator.next() {
+        match token {
+            TokenTree::Ident(name) if name == "crate" && matches!(iterator.peek(), Some(TokenTree::Punct(next)) if next.as_char() == ':') => {
+                output.push(TokenTree::Punct(Punct::new('$', Spacing::Alone)));
+                output.push(TokenTree::Ident(name));
+            }
+            TokenTree::Group(group) => {
+                let mut rewritten = Group::new(group.delimiter(), hygienic_crate_paths(group.stream()));
+                rewritten.set_span(group.span());
+                output.push(TokenTree::Group(rewritten));
+            }
+            other => output.push(other),
+        }
+    }
+    output.into_iter().collect()
+}
+
 /// 🏗️ Builds the whole `#[macro_export] macro_rules! __semio_dispatch_<Name> { .. }` item.
 fn build_dispatch_macro(item_trait: &ItemTrait) -> TokenStream {
     let macro_name = dispatch_macro_ident(&item_trait.ident);
-    let body = analyze_and_build_body(item_trait);
+    let body = hygienic_crate_paths(analyze_and_build_body(item_trait));
     quote! {
         #[doc(hidden)]
         #[macro_export]

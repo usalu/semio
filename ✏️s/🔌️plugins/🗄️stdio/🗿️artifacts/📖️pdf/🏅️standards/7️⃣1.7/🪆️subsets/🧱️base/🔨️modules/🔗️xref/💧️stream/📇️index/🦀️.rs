@@ -114,6 +114,9 @@ impl XrefIndex {
     pub fn len(&self) -> usize { self.live }
     pub fn is_empty(&self) -> bool { self.live == 0 }
 
+    /// 📏️ Bytes of slot backing the index holds, the release its close credits.
+    pub fn held_bytes(&self) -> usize { (self.slots.capacity() + self.growth.as_ref().map_or(0, |growth| growth.slots.capacity())) * std::mem::size_of::<Option<XrefRow>>() }
+
     pub fn get(&self, number: &u32) -> Option<&XrefEntry> { self.find(*number)?.entry.as_ref() }
     pub fn contains_key(&self, number: &u32) -> bool { self.get(number).is_some() }
     pub fn is_free(&self, number: u32) -> bool { self.find(number).is_some_and(|row| row.entry.is_none()) }

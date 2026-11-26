@@ -8,7 +8,7 @@ const run=async(names:readonly string[],present:ReadonlySet<string>)=>{
  const laneOf=(name:string)=>present.has(name)?"local":"remote";
  const attempt=async(name:string)=>{
   const lane=laneOf(name);now=(flying.get(lane)??0)+1;flying.set(lane,now);most.set(lane,Math.max(most.get(lane)??0,now));
-  await Bun.sleep(5);flying.set(lane,(flying.get(lane)??1)-1);return"fetched";
+  await Bun.sleep(5);flying.set(lane,(flying.get(lane)??1)-1);return"fetched" as const;
  };
  await takeFetchFirstV1({lanes,concurrency:takeLookConcurrencyV1(),fetchConcurrency:takeFetchConcurrencyV1(),fetches:lane=>lane.length>0&&!present.has(lane[0]!),attempt,hot:()=>undefined,queue:()=>[],arrived:()=>{},stop:()=>false,mark:()=>{}});
  return{most,batches};

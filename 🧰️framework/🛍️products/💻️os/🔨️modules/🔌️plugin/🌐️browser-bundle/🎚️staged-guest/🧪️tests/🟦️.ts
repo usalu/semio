@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { types } from "@bytecodealliance/jco";
 import ts from "typescript";
 import { PLUGIN_STAGED_BUDGET_GROUPS, pluginStagedGuestSource, stagedGuest } from "../🟦️.ts";
+import { evaluateGeneratedSourceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 
 const EXPECTED = [
   { stage: ["reactor", "stageActorContextBudget"], consumers: { reactor: ["admitActorContext", "admitActorInput", "closeActorContext", "closeActorOutput", "poll"], checkpoint: ["checkpoint", "restore"], describe: ["describe"], codec: ["sqliteSchema", "sqliteExport", "sqliteImport", "sqliteTakeFile", "sqliteTakePayload", "sqliteRetirement", "sqliteClose", "packSchemaHash", "genesis", "printMirror", "applyOps", "replayEnvelopes"] } },
@@ -24,7 +25,7 @@ test("staged budget consumers derive from the owned WIT and the independent JCO 
 test("a staged guest stages the last argument immediately before every consuming call and leaves the rest untouched", async () => {
   const log: unknown[][] = [];
   const raw = { reactor: { stageActorContextBudget: (budget: unknown) => log.push(["stage", budget]), stageCommandPage: async (page: unknown) => log.push(["page", page]), poll: async (...args: unknown[]) => { log.push(["poll", ...args]); return "polled"; } }, jobs: { stageJobBudget: (budget: unknown) => log.push(["stageJob", budget]), startJob: async (...args: unknown[]) => { log.push(["start", ...args]); return "started"; } }, describe: { describe: async (...args: unknown[]) => { log.push(["describe", ...args]); return "described"; } } };
-  for (const guest of [stagedGuest(raw, PLUGIN_STAGED_BUDGET_GROUPS), new Function(pluginStagedGuestSource() + ";return pluginStagedGuest")()(raw)]) {
+  for (const guest of [stagedGuest(raw, PLUGIN_STAGED_BUDGET_GROUPS), evaluateGeneratedSourceV1(pluginStagedGuestSource(), "pluginStagedGuest")(raw)]) {
     log.length = 0;
     expect(await guest.reactor.poll("budget-1")).toBe("polled");
     await guest.reactor.stageCommandPage("page");

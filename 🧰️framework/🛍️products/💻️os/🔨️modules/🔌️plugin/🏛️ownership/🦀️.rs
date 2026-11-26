@@ -454,21 +454,25 @@ impl<T> ArtifactFixedRegistry<T> {
         self.entry(index).map(|(id, _)| *id)
     }
 
+    /// 🔁️ Visits each occupied physical slot once, starting at the cursor and wrapping at capacity.
+    pub fn entries_from(&self, cursor: usize) -> impl Iterator<Item = (usize, &(u64, T))> + '_ {
+        let start = cursor % self.capacity;
+        let mut remaining = self.occupied.rotate_right(start as u32);
+        std::iter::from_fn(move || {
+            if remaining == 0 { return None; }
+            let offset = remaining.trailing_zeros() as usize;
+            remaining &= remaining - 1;
+            let slot = (start + offset) % self.capacity;
+            Some((slot, self.entry(slot).expect("occupied bit witnesses a resident entry")))
+        })
+    }
+
     pub fn each_id(&self, mut visit: impl FnMut(u64)) {
-        for index in 0..self.capacity {
-            if let Some(id) = self.id_at(index) {
-                visit(id);
-            }
-        }
+        for (_, (id, _)) in self.entries_from(0) { visit(*id); }
     }
 
     pub fn next_id_from(&self, cursor: usize) -> Option<(usize, u64)> {
-        if self.occupied == 0 {
-            return None;
-        }
-        let offset = self.occupied.rotate_right(cursor as u32).trailing_zeros() as usize;
-        let index = (cursor + offset) % self.capacity;
-        self.id_at(index).map(|id| (index, id))
+        self.entries_from(cursor).next().map(|(index, (id, _))| (index, *id))
     }
 
     pub fn is_empty(&self) -> bool {

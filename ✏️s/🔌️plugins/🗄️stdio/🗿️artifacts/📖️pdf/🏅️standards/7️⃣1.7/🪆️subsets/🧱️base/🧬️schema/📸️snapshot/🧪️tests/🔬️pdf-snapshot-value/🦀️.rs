@@ -10,7 +10,7 @@ fn populated_snapshot() -> PdfSnapshot {
     let mut page = PdfPage::new(612.0, 792.0);
     page.crop_box = Some([12.0, 12.0, 600.0, 780.0]);
     page.rotate = 90;
-    page.content = vec![PdfOp::BeginText, PdfOp::SetFont { name: "F1".into(), size: 12.0 }, PdfOp::MoveText { tx: 72.0, ty: 720.0 }, PdfOp::ShowText { text: PdfTextString::text("Semio") }, PdfOp::EndText, PdfOp::Rectangle { x: 1.0, y: 2.0, width: 3.0, height: 4.5 }, PdfOp::Fill];
+    page.content = vec![PdfOp::BeginText, PdfOp::SetFont { name: "F1".into(), size: 12.0 }, PdfOp::MoveText { tx: 72.0, ty: 720.0 }, PdfOp::ShowText { text: PdfTextString::text("Semio") }, PdfOp::EndText, PdfOp::Rectangle { x: 1.0, y: 2.0, width: 3.0, height: 4.5 }, PdfOp::Fill].into();
     page.annotations.push(PdfAnnotation::link([0.0, 0.0, 10.0, 10.0], "https://semio-tech.com"));
     PdfSnapshot {
         pages: vec![page],
@@ -371,5 +371,42 @@ fn controlled_shapes_match_the_independent_reader_and_the_cold_lift() {
             }
         }
         assert!(finished, "{shape}: the controlled lift did not finish");
+    }
+}
+
+#[test]
+fn paged_page_program_keeps_the_wire_shape_of_the_vector_it_replaced() {
+    let operators: Vec<PdfOp> = populated_snapshot().pages[0].content.iter().cloned().collect();
+    let paged: PdfContent = operators.iter().cloned().collect();
+    assert_eq!(paged.to_value(), operators.to_value());
+    let (paged_json, vector_json): (serde_json::Value, serde_json::Value) = (paged.to_value().into(), operators.to_value().into());
+    assert_eq!(paged_json, vector_json);
+    assert!(paged_json.as_array().is_some_and(|rows| rows.len() == operators.len()));
+    assert_eq!(PdfContent::from_value(operators.to_value()), Ok(paged));
+}
+
+/// 📜️ Retiring a page program of N operators never needs one release larger than one page (fixture `cases`), and every page it released was acquired.
+#[test]
+fn retiring_a_page_program_never_needs_a_release_larger_than_one_page() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let page_bytes = fixture["pageBytes"].as_u64().unwrap() as usize;
+    let per_page = page_bytes / std::mem::size_of::<PdfOp>();
+    for case in fixture["cases"].as_array().unwrap() {
+        let count = case["operators"].as_u64().unwrap() as usize;
+        let mut program: PdfContent = (0..count).map(|index| PdfOp::MoveTo { x: index as f64, y: 0.0 }).collect();
+        assert_eq!(program.len(), count);
+        let acquired = program.allocated_bytes();
+        let payload_pages = count.div_ceil(per_page);
+        assert!(acquired >= payload_pages * per_page * std::mem::size_of::<PdfOp>().min(page_bytes));
+        let (mut released, mut largest) = (0, 0);
+        while program.pop().is_some() {}
+        while !program.terminal_is_empty() {
+            let quote = program.next_release_allocation_bytes().unwrap();
+            largest = largest.max(quote);
+            assert!(quote <= page_bytes, "a release of {quote} bytes exceeds one {page_bytes}-byte page for {count} operators");
+            released += program.release_empty_page_leased(page_bytes).unwrap().released_allocation_bytes;
+        }
+        assert_eq!(released, acquired);
+        assert!(count == 0 || largest > 0);
     }
 }

@@ -15,7 +15,7 @@ const cache=(root:string,late:boolean)=>scriptInputs.createScriptInputCache({wor
 const driver="⚡️caching/🦀️cargo/📜️script.ts",native=(extra:Record<string,unknown>={})=>({options:{cwd:".",command:'repo "'+driver+'" native cargo build'},...extra});
 const files=(list:readonly unknown[])=>list.filter((item):item is string=>typeof item==="string"&&item.startsWith("{workspaceRoot}/")).map(item=>item.slice(16)).sort();
 const toolRef=(name:string)=>({input:`toolClosure:${name}:native`,projects:[corpus.providersProject]});
-const infer=<T>(body:()=>Promise<T>)=>observation.observeInferenceSnapshotV1(body) as Promise<T>;
+const infer=(body:()=>Promise<any>):Promise<any>=>observation.observeInferenceSnapshotV1(body);
 const groupsOf=(root:string)=>infer(async()=>{const api=scriptInputs.closureApiV1(cache(root,false),root);return new Map<string,unknown[]>(await api.sharedClosureGroups(dirname(corpus.designation),"🔣️.json"));});
 
 test("a command that runs a declared tool script names the tool and holds none of its files, and the files it keys on are never fewer than the walk of the script",async()=>{

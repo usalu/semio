@@ -55,7 +55,7 @@ const join_=(generation:string,store:string)=>{
  try{mkdirSync(join(store,"v1","origins","g1-m01"),{recursive:true});}catch{return;}cpSync(join(template,".cache","f","identity","registration.json"),join(store,"v1","origins","g1-m01","fleet-auth.json"));
  if(!existsSync(join(generation,"bun.lock")))writeFileSync(join(generation,"bun.lock"),LOCK);
 };
-const request=(generation:string,store:string,remote?:{endpoint:string;instance:string;token:string|undefined;authenticated?:boolean}):FleetInstallRequestV1=>(join_(generation,store),{
+const request=(generation:string,store:string,remote?:{endpoint:string;instance:string;token:string|undefined;authenticated:boolean}):FleetInstallRequestV1=>(join_(generation,store),{
  context:fleetFetchContextV1({},generation,{storeRoot:store,remote}),projectionSha256:projection,runtime,directory:generation,lockFile:"bun.lock",storeRoot:"/stores/default",roots,check:()=>{},scan:scanOf(generation),
  remove:async path=>{rmSync(path,{recursive:true,force:true});},installed:()=>"c".repeat(64),
 });

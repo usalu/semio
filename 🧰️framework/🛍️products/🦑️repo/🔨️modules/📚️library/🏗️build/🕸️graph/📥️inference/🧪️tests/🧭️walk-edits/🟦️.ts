@@ -1,4 +1,4 @@
-/** 🧭️ Contract: an edit that changes what a command walk loads can never leave the observations of the walk standing. For real edits of a fixture workspace (a comment, an import of a reached file, a transitive import of a new file, the exports of a workspace package, the paths of a tsconfig, files outside the closure) the observations the walk recorded hold exactly when the walk answers the same way a fresh process would; whenever the roster moves the observations are stale, and the roster always equals what esbuild's bundle graph loads. The recording and the check run in separate processes, as the inference and the generation verifier do, because a process caches the package manifests it read. The scenario lives in `./🔣️.json` as language-agnostic data. */
+/** 🧭️ Contract: an edit that changes what a command walk loads can never leave the observations of the walk standing. For real edits of a fixture workspace (a comment, an import of a reached file, a transitive import of a new file, the exports of a workspace package, the paths of a tsconfig, files outside the closure) the observations the walk recorded hold exactly when the walk answers the same way a fresh process would; whenever the roster moves the observations are stale, and the roster always equals what esbuild's bundle graph loads. The recording and the check run in separate processes, as the inference and the generation verifier do, because a process caches the package manifests it read; the check is the verifier's asynchronous judge with the walk's script input cache bound (the synchronous judge decides a `closure-graph` row only from witnessed stored nodes and answers false for every edit it would have to visit modules for: never wrong, at worst derived again). The scenario lives in `./🔣️.json` as language-agnostic data. */
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
@@ -21,14 +21,16 @@ if(mode==="compute"){
  writeFileSync(rows,JSON.stringify({rows:seen.rows,layers:seen.layers.map(layer=>[...layer])}));writeFileSync(roster,JSON.stringify(seen.value));
 }else{
  inference.prepareSourceAnalysesV1();const {rows:recorded,layers}=JSON.parse(readFileSync(rows,"utf8"));
- writeFileSync(roster,JSON.stringify({holds:observation.observationRowsHoldV1(recorded)&&layers.every(layer=>observation.observationLayerHoldsV1(layer))}));
+ scriptInputs.bindClosureScriptsV1(root,inference.createScriptInputCache({workspaceRoot:root}));await observation.prepareGlobalFactsV1(recorded);
+ let holds=await observation.observationRowsHoldAsyncV1(recorded,async()=>{});for(const layer of layers)holds=holds&&await observation.observationLayerHoldsAsyncV1(layer,async()=>{});
+ writeFileSync(roster,JSON.stringify({holds}));
 }`;
 const phase=(mode:string,root:string,rows:string,roster:string)=>{
  const result=spawnSync(process.execPath,["-e",phaseSource],{encoding:"utf8",env:{...process.env,WALK_MODE:mode,WALK_ROOT:root,WALK_ROWS:rows,WALK_ROSTER:roster,WALK_LIBRARY:library,WALK_ENTRY:corpus.entry}});
  expect(result.status,result.stderr).toBe(0);
  return JSON.parse(readFileSync(roster,"utf8"));
 };
-const write=(root:string,files:Readonly<Record<string,string>>)=>{for(const[path,text]of Object.entries(files)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}};
+const write=(root:string,files:Readonly<Record<string,string|undefined>>)=>{for(const[path,text]of Object.entries(files)){if(text===undefined)continue;mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}};
 const configs=(paths:readonly string[])=>paths.filter(path=>!path.endsWith("package.json")&&!path.endsWith("tsconfig.json"));
 const esbuildOracle=async(root:string)=>{const result=await createRequire(import.meta.url)("esbuild").build({entryPoints:[join(root,corpus.entry)],absWorkingDir:root,bundle:true,write:false,platform:"node",format:"esm",metafile:true,logLevel:"silent",outfile:"out.js"});return Object.keys(result.metafile.inputs).map(path=>path.replace(/^\.\//u,"")).sort();};
 

@@ -22,8 +22,8 @@ const stamp=(row:any)=>[row.dev,row.ino,row.mode,row.nlink,row.size,row.mtimeNs,
 test("closure proof accepts derived-node writes and still rejects replacement of its root",async()=>withPrivateRepositoryBuildTestInvocationV1(async original=>withRepositoryTestArtifactsV1(repository.root,original,createIssuedResourceControlV1(original,"test:closure-census-artifacts",0),async()=>{
  const source=(await readFile(new URL("../../🏷️names/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as ImportMeta&{semioPhysicalSourceURL?:string}).semioPhysicalSourceURL)),"utf8"))+"\n"+(await readFile(new URL("../../🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as ImportMeta&{semioPhysicalSourceURL?:string}).semioPhysicalSourceURL)),"utf8"));
  const tree=ts.createSourceFile("closures.ts",source,ts.ScriptTarget.Latest,true);
- const nodes=tree.statements.filter((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&["directories","recheck","spill","liveSpillDirectory"].includes(node.name?.text??""));
- expect(nodes).toHaveLength(4);
+ const nodes=tree.statements.filter((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&["directories","recheck","metadataOnlyDriftV1","spill","liveSpillDirectory"].includes(node.name?.text??""));
+ expect(nodes).toHaveLength(5);
  const code=ts.transpileModule(nodes.map(node=>node.getText(tree)).join("\n"),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
  const ports={P:component.definitions.Protocol.const,join,relative,sep,stamp,ancestor,nativeImageServiceEntryV1,temporaryBase:()=>undefined,directoryChangeV1:()=>"",requireNativeStoragePathV1,lstatSync,
   named:(_proof:unknown,path:string)=>lstatSync(path,{bigint:true}),namesAt:(_proof:unknown,path:string)=>readdirSync(path).sort(),

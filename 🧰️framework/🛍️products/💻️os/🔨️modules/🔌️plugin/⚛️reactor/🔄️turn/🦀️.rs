@@ -78,7 +78,6 @@ mod turn_execution_and_poll_entry;
 pub use turn_execution_and_poll_entry::*;
 
 thread_local! {
-    static TURN_EXECUTION: Cell<TurnExecution> = const { Cell::new(TURN_EXECUTION_IDLE) };
 }
 
 //#endregion ⏱️TurnExecution

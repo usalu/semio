@@ -16,6 +16,8 @@ role = "hub"
 path = "🦀️.rs"
 
 [dependencies]
+semio-hub-draw-editor-app = { workspace = true }
+semio-hub-draw-viewer-app = { workspace = true }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-s-artifact-draw-drawing = { workspace = true }
 semio-s-artifact-draw-drawing-editor = { workspace = true }

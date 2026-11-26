@@ -25,6 +25,20 @@ const cases:{lines:string[];root:string;want:boolean}[]=[
  {lines:["Error [BUILD_SOURCE_CONFLICT]: Something else entirely"],root,want:false},
  {lines:[`error: failed to write \`${root}/.cache/b/r/m/b/p/prototype/build/semio-framework-pack-http/cf085c40b268a8e7/fingerprint/invoked.timestamp\``],root,want:true},
  {lines:["error: failed to write `/elsewhere/cache/x.timestamp`"],root,want:false},
+ {lines:["The resident service met an unexpected failure (reference 145eb0b1): Error: Complete retained closure publication required"],root,want:true},
+ {lines:["The resident service met an unexpected failure (reference 84438681): Error: Closure reference proof leaf changed"],root,want:true},
+ {lines:["The resident service met an unexpected failure (reference d4797b0e): Error: Slice worker exited with code null: [graph-closure] {}"],root,want:true},
+ {lines:["The resident service met an unexpected failure (reference 1): Error: Slice worker exited with code 1: out of memory"],root,want:false},
+ {lines:["The resident service met an unexpected failure (reference 92b15f5b): Error: Closure index descriptor changed"],root,want:true},
+ {lines:["The resident service met an unexpected failure (reference 92b15f5c): Error: Closure proof descriptor changed"],root,want:true},
+ {lines:["The resident service met an unexpected failure (reference 92b15f5d): Error: Original group retirement descriptor changed"],root,want:true},
+ {lines:["The resident service met an unexpected failure (reference 92b15f5e): ConcurrentEditErrorV1: Closure index file changed while it was open / Abschlussindex Datei hat sich geändert, während sie offen war: /x/y.idx"],root,want:true},
+ {lines:["The resident service met an unexpected failure (reference 92b15f5f): ConcurrentEditErrorV1: Closure index append-only file was replaced, linked again or shortened while it was open / Abschlussindex anhängbare Datei wurde ersetzt, neu verlinkt oder gekürzt, während sie offen war: /x/y.idx"],root,want:true},
+ {lines:["Slice worker failed: Closure proof leaf descriptor stamp mismatch (ino)"],root,want:true},
+ {lines:["The resident service met an unexpected failure (reference 92b15f60): Error: Closure index is required"],root,want:false},
+ {lines:["The resident service met an unexpected failure (reference 92b15f61): ConcurrentEditErrorV1: Cache charge receipt file changed while it was open / Cache-Belastungsbeleg Datei hat sich geändert, während sie offen war: /x/y.json"],root,want:true},
+ {lines:["The resident service met an unexpected failure (reference 92b15f62): ConcurrentEditErrorV1: Retiring closure leaf file was replaced again while it was opened by name / Abzuräumendes Abschlussblatt Datei wurde beim Öffnen über den Namen erneut ersetzt: /x/y.json"],root,want:true},
+ {lines:["The file changed while it was open in another editor"],root,want:false},
 ];
 test("the source-transient classification equals an independent Python implementation",()=>{
  const expected=oracle("classify",cases.map(row=>({lines:row.lines,root:row.root,patterns:P.sourceTransientPatterns})));

@@ -42,7 +42,7 @@ class Writer{
   this.bytes[this.length++]=value;
  }
  raw(data:Uint8Array):void{this.reserve(data.length);this.bytes.set(data,this.length);this.length+=data.length;}
- view():Uint8Array{return this.bytes.subarray(0,this.length);}
+ view():Uint8Array<ArrayBuffer>{return this.bytes.subarray(0,this.length);}
 }
 
 const enumNumber=(field:ProtobufFieldV1,value:unknown):number=>typeof value==="string"?protobufEnumV1(field.enum!,value):Number(value);
@@ -68,7 +68,7 @@ function writeValue(writer:Writer,field:ProtobufFieldV1,value:unknown,tag:boolea
 const isDefault=(field:ProtobufFieldV1,value:unknown):boolean=>value===undefined||value===null||(field.type==="bytes"?(value as Uint8Array).length===0:field.type==="string"?value==="":field.type==="bool"?value===false:field.type==="message"?false:field.type==="enum"?enumNumber(field,value)===0:value===0);
 
 /** 📦️ Encodes a message by its schema: fields in number order, defaults omitted, repeated scalars packed, enums by number or member name. */
-export function encodeProtobufV1(name:string,value:ProtobufMessageV1):Uint8Array{
+export function encodeProtobufV1(name:string,value:ProtobufMessageV1):Uint8Array<ArrayBuffer>{
  const fields=MESSAGES[name];
  if(!fields)throw Error(`Declared message required: ${name}`);
  const writer=new Writer();

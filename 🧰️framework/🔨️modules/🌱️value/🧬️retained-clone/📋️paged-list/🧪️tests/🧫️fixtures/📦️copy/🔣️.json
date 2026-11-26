@@ -16,7 +16,7 @@
     "copyRequiresMultipleTurns": true,
     "closeRequiresMultipleTurns": true,
     "terminalEmpty": true,
-    "spentCloseTurns": 11,
-    "spentCloseCpu": 21
+    "spentCloseTurns": 2,
+    "spentCloseCpu": 3
   }
 }

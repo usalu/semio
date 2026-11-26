@@ -160,13 +160,15 @@ fn every_family_of_the_house_comes_back_from_its_authored_record() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_deserializer_sniffs_ifc_2x3_and_returns_the_model_with_diagnostics() {
+    use semio_framework_test_original_snapshot_owners::{original_grant, with_decoding};
+    use semio_os_kernel::io::io_mechanism::IoRunControl;
     let (bytes, _) = export_ifc2x3(&house()).expect("the house exports");
     assert_eq!(Ifc2x3IntoModel::sniff(&IoPayload::Binary(bytes.clone())).await, Confidence::High);
     assert_eq!(Ifc2x3IntoModel::sniff(&IoPayload::Text("hello".into())).await, Confidence::None);
-    let outcome = Ifc2x3IntoModel::deserialize(&IoPayload::Binary(bytes)).await.expect("it imports");
+    let outcome = with_decoding(|owner| semio_framework_async::poll::resolve_ready(Ifc2x3IntoModel::deserialize(&IoPayload::Binary(bytes), &mut IoRunControl::decoding(owner.native(), original_grant())))).expect("it imports");
     assert!(outcome.value.walls.contains_key("w-south"));
     assert!(outcome.diagnostics.iter().all(|diagnostic| !diagnostic.message.starts_with("IFCROOF")));
-    let broken = Ifc2x3IntoModel::deserialize(&IoPayload::Text("not a file".into())).await;
+    let broken = with_decoding(|owner| semio_framework_async::poll::resolve_ready(Ifc2x3IntoModel::deserialize(&IoPayload::Text("not a file".into()), &mut IoRunControl::decoding(owner.native(), original_grant()))));
     assert!(broken.is_err());
 }
 

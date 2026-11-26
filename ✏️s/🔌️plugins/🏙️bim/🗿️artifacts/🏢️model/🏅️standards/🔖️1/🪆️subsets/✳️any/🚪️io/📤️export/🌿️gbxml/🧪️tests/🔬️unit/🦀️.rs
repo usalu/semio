@@ -32,6 +32,7 @@ use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapsh
 static BOX: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🌡️energy-envelope/🏠️box/📸️snapshot/🔣️.json"));
 static ZONING: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🌡️energy-envelope/🏘️zoning/📸️snapshot/🔣️.json"));
 static STACK: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🌡️energy-envelope/🧱️stack/📸️snapshot/🔣️.json"));
+static CONTROL: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🌡️energy-envelope/🏠️box/🎚️io-control/🔣️.json"));
 
 fn load(text: &str) -> ModelSnapshot {
     from_json_str(text, JsonMemberPolicy::Reject).expect("the committed fixture decodes")
@@ -55,7 +56,80 @@ fn ids_are_xs_ids_unique_and_made_of_the_prefix_and_the_model_id() {
     assert_eq!(names.id("space", "sp-b1"), "space-sp-b1");
     assert_eq!(names.id("space", "sp/b1"), "space-sp_b1");
     assert_eq!(names.id("space", "sp_b1"), "space-sp_b1-2", "a clash is numbered");
+    assert_eq!(names.id("space", "sp_b1-3"), "space-sp_b1-3");
+    assert_eq!(names.id("space", "sp/b1"), "space-sp_b1-4");
     assert!(names.id("surface", "a b\u{e4}").chars().all(|letter| letter.is_ascii_alphanumeric() || matches!(letter, '-' | '_' | '.')));
+}
+
+#[test]
+fn xml_cursor_matches_the_stdio_writer_at_every_byte_boundary() {
+    use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gbxml::codec::document_text;
+    use semio_s_artifact_bim_model_gbxml::standards::v1::subsets::any::io::export::gbxml::GbxmlTextCursor;
+    let long = "München \"<> & \n雪\r\t".repeat(20);
+    let root = element("Root", vec![attr("description", &long)], vec![
+        leaf("Leaf", vec![attr("name", "short")], &long),
+        element("Empty", vec![attr("quote", "'\"")], Vec::new()),
+    ]);
+    let expected = document_text(root.clone()).unwrap();
+    for size in [1, 2, 5, 120, 4096] {
+        let mut cursor = GbxmlTextCursor::default();
+        let mut page = vec![0; size];
+        let mut actual = Vec::new();
+        while !cursor.is_complete() {
+            let count = cursor.write(&root, &mut page, size).unwrap();
+            actual.extend_from_slice(&page[..count]);
+        }
+        assert_eq!(actual, expected.as_bytes(), "page capacity {size}");
+    }
+}
+
+#[test]
+fn original_gbxml_pages_reproduce_the_reference_and_retire_after_cancel() {
+    use semio_framework_job::{Generation, OperationId, OriginalJobFixtureCaller, RetainedCloneGrant};
+    use semio_plugin::app::ArtifactOutputChunks;
+    use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gbxml::codec::document_text;
+    use semio_s_artifact_bim_model_gbxml::standards::v1::subsets::any::io::export::gbxml::GbxmlPages;
+
+    let tree = element("gbXML", Vec::new(), vec![leaf("Name", Vec::new(), &"Räume & 雪 ".repeat(2000))]);
+    let expected = document_text(tree.clone()).unwrap();
+    let stock = RetainedCloneGrant { maximum_items: 1 << 19, maximum_copy_bytes: 1 << 26, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 256 };
+    let grant = RetainedCloneGrant { maximum_items: 256, maximum_copy_bytes: 1 << 17, maximum_capacity_bytes: 1 << 17, maximum_release_bytes: 1 << 17, maximum_depth: 128 };
+    for operation in [1, 2] {
+        let mut caller = OriginalJobFixtureCaller::admit(OperationId(operation), Generation(1), stock, || Some(1), 1000, 1 << 22);
+        let mut work = GbxmlPages::default();
+        let mut original = None;
+        let maximum = ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES;
+        assert!(caller.turn(grant, |cx| ArtifactOutputChunks::original_birth_admit(maximum, &mut original, cx)).unwrap());
+        assert!(caller.turn(grant, |cx| work.receive(&mut original, cx)).unwrap());
+        assert!(original.is_none());
+        let denied = RetainedCloneGrant { maximum_capacity_bytes: 0, ..grant };
+        assert!(!caller.turn(denied, |cx| work.advance(&tree, cx)).unwrap());
+        let mut sealed = false;
+        for turn in 0..4096 {
+            if operation == 2 && turn == 20 {
+                caller.cancel().cancel_now();
+                let stopped = caller.turn(grant, |cx| Ok(work.advance(&tree, cx))).unwrap().unwrap_err();
+                assert!(stopped.primary_value().is_some_and(|error| error.kind == semio_framework_value::ValueRefusalKind::Canceled));
+                break;
+            }
+            sealed = caller.turn(grant, |cx| work.advance(&tree, cx)).unwrap();
+            if sealed { break; }
+        }
+        assert_eq!(sealed, operation == 1);
+        if sealed {
+            let chunks = caller.turn(grant, |cx| work.take(cx)).unwrap().unwrap();
+            assert!(chunks.chunks_remaining() > 1);
+            let mut contents = Vec::new();
+            while let Some(page) = chunks.take_chunk().unwrap() { contents.extend(page); }
+            assert_eq!(contents, expected.as_bytes());
+        }
+        for _ in 0..8192 {
+            if work.terminal_is_empty() { break; }
+            caller.retirement_turn(grant, |cx| work.close_step(cx)).unwrap();
+        }
+        assert!(work.terminal_is_empty());
+        caller.retire(stock);
+    }
 }
 
 #[test]
@@ -169,6 +243,53 @@ fn a_stack_has_underground_walls_a_shared_interior_floor_and_a_roof() {
 fn a_model_without_conditions_has_no_envelope_and_is_refused() {
     let message = export_gbxml(&ModelSnapshot::default()).expect_err("refused");
     assert!(message.contains("no space states thermal conditions"), "{message}");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn registered_serializer_checks_its_caller_and_preserves_canonical_xml() {
+    use semio_framework_value::{NativeDecodeControl, NativeDecodeProgress, ValueRefusalKind};
+    use semio_os_kernel::io::io_mechanism::IoRunControl;
+    use semio_s_artifact_bim_model_gbxml::standards::v1::subsets::any::io::export::gbxml::ModelIntoGbxml;
+    let model = load(*BOX);
+    let cases: serde_json::Value = serde_json::from_str(*CONTROL).expect("IO control cases");
+    for row in cases.as_array().unwrap() {
+        let stop = row["stopAtCheckpoint"].as_u64().map(|count| count as usize);
+        let mut checkpoints = 0;
+        let mut milestones = Vec::new();
+        let mut progress = |status: NativeDecodeProgress| {
+            checkpoints += 1;
+            if status.total != 0 && milestones.last() != Some(&status.completed) {
+                milestones.push(status.completed);
+            }
+            stop != Some(checkpoints)
+        };
+        let mut native = NativeDecodeControl::new(1 << 20, &mut progress);
+        let mut control = IoRunControl::decoding(&mut native, Default::default());
+        let result = ModelIntoGbxml::serialize(&model, &ArchiveChildren::default(), &mut control).await;
+        drop(control);
+        drop(native);
+        if let Some(stop) = stop {
+            assert_eq!(checkpoints, stop);
+            assert_eq!(result.expect_err("cancelled serializer").cause.kind(), ValueRefusalKind::Canceled);
+        } else {
+            assert!(checkpoints >= row["minimumCheckpoints"].as_u64().unwrap() as usize);
+            let complete: Vec<usize> = serde_json::from_value(row["writingMilestones"].clone()).unwrap();
+            assert_eq!(milestones, complete);
+            let export = result.expect("box export");
+            let IoPayload::Text(xml) = export.value else { panic!("expected XML text") };
+            assert_eq!(xml, export_gbxml(&model).expect("canonical box XML").0);
+            let mut reader = quick_xml::Reader::from_str(&xml);
+            let mut surfaces = 0;
+            loop {
+                match reader.read_event().expect("quick-xml parses the export") {
+                    quick_xml::events::Event::Start(node) if node.name().as_ref() == b"Surface" => surfaces += 1,
+                    quick_xml::events::Event::Eof => break,
+                    _ => (),
+                }
+            }
+            assert_eq!(surfaces, row["surfaces"].as_u64().unwrap());
+        }
+    }
 }
 
 #[test]

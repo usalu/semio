@@ -8,6 +8,9 @@ use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_plugin_interpreter_runtime::{OwnedActorStartupStatus, OwnedCompiledGuest, OwnedGuestInstance, OwnedRuntime};
 use serde_json::Value;
 
+#[path="actor-clock-host.rs"]
+mod actor_clock_host;
+
 fn clock() -> Option<u64> { Some(1000) }
 
 fn unsigned(mut value: usize, destination: &mut Vec<u8>) {

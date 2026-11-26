@@ -13,6 +13,7 @@ import contract from "../🧬️schema/🔣️.json";
 import corpus from "./🧫️fixtures/🔣️.json";
 import { identityInstallationSchema as identity } from "@semio-tech/framework/identity/installation/schema";
 import { parseComponentSourceRowV1, parseCompiledComponentRowV1, parseDeployedRegistryEntryV1, parsePluginBuildTargetV1 } from "../🧬️schema/🟦️.ts";
+import { loadProductFunctionsV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 
 const parsers = { source: parseComponentSourceRowV1, target: parsePluginBuildTargetV1, compiled: parseCompiledComponentRowV1, deployed: parseDeployedRegistryEntryV1 };
 const names = { source: "ComponentSourceOwnerV1", target: "PluginBuildTargetV1", compiled: "CompiledComponentOwnerV1", deployed: "DeployedRegistryEntryV1" };
@@ -207,11 +208,6 @@ for (const row of corpus.retainedSession) test(`retained session reader ${row.id
   const { parseProjectedPlaygroundV1, registryModuleDirectories } = await import("../../📖️catalog-view/🟦️.ts");
   const { artifactsStorageSchema } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts");
   const readingPath = resolve(import.meta.dirname, "../../🎮️playground/🧭️session/👓️reading/🟦️.ts");
-  const tree = ts.createSourceFile(readingPath, readFileSync(readingPath, "utf8"), ts.ScriptTarget.Latest, true);
-  const names = ["textAt", "withPlaygroundSessionV1", "retainedPlaygroundSessionProjectionV1", "withSessionV1"];
-  const code = names.map(name => tree.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name)!.getText(tree).replace(/^export /u, "")).join("\n");
-  const program = ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 }, reportDiagnostics: true });
-  expect(program.diagnostics).toEqual([]);
   const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "retained-session-"));
   const entry = corpus.cases.find(item => item.stage === "deployed" && item.valid)!.value;
   const projection = { entries: [entry], playgrounds: [{ variant: "portable", pluginId: entry.pluginId, aliases: [], app: "portable.drawing@1/*#editor", ports: { react: 6000, wgpu: 6100 }, examples: [], assets: [], engines: [], cratePath: entry.cratePath }] } as never;
@@ -234,7 +230,7 @@ for (const row of corpus.retainedSession) test(`retained session reader ${row.id
     withRepositoryArtifactV1: (_options: unknown, body: (reader: unknown) => Promise<unknown>) => body({}),
     withRepositoryArtifactTaskV1: (_reader: unknown, _invocation: unknown, body: (artifact: unknown) => Promise<unknown>) => body({ path: output, files: [...sessionSchema.definitions.Protocol.const.files], control: {}, recheck: async () => {} }),
   };
-  const api = new Function(...Object.keys(ports), program.outputText + "\nreturn {withPlaygroundSessionV1,retainedPlaygroundSessionProjectionV1};")(...Object.values(ports));
+  const api = await loadProductFunctionsV1(readingPath, ["withPlaygroundSessionV1", "retainedPlaygroundSessionProjectionV1"], ports);
   const retained = await api.retainedPlaygroundSessionProjectionV1(workspace, invocation, "portable");
   expect(retained !== undefined).toBe(row.retained);
   if (row.retained) expect(retained).toEqual(projection);

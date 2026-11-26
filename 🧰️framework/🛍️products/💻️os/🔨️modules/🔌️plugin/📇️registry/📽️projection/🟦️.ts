@@ -1,5 +1,4 @@
-import nativeCatalogSchema from "../📥️runtime/🧬️schema/🔣️.json" with { type: "json" };
-import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import { readNativeCatalogV1 } from "../📥️runtime/🟦️.ts";
 import neutralPublication from "../📣️publication/🔣️.json" with { type: "json" };
 import {parseCatalogPublicationV1,publicationIncludesPackageV1,publicationPackageRootsV1,type CatalogPublicationV1} from "../📣️publication/🟦️.ts";
 import type { ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -538,7 +537,5 @@ export function publishCatalogFilesV1(outDir:string,files:Readonly<Record<string
 /** 🦀️ Publishes the schema-owned native receiver document from the caller's admitted inventory. */
 export function emitNativeCatalogV1(entries:readonly DeployedRegistryEntryV1[],playgrounds:readonly PlaygroundEntry[]):string{
   const document={version:1,plugins:entries.map(row=>({pluginId:row.pluginId,cratePath:row.cratePath,wasmOut:row.wasmOut,role:row.role,extends:row.extends??null,capabilities:row.capabilities,activationEvents:row.activationEvents,host:row.host??null})),playgrounds:playgrounds.map(row=>({variant:row.variant,pluginId:row.pluginId,app:row.app??null,aliases:row.aliases}))};
-  const errors=validateJsonSchemaSubset(nativeCatalogSchema,document);
-  if(errors.length)throw Error("Native catalog publication is invalid: "+errors.join("; "));
-  return JSON.stringify(document,null,2)+"\n";
+  return JSON.stringify(readNativeCatalogV1(document),null,2)+"\n";
 }

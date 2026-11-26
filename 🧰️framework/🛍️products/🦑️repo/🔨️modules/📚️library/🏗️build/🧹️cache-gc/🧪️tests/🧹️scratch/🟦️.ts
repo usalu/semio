@@ -38,7 +38,7 @@ test("collecting the declared scratch area removes exactly what the independent 
  for(const entry of cases.entries){const directory=join(base(),entry.name);mkdirSync(directory,{recursive:true});const file=join(directory,"payload.bin");writeFileSync(file,"x".repeat(entry.bytes));const time=(now-entry.ageMs)/1000;utimesSync(file,time,time);utimesSync(directory,time,time);}
  const measured=await Promise.all(cases.entries.map(async entry=>[entry.name,await measureCacheTreeV1(join(base(),entry.name),ports(alive),1000)] as const));
  const file=join(workspace,"cases.json");
- writeFileSync(file,JSON.stringify({cases:[{now,units:area.collect!.units,unusedAgeMs:area.collect!.unusedAgeMs,quietMs:area.collect!.quietMs,budgetBytes:area.budget!.bytes,entries:cases.entries.map((entry,index)=>({name:entry.name,bytes:measured[index]![1].bytes,recencyMs:measured[index]![1].recencyMs,alive:live.has(Number(entry.name.split("-")[0]))}))}]}));
+ writeFileSync(file,JSON.stringify({cases:[{now,units:area.collect!.units,unusedAgeMs:area.collect!.unusedAgeMs,quietMs:area.collect!.quietMs,budgetBytes:"bytes" in area.budget!?area.budget.bytes:undefined,entries:cases.entries.map((entry,index)=>({name:entry.name,bytes:measured[index]![1].bytes,recencyMs:measured[index]![1].recencyMs,alive:live.has(Number(entry.name.split("-")[0]))}))}]}));
  const run=runToolSyncV1("python",["-I",oracle,file],{encoding:"utf8",maxBuffer:1<<26});expect(run.status,run.stderr).toBe(0);
  const expected=(JSON.parse(run.stdout) as string[][])[0]!.sort();
  expect(expected).toEqual(cases.entries.filter(entry=>entry.expect==="removed").map(entry=>entry.name).sort());

@@ -3,6 +3,18 @@ import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import fixture from"./🧫️fixtures/🔣️.json"with{type:"json"};
+import reserveLaw from"./🧫️fixtures/reserve.json"with{type:"json"};
+
+test("live depleted reserves and authored or recorded overdraw differ on consumable axes",()=>{
+ const db=new Database(":memory:");
+ try{
+  const classify=db.query<{runtime:string|null; authored:string|null},[string,number,number]>(`WITH quota(axis, available, reserved) AS (VALUES(?,?,?))
+    SELECT CASE WHEN available>=reserved THEN NULL WHEN axis='depth' THEN 'invalidValue' ELSE 'workLimit' END runtime,
+    CASE WHEN available<reserved THEN 'invalidValue' END authored FROM quota`);
+  expect(new Set(reserveLaw.cases.map(row=>row.axis))).toEqual(new Set(reserveLaw.axes));
+  for(const row of reserveLaw.cases)expect(classify.get(row.axis,row.available,row.reserved),row.axis).toEqual({runtime:row.runtime,authored:row.static});
+ }finally{db.close();}
+});
 test("per-operation source bounds preserve declared cleanup and match independent SQLite projection",()=>{
  const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);
  const db=new Database(":memory:");try{

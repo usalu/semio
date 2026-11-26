@@ -48,7 +48,7 @@ for(const condition of repairFixture.cases)test("targeted repair archive index "
  const expected=oracle.query(`WITH RECURSIVE w(offset) AS (VALUES (0) UNION ALL SELECT offset+?1 FROM w WHERE offset+?1<?2)
   SELECT COUNT(*) AS waves, 2 AS verifiedReads, ?3 AS checked, ?3 AS published,
          CASE WHEN ?3=0 THEN 'GENERATION_CLOSURE_REPAIR_UNQUALIFIED' END AS refusal FROM w`).get(BASE,affected,Number(condition==="unchanged"));
- expect({waves,verifiedReads,checked,...result}).toEqual(expected);
+ expect<unknown>({waves,verifiedReads,checked,...result}).toEqual(expected);
  if(result.published)expect((await store.read())!.manifest!.owners[names.at(-1)!]).toEqual(first.current.manifest!.owners[names.at(-1)!]);
  else expect((await store.read())!.pointer).toEqual(tombstone);
 });
@@ -136,7 +136,7 @@ test("every wave carries the seconds of its stages, the stages of the part inclu
   await world.refresh();
   await edit(dir,COUNT);
   const told:{done:number;total:number;phases?:Record<string,number>}[]=[];
-  await world.refresh({published:(_generation:number,info:never)=>{told.push(info);},wave:info=>{told.push(info as never);}});
+  await world.refresh({published:(_generation:number,info:{done:number;total:number;phases?:Record<string,number>})=>{told.push(info);},wave:info=>{told.push(info as never);}});
   expect(told.length).toBe(3);
   for(const[at,info]of told.entries()){
    expect(Object.keys(info.phases!).sort()).toEqual([...(at===0?["plan.facts","plan.index","plan.settle"]:[]),"compute","compute.projects","compute.setup","compute.tail","fragments","plan","prime",...(at===2?["pack","patch","publish"]:[])].sort());
@@ -150,6 +150,6 @@ test("the shaped compute result forwards what the part said about inference and 
  const part={owners:[],edgeOnly:[],edges:[],rows:[],env:{digest:"x",rows:[]},externalNodes:{},parseUnavailable:[]};
  const shape=(extra:object)=>shapeComputeResultV1({workspaceRoot:"/w",part:{...part,...extra} as never,stubs:{}});
  expect(shape({inferred:3,phases:{tail:5}})).toMatchObject({inferred:3,phases:{tail:5}});
- const bare=shape({}) as Record<string,unknown>;expect("inferred" in bare).toBe(false);expect("phases" in bare).toBe(false);
+ const bare=shape({});expect("inferred" in bare).toBe(false);expect("phases" in bare).toBe(false);
  expect("inferred" in (shape({inferred:"3"}) as object)).toBe(false);
 });

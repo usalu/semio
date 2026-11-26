@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { execFileSync } from "node:child_process";
+import { createServer, normalizePath } from "vite";
 import { STORY_SCOPES, buildExactAliasEntries, buildScopeAliases, buildScopeStoryGlobs, buildScopeWatchIgnores, buildScopeWatchRoots, isWatchedPathV1, resolveActiveScopes, scopeActive } from "../../📖️stories/🧭️coordination/🟦️.ts";
 
 describe("resolveActiveScopes", () => {
@@ -31,28 +31,30 @@ describe("Storybook scope projections", () => {
     expect(aliases["@semio-tech/ui-react"]).toBe("🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript");
     expect(aliases["@elements/ui/globals.css"]).toBe("🧰️framework/🔨️modules/🖱️ui/🌐️globals/🎨️.css");
   });
-  it("builds exact-match alias entries that leave package subpaths to node resolution", () => {
-    const own = import.meta.filename;
+  it("builds exact-match alias entries that leave package subpaths to node resolution", async () => {
+    const own = normalizePath(import.meta.filename);
     const entries = buildExactAliasEntries({ "@semio-tech/assets": own, "vite/internal": own }, { storybook: "/sb" });
     const tests = (entry: { readonly find: string | RegExp }, specifier: string) => (entry.find instanceof RegExp ? entry.find.test(specifier) : entry.find === specifier);
     expect(entries.map((entry) => entry.replacement)).toEqual([own, own, "/sb"]);
     expect(entries.some((entry) => tests(entry, "@semio-tech/assets/mesh"))).toBe(false);
     expect(entries.some((entry) => tests(entry, "@semio-tech/assets"))).toBe(true);
-    const oracle = `
-      import { createServer } from "vite";
-      const [own, sources] = JSON.parse(process.argv[1]);
-      const alias = sources.map(([source, replacement]) => ({ find: new RegExp(source, "u"), replacement }));
-      const server = await createServer({ configFile: false, logLevel: "silent", appType: "custom", server: { middlewareMode: true, watch: null }, resolve: { alias }, optimizeDeps: { noDiscovery: true, include: [] } });
-      const bare = await server.pluginContainer.resolveId("@semio-tech/assets", own);
-      const sub = await server.pluginContainer.resolveId("@semio-tech/assets/mesh", own);
-      console.log(JSON.stringify([bare?.id ?? null, sub?.id ?? null]));
+    const server = await createServer({
+      configFile: false,
+      logLevel: "silent",
+      appType: "custom",
+      server: { middlewareMode: true, watch: null, ws: false },
+      resolve: { alias: entries },
+      optimizeDeps: { noDiscovery: true, include: [] },
+    });
+    try {
+      const bare = (await server.pluginContainer.resolveId("@semio-tech/assets", own))?.id;
+      const sub = (await server.pluginContainer.resolveId("@semio-tech/assets/mesh", own))?.id;
+      expect(bare).toBe(own);
+      expect(sub).toBeTruthy();
+      expect(sub!.startsWith(`${own}/`)).toBe(false);
+    } finally {
       await server.close();
-    `;
-    const sources = entries.flatMap((entry) => (entry.find instanceof RegExp ? [[entry.find.source, entry.replacement]] : []));
-    const [bare, sub] = JSON.parse(execFileSync(process.execPath, ["--input-type=module", "-e", oracle, JSON.stringify([own, sources])], { cwd: import.meta.dirname, encoding: "utf8" }).trim()) as [string | null, string | null];
-    expect(bare).toBe(own);
-    expect(sub).toBeTruthy();
-    expect(sub!.startsWith(`${own}/`)).toBe(false);
+    }
   }, 60_000);
   it("throws on a genuine key conflict between scopes", () => {
     expect(() => buildScopeAliases([

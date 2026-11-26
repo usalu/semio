@@ -217,7 +217,6 @@ pub mod plugin_app_close_prelude {
     pub use crate::app::*;
     pub use crate::app::{tree_item, PeerMark};
     pub use semio_plugin_reactor_app::OriginalMediaImport;
-    pub use semio_plugin_reactor_app::RetainedAllocationEffect;
     pub use semio_framework::kernel::ActionId;
     pub use semio_framework::kernel::*;
     pub use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation};

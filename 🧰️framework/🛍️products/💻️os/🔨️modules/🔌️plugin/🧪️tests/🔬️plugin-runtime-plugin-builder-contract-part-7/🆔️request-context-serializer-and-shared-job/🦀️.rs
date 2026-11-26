@@ -147,7 +147,40 @@
 
     #[test]
     fn retained_latest_wins_raw_capacity_is_not_initialized_byte_retirement() {
-        semio_plugin_retained_command::test_raw_allocation_close::<TestApp>();
+        use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, OriginalJobFixtureCaller, OperationId, Generation};
+        use semio_plugin_retained_command::test_raw_allocation_close;
+        let stock=RetainedCloneGrant{maximum_items:20000,maximum_copy_bytes:16777216,maximum_capacity_bytes:16777216,maximum_release_bytes:16777216,maximum_depth:128};
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧵️retained-command/🧪️tests/🧫️fixtures/🚪️raw-allocation-close.json")).unwrap();
+        for case in fixture["cases"].as_array().unwrap() {
+            let mut raw = Vec::with_capacity(case["capacity"].as_u64().unwrap() as usize);
+            raw.resize(case["initializedBytes"].as_u64().unwrap() as usize, 42);
+            let mut job = test_raw_allocation_close::<TestApp>(raw);
+            job.begin_close();
+            let capacity=job.raw_allocation_fixture_bytes().capacity();
+            let pointer=job.raw_allocation_fixture_bytes().as_ptr();
+            let expected:Vec<u8>=serde_json::from_str(&serde_json::to_string(&vec![42u8;case["initializedBytes"].as_u64().unwrap() as usize]).unwrap()).unwrap();
+            assert_eq!(job.raw_allocation_fixture_bytes(), &expected);
+            assert_eq!(job.next_close_copy_byte_demand().unwrap(),0);
+            let mut close_caller=OriginalJobFixtureCaller::admit(OperationId(1),Generation(1),stock,||Some(1),12345,100000);let unfunded=RetainedCloneGrant{maximum_items:0,maximum_depth:1,..Default::default()};
+            assert!(matches!(close_caller.turn(unfunded, |cx| job.close_step(cx)).expect("original fixture close turn"),InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress} if progress==RetainedCloneProgress::default()));
+            assert_eq!(job.raw_allocation_fixture_bytes().as_ptr(),pointer);assert_eq!(job.raw_allocation_fixture_bytes().capacity(),capacity);
+            let mut copied=0;let mut released=0;
+            for _ in 0..16 {
+                let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:fixture["maximumCopyBytes"].as_u64().unwrap() as usize,maximum_capacity_bytes:0,maximum_release_bytes:job.next_close_release_byte_demand().unwrap(),maximum_depth:job.next_close_depth_demand().unwrap()};
+                
+                let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close_caller.turn(grant, |cx| job.close_step(cx)).expect("original fixture close turn"));
+                let progress=match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>progress,_=>panic!("funded original raw allocation must complete")};
+                assert_eq!(heap.requested_bytes,0);assert_eq!(heap.released_bytes,progress.released_bytes);
+                assert!(progress.copied_items<=grant.maximum_items&&progress.copied_bytes<=grant.maximum_copy_bytes&&progress.released_bytes<=grant.maximum_release_bytes);
+                copied+=progress.copied_bytes;released+=progress.released_bytes;
+                if job.terminal_is_empty(){break;}
+            }
+            assert!(job.terminal_is_empty());
+            assert_eq!(copied,case["expectedCopiedBytes"].as_u64().unwrap() as usize);
+            close_caller.retire(stock);
+            assert_eq!(released,case["expectedReleasedBytes"].as_u64().unwrap() as usize);
+            assert_eq!(released,capacity);
+        }
     }
 
     #[semio_framework_async_macros::async_test]

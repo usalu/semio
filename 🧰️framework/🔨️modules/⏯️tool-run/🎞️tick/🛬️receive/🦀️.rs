@@ -24,6 +24,9 @@ fn empty_identity()->ToolRunIdentity{ToolRunIdentity{id:ToolRunId{app_instance_i
 fn malformed(detail:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,detail)}
 fn pack_error(_:pack::PackRefusal)->ValueError{malformed("original Tick Pack record refused")}
 fn funds(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand)}
+const TRACE_RETURN_COPY_BYTES: usize = size_of::<usize>() + size_of::<bool>();
+const PARSER_TOKEN_COPY_BYTES: usize = size_of::<Option<Token>>() + 3 * size_of::<usize>() + size_of::<bool>();
+
 /// ⛽️ Records one pure transition on the surrounding effect.
 pub(crate) fn tally(effect:&mut RetainedAllocationEffect<'_>)->Result<(),ValueError>{if pure(effect)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native Tick transition exceeded its original work"))}}
 fn le<const N:usize>(bytes:&[u8])->Result<[u8;N],ValueError>{bytes.get(..N).and_then(|slice|slice.try_into().ok()).ok_or_else(||malformed("native Tick scalar width differs"))}
@@ -81,9 +84,18 @@ impl ToolRunTickNativeCursor{
  /// 📏️ Quotes the next native transition independently of input parsing and terminal retirement.
  pub fn next_demands(&mut self)->Result<RetirementDemand,ValueError>{
   if self.closing||self.complete{return Ok(Default::default())}
-  if self.trace_pending{let mut demand=self.trace.next_demands()?;demand.copy_bytes+=size_of::<Frame>()+size_of::<bool>();demand.depth+=1;return Ok(demand)}
+  if self.trace_pending{let mut demand=self.trace.next_demands()?;demand.copy_bytes+=TRACE_RETURN_COPY_BYTES;demand.depth+=1;return Ok(demand)}
+  if matches!(self.pending, Some(Token::Byte(_))) {
+   let sink = match self.bytes.kind {
+    Bytes::Trace => size_of::<Option<(u64, u8)>>() + 2 * size_of::<usize>() + 2 * size_of::<bool>(),
+    Bytes::Counters => size_of::<ToolRunCounter>() + size_of::<usize>(),
+    Bytes::Args => size_of::<ToolRunStepArg>() + size_of::<usize>(),
+    _ => size_of::<u64>() + 2 * size_of::<usize>(),
+   };
+   return Ok(RetirementDemand { copy_bytes: size_of::<Option<Token>>() + size_of::<ByteState>() + sink, depth: self.depth + 1, ..Default::default() });
+  }
   if let Some(token)=self.pending{let trace_birth=if matches!(token,Token::Unsigned{role:Role::BytesLength,..})&&self.frame()?.kind==Kind::Trace{trace::NativeTraceCursor::birth_copy_bytes()}else{0};return Ok(RetirementDemand{copy_bytes:size_of::<Token>()+size_of::<Frame>()+size_of::<ByteState>()+size_of::<ToolRunStep>()+trace_birth,capacity_bytes:self.allocation(token)?,depth:self.depth+1,..Default::default()})}
-  let mut demand=self.parser()?.record_storage_admission_demands().map_err(pack_error)?;if demand.capacity_bytes==0{demand.copy_bytes=size_of::<Option<Token>>()+3*size_of::<usize>()+size_of::<bool>();}demand.depth=demand.depth.max(1);Ok(demand)
+  let mut demand=self.parser()?.record_storage_admission_demands().map_err(pack_error)?;if demand.capacity_bytes==0{demand.copy_bytes=PARSER_TOKEN_COPY_BYTES;}demand.depth=demand.depth.max(1);Ok(demand)
  }
  /// ⏱️ Reborrows the exact same source, decoder ledger, cancellation observer and construction recipient.
  pub fn advance(&mut self,source:&dyn OriginalTickWireSource,control:&mut NativeDecodeControl<'_>)->Result<RetainedCloneStep,OriginalReceivingPrimary>{
@@ -103,9 +115,36 @@ impl ToolRunTickNativeCursor{
    Err(error)=>Err(error.into()),
   }
  }
+ /// 🎞️ Decodes consecutive fields in the original receiving scope until its physical grant is spent.
+ pub fn advance_run(&mut self, source: &dyn OriginalTickWireSource, control: &mut NativeDecodeControl<'_>, mut remaining: RetainedCloneGrant) -> Result<RetainedCloneStep, OriginalReceivingPrimary> {
+    let mut total = RetainedCloneProgress::default();
+    let result: Result<(), OriginalReceivingPrimary> = (|| {
+        for _ in 0..remaining.maximum_items.min(64) {
+            if self.is_complete() { break; }
+            if !funds(remaining, self.next_demands()?) { break; }
+            let step = self.advance(source, control)?;
+            let progress = step.progress();
+            if progress == RetainedCloneProgress::default() { break; }
+            if !progress.fits(remaining) {
+                return Err(ValueError::invariant("native tick step exceeded its remaining receiving grant").with_retained_progress(progress).into());
+            }
+            remaining.maximum_items -= progress.copied_items;
+            remaining.maximum_copy_bytes -= progress.copied_bytes;
+            remaining.maximum_capacity_bytes -= progress.retained_capacity_bytes;
+            remaining.maximum_release_bytes -= progress.released_bytes;
+            total = total.saturating_add(progress);
+        }
+        Ok(())
+    })();
+    if let Err(mut failure) = result {
+        failure.progress = total.saturating_add(failure.progress);
+        return Err(failure);
+    }
+    Ok(if self.is_complete() { RetainedCloneStep::Complete(total) } else { RetainedCloneStep::Progress(total) })
+ }
  fn advance_admitted(&mut self,source:&dyn OriginalTickWireSource,control:&mut NativeDecodeControl<'_>,effect:&mut RetainedAllocationEffect<'_>,demand:RetirementDemand)->Result<RetainedCloneStep,ValueError>{
   let grant=effect.grant();let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
-  let result=(||{if self.trace_pending{let parent=size_of::<Frame>()+size_of::<bool>();let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(parent),maximum_depth:grant.maximum_depth.saturating_sub(1),..grant};if self.trace.is_complete(){tally(effect)?;let(page,receipt)=self.trace.take(child).ok_or_else(||malformed("native Tick trace output move was not quoted"))?;self.tick_mut()?.trace.push(page);progress=receipt;}else{let mut nested=effect.nested(child);progress=self.trace.advance(control,&mut nested)?.progress();}if self.trace.terminal_is_empty(){self.element()?;self.trace_pending=false;}else if self.trace.ready_for_input(){self.trace_pending=false;}progress.copied_items=progress.copied_items.max(1);progress.copied_bytes+=parent; }
+  let result=(||{if self.trace_pending{let parent=TRACE_RETURN_COPY_BYTES;let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(parent),maximum_depth:grant.maximum_depth.saturating_sub(1),..grant};if self.trace.is_complete(){tally(effect)?;let(page,receipt)=self.trace.take(child).ok_or_else(||malformed("native Tick trace output move was not quoted"))?;self.tick_mut()?.trace.push(page);progress=receipt;}else{let mut nested=effect.nested(child);progress=self.trace.advance(control,&mut nested)?.progress();}if self.trace.terminal_is_empty(){self.element()?;self.trace_pending=false;}else if self.trace.ready_for_input(){self.trace_pending=false;}progress.copied_items=progress.copied_items.max(1);progress.copied_bytes+=parent; }
   else if let Some(token)=self.pending{tally(effect)?;control.charge(demand.capacity_bytes)?;let born=self.token(token)?;if demand.capacity_bytes!=0{*effect.actual()=Some(born)}progress.retained_capacity_bytes=born;self.pending=None;}
   else if demand.capacity_bytes!=0{control.charge(demand.capacity_bytes)?;progress=self.parser()?.admit_record_storage(effect).map_err(pack_error)?;}
   else if let Some(token)=self.parser()?.grant().map_err(pack_error)?{tally(effect)?;match token{RetainedRecordBodyToken::Value(token)=>self.pending=Some(token),RetainedRecordBodyToken::Catalog{symbols}if symbols!=0=>return Err(malformed("native Tick wire has foreign symbols")),_=>{}}}

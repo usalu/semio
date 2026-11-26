@@ -126,6 +126,7 @@
         "resolveKind": "resolve",
         "maximumCarry": 400000,
         "maximumCarriedCursors": 2,
+        "levelMemoEntries": 100000,
         "installStore": ".cache/b/d/m/j/",
         "lockfile": "bun.lock"
       }

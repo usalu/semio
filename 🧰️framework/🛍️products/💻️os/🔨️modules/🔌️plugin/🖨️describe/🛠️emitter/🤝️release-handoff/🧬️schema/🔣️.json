@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/plugins/descriptor-emitter/release-handoff.json",
+  "definitions": {
+    "Protocol": { "const": { "environment": "SEMIO_DESCRIPTOR_EMITTER_RELEASE_HANDOFF", "namespace": "er", "file": "handoff.json", "maximumBytes": 1024 } },
+    "Digest": { "type": "string", "pattern": "^[a-f0-9]{64}$(?![\\s\\S])" },
+    "Platform": { "enum": ["darwin", "linux", "win32"] },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "id", "callerSha256", "platform"],
+      "properties": {
+        "version": { "const": 1 },
+        "id": { "type": "string", "pattern": "^[a-f0-9]{32}$(?![\\s\\S])" },
+        "callerSha256": { "$ref": "#/definitions/Digest" },
+        "platform": { "$ref": "#/definitions/Platform" }
+      }
+    },
+    "Evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "mode", "platform", "binarySha256", "receiptSha256", "indexSha256"],
+      "properties": {
+        "version": { "const": 1 },
+        "mode": { "const": "release" },
+        "platform": { "$ref": "#/definitions/Platform" },
+        "binarySha256": { "$ref": "#/definitions/Digest" },
+        "receiptSha256": { "$ref": "#/definitions/Digest" },
+        "indexSha256": { "$ref": "#/definitions/Digest" }
+      }
+    },
+    "Reply": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["request", "evidence"],
+      "properties": { "request": { "$ref": "#/definitions/Request" }, "evidence": { "$ref": "#/definitions/Evidence" } }
+    }
+  }
+}

@@ -89,10 +89,6 @@ pub mod editor {
             pub mod overlays;
             #[path = "../../🎮️commands/👁️view/🦀️.rs"]
             pub mod view;
-
-        #[cfg(test)]
-        #[path = "../../🎮️commands/🧪️tests/🔬️unit/🦀️.rs"]
-        mod leaf_tests;
         }
         #[path = "."]
         pub mod modes {

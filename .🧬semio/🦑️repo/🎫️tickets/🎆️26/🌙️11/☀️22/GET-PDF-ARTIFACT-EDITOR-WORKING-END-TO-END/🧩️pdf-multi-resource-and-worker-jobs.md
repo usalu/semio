@@ -662,35 +662,31 @@ So the import was not stuck in the interpret pass or the lift for 1,024 turns: i
 
 Fix (`🚪️io/📥️import/🔁️controlled/🦀️.rs`): the decoder keeps the largest allocation and release backing any of its calls was offered (`peak`); `refused_for_good` refuses only a demand that failed twice against that largest backing. A turn whose grant earlier calls already spent only yields. Law `a_demand_blocked_by_a_spent_turn_grant_yields_and_only_a_full_grant_refuses`.
 
-After the fix the institution diagram prepares and lifts to completion at host turn about 190 of 1,024 and enters Pack export.
+After the fix the institution diagram prepares and lifts to completion at host turn about 190, enters Pack export, and the **whole open settles: 201 intake + 721 settle turns (bound 1,024), 267,852,836 B copied** (final run `s11-routes`). The route law now fails only on its copy assertion, not on turns: the open copied 267.9 MB against the 157.1 MB bound for a 648,725-byte file with 343,228 decoded stream bytes (another session's current bound formula). The earlier mid-session run of the same code (before concurrent framework Pack changes landed) still sat in `natural-file-import-encode` for 830 host turns, so the encode is the stage that decides the remaining 530 turns and the copy overshoot: the canonical deflate of the typed snapshot, about 40 B of copy per raw byte (slice 7 §2). Not changed: it needs the canonical stored-block rule for already-encoded streams in the codec1 format first (schema-first), as slice 7 states.
 
-#### 3. Root cause 2 (binding now): Pack export, not prepare or lift
-
-After the decode the institution diagram spends the remaining 830 host turns in `natural-file-import-encode` (3,161 encode steps, never completes): the canonical deflate of the typed snapshot, about 40 B of copy per raw byte (slice 7 §2). The route's copy bound for the open is 32 MiB + 24 B per file byte = 47.6 MB; the encode alone is far above it. Not changed: it needs the canonical stored-block rule for already-encoded streams in the codec1 format first (schema-first), as slice 7 states.
-
-#### 4. Thesis (6.3 MB, 65 pages)
+#### 3. Thesis (6.3 MB, 65 pages)
 
 Attributed with the same census: **the decode finishes at host turn 285 and fails at its output ceiling, not on turns**: `natural-file decoder retained 55,096,972 output bytes; maximum is 33,554,432`. Retained bytes (live delta by stage): project 16.2 MB (2.6x the file: object streams, whole 4 KiB pages and frames), Type 3 glyph programs 12.2 MB (reference lifter, one whole page per small program), page contents 13.3 MB, operator role mirror 6.8 MB, annotations 1.1, page tree 1.1, the rest 4. The failure was then invisible for 3,800 host turns and 160,000 close turns (`registered fixture did not reach its exact terminal-empty witness`) because the lifetime copy stock of the scope (528 MB) was spent. Copy is also above the route's 184 MB bound before the encode starts (decode alone 233 MB).
 
 Reducing 55 MB to 32 MiB needs the operator role mirror gone (about 13 MB of it across contents and glyph programs: slice 7 §Not done 3, a cross-crate change of reference lifter, controlled lifter, graph projection, native Save and every twin) and a page-granular retention fix for small programs; not started.
 
-#### 5. Laws
+#### 4. Laws
 
 - `real_world_documents_prepare_within_half_of_their_route_turn_bound` (retained-graph tests, mut-family-11): under the importer's accounting (copy 1,048,463, items 63, fuel 4,096 per turn; bulk runs for body bytes and slot writes; allocation charged as copy unless it only reserves empty backing) every ledger document prepares to exactly the file single units reach, in at most half of its route bound (512 + 512 per MiB, halved), and the interpreted-stream pass is at most a third of the turns. Model vs route: institution 248 vs 256 decoder turns measured, thesis 267 vs 337.
 - `real_world_documents_lift_within_half_of_their_route_turn_bound` (testkit): same for the lift, equal to the single-unit snapshot.
 - `a_demand_blocked_by_a_spent_turn_grant_yields_and_only_a_full_grant_refuses` (importer).
 - `PdfFilePreparationCursor::trace` and `InterpretedStreamCursor::trace` now name the interpret sub-step, so census and failures carry it.
 
-#### 6. Not done (in order of yield)
+#### 5. Not done (in order of yield)
 
 1. Pack export copy model and the canonical stored-block rule (binds the institution diagram, site plan and thesis).
 2. Operator role mirror, page-granular small programs, object-stream retention (thesis output ceiling).
 3. Per-stream interpret cost (decoder reuse across streams) was not changed: after the stall fix the interpret pass is 85 of 397 decoder turns and is not binding.
 
-#### 7. Files
+#### 6. Files
 
 - `🚪️io/📥️import/🔁️controlled/🦀️.rs` (`peak`, `refused_for_good`, law); `🚪️io/📥️import/📖️interpreted-streams/🦀️.rs` (`trace`); `🔨️modules/🔗️xref/📥️retained-graph/🦀️.rs` (`trace`, `prepare_turns`, law); `🔨️modules/⬇️lift/🧩️lifter-and-document/🧭️document-lift/🧭️controlled/🧪️tests/🔬️unit/🦀️.rs` (`controlled_lift_turns`, law).
-- Ticket logs: `s11-institution-route.log`, `s11-thesis-3.log` (before/after attribution).
+- Ticket inputs: `run-s11-check.sh` (laws), `run-route.sh` (routes). Logs are deleted again.
 
 ### Slice 12: bounded canonical compressor and a decoded-volume copy bound (2026-11-26)
 
@@ -728,3 +724,193 @@ The old bound `32 MiB + 24 × file` assumed work proportional to the encoded fil
 #### 6. Open: Save of real-world files is a full rewrite
 
 With the open inside its bound the site plan test now fails one step later: `the saved file must keep every byte of its base` (Save does not append to the original; custody lookup for this graph falls back to a rewrite, which re-encodes streams). That is the (a) defect; it was hidden behind the copy bound. Not diagnosed in this slice. Thesis and institution routes not re-run.
+
+### Slice 13: retained output of the thesis, dependency generators, retention charged as held, prompt refusal (2026-11-26)
+
+Native, debug, every cargo run through `native-cargo.sh` (`run-s13.sh`: gate, watchdog, retry while a foreign crate does not compile, stop at once for a PDF or natural-file crate). Logs `🗑️generated/s13-*.log`. Every temporary `[DEBUG]` trace (natural-file fault and decode traces, `SEMIO_DEBUG_CEILING`, the per-stage census tests, the open-failure print) is removed again. Save (`✏️editor/💾️native-save/`) was not touched.
+
+#### 1. What was really retained (census, thesis, quotes net of releases)
+
+The slice 11 attribution (operator role mirror 6.8 MB, one whole page per small program) was wrong in its weights. A per-stage census of the controlled lift and of the preparation (temporary tests) showed:
+
+| thesis | before this slice | after |
+| --- | --- | --- |
+| preparation (retained graph: 3,173 objects, 7.3 MB of retained stream bytes) | 17.3 MB | 17.3 MB (unchanged) |
+| lift: Type 3 glyph programs | 12.2 MB (770 roles) | 5.0 MB, all credited at release (reference builder state) |
+| lift: navigation lanes (outlines, named destinations, labels) | 20.8 MB charged for permanent | 0.14 MB |
+| lift: link annotations (511) | 5.8 MB | 0.44 MB |
+| lift: page contents (23,874 operators) and their role mirror | 5.2 + 4.4 MB | 5.2 + 4.4 MB (accurate: real operator heap) |
+| decoder output at completion (model of the importer's accounting) | 55.1 MB | **27.8 MB** (ceiling 33.6 MB) |
+
+Two duplicated or inflated representations carried the overshoot, neither of them the mirror:
+
+1. **Role dependencies were stored as closures, quadratic in roles times fonts.** A role listed every object its admission consumed: for each of the 770 glyph programs the identity plus the closure of every claimed font (the 47 thesis fonts reach 941 objects), 15,786 stored identities after the fix against about 360,000 before, in the retained snapshot, the Pack export and SQLite.
+2. **Lanes charged their admission quote as retained bytes.** An outline item, named destination or link annotation is admitted against `3 * (value + what its references reach two levels deep)` so the reference builder's transient clones fit the turn grant, and that same quote was then booked as permanent output although the typed result keeps the item and its name. 26.5 MB of the thesis' 36.6 MB lift output were those quotes.
+
+#### 2. Canonical form: generators stored, closure derived
+
+- `PdfAdmittedStreamRole.dependencies` now holds the **generators** of a role's inputs: its identity, the inherited font dictionary and the root of every font whose codec it read (`GraphSource::generators_of`, reference lifter, controlled lifter, controlled images). Every other consumed object is the **closure** of the generators in the graph (`GraphSource::closure_of`, `dependencies_of`), derived when a mutation is validated and never stored. A role equal to the old closure list still validates (closure of a closure is itself), so stored data needs no migration and the wire shape (JSON, proto, GraphQL) is unchanged.
+- `validate_role_inputs` and `validate_role_transition` (Rust `stream-roles`, TypeScript twin) test a role through memoized per-generator closures (`InputChanges`, a few dozen generators shared by thousands of roles instead of a re-walk per role), and a replacement must cover the closure of its own identity with the closure of its generators.
+- Derived views are lazy; the one remaining duplicate representation, the authored operator program of the `Operators` role next to the renamed `PdfPage.content`, is real (4.4 MB for the thesis) but not needed for the bound and is not touched: projection from the graph (`project_graph`, `carry_graph_edit`) reads the role as the only semantic source of a native stream, so dropping the payload needs a schema decision (authored program as the role, typed page as its renamed view, or a sparse rename delta over the typed program), not a lifter change. Recorded as the next step if the ceiling ever binds again.
+
+#### 3. Retention charged as held, not as admitted
+
+The controlled lifter keeps the admission quote for `budget` (the grant must fit the transient clones) and books the **retained heap** of what it typed (`outline_item_heap`, `named_destination_heap`, `annotation_heap` over actions, destinations, file specifications and dictionary entries, capacity based, never above the quote): outlines, named destinations (names tree and legacy `Dests`), page labels and link annotations without appearance. Other annotations, forms and fonts keep their quotes.
+
+#### 4. Prompt refusal
+
+- The decoder refuses an over-ceiling document in the turn its un-releasable output passes the ceiling (`releasable_bytes`: the lift's held tables and builder state, its cursor and the position index are credited back at completion and never count; checked between pages), not at completion after the rest of the lift copied its bytes (`exceeds_ceiling`).
+- Measured on the site plan under an artificially lowered ceiling (temporary env hook): the decoder fails at completion, the fault outcome is delivered 14 turns later, and the open then stayed unsettled for the whole 1,024-turn bound: the Fault page was published only after the failed worker session had retired its output, which costs one paid retirement item per operator and string (63 items per turn), thousands of turns for the thesis. **`MountedTypedCommandFullOperation` now publishes a captured terminal fault page as soon as the worker outcome is acknowledged and retires the session afterwards** (`🧵️retained-command/🔄️full-operation`: the `terminal_seen` branch moves to `Publishing` when `terminal_fault` is set; the retirement stage already closes a live session).
+
+#### 5. Laws and oracles
+
+- `stored_role_dependencies_are_generators_and_derive_exactly_what_lopdf_reaches` (testkit, controlled lift tests): over the ledger (2,347 roles, 17,501 stored identities) no role stores more than identity, font dictionary and its fonts, every generator resolves, and the objects derived from the generators equal the objects the third-party reader lopdf reaches from them (`reference_reachable_objects`, new oracle), both ways.
+- `reference_glyph_programs_depend_on_every_claimed_font_in_object_order`: generators in object order, and their closure equals the old full list.
+- `every_real_world_document_decodes_within_the_output_ceiling_and_an_oversize_one_is_refused_early` (importer unit law; the retention-bound law): the real decoder phases under the contract's ceiling and the importer's accounting; every ledger document retains at most 32 MiB (thesis 27,805,500, site plan 2,606,616, institution diagram 10,986,440 bytes), and the thesis under three quarters of its own output is refused before its last page with the output at refusal within 4 MiB of the ceiling. `output_the_decoder_can_no_longer_release_is_refused_the_turn_it_passes_the_ceiling`: the pure refusal rule.
+- `registered_pdf_over_the_output_ceiling_is_refused_promptly_with_the_ceiling_message` (registered browser route; fixture `🧪️tests/🧫️fixtures/🛑️over-ceiling`, written by `over-ceiling-fixture.py`, checked by pymupdf in `over-ceiling-oracle.py` and by lopdf in the test): 30 pages of 14,000 save and restore operators, 17 KB in all, whose typed pages and role mirrors pass the ceiling after about 20 pages. Result: the decoder refuses at "retains at least 34,109,880 output bytes it can no longer release; maximum is 33,554,432", the fault page reaches the host well inside the 4,096-turn bound, and closing the failed app afterwards (the retirement the fault no longer waits for) takes 78 s of the test's 78 s. A single page above about 18,000 operators is refused by the lift itself (its doubling operator vector needs a 2 MiB empty backing, the browser grants 1 MiB: "PDF decoder needs a 2097152-byte backing grant during lift content after 0 pages", seen while building the fixture), which is why the operators are spread over pages.
+- TypeScript twin: `stream-roles` tests 7 of 7 (new law: generators and derived closure), SQLite snapshot 8 of 8.
+- Existing laws: ledger controlled lift equals the reference lifter over every typed lane and every role (this found controlled images still storing identity plus soft mask: fixed), lift and preparation turn bounds; after the fix testkit 69 of 69 and `mut-family-11` 41 of 41 unit tests pass.
+
+#### 6. Registered routes
+
+| route | result |
+| --- | --- |
+| site plan | open 201 + 145 turns, 47.9 MB copied (bound 61.4 MB); fails afterwards in Save (`the saved file must keep every byte of its base`, other session) |
+| institution diagram | open 201 + 723 turns, 266.3 MB copied against 157.1 MB: the copy assertion of slice 11, the Pack export deflate model, unchanged |
+| thesis | the decode completes inside the ceiling: the job reports 27,744,182 owned output bytes (model 27,805,500) after 198.2 MB of copy; the route then runs into the Pack export and ends at the scope's 504 MiB lifetime copy stock (copy grant 0 at host turn 4,096, `registered fixture did not settle`); the next limit is Pack export copy, not retention |
+
+#### 7. Not done
+
+1. Thesis route to completion: Pack export copy and the stored-block rule for already-encoded streams (slice 7, 11, 12).
+2. The authored program duplicate of the `Operators` role (section 2).
+3. Retained heap booking for forms, fonts and reference-built annotations (their quotes are credited at completion and are therefore not counted at all).
+
+#### 8. Files
+
+- Schema and graph: `🧬️schema/🪪️stream-roles/` (`🦀️.rs`, `🟦️.ts`, `🧪️tests`), `🧬️schema/🔗️graph-source/🦀️.rs`; oracle `🔮️oracles/🦀️.rs`.
+- Lift: `🔨️modules/⬇️lift/🧩️lifter-and-document/🧭️document-lift/🧭️controlled/🦀️.rs` (+ tests), `🔨️modules/🖼️images/🎞️controlled/🦀️.rs`, `🔨️modules/🔗️xref/💧️stream/📇️index/🦀️.rs` (`held_bytes`).
+- Importer: `🚪️io/📥️import/🔁️controlled/🦀️.rs`.
+- Framework: `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/🦀️.rs`.
+- Fixtures and route law: `🧪️tests/🧫️fixtures/🛑️over-ceiling/`, `✏️editor/🧪️tests/🔬️unit/🦀️.rs`.
+- Ticket inputs: `run-s13.sh`, `over-ceiling-fixture.py`, `over-ceiling-oracle.py`, `thesis-count.py`, `thesis-deps.py`, `thesis-streams.py`.
+
+### Slice 14: speed tier and literal skip for codec1 Deflate, empty-backing units in the stream decoder, and where the Pack copy really goes (2026-11-26)
+
+Native, debug, every cargo run through `native-cargo.sh` (`run-s13.sh`, `run-s14-codec.sh`, `run-s14-framework.sh`, `run-s14-manifest.sh`, `run-s14-prep.sh`, `retry-route.sh`). Logs `🗑️generated/s14-*.log`. Every temporary `[DEBUG]` hook (Pack cursor atomics, settle-loop copy print, lift-law stage print, open-failure print, probe test) is removed again; the Pack cursor file is byte-identical to HEAD.
+
+#### 1. The premise of the task was wrong for the institution diagram
+
+Slice 12's bound `4 MiB + 24 x file + 400 x D` applies to the route and yields 157.1 MB for the institution diagram (648,725 B, D = 343,228). The route copied 266.3 MB. A phase census of the Pack cursor (copy by deflate phase, 1 MiB frames) showed the compressor was not the whole Pack and the Pack was not the whole open: the compressible typed snapshot (3.4 MB raw, 413 KB stored) cost about 52 MB of deflate work (old tier, model 52.0 against 53.6 measured), and the per-turn copy profile (`settle turn` census, 25-turn buckets) showed three further parts: decode 0 to 225 turns about 88 MB, Pack export 225 to 625 about 90 MB, retirement about 1.5 MB.
+
+#### 2. Codec1 Deflate: schema-first speed tier and literal-run skip
+
+- **Policy** (schema `🛫️encode/⏳️cursor/🧬️schema/🔣️.json` property `policy`, fixture `🧪️tests/🧫️fixtures/🔣️.json`): `maximumChain` 4, `niceMatch` 8, `maximumInsert` 4, `skipShift` 6 (was 16 / 32 / 16 / none). All three twins read the same numbers: Rust `MAX_CHAIN`, `NICE_MATCH`, `MAX_INSERT`, `SKIP_SHIFT` (ordinary encoder, controlled encoder, `DeflateMeasure`, retained cursor), TypeScript `DEFLATE_POLICY`, Python `DEFLATE_POLICY`, each asserted equal to the fixture.
+- **Literal skip, canonical and deterministic:** `misses` counts literals since the last match; after a searched position emits a literal the next `misses >> skipShift` positions are bare literals (no search, no chain insert); any match resets `misses` and the skip. The stream stays one fixed-Huffman block, so every inflater reads it, and no block lookahead is needed (a stored-block rule would have needed lookahead in the byte-granular cursor and only saves 12.5% output on random data, not work).
+- **Why the skip, from measurement.** Offline census (`census.py`, calibrated against the measured institution Pack: model 52.0 MB against 53.6 MB) over the snapshot packs written by the ordinary encoder:
+
+| document | raw body | stored (old tier) | cost old tier | cost 4/8/4 | cost 4/8/4 + skip 6 | stored with skip 6 |
+| --- | --- | --- | --- | --- | --- | --- |
+| site plan | 857,435 | 108,611 | 13.7 MB (16.0 B/B) | 6.0 MB (6.9 B/B) | unchanged output | 121,890 |
+| institution diagram | 3,424,339 | 412,712 | 52.0 MB (15.2) | 23.6 MB (6.9) | unchanged output | 466,025 |
+| bachelor thesis | 16,588,786 | 7,020,231 | 384 MB (23.2) | 308 MB (18.6) | 97 MB (5.9) | 7,619,415 (+5.8%) |
+
+  The thesis snapshot is only 44% compressible and 33% of its bytes are literals (5.46 M, Type 1 programs, bitmaps); at 40 B of work per searched literal the tier alone left 308 MB. A skip shift of 7 would cost 104 MB for +2.9% size; 6 was chosen.
+- **Laws** (`🛫️encode/⏳️cursor/🧪️tests/🦀️.rs`): the work per input byte is derived from the cost of a token (`SEARCHED_LITERAL` = input 2 + Search 12 + Token 2 + insert 24 + `MAX_CHAIN` probes of 8 + output 3 = 75 B, a skipped literal 7 B), no corpus input exceeds it, the incompressible corpus input stays under what its skip schedule searches (one position per `1 + misses >> SKIP_SHIFT`) and holds no match; the matching-page initialization copy is a fixture figure (`initializationCopyBytes` 479,944 B: 104 full and one partial 4,096-byte table page of head slots, previous links and history plus the paged-list page headers and ladder steps; the payload part, 426,349 B, is derived, the 53,595 B of page reservations belong to the paged-list crate and are pinned, not derived).
+- **Cross-language vectors** (fixture `vectors`, read by Rust, TypeScript and Python): `literal-run-skips-the-search-and-the-insert`, `nice-match-stops-probing`, `long-match-inserts-only-its-first-position`, `chain-limit-bounds-the-probes`, each checked to differ when its constant is perturbed (skip 40, nice 64, insert 64, chain 5 and 64). System zlib inflates all of them (TS `inflateRawSync`, Python `zlib`), and `miniz_oxide` in Rust.
+- **Regeneration, one sweep with the real recoder** (`recode-packs.ts`, `recode-embedded.ts`, both in the ticket folder): 90 of the 150 committed `*.pack.semio` the TS twin can read, fixture packs in `durable-group` and `composed-pack-schema`, the wfc bitmap genesis pack, the `deflate` rows and the hostile-value golden of the record-document tests; second dry run 0 changed. TypeScript record-document 19 of 19, Python 18 of 18, deflate crate 34 of 34, Pack cursor 20 of 20, replication facade 2 of 2 (`s14-codec7`). The `controlled` cancel fixture now cancels at 1 completed match-search step (the skip leaves about 8 candidate probes on random input).
+
+#### 3. Stream decoder: reservations of empty backing are units of their own
+
+The preparation law (importer accounting: allocation is copy unless it only reserves empty backing) showed the interpreted-stream pass copying 53.3 MB in `interpret/decode` for 1,346 streams (about 40 KB each) and 12.5 MB for the 9 KB walk record. Per-call trace: the inflater was born, its 32 KiB history reserved and the first body bytes decoded in one call, so the reservation was charged as copy because the call did not start as a reservation, and every 4 KiB output page the same way. Fix: the Flate cursor yields after creating its inflater; `PdfStreamDataCursor::drive` ends the call before any unit that only reserves empty backing (history, output page) once the call did other work, and `next_reserves_history` also answers for the output page; the stream-data tests and the flate tests follow the new sequence. Law `INTERPRET_COPY_PER_STREAM` (20 KiB per decoded stream beyond two bytes per body byte, one stream of slack): `mut-family-11` 40 of 40, filters 14 of 14 (`s14-pdf4`). Institution open: 266.3 MB (start) -> 230.0 MB (history alone) -> 224.5 -> 179.8 MB (with reservations as units and the speed tier).
+
+#### 4. What is still outside the bound (measured, not fitted)
+
+| institution diagram | copy |
+| --- | --- |
+| lift (model, per stage: form 12.1 MB, content 7.2 MB, role mirror and rename 0.9 MB each) | about 21.5 MB |
+| preparation (structure 2.9 MB, interpret about 22 MB) | about 30 MB |
+| Pack export (counter run `s14-rt7x2`): frame 1 source 41.9 MB, deflate 7.9 MB, total 55.1 MB; frames 2 to 4 15.2 / 15.2 / 3.4 MB (source 2.2 / 2.4 / 0.9 MB, deflate 7.7 / 7.5 / 1.4 MB) | about 89 MB |
+| route total | 179.8 MB against the 157.1 MB bound |
+
+The 41.9 MB of frame-1 source copy is not body projection (2 MB per later frame): the counter was reset only at printed frames, so it carries the **symbol discovery** (binary search with text comparisons over the whole document, `Phase::Find`, at most 64 compared bytes per step) and the **symbol-table segment** (`Phase::SymbolBytes`, one byte per pull, text located through the source path each time). For the thesis the symbol segment is 70,025 B raw and the body 16.6 MB, so this cost is larger there; it was not measured. The copy bound `REAL_WORLD_PACK_PER_DECODED_BYTE` (192) was **not** changed: the Pack costs about 260 B per decoded byte here because discovery scales with the number of text values, not with decoded bytes, so no per-decoded-byte constant is honest.
+
+Thesis route (`s14-thesis`, `s14-th2x1`, `s14-th3x1`): still ends at the scope's 504 MiB lifetime copy stock (copy grant 6 B at host turn 4,096); preparation alone is 267 turns (about 280 MB at the browser grant) and the lift 215 turns, so decode plus a symbol-heavy Pack exceed the stock with or without the Pack compressor.
+
+#### 5. Framework faulting-job tests (task 2)
+
+- Candidates found by mapping every `#[path]` mount of the plugin tree: `semio-plugin-retained-command` (lib), its companion `semio-plugin-retained-command-tests`, `tests-01` (typed operation slot and fault pages), `tests-02`, `tests-03-2` (command ingress terminal), `tests-12-2` (full-operation publication boundaries), `tests-17` (publication retirement authority), `tests-20`, `semio-plugin-instance-typed-ops`, `semio-plugin-reactor-app` (operation progress, `cancellation_outcomes_preserve_actual_worker_failures`), `semio-plugin-host-shard-laws` (`terminal_faults_never_create_a_lifecycle_retry`), plus `tests-10`, `tests-11-2`, `tests-16`. These crates belong to the root workspace, not the framework one.
+- `semio-plugin-result-page` is not a workspace member (`--manifest-path` is required): its `📃️pending` tests do not compile against the current construction API (`admit_original_construction` takes six arguments and returns a status; 25 errors). Stale before this ticket, left as a follow-up.
+- `tests-05` (a dependency of `tests-10`, `-11-2`, `-16`) was broken by another session's macro change for part of the run; those three are run last. Results are appended at the end of this section.
+- The drop assertion of the thesis route (`original Store slot requires payload handoff or paid physical shell closure`) is not a fault-path defect: it is the failed-open path dropping an app whose close the exhausted stock cannot fund; the test helper now leaks that app instead of masking the real error.
+
+#### 6. Not done, in order of yield
+
+1. Symbol discovery and symbol segment of the borrowed Pack cursor (`🫳️borrowed/⏳️cursor`): pull the symbol bytes in runs and bound the discovery compare cost (a recent-symbol probe before the binary search, then a sorted-once structure). Output must stay byte-identical across the three twins, so the existing vectors and the 150 committed packs are the proof; a law should bound segment-0 copy per symbol and per text byte. The files had been quiet since 04:40 when this was planned.
+2. Preparation (267 turns) and lift (215 turns) of the thesis, which alone approach the lifetime copy stock.
+3. `semio-plugin-result-page` pending tests against the current construction API.
+
+#### 7. Files
+
+- Codec: `🧰️framework/🔨️modules/🗜️deflate/📤️deflate-encoder/🦀️.rs`, `🫳️measure/🦀️.rs`, `🛫️encode/⏳️cursor/🦀️.rs` (+ `🧬️schema`, `🧪️tests` rust and fixture, `🧪️tests/🧫️fixtures/🛫️controlled`); TypeScript and Python `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🚪️io/💾️binary/🎒️record-document/` and their tests and fixture; committed packs and the embedded fixtures listed in section 2.
+- Decoder: `🔨️modules/🗜️filters/🌀️bounded-flate/🦀️.rs`, `🪣️stream-data/🦀️.rs` and their tests; `🔨️modules/🔗️xref/📥️retained-graph/🦀️.rs` (law).
+- Editor test helper `✏️editor/🧪️tests/🔬️unit/🦀️.rs` (failed-open path).
+- Ticket inputs: `recode-embedded.ts`, `pack-census.ts`, `run-s14-*.sh`.
+
+#### 7. Save of the site plan is now an append (root cause and fix)
+
+The compact-rewrite fallback of `IncrementPlan` (`✏️editor/💾️native-save/🧷️increment.rs`, `Route::Compact`) was reached through four separate refusals, found one at a time with temporary `[DEBUG]` prints (removed again):
+
+| step | refusal | root cause | fix |
+| --- | --- | --- | --- |
+| 1 | `Compact::Document` | `lower_info` spelled `CreationDate`/`ModDate` as `PdfObject::Str`; the probe reading lifts only `PdfObject::Date`, so the re-read info lost its dates and "moved" again | `lower_info_with` emits `PdfObject::Date` (identical bytes: the lexer prints a date through `print_pdf_date`) |
+| 2 | `Compact::Resources` | the page probe's catalog stub carried no `OCProperties`, so `/Properties /oc1` resolved to an inline dictionary instead of the admitted optional-content group (the same class of un-admitted resource as slice 8's fonts) | the stub carries the catalog's `OCProperties`; `seed_resources` seeds through arrays and records the seeded rows |
+| 3 | `Compact::Resources` (coverage) and `Compact::Page` | the edit adds a text font `F1` the original page never named; the probe lanes held only what the page read and the graft could not create a new resource object | the probe adds the typed resources the typed page's operators name; `lower_resources_standalone` (new, `⬆️lower`) lowers only those; `Graft::patch_page` adopts them into the section and binds them; rewritten seeded resource dictionaries are allowed |
+| 4 | appended section 119,497 B (> 64 KiB) | a content edit re-emitted the whole 12,849-operator page program | when the typed content extends the read content, `patch_page` lowers only the new operators as an extra stream and sets `Contents` to `[original, new]` (the first attempt dropped the original: it resolved the `Contents` reference inside the graft's own seeds, which do not hold the stream) |
+
+Route status (`s12-savel` … `s12-saveo`, `s12-final6`): the site plan Save now keeps every byte of its base and appends a bounded section (`assert_appended`: prefix kept, section under 64 KiB), lopdf reads every page and navigation lane of the saved file (the route's page digest and `reference_page_count`), and the saved file reopens through the same route (reopen: 38.0 MB copied, 143 + 145 turns). The route's `assert_appended` is the law for this route. pymupdf was not installed on this machine; `real-world-oracle.py` was not run.
+
+#### 8. Open after Slice 12
+
+- The site plan open now copies 37.7 MB (before this slice 133.1 MB; the importer session's own change took 47.9 to 37.7), inside the derived bound.
+- **Next blocker (not fixed, not in this slice's scope)**: after the reopen the registered app does not close: `registered fixture did not reach its exact terminal-empty witness`, last close quote `release_bytes: 1,643,904` (12,843 operators x 128 B in one allocation) against the 1 MiB release grant. A page above 8,190 operators needs a paged operator list in the typed model (see slice 5's "contiguous per-page operator vectors"); no cursor can release a single 1.6 MB allocation in 1 MiB units.
+- **Institution diagram**: opens in 743 turns but copies 179.8 MB, above the derived 157.1 MB (343,228 decoded bytes x 400 + 24 x file + 4 MiB): about 524 B per decoded byte, driven by 1,345 form streams (per-stream fixed cost, the interpret pass another session is changing). The coefficient was not raised.
+- **Thesis**: not run in this slice (the filter `registered_real_world` does not match its test name `registered_bachelor_thesis_…`); disk free dropped to 29 GB during the runs.
+
+#### 8. Symbol discovery of the borrowed Pack cursor (continuation, 2026-11-26)
+
+- **Census (offline, from the snapshot packs of the ordinary encoder):** selected symbols 2,759 (institution diagram) and 8,572 (thesis), total unique texts higher; symbol segment 17,168 and 70,025 raw bytes. The counter probe in the cursor allocated inside other tests' allocation-observed windows (`tests-06-2`) and was removed at once; counters must be read from the test side.
+- **Defect:** `order` is kept sorted by inserting each new symbol at the end and swapping it down one slot per event (12 B, one event each), so discovery is quadratic in the unique symbol count: about 27 MB for the institution diagram, hundreds of MB and tens of millions of events for the thesis (more events than the 4,096-turn cap allows).
+- **Implemented (`🫳️borrowed/⏳️cursor/🦀️.rs`, cursor tests 19 of 20 before the size fix, `s14-cur1`):** new symbols wait in one sorted inline run of `TAIL` slots (lookup: binary search of the main order, then of the run) and are merged into the main order block-wise when the run is full and at the end of discovery (each run element gets a binary-searched position; the main slots above it move up by `MOVE_BLOCK` = 16 slots per event); every order growth is a funded reservation with a receipt; all quotes (capacity, work, depth, minimum copy) cover the new phases. The sorted result and the symbol slots are exactly what the swap walk produced, so output is byte-identical (cursor oracle tests pass). The inline run had to shrink from 64 to 16 slots because `BorrowedPackDocumentCursor` must stay within 4,096 bytes.
+- **Complexity, stated honestly:** copy is `4 N^2 / TAIL` bytes plus `N` compares per merge, that is quadratic with a constant 16 times smaller (about 56 MB and 1.1 M events for 15 K symbols), not O(N log N). It removes the failure mode of the swap walk, it does not meet the O(N log N) law the coordinator asked for.
+- **Not done, designed:** sort-once with a funded hash index. Discovery hashes each text by bytes (resumable, at most 64 bytes per event through the existing text reader), looks the hash up in a fixed `BUCKETS` = 4,096-entry bucket list (initialized once, chains through a new `next: u32` and `hash: u32` in `Symbol`, so no rehash and no growth), compares texts only on equal hashes, and appends new symbols unsorted. After discovery `order` is built by a bottom-up merge sort of the symbol chains (O(N log N) compares and slot writes, no scratch array: the `next` links are the scratch). Needs: two new `Symbol` fields, bucket list birth and retirement in the close ladder (`next_close_*`, `retirement_demands`, `Drop`, `PhysicalBorrowedPack`), about eight new phases and their quotes, and a law that bounds discovery plus sort copy by `c N log N` and heap allocated per step by the step receipt (the `tests-06-2` receipt law). Estimated effect: institution about 3 MB, thesis about 8 MB of symbol copy and under 0.5 M events.
+- **`tests-06-2` `original_inference_gateway_failure_all_owned_causes`:** the authority check of the borrowed cursor was right; `ArtifactInferenceExecutionError`'s projection returned plain `Text`/`UInt`/`Bool` children under an `IntrinsicObject` root and now returns the intrinsic views (`💡️inference/🦀️.rs`). The test then fails one step later because its expected wire omits the `domain` object the product emits for `Execution` (reported to the coordinator; the test file was edited by another session).
+
+### Slice 15: paged page programs, the site plan closes (2026-11-26)
+
+Native, debug, every cargo run through `native-cargo.sh` (`run-s15-check.sh`, `run-s15.sh`); logs `🗑️generated/s15-*.log`. No temporary `[DEBUG]` hook was added.
+
+#### 1. Root cause and decision
+
+A page's operator program was one `Vec<PdfOp>` (128 B per operator): 12,843 operators are one 1,643,904-byte allocation whose release no host turn can fund (1 MiB release grant). The same program was held twice by the lift (page `content` and the `Operators` content role). Decision: the program is a paged list of the framework (`PagedList<PdfOp, _>`, 4,096-byte payload pages, 32 operators per page), so birth, clone, mutation and retirement move one page per unit.
+
+#### 2. Schema-first change
+
+- `PdfContent` (`🖋️content-operators`, next to `PdfOp`; re-exported by the model facade) is the one carrier of a page program: `PdfPage::content`, `PdfStreamRoleValue::Operators`, the `SetPageContent`, `AppendPageContent` and `InsertContent` payloads. Wire shape is unchanged (an array), so the JSON schema, proto, GraphQL, TypeScript twin and every committed Pack/fixture stay as they are: nothing was regenerated (the serde_json oracle test of the shape passes unchanged). Form, Type 3 glyph and tiling programs stay `Vec<PdfOp>` (a small paged list costs a 400-byte root per program).
+- `PdfProgram` (read trait, `Vec<PdfOp>` and `PdfContent`) lets the editor scene, geometry, image preview and Type 3 painting take one `&dyn PdfProgram` for page and form programs; print, extract, references, glyph recording, `write_ops`, `lower_resources_standalone` take any `IntoIterator<Item = &PdfOp>`; `read_ops` and `rename_content` build any `FromIterator` / `Extend` carrier.
+- Controlled lift: `PageProgramCursor` collects straight into pages (one page reservation per unit, no doubling and no migration stage, retirement pops operators, then releases one empty page per unit through `release_empty_page_leased`); the content role mirror is paged the same way (`mirror` reserves a page, then copies operators). `reserving_empty_backing` is now one page, so the run still breaks before each reservation (slice 14's unit law).
+- Diffs: `PdfIndexedDiff::apply_owned`/`inverse_by` (paged owners hand their items over, no contiguous view); the page-program replacement diff keeps the common prefix and suffix, so a `SetPageContent` that only appends carries only the new operators.
+- Editors that edit a program as a vector (`content-ops`, object edits) clone it once into a `Vec`, edit, and build a `PdfContent` for the mutation.
+
+#### 3. Law and oracles
+
+- `retiring_a_page_program_never_needs_a_release_larger_than_one_page` (`pdf-snapshot-value`, language-agnostic fixture `🧫️fixtures/🔣️.json`: 0, 1, 31, 32, 33 and 12,843 operators): every release quote is at most one 4,096-byte page and the pages released equal the pages acquired.
+- `paged_page_program_keeps_the_wire_shape_of_the_vector_it_replaced`: value and serde_json shape equal the vector's.
+- The page-content cursor tests keep the account law (acquired = released + transferred), cancellation at every turn included.
+
+#### 4. Results
+
+- PDF workspace `check --workspace --tests` clean; `registered_real_world_site_plan_opens_edits_saves_and_reopens_like_the_reference_readers` passes end to end including the close of the reopened app (open 36.7 MB copy, 201 + 142 turns; reopen 37.0 MB, 201 + 146 turns; was 38.0 MB).
+- Workspace lib tests, testkit, `mut-family-*`, thesis: see 5.
+
+#### 5. Verification and open items
+

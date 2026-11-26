@@ -173,7 +173,7 @@ test("a spawn-only reference is a real file reference of its owner, and cutting 
 test("the engine closure answered from the in-process memo equals a fresh computation in another process and a caller cannot change the memo",()=>{
  const first=nxBuildEngineClosureV1(),second=nxBuildEngineClosureV1();
  expect(second).toEqual(first);
- first.files.length=0;first.packages.length=0;
+ Reflect.set(first.files,"length",0);Reflect.set(first.packages,"length",0);
  const third=nxBuildEngineClosureV1();expect(third).toEqual(second);expect(third.files.length).toBeGreaterThan(0);
  const library=resolve(import.meta.dir,"../../../../../🟨️.mjs"),run=Bun.spawnSync([process.execPath,"-e",`const m=await import(${JSON.stringify(library)});console.log(JSON.stringify(m.nxBuildEngineClosureV1()));`],{env:{...process.env,BUN_OPTIONS:process.env.BUN_OPTIONS??""}});
  expect(run.exitCode,run.stderr.toString()).toBe(0);

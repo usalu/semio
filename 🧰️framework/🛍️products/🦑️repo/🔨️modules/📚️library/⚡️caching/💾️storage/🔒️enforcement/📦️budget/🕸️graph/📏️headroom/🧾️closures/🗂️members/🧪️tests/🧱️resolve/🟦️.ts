@@ -13,8 +13,8 @@ import closures from"../../../🧬️schema/🔣️.json";
 
 const hash=(value:string|Uint8Array)=>createHash("sha256").update(value).digest("hex"),P=closures.definitions.Protocol.const;
 const text=readFileSync(new URL("../../../🏷️names/🟦️.ts",import.meta.url),"utf8")+"\n"+readFileSync(new URL("../../../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("closures.ts",text,ts.ScriptTarget.Latest,true);
-const declarations=(names:string[])=>tree.statements.filter(node=>ts.isFunctionDeclaration(node)&&Boolean(node.name&&names.includes(node.name.text))).map(node=>node.getText(tree).replace(/^export /u,"")).join("\n");
-const load=(ports:Record<string,unknown>)=>Function(...Object.keys(ports),ts.transpileModule(declarations(["role","acceptReferences","acceptLinks","resolveIncrementalRows"]),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText+";return resolveIncrementalRows")(...Object.values(ports))as(proof:any)=>void;
+const declarations=(names:string[])=>tree.statements.filter(node=>(ts.isFunctionDeclaration(node)||ts.isClassDeclaration(node))&&Boolean(node.name&&names.includes(node.name.text))).map(node=>node.getText(tree).replace(/^export /u,"")).join("\n");
+const load=(ports:Record<string,unknown>)=>Function(...Object.keys(ports),ts.transpileModule(declarations(["role","acceptReferences","IncompleteClosureRefusalV1","acceptLinks","resolveIncrementalRows"]),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText+";return resolveIncrementalRows")(...Object.values(ports))as(proof:any)=>void;
 
 const root="/img",a="a".repeat(64),b="b".repeat(64),c="c".repeat(64),d="d".repeat(64),source=(character:string)=>"source:"+character.repeat(64);
 const stamp7=(ino:number,size:number,mtime:number)=>["1",ino,"33188","1",size,mtime,mtime+1].join(":"),memberStamp=(ino:number,size:number,mtime:number)=>ino+":"+size+":"+mtime;
@@ -51,7 +51,7 @@ test("a block link to a missing observation keeps every inventory, a link that m
  const group="contexts/"+b,leaf:Leaf={name:"np/"+"2".repeat(24)+".json",kind:"inference",bytes:10,ino:20,mtime:600};
  const make=(link:{p:string;m?:"block"})=>{const state=build(),proof=proofOf(),index={path:join(root,"inference",group,"members.jsonl"),stamp:stamp7(2,2,2),kind:"member-index",bytes:500,allocatedBytes:4096,modified:0}as any,row=rowOf(group,leaf);state.texts.set(index.path,indexText(group,[fullMemberRowV1({n:leaf.name,b:10,h:hash("x"),k:"inference",s:memberStamp(20,10,600),x:20,g:null,r:[],l:[link]})]));proof.rows.set(index.path,index);proof.rows.set(row.path,row);return{state,proof};};
  const tolerated=make({p:"np/ob/"+d+".br",m:"block"});tolerated.state.run(tolerated.proof);expect(tolerated.proof.retainAll).toBe(true);expect(tolerated.state.missing).toEqual([join(root,"inference",group,"np","ob",d+".br")]);
- const refused=make({p:"mr/pk-1-"+"e".repeat(16)+".idx"});expect(()=>refused.state.run(refused.proof)).toThrow("Complete retained closure publication required");
+ const refused=make({p:"mr/pk-1-"+"e".repeat(16)+".idx"});expect(()=>refused.state.run(refused.proof)).toThrow("Complete retained closure publication required");try{refused.state.run(refused.proof);}catch(error){expect((error as Error).name).toBe("IncompleteClosureRefusalV1");expect((error as{path:string}).path).toBe(join(root,"inference",group,"mr","pk-1-"+"e".repeat(16)+".idx"));}
 });
 
 test("a leaf the index cannot vouch for, a stale stamp, a light row, a missing or oversized index each leave the group unproven and every inventory retained",()=>{

@@ -507,7 +507,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// maintenance turns (a long ingest, a test or tool driving the store directly) keeps the queue below its fixed authority,
     /// at O(change) cost, while the runtime's maintenance rotation still drains the rest. A blocked owner (an outstanding
     /// read) stops the relief.
-    pub fn relieve_displaced_pressure(&mut self) -> Result<(), VcsError> {
+    pub fn relieve_displaced_pressure(&mut self) -> Result<bool, VcsError> {
+        let mut progressed = false;
         for _ in 0..DISPLACED_RELIEF_STEPS {
             if !self.displaced_retirements.under_pressure() {
                 break;
@@ -520,10 +521,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             match turn.result.map_err(|failure| refused(failure.into_value_error()))? {
                 RetainedCloneStep::Complete(_) => break,
                 RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => break,
-                RetainedCloneStep::Progress(_) => {}
+                RetainedCloneStep::Progress(_) => progressed = true,
             }
         }
-        Ok(())
+        Ok(progressed)
     }
 }
 //#endregion 🔖️ArtifactStore

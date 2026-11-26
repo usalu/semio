@@ -915,3 +915,67 @@ fn a_hundred_retained_sessions_are_listed_to_a_fresh_view_beside_a_stalled_one()
     assert!(!stalled.ended);
 }
 // #endregion 🔖️FlowControl
+
+// #region 🔖️Fleet
+fn fleet_store(name: &str) -> PathBuf {
+    let root = control_root(name);
+    let fixtures = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../📊️fleet/🧪️tests/🧫️fixtures/🏪️store/origins");
+    fn copy(from: &Path, to: &Path) {
+        std::fs::create_dir_all(to).unwrap();
+        for entry in std::fs::read_dir(from).unwrap().map(Result::unwrap) {
+            let target = to.join(entry.file_name());
+            if entry.file_type().unwrap().is_dir() { copy(&entry.path(), &target); } else { std::fs::copy(entry.path(), target).unwrap(); }
+        }
+    }
+    copy(&fixtures, &root.join("v1/origins"));
+    root
+}
+
+fn fleet_request(range: dashboard_fleet::Range, columns: u16, origin: Option<&str>) -> dashboard_fleet::Request { dashboard_fleet::Request { range, columns, origin: origin.map(str::to_string) } }
+
+fn snapshots(messages: &[ServerMsg]) -> Vec<&dashboard_fleet::Snapshot> { messages.iter().filter_map(|message| if let ServerMsg::Fleet { snapshot } = message { Some(&**snapshot) } else { None }).collect() }
+
+#[test]
+fn a_fleet_watch_streams_compact_snapshots_of_the_store_named_by_the_view_and_stops_on_unwatch() {
+    let daemon = Daemon::start("fleet");
+    let store = fleet_store("fleet-store");
+    let mut raw = Raw::connect(&daemon.root);
+    raw.controls(Duration::from_secs(5));
+    raw.hello(&[(super::fleet::STORE_ROOT_ENVIRONMENT, store.to_str().unwrap())]);
+    raw.send(&ClientMsg::FleetWatch { request: fleet_request(dashboard_fleet::Range::Days7, 8, None) });
+    let first = raw.controls(Duration::from_secs(5));
+    let seen = snapshots(&first);
+    assert_eq!(seen.len(), 1, "{first:?}");
+    assert_eq!((seen[0].store, seen[0].rows.len(), seen[0].range, seen[0].detail.is_none()), (dashboard_fleet::StoreState::Available, 3, dashboard_fleet::Range::Days7, true));
+    let quiet = raw.controls(Duration::from_millis(400));
+    assert!(snapshots(&quiet).is_empty(), "an unchanged store is not sent again within the heartbeat: {quiet:?}");
+
+    raw.send(&ClientMsg::FleetWatch { request: fleet_request(dashboard_fleet::Range::Hour1, 24, Some("g1-m01")) });
+    let drilled = raw.controls(Duration::from_secs(5));
+    let detail = snapshots(&drilled);
+    assert_eq!(detail.len(), 1, "{drilled:?}");
+    assert_eq!((detail[0].rows.len(), detail[0].detail.as_ref().map(|found| found.origin.as_str())), (1, Some("g1-m01")));
+
+    raw.send(&ClientMsg::FleetUnwatch {});
+    raw.send(&ClientMsg::Ping {});
+    let after = raw.controls(Duration::from_secs(5));
+    assert!(after.contains(&ServerMsg::Pong {}) && snapshots(&after).is_empty());
+    remove_root(&store);
+}
+
+#[test]
+fn a_fleet_watch_without_a_store_is_answered_as_unavailable_and_a_bad_request_is_refused() {
+    let daemon = Daemon::start("fleet-none");
+    let mut raw = Raw::connect(&daemon.root);
+    raw.controls(Duration::from_secs(5));
+    raw.hello(&[(super::fleet::STORE_ROOT_ENVIRONMENT, ""), (super::fleet::MACHINE_STATE_ENVIRONMENT, "")]);
+    raw.send(&ClientMsg::FleetWatch { request: fleet_request(dashboard_fleet::Range::Minutes5, 16, None) });
+    let answered = raw.controls(Duration::from_secs(5));
+    let seen = snapshots(&answered);
+    assert_eq!((seen.len(), seen[0].store, seen[0].rows.len()), (1, dashboard_fleet::StoreState::Unavailable, 0), "{answered:?}");
+    raw.send(&ClientMsg::FleetWatch { request: fleet_request(dashboard_fleet::Range::Minutes5, 3, None) });
+    raw.send(&ClientMsg::FleetWatch { request: fleet_request(dashboard_fleet::Range::Minutes5, 16, Some("../escape")) });
+    let refused = raw.controls(Duration::from_secs(5));
+    assert_eq!(refused.iter().filter(|message| matches!(message, ServerMsg::Error { code: Some(ipc::ErrorCode::Invalid), .. })).count(), 2, "{refused:?}");
+}
+// #endregion 🔖️Fleet

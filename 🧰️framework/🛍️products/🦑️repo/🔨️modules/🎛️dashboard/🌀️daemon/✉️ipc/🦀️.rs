@@ -3,6 +3,7 @@
 //!
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🌀️daemon/🔣️.json
 
+use dashboard_fleet::{Request as FleetRequest, Snapshot as FleetSnapshot};
 use dashboard_launch::{Launch, LaunchProcess, Ready, Stop, TaskLabel};
 use serde::{Deserialize, Serialize};
 use std::io::{Read, Write};
@@ -80,6 +81,8 @@ pub enum ClientMsg {
     KillGroup { group_id: String },
     Forget { session_id: String },
     List {},
+    FleetWatch { request: FleetRequest },
+    FleetUnwatch {},
     Shutdown {},
     Ping {},
 }
@@ -96,6 +99,7 @@ pub enum ServerMsg {
     ReplayComplete { #[serde(default, skip_serializing_if = "Option::is_none")] session_id: Option<String> },
     Error { message: String, #[serde(default, skip_serializing_if = "Option::is_none")] code: Option<ErrorCode>, #[serde(default, skip_serializing_if = "Option::is_none")] session_id: Option<String> },
     Pong {},
+    Fleet { snapshot: Box<FleetSnapshot> },
     Shutdown {},
 }
 
@@ -359,6 +363,7 @@ impl ClientMsg {
                 }
                 Ok(())
             }
+            Self::FleetWatch { request } => request.validate(),
             Self::StopGroup { group_id } | Self::KillGroup { group_id } => validate_id(group_id),
             Self::Input { session_id, .. } | Self::Stop { session_id } | Self::Kill { session_id } | Self::Restart { session_id } | Self::Subscribe { session_id } | Self::Unsubscribe { session_id } | Self::Forget { session_id } => validate_id(session_id),
             Self::Resize { session_id, cols, rows } => {
@@ -366,7 +371,7 @@ impl ClientMsg {
                 if *cols == 0 || *rows == 0 || *cols > 32767 || *rows > 32767 { return Err(invalid("invalid terminal size")); }
                 Ok(())
             }
-            Self::Attach { .. } | Self::Watch {} | Self::Detach {} | Self::List {} | Self::Shutdown {} | Self::Ping {} => Ok(()),
+            Self::Attach { .. } | Self::Watch {} | Self::Detach {} | Self::List {} | Self::FleetUnwatch {} | Self::Shutdown {} | Self::Ping {} => Ok(()),
         }
     }
 }

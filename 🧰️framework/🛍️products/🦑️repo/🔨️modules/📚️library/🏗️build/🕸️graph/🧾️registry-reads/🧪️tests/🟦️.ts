@@ -45,7 +45,7 @@ test("the identity of a selected scope is the digest of the selection and never 
  expect(admission.buildGraphScopeKeyV1(selection)).toBe(expected.scope);
  for(const edit of fixture.edits)expect((admission.buildGraphScopeKeyV1 as (...values:unknown[])=>string)(selection,apply(fixture.registry,edit))).toBe(expected.scope);
  expect(admission.buildGraphScopeKeyV1({kind:"all"})).not.toBe(expected.scope);
- expect(admission.buildGraphScopeKeyV1({...selection,projects:["@semio-tech/alpha"]})).not.toBe(expected.scope);
+ expect(admission.buildGraphScopeKeyV1({kind:"owners",projects:["@semio-tech/alpha"],exclude:[...fixture.selection.exclude],targets:[...fixture.selection.targets]})).not.toBe(expected.scope);
 });
 
 test("a recorded question holds while the registry on disk answers it the same, per question and not per file",()=>{

@@ -29,7 +29,7 @@ const vendor = join(lane, MODULE_PLUGIN_ROUTE.replace(/^\//, ""), PREVIEW2_VENDO
 mkdirSync(dirname(vendor), {recursive:true});
 cpSync(join(builtPluginModulesRootIn(process.cwd(), "prototype"), PREVIEW2_VENDOR_RELATIVE), vendor, {recursive:true});
 writeFileSync(join(served, PLUGIN_HOST_SHIM_FILE), hostShimSource());
-const semantic = execFileSync("node", ["--experimental-wasm-jspi","--input-type=module","--eval",PLUGIN_DESCRIPTOR_PROBE_SOURCE,join(served,name+".js")], {encoding:"utf8",timeout:300000,maxBuffer:32*1024*1024});
+const semantic = execFileSync("node", ["--experimental-wasm-jspi","--wasm-num-compilation-tasks=1","--input-type=module","--eval",PLUGIN_DESCRIPTOR_PROBE_SOURCE,join(served,name+".js")], {encoding:"utf8",timeout:300000,maxBuffer:32*1024*1024});
 const descriptor = finalizePluginDescriptor(Buffer.from(semantic.trim(),"base64"),"flow-extension-"+id);
 writeFileSync(join(served,"🛂️.descriptor.semio"),descriptor.pack);
 writeFileSync(join(served,"🔣️.json"),descriptor.json);

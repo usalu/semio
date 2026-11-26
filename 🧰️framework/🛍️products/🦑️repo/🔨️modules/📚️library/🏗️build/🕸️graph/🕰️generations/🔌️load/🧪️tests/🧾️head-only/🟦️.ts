@@ -11,6 +11,8 @@ import fixture from "./🔣️.json";
 import retryFixture from "./🕓️retry.json";
 import localWaitFixture from "./🖥️local-wait.json";
 
+const projectNames=(graph:unknown):string[]=>{if(typeof graph==="object"&&graph!==null&&"projects"in graph&&typeof graph.projects==="object"&&graph.projects!==null)return Object.keys(graph.projects);throw Error("graph with projects required");};
+
 test("a restore-only request preserves a matching seal and attempts one exact head only under structural custody",async()=>{
  using oracle=new Database(":memory:");
  const rule=oracle.query(`SELECT CASE $case WHEN 'matching' THEN 'local' WHEN 'wrong-code' THEN 'foreign' WHEN 'busy' THEN 'busy'
@@ -58,8 +60,8 @@ test("a restore-only request preserves a matching seal and attempts one exact he
    }});
    expect(intents,row.name).toEqual(row.status==="restored"?[{generation:pointer.generation,localManifest:pointer.manifest}]:[]);
    const observed={status:result.status,...counts};
-   expect(observed,row.name).toEqual(rule.get({$case:row.name}));
-   expect(observed,row.name).toEqual({status:row.status,builders:row.builders,restores:row.restores,fences:row.fences});
+   expect<unknown>(observed,row.name).toEqual(rule.get({$case:row.name}));
+   expect<unknown>(observed,row.name).toEqual({status:row.status,builders:row.builders,restores:row.restores,fences:row.fences});
    if(result.status==="restored")expect(result.localManifest).toBe(pointer.manifest);
    expect(mock.log,row.name).toEqual([]);
   }
@@ -87,7 +89,7 @@ test("a waiting whole read retries its same exact candidate after a transient re
      availability.push(Number(await wait.available()));
     }
     const expectedAvailability=oracle.query("select value >= ?1 as eligible from json_each(?2) order by key").values(retryFixture.retryMilliseconds,JSON.stringify(retryFixture.observations)).flat();
-    expect(availability).toEqual(expectedAvailability);
+    expect<unknown>(availability).toEqual(expectedAvailability);
     return{restored:await wait.restore()};
    },
    async wholeGate({look,fund}:{look():Promise<{ahead:boolean;candidate?:typeof expected}>;fund():Promise<unknown>}){
@@ -111,7 +113,7 @@ test("a waiting whole read retries its same exact candidate after a transient re
   const result=await loadGenerationGraphV1(target.host,{lean:true});
   expect(restores).toBe(2);
   expect(target.log).toEqual([]);
-  expect(Object.keys(result.graph.projects)).toHaveLength(6);
+  expect(projectNames(result.graph)).toHaveLength(6);
  }finally{rmSync(area,{recursive:true,force:true});}
 });
 
@@ -180,7 +182,7 @@ test("a queued whole read reuses one compatible local seal through the shared re
    const result=await loadGenerationGraphV1(target.host).catch(error=>{if(error!==controller.signal.reason)throw error;return undefined;});
    expect(entered,row.name).toBe(1);
    expect(target.log,row.name).toEqual([]);
-   if(result)expect(Object.keys(result.graph.projects),row.name).toEqual(["p0","p1","p2"]);
+   if(result)expect(projectNames(result.graph),row.name).toEqual(["p0","p1","p2"]);
   }
  }finally{rmSync(area,{recursive:true,force:true});}
 });

@@ -216,6 +216,7 @@ export function useExtensionCallbacks({ extensionStoreUrl, extensionFetchAbortRe
    * available, loads its module into `loadedPlugins`, and records it on the durable ledger. */
   const installExtension = useCallback(
     async (sourceUri: string) => {
+      if (extensionRoute === undefined) return;
       let extensionId = "";
       let version = "0.0.0";
       let moduleUrl = "";
@@ -291,6 +292,7 @@ export function useExtensionCallbacks({ extensionStoreUrl, extensionFetchAbortRe
   /** 🧩️ Installs an extension package from a local `.sxt` / `.semio` file via the extension store. */
   const installExtensionFromFile = useCallback(
     async (file: File) => {
+      if (extensionRoute === undefined) return;
       let extensionId = "";
       let version = "0.0.0";
       let moduleUrl = "";
@@ -362,7 +364,7 @@ export function useExtensionCallbacks({ extensionStoreUrl, extensionFetchAbortRe
    * document to forget it. */
   const uninstallExtension = useCallback(
     async (extensionId: string) => {
-      if (pluginOpInFlightRef.current.has(extensionId)) return;
+      if (extensionRoute === undefined || pluginOpInFlightRef.current.has(extensionId)) return;
       pluginOpInFlightRef.current.add(extensionId);
       try {
         const current = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === extensionId);

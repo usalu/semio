@@ -72,6 +72,6 @@ try{
   }));
 }catch(error:any){reporter.stop();const recycle=sliceRecycleOfV1(error);if(recycle!==undefined)parentPort!.postMessage({type:"recycle",state:recycle});else{if(isHalfEditedModuleLoadV1(error)||error?.replicaUnsettled===true)exitIfStaleImplementationV1(error);parentPort!.postMessage({type:"error",...errorMessageV1(error)});}}
 }catch(error){
- if(isHalfEditedModuleLoadV1(error)||error?.replicaUnsettled===true)exitIfStaleImplementationV1(error);
+ if(isHalfEditedModuleLoadV1(error)||(error as {replicaUnsettled?:unknown}|null)?.replicaUnsettled===true)exitIfStaleImplementationV1(error);
  throw error;
 }

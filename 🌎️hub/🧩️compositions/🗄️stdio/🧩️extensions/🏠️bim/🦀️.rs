@@ -1,5 +1,7 @@
 //! 🧩️ Typed runtime assembly published from artifact-owned composition contributions.
 
+#![recursion_limit = "512"]
+
 use semio_plugin::__semio_dispatch_PluginApp;
 use semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_plugin::plugin_app_close_prelude::*;
@@ -28,8 +30,9 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// 🔌️ Builds the exact present artifact and app contributions.
 pub fn plugin() -> Result<Plugin<StdioBimApps>, PluginAssemblyError> {
     let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, StdioBimApps>::new("stdio-bim").label("Stdio BIM").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-bim").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
-    builder = builder.host_artifact(semio_s_artifact_stdio_ifc_catalog::declaration(semio_s_artifact_stdio_ifc::definition()?).map_err(PluginAssemblyError::definition)?);
+    builder = builder.runtime_host_artifact(semio_s_artifact_stdio_ifc_catalog::assembly()?.into_runtime()?);
     builder = builder.host_artifact(semio_s_artifact_stdio_bcf::declaration(semio_s_artifact_stdio_bcf::definition()?).map_err(PluginAssemblyError::definition)?);
+    builder = builder.contributes_topic(semio_hub_stdio_catalog_projection::hosted_artifact_catalog_contribution_for("stdio-bim", "semio:stdio-bim", &[semio_s_artifact_stdio_ifc_catalog::contribution()])?);
     builder = builder.editor::<semio_s_artifact_stdio_ifc_2x3_base::editor::ifc2x3_any::Ifc2x3AnyEditor>(semio_s_artifact_stdio_ifc_2x3_base::editor::ifc2x3_any::create_ifc2x3_any_editor());
     builder = builder.viewer::<semio_s_artifact_stdio_ifc_2x3_viewer::viewer::ifc2x3_any::Ifc2x3AnyViewer>(semio_s_artifact_stdio_ifc_2x3_viewer::viewer::ifc2x3_any::create_ifc2x3_any_viewer());
     builder = builder.editor::<semio_s_artifact_stdio_ifc_2x3_cobie::editor::ifc2x3_cobie::Ifc2x3CobieEditor>(semio_s_artifact_stdio_ifc_2x3_cobie::editor::ifc2x3_cobie::create_ifc2x3_cobie_editor());
@@ -44,7 +47,7 @@ pub fn plugin() -> Result<Plugin<StdioBimApps>, PluginAssemblyError> {
     builder = builder.viewer::<semio_s_artifact_stdio_ifc_4x3::viewer::Ifc4x3AnyViewer>(semio_s_artifact_stdio_ifc_4x3::viewer::create_ifc4x3_any_viewer());
     builder = builder.editor::<semio_s_artifact_stdio_bcf::editor::bcf::BcfAnyEditor>(semio_s_artifact_stdio_bcf::editor::bcf::create_bcf_any_editor());
     builder = builder.viewer::<semio_s_artifact_stdio_bcf::viewer::bcf::BcfAnyViewer>(semio_s_artifact_stdio_bcf::viewer::bcf::create_bcf_any_viewer());
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_ifc::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_ifc::definition()?.identity().as_str().into() });
     builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_bcf::artifact_kind().id });
     builder = builder.execution(ExecutionMode::Isolated).requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist contributed editor operations to the open document".into(), optional: false });
     builder.try_build()

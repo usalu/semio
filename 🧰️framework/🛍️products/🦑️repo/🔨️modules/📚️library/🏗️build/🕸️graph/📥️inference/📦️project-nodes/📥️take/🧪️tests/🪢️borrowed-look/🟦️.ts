@@ -2,7 +2,7 @@
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import * as take from "../../🟨️.mjs";
-import source from "../../../🟨️.mjs" with { type: "text" };
+const source=await Bun.file(new URL("../../../🟨️.mjs",import.meta.url)).text();
 import cases from "./🔣️.json" with { type: "json" };
 
 function deferred<Outcome>() {

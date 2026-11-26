@@ -17,6 +17,7 @@ import{requireToolingPublicationValueV1}from"../../../../../🧹️retention/�
 import corpus from"../revalidation.json"with{type:"json"};
 import schema from"../revalidation.schema.json"with{type:"json"};
 import{privateRepositoryWorkspaceV1}from"../../../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import {linuxHostLibcV1} from "../../../../../../../../🎛️commands/🔧️setup/🟦️.ts";
 const repository=await privateRepositoryWorkspaceV1();
 const withNx=async(store:{root:string})=>{await(await import("node:fs/promises")).mkdir((await import("node:path")).join(store.root,"nx"),{recursive:true});};
 const registerIsolatedRepositoryLaw=(name:string,rejection:RegExp|undefined,body:(original:Parameters<Parameters<typeof repository.invoke>[0]>[0],checkpoint:()=>void)=>Promise<unknown>)=>registerIsolatedBuildTestV1(import.meta.path,name,{bodyMilliseconds:120000,scope:{kind:"body"}},checkpoint=>repository.invoke(original=>body(original,checkpoint),{owner:"sdk-fence-law",maximumElapsedMilliseconds:100000}),rejection);

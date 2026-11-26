@@ -33,7 +33,7 @@ test("the policy and the verdict are closed by the schema and the corpus by its 
  }
  expect(policy.carving.find(entry=>entry.crate==="semio_hub_cad_component")).toMatchObject({measuredMegabytes:8036,budgetMegabytes:8500});
  expect(policy.carving.filter(entry=>/^semio_(hub_sourcing_component|s_plugin_sourcing_(beams|slabs|windows)_component)$/u.test(entry.crate)),"the sourcing closure finals are carved under the final budget").toEqual([]);
- expect(policy.carving.find(entry=>entry.crate==="semio_hub_sourcing")).toMatchObject({measuredMegabytes:4273,budgetMegabytes:4500});
+ expect(policy.carving.find(entry=>entry.crate==="semio_hub_sourcing")).toMatchObject({measuredMegabytes:2824,budgetMegabytes:3100});
  for(const [crate,measured,budget] of [["semio_hub_stdio",8953,9450],["semio_hub_stdio_component",9306,9820],["semio_hub_stdio_office_component",4231,4470],["semio_hub_stdio_office",7939,8400],["semio_hub_space_component",5055,5300],["semio_hub_process_component",8944,9800],["semio_s_artifact_stdio_pdf_model",3525,3720],["semio_s_artifact_bim_model_snapshot",3016,3190],["semio_s_artifact_fem_2d_model",1549,1640]] as const)expect(policy.carving.find(entry=>entry.crate===crate&&entry.target==="wasm32-wasip2"),crate).toMatchObject({measuredMegabytes:measured,budgetMegabytes:budget});
  for(const entry of policy.carving)expect(entry.budgetMegabytes,`${entry.crate} fits one heavy job on a 16 GB host: hub aggregate and component units (semio_hub_*, built only under the single-slot resource guard) up to 10000 MB, everything else up to 9000 MB`).toBeLessThanOrEqual(entry.crate.startsWith("semio_hub_")?10000:9000);
  for(const family of policy.families){
@@ -67,7 +67,7 @@ test("the runtime ceiling of every corpus command line equals the independent Py
  expect(corpus.commands.map(item=>runtimeCeilingOfCommandV1(policy,item.command))).toEqual(expected);
  const by=(id:string)=>runtimeCeilingOfCommandV1(policy,corpus.commands.find(item=>item.id===id)!.command);
  expect(by("listed-final-declared-budget")).toEqual({unit:"semio_hub_cad_component|wasm32-wasip2",kind:"final",megabytes:8500,listed:true,measuredMegabytes:8036});
- expect(by("listed-hub-sourcing-equals-form")).toMatchObject({megabytes:4500,listed:true});
+ expect(by("listed-hub-sourcing-equals-form")).toMatchObject({megabytes:3100,listed:true});
  expect(by("unlisted-final-budget")).toEqual({unit:"semio_new_hub|wasm32-wasip2",kind:"final",megabytes:4096,listed:false});
  expect(by("listed-crate-other-target-is-unlisted")).toMatchObject({megabytes:1536,listed:false});
  expect(by("probe-without-a-crate-name")).toBeNull();

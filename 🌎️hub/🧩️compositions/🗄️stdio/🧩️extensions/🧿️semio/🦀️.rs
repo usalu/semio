@@ -1,5 +1,7 @@
 //! 🧩️ Typed runtime assembly published from artifact-owned composition contributions.
 
+#![recursion_limit = "512"]
+
 use semio_plugin::__semio_dispatch_PluginApp;
 use semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_plugin::plugin_app_close_prelude::*;
@@ -52,7 +54,8 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// 🔌️ Builds the exact present artifact and app contributions.
 pub fn plugin() -> Result<Plugin<StdioSemioApps>, PluginAssemblyError> {
     let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, StdioSemioApps>::new("stdio-semio").label("Stdio Semio").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-semio").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
-    builder = builder.host_artifact(semio_s_artifact_stdio_semio_catalog::declaration(semio_s_artifact_stdio_semio::definition()?).map_err(PluginAssemblyError::definition)?);
+    builder = builder.runtime_host_artifact(semio_s_artifact_stdio_semio_catalog::assembly()?.into_runtime()?);
+    builder = builder.contributes_topic(semio_hub_stdio_catalog_projection::hosted_artifact_catalog_contribution_for("stdio-semio", "semio:stdio-semio", &[semio_s_artifact_stdio_semio_catalog::contribution()])?);
     builder = builder.editor::<semio_s_artifact_stdio_semio_brep::editor::SemioBrepEditor>(semio_s_artifact_stdio_semio_brep::editor::create_semio_brep_editor());
     builder = builder.editor_mutation_roster::<semio_s_artifact_stdio_semio_brep::editor::SemioBrepEditor>();
     builder = builder.viewer::<semio_s_artifact_stdio_semio_brep::viewer::SemioBrepViewer>(semio_s_artifact_stdio_semio_brep::viewer::create_semio_brep_viewer());
@@ -107,7 +110,7 @@ pub fn plugin() -> Result<Plugin<StdioSemioApps>, PluginAssemblyError> {
     builder = builder.viewer::<semio_s_artifact_stdio_semio_value::viewer::SemioValueViewer>(semio_s_artifact_stdio_semio_value::viewer::create_semio_value_viewer());
     builder = builder.editor::<semio_s_artifact_stdio_semio_video::editor::SemioVideoEditor>(semio_s_artifact_stdio_semio_video::editor::create_semio_video_editor());
     builder = builder.viewer::<semio_s_artifact_stdio_semio_video::viewer::SemioVideoViewer>(semio_s_artifact_stdio_semio_video::viewer::create_semio_video_viewer());
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_semio::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_semio::definition()?.identity().as_str().into() });
     builder = builder.execution(ExecutionMode::Isolated).requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist contributed editor operations to the open document".into(), optional: false });
     builder.try_build()
 }

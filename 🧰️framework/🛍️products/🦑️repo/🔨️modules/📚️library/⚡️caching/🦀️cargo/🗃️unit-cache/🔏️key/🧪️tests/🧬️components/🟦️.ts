@@ -9,7 +9,7 @@ import schema from"../../../🧬️schema/🔣️.json"with{type:"json"};
 import fixture from"./🔣️.json"with{type:"json"};
 
 /** 🧬️ The key of a unit lookup is explained by named components, each an individual digest: changing exactly one input moves exactly its component (and the key), and an independent Python classifier computes the same digests. */
-const python=Bun.which("python3")??Bun.which("python"),input=fixture.input as Parameters<typeof unitKeyV1>[0];
+const python=Bun.which("python3")??Bun.which("python"),input:Parameters<typeof unitKeyV1>[0]={...fixture.input,environment:fixture.input.environment.map(row=>[row[0]!,row[1]!]as const)};
 const variantOf=(row:(typeof fixture.variants)[number])=>({...input,...("set"in row?row.set:{}),...("from"in row?{normalized:input.normalized.map(argument=>argument===row.from?row.to:argument)}:{})}) as Parameters<typeof unitKeyV1>[0];
 const named=(value:Parameters<typeof unitKeyV1>[0],extra:Record<string,string>)=>unitKeyComponentsV1(value,extra).components;
 

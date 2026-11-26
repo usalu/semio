@@ -3,6 +3,7 @@ import {blake3} from "@noble/hashes/blake3.js";
 import {createHash} from "node:crypto";
 import {mkdir,mkdtemp,readFile,rm,writeFile} from "node:fs/promises";
 import {join,resolve} from "node:path";
+import {churnProtocolV1,concurrentEditOfV1,retryOnConcurrentEditV1} from "../../../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {admitWarmCargoRetryGraphV1,runCargoPassAttemptsV1} from "../../../🧩️component-pass/🔁️failure-churn/🟦️.ts";
 import {announcedCargoSourceChecksumsV1,CargoSourceAttemptV1,CargoSourceWitnessV1} from "../🟦️.ts";
 import {withLawStorageV1,lawStoragePolicyV1} from "../../../🧪️tests/🦀️cargo/🟦️.ts";
@@ -37,13 +38,38 @@ test("announced dep-info proves conflicts without reading compiler outputs or so
       const control=scriptCompilerAdmissionControlV1(invocation,"test:announced-source-conflict",10000);
       const attempt=new CargoSourceAttemptV1(new Map([[source,"admitted"]]));
       for(const [unit,artifact] of [["first",first],["outside",outside],["missing",missing],["second",second]] as const){
-        for await(const claim of announcedCargoSourceChecksumsV1([artifact],[build],physical,control))attempt.record(unit,claim);
+        expect(await attempt.recordArtifact(unit,[artifact],[build],physical,control)).toBe(attempt.conflict);
         if(unit!=="second")expect(attempt.conflict).toBeUndefined();
       }
       const [expected,observed]=revisions.map(row=>row.blake3+":"+row.length).sort();
       expect(attempt.conflict).toEqual({path:source,expected,observed});
     });
   }finally{await rm(directory,{recursive:true,force:true});}
+});
+
+test("a fresh Cargo unit anchors its relative consumed paths to rustc's target record",async()=>{
+  const root=await mkdtemp(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!), "sw-"));
+  const build=join(root,"build"),artifact=join(build,"libunit.rlib"),dep=join(build,"unit.d"),source=join(root,"lib.rs");
+  const physical={maxBytes:4096,maxWork:32,chunkBytes:1024,cancelled:()=>false,remainingMs:()=>10000,onProgress:()=>{}};
+  const claim=(path:string,body:string)=>`# checksum:blake3=${Buffer.from(blake3(new TextEncoder().encode(body))).toString("hex")} file_len:${Buffer.byteLength(body)} ${path}\n`;
+  try{
+    await mkdir(build);
+    await writeFile(dep,`${dep}: lib.rs package/../module.rs\n`+claim("lib.rs",fixture[0]!.source)+claim("package/../module.rs",fixture[1]!.source));
+    await withBuildTestInvocationV1(async invocation=>{
+      const control=scriptCompilerAdmissionControlV1(invocation,"test:anchored-source",10000);
+      const claims=async(cargoWorkspace:string,targetSource:string,sinceMs:number)=>{
+        const rows=[];
+        for await(const row of announcedCargoSourceChecksumsV1([artifact],[build],physical,control,undefined,{cargoWorkspace,targetSource,sinceMs}))rows.push(row.path);
+        return rows;
+      };
+      expect(await claims(root,source,0)).toEqual([source,join(root,"module.rs")]);
+      expect(await claims(root,join(root,"unrelated.rs"),0)).toEqual([]);
+      expect(await claims(root,source,Date.now()+10000)).toEqual([]);
+      expect(await claims(join(root,"wrong"),source,0)).toEqual([]);
+      await writeFile(dep,`${artifact}: lib.rs package/../module.rs\n`+claim("lib.rs",fixture[0]!.source)+claim("package/../module.rs",fixture[1]!.source));
+      expect(await claims(root,source,0)).toEqual([]);
+    });
+  }finally{await rm(root,{recursive:true,force:true});}
 });
 
 test("early capture retains only exact admitted Rust source bodies",async()=>{
@@ -69,6 +95,12 @@ test("early capture retains only exact admitted Rust source bodies",async()=>{
             await Promise.all([witness.captureAnnouncedSources([artifact],[build],physical,control),witness.captureAnnouncedSources([artifact],[build],physical,control)]);
             expect(witness.canTransfer(source,expected),row.id).toBe(row.retained);
             expect(witness.matchesAdmitted(expected,admittedSha256),row.id).toBe(row.retained);
+            expect(witness.admittedDrift(expected,admittedSha256),row.id).toBeUndefined();
+            if(row.retained){
+              const changed={...expected,blake3:"2".repeat(64)};
+              expect(witness.admittedDrift(changed,admittedSha256),row.id).toEqual({path:source,expected:expected.blake3+":"+expected.length,observed:changed.blake3+":"+changed.length});
+              expect(witness.admittedDrift(changed,"0".repeat(64)),row.id).toBeUndefined();
+            }
             expect(witness.matchesAdmitted(expected,"0".repeat(64)),row.id).toBe(false);
             expect(witness.selectedPath(source,admittedSha256),row.id).toBeUndefined();
             const live=new TextEncoder().encode(row.source);
@@ -88,7 +120,26 @@ test("early capture retains only exact admitted Rust source bodies",async()=>{
               witness.noteUncheckedInput(source,admittedSha256);
               expect(witness.selectedPath(source,admittedSha256)).toBeUndefined();
             }else if(row.admitted){
-              await expect(witness.input(source,expected,physical)).rejects.toThrow("Compiler consumed bytes have no matching retained source witness");
+              const profiles=churnProtocolV1().profiles;
+              let snapshotAttempts=0,buildAttempts=0;
+              await retryOnConcurrentEditV1("build",async build=>{
+                buildAttempts++;
+                if(build===2){
+                  const compiled=Buffer.from("later"),sha256=createHash("sha256").update(compiled).digest("hex");
+                  const current={path:source,blake3:Buffer.from(blake3(compiled)).toString("hex"),length:compiled.byteLength};
+                  expect((await witness.input(source,current,physical)).row.sha256).toBe(sha256);
+                  return;
+                }
+                try{
+                  await retryOnConcurrentEditV1("snapshot",async()=>{snapshotAttempts++;return witness.input(source,expected,physical);},{modifiedAgeMs:()=>undefined,sleep:async()=>{},onRetry:()=>{}});
+                  throw Error("Unproven compiler bytes accepted");
+                }catch(error){
+                  expect(concurrentEditOfV1(error,profiles.snapshot.rank),row.id).toBeUndefined();
+                  expect(concurrentEditOfV1(error,profiles.build.rank),row.id).toMatchObject({path:source,reason:"bytes"});
+                  throw error;
+                }
+              },{modifiedAgeMs:()=>undefined,sleep:async()=>{},onRetry:()=>{}});
+              expect({snapshotAttempts,buildAttempts},row.id).toEqual({snapshotAttempts:1,buildAttempts:2});
             }
           }
           const missing=join(workspace,"missing.rs");

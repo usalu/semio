@@ -46,7 +46,7 @@ test("200 seeded manifests: the dependency reader answers the same on the projec
  for(let seed=1;seed<=200;seed++){
   const m=manifest(seed),w=manifest(seed+1000);w.workspace??={};
   for(const tests of[false,true]){
-   const role=tests?"graph-tests":"graph",whole=nativeDependencies(m,w.workspace),projected=nativeDependencies(cargoManifestProjectionV1(m,role),cargoManifestProjectionV1(w,"graph").workspace);
+   const role=tests?"graph-tests":"graph",whole=nativeDependencies(m,w.workspace),projected=nativeDependencies(cargoManifestProjectionV1(m,role),cargoManifestProjectionV1(w,"graph").workspace??{});
    const expected=tests?whole:whole.filter(row=>row.kind!=="dev-dependencies");
    expect(projected,`${seed} ${role}`).toEqual(expected);
   }
@@ -105,7 +105,7 @@ test("a dependent's record holds while a dependency edits what does not concern 
  expect(captured.value).toEqual(["a","b","c"]);
  const rows=captured.observations;
  expect(rows.filter((row:any)=>row.kind==="file"&&/[\\/][bc][\\/]Cargo\.toml$/u.test(row.path)),"no whole-file row of a dependency manifest").toEqual([]);
- const fields=rows.filter((row:any)=>row.kind==="field"&&row.fact.format==="cargo-manifest");
+ const fields=rows.filter((row):row is Extract<(typeof rows)[number],{kind:"field"}>=>row.kind==="field"&&row.fact.format==="cargo-manifest");
  expect(fields.length).toBeGreaterThanOrEqual(3);
  for(const row of fields)expect(row.fact.digest).toBe(fieldFactV1(row.path,"cargo-manifest",row.fact.pointer,()=>require("node:fs").readFileSync(row.path,"utf8")).digest);
  expect(await observationsHold(rows)).toBe(true);

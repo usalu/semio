@@ -49,6 +49,7 @@ semio-s-artifact-stdio-stl = { workspace = true }
 semio-s-artifact-stdio-ply = { workspace = true }
 semio-s-artifact-stdio-las = { workspace = true }
 semio-s-artifact-stdio-step = { workspace = true }
+semio-s-artifact-stdio-ifc = { workspace = true }
 semio-s-artifact-stdio-ifc-catalog = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
@@ -63,6 +64,7 @@ semio-s-artifact-stdio-docx = { workspace = true }
 semio-s-artifact-stdio-pptx = { workspace = true }
 semio-s-artifact-stdio-xlsx = { workspace = true }
 semio-s-artifact-stdio-bcf = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
 semio-s-artifact-stdio-semio-catalog = { workspace = true }
 semio-s-artifact-stdio-mp4 = { workspace = true }
 semio-s-artifact-stdio-avi = { workspace = true }

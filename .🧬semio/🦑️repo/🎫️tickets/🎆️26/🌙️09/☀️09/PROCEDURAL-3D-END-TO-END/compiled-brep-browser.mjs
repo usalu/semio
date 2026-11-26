@@ -25,12 +25,19 @@ const mushroom = process.env.GEOMETRY_BREP_SCENE === "mushroom"
     return { height, low: expected.boundingBoxMin, high: expected.boundingBoxMax, tolerance: expected.boundingBoxTolerance, minTriangles: expected.minTriangles, volume: expected.volume * height / 6 };
   })
   : null;
-const browser = await chromium.launch({headless:true});
+const compilerCount = Number(process.env.GEOMETRY_CHROMIUM_COMPILERS ?? 1);
+if (!Number.isInteger(compilerCount) || compilerCount < 1 || compilerCount > 4) throw Error("Expected between one and four Chromium WASM compilation tasks");
+const browser = await chromium.launch({headless:true,args:[`--js-flags=--wasm-num-compilation-tasks=${compilerCount}`, "--renderer-process-limit=1"]});
 const timeout = setTimeout(() => { console.error("[DEBUG] BRep capability deadline"); void browser.close(); }, Number(process.env.GEOMETRY_PROBE_MS ?? 600000));
 try {
   const page = await browser.newPage();
   page.context().on("requestfailed", r => console.error("[DEBUG] request failed",r.url(),r.failure()?.errorText));
-  page.context().on("response", r => { if(r.status()>=400) console.error("[DEBUG] HTTP",r.status(),r.url()); });
+  page.context().on("response", response => {
+    const asset = new URL(response.url()).pathname;
+    if (response.status() >= 400 || asset.endsWith("semio_s_plugin_flow_brep_component.core.wasm")) {
+      console.log("[DEBUG] HTTP", response.status(), response.url(), response.headers()["content-length"]);
+    }
+  });
   page.on("pageerror", error => console.error("[DEBUG]", error.message));
   page.on("console", text => { if (text.text().startsWith("[DEBUG]")) console.log(text.text()); });
   await page.route(url + "/geometry-capability", route => route.fulfill({contentType:"text/html",body:"<!doctype html><title>BRep capability verification</title>"}));
@@ -38,7 +45,8 @@ try {
     const response = await route.fetch();
     const source = await response.text();
     if (!source.includes("INBOUND_REQUEST_TURN_BUDGET = 64")) throw Error("Missing original browser turn policy");
-    await route.fulfill({response,body:source.replace("INBOUND_REQUEST_TURN_BUDGET = 64","INBOUND_REQUEST_TURN_BUDGET = "+Number(process.env.GEOMETRY_DIAGNOSTIC_TURNS))});
+    const traced = source.replace("const result = answerFor(turn);", "if (drive.capability === 'tessellate' && turns % 32 === 0) {const raw=turn.original??turn;console.log('[DEBUG] Original actor result',turns,Object.keys(raw).join(','),JSON.stringify(raw.retainedReceipt??raw.fuelUsed,(_,x)=>typeof x==='bigint'?x.toString():x));} const result = answerFor(turn);");
+    await route.fulfill({response,body:traced.replace("INBOUND_REQUEST_TURN_BUDGET = 64","INBOUND_REQUEST_TURN_BUDGET = "+Number(process.env.GEOMETRY_DIAGNOSTIC_TURNS))});
   });
   if (process.env.GEOMETRY_PROFILE_CORE) await page.context().route("**/semio_s_plugin_flow_brep_component.core.wasm", route => route.continue({url:new URL("/@fs/"+resolve(process.env.GEOMETRY_PROFILE_CORE),url).href}));
   if (process.env.GEOMETRY_PROBE_GRANTS) await page.context().route(/extension-modules.*bridge\.js(?:\?.*)?$/, async route => {
@@ -84,11 +92,13 @@ try {
     });
     await protocol.send("Target.setAutoAttach", {autoAttach:true,waitForDebuggerOnStart:false,flatten:false});
   }
-  const result = await page.evaluate(async ({loader,packs,capabilityGroup,mushroom,scenarios}) => {
+  page.on("crash",()=>console.error("[DEBUG] Browser page crashed"));
+  page.on("framenavigated",frame=>console.log("[DEBUG] Browser frame navigated",frame.url()));
+  const result = await page.evaluate(({loader,packs,capabilityGroup,mushroom,scenarios,verifySolid}) => window.geometryProbe = (async () => {
     window.$RefreshReg$ = () => {};
     window.$RefreshSig$ = () => value => value;
     window.__vite_plugin_react_preamble_installed__ = true;
-    const [{loadPluginModule},{decodePackValue}] = await Promise.all([import(loader),import(packs)]);
+    const [{loadPluginModule},{decodePackValue,decodeMeshPackChunks}] = await Promise.all([import(loader),import(packs)]);
     console.log("[DEBUG] Runtime ready");
     const loadExtension = (id) => {
       const directory = id === "math" ? "🧮️flow-extension-math" : "🧊️flow-extension-brep";
@@ -123,7 +133,21 @@ try {
         return {sum:5,coordinates};
       }
       if (scenarios) {
-        const math = await loadExtension("math");
+        const needsMath = scenarios.some(({neurons}) => neurons.some(node => node.kind.startsWith("math.")));
+        const math = needsMath ? await loadExtension("math") : null;
+        const defaults = new Map();
+        const directories = needsMath ? ["🧮️flow-extension-math","🧊️flow-extension-brep"] : ["🧊️flow-extension-brep"];
+        for (const directory of directories) {
+          const response = await fetch("/🧩️extension-modules/"+directory+"/🔣️.json");
+          if (!response.ok) throw Error("Missing installed extension declaration "+directory);
+          const descriptor = await response.json();
+          for (const topic of descriptor.manifest.topicContributions) {
+            if (!topic.payload?.manifestJson) continue;
+            for (const operator of JSON.parse(topic.payload.manifestJson).contributes.operators ?? []) {
+              defaults.set(operator.id,Object.fromEntries(operator.inputs.filter(port=>port.default!=null).map(port=>[port.name,port.default])));
+            }
+          }
+        }
         let hash = 89001;
         const results = [];
         const normalize = value => {
@@ -136,12 +160,20 @@ try {
         try {
           for (const {fixture,sliders,neurons,wires} of scenarios) {
             const outputs = new Map(Object.entries(sliders).map(([id,value])=>[id,{number:number(value)}]));
-            const pending = [...neurons];
+            const required = new Set();
+            const select = id => {
+              if (!id || required.has(id)) return;
+              required.add(id);
+              for (const [source,,target] of wires) if (target === id) select(source);
+            };
+            select(fixture.preview.node);
+            select(fixture.expect.kernelVolumeNode);
+            const pending = neurons.filter(node => required.has(node.id));
             while (pending.length) {
               const index = pending.findIndex(node => wires.filter(edge=>edge[2]===node.id).every(edge=>outputs.has(edge[0])));
               if (index < 0) throw Error("Cannot order authored graph "+fixture.example);
               const [{id,kind}] = pending.splice(index,1);
-              const input = {};
+              const input = {...defaults.get(kind)};
               for (const [source,port,,target] of wires.filter(edge=>edge[2]===id)) {
                 const value=outputs.get(source)[port];
                 if (value === undefined) throw Error("Missing authored channel "+source+"@"+port);
@@ -152,12 +184,16 @@ try {
               outputs.set(id,normalize(await evaluate(group==="math"?math:ext,group,kind,++hash,input)));
             }
             const preview=outputs.get(fixture.preview.node)?.[fixture.preview.channel];
-            if (!preview?.handle) throw Error("Missing authored preview handle "+fixture.example);
-            const request=JSON.stringify({handle:preview.handle,nodeHash:++hash,tolerance:fixture.tessellationTolerance,windowId:"preview",windowKindId:"preview"});
             let mesh;
-            for(let round=0;round<1024 && !mesh;round++){
-              const reply=decodePackValue(await ext.invoke("tessellate",request,{onProgress:({turns})=>{if(turns%32===0)console.log("[DEBUG] Authored tessellation turns",fixture.example,round,turns)}}));
-              if(reply.done) mesh=reply.mesh;
+            if (typeof preview?.preview === "string" && preview.preview) {
+              mesh=decodeMeshPackChunks([preview.preview]);
+            } else {
+              if (!preview?.handle) throw Error("Missing authored preview handle or inline mesh "+fixture.example);
+              const request=JSON.stringify({handle:preview.handle,nodeHash:++hash,tolerance:fixture.tessellationTolerance,windowId:"preview",windowKindId:"preview"});
+              for(let round=0;round<1024 && !mesh;round++){
+                const reply=decodePackValue(await ext.invoke("tessellate",request,{onProgress:({turns})=>{if(turns%32===0)console.log("[DEBUG] Authored tessellation turns",fixture.example,round,turns)}}));
+                if(reply.done) mesh=reply.mesh;
+              }
             }
             if(!mesh) throw Error("Missing tessellation "+fixture.example);
             const positions=Array.from(mesh.positions??[],numeric),indices=Array.from(mesh.indices??[],numeric),edges=Array.from(mesh.edgePositions??[],numeric);
@@ -167,12 +203,52 @@ try {
             const triangles=indices.length/3,segments=edges.length/6,expected=fixture.expect;
             if (!coordinates.length || !coordinates.every(Number.isFinite) || indices.some(i=>!Number.isInteger(i)||i<0||i>=positions.length/3) || triangles<fixture.delivery.minTriangles || segments<fixture.delivery.minEdgeSegments) throw Error("Unexpected authored primitive counts "+JSON.stringify({example:fixture.example,triangles,segments}));
             if(low.some((v,i)=>Math.abs(v-expected.boundingBoxMin[i])>expected.boundingBoxTolerance)||high.some((v,i)=>Math.abs(v-expected.boundingBoxMax[i])>expected.boundingBoxTolerance))throw Error("Unexpected authored bounds "+JSON.stringify({example:fixture.example,low,high}));
-            const volume=expected.kernelVolumeNode?numeric(outputs.get(expected.kernelVolumeNode)[expected.kernelVolumeChannel].value):null;
-            if(volume!==null&&Math.abs(volume-expected.volume)>expected.kernelVolumeTolerance)throw Error("Unexpected authored kernel volume "+volume);
-            results.push({example:fixture.example,triangles,segments,low,high,volume});
+            let volume = expected.kernelVolumeNode
+              ? numeric(outputs.get(expected.kernelVolumeNode)[expected.kernelVolumeChannel].value)
+              : null;
+            if (volume === null && verifySolid && expected.closed) {
+              if (!preview?.handle) throw Error("Closed solid lacks a live kernel handle");
+              const result = normalize(await evaluateInGroup("brep.measure.volume", ++hash, {geometry:preview}));
+              volume = numeric(result.volume.value);
+            }
+            if (volume !== null && (!Number.isFinite(volume) || Math.abs(volume-expected.volume) > (expected.kernelVolumeTolerance ?? 1e-9))) {
+              throw Error("Unexpected authored kernel volume "+volume);
+            }
+            let meshVolume = null;
+            let weldedEdges = null;
+            if (expected.closed && (verifySolid || typeof preview.preview === "string" && preview.preview)) {
+              let sixVolume = 0;
+              const edgesByKey = verifySolid ? new Map() : null;
+              const welded = point => point.map(value => Math.round(value * 100000)).join(",");
+              for (let i = 0; i < indices.length; i += 3) {
+                const [a,b,c] = indices.slice(i,i+3).map(index => positions.slice(3*index,3*index+3));
+                sixVolume += a[0]*(b[1]*c[2]-b[2]*c[1]) + a[1]*(b[2]*c[0]-b[0]*c[2]) + a[2]*(b[0]*c[1]-b[1]*c[0]);
+                if (edgesByKey) {
+                  const [p,q,r] = [a,b,c].map(welded);
+                  for (const [start,end] of [[p,q],[q,r],[r,p]]) {
+                    if (start === end) throw Error("Collapsed authored mesh edge");
+                    const [low,high] = start < end ? [start,end] : [end,start];
+                    const key = low + "|" + high;
+                    const tally = edgesByKey.get(key) ?? [0,0];
+                    tally[0]++;
+                    tally[1] += start < end ? 1 : -1;
+                    edgesByKey.set(key,tally);
+                  }
+                }
+              }
+              meshVolume = (verifySolid ? sixVolume : Math.abs(sixVolume)) / 6;
+              if (Math.abs(meshVolume-expected.volume)>expected.volumeTolerance) throw Error("Unexpected authored mesh volume "+meshVolume);
+              if (edgesByKey) {
+                for (const [count,orientation] of edgesByKey.values()) {
+                  if (count !== 2 || orientation !== 0) throw Error("Open or inconsistently oriented authored mesh");
+                }
+                weldedEdges = edgesByKey.size;
+              }
+            }
+            results.push({example:fixture.example,triangles,segments,low,high,volume,meshVolume,weldedEdges});
             console.log("[DEBUG] Authored installed result",JSON.stringify(results.at(-1)));
           }
-        } finally { await math.dispose?.(); }
+        } finally { await math?.dispose?.(); }
         return results;
       }
       const profile = mushroom
@@ -229,8 +305,10 @@ try {
         }
       } finally { await math.dispose?.(); }
       return { geometries };
-    } finally { await ext.dispose?.(); }
-  },{loader,packs,mushroom,scenarios,capabilityGroup:process.env.GEOMETRY_CAPABILITY_GROUP ?? "brep"});
+    } catch (problem) { throw Error("Geometry actor failed: "+String(problem?.stack ?? problem?.message ?? problem)); }
+    finally { await ext.dispose?.(); }
+  })(),{loader,packs,mushroom,scenarios,verifySolid:process.env.GEOMETRY_VERIFY_SOLID === "1",capabilityGroup:process.env.GEOMETRY_CAPABILITY_GROUP ?? "brep"});
+  if (result == null || (scenarios && (!Array.isArray(result) || result.length !== scenarios.length))) throw Error("Browser capability probe ended without all expected results");
   console.log("[DEBUG] Actual browser capability result",JSON.stringify(result));
 } finally {
   clearTimeout(timeout);

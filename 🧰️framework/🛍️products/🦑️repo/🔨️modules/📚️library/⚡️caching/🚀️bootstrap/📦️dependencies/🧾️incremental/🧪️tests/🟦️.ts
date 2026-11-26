@@ -110,7 +110,7 @@ async function verifyMutationCases(cases:typeof fixture.installed.cases,links:bo
    build(root,fixture.installed.tree,links);
    if(row.settled){const latest=Math.max(...[".",...fixture.installed.tree.dirs].map(path=>{const facts=lstatSync(join(root,path));return Math.max(facts.mtimeMs,facts.ctimeMs);})),wait=Math.max(0,Math.ceil(latest+protocol.installed.settleMilliseconds-Date.now())+1);if(wait>protocol.installed.settleMilliseconds+2000)throw Error("Bounded settled fixture clock required");await sleep(wait);}
    const start=row.settled?Date.now():Date.now()+fixture.installed.pastOffsetMs,rows=core.decodeInstalledLedgerV1(...(()=>{const encoded=core.encodeInstalledLedgerV1(collect(root,start));return[encoded.bytes,encoded.evidence]as const;})()),{receipt}=receiptOf(rows,(row as {device?:string}).device);
-   const modeMutation=row.mutations.find(mutation=>mutation.op==="chmod"),beforeMode=modeMutation?lstatSync(join(root,modeMutation.path),{bigint:true}).mode:undefined;for(const mutation of row.mutations)mutate(root,mutation as Mutation);const unchangedMode=modeMutation!==undefined&&lstatSync(join(root,modeMutation.path),{bigint:true}).mode===beforeMode,expected=unchangedMode?(row as {unchangedModeExpect:{status:string}}).unchangedModeExpect:row.expect;
+   const modeMutation=row.mutations.find(mutation=>mutation.op==="chmod"),beforeMode=modeMutation?lstatSync(join(root,modeMutation.path),{bigint:true}).mode:undefined;for(const mutation of row.mutations)mutate(root,mutation as Mutation);const unchangedMode=modeMutation!==undefined&&lstatSync(join(root,modeMutation.path),{bigint:true}).mode===beforeMode,expected=unchangedMode?(row as {unchangedModeExpect:{status:string;class?:string;path?:string}}).unchangedModeExpect:row.expect;
    let listings=0;const ports=glue.installedPortsV1(root,idle),counted={...ports,children:(path:string)=>{listings++;return ports.children(path);}};
    const result=await core.verifyInstalledLedgerV1(receipt,rows,counted);
    expect(result.status as string,row.id).toBe(expected.status);
@@ -208,8 +208,8 @@ test("incremental single-link invariant sees a real second name",()=>{
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
-/** 🧪️ Proves with Bun itself that no install backend gives a workspace member manifest a second name, while a directory dependency does so regardless of the backend. */
-test("bun install never links workspace member manifests; only file directory dependencies gain a second name",()=>{
+/** 🧪️ Proves with Bun itself that no install backend gives a tracked manifest a second name: neither a workspace member manifest nor the Source of a file directory dependency (the pinned Bun copies it into the dependent), so the single-link invariant refuses only a name made from outside. */
+test("bun install never gives a workspace member manifest or a file directory dependency Source a second name",()=>{
  for(const backend of [...new Set([...fixture.bun.probeBackends,recipeBackends()[process.platform]!])]){
   const root=scratch(),cache=join(root,"cache"),workspace=join(root,"ws"),leaf=join(root,"pk");
   try{
@@ -224,9 +224,9 @@ test("bun install never links workspace member manifests; only file directory de
    const dependent=join(workspace,fixture.bun.control.dependent);writeFileSync(dependent,JSON.stringify({name:"c",version:"1.0.0",dependencies:{localpkg:"file:../../"+fixture.bun.control.directory}}));
    rmSync(join(workspace,"node_modules"),{recursive:true,force:true});rmSync(join(workspace,"bun.lock"),{force:true});
    const second=install();expect(second.status,second.stderr).toBe(0);
-   expect(lstatSync(join(controlRoot,"package.json")).nlink,backend+" control").toBe(2);
+   expect(lstatSync(join(controlRoot,"package.json")).nlink,backend+" control").toBe(1);
    expect(lstatSync(dependent).nlink,backend+" dependent").toBe(1);
-   expect(()=>core.requireSingleLinkInputV1(join(controlRoot,"package.json"),lstatSync(join(controlRoot,"package.json")).nlink)).toThrow(protocol.singleLink.message);
+   expect(()=>core.requireSingleLinkInputV1(join(controlRoot,"package.json"),lstatSync(join(controlRoot,"package.json")).nlink)).not.toThrow();
   }finally{rmSync(root,{recursive:true,force:true});}
  }
 },180000);

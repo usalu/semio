@@ -4,11 +4,31 @@
   "additionalProperties": false,
   "required": [
     "version",
-    "cases"
+    "cases",
+    "evaluationOwners"
   ],
   "properties": {
     "version": {
       "const": 1
+    },
+    "evaluationOwners": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["semio-plugin-extension", "semio-plugin-ownership"],
+      "properties": {
+        "semio-plugin-extension": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "minItems": 2,
+          "uniqueItems": true
+        },
+        "semio-plugin-ownership": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
     },
     "cases": {
       "type": "array",

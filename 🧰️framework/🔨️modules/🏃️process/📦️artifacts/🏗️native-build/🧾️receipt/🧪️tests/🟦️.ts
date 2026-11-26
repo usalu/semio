@@ -1,3 +1,5 @@
+import { Database } from "bun:sqlite";
+import { closeReleaseProvenanceV1 } from "../../🧩️component-pass/📦️partial-provenance/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import deepEqual from "fast-deep-equal";
@@ -574,4 +576,42 @@ test("prefetch never pins a previous build's output or dep-info that Cargo then 
   writeFileSync(dep, `${wasm}: ${join(root, "src", "rebuilt.rs")}\n`);
   await session.close();
   expect(readFileSync(dep, "utf8")).toContain("rebuilt.rs");
+});
+
+test("a failed native release seals a proven linked tree only while its observed artifact and source stay current", async () => {
+  const cases = JSON.parse(readFileSync(new URL("./🧫️partial.json", import.meta.url), "utf8"));
+  const db = new Database(":memory:");
+  try {
+    for (const row of cases) {
+      const root = mkdtempSync(join(artifacts, "partial-"));
+      const { files, invocation } = syntheticInvocation(root, 2, 1);
+      const control = () => cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress: () => undefined });
+      const session = new CargoProvenanceSessionV1(sharedProvenanceCustodyV1(root, control));
+      const receipt = join(root, "session", "cargo-unit-provenance-closure.json");
+      const synthetic = {...invocation, status:row.failed ? 101 : 0};
+      const artifact = invocation.units[0]!.message.filenames[0]!;
+      const staged = join(root, "staged.wasm");
+      if (row.linked) writeFileSync(staged, readFileSync(artifact));
+      const ready = row.linked ? [session.write(receipt, synthetic, new Map([[artifact, staged]]), join(root, "cargo-home"))] : [];
+      await Promise.all(ready);
+      expect(existsSync(receipt)).toBe(false);
+      if (row.mutate) writeFileSync(files[0]!.path, "pub const CHANGED: u32 = 0;\n");
+      const sql = db.query("SELECT (NOT ?1 OR (?2 AND ?3)) AND NOT ?4 AS accepts").get(
+        Number(row.failed), row.linked, Number(row.browserRelease), Number(row.mutate),
+      ) as {accepts:number};
+      try {
+        const result = closeReleaseProvenanceV1(session, ready, () => undefined, row);
+        if (row.mutate) await expect(result).rejects.toThrow("before transfer");
+        else expect(await result).toBe(row.expected);
+        expect(existsSync(receipt)).toBe(Boolean(sql.accepts));
+        if (row.expected) {
+          const observed = decodeCargoProvenanceV1(readFileSync(receipt, "utf8"));
+          expect(observed.status).toBe(synthetic.status);
+          expect(observed.units[0]!.artifacts[0]!.stagedSha256).toBe(createHash("sha256").update(readFileSync(staged)).digest("hex"));
+        }
+      } finally {
+        await session.discard();
+      }
+    }
+  } finally { db.close(); }
 });

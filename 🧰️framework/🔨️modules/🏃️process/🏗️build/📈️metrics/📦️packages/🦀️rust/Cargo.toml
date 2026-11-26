@@ -1,0 +1,27 @@
+cargo-features = ["trim-paths"]
+
+[package]
+name = "semio-framework-process-metrics"
+version = "0.1.0"
+edition = "2021"
+description = "Reader of the multi-resolution metrics rings: the merged, non-uniform series of dense recent and coarse old points."
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "process-metrics"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[workspace]
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[[test]]
+name = "process-metrics-golden"
+path = "../../🧪️tests/🦀️.rs"
+
+[dependencies]

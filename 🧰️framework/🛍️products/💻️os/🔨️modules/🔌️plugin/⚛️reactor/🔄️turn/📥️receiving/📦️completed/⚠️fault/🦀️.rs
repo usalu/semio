@@ -16,6 +16,7 @@ impl FaultCursor{
   if self.field==fields.len(){if self.seen!=31{return Err(invalid())}if !metadata(cx)?{return Ok(None)}return Ok(self.output.take())}
   let(name,value)=&mut fields[self.field];let output=self.output.as_mut().unwrap();
   if self.kind==0{
+   if name=="domain" && cx.retained_grant().maximum_capacity_bytes<std::mem::size_of::<DslValue>(){return Ok(None)}
    if !metadata(cx)?{return Ok(None)}
    match name.as_str(){
     "origin"=>{let DslValue::String(text)=value else{return Err(invalid())};output.origin=match text.as_str(){"edge"=>FaultOrigin::Edge,"renderer"=>FaultOrigin::Renderer,"os"=>FaultOrigin::Os,"module"=>FaultOrigin::Module,"plugin"=>FaultOrigin::Plugin,"app"=>FaultOrigin::App,"extension"=>FaultOrigin::Extension,"framework"=>FaultOrigin::Framework,_=>return Err(invalid())};self.seen|=2},
@@ -26,7 +27,7 @@ impl FaultCursor{
     "scope"=>if !matches!(value,DslValue::Null){object(value)?;self.kind=2;return Ok(None)},
     "source"=>if !matches!(value,DslValue::Null){object(value)?;output.source=Some(Default::default());self.kind=3;return Ok(None)},
     "span"=>if !matches!(value,DslValue::Null){object(value)?;output.span=Some(Default::default());self.kind=4;return Ok(None)},
-    "domain"=>{object(value)?;output.domain=Some(Box::new(std::mem::replace(value,DslValue::Null)))},
+    "domain"=>{object(value)?;output.domain=Some(Box::new(std::mem::replace(value,DslValue::Null)));cx.consume_retained(RetainedCloneProgress{retained_capacity_bytes:std::mem::size_of::<DslValue>(),..Default::default()})?},
     "retryable"=>match value{DslValue::Bool(flag)=>output.retryable=*flag,DslValue::Null=>{},_=>return Err(invalid())},
     "causes"=>if !matches!(value,DslValue::Null){if !matches!(value,DslValue::Array(_)){return Err(invalid())}self.kind=5;self.reserved=false;return Ok(None)},
     "params"=>if !matches!(value,DslValue::Null){object(value)?;self.kind=6;self.reserved=false;return Ok(None)},

@@ -98,3 +98,14 @@ test("a waiter for a held product lane declares its wait to the watchdog and nam
   cancelled.abort(Error("stop waiting"));await expect(waiting).rejects.toThrow("stop waiting");expect(activeScriptProcessWaitsV1()).toBe(0);first.release();
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+test("retained product lanes, idle or held, never fill the live bound: the next product is admitted at once",async()=>{
+ const root=scratch(),limit=UNIT_CACHE_POLICY_V1.pool.maximumLiveLanes,signal=new AbortController().signal,lines:string[]=[];
+ try{
+  for(let index=0;index<limit+2;index++)(await acquireProductLaneV1(root,request(index.toString(16).padStart(6,"0").padEnd(64,"0")),{signal})).release();
+  const held:Awaited<ReturnType<typeof acquireProductLaneV1>>[]=[];
+  for(let index=0;index<limit;index++)held.push(await acquireProductLaneV1(root,request((index+4096).toString(16).padStart(6,"0").padEnd(64,"1")),{signal}));
+  const next=await acquireProductLaneV1(root,request("f".repeat(64)),{signal,report:kind=>{lines.push(kind);}});expect(lines).toEqual([]);next.release();
+  for(const lane of held)lane.release();
+ }finally{rmSync(root,{recursive:true,force:true});}
+},60000);

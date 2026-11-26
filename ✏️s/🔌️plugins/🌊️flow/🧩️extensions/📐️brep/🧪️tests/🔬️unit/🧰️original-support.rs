@@ -28,9 +28,20 @@ fn run_funded_preview(
     born: &mut usize,
     free: &mut usize,
 ) -> semio_framework::MeshData {
+    run_funded_preview_at(session, identity, handle, 0.025, caller, born, free)
+}
+
+fn run_funded_preview_at(
+    session: &Session,
+    identity: semio_os_flow_geometry::GeometryWorkIdentity,
+    handle: &str,
+    tolerance: f64,
+    caller: &mut OriginalJobFixtureCaller,
+    born: &mut usize,
+    free: &mut usize,
+) -> semio_framework::MeshData {
     use semio_os_flow_geometry::GeometryStep;
-    let tolerance = 0.025;
-    for _ in 0..20000 {
+    for _ in 0..100000 {
         let demand = session.tessellation_demands(identity, handle, tolerance, 128).unwrap();
         let grant = Grant {
             maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(128),

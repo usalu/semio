@@ -122,6 +122,19 @@
         ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/DRAW-PLUGIN-END-TO-END/serve-draw-native.sh"
       ],
       "port": 6064
+    },
+    {
+      "name": "bim-react",
+      "runtimeExecutable": "repo",
+      "runtimeArgs": [
+        "./📜️script.ts",
+        "dev",
+        "playground",
+        "bim",
+        "react",
+        "prototype"
+      ],
+      "port": 6302
     }
   ]
 }

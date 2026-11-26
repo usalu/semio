@@ -162,7 +162,7 @@ impl MountedState {
                 };
                 cx.consume_retained(progress)?;
                 eigen.second = Some(second);
-                eigen.factor = Some(LdltJob::new(operation, stiffness, 1));
+                eigen.factor = Some(LdltJob::new(operation, stiffness));
                 eigen.phase = Phase::Factor;
             }
             Phase::Factor => {

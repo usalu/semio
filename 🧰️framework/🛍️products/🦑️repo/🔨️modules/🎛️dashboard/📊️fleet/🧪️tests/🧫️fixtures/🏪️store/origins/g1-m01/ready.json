@@ -1,0 +1,13 @@
+{
+ "version": 1,
+ "origin": "g1-m01",
+ "platform": "macos",
+ "state": "ready",
+ "ready": true,
+ "stage": null,
+ "stageIndex": 0,
+ "stageCount": 5,
+ "refusal": null,
+ "updatedMs": 1800000295000,
+ "beatMilliseconds": 120000
+}

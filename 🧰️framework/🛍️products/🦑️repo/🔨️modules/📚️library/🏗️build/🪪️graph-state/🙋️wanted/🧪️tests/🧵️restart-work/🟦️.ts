@@ -48,7 +48,7 @@ test("a restart that waits: busy while the read for held requests runs, no new r
   const ended=reports.findIndex(row=>!row.busy);expect(ended,"the end of the read is reported").toBeGreaterThan(0);
   expect(reports.slice(1,ended).every(row=>row.busy)).toBe(true);
   expect((await readServedV1({client:requester,requester:"g1-m06"}))?.generation).toBe(5);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 });
 
 test("a restart that waits and nothing held: no refresh is started however quiet the tree is, and without a waiting restart it is",async()=>{
@@ -61,7 +61,7 @@ test("a restart that waits and nothing held: no refresh is started however quiet
     work:{restartPending:()=>pending,report:()=>{}},quietMilliseconds:async()=>10**9,say:()=>{},signal:new AbortController().signal,now:()=>clock,sleep:async()=>{clock+=1000;},rounds:3});
    expect(reads,`pending ${pending}`).toEqual(pending?[]:["refresh"]);
   }
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 });
 
 test("every held request expired while the read runs: nobody waits for the serve, so it is no longer reported as busy",async()=>{
@@ -75,5 +75,5 @@ test("every held request expired while the read runs: nobody waits for the serve
    quietMilliseconds:async()=>10**9,say:()=>{},signal:controller.signal,now:()=>clock,sleep:async()=>{round++;if(round===2)clock+=24*3600*1000;if(round===4)controller.abort();},rounds:6});
   expect(reports[0],"busy while the request is held").toBe(true);
   expect(reports.at(-1),"not busy once the request expired, although the read still runs").toBe(false);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 });

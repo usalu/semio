@@ -288,6 +288,88 @@
     "cdylib",
     "lib.rs"
    ]
+  },
+  {
+   "id": "actor-decoder-wasi-serial",
+   "args": [
+    "--crate-name",
+    "semio_plugin_actor_input_decoder",
+    "--target=wasm32-wasip2",
+    "--crate-type=lib",
+    "-Zthreads=0"
+   ],
+   "tokens": 5,
+   "note": "the measured WASI decoder preserves the library ceiling with one scheduled worker",
+   "expected": [
+    "--crate-name",
+    "semio_plugin_actor_input_decoder",
+    "--target=wasm32-wasip2",
+    "--crate-type=lib",
+    "-Zthreads=1",
+    "-Z",
+    "no-parallel-backend"
+   ]
+  },
+  {
+   "id": "actor-decoder-wasi-serial-joined",
+   "args": [
+    "--crate-name=semio_plugin_actor_input_decoder",
+    "--target",
+    "wasm32-wasip2",
+    "--crate-type=lib",
+    "-Z",
+    "threads=0"
+   ],
+   "tokens": 5,
+   "note": "paired and joined spellings preserve the same runtime owner",
+   "expected": [
+    "--crate-name=semio_plugin_actor_input_decoder",
+    "--target",
+    "wasm32-wasip2",
+    "--crate-type=lib",
+    "-Z",
+    "threads=1",
+    "-Z",
+    "no-parallel-backend"
+   ]
+  },
+  {
+   "id": "actor-decoder-host-keeps-grant",
+   "args": [
+    "--crate-name",
+    "semio_plugin_actor_input_decoder",
+    "--target=aarch64-apple-darwin",
+    "--crate-type=lib",
+    "-Zthreads=0"
+   ],
+   "tokens": 5,
+   "note": "native actor decoder retains the admitted parallelism",
+   "expected": [
+    "--crate-name",
+    "semio_plugin_actor_input_decoder",
+    "--target=aarch64-apple-darwin",
+    "--crate-type=lib",
+    "-Zthreads=5"
+   ]
+  },
+  {
+   "id": "different-wasi-decoder-keeps-grant",
+   "args": [
+    "--crate-name",
+    "semio_plugin_actor_input_decoder_peer",
+    "--target=wasm32-wasip2",
+    "--crate-type=lib",
+    "-Zthreads=0"
+   ],
+   "tokens": 5,
+   "note": "other decoder-like WASI units keep the admitted parallelism",
+   "expected": [
+    "--crate-name",
+    "semio_plugin_actor_input_decoder_peer",
+    "--target=wasm32-wasip2",
+    "--crate-type=lib",
+    "-Zthreads=5"
+   ]
   }
  ]
 }

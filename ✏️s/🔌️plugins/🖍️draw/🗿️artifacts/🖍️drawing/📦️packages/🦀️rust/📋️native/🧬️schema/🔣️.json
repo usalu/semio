@@ -27,7 +27,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "pattern": "^semio-s-artifact-draw-drawing(?:-[a-z0-9-]+)?$"
+            "pattern": "^(?:semio-s-artifact-draw-drawing(?:-[a-z0-9-]+)?|semio-draw-member-decode)$"
           },
           "manifest": {
             "type": "string",

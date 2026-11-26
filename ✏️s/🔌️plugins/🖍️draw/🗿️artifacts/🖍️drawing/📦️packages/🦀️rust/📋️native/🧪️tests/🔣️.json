@@ -1,8 +1,13 @@
 {
   "version": 1,
-  "expectedPackages": 38,
+  "expectedPackages": 40,
   "requiredPackages": [
     "semio-s-artifact-draw-drawing",
+    "semio-draw-member-decode",
+    "semio-s-artifact-draw-drawing-editor-member-wire",
+    "semio-s-artifact-draw-drawing-editor-tests",
+    "semio-s-artifact-draw-drawing-editor-tests-2",
+    "semio-s-artifact-draw-drawing-model-tests",
     "semio-s-artifact-draw-drawing-viewer",
     "semio-s-artifact-draw-drawing-geometry",
     "semio-s-artifact-draw-drawing-read",
@@ -29,6 +34,11 @@
     {
       "effect": "unknown",
       "schemaAccepted": true,
+      "complete": false
+    },
+    {
+      "effect": "foreign-package",
+      "schemaAccepted": false,
       "complete": false
     },
     {

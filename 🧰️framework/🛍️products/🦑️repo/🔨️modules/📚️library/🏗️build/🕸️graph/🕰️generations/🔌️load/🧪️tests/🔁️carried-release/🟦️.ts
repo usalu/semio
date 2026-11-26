@@ -41,6 +41,6 @@ test("every release between waves says more follows, the last wave and the end o
   expect(releases).toEqual([{more:true},{more:true},{more:false},undefined]);
   expect(infos.length).toBe(3);
   for(const info of infos)for(const name of ["compute.cutoff","compute.release"])expect(Number.isSafeInteger(info.phases![name]),name).toBe(true);
-  expect(infos.map(info=>info.phases!.yield)).toEqual([undefined,7,7]);expect(carriedStagesV1.yield).toBe(7);
+  expect<unknown>(infos.map(info=>info.phases!.yield)).toEqual([undefined,7,7]);expect(carriedStagesV1.yield).toBe(7);
  }finally{rmSync(dir,{recursive:true,force:true});}
 });

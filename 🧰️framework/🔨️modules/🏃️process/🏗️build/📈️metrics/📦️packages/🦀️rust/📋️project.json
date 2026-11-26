@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/process-metrics-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

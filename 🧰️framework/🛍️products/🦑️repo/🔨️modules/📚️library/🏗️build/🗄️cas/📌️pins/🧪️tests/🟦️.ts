@@ -10,10 +10,11 @@ test("a delayed older rename cannot displace newer held digests",async()=>{
  const documents=new Map<string,string>(),publications:string[][]=[];
  const olderEntered=Promise.withResolvers<void>(),finishOlder=Promise.withResolvers<void>();
  let renewal:()=>void=()=>undefined,failNext=false;
- const timer=spyOn(globalThis,"setInterval").mockImplementation(callback=>{
+ const inert=setTimeout(()=>undefined,0);clearTimeout(inert);
+ const timer=spyOn(globalThis,"setInterval").mockImplementation(((callback:()=>void)=>{
   renewal=()=>callback();
-  return {unref:()=>undefined} as ReturnType<typeof setInterval>;
- });
+  return inert;
+ })as typeof setInterval);
  const mkdir=spyOn(fs,"mkdir").mockResolvedValue(undefined);
  const write=spyOn(fs,"writeFile").mockImplementation(async(path,data)=>{documents.set(String(path),String(data));});
  const rename=spyOn(fs,"rename").mockImplementation(async(from,to)=>{

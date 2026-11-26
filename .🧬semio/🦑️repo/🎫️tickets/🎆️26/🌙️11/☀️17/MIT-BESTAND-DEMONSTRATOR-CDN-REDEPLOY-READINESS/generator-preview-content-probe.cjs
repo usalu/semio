@@ -4,7 +4,7 @@ const { createWriteStream } = require("node:fs");
 const { once } = require("node:events");
 const [url, seconds = "240", browsers, diagnostics] = process.argv.slice(2);
 process.env.PLAYWRIGHT_BROWSERS_PATH = browsers;
-const { chromium } = createRequire(resolve("package.json"))("playwright");
+const { chromium, devices } = createRequire(resolve("package.json"))("playwright");
 let moreWork = 0;
 const stamp = () => new Date().toISOString().slice(11, 23);
 async function sampleWorker(session, path, ms) {
@@ -24,16 +24,27 @@ async function sampleWorker(session, path, ms) {
   await session.send("IO.close", { handle: stream });
 }
 (async () => {
-  const browser = await chromium.launch({});
-  const page = await browser.newPage({ locale: "en-US" });
+  const wireMode = diagnostics === "wire";
+  const launch = wireMode ? { args: [process.platform === "darwin" ? "--use-angle=metal" : "--use-angle=gl", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"] } : {};
+  const browser = await chromium.launch(launch);
+  const page = await browser.newPage({ ...(wireMode ? devices["Desktop Chrome"] : {}), locale: "en-US" });
   page.on("console", (message) => {
     const line = message.text();
     if (/GL Driver|turn phase|guest linear|typed-operation slots/.test(line)) return;
     if (diagnostics && /reactor more-work/.test(line) && (++moreWork % 400) !== 1) return;
+    if (diagnostics === "wire" && message.type() !== "error" && !line.includes("[DEBUG] generator")) return;
     if (diagnostics || message.type() === "error" || /flowEval|preview|toolRun|refus|fault|stall/i.test(line)) process.stdout.write(`[DEBUG] ${stamp()} console ${message.type()} ${diagnostics ? line.slice(0, 6000) : line.slice(0, 400)}\n`);
   });
-  if (diagnostics) await page.addInitScript(() => localStorage.setItem("SEMIO_RUNTIME_DIAGNOSTICS", "1"));
+  if (diagnostics && diagnostics !== "wire") await page.addInitScript(() => localStorage.setItem("SEMIO_RUNTIME_DIAGNOSTICS", "1"));
+  if (diagnostics === "wire") {
+    const { traceShardWire } = require("./generator-command-probe.cjs");
+    await page.addInitScript(traceShardWire, { traceHost: true, traceHostAlways: true });
+  }
   await page.goto(url, { waitUntil: "domcontentloaded" });
+  if (diagnostics === "wire") {
+    const intro = page.locator('[data-shell-id="generator"] [data-element-id="ui.introduction.skip"]').first();
+    void intro.click({ timeout: 120_000 }).catch(() => {});
+  }
   const profilePath = process.argv[6];
   if (profilePath) { const cdp = await browser.newBrowserCDPSession(); setTimeout(() => sampleWorker(cdp, profilePath, 6000).then(() => process.stdout.write("[DEBUG] profile stored\n"), (e) => process.stdout.write("[DEBUG] profile error " + e + "\n")), Number(process.argv[7] ?? 60) * 1000); }
   const end = Date.now() + Number(seconds) * 1000;

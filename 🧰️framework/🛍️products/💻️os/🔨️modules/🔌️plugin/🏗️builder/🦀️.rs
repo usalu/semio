@@ -223,6 +223,15 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         self
     }
 
+    /// 🏘️ Hosts the complete runtime of a kind whose owner assembles its definition alone: exactly [`Self::host_artifact`], and
+    /// this guest is the kind's only runtime, so `describe` lists the composer and inference rows of the kind in this
+    /// plugin's descriptor, where the owner no longer can. Repeatable, once per kind.
+    pub fn runtime_host_artifact(mut self, declaration: ArtifactDeclaration) -> Self {
+        semio_os_kernel::io::register_runtime_hosted_artifact_kind(declaration.definition().identity().as_str());
+        self.hosted_artifacts.push(declaration);
+        self
+    }
+
     /// 📚️ Declares the shared schema documents of a plugin submodule (`s.<plugin>.<submodule>`, e.g. `s.stdio.registry`) —
     /// contracts several artifacts `$ref` that no single artifact owns — committed into the OS-wide export registry with
     /// the other catalogs, so the runtime input reader (`registered_input_schema_document`) resolves them. The owning

@@ -65,8 +65,8 @@ path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive
 [workspace.dependencies.semio-s-artifact-stdio-contract]
 path = "../../📇️registry/🧬️contract/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-txt]
-path = "../🔤️txt/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-stdio-txt-schema]
+path = "../🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
 
 [workspace.dependencies.serde_json]
 version = "1.0.149"

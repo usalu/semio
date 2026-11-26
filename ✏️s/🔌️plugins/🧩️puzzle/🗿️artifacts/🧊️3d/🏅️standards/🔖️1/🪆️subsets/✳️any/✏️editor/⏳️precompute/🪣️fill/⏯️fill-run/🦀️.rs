@@ -654,6 +654,10 @@ impl FillRunJob {
 }
 
 impl InteractiveJob for FillRunJob {
+    fn checkpoint_follows_preview(&self) -> bool {
+        matches!(self.owed, Some(FillRunOwed::Checkpoint))
+    }
+
     fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(cx))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {

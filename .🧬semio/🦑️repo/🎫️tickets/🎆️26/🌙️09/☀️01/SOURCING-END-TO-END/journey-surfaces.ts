@@ -26,8 +26,8 @@ const moduleLabels: Record<string, [string, string]> = { beams: ["Beams", "Balke
 const segmentLabels: Record<string, [string, string]> = { beams: ["Beams", "Balken"], "solid-timber": ["Solid Timber", "Massivholz"], glulam: ["Glulam", "Brettschichtholz"], kvh: ["KVH", "KVH"], steel: ["Steel", "Stahl"], ipe: ["IPE", "IPE"], hea: ["HEA", "HEA"], windows: ["Windows", "Fenster"], casement: ["Casement", "Drehflügel"], fixed: ["Fixed", "Festverglasung"], "tilt-turn": ["Tilt & Turn", "Dreh-Kipp"], slabs: ["Slabs", "Decken"], concrete: ["Concrete", "Beton"], clt: ["CLT", "BSP"], "hollow-core": ["Hollow Core", "Hohlkörper"], reuse: ["Reuse", "Wiederverwendung"], forest: ["Forest", "Wald"] };
 const typologyOptions: string[][] = [["beams"], ["beams", "solid-timber"], ["beams", "solid-timber", "glulam"], ["beams", "solid-timber", "kvh"], ["beams", "steel"], ["beams", "steel", "ipe"], ["beams", "steel", "hea"], ["windows"], ["windows", "casement"], ["windows", "fixed"], ["windows", "tilt-turn"], ["slabs"], ["slabs", "concrete"], ["slabs", "clt"], ["slabs", "hollow-core"], ["reuse"], ["reuse", "concrete"], ["reuse", "concrete", "forest"]];
 const labels = {
-  en: { viewer: "Viewer", editor: "Editor", table: "Table", example: "Example", noExample: "No example", demo: "Demo", language: "Language", german: "Deutsch", english: "English", preview: "Preview", previewSurface: "Object preview", poolTable: "Pool table", curatedTable: "Curated table", module: "Module", typology: "Typology", availability: "Availability", curatedColumn: "Curated", focus: "Focus", unfocus: "Unfocus", close: "Close", actions: "Actions", noData: "No data", instance: "Instance display", projection: "Projection", options: "Window Options", utilities: "Utilities", name: "Name", count: "Count", setExample: "Set Active Example…", stock: "Stock From Catalogue", execute: "Execute", noSelection: "No selection", increase: "Increase Curated", remove: "Remove", curate: "Curate", search: "Search", lineBehind: "Line behind grid", representative: "Representative only", representativeCount: "Representative and count" },
-  de: { viewer: "Betrachter", editor: "Editor", table: "Tabelle", example: "Beispiel", noExample: "Kein Beispiel", demo: "Demo", language: "Sprache", german: "Deutsch", english: "English", preview: "Vorschau", previewSurface: "Objektvorschau", poolTable: "Pool-Tabelle", curatedTable: "Kuratierte Tabelle", module: "Modul", typology: "Typologie", availability: "Verfügbarkeit", curatedColumn: "Kuratiert", focus: "Fokussieren", unfocus: "Fokus aufheben", close: "Schließen", actions: "Aktionen", noData: "Keine Daten", instance: "Instanzdarstellung", projection: "Projektion", options: "Fensteroptionen", utilities: "Hilfsmittel", name: "Name", count: "Anzahl", setExample: "Aktives Beispiel festlegen…", stock: "Bestand aus Katalog", execute: "Ausführen", noSelection: "Keine Auswahl", increase: "Erhöhen Kuratiert", remove: "Entfernen", curate: "Kuratieren", search: "Suchen", lineBehind: "Linie hinter Raster", representative: "Nur Vertreter", representativeCount: "Vertreter und Anzahl" },
+  en: { viewer: "Viewer", editor: "Editor", table: "Table", example: "Example", noExample: "No example", demo: "Demo", language: "Language", german: "Deutsch", english: "English", preview: "Preview", previewSurface: "Object preview", poolTable: "Pool table", curatedTable: "Curated table", module: "Module", typology: "Typology", availability: "Availability", curatedColumn: "Curated", select: "Select", focus: "Focus", unfocus: "Unfocus", close: "Close", actions: "Actions", noData: "No data", instance: "Instance display", projection: "Projection", options: "Window Options", utilities: "Utilities", name: "Name", count: "Count", setExample: "Set Active Example…", stock: "Stock From Catalogue", execute: "Execute", noSelection: "No selection", increase: "Increase Curated", remove: "Remove", curate: "Curate", search: "Search", lineBehind: "Line behind grid", representative: "Representative only", representativeCount: "Representative and count" },
+  de: { viewer: "Betrachter", editor: "Editor", table: "Tabelle", example: "Beispiel", noExample: "Kein Beispiel", demo: "Demo", language: "Sprache", german: "Deutsch", english: "English", preview: "Vorschau", previewSurface: "Objektvorschau", poolTable: "Pool-Tabelle", curatedTable: "Kuratierte Tabelle", module: "Modul", typology: "Typologie", availability: "Verfügbarkeit", curatedColumn: "Kuratiert", select: "Auswählen", focus: "Fokussieren", unfocus: "Fokus aufheben", close: "Schließen", actions: "Aktionen", noData: "Keine Daten", instance: "Instanzdarstellung", projection: "Projektion", options: "Fensteroptionen", utilities: "Hilfsmittel", name: "Name", count: "Anzahl", setExample: "Aktives Beispiel festlegen…", stock: "Bestand aus Katalog", execute: "Ausführen", noSelection: "Keine Auswahl", increase: "Erhöhen Kuratiert", remove: "Entfernen", curate: "Kuratieren", search: "Suchen", lineBehind: "Linie hinter Raster", representative: "Nur Vertreter", representativeCount: "Vertreter und Anzahl" },
 } as const;
 const editorWindows = ["sourcing-pool", "sourcing-curated", "sourcing-preview", "sourcing-grid"];
 const dragHint = /^\s*(Drag to window|Verschieben)\s*/u;
@@ -324,6 +324,22 @@ async function journey(browser: Browser, language: Language) {
       await eventually(async () => assert.ok(!(await preview().innerText()).includes(l.noSelection), "Preview did not follow the grid selection"), 15_000);
       return { selected };
     });
+    await step("grid Select utility turns a plain drag into rectangle selection", async () => {
+      await page.keyboard.press("Escape");
+      const selection = () => page.evaluate(() => { const surface = document.querySelector('[data-surface-id="window:sourcing-grid"]'); return surface ? JSON.parse(surface.getAttribute("data-selection-json") ?? "{}").selectedIds ?? [] : null; });
+      await eventually(async () => assert.deepEqual(await selection(), []), 10_000);
+      const unfold = button("framework.window.sourcingGrid.utilityBar.unfold");
+      assert.equal(await unfold.isDisabled(), false, "Grid declares no utility");
+      await unfold.click();
+      await page.getByRole("button", { name: l.select, exact: true }).first().click();
+      const box = (await gridCanvas().boundingBox())!;
+      await page.mouse.move(box.x + box.width * 0.04, box.y + box.height * 0.1);
+      await page.mouse.down();
+      await page.mouse.move(box.x + box.width * 0.96, box.y + box.height * 0.92, { steps: 15 });
+      await page.mouse.up();
+      await eventually(async () => assert.ok(((await selection()) as string[]).length > 0, "plain drag with the Select utility selected nothing"), 10_000);
+      return { selected: await selection() };
+    });
     await step("projection pane lists the camera projections and switching one keeps the grid alive", async () => {
       await button("framework.worldOrbit.projection.sourcingGrid.pane.fold").click();
       const entries = (await page.evaluate(() => [...document.querySelectorAll('[id^="framework.worldOrbit.projection.sourcingGrid."]')].map(element => element.id))).filter(id => !id.endsWith(".disclosureLabel") && !id.endsWith("pane.fold"));
@@ -346,16 +362,23 @@ async function journey(browser: Browser, language: Language) {
       return { options };
     });
     await fresh();
-    await step("window Focus, Unfocus, Close and Display-drag reopen work by pointer and keyboard", async () => {
+    await step("window Focus, Unfocus and Close work with the mouse on every window, keyboard Close works, palette and Display drag reopen", async () => {
       const tab = (id: string) => page.locator(`[data-slot="mode-dock-tab"][data-window-id="${id}"]`);
       await clearCuration();
-      for (const id of editorWindows) {
-        assert.equal(await tab(id).locator('[data-slot="mode-dock-tab-focus"]').getAttribute("aria-label"), l.focus);
-        assert.equal(await tab(id).locator('[data-slot="mode-dock-tab-close"]').getAttribute("aria-label"), l.close);
-      }
-      const reopen = async (kind: string, prefix: string) => {
-        if (await button("framework.display.windows." + kind + ".kind").count() === 0) { await button("framework.category.display").click(); await button("framework.display.windows." + kind).click(); }
-        const box = (await button("framework.display.windows." + kind + ".kind").locator('[data-drag-role="transfer"]').first().boundingBox())!;
+      const widthOf = async (name: string) => (await page.getByRole("tabpanel", { name, exact: true }).boundingBox())?.width ?? 0;
+      const mouse = async (id: string, slot: "focus" | "close") => {
+        await tab(id).hover();
+        await tab(id).locator(`[data-slot="mode-dock-tab-${slot}"]`).click({ timeout: 10_000 });
+      };
+      const reopenByPalette = async (title: string, prefix: string) => {
+        await openPalette();
+        await page.locator('[id$="ui.search.input"]').fill(title);
+        await page.getByRole("option", { name: title, exact: true }).first().click();
+        await eventually(async () => assert.ok((await windows()).some(id => id.startsWith(prefix)), `palette did not reopen ${prefix}: ${await windows()}`), 15_000);
+      };
+      const reopenByDisplay = async (kind: string, prefix: string) => {
+        if (await button(`framework.display.windows.${kind}.kind`).count() === 0) { await button("framework.category.display").click(); await button(`framework.display.windows.${kind}`).click(); }
+        const box = (await button(`framework.display.windows.${kind}.kind`).locator('[data-drag-role="transfer"]').first().boundingBox())!;
         await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
         await page.mouse.down();
         await page.mouse.move(900, 500, { steps: 15 });
@@ -364,29 +387,28 @@ async function journey(browser: Browser, language: Language) {
         await eventually(async () => assert.ok((await windows()).some(id => id.startsWith(prefix)), `Display drag did not reopen ${prefix}: ${await windows()}`), 15_000);
         await button("framework.category.display").click().catch(() => undefined);
       };
-      const press = async (id: string, slot: "focus" | "close") => {
-        const box = (await tab(id).boundingBox())!;
-        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-        await settle(400);
-        const target = (await tab(id).locator(`[data-slot="mode-dock-tab-${slot}"]`).boundingBox())!;
-        await page.mouse.click(target.x + target.width / 2, target.y + target.height / 2);
-      };
-      const widthOf = async (name: string) => (await page.getByRole("tabpanel", { name, exact: true }).boundingBox())?.width ?? 0;
-      const before = await widthOf(t.preview);
-      await press("sourcing-preview", "focus");
-      await eventually(async () => assert.ok(await widthOf(t.preview) > before + 400, "Focus did not enlarge Preview"));
-      await eventually(async () => assert.deepEqual(await windows(), ["sourcing-preview"]), 10_000);
-      await tab("sourcing-preview").locator('[data-slot="mode-dock-tab-focus"]').focus();
-      assert.equal(await tab("sourcing-preview").locator('[data-slot="mode-dock-tab-focus"]').getAttribute("aria-label"), l.unfocus);
-      await page.keyboard.press("Enter");
-      await eventually(async () => assert.deepEqual(await windows(), editorWindows), 10_000);
-      await press("sourcing-preview", "close");
+      for (const [id, panel, kind] of [["sourcing-pool", t.pool, "sourcingPool"], ["sourcing-curated", t.curated, "sourcingCurated"], ["sourcing-preview", t.preview, "sourcingPreview"], ["sourcing-grid", t.grid, "sourcingGrid"]] as const) {
+        assert.equal(await tab(id).locator('[data-slot="mode-dock-tab-focus"]').getAttribute("aria-label"), l.focus);
+        assert.equal(await tab(id).locator('[data-slot="mode-dock-tab-close"]').getAttribute("aria-label"), l.close);
+        const before = await widthOf(panel);
+        await mouse(id, "focus");
+        await eventually(async () => assert.deepEqual(await windows(), [id]), 10_000);
+        assert.ok(await widthOf(panel) > before + 100, `Focus did not enlarge ${id}`);
+        assert.equal(await tab(id).locator('[data-slot="mode-dock-tab-focus"]').getAttribute("aria-label"), l.unfocus);
+        await mouse(id, "focus");
+        await eventually(async () => assert.deepEqual(await windows(), editorWindows), 10_000);
+        void kind;
+      }
+      await mouse("sourcing-preview", "close");
       await eventually(async () => assert.deepEqual(await windows(), ["sourcing-pool", "sourcing-curated", "sourcing-grid"]), 10_000);
-      await reopen("sourcingPreview", "sourcing-preview");
-      await tab("sourcing-curated").locator('[data-slot="mode-dock-tab-close"]').focus();
+      await reopenByPalette(t.preview, "sourcing-preview");
+      await mouse("sourcing-curated", "close");
+      await eventually(async () => assert.ok(!(await windows()).includes("sourcing-curated")), 10_000);
+      await reopenByPalette(t.curated, "sourcing-curated");
+      await tab("sourcing-grid").locator('[data-slot="mode-dock-tab-close"]').focus();
       await page.keyboard.press("Enter");
-      await eventually(async () => assert.ok(!(await windows()).includes("sourcing-curated"), "keyboard Close did not close Curated"), 10_000);
-      await reopen("sourcingCurated", "sourcing-curated");
+      await eventually(async () => assert.ok(!(await windows()).includes("sourcing-grid"), "keyboard Close did not close Grid"), 10_000);
+      await reopenByDisplay("sourcingGrid", "sourcing-grid");
       return { windows: await windows() };
     });
     await fresh();
@@ -502,28 +524,37 @@ async function journey(browser: Browser, language: Language) {
       assert.deepEqual(await windows(), ["framework.window.table"]);
       return { before };
     });
-    await step("keyboard shortcuts switch Viewer to Editor and back", async () => {
-      await switchRole("editor", "shortcut");
-      assert.deepEqual(await windows(), editorWindows);
+    await fresh();
+    await step("keyboard shortcuts switch Editor to Viewer and back", async () => {
       await switchRole("viewer", "shortcut");
       await switchRole("editor", "shortcut");
-      await eventually(async () => assert.equal(await rowIn(curated(), name(glulam)).locator("input").first().inputValue(), "2"));
+      assert.deepEqual(await windows(), editorWindows);
       return {};
     });
-    await step("role switches log no page errors; retirement warnings are recorded as the open lifecycle defect", async () => {
-      assert.deepEqual(s.faults.filter(line => line.startsWith("pageerror") || /intake-rejected|no actor for instance|prior-outcome|role switch to/u.test(line)), []);
-      const retirement = s.faults.filter(line => /original lifecycle receipt differs/u.test(line)).length;
-      return { openDefect: "editor retirement logs original lifecycle receipt differs from its caller authority", occurrences: retirement };
+    await step("four consecutive role round trips complete (each Editor retirement must succeed)", async () => {
+      await fresh();
+      const before = s.faults.filter(line => /original lifecycle receipt differs/u.test(line)).length;
+      for (let trip = 0; trip < 4; trip++) { await switchRole("viewer"); await switchRole("editor"); }
+      const after = s.faults.filter(line => /original lifecycle receipt differs/u.test(line)).length;
+      assert.equal(after - before, 0, "Editor retirement logged the lifecycle receipt fault");
+      return { trips: 4 };
     });
+    await step("role switches log no page errors, no intake rejections and no failed role switch", async () => {
+      assert.deepEqual(s.faults.filter(line => line.startsWith("pageerror") || /intake-rejected|no actor for instance|prior-outcome|role switch to/u.test(line)), []);
+      return { faults: s.faults.length };
+    });
+    await fresh();
     await step("settings language switch flips every sourcing label at runtime and back", async () => {
       await clearCuration();
       const target = language === "en" ? "de" : "en";
       const flip = async (to: Language) => {
-        await button("framework.settings").click();
+        await button("framework.settings").focus();
+        await page.keyboard.press("Enter");
         await page.locator('button[id="framework.settings.language"]').click();
         await page.getByRole("option", { name: to === "de" ? "Deutsch" : "English", exact: true }).click();
         await eventually(async () => assert.ok((await body()).includes(labels[to].noSelection) || (await body()).includes(labels[to].noData), `UI did not flip to ${to}`), 15_000);
-        await button("framework.settings").click().catch(() => undefined);
+        await button("framework.settings").focus();
+        await page.keyboard.press("Enter");
         await settle(1500);
       };
       await flip(target);

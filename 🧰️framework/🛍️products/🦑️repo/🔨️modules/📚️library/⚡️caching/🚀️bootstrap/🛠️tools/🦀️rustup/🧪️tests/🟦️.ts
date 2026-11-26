@@ -39,7 +39,7 @@ import {readFileSync} from "node:fs";
 import {join,resolve} from "node:path";
 import {testCheckoutRootV1} from "../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 test("actual pinned component declaration agrees with neutral request and independent TOML and SQLite",()=>{
- const actual=Bun.TOML.parse(readFileSync(join(testCheckoutRootV1(),"rust-toolchain.toml"),"utf8")).toolchain as {channel:string;profile:string;components:string[];targets:string[]},database=new Database(":memory:");try{expect(actual.channel).toBe(corpus.request.channel);expect(actual.profile).toBe(corpus.request.profile);for(const key of ["components","targets"] as const){const sorted=database.query<{value:string},[string]>("select value from json_each(?) order by value").all(JSON.stringify(actual[key])).map(row=>row.value);expect(sorted).toEqual([...corpus.request[key]].sort());expect(new Set(actual[key]).size).toBe(actual[key].length);}}finally{database.close();}
+ const actual=(Bun.TOML.parse(readFileSync(join(testCheckoutRootV1(),"rust-toolchain.toml"),"utf8"))as{toolchain:{channel:string;profile:string;components:string[];targets:string[]}}).toolchain,database=new Database(":memory:");try{expect(actual.channel).toBe(corpus.request.channel);expect(actual.profile).toBe(corpus.request.profile);for(const key of ["components","targets"] as const){const sorted=database.query<{value:string},[string]>("select value from json_each(?) order by value").all(JSON.stringify(actual[key])).map(row=>row.value);expect(sorted).toEqual([...corpus.request[key]].sort());expect(new Set(actual[key]).size).toBe(actual[key].length);}}finally{database.close();}
 });
 
 test("different immutable Rustup requests retain distinct bounded homes under one bootstrap",async()=>{

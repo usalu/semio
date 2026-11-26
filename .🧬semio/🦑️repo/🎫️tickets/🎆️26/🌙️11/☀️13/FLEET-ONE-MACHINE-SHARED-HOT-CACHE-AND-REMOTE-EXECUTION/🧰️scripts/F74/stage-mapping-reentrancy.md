@@ -1,0 +1,6 @@
+# F74 staged product patch (not landed: seal window, locks native-build/process held by F75)
+1. `🏃️process/🔒️leases/🟦️.ts` after `leaseTaskOf`: add and export
+   `holdsExclusiveInTaskV1(options:Pick<LeaseOptions,"directory"|"resource"|"control"|"signal">):boolean` = `const{task,ancestors}=leaseTaskOf(options);return heldLeasesV1(task,ancestors).some(r=>r.directory===resolve(options.directory)&&r.resource===options.resource&&r.mode==="exclusive")`.
+2. `🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔒️mapping/🟦️.ts` `withNativeStorageMappingReadV1`: when no `writer` and no `frames` entry, look for a live exclusive scope in `retained` with the same resource/root/leaseDirectory, only if `holdsExclusiveInTaskV1({directory:leaseDirectory,resource:name,control,signal})`; then `return run(held,{...captured,identity:held.binding.identity},body)` instead of acquiring SH (reentrant read under own EX, never waits).
+3. Test: in `🔒️leases/🧪️tests/🎟️writer` add variant "nested-read-under-own-writer" (read without passing writer returns within 1 s).
+Evidence: stack of the SH requester = `verifyPersistentManagedChildrenOnceV1` -> `retain` (cleanup/🎛️command:190) taking SH on a descendant mount mapping (`r/m/cs/v/m`) while the grandchild retirement of the same task holds that mapping EX (r/m strict recheck runs only after the recheck window elapses, hence load dependent).

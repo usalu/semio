@@ -10,6 +10,7 @@ import { test } from "bun:test";
 import { copyBrowserArtifacts } from "../../🟦️.ts";
 import { compressBrowserCore, gzipCoreLoader } from "../🟦️.ts";
 import fixture from "./🔣️.json" with { type: "json" };
+import { evaluateGeneratedSourceV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 
 test("the encoded delivery compiles to the same WebAssembly function", async () => {
   const root = await mkdtemp(join(process.env.SEMIO_TICKET_DIR ?? tmpdir(), "core-"));
@@ -77,9 +78,9 @@ test("an activation factory requests encoded cores through the generated shard l
   const start = worker.indexOf("const coreModules = new ShardCoreModules(");
   const end = worker.indexOf("const coreModuleHolder", start);
   assert.ok(start >= 0 && end > start);
-  const compile = new Function("ShardCoreModules", worker.slice(start, end) + "return coreModules.compile;")(class {
+  const compile = evaluateGeneratedSourceV1(worker.slice(start, end), "coreModules.compile", { ShardCoreModules: class {
     constructor(readonly compile: (url: string) => Promise<WebAssembly.Module>) {}
-  });
+  } });
   const core = Buffer.from(fixture.moduleHex, "hex");
   const requests: string[] = [];
   const server = createServer((request, response) => {

@@ -26,7 +26,7 @@ test("a child answers the facts and the rows of the discovery in this process",a
  expect(answer.facts).toEqual(JSON.parse(JSON.stringify(oracle.value)));
  const key=(each:{kind:string;path:string})=>each.kind+"\0"+each.path,mine=new Set(answer.rows.map(key));
  expect(mine.size).toBeGreaterThan(0);
- for(const each of oracle.observations as {kind:string;path:string}[])if(each.kind==="file"||each.kind==="readdir"||each.kind==="readdirNames")expect(mine.has(key(each))).toBe(true);
+ for(const each of oracle.observations)if(each.kind==="file"||each.kind==="readdir"||each.kind==="readdirNames")expect(mine.has(key(each))).toBe(true);
  expect(answer.rows.some(each=>each.path.endsWith("library/api.ts"))).toBe(true);
  const lib=registry.owners.find(each=>each.name==="lib")!,viaInput=await captureObservedSourceInputsV1(()=>producer.discoverBuildOwnerAdmissionFactsV1(lib,[],registry,{workspaceRoot:root,selection,nativeCache:new Map(),nativeClosures:new Map()},["api"]),undefined,false);
  const again=await farm.discover(request(root,{owner:"lib",targets:[],inputs:["api"],epoch:"e2"})) as {facts:unknown};

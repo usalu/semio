@@ -1,7 +1,7 @@
 /// 🔬️ Items of Part 6 of 7 of the plugin builder contract laws that came from included fixture files.
 
 
-use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep};
 use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::TestMembers;
 #[semio_framework_async_macros::async_test]
 async fn reactor_native_lifecycle_retains_exact_close_until_ack() {

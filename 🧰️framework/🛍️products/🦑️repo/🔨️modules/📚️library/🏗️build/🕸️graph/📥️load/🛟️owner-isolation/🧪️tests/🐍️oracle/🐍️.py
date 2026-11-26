@@ -30,12 +30,16 @@ def decision(foreign, moved, young, round_, rounds=RETRY_ROUNDS, cancelled=False
     return "retry"
 
 
-def revalidate(entry, fragment, now, cooldown, attempts):
+def revalidate(entry, fragment, now, cooldown, attempts, implementation=None, transient=False):
+    stamp = {} if implementation is None else {"implementation": implementation}
     if entry is None or entry["fragment"] != fragment:
-        return {"revalidate": False, "entry": {"fragment": fragment, "attempts": 0, "at": now}}
-    if entry["attempts"] >= attempts or now - entry["at"] < cooldown:
-        return {"revalidate": False, "entry": entry}
-    return {"revalidate": True, "entry": {"fragment": fragment, "attempts": entry["attempts"] + 1, "at": now}}
+        return {"revalidate": False, "entry": {"fragment": fragment, "attempts": 0, "at": now, **stamp}}
+    if implementation is not None and entry.get("implementation") != implementation:
+        return {"revalidate": True, "entry": {"fragment": fragment, "attempts": 1, "at": now, **stamp}}
+    used = 0 if transient and entry["attempts"] >= attempts else entry["attempts"]
+    if used >= attempts or now - entry["at"] < cooldown:
+        return {"revalidate": False, "entry": entry if used == entry["attempts"] else {**entry, "attempts": used}}
+    return {"revalidate": True, "entry": {"fragment": fragment, "attempts": used + 1, "at": now, **stamp}}
 
 
 if __name__ == "__main__":
@@ -48,5 +52,5 @@ if __name__ == "__main__":
     print(json.dumps({
         "retry": {case["name"]: decide(case["attempts"], rounds) for case in corpus["cases"]},
         "decisions": table,
-        "revalidation": {case["name"]: revalidate(case.get("entry"), case["fragment"], case["now"], corpus["revalidation"]["cooldownMilliseconds"], corpus["revalidation"]["attempts"]) for case in corpus["revalidationCases"]},
+        "revalidation": {case["name"]: revalidate(case.get("entry"), case["fragment"], case["now"], corpus["revalidation"]["cooldownMilliseconds"], corpus["revalidation"]["attempts"], case.get("implementation"), case.get("transient", False)) for case in corpus["revalidationCases"]},
     }, ensure_ascii=False))

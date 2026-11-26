@@ -25,12 +25,14 @@ async fn published_load(app: &mut super::unit_tests::context::DrawingAppFixture,
     loaded
 }
 
-async fn settle_archive(app: &mut super::unit_tests::context::DrawingAppFixture, operation: u64, parent_pack: Vec<u8>, parent_spr: Vec<u8>) -> protocol::DocumentArchiveLoadStatus {
+async fn settle_archive(app: &mut super::unit_tests::context::DrawingAppFixture, operation: u64, parent_pack: Vec<u8>, parent_spr: Vec<u8>) -> (protocol::DocumentArchiveLoadStatus, usize) {
     semio_plugin::artifact_app_laws::admit_document_archive_load(&mut app.0, operation, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }, app.1.cx()).expect("archive admission");
     let mut status = None;
     let grant = app.1.cx().retained_grant();
     let mut identity = semio_plugin::artifact_app_laws::fixture_identity();
+    let mut rounds = 0;
     for _ in 0..20_000 {
+        rounds += 1;
         semio_plugin::artifact_app_laws::fixture_renew_turn(app.1.cx(), semio_plugin::artifact_app_laws::OriginalFixtureCaller::turn_fuel(), grant).expect("archive fixture turn");
         let polled = PluginApp::poll_document_archive_load(&mut app.0, operation, &mut identity, app.1.cx()).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
@@ -42,7 +44,8 @@ async fn settle_archive(app: &mut super::unit_tests::context::DrawingAppFixture,
     }
     let status = status.expect("archive load reaches a terminal state");
     PluginApp::acknowledge_document_archive_load(&mut app.0, operation).expect("archive acknowledgement");
-    status
+    eprintln!("[DEBUG] archive rounds {rounds}");
+    (status, rounds)
 }
 
 #[semio_framework_async_macros::async_test]
@@ -50,7 +53,7 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     let mut app = drawing_app().await;
     app.bind_instance_id(7).await;
     let (pack, spr) = published_load(&mut app, DrawingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }), 7).await;
-    let status = settle_archive(&mut app, 91, pack, spr).await;
+    let (status, _) = settle_archive(&mut app, 91, pack, spr).await;
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
     let snapshot = app.snapshot().expect("loaded snapshot");
     assert_eq!(snapshot.id, "semio", "the demo document replaced the boot document");
@@ -85,7 +88,7 @@ async fn document_archive_replays_the_edited_drawing_on_reopen() {
     drop(app);
 
     let mut reopened = drawing_app().await;
-    let status = settle_archive(&mut reopened, 92, persisted.pack, persisted.spr).await;
+    let (status, _) = settle_archive(&mut reopened, 92, persisted.pack, persisted.spr).await;
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
     assert_eq!(reopened.snapshot_ref(), &edited);
     artifact_laws::close_registered_fixture_app(&mut reopened.0, policy, reopened.1.cx()).expect("close reopened Drawing");

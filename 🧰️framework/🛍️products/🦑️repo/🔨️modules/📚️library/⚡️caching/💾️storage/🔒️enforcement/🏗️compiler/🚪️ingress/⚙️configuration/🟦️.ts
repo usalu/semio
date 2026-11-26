@@ -62,20 +62,41 @@ export async function withRepositoryCargoConfigurationV1<T>(request:RepositoryCa
  if(consumption.kind==="resolution")return withRepositoryCargoConfigurationOwnedV1(request,body,{profile:null,declaredArguments:request.args,sourceInputs:Object.freeze([]),recheck:async phase=>{checkResourceLeaseControl(phase);}});
  return withCargoWorkspaceSelectionV1(request.workspace,request.manifest,request.control,async selected=>{
   const control=selected.control,owner=selected.scope.manifest,capturedOwner=selected.inputs.find(row=>row.path===owner);if(!capturedOwner)throw Error("Captured selected Cargo workspace Source extent required");if(capturedOwner.bytes>protocol.maximumPolicyBytes)throw Error("Captured selected Cargo workspace Source exceeds policy capacity");const manifest=runtimeParseTomlV1(selected.workspaceManifestText())as{workspace?:{metadata?:{semio?:{repository?:unknown}}};profile?:Record<string,Record<string,unknown>>},workspaceKind=manifest.workspace?.metadata?.semio?.repository===undefined?"isolated":"repository";for(const[name,row]of Object.entries(manifest.profile??{}))if(!["prototype","release"].includes(name)||row.package!==undefined)throw Error("Cargo authored profiles belong to canonical two-intent consumption");
-  const compiler=request.environment.RUSTC||"rustc",wrappers=[request.environment.RUSTC_WRAPPER,request.environment.RUSTC_WORKSPACE_WRAPPER].filter((value):value is string=>Boolean(value)),program=wrappers[0]??compiler,version=await profilePhaseV1("cargo.config.rustc-version",()=>captureOwnedCommandV1(program,[...wrappers.slice(1),...(wrappers.length?[compiler]:[]),"-vV"],request.cwd,{control,env:request.environment,output:{maximumBytes:65536,maximumLines:1024}})),host=version.match(/^host: ([A-Za-z0-9_-]+)$/mu)?.[1];if(!host)throw Error("Actual compiler host profile target required");const target=selectedTargetV1(request.args)??request.environment.CARGO_BUILD_TARGET??host,compositions=selectedCargoProfileCompositionsV1(request.args),profile=renderCargoProfileConfigurationV1({version:1,mode:authority.original.buildMode,target,producer:consumption.producer,operation:consumption.operation,...(compositions===undefined?{}:{compositions})},owner,workspaceKind),inputs:CargoConfigurationSourceV1[]=[...selected.inputs],expected=new Map<string,Readonly<{digest:string;bytes:number}>>();
-  for(const record of profile.plan.sources){
-   const path = join(request.workspace, record.path);
-   const bytes = await readPhysicalCargoSourceV1(path, {version:1,root:request.workspace,expectedBytes:null,maximumBytes:protocol.maximumPolicyBytes,remainingFiles:1}, control);
-   if(!bytes)throw concurrentEditV1("vanished", path, "Cargo profile policy Source disappeared", "build");
-   if(loadedCargoProfilePolicyDriftedV1(bytes,record.digest)){inputs.push(Object.freeze({path:record.path,digest:record.digest,bytes:bytes.length}));continue;}
-   requireLoadedCargoProfilePolicyV1(path,bytes,record.digest);
-   const digest = createHash("sha256").update(bytes).digest("hex");
-   inputs.push(Object.freeze({path:record.path,digest,bytes:bytes.length}));
-   expected.set(record.path,Object.freeze({digest,bytes:bytes.length}));
-  }
-  const sourceInputs=Object.freeze(inputs.map(row=>Object.freeze({...row}))),recheck=async(phase:ResourceLeaseControl)=>{checkResourceLeaseControl(phase);await selected.recheck();for(const[path,expectedSource]of expected)await recheckCargoProfileSourceV1(request.workspace,{path,...expectedSource},phase);checkResourceLeaseControl(phase);};
+  const compiler=request.environment.RUSTC||"rustc",wrappers=[request.environment.RUSTC_WRAPPER,request.environment.RUSTC_WORKSPACE_WRAPPER].filter((value):value is string=>Boolean(value)),program=wrappers[0]??compiler,version=await profilePhaseV1("cargo.config.rustc-version",()=>captureOwnedCommandV1(program,[...wrappers.slice(1),...(wrappers.length?[compiler]:[]),"-vV"],request.cwd,{control,env:request.environment,output:{maximumBytes:65536,maximumLines:1024}})),host=version.match(/^host: ([A-Za-z0-9_-]+)$/mu)?.[1];if(!host)throw Error("Actual compiler host profile target required");const target=selectedTargetV1(request.args)??request.environment.CARGO_BUILD_TARGET??host,compositions=selectedCargoProfileCompositionsV1(request.args),profile=renderCargoProfileConfigurationV1({version:1,mode:authority.original.buildMode,target,producer:consumption.producer,operation:consumption.operation,...(compositions===undefined?{}:{compositions})},owner,workspaceKind);
+  const captured=await captureCargoProfilePolicySourcesV1(request.workspace,profile.plan,control);
+  const sourceInputs=Object.freeze([...selected.inputs,...captured.sourceInputs]);
+  const recheck=async(phase:ResourceLeaseControl)=>{checkResourceLeaseControl(phase);await selected.recheck();await captured.recheck(phase);};
   return withRepositoryCargoConfigurationOwnedV1({...request,control,args:cargoProfileInvocationArgumentsV1(request.args,profile)},body,{profile,declaredArguments:request.args,sourceInputs,recheck});
  });
+}
+
+/** 📚️ Admits the physical Source of the loaded profile policy. A received descriptor-emitter Original retains its admitted policy evidence alongside the immutable effective Cargo configuration. */
+export async function captureCargoProfilePolicySourcesV1(
+ root:string,
+ plan:Pick<CargoProfileRenderedConfigurationV1["plan"],"sources"|"request">,
+ control:ResourceLeaseControl,
+):Promise<Readonly<{sourceInputs:readonly CargoConfigurationSourceV1[];recheck(phase:ResourceLeaseControl):Promise<void>}>>{
+ requireIssuedResourceControlV1(control);
+ const retainAdmittedPolicy=plan.request.producer==="descriptor-emitter"&&implementationPinnedV1();
+ const inputs:CargoConfigurationSourceV1[]=[],expected:CargoConfigurationSourceV1[]=[];
+ for(const record of plan.sources){
+  const path=join(root,record.path);
+  const bytes=await readPhysicalCargoSourceV1(path,{version:1,root,expectedBytes:null,maximumBytes:protocol.maximumPolicyBytes,remainingFiles:1},control);
+  if(!bytes)throw concurrentEditV1("vanished",path,"Cargo profile policy Source disappeared","build");
+  if(!retainAdmittedPolicy&&loadedCargoProfilePolicyDriftedV1(bytes,record.digest)){
+   inputs.push(Object.freeze({path:record.path,digest:record.digest,bytes:bytes.length}));
+   continue;
+  }
+  requireLoadedCargoProfilePolicyV1(path,bytes,record.digest);
+  const source=Object.freeze({path:record.path,digest:createHash("sha256").update(bytes).digest("hex"),bytes:bytes.length});
+  inputs.push(source);
+  if(!retainAdmittedPolicy)expected.push(source);
+ }
+ return Object.freeze({sourceInputs:Object.freeze(inputs),async recheck(phase:ResourceLeaseControl){
+  requireIssuedResourceControlRefinementV1(control,phase);
+  for(const source of expected)await recheckCargoProfileSourceV1(root,source,phase);
+  checkResourceLeaseControl(phase);
+ }});
 }
 /** 🔬️ Revalidates the exact source bytes in a consumed Cargo profile. */
 export async function recheckCargoProfileSourceV1(root:string,source:CargoConfigurationSourceV1,control:ResourceLeaseControl):Promise<void>{

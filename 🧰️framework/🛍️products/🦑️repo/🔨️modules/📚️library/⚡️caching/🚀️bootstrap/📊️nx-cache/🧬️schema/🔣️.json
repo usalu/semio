@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:caching:bootstrap:nx-cache:v1",
+  "title": "How many Nx tasks this machine restored from its local cache, from the remote cache or executed / Wie viele Nx-Aufgaben diese Maschine aus ihrem lokalen Cache, aus dem Remote-Cache wiederherstellte oder ausführte",
+  "description": "EN: Nx prints one line `> nx run <project>:<target>` for every task it starts and appends the marker of the cache that answered (`[local cache]`, `[existing outputs match the cache, left as is]`, `[remote cache]`); a task without a marker was executed. The bootstrap reads every output line of the Nx processes it starts and appends one byte to the counter file of the outcome (`nxLocalHit`, `nxRemoteHit`, `nxExecuted`) below `<worktree>/.cache/f/nx-counters/` (see `build/counter-ledger`), so the sizes of the three files are the monotonic counts of the machine and `since` is the time of the first count. The markers are the ones the build backend registry already names as cache proof. DE: Nx gibt für jede gestartete Aufgabe eine Zeile `> nx run <Projekt>:<Ziel>` aus und hängt die Kennzeichnung des antwortenden Caches an (`[local cache]`, `[existing outputs match the cache, left as is]`, `[remote cache]`); eine Aufgabe ohne Kennzeichnung wurde ausgeführt. Das Bootstrap liest jede Ausgabezeile der von ihm gestarteten Nx-Prozesse und hängt der Zähldatei des Ergebnisses (`nxLocalHit`, `nxRemoteHit`, `nxExecuted`) unter `<Arbeitsbaum>/.cache/f/nx-counters/` ein Byte an (siehe `build/counter-ledger`); die Größen der drei Dateien sind also die monotonen Zählungen der Maschine, `since` ist der Zeitpunkt der ersten Zählung. Die Kennzeichnungen sind die, die das Registry der Build-Backends bereits als Cache-Nachweis nennt.",
+  "definitions": {
+    "Policy": {"const": {"version": 1, "taskPattern": "^>\\s+nx run\\s+\\S+", "localPattern": "\\[(local cache|existing outputs match the cache[^\\]]*)\\]", "remotePattern": "\\[remote cache\\]", "maximumLineCharacters": 4096, "directory": ["f", "nx-counters"], "events": {"local": "nxLocalHit", "remote": "nxRemoteHit", "executed": "nxExecuted"}}},
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["line", "outcome"],
+      "properties": {"line": {"type": "string"}, "outcome": {"enum": ["local", "remote", "executed", null]}}
+    }
+  }
+}

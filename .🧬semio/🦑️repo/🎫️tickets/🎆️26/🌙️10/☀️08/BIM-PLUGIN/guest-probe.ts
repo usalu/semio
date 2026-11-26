@@ -1,5 +1,6 @@
 import { join, resolve } from "node:path";
-import { existsSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
+import { createReadStream, existsSync, mkdirSync, renameSync, writeFileSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import assert from "node:assert/strict";
@@ -15,6 +16,16 @@ if (process.argv[2] === "prepare") {
   const { pluginComponentBridgeSource } = await source("🏗️materialization/🌉️component-bridge-source");
   mkdirSync(output, { recursive: true });
   const binary = resolve(process.argv[3]);
+  const hash = createHash("sha256");
+  for await (const chunk of createReadStream(binary)) hash.update(chunk);
+  const digest = hash.digest("hex");
+  const recordDigest = (filename: string) => {
+    const path = join(output, filename);
+    const pending = path + "." + process.pid;
+    writeFileSync(pending, digest + "\n");
+    renameSync(pending, path);
+  };
+  recordDigest("linked-component.sha256");
   const witPath = join(output, "component.wit");
   const wit = spawnSync("node", [resolve("node_modules/.bin/jco"), "wit", binary, "-o", witPath], { stdio: "inherit" });
   assert.equal(wit.status, 0);
@@ -33,6 +44,7 @@ if (process.argv[2] === "prepare") {
   writeFileSync(join(output, "package.json"), JSON.stringify({ type: "module" }));
   writeFileSync(join(output, "🟨️.js"), hostShimSource());
   writeFileSync(join(output, "bridge.js"), pluginComponentBridgeSource("bim"));
+  recordDigest("prepared-component.sha256");
 } else {
   const frames: unknown[] = [];
   Object.defineProperty(globalThis, "self", { value: { postMessage(message: {frame: {envelope: {payload: {kind: string}}}}) {
@@ -41,8 +53,14 @@ if (process.argv[2] === "prepare") {
   } } });
   const { decodeActorInstanceLifecycle } = await import(pathToFileURL(resolve("🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts")).href);
   const { createActorApi } = await import(pathToFileURL(join(output, "bridge.js")).href);
-  const policy = JSON.parse(readFileSync(resolve("🌎️hub/🧩️compositions/🖍️draw/🧪️tests/🌐️guest/scenarios.json"), "utf8")).caller;
   const contract = JSON.parse(readFileSync(resolve("🌎️hub/🧩️compositions/🏙️bim/🧪️tests/🧫️fixtures/🛂️committed-descriptor/🔣️.json"), "utf8"));
   const { exercise } = await import("./guest-scenarios.ts");
-  await exercise(createActorApi, decodeActorInstanceLifecycle, contract.applicationIds, policy, () => process.hrtime.bigint() / 1000n, async (url: string) => WebAssembly.compile(readFileSync(new URL(url))));
+  const wirePaths = [
+    "🧾️app-channel/🎛️command-codec/🟦️.ts",
+    "🧾️app-channel/🎞️frame-codec/🟦️.ts",
+    "🎭️actor/📮️shard-client/📜️wire/🟦️.ts",
+    "🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts",
+  ];
+  const wire = await Promise.all(wirePaths.map(path => import(pathToFileURL(resolve("🧰️framework/🔨️modules", path)).href)));
+  await exercise(createActorApi, decodeActorInstanceLifecycle, contract.applicationIds, contract.browserCaller, () => process.hrtime.bigint() / 1000n, async (url: string) => WebAssembly.compile(readFileSync(new URL(url))), contract.guestReadConfigSequence, Object.assign({}, ...wire));
 }

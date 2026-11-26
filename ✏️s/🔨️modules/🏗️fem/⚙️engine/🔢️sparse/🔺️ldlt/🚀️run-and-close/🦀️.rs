@@ -36,7 +36,7 @@ impl LdltJob {
                 return Ok(NumericalRun::Yield);
             }
             if self.checkpoint_writer.as_ref().is_none_or(|writer| !writer.is_initialized()) {
-                if numerical_open_writer(&mut self.checkpoint_writer, JobPayloadStream::CheckpointState, context)? { self.state.checkpoint_due = false; self.checkpoint_cursor = NumericalPageCursor::new(); }
+                if numerical_open_writer(&mut self.checkpoint_writer, JobPayloadStream::CheckpointState, context)? { self.state.checkpoint_due = false; self.state.checkpoint_entries = self.state.columns.entries.len(); self.checkpoint_cursor = NumericalPageCursor::new(); }
                 return Ok(NumericalRun::Yield);
             }
             let Some(writer) = self.checkpoint_writer.as_mut() else {
@@ -186,7 +186,7 @@ impl NumericalStep for LdltJob {
         }
         let run = match self.desk.take_pending() {
             Some(run) => run,
-            None => self.run(cx)?,
+            None => run_turn(cx, |cx| self.run(cx))?,
         };
         Ok(self.desk.admit(cx, run)?)
     }

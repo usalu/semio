@@ -61,7 +61,7 @@ test("an unpinned read adopts every moved registry and ends with the first candi
 
 test("a seal names the owner of every stale row it lists (at most the stale paths it keeps), not 64, and the authority receipt admits the list",()=>{
  const owners=retrySchema.$defs.SealPolicy.const.maximumStalePaths,rows=Array.from({length:owners},(_,index)=>({kind:"file",path:"owner-"+index+"/src",fact:{sha256:"a".repeat(64)}})),projects=Object.fromEntries(rows.map((_,index)=>["owner-"+index,{root:"owner-"+index}]));
- const verdict=sealVerdictV1({rounds:4,staleCount:owners,stale:rows,membershipMoved:false,admissionMoved:false,projects,rows}) as{laterChangedOwners:string[];owners:Record<string,string>;sealedWithLaterChanges:number};
+ const verdict=sealVerdictV1({rounds:4,staleCount:owners,stale:rows,membershipMoved:false,admissionMoved:false,projects,rows});
  expect(verdict.laterChangedOwners.length).toBe(owners);expect(Object.keys(verdict.owners).length).toBe(owners);expect(owners).toBeGreaterThan(64);
  const seal=(authoritySchema as{properties:{seal:unknown}}).properties.seal,ajv=new Ajv({strict:false});
  expect(ajv.validate(seal as object,verdict),JSON.stringify(ajv.errors)).toBe(true);

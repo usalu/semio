@@ -11,6 +11,8 @@ export function buildInputPathMatchesV1(path:string,pattern:string):boolean;
 /** ✂️ Cuts a sorted roster into content-defined chunks (a chunk ends after a path whose digest byte is a multiple of 128 once it holds 16 paths). */
 export function splitInputClosureV1(files:readonly string[]):string[][];
 /** 🕊️ Forgets the in-process memo of captured inventories and verified closure stamps. */
+/** 🧮️ The memos of this module as report rows. */
+export function inputCollectionsV1():{name:string;entries:number;bytes?:number;sample?:()=>unknown[]}[];
 export function releaseInputMemoryV1():void;
 /** 🪢️ The workspace relative helper files a compacted group names besides its exact files. */
 export function compactionHelperPathsV1(workspaceRoot:string,origin?:string|URL):string[];
@@ -26,3 +28,6 @@ export function internProjectInputGroups(groups:Record<string,unknown[]>):Record
 export interface ProjectInputInferenceContextV1 extends Readonly<Record<string,unknown>>{declaredSourceInputs(project:Record<string,unknown>,workspaceRoot:string,namedInputs:Record<string,unknown[]>):Promise<Record<string,unknown[]>>}
 /** 🧾️ Infers owned source groups from admitted first-party project declarations. */
 export function inferProjectInputs(json:Record<string,unknown>,root:string,workspaceRoot:string,facts:Record<string,unknown>,scripts:unknown,context:ProjectInputInferenceContextV1):Promise<Record<string,unknown[]>>;
+
+/** 🎯️ Compiles one portable predicate for an operation-owned input pattern. */
+export function createBuildInputPathMatcherV1(pattern: string): (path: string) => boolean;

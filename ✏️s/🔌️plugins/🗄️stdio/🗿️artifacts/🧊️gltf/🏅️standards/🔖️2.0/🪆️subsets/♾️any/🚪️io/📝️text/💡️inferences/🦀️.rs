@@ -140,7 +140,7 @@ fn check_header(line: u8, actual: Option<&str>, expected: &str) -> Result<(), Gl
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn canonical_json_bytes<T: semio_framework_value::ToValue>(value: &T) -> Result<Vec<u8>, GltfInferenceTextError> {
+pub fn canonical_json_bytes<T: semio_framework_value::ToValue>(value: &T) -> Result<Vec<u8>, GltfInferenceTextError> {
     let value = value.to_value();
     let mut output = String::new();
     write_canonical_json(&value, &mut output)?;

@@ -97,9 +97,9 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             (Arc::new(Puzzle3dArtifactStorePreparationFactory), Arc::new(Puzzle3dHistoryPreparation::default()))
         }).map(|(mut owners, progress)| {
             owners.operation_wire.source = semio_s_artifact_puzzle_3d_mutations::io::binary::mutations::prepared_operation_wire_source;
-            owners.operation_wire = owners.operation_wire
-                .with_original_target(Self::Mutation::original_conflict_target)
-                .with_original_binary_receiving();
+            owners.operation_wire = store::os_store::original_edit::with_original_edit_message(
+                owners.operation_wire.with_original_target(Self::Mutation::original_conflict_target).with_original_binary_receiving(),
+            );
             (owners, progress)
         }))
     }

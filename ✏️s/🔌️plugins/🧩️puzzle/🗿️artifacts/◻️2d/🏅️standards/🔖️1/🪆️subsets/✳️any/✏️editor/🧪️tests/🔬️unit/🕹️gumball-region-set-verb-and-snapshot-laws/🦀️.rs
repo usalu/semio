@@ -43,10 +43,15 @@ async fn a_rotate_gesture_record_commits_one_rotate_selection_edit() {
     let record = |angle: f64, targets: Value| json!([{ "name": "gesture", "payload": { "gestureId": "gesture-1", "kind": "rotate", "targets": targets, "pivotX": x0, "pivotY": y0 + 10.0, "angle": angle, "proximity": [] } }]).to_string();
     let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": record(std::f64::consts::PI, json!([node_id.clone()])) })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("rotate record");
     assert_eq!(committed_edits(&result), 1, "a rotate record is one document edit");
+    let edits = &app.stores.store.envelope().vcs.edits;
+    let operation = edits.last().and_then(|edit| edit.forwards.first()).expect("recorded rotation");
+    let Puzzle2dMutation::RotateSelection(rotation) = operation else { panic!("a ring rotation records its typed parameters") };
+    let pivot = ((x0 * 100.0).round() / 100.0, ((y0 + 10.0) * 100.0).round() / 100.0);
+    assert_eq!((rotation.pivot_x, rotation.pivot_y, rotation.angle), (pivot.0, pivot.1, std::f64::consts::PI), "the recorded pivot has the declared two-decimal precision");
     let after = fixture_of(&app);
     let node_after = board_snapshot_nodes(&after).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(node_id.as_str())).cloned().expect("node after");
     let (x1, y1) = (node_after.get("x").and_then(Value::as_f64).expect("x"), node_after.get("y").and_then(Value::as_f64).expect("y"));
-    assert!((x1 - x0).abs() < 1e-6 && (y1 - (y0 + 20.0)).abs() < 1e-6, "a half turn about a pivot 10 below mirrors the node 20 down: ({x0},{y0}) -> ({x1},{y1})");
+    assert!((x1 + x0 - 2.0 * pivot.0).abs() < 1e-6 && (y1 + y0 - 2.0 * pivot.1).abs() < 1e-6, "a half turn mirrors the node about the recorded pivot: ({x0},{y0}) -> ({x1},{y1})");
     let noop = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": record(0.0, json!([node_id.clone()])) })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("zero rotate");
     assert_eq!(committed_edits(&noop), 0, "a zero-angle record commits nothing");
     let targetless = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": record(1.0, json!([])) })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("target-less rotate");

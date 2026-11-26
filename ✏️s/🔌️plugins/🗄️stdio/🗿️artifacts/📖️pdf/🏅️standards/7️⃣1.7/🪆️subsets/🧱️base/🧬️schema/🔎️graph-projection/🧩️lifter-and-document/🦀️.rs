@@ -215,7 +215,7 @@ impl Lifter<'_> {
         let map = self.lift_resources(&resources);
         let identity = PdfGraphIdentity { owner: page_ref, path: vec![PdfGraphPath::Entry { key: "Contents".into() }] };
         let value = dict_get(&dict, "Contents");
-        page.content = if value.is_some() { self.source.semantic_role_at(&identity, PdfStreamRoleKind::Operators).map(|role| match role { PdfStreamRoleValue::Operators { content } => rename_content(content, &map), _ => Vec::new() }).unwrap_or_default() } else { Vec::new() };
+        page.content = if value.is_some() { self.source.semantic_role_at(&identity, PdfStreamRoleKind::Operators).map(|role| match role { PdfStreamRoleValue::Operators { content } => rename_content(content, &map), _ => PdfContent::default() }).unwrap_or_default() } else { PdfContent::default() };
         page.group = dict_get(&dict, "Group").map(|g| self.source.deref(g)).and_then(|g| g.as_dict().map(|g| self.lift_group(g)));
         page.thumbnail = dict_get(&dict, "Thumb").cloned().map(|thumb| self.lift_x_object("Thumb", &thumb)).filter(|id| !id.is_empty());
         page.struct_parents = dict_i64(&dict, "StructParents").map(|v| v as u32);
@@ -253,7 +253,7 @@ impl Lifter<'_> {
 
     /// 🖋️ Parses a content stream against `map` and rewrites its resource names to ids.
     pub(super) fn parse_and_rename(&mut self, owner: &PdfObject, map: &ResourceMap) -> Vec<PdfOp> {
-        let ops = match self.source.semantic_role(owner, PdfStreamRoleKind::Operators) { Some(PdfStreamRoleValue::Operators { content }) => content, _ => Vec::new() };
+        let ops = match self.source.semantic_role(owner, PdfStreamRoleKind::Operators) { Some(PdfStreamRoleValue::Operators { content }) => content, _ => PdfContent::default() };
         rename_content(ops, map)
     }
 }

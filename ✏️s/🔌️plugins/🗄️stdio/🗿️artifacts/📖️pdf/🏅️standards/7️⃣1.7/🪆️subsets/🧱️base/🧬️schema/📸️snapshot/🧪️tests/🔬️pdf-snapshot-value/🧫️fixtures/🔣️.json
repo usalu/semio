@@ -1,0 +1,12 @@
+{
+  "description": "Language-agnostic law of paged page programs: a page program is held in pages of at most pageBytes, so retiring N operators never needs one release larger than a page, and the pages hold every operator exactly once.",
+  "pageBytes": 4096,
+  "cases": [
+    { "operators": 0 },
+    { "operators": 1 },
+    { "operators": 31 },
+    { "operators": 32 },
+    { "operators": 33 },
+    { "operators": 12843 }
+  ]
+}

@@ -7,14 +7,14 @@ import{startRemoteCacheServerV1}from"../../../../🌐️remote-cache/🖥️serv
 import{createProjectFleetPortV1,type ProjectRecordInfoV1}from"../../🟦️.ts";
 import{bindClosureStoreV1,closureRecipeKeyV1,closureTravelV1}from"../../../../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs";
 import{createClosureStoreV1}from"../../../../🕸️graph/📥️inference/🧭️script-inputs/💾️entries/🟨️.mjs";
-import{PROVIDER_CLOSURE_POLICY_V1,providerReferenceV1}from"../../../../🕸️graph/📥️inference/🧭️script-inputs/🔌️provider-closures/🟨️.mjs";
+import{providerReferenceV1}from"../../../../🕸️graph/📥️inference/🧭️script-inputs/🔌️provider-closures/🟨️.mjs";
 
 /** 🚚️ The closure entries a project record names travel with it: a machine that takes the record from the fleet finds the entries in its own closure store, with its own paths and its own digests, and a forged bundle is refused. */
 const scratch:string[]=[];
 const temp=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`closure-travel-${label}-`));scratch.push(path);return path;};
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 const sha=(text:string)=>createHash("sha256").update(text).digest("hex");
-const view=Object.keys(PROVIDER_CLOSURE_POLICY_V1.views)[0]!;
+const view="scheduling";
 const providerRecipe={fn:"script-provider",port:"alpha-port",view},commandRecipe={fn:"native-command"};
 
 const populate=async(root:string)=>{

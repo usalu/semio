@@ -43,6 +43,9 @@ function sourcesV1(manifest,tests){
 }
 
 /** 🧮️ The part of a parsed Cargo manifest that one role depends on, in the shape the readers consume (so a reader of the projection gets the same answer as of the whole manifest); everything else (versions, features, registry dependencies, lints, metadata, order, comments) is not part of it. The pure function behind the `cargo-manifest` field row, shared by the inferring process and every judge.
+ * @param {unknown} manifest
+ * @param {string} role
+ * @returns {import("../🟨️.d.mts").CargoManifestV1 & {workspace?: Readonly<{dependencies?: Readonly<Record<string, Readonly<{path?: string; package?: string}>>>}>}}
  * @see ./🧪️tests/🟦️.ts */
 export function cargoManifestProjectionV1(manifest,role){
  if(!CARGO_MANIFEST_ROLES_V1.includes(role))throw Error("Cargo manifest role required: "+role);

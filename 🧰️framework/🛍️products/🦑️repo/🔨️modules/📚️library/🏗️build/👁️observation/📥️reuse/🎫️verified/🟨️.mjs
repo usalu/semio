@@ -14,6 +14,7 @@ export function createVerifiedPresenceV1({ maximum, stat = path => lstatSync(pat
       rows.set(name, { path, stamp, ancestry });
       while (rows.size > maximum) rows.delete(rows.keys().next().value);
     },
+    /** @param {string} name @param {(ancestry: unknown) => void} [recheck] */
     holds(name, recheck = () => {}) {
       const row = rows.get(name);
       if (row === undefined) return false;

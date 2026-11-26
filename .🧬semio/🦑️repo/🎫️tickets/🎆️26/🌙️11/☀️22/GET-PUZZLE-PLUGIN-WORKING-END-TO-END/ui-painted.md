@@ -1,0 +1,9 @@
+# Puzzle2D Painted Board Verification
+
+The canvas and the editor's own BoardHost previously passed the persisted Puzzle2D document straight to the closed BoardSnapshot parser. The renderer's TypeScript session sync passes `scene.snapshotJson` unchanged, so it did not adapt the nested records. The engine schema rejects the artifact's node `anchor` and its edge compose fields `gap`, `shift`, `rise`, `rotation`, `turn`, `tilt`, `x`, and `y`.
+
+The canvas and native host now share one production snapshot projection. The document still carries its anchors and compose parameters. The projection keeps the node IDs and coordinates, complete handle records, edge endpoint identities, region records, and board metadata. The mounted drag law continues to validate the rendered lane before and after the real persisted edit. The edged-handle deletion law now reparses the app's rendered lane after the edit as well.
+
+The equivalent engine-boundary test passed. The staged browser WASM parsed the shipped, unmodified Nakagin DSL into 180 nodes and 179 edges with the persisted domain fields. A native harness compiled the actual production Rust projection and recorded its stdout byte-for-byte. Ajv accepted those bytes against the published closed BoardSnapshot schema. The actual WASM BoardSession refused the raw artifact document and loaded the unmodified produced scene. A pointer click selected the test node and a background click cleared selection. The complete smoke also passed the 3D and 5D sample counts and exited 0.
+
+The smoke's first pipe-spawn attempt stalled after DSL parsing under the loaded host. Separately capturing the actual DSL output, running the native projector, and reading its exact emitted file into the WASM smoke avoided that stall. No JavaScript field projection remains in the smoke.

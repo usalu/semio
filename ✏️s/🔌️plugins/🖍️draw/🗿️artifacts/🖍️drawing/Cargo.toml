@@ -7,8 +7,9 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪜️commands-2/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/📥️decode/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🧪️tests/🥣️companion/📦️packages/🦀️rust",
@@ -82,9 +83,6 @@ path = "../../../../../🧰️framework/🔨️modules/🛠️tool-machine/📦�
 
 [workspace.dependencies.semio-framework-trace]
 path = "../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-deflate]
-path = "../../../🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-json]
 path = "../../../🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust"
@@ -230,6 +228,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️p
 
 [workspace.dependencies.semio-s-artifact-draw-drawing-editor-store-preparation]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-draw-member-decode]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/📥️decode/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-draw-drawing-editor-member-wire]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/📦️packages/🦀️rust"

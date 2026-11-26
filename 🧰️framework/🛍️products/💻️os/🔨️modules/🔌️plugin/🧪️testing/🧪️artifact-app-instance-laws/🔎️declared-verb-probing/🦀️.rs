@@ -265,8 +265,10 @@ pub async fn dispatch_addressed_fixture_on_original<PA:semio_plugin_reactor_app:
 /// 🪜️ Keeps one admitted preview source under its initiating fixture context through pending phases.
 async fn preview_fixture_on_original<A,M>(app:&mut VcsArtifactApp<A,M>,invocation:&semio_framework::manifest::ActionInvocation,meta:&ActionMeta,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework::InvocationResult,semio_framework_job::OriginalTurnFailure>
 where A:ArtifactApp,M:store::ReferenceSpaceMember+store::MemberFactory+Send+'static{
+    let fuel = OriginalFixtureCaller::turn_fuel();
+    let (grant, _) = cx.original_turn_ceiling();
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
-        if cx.should_yield(){break}
+        fixture_renew_turn(cx, fuel, grant)?;
         if let Some(result)=app.command_ctx().preview_addressed_action(invocation,meta,cx).await?{return Ok(result)}
     }
     Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture preview did not settle under its supplied context").into())

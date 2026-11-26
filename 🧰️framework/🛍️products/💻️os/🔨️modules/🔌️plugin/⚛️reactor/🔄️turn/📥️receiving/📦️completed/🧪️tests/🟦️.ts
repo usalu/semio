@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
-import {decodePackValue, encodePackValue, packUInt} from "@semio-tech/framework/packs";
+import {decodePackValue, decodePackWire, encodeFaultPack, encodePackValue, packUInt} from "@semio-tech/framework/packs";
 import law from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 test("original Completed uses the same admitted donor and independent correlation/full-Fault oracle",()=>{
@@ -25,4 +25,19 @@ test("original Completed receives the container-less extension Pack response", (
  const source = readFileSync(new URL("../🦀️.rs", import.meta.url), "utf8");
  expect(source).toContain("RetainedIntrinsicBody::new(RetainedIntrinsicInput::OwnedBytes(bytes)");
  expect(source).not.toContain("RetainedIntrinsicDocument");
+});
+
+test("Completed decodes both WIT completion arms as Pack", () => {
+ const bytes = encodeFaultPack(law.fault);
+ expect(Buffer.from(bytes).toString("hex")).toBe(law.faultWireHex);
+ expect(decodePackWire(bytes)).toEqual(law.fault);
+ const original = decodePackValue(bytes) as {span:{line:unknown}};
+ expect(original.span.line).toEqual(packUInt(BigInt(law.fault.span.line)));
+ expect(encodeFaultPack(original as typeof law.fault)).toEqual(bytes);
+ const {retainedProgress, ...hostFault} = law.fault;
+ const decoded = decodePackWire(encodeFaultPack(hostFault)) as {retainedProgress: typeof retainedProgress};
+ expect(decoded.retainedProgress).toEqual({copiedItems:0, copiedBytes:0, retainedCapacityBytes:0, releasedBytes:0});
+ expect(() => encodeFaultPack({...hostFault, span:{line:1.5}})).toThrow("exact unsigned integer");
+ const receiver = readFileSync(new URL("../🦀️.rs", import.meta.url), "utf8");
+ expect(receiver).not.toContain("self.grammar_step(false,cx)");
 });

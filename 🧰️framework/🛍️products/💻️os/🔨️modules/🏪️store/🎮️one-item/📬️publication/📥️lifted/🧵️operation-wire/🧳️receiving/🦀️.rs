@@ -12,6 +12,8 @@ pub trait ArtifactOriginalOperationReceiving<M>:Send{
  fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
  fn advance(&mut self,control:&mut NativeDecodeControl<'_>,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<RetainedCloneStep,NativeReceivingFailure>;
  fn ready(&self)->bool;
+ /// 📤️ Indicates when the decoder can transfer the mutation to an owning caller.
+ fn ready_for_owned(&self)->bool{self.ready()}
  fn owned_handoff_pending(&self)->bool;
  fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(RetainedOwnedProjection<M>,RetainedCloneProgress)>> where M:Sync;
  fn take_owned_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;

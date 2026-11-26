@@ -148,6 +148,27 @@ impl TessellationResources{
  pub fn invoke(&self,session:&SessionCapture,source:&[u8],cx:&mut StepContext<'_>)->Result<semio_plugin::ExtensionInvokeStep,semio_framework::Fault>{
   let pending=||semio_plugin::ExtensionInvokeStep{payload:None,retained_progress:Default::default(),refusal:None};
   let mut owner=match self.cursor.try_lock(){Ok(owner)=>owner,Err(TryLockError::WouldBlock)=>return Ok(pending()),Err(TryLockError::Poisoned(_))=>return Ok(semio_plugin::ExtensionInvokeStep{refusal:Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tessellation owner is poisoned").into()),..pending()})};
+  let mut total = RetainedCloneProgress::default();
+  for _ in 0..256 {
+   let mut step = Self::step_locked(&mut owner, session, source, cx)?;
+   let progressed = step.retained_progress != RetainedCloneProgress::default();
+   match total.checked_add(step.retained_progress) {
+    Ok(progress) => total = progress,
+    Err(error) => {
+     step.retained_progress = total.saturating_add(step.retained_progress);
+     step.refusal = Some(error.into());
+     return Ok(step);
+    }
+   }
+   if step.payload.is_some() || step.refusal.is_some() || !progressed || cx.should_yield() || cx.retained_grant().maximum_items == 0 {
+    step.retained_progress = total;
+    return Ok(step);
+   }
+  }
+  Ok(semio_plugin::ExtensionInvokeStep { retained_progress: total, ..pending() })
+ }
+ fn step_locked(owner: &mut Option<TessellationInvokeCursor>, session: &SessionCapture, source: &[u8], cx: &mut StepContext<'_>) -> Result<semio_plugin::ExtensionInvokeStep, semio_framework::Fault> {
+  let pending=||semio_plugin::ExtensionInvokeStep{payload:None,retained_progress:Default::default(),refusal:None};
   if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(pending())}
   let owns_lane=owner.as_ref().is_some_and(|cursor|cursor.matches(source,cx));
   if !owns_lane {

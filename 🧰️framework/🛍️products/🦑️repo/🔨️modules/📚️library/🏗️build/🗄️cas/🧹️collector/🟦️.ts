@@ -2,6 +2,7 @@ import {lstat,mkdir,open,readdir,readFile,rename,rmdir,stat,unlink,writeFile} fr
 import {setTimeout as sleep} from "node:timers/promises";
 import {basename,dirname,join} from "node:path";
 import type {FileHandle} from "node:fs/promises";
+import {casCensusPathV1} from "../🗃️store/🟦️.ts";
 import {compactCasShardV1,foldCasShardV1,openCasShardViewV1,type CasShardViewV1} from "../📒️ledger/🟦️.ts";
 import {casPinDirectoryV1,compactCasTransientsV1,readCasPinsV1,readCasTransientsV1,stampCasTransientsV1} from "../📌️pins/🟦️.ts";
 import {casPartitionNeedBytesV1,casPartitionUsedFractionV1,type CasPartitionV1} from "../🌡️partition/🟦️.ts";
@@ -315,7 +316,7 @@ export function forgetCensusV1(census:CasCensusV1,counted:Map<string,CensusRowV1
 }
 
 /** 📊️ Where the census of a store lives. */
-export const casCensusPathV1=(root:string):string=>join(root,"v1","census.json");
+export {casCensusPathV1};
 /** 📊️ Writes the census atomically; best effort, a full disk only loses the counters. */
 export async function writeCasCensusV1(root:string,census:CasCensusV1):Promise<void>{
  const target=casCensusPathV1(root),temporary=`${target}.${process.pid}.tmp`;

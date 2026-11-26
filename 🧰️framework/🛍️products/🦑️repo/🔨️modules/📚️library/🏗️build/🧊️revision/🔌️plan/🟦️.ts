@@ -22,7 +22,7 @@ export function createRevisionPinHookV1(options:{cas:CasStoreV1;inputsOf(request
 }
 
 /** 🔌️ Creates the capture hook of the resident planner port: runs one plan with its workspace reads captured and answers the result with the revision the plan read as its pin (`parent` is the previous revision id; one that left the store is ignored). */
-export function createRevisionCaptureHookV1(options:{cas:CasStoreV1;progress?:never}):<T>(request:RevisionPinRequestV1,body:()=>Promise<T>)=>Promise<CapturedPlanV1<T>>{
+export function createRevisionCaptureHookV1(options:{cas:CasStoreV1;progress?:never}):<T>(request:Omit<RevisionPinRequestV1,"targets"|"order">,body:()=>Promise<T>)=>Promise<CapturedPlanV1<T>>{
  return async(request,body)=>{
   const parent=request.parent===undefined?undefined:await loadManifestV1(options.cas,request.parent,request.signal).then(loaded=>({revision:loaded.revision,manifest:loaded.manifest}),()=>undefined);
   return withCapturedPlanV1({cas:options.cas,root:request.root!,workspace:request.workspace!,holder:request.agent??"agent",journalCursor:request.cursor??request.dirty?.cursor??"0",...parent===undefined?{}:{parent},...request.signal===undefined?{}:{signal:request.signal}},body);

@@ -1,0 +1,33 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../../../../../node_modules/.cache/tsconfig.server-build.tsbuildinfo",
+    "types": [
+      "bun",
+      "node"
+    ]
+  },
+  "include": [
+    "**/*.ts"
+  ],
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/📤️dist/**",
+    "**/.next/**",
+    "**/🗑️generated/**",
+    "**/🤖️generated/**",
+    "🎛️coordinator/🎫️ticket/**",
+    "🎛️coordinator/🧾️diff/**",
+    "🎛️coordinator/⚠️warnings/**",
+    "🎛️coordinator/🪝️webhook/**",
+    "🎛️coordinator/📚️repository/**",
+    "🎛️coordinator/🎯️scope/**",
+    "🎛️coordinator/🚨️breaches/**",
+    "🎛️coordinator/📡️event/**",
+    "🎛️coordinator/🔐️authentication/**",
+    "🎛️coordinator/📦️packages/🟦️typescript/app/**",
+    "📚️library/**",
+    "🎛️coordinator/📦️packages/🟦️typescript/next-env.d.ts"
+  ]
+}

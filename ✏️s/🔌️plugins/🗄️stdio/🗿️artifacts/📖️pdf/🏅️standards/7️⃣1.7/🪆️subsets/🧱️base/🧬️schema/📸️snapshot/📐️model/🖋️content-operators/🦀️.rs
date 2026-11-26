@@ -42,7 +42,7 @@ impl PdfInlineImage {
 }
 
 /// 🖋️ One content-stream operator with typed operands — every operator of ISO 32000-1 Table 51.
-/// Painting order is the `Vec<PdfOp>` order; nothing is inferred or re-ordered on either side.
+/// Painting order is the [`PdfContent`] order; nothing is inferred or re-ordered on either side.
 #[derive(semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "op", rename_all = "camelCase", rename_all_fields = "camelCase")]
@@ -118,5 +118,51 @@ pub enum PdfOp {
     BeginCompatibility,
     EndCompatibility,
     Unknown { operator: String, operands: Vec<PdfObject> },
+}
+
+/// 📏️ Logical ceiling of one page program; physical backing is always admitted one page at a time.
+pub const PDF_CONTENT_MAXIMUM_OPERATORS: usize = isize::MAX as usize / size_of::<PdfOp>();
+
+/// 📜️ A page's operator program in separately admitted fixed-size pages, never one contiguous allocation, so birth, clone and retirement each move one page per unit (a 12,843-operator page is 402 pages of 4,096 bytes, not one 1,643,904-byte block).
+/// See [`semio_framework_value_persistent::list::PagedList`].
+pub type PdfContent = semio_framework_value_persistent::list::PagedList<PdfOp, PDF_CONTENT_MAXIMUM_OPERATORS>;
+
+/// 📖️ Read access to an operator program, whatever holds it: a form, glyph or pattern program in one vector, or a page program in pages.
+pub trait PdfProgram {
+    fn len(&self) -> usize;
+    fn get(&self, index: usize) -> Option<&PdfOp>;
+    fn iter(&self) -> Box<dyn Iterator<Item = &PdfOp> + '_>;
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+impl PdfProgram for Vec<PdfOp> {
+    fn len(&self) -> usize {
+        <[PdfOp]>::len(self)
+    }
+    fn get(&self, index: usize) -> Option<&PdfOp> {
+        <[PdfOp]>::get(self, index)
+    }
+    fn iter(&self) -> Box<dyn Iterator<Item = &PdfOp> + '_> {
+        Box::new(<[PdfOp]>::iter(self))
+    }
+}
+
+impl PdfProgram for PdfContent {
+    fn len(&self) -> usize {
+        PdfContent::len(self)
+    }
+    fn get(&self, index: usize) -> Option<&PdfOp> {
+        PdfContent::get(self, index)
+    }
+    fn iter(&self) -> Box<dyn Iterator<Item = &PdfOp> + '_> {
+        Box::new(PdfContent::iter(self))
+    }
+}
+
+/// 🧱️ Builds a page program from operators (a cold, uncontrolled admission for authored and fixture programs).
+pub fn pdf_content(operators: impl IntoIterator<Item = PdfOp>) -> PdfContent {
+    operators.into_iter().collect()
 }
 //#endregion 🔖️Content

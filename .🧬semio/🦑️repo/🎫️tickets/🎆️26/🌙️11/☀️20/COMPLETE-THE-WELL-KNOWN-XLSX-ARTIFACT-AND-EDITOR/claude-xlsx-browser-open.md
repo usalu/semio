@@ -31,6 +31,38 @@ Why the browser differs from the native tests: the native suites call the guest 
 3. Genuine Strict workbook `🔒️strict/🧪️tests/🧫️fixtures/🔒️reuse-marketplaces-strict.xlsx`, derived by `claude-xlsx-strict-fixture.py` (namespaces, relationship types, `conformance="strict"`). The journey uses it and expects `A1 = ID` for both dialects.
 4. Locale for the native path. The grid's cell action carries a hidden optional `locale` argument; `command_from_action` rewrites the typed text into canonical invariant spelling with `xlsx_canonical_cell_text` (German `1,5` → `1.5`, German `1.5` → literal text, English `1,5` → text, no locale → unchanged), so both the native reducer and the `handle` path (now locale-free) agree. Files: `🪟️window-kit/🦀️.rs` (contract), base/strict/transitional `✏️editor/🦀️.rs`, base main window. Tests: fixture `🧫️fixtures/🌐️canonical-cell-text/🔣️.json` (cross-checked with a Python float oracle) and two unit tests in the base editor test module.
 
-## 4. Journey verdicts
+## 4. Journey verdicts (pane on 6273, the wasm of 2026-11-25 23:48 plus the TypeScript fixes)
 
-See the final section (filled after the rebuild).
+| Step | Verdict | Evidence |
+| --- | --- | --- |
+| en: open Transitional, edit A1, save, reopen | pass | A1 `ID` after open, saved file 11,045 bytes, edited cell read back |
+| de: open, edit A1, save, reopen | pass | German notices, `Geändert auf Deutsch` round trip |
+| de: `1,5` stored as number 1.5, shown as `1,5` | fail, fix written, not built | saved as inline string `1,5`; needs fix 4, which is Rust and needs the rebuilt wasm |
+| open Transitional workbook | pass | `A1 = ID` |
+| open Strict workbook | pass | genuine Strict fixture, `A1 = ID` |
+| en and de: refuse text file and foreign ZIP named `.xlsx` | pass (4 of 4) | localized `content-mismatch` notices |
+
+TypeScript-only fixes (1 to 3) are verified in the browser. The Rust fix (4) is verified only by its written tests, which have not been compiled or run.
+
+## 5. Rebuild status and blocker
+
+The wasm could not be rebuilt for fix 4. Sequence of causes, all outside the change:
+
+1. Other agents' in-flight breaks (about a dozen distinct ones, each fixed by its owner within an attempt or two).
+2. Warden cancellations of IFC shards over their carving budgets (budgeted by the coordinator), then of the `semio_hub_stdio_component` thin-LTO link at 6.0 to 6.4 GB (memory pressure, stalled-too-long, compressed memory), four times.
+3. Final blocker: with LTO off the stdio component's core module declares more than 1,000,000 functions (wasmparser limit). The 2026-11-25 23:36 build declared 934,477, so the code has grown past the cap. `-Z share-generics=y` did not bring it under. The coordinator is splitting the stdio component (large artifact families into their own extension component); the rebuild resumes after that lands.
+
+Build scripts (ticket folder): `claude-pane-cargo.sh` (now with `--keep-going`, `lto`, a 60% free-memory gate), `claude-pane-cargo-retry.sh`, `claude-pane-cargo-forever.sh`. My loops are stopped.
+
+## 6. Not done
+
+- Rebuild, publish, support, activate and the pane journey for the German decimal step.
+- The full S lane (6070/6071): session, publish with space, stdio and stdio-office, activate, serve with `S_DATA_DIR`, journeys en and de. `claude-fulls-journey.ts` already writes `conformance="strict"` into its generated Strict workbook; it still needs to use the genuine Strict fixture.
+- Native run of the new Rust tests (base editor: `canonical_cell_text_fixture_agrees_with_the_python_float_oracle`, `a_german_cell_draft_reduces_to_the_canonical_number_on_the_locale_free_native_path`).
+
+## 7. Files changed
+
+Shell and runtime: `🔌️PluginRuntime/🔗️channel-adapter/🟦️.ts`, `🔌️PluginRuntime/🏁️operation-completion/🟦️.ts`, `🧪️tests/📦️document-pack-wire-adapter/🟦️.tsx`.
+Rust (unbuilt): `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🪟️window-kit/🦀️.rs`; xlsx base, strict and transitional `✏️editor/🦀️.rs`; xlsx base main window `🦀️.rs`; base editor unit tests; fixture `🧫️fixtures/🌐️canonical-cell-text/🔣️.json`.
+Fixture: strict subset `🧪️tests/🧫️fixtures/🔒️reuse-marketplaces-strict.xlsx`.
+Ticket folder: `claude-xlsx-browser-open.ts`, `.test.ts`, `.md`, `claude-xlsx-strict-fixture.py`, `claude-fulls-serve.sh`, `standalone-pane-journey.ts`, `claude-fulls-journey.ts`, the three build scripts above.

@@ -11,7 +11,7 @@ test("a held head that carries no retention manifest of this code is offered aga
 });
 
 test("a machine that takes a head published by an older code declares it into the protected class without reading anything",async()=>{
- const{fleet,machines:[a,b]}=world(6,["a","b"]) as {fleet:FleetV1;machines:[MachineV1,MachineV1]};
+ const{fleet,machines:[a,b]}=world(6,["a","b"]);
  await run(fleet,a!);
  const client=fleet.client("a"),key=selectedHeadKeyV1({scope,platform}),current=await client.getResult(key) as Uint8Array,decoded=decodeProtobufV1(REAPI_V1.actionResult,current),files=(decoded.output_files as {path:string;digest:{hash:string;size_bytes:number}}[]);
  const older=encodeProtobufV1(REAPI_V1.actionResult,{output_files:files.filter(file=>file.path!==policy.retentionManifest),stdout_raw:decoded.stdout_raw});
@@ -35,11 +35,11 @@ import{makeFleet,makeMachine,makeRecords,ownerNameV1,ownerOfV1,sha,type FleetV1,
 
 const scope=sha("scope-of-the-selection-and-the-registry"),platform="darwin-arm64";
 const run=(fleet:FleetV1,machine:MachineV1,extra:Partial<Parameters<typeof selectedGenerationV1>[0]>={})=>selectedGenerationV1({client:fleet.client(machine.name),scope,platform,host:machine.host,owner:machine.name,ownerOf:ownerOfV1,holds:machine.holds,install:machine.install,read:machine.read,claimTtlMilliseconds:400,claimHeartbeatMilliseconds:80,waitSliceMilliseconds:60,waitMaximumMilliseconds:5000,...extra});
-const world=(count:number,names:string[])=>{const records=makeRecords(),fleet=makeFleet(),machines=names.map(name=>makeMachine({name,count,records}));return{records,fleet,machines};};
+const world=<const Names extends readonly string[]>(count:number,names:Names)=>{const records=makeRecords(),fleet=makeFleet(),machines=names.map(name=>makeMachine({name,count,records})) as unknown as {-readonly [Index in keyof Names]:MachineV1};return{records,fleet,machines};};
 const changed=(machine:MachineV1,indexes:number[])=>{for(const index of indexes)machine.edit(index,`edited-${index}`);};
 
 test("the first machine reads and publishes, a second machine on the same tree installs the generation and reads nothing",async()=>{
- const{fleet,machines:[a,b],records}=world(12,["a","b"]) as {fleet:FleetV1;machines:[MachineV1,MachineV1];records:RecordsV1};
+ const{fleet,machines:[a,b],records}=world(12,["a","b"]);
  const first=await run(fleet,a!);
  expect(first.outcome).toBe("read");expect(first.published).toBe(true);
  expect(a!.counters).toEqual({observations:12,inferences:12,takes:0,reads:1});
@@ -52,7 +52,7 @@ test("the first machine reads and publishes, a second machine on the same tree i
 });
 
 test("the head names the module graph the reading machine offered, a machine that takes the head adopts that graph before it judges the owners, and a newer graph alone publishes the head again",async()=>{
- const{fleet,machines:[a,b]}=world(6,["a","b"]) as {fleet:FleetV1;machines:[MachineV1,MachineV1]};
+ const{fleet,machines:[a,b]}=world(6,["a","b"]);
  const offered=sha("graph-head-1"),adopted:string[]=[],order:string[]=[];
  const first=await run(fleet,a!,{graph:{offer:async()=>offered,adopt:async()=>{throw new Error("the reader adopts nothing");}}});
  expect(first.published).toBe(true);
@@ -67,7 +67,7 @@ test("the head names the module graph the reading machine offered, a machine tha
 });
 
 test("k changed owners: exactly those are read again, the other owners are held, and the fleet converges on the newest head",async()=>{
- const{fleet,machines:[a,b,c],records}=world(40,["a","b","c"]) as {fleet:FleetV1;machines:[MachineV1,MachineV1,MachineV1];records:RecordsV1};
+ const{fleet,machines:[a,b,c],records}=world(40,["a","b","c"]);
  await run(fleet,a!);
  changed(b!,[5,20]);
  const second=await run(fleet,b!);
@@ -81,14 +81,14 @@ test("k changed owners: exactly those are read again, the other owners are held,
 });
 
 test("one differing owner never rejects the whole generation",async()=>{
- const{fleet,machines:[a,b]}=world(40,["a","b"]) as {fleet:FleetV1;machines:[MachineV1,MachineV1]};
+ const{fleet,machines:[a,b]}=world(40,["a","b"]);
  await run(fleet,a!);changed(b!,[0]);
  const result=await run(fleet,b!);
  expect(result.held).toBe(39);expect(result.differing).toEqual(["o0"]);
 });
 
 test("a machine that holds its own digest of an owner decides without touching the tree",async()=>{
- const{fleet,machines:[a,b]}=world(8,["a","b"]) as {fleet:FleetV1;machines:[MachineV1,MachineV1]};
+ const{fleet,machines:[a,b]}=world(8,["a","b"]);
  await run(fleet,a!);
  const mine=new Map<string,string>();
  for(const[owner,rows]of selectedRowsByOwnerV1(await a!.read(undefined).then(sealed=>sealed.rows),a!.host,ownerOfV1))mine.set(owner,selectedOwnerDigestV1(rows));
@@ -99,7 +99,7 @@ test("a machine that holds its own digest of an owner decides without touching t
 });
 
 test("simultaneous start: one machine reads, the other waits with progress and takes the head, every owner is inferred once fleet-wide",async()=>{
- const{fleet,machines:[a,b],records}=world(16,["a","b"]) as {fleet:FleetV1;machines:[MachineV1,MachineV1];records:RecordsV1};
+ const{fleet,machines:[a,b],records}=world(16,["a","b"]);
  const said:string[]=[],slow=async(differing:readonly string[]|undefined)=>{await Bun.sleep(300);return a!.read(differing);};
  const [first,second]=await Promise.all([run(fleet,a!,{read:slow}),run(fleet,b!,{say:(key,fields)=>said.push(key+":"+JSON.stringify(fields))})]);
  const outcomes=[first.outcome,second.outcome].sort();
@@ -111,7 +111,7 @@ test("simultaneous start: one machine reads, the other waits with progress and t
 });
 
 test("the reading machine dies: the waiter takes over after the lease and reads with the owner records already published",async()=>{
- const{fleet,machines:[a,b],records}=world(10,["a","b"]) as {fleet:FleetV1;machines:[MachineV1,MachineV1];records:RecordsV1};
+ const{fleet,machines:[a,b],records}=world(10,["a","b"]);
  for(let index=0;index<6;index++){const own=sha(a!.tree.get(a!.file(index))!),dep=index>0?sha(a!.tree.get(a!.file(index-1))!):"";records.records.set(sha(JSON.stringify([index,own,dep])),ownerNameV1(index));records.inferences.set(ownerNameV1(index),1);}
  const key=selectedHeadKeyV1({scope,platform});
  fleet.claims.set(key,{owner:"dead",until:Date.now()+150});
@@ -124,7 +124,7 @@ test("the reading machine dies: the waiter takes over after the lease and reads 
 });
 
 test("a holder that keeps renewing is waited for only up to the named bound, then this machine reads",async()=>{
- const{fleet,machines:[a]}=world(4,["a"]) as {fleet:FleetV1;machines:[MachineV1]};
+ const{fleet,machines:[a]}=world(4,["a"]);
  const key=selectedHeadKeyV1({scope,platform}),beat=setInterval(()=>{fleet.claims.set(key,{owner:"alive",until:Date.now()+300});},50);
  fleet.claims.set(key,{owner:"alive",until:Date.now()+300});
  const said:string[]=[],started=Date.now();
@@ -136,12 +136,12 @@ test("a holder that keeps renewing is waited for only up to the named bound, the
 
 test("a machine with enough memory reads beside a renewing holder at once, a small machine waits for it",async()=>{
  const key=selectedHeadKeyV1({scope,platform});
- const beside=world(4,["a"]) as {fleet:FleetV1;machines:[MachineV1]};
+ const beside=world(4,["a"]);
  const beat=setInterval(()=>{beside.fleet.claims.set(key,{owner:"alive",until:Date.now()+300});},50);
  beside.fleet.claims.set(key,{owner:"alive",until:Date.now()+300});
  const said:string[]=[],started=Date.now(),big=await run(beside.fleet,beside.machines[0]!,{readBesideMegabytes:policy.readBesideMinimumTotalMegabytes,waitMaximumMilliseconds:60000,say:name=>said.push(name)});
  expect(big.outcome).toBe("read");expect(Date.now()-started).toBeLessThan(2000);expect(beside.machines[0]!.counters.reads).toBe(1);expect(said).toContain("reading-beside");expect(said).not.toContain("waiting");
- const small=world(4,["b"]) as {fleet:FleetV1;machines:[MachineV1]};
+ const small=world(4,["b"]);
  small.fleet.claims.set(key,{owner:"alive",until:Date.now()+300});
  const waited:string[]=[],result=await run(small.fleet,small.machines[0]!,{readBesideMegabytes:policy.readBesideMinimumTotalMegabytes-1,waitMaximumMilliseconds:200,say:name=>waited.push(name)});
  clearInterval(beat);
@@ -149,7 +149,7 @@ test("a machine with enough memory reads beside a renewing holder at once, a sma
 });
 
 test("a fleet that is down, denied or breaks mid-read never fails or hangs the read",async()=>{
- const{fleet,machines:[a]}=world(5,["a"]) as {fleet:FleetV1;machines:[MachineV1]};
+ const{fleet,machines:[a]}=world(5,["a"]);
  fleet.down=true;
  const result=await run(fleet,a!);
  expect(result.outcome).toBe("unreachable");expect(result.published).toBe(false);expect(a!.counters.inferences).toBe(5);
@@ -161,7 +161,7 @@ test("a fleet that is down, denied or breaks mid-read never fails or hangs the r
 });
 
 test("a fleet that answers nothing is waited for only up to the look bound, then this machine reads and infers every owner itself",async()=>{
- const{fleet,machines:[a]}=world(6,["a"]) as {fleet:FleetV1;machines:[MachineV1]};
+ const{fleet,machines:[a]}=world(6,["a"]);
  const client=fleet.client("a"),calls={count:0},silent={...client,getResult:(key:string)=>calls.count++===0?new Promise<never>(()=>undefined):client.getResult(key)} as typeof client,said:string[]=[],started=Date.now();
  const result=await selectedGenerationV1({client:silent,scope,platform,host:a!.host,owner:"a",ownerOf:ownerOfV1,holds:a!.holds,install:a!.install,read:a!.read,lookMaximumMilliseconds:150,say:key=>said.push(key)});
  expect(result.outcome).toBe("unreachable");expect(Date.now()-started).toBeLessThan(2500);expect(said).toContain("look-bound");
@@ -169,7 +169,7 @@ test("a fleet that answers nothing is waited for only up to the look bound, then
 });
 
 test("a machine that is not Ready and has no records of its own installs the fleet generation: no read, no inference, progress told",async()=>{
- const{fleet,machines:[a,b]}=world(20,["a","b"]) as {fleet:FleetV1;machines:[MachineV1,MachineV1]};
+ const{fleet,machines:[a,b]}=world(20,["a","b"]);
  await run(fleet,a!);
  const said:string[]=[];
  const result=await run(fleet,b!,{say:key=>said.push(key)});
@@ -205,7 +205,7 @@ test("the key changes with the scope, the revision and the platform, and with no
 });
 
 test("a corrupt blob, a foreign head, a head of another revision and a damaged owner digest are a miss, never an installed generation",async()=>{
- const{fleet,machines:[a,b,c,d]}=world(6,["a","b","c","d"]) as {fleet:FleetV1;machines:[MachineV1,MachineV1,MachineV1,MachineV1]};
+ const{fleet,machines:[a,b,c,d]}=world(6,["a","b","c","d"]);
  await run(fleet,a!);
  fleet.corruptBlobs=true;
  expect(await lookSelectedGenerationV1({client:fleet.client("b"),scope,platform,host:b!.host})).toBe("fault");
@@ -224,7 +224,7 @@ test("a corrupt blob, a foreign head, a head of another revision and a damaged o
 });
 
 test("a valid blob served under the name of another is refused, so a swapped graph is never installed",async()=>{
- const{fleet,machines:[a,b,c]}=world(6,["a","b","c"]) as {fleet:FleetV1;machines:[MachineV1,MachineV1,MachineV1]};
+ const{fleet,machines:[a,b,c]}=world(6,["a","b","c"]);
  await run(fleet,a!);changed(b!,[1]);
  const{packGraphDocumentV1}=await import("../../../../🪪️graph-state/🛰️exchange/🟦️.ts");
  const other=packGraphDocumentV1({name:"graph",bytes:Buffer.from(JSON.stringify({owners:["somewhere else"]}))})[0]!,graph=packGraphDocumentV1({name:"graph",bytes:Buffer.from(a!.graph.replaceAll(a!.root,"⟦semio-root⟧"))})[0]!;
@@ -297,13 +297,13 @@ test("a head written under the key of this revision by another revision is a mis
 });
 
 test("a machine that may not upload never claims the head: waiters would wait for a head that cannot come",async()=>{
- const{fleet,machines:[a]}=world(3,["a"]) as {fleet:FleetV1;machines:[MachineV1]},client=fleet.client("a"),readonly={...client,settings:{...client.settings,upload:false}} as typeof client;
+ const{fleet,machines:[a]}=world(3,["a"]),client=fleet.client("a"),readonly={...client,settings:{...client.settings,upload:false}} as typeof client;
  const result=await selectedGenerationV1({client:readonly,scope,platform,host:a!.host,owner:"a",ownerOf:ownerOfV1,holds:a!.holds,install:a!.install,read:a!.read});
  expect(result.outcome).toBe("unreachable");expect(fleet.claims.size).toBe(0);expect(a!.counters.reads).toBe(1);
 });
 
 test("a published head is declared to the cache server as an entry of the protected graph class",async()=>{
- const{fleet,machines:[a]}=world(6,["a"]) as {fleet:FleetV1;machines:[MachineV1]};
+ const{fleet,machines:[a]}=world(6,["a"]);
  await run(fleet,a!);
  const kept=retentionManifestV1(),client=fleet.client("a"),declared=JSON.parse(Buffer.from(kept.bytes).toString("utf8"));
  expect(await client.hasBlob(kept.hash)).toBe(true);
@@ -313,7 +313,7 @@ test("a published head is declared to the cache server as an entry of the protec
 });
 
 test("a head published by a machine that never held the claim ends the wait of a small machine at once, not after its wait slice",async()=>{
- const{fleet,machines:[a,b]}=world(6,["a","b"]) as {fleet:FleetV1;machines:[MachineV1,MachineV1]};
+ const{fleet,machines:[a,b]}=world(6,["a","b"]);
  const key=selectedHeadKeyV1({scope,platform}),beat=setInterval(()=>{fleet.claims.set(key,{owner:"slow-holder",until:Date.now()+400});},60);
  fleet.claims.set(key,{owner:"slow-holder",until:Date.now()+400});
  const said:string[]=[],started=Date.now();

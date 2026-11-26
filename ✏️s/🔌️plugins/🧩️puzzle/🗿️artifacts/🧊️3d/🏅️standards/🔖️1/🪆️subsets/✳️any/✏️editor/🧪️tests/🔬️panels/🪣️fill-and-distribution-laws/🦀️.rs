@@ -123,8 +123,14 @@ async fn engagement_abort_tears_the_fill_plan_down_across_turns_and_never_inside
     let generation = identity[semio_framework_tool_run::TOOL_RUN_ARG_GENERATION].as_u64().and_then(|generation| u32::try_from(generation).ok()).expect("generation");
     app.echo_tool_run_trace_cursor(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, semio_framework_tool_run::ToolRunTraceCursor { run, generation, page: 1 });
     let escape = dispatch_unsettled(&mut app, "engagementAbort", None, None).await.expect("Escape");
-    let settled = settle(&mut app).await;
-    let effects: Vec<&Effect> = escape.requested_effects.iter().chain(&settled.effects).collect();
+    let mut settled = Puzzle3dSettled { effects: escape.requested_effects, ..Default::default() };
+    for _ in 0..FILL_RUN_TURNS {
+        let abort = settled.effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID));
+        let disarm = settled.effects.iter().any(|effect| matches!(effect, Effect::SetActiveTool { tool_id } if tool_id.is_empty()));
+        if abort && disarm { break; }
+        host_turn(&mut app, 1, &mut settled).await;
+    }
+    let effects = &settled.effects;
     let abort = effects
         .iter()
         .find_map(|effect| match effect {
@@ -192,6 +198,7 @@ async fn raising_and_lowering_the_fill_count_during_a_run_continues_and_retracts
     let six = provisional_ids(&mut app, &committed).await;
     assert!(four.is_subset(&six) && six.len() == 6, "a raise continues the sequence: {four:?} ⊂ {six:?}");
     dispatch(&mut app, "setFillCount", Some(&json!({ "value": 2 })), None).await.expect("lower to 2");
+    assert_eq!(app.parts().0.stores.config_store.snapshot_owner().fill_count, 2, "the lowered count reached the document configuration");
     pump_fill_run(&mut app, "two placements", |presence| presence.state == protocol::PresenceToolRunState::Complete && presence.completed == 2).await;
     let two = provisional_ids(&mut app, &committed).await;
     assert!(two.is_subset(&four) && two.len() == 2, "a lower retracts the tail: {two:?} ⊂ {four:?}");

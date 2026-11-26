@@ -24,6 +24,16 @@
           "main",
           "shards"
         ],
+        "if": {
+          "properties": { "main": { "const": true } }
+        },
+        "then": {
+          "required": ["appLibraries"],
+          "properties": { "shards": { "maxItems": 0 } }
+        },
+        "else": {
+          "not": { "required": ["appLibraries"] }
+        },
         "properties": {
           "id": {
             "type": "string",
@@ -44,36 +54,40 @@
           "main": {
             "type": "boolean"
           },
+          "appLibraries": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/definitions/appPartition" }
+          },
           "shards": {
             "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "root",
-                "enum",
-                "variants"
-              ],
-              "properties": {
-                "root": {
-                  "type": "string",
-                  "pattern": "^[^./][^\\\\]*\\/🦀️\\.rs$"
-                },
-                "enum": {
-                  "type": "string",
-                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
-                },
-                "variants": {
-                  "type": "array",
-                  "minItems": 1,
-                  "uniqueItems": true,
-                  "items": {
-                    "type": "string",
-                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
-                  }
-                }
-              }
-            }
+            "items": { "$ref": "#/definitions/appPartition" }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "appPartition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "enum", "variants"],
+      "properties": {
+        "root": {
+          "type": "string",
+          "pattern": "^[^./][^\\\\]*\\/🦀️\\.rs$"
+        },
+        "enum": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "variants": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
           }
         }
       }

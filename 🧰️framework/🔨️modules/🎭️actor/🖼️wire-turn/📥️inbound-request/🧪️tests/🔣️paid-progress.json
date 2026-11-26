@@ -1,0 +1,32 @@
+[
+  {
+    "case": "paid",
+    "answer": 150,
+    "turns": 150,
+    "status": "answered"
+  },
+  {
+    "case": "parked",
+    "answer": 150,
+    "turns": 64,
+    "status": "unanswered"
+  },
+  {
+    "case": "replayed",
+    "answer": 150,
+    "turns": 65,
+    "status": "unanswered"
+  },
+  {
+    "case": "explicit",
+    "answer": 150,
+    "turns": 64,
+    "status": "unanswered"
+  },
+  {
+    "case": "ends",
+    "answer": 150,
+    "turns": 70,
+    "status": "unanswered"
+  }
+]

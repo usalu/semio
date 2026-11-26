@@ -423,7 +423,7 @@ pub fn retain_original_ownership_receipts<P: PluginApp>(app: &mut P, policy: sem
         recipient.push(TypedOperationFixtureOwnershipReceipt::History { grant, progress });
     }
     if let Some((grant, progress)) = app.take_tool_run_receipt() {
-        if !receipt_grant_matches(grant, policy.maintenance) || !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() { return Err(semio_framework::Fault::from("registered fixture tool run receipt differs from its original caller authority")); }
+        if !receipt_grant_matches(grant, policy.maintenance) || !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() { return Err(semio_framework::Fault::from(format!("registered fixture tool run receipt differs from its original caller authority: grant {grant:?}, authority {:?}, progress {progress:?}", policy.maintenance).as_str())); }
         recipient.push(TypedOperationFixtureOwnershipReceipt::ToolRun { grant, progress });
     }
     if let Some((grant,progress))=app.take_local_interaction_query_receipt(){

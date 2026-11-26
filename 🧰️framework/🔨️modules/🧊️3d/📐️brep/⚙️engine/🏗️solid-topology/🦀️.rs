@@ -18,6 +18,12 @@ use std::mem::{size_of, take};
 pub mod sector_boundary;
 #[path = "🌗️spherical-cap-boundary/🦀️.rs"]
 pub mod spherical_cap_boundary;
+
+#[path="🍩️spherical-torus-boundary/🦀️.rs"]
+pub mod spherical_torus_boundary;
+
+#[path="🧲️spherical-box-boundary/🦀️.rs"]
+pub mod spherical_box_boundary;
 #[path = "🟠️rounded-box-boundary/🦀️.rs"]
 pub mod rounded_box_boundary;
 #[path = "✂️clip-boundary/🦀️.rs"]

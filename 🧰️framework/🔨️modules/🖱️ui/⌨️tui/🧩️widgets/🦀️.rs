@@ -59,18 +59,3 @@ pub mod wizard;
 
 #[path = "../../🧱️elements/🔤️Textarea/🎯️targets/⌨️tui/🦀️.rs"]
 pub mod editor;
-
-#[path = "../../🧱️elements/🧮️ChartScale/🎯️targets/⌨️tui/🦀️.rs"]
-pub mod chart_scale;
-
-#[path = "../../🧱️elements/🔢️StatCell/🎯️targets/⌨️tui/🦀️.rs"]
-pub mod stat;
-
-#[path = "../../🧱️elements/📈️Sparkline/🎯️targets/⌨️tui/🦀️.rs"]
-pub mod sparkline;
-
-#[path = "../../🧱️elements/📉️LineChart/🎯️targets/⌨️tui/🦀️.rs"]
-pub mod line_chart;
-
-#[path = "../../🧱️elements/🌡️Gauge/🎯️targets/⌨️tui/🦀️.rs"]
-pub mod gauge;

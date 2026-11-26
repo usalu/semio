@@ -29,6 +29,9 @@ impl<T: ?Sized> JobThreadTransfer for T {}
 
 /// 🧩️ See `README.md`.
 pub trait InteractiveJob: JobThreadTransfer {
+    /// 📸️ A received preview owes its matching resume checkpoint before a paused step can finish.
+    fn checkpoint_follows_preview(&self) -> bool { false }
+
     fn step<'a>(&'a mut self,cx:&mut StepContext<'_>,return_claim:&mut OriginalJobReturnClaim<'_>)->InteractiveJobStep<'a>;
     fn borrow_outcome<'a>(&'a self, descriptor:&'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>,ValueError>;
     fn begin_close(&mut self);

@@ -2,7 +2,7 @@
 
 use semio_s_plugin_norm_app_surface::{IdRemoval, InsertItemRule, NormEdit, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
 use semio_s_artifact_norm_en1995_model::En1995Snapshot;
-use crate::En1995Mutation;
+use semio_s_artifact_norm_en1995_mutations::En1995Mutation;
 
 /// 📚 Every path an EN1995 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {

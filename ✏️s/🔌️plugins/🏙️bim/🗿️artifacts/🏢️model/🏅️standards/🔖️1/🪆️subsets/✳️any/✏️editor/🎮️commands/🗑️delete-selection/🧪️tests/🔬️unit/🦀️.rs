@@ -76,7 +76,7 @@ async fn any_number_of_elements_leave_as_parts_of_a_bounded_inverse() {
     let mut after = snapshot.clone();
     for mutation in &mutations {
         assert!(protocol::Mutation::<ModelSnapshot>::inverse_rows(mutation) <= INVERSE_ROWS, "every part declares a bounded inverse");
-        let inverse = protocol::Mutation::<ModelSnapshot>::inverse(mutation, &after).expect("the inverse");
+        let inverse = protocol::ColdMutation::<ModelSnapshot>::inverse(mutation, &after).expect("the inverse");
         assert!(inverse.len() <= INVERSE_ROWS, "{} rows", inverse.len());
         after = semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&after, mutation).expect("the part leaves");
     }
@@ -121,5 +121,5 @@ async fn one_removal_above_the_bound_is_refused_and_has_no_inverse() {
     let (snapshot, ids) = crowded(INVERSE_ROWS + 1);
     let whole = ModelMutation::DeleteElements(DeleteElements { ids });
     assert!(semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &whole).is_err(), "the bound is a promise the diff keeps");
-    assert!(protocol::Mutation::<ModelSnapshot>::inverse(&whole, &snapshot).expect("an inverse").is_empty());
+    assert!(protocol::ColdMutation::<ModelSnapshot>::inverse(&whole, &snapshot).expect("an inverse").is_empty());
 }

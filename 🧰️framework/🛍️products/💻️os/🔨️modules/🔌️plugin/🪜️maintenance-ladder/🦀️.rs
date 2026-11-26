@@ -114,7 +114,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             MaintenanceUnit::AgentPreview=>self.tools.close_agent_lane_preview(cx, grant),
             MaintenanceUnit::MediaRefusal=>self.media.close_media_submission_refusal(&mut *self.stores,&mut *self.tools, cx, grant),
             MaintenanceUnit::ActionIngress=>self.ingress.close_action_ingress_sources(cx, grant, false),
-            MaintenanceUnit::CommandPrune=>self.history.advance_command_prune_step(&mut *self.stores, grant, false).map_err(Into::into),
+            MaintenanceUnit::CommandPrune=>{
+                self.history.advance_command_prune_step(&mut *self.stores, grant, false).map_err(Into::into)
+            },
             MaintenanceUnit::PrivateChildGroup(operation)=>Ok(match self.child_composition.close_private_child_group_operation_step(&mut *self.stores, operation, cx, grant)?{semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),semio_framework_job::InteractiveJobCloseStep::Blocked=>PluginLifecycleStep::Blocked{reason:"original private child group awaits custody"}}),
             MaintenanceUnit::DirectIngress=>{
                 let Some(((result,work),_))=cx.with_original_effect(grant,|_,effect|{let result=self.stores.window_config_store.close_direct_ingress(effect);(result,effect.performed_work())})? else{return Ok(PluginLifecycleStep::Progress(Default::default()))};
@@ -408,6 +410,18 @@ if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceT
     fn drive_store_replacement_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let target = self.shared().store_replacement_target(closing).map(|(_, operation_id)| operation_id);
         let step = self.drive_store_replacement_unit(cx, grant, closing);
+        thread_local! { static DEBUG_ZERO_RUN: std::cell::Cell<u64> = const { std::cell::Cell::new(0) }; }
+        match &step {
+            Ok(PluginLifecycleStep::Progress(progress)) if *progress == RetainedCloneProgress::default() => {
+                let run = DEBUG_ZERO_RUN.with(|run| { run.set(run.get() + 1); run.get() });
+                if run % 32 == 1 {
+                    let state = target.and_then(|operation_id| self.ingest.store_replacement_jobs.get(operation_id).map(|active| active.state));
+                    let quote = self.shared().store_replacement_demands(closing, grant.maximum_copy_bytes);
+                    eprintln!("[DEBUG] store replacement zero reading run={run} state={state:?} grant={grant:?} quote={quote:?} fuel={} should_yield={} cancelled={}", cx.fuel_remaining(), cx.should_yield(), cx.is_cancelled());
+                }
+            }
+            _ => DEBUG_ZERO_RUN.with(|run| run.set(0)),
+        }
         if let (Some(operation_id), Ok(PluginLifecycleStep::Progress(progress))) = (target, &step) {
             if let Some(active) = self.ingest.store_replacement_jobs.get_mut(operation_id) {
                 active.decoded = active.decoded.saturating_add(progress.copied_items as u64);
@@ -601,7 +615,7 @@ if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceT
         } else {
             self.pending.commit_document_window_reset(&mut *self.stores, &mut *self.history, &mut window_reset, self.tools.tool_cancellations.scope_generation(), cx)?;
         }
-        self.history.cache = None;
+        self.history.invalidate_cache();
         self.history.retire_displaced_document_rows();
         self.time_travel.set_history_unavailable(false);
         Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { retained_capacity_bytes: store_replacement_commit_capacity(), ..item }))

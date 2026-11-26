@@ -136,6 +136,7 @@ impl semio_plugin_host_wit::actor_bindings::semio::framework::pure::Host for Act
     }
 
     fn operation_clock_us(&mut self,clock_binding:u64)->Option<u64>{self.original_job_clock.filter(|(binding,_)|*binding==clock_binding).and_then(|(_,clock)|clock())}
+    fn actor_execution_clock_us(&mut self,_clock_binding:u64)->Option<u64>{None}
 
     fn now_ms(&mut self) -> i64 {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as i64)

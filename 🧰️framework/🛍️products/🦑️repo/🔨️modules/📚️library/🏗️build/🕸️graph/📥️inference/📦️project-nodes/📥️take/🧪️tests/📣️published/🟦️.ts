@@ -6,7 +6,7 @@ import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{spawnSync}from"node:child_process";
 import{TAKE_POLICY_V1,fleetGlobalsKeyV1,fleetPublishedNamesV1,takePollV1}from"../../🟨️.mjs";
-import childSource from"../../../🌐️owner-pool/🧒️child/🟨️.mjs"with{type:"text"};
+const childSource=await Bun.file(new URL("../../../🌐️owner-pool/🧒️child/🟨️.mjs",import.meta.url)).text();
 
 const store=()=>mkdtempSync(join(tmpdir(),"r194-"));
 const publish=(root:string,origin:string,wave:string,names:string[],ageMs=0)=>{const dir=join(root,"v1","origins",origin);mkdirSync(dir,{recursive:true});const file=join(dir,`pool-published-${wave}.txt`);writeFileSync(file,names.join("\n")+"\n");const at=new Date(Date.now()-ageMs);utimesSync(file,at,at);};

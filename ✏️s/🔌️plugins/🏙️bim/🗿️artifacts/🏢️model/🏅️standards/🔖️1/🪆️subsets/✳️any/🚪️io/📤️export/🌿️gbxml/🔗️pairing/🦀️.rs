@@ -30,7 +30,8 @@ impl Merged<'_> {
     }
 }
 
-fn shared(surface: &EnvelopeSurface) -> bool {
+/// 🪟️ Whether an envelope side can have a reciprocal partner.
+pub fn shared(surface: &EnvelopeSurface) -> bool {
     matches!(surface.boundary, Boundary::Adjacent | Boundary::Adiabatic) && !surface.adjacent.is_empty() && !surface.polygon.is_empty()
 }
 
@@ -38,87 +39,172 @@ fn horizontal(surface: &EnvelopeSurface) -> bool {
     matches!(surface.kind, SurfaceKind::Floor | SurfaceKind::Ceiling)
 }
 
-fn plan_centre(surface: &EnvelopeSurface) -> [f64; 2] {
-    let count = surface.polygon.len() as f64;
-    [surface.polygon.iter().map(|point| point.x).sum::<f64>() / count, surface.polygon.iter().map(|point| point.y).sum::<f64>() / count]
-}
-
-fn stretch(surface: &EnvelopeSurface, direction: [f64; 2]) -> ([f64; 2], [f64; 2]) {
-    let mut along = [f64::INFINITY, f64::NEG_INFINITY];
-    let mut height = [f64::INFINITY, f64::NEG_INFINITY];
-    for point in &surface.polygon {
-        let at = point.x * direction[0] + point.y * direction[1];
-        along = [along[0].min(at), along[1].max(at)];
-        height = [height[0].min(point.z), height[1].max(point.z)];
-    }
-    (along, height)
+/// 🪪️ Selects the first side of a paired surface in canonical output.
+pub fn prefer_side(space: &str, surface: &EnvelopeSurface, other: &str) -> bool {
+    if horizontal(surface) { surface.kind == SurfaceKind::Floor } else { space <= other }
 }
 
 fn overlap(a: [f64; 2], b: [f64; 2]) -> f64 {
     (a[1].min(b[1]) - a[0].max(b[0])).max(0.0)
 }
 
-fn score(mine: &EnvelopeSurface, theirs: &EnvelopeSurface) -> Option<f64> {
-    if horizontal(mine) != horizontal(theirs) {
-        return None;
+#[derive(Clone, Copy)]
+struct Extent {
+    centre_sum: [f64; 2],
+    along: [f64; 2],
+    height: [f64; 2],
+}
+
+impl Default for Extent {
+    fn default() -> Self {
+        Self { centre_sum: [0.0; 2], along: [f64::INFINITY, f64::NEG_INFINITY], height: [f64::INFINITY, f64::NEG_INFINITY] }
     }
-    if horizontal(mine) {
+}
+
+#[derive(Clone, Copy)]
+enum Metric { Horizontal, Wall([f64; 2]) }
+
+/// 📏️ Bounded score for two reciprocal envelope surfaces.
+#[derive(Clone, Copy)]
+pub struct PairingScore {
+    metric: Metric,
+    sides: [Extent; 2],
+    side: usize,
+    point: usize,
+}
+
+impl PairingScore {
+    /// 🎛️ Selects the geometric comparison from the authored surface kinds and wall directions.
+    pub fn new(mine: &EnvelopeSurface, theirs: &EnvelopeSurface) -> Option<Self> {
+        if horizontal(mine) != horizontal(theirs) { return None; }
         let wanted = if mine.kind == SurfaceKind::Floor { SurfaceKind::Ceiling } else { SurfaceKind::Floor };
-        let (a, b) = (plan_centre(mine), plan_centre(theirs));
-        let close = (a[0] - b[0]).hypot(a[1] - b[1]) <= 1e-3 && (mine.area - theirs.area).abs() <= 1e-4 * (1.0 + mine.area.max(theirs.area));
-        return (theirs.kind == wanted && close).then(|| 1.0 / (1.0 + (a[0] - b[0]).hypot(a[1] - b[1])));
+        let metric = if horizontal(mine) {
+            if theirs.kind != wanted { return None; }
+            Metric::Horizontal
+        } else {
+            if mine.kind != theirs.kind || mine.element != theirs.element || ((mine.azimuth - theirs.azimuth).rem_euclid(360.0) - 180.0).abs() > 20.0 {
+                return None;
+            }
+            let radians = mine.azimuth.to_radians();
+            Metric::Wall([radians.cos(), -radians.sin()])
+        };
+        Some(Self { metric, sides: [Extent::default(); 2], side: 0, point: 0 })
     }
-    if mine.kind != theirs.kind || mine.element != theirs.element || ((mine.azimuth - theirs.azimuth).rem_euclid(360.0) - 180.0).abs() > 20.0 {
-        return None;
+
+    /// 🧭️ Inspects at most `points` vertices from the same two original sides.
+    pub fn advance(&mut self, mine: &EnvelopeSurface, theirs: &EnvelopeSurface, points: usize) -> Option<Option<f64>> {
+        let surfaces = [mine, theirs];
+        for _ in 0..points {
+            if self.side == 2 { break; }
+            let Some(point) = surfaces[self.side].polygon.get(self.point) else {
+                self.side += 1;
+                self.point = 0;
+                continue;
+            };
+            let extent = &mut self.sides[self.side];
+            match self.metric {
+                Metric::Horizontal => {
+                    extent.centre_sum[0] += point.x;
+                    extent.centre_sum[1] += point.y;
+                }
+                Metric::Wall(direction) => {
+                    let at = point.x * direction[0] + point.y * direction[1];
+                    extent.along = [extent.along[0].min(at), extent.along[1].max(at)];
+                    extent.height = [extent.height[0].min(point.z), extent.height[1].max(point.z)];
+                }
+            }
+            self.point += 1;
+        }
+        (self.side == 2).then(|| self.result(mine, theirs))
     }
-    let radians = mine.azimuth.to_radians();
-    let direction = [radians.cos(), -radians.sin()];
-    let ((a_along, a_height), (b_along, b_height)) = (stretch(mine, direction), stretch(theirs, direction));
-    let common = overlap(a_along, b_along) * overlap(a_height, b_height);
-    let smaller = ((a_along[1] - a_along[0]) * (a_height[1] - a_height[0])).min((b_along[1] - b_along[0]) * (b_height[1] - b_height[0]));
-    (common > 1e-9 && common >= 0.5 * smaller).then_some(common)
+
+    fn result(&self, mine: &EnvelopeSurface, theirs: &EnvelopeSurface) -> Option<f64> {
+        let [a, b] = self.sides;
+        match self.metric {
+            Metric::Horizontal => {
+                let a = a.centre_sum.map(|coordinate| coordinate / mine.polygon.len() as f64);
+                let b = b.centre_sum.map(|coordinate| coordinate / theirs.polygon.len() as f64);
+                let distance = (a[0] - b[0]).hypot(a[1] - b[1]);
+                let close = distance <= 1e-3 && (mine.area - theirs.area).abs() <= 1e-4 * (1.0 + mine.area.max(theirs.area));
+                close.then(|| 1.0 / (1.0 + distance))
+            }
+            Metric::Wall(_) => {
+                let common = overlap(a.along, b.along) * overlap(a.height, b.height);
+                let size = |extent: Extent| (extent.along[1] - extent.along[0]) * (extent.height[1] - extent.height[0]);
+                (common > 1e-9 && common >= 0.5 * size(a).min(size(b))).then_some(common)
+            }
+        }
+    }
 }
 
 /// 🔗️ The surfaces of the file from the envelopes of the spaces, in space order then envelope order; the second side of a pair is not listed again.
 pub fn merge<'a>(envelopes: &'a BTreeMap<String, EnvelopeSpace>) -> Vec<Merged<'a>> {
-    let hosts: Vec<(&str, &EnvelopeSurface)> = envelopes.iter().flat_map(|(space, envelope)| envelope.surfaces.iter().filter(|surface| surface.parent.is_empty()).map(move |surface| (space.as_str(), surface))).collect();
-    let children = |space: &str, host: &EnvelopeSurface| -> Vec<(&'a str, &'a EnvelopeSurface)> {
-        envelopes.get_key_value(space).into_iter().flat_map(|(key, envelope)| envelope.surfaces.iter().filter(|surface| surface.parent == host.id).map(move |surface| (key.as_str(), surface))).collect()
-    };
+    merge_checked(envelopes, &mut || Ok::<_, std::convert::Infallible>(()))
+        .unwrap_or_else(|never| match never {})
+}
+
+/// 🧭️ Pairs the same hosts while honoring a caller checkpoint during indexing and reciprocal searches.
+pub fn merge_checked<'a, E>(envelopes: &'a BTreeMap<String, EnvelopeSpace>, checkpoint: &mut impl FnMut() -> Result<(), E>) -> Result<Vec<Merged<'a>>, E> {
+    let mut hosts = Vec::new();
+    let mut partitions = BTreeMap::<_, Vec<_>>::new();
+    let mut openings = BTreeMap::<_, Vec<_>>::new();
+    for (space, envelope) in envelopes {
+        for surface in &envelope.surfaces {
+            checkpoint()?;
+            let row = (space.as_str(), surface);
+            if !surface.parent.is_empty() {
+                openings.entry((row.0, surface.parent.as_str())).or_default().push(row);
+                continue;
+            }
+            hosts.push(row);
+            if shared(surface) {
+                partitions.entry((row.0, surface.adjacent.as_str(), partition_family(surface))).or_default().push(row);
+            }
+        }
+    }
+    let children = |space: &'a str, host: &'a EnvelopeSurface| openings.get(&(space, host.id.as_str())).into_iter().flatten().copied();
     let mut taken: BTreeSet<(&str, &str)> = BTreeSet::new();
     let mut merged = Vec::new();
-    for (space, host) in &hosts {
-        if taken.contains(&(*space, host.id.as_str())) {
+    for (space, host) in hosts {
+        checkpoint()?;
+        if !taken.insert((space, host.id.as_str())) {
             continue;
         }
-        taken.insert((*space, host.id.as_str()));
-        let partner = shared(host)
-            .then(|| {
-                hosts
-                    .iter()
-                    .filter(|(other, candidate)| *other == host.adjacent && candidate.adjacent == *space && shared(candidate) && !taken.contains(&(*other, candidate.id.as_str())))
-                    .filter_map(|(other, candidate)| score(host, candidate).map(|value| (value, *other, *candidate)))
-                    .max_by(|a, b| a.0.total_cmp(&b.0).then_with(|| b.2.id.cmp(&a.2.id)))
-            })
-            .flatten();
+        let candidates = shared(host).then(|| partitions.get(&(host.adjacent.as_str(), space, partition_family(host)))).flatten();
+        let mut partner: Option<(f64, &str, &EnvelopeSurface)> = None;
+        for &(other, candidate) in candidates.into_iter().flatten() {
+            checkpoint()?;
+            if taken.contains(&(other, candidate.id.as_str())) { continue; }
+            let Some(mut score) = PairingScore::new(host, candidate) else { continue };
+            let scored = loop {
+                checkpoint()?;
+                if let Some(scored) = score.advance(host, candidate, 64) { break scored; }
+            };
+            let Some(value) = scored else { continue };
+            if partner.is_none_or(|(best, _, previous)| value.total_cmp(&best).then_with(|| previous.id.cmp(&candidate.id)).is_ge()) {
+                partner = Some((value, other, candidate));
+            }
+        }
         let Some((_, other, candidate)) = partner else {
-            merged.push(Merged { space, surface: host, other: None, children: children(space, host) });
+            merged.push(Merged { space, surface: host, other: None, children: children(space, host).collect() });
             continue;
         };
         taken.insert((other, candidate.id.as_str()));
-        let (first, second) = if horizontal(host) {
-            if host.kind == SurfaceKind::Floor { ((*space, *host), (other, candidate)) } else { ((other, candidate), (*space, *host)) }
-        } else if *space <= other {
-            ((*space, *host), (other, candidate))
+        let prefer_host = prefer_side(space, host, other);
+        let (first, second) = if prefer_host {
+            ((space, host), (other, candidate))
         } else {
-            ((other, candidate), (*space, *host))
+            ((other, candidate), (space, host))
         };
-        let mut kids = children(first.0, first.1);
-        let known: BTreeSet<String> = kids.iter().map(|(_, kid)| kid.element.clone()).collect();
-        kids.extend(children(second.0, second.1).into_iter().filter(|(_, kid)| !known.contains(&kid.element)));
+        let mut kids: Vec<_> = children(first.0, first.1).collect();
+        let known: BTreeSet<&str> = kids.iter().map(|(_, kid)| kid.element.as_str()).collect();
+        kids.extend(children(second.0, second.1).filter(|(_, kid)| !known.contains(kid.element.as_str())));
         merged.push(Merged { space: first.0, surface: first.1, other: Some(second), children: kids });
     }
-    merged
+    Ok(merged)
 }
 
+fn partition_family(surface: &EnvelopeSurface) -> Option<(&str, &'static str)> {
+    (!horizontal(surface)).then(|| (surface.element.as_str(), surface.kind.name()))
+}
 

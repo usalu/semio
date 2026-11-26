@@ -1,13 +1,27 @@
 import { readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { verifySemanticDescriptorPairBytesV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
-import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
-import { componentStageTargetsV1, type ComponentStageTargetV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts";
+import { DESCRIPTOR_JSON_REL_PATH, findPluginCargoFiles, parseComponentSourceOwnerV1, type ComponentSourceOwnerV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 
 export const workspace = resolve(import.meta.dirname, "../../../../../../..");
+const descriptorJson = basename(DESCRIPTOR_JSON_REL_PATH.at(-1)!);
+const descriptorPack = "🛂️.descriptor.semio";
+
+/** 🪪 Resolve authored component ownership without loading compiler tools. */
+export function authoredReleaseTargetsV1() {
+  return findPluginCargoFiles(workspace).map(manifest => {
+    const target = parseComponentSourceOwnerV1(manifest, workspace);
+    return {...target, ownerRoot:dirname(resolve(workspace,target.cratePath,...DESCRIPTOR_JSON_REL_PATH))};
+  });
+}
+
+/** 🧾 Verify an exact current semantic pair at its authored owner. */
+export function authoredTargetDigestV1(target: ReturnType<typeof authoredReleaseTargetsV1>[number]) {
+  return authoredReleaseDigestV1(target, readFileSync(join(target.ownerRoot,descriptorJson)), readFileSync(join(target.ownerRoot,descriptorPack)));
+}
 
 /** 🧾️ Checks an authored pair using the same identity and semantic digest as a release component. */
-export function authoredReleaseDigestV1(target: Pick<ComponentStageTargetV1, "pluginId" | "packageId" | "role">, json: Uint8Array, pack: Uint8Array): string {
+export function authoredReleaseDigestV1(target: Pick<ComponentSourceOwnerV1, "pluginId" | "packageId" | "role">, json: Uint8Array, pack: Uint8Array): string {
   const descriptor = verifySemanticDescriptorPairBytesV1(json, pack);
   if (descriptor.pluginId !== target.pluginId || descriptor.packageId !== target.packageId || descriptor.role !== target.role) {
     throw new Error(`${target.pluginId}: descriptor pair does not match its release owner`);
@@ -17,7 +31,7 @@ export function authoredReleaseDigestV1(target: Pick<ComponentStageTargetV1, "pl
 
 /** 🧭️ Maps the requested Demonstrator roster to canonical release descriptor owners. */
 export function authoredReleaseDigestsV1(roots: readonly string[]): Record<string, string> {
-  const targets = componentStageTargetsV1(workspace);
+  const targets = authoredReleaseTargetsV1();
   const errors: string[] = [];
   const digests = new Map<string, string>();
   for (const pluginId of roots) {
@@ -25,7 +39,7 @@ export function authoredReleaseDigestsV1(roots: readonly string[]): Record<strin
       const matches = targets.filter(target => target.pluginId === pluginId);
       const [target] = matches;
       if (!target || matches.length !== 1) throw new Error(`expected one release component owner, found ${matches.length}`);
-      const digest = authoredReleaseDigestV1(target, readFileSync(join(target.ownerRoot, DESCRIPTOR_JSON_FILENAME)), readFileSync(join(target.ownerRoot, DESCRIPTOR_PACK_FILENAME)));
+      const digest = authoredTargetDigestV1(target);
       digests.set(pluginId, digest);
     } catch (error) {
       errors.push(`${pluginId}: ${error instanceof Error ? error.message : error}`);

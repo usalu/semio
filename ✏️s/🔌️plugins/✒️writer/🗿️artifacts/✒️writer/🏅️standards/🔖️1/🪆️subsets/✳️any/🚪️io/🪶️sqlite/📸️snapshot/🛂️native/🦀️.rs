@@ -17,12 +17,13 @@ fn admit_values(snapshot:&WriterSnapshot,control:&mut SqliteSnapshotControl<'_>,
  }Ok(())
 }
 
-pub(super) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<WriterSnapshot,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
- control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,2)?;
- admit(control)?;
- let value=work.take(store::decode_sqlite_snapshot_record_native(payload,<WriterSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),WriterSnapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {WriterSnapshot::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control))?;admit_values(&value,control,SqliteSnapshotPhase::DecodeNative)?;Ok(value)
-})}
-pub(super) fn encode(snapshot:&WriterSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io::IoPayload,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
- control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,2)?;
- admit(control)?;admit_values(snapshot,control,SqliteSnapshotPhase::EncodeNative)?;
- work.take(store::encode_sqlite_snapshot_record_native(encoding,<WriterSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),WriterSnapshot::__dsl_spec_producer(),|native|snapshot.__dsl_to_record_controlled(native),control,native_owner))})}
+pub(super) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_,'_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<WriterSnapshot>>)->store::os_store::serialization::SnapshotReceivingOutcome{
+ if let Err(error)=(||->Result<(),ValueError>{control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,2)?;admit(control)})(){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}
+ store::decode_sqlite_snapshot_record_receiving(payload,<WriterSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),WriterSnapshot::__dsl_spec_producer(),&mut |record,retained,owner,control|semio_os_kernel::native_snapshot_turn(|work|{
+  let value=work.measured(owner.native(),|native|WriterSnapshot::__dsl_from_record_controlled(record,native))?;
+  admit_values(&value,control,SqliteSnapshotPhase::DecodeNative)?;
+  *retained=Some(value);Ok(())
+ }),control,native_owner,output)}
+pub(super) fn encode(snapshot:&WriterSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_,'_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome{
+ if let Err(error)=(||->Result<(),ValueError>{control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,2)?;admit(control)?;admit_values(snapshot,control,SqliteSnapshotPhase::EncodeNative)})(){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}
+ store::encode_sqlite_snapshot_record_native(encoding,<WriterSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),WriterSnapshot::__dsl_spec_producer(),&mut |native|snapshot.__dsl_to_record_controlled(native),control,native_owner,output)}

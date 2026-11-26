@@ -13,7 +13,7 @@ const directory=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`work-wire
 afterAll(async()=>{for(const stop of stops)await stop().catch(()=>{});for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 const serve=async()=>{const server=await startRemoteCacheServerV1({directory:directory("cache"),host:"127.0.0.1",port:0,maximumBytes:2**28,maximumEntryBytes:2**26,maximumAgeDays:30,defaultInstance:"main",tokens:{write:TOKEN}});stops.push(()=>server.stop());return server;};
 const sha=(value:Uint8Array|string)=>createHash("sha256").update(value).digest("hex");
-const upstream=(payload:Uint8Array,delayMilliseconds:number)=>{
+const upstream=(payload:Uint8Array<ArrayBuffer>,delayMilliseconds:number)=>{
  const served={requests:0};
  const server=Bun.serve({port:0,hostname:"127.0.0.1",fetch:async()=>{served.requests++;await new Promise(resolve=>setTimeout(resolve,delayMilliseconds));return new Response(payload);}});
  stops.push(async()=>{server.stop(true);});return {url:`http://127.0.0.1:${server.port}/tool.bin`,served};

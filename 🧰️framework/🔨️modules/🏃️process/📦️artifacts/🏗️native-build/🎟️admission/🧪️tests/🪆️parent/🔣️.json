@@ -17,5 +17,6 @@
     {"name":"missing ledger is not permission to allocate", "claim":"matching", "state":"missing", "carriedMiB":8192, "reservedMiB":null, "expectedMiB":0}
   ],
   "overhead": {"parentMiB":2400,"nonCompilerMiB":1000,"peakMiB":1536,"secondPeakMiB":1024},
+  "drawFinal": {"peakMiB":3294,"coordinatorMiB":1685,"underpaidMiB":4608,"paidMiB":6144,"shortAvailableMiB":5996,"availableMiB":6400},
   "fleetOnly": {"parentMiB":2048,"peakMiB":1024,"reason":"fleet-placement","allowanceBytes":0}
 }

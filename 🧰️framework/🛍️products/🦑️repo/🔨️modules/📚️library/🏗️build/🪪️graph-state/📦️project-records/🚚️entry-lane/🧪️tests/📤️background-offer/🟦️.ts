@@ -9,7 +9,7 @@ import{startRemoteCacheServerV1}from"../../../../../🌐️remote-cache/🖥️s
 import{closureEntryKeyV1,closureEntryPolicyV1,createClosureEntryLaneV1,forgetPackedClosureDocumentsV1}from"../../🟦️.ts";
 import{brotliDecompressSync}from"node:zlib";
 import{hostOfRootV1,packBundleV1}from"../../../🧳️portable/🟦️.ts";
-import{PROVIDER_CLOSURE_POLICY_V1,providerGroupNameV1}from"../../../../../🕸️graph/📥️inference/🧭️script-inputs/🔌️provider-closures/🟨️.mjs";
+import{providerGroupNameV1}from"../../../../../🕸️graph/📥️inference/🧭️script-inputs/🔌️provider-closures/🟨️.mjs";
 import{bindClosureStoreV1,closureRecipeKeyV1,closureTravelV1}from"../../../../../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs";
 import{createClosureStoreV1}from"../../../../../🕸️graph/📥️inference/🧭️script-inputs/💾️entries/🟨️.mjs";
 
@@ -93,7 +93,7 @@ test("cancel drops the queued jobs, keeps their outbox files for adoption and le
 test("a shared entry an offer refers to is packed once per entry version: the next offers of the same process and of another process take its document from the memory or from the file, which equals a fresh pack",async()=>{
  const{server,environment}=await world();
  try{
-  const root=temp("a"),documents=join(root,"d"),view=Object.keys(PROVIDER_CLOSURE_POLICY_V1.views)[0]!,shared={fn:"script-provider",port:"alpha",view},reference={projects:["@semio-tech/p"],input:providerGroupNameV1("alpha",view)};
+  const root=temp("a"),documents=join(root,"d"),view="scheduling",shared={fn:"script-provider",port:"alpha",view},reference={projects:["@semio-tech/p"],input:providerGroupNameV1("alpha",view)};
   mkdirSync(join(root,"ce"),{recursive:true});writeFileSync(join(root,"p.ts"),"export const p=1;\n");utimesSync(join(root,"p.ts"),1_700_000_000,1_700_000_000);bindClosureStoreV1(root,join(root,"ce"),true);
   const store=createClosureStoreV1({directory:join(root,"ce")}),save=async(recipe:object,value:unknown)=>{const rows=[row(root)];await store.save(`${root}\0${closureRecipeKeyV1(recipe)}`,{recipe,value,rows,layers:[[...rows]],sidecar:{facts:[null],members:[null]}});};
   const first=recipeOf(root,"h1"),second=recipeOf(root,"h2");

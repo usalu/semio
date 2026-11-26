@@ -124,6 +124,13 @@ pub struct RuntimeAppCell<PA: PluginApp> {
     pub maintenance_fault_us: AtomicU64,
     pub maintenance_generation: AtomicU64,
     pub maintenance_stalled_steps: AtomicU32,
+    /// ⏱️ Monotonic instant the current zero-progress run of the live pump began (`0` = the pump is moving).
+    pub maintenance_stall_since_us: AtomicU64,
+    /// ⏱️ Stall credit actually spent when a `ZeroProgress` verdict was stored, so the emitted fault quotes the measured stall instead of the last turn's unrelated cost.
+    pub maintenance_stall_credit_spent_us: AtomicU64,
+    /// 📈️ Bumped whenever another owner of this instance advances (a whole-document archive load is admitted or polled); a live pump that sees it move is waiting behind progress, not stalled.
+    pub instance_progress_epoch: AtomicU64,
+    pub maintenance_seen_progress_epoch: AtomicU64,
     /// 🛎️ How many HOST crossings currently want or hold [`Self::instance`]. A background lane
     /// reads it before it touches the mutex and yields its whole turn while it is non-zero, so
     /// the host lane — which has nothing to yield to — is never made to wait on maintenance it
@@ -157,6 +164,10 @@ impl<PA: PluginApp> RuntimeAppCell<PA> {
             maintenance_fault_us: AtomicU64::new(0),
             maintenance_generation: AtomicU64::new(0),
             maintenance_stalled_steps: AtomicU32::new(0),
+            maintenance_stall_since_us: AtomicU64::new(0),
+            maintenance_stall_credit_spent_us: AtomicU64::new(0),
+            instance_progress_epoch: AtomicU64::new(0),
+            maintenance_seen_progress_epoch: AtomicU64::new(0),
             host_crossings: AtomicU32::new(0),
             background_holds: AtomicU32::new(0),
             maintenance_pressure: AtomicBool::new(false),

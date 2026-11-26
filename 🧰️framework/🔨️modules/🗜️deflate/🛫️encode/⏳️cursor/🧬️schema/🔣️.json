@@ -3,10 +3,12 @@
   "title": "Retained Fixed Huffman Deflate Producer",
   "type": "object",
   "additionalProperties": false,
-  "required": ["maximumPageBytes", "maximumInlineBytes", "vectors", "cancellationPhases"],
+  "required": ["maximumPageBytes", "maximumInlineBytes", "initializationCopyBytes", "policy", "vectors", "cancellationPhases"],
   "properties": {
     "maximumPageBytes": { "const": 4096 },
     "maximumInlineBytes": { "const": 1024 },
+    "initializationCopyBytes": { "description": "The exact copy the matching pages cost once to initialize: every written table byte (head slots, previous links, history: 104 full 4096-byte pages and one partial page) plus the quoted page-header and bookkeeping bytes of the 105 page reservations and their ladder steps.", "type": "integer", "minimum": 1 },
+    "policy": { "description": "The canonical matching policy every implementation of codec1 Deflate shares: at most maximumChain probes per position, none after a match of niceMatch, and only the first position of a match longer than maximumInsert enters the chains, and after a run of literals the next misses >> skipShift positions are bare literals without a search or an insert (the speed tier: about a third of the copy work of the 16/32/16 tier for about 12% more stored bytes).", "type": "object", "additionalProperties": false, "required": ["maximumChain", "niceMatch", "maximumInsert", "skipShift"], "properties": { "maximumChain": { "const": 4 }, "niceMatch": { "const": 8 }, "maximumInsert": { "const": 4 }, "skipShift": { "const": 6 } } },
     "vectors": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["id", "raw", "stored"], "properties": { "id": { "type": "string" }, "raw": { "type": "array", "items": { "$ref": "#/definitions/byte" } }, "stored": { "type": "array", "items": { "$ref": "#/definitions/byte" } } } } },
     "cancellationPhases": { "type": "array", "items": { "enum": ["initialize", "input", "search", "compare", "token", "insert", "finish", "complete"] }, "uniqueItems": true }
   },

@@ -27,7 +27,7 @@ fn assembling_the_component_parses_every_artifact_definition_at_most_once() {
     assert_eq!(warmed, 36, "the process parsed {warmed} definition documents; stdio compiles in exactly 36 and each is memoized on first use");
 
     let lookups_before = semio_s_artifact_stdio_contract::artifact_definition_lookup_count();
-    let plugin = semio_hub_stdio::plugin::plugin().expect("stdio plugin assembly");
+    let plugin = semio_hub_stdio_router::plugin::plugin().expect("stdio plugin assembly");
     assert_eq!(plugin.manifest.plugin_id, "stdio");
     let after = semio_s_artifact_stdio_contract::artifact_definition_parse_count();
     assert_eq!(after, warmed, "a complete component assembly re-parsed {} artifact definitions that were already memoized", after - warmed);
@@ -40,7 +40,7 @@ fn assembling_the_component_parses_every_artifact_definition_at_most_once() {
 #[cfg(feature = "component-app-assembly")]
 #[test]
 fn the_runtime_registry_resolves_the_store_link_scope_after_assembly() {
-    semio_hub_stdio::plugin::plugin().expect("stdio plugin assembly");
+    semio_hub_stdio_router::plugin::plugin().expect("stdio plugin assembly");
     let bind = include_str!("../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🪢️bind-representation/🧬️schema/🔣️.json");
     let inputs = semio_framework::mutation_input_defs(bind, &semio_framework::registered_input_schema_document).expect("the kit pin reads through the framework.schema.artifact-reference.link scope");
     assert!(inputs.iter().any(|input| input.key() == "pin"), "{inputs:?}");
@@ -57,11 +57,11 @@ fn the_runtime_registry_resolves_the_store_link_scope_after_assembly() {
 #[test]
 fn zzz_describe_assembly_cost_report() {
     let started = std::time::Instant::now();
-    let plugin = semio_hub_stdio::plugin::plugin().expect("cold stdio plugin assembly");
+    let plugin = semio_hub_stdio_router::plugin::plugin().expect("cold stdio plugin assembly");
     let cold = started.elapsed();
     let lookups = semio_s_artifact_stdio_contract::artifact_definition_lookup_count();
     let parses = semio_s_artifact_stdio_contract::artifact_definition_parse_count();
     let warm_started = std::time::Instant::now();
-    semio_hub_stdio::plugin::plugin().expect("warm stdio plugin assembly");
+    semio_hub_stdio_router::plugin::plugin().expect("warm stdio plugin assembly");
     println!("describe assembly: apps={} lookups={lookups} parses={parses} multiplier={:.1}x cold={:?} warm={:?}", plugin.manifest.apps.len(), lookups as f64 / parses.max(1) as f64, cold, warm_started.elapsed());
 }

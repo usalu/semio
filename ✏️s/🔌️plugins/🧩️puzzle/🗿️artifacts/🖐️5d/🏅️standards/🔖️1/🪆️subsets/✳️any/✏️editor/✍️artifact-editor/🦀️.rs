@@ -19,6 +19,18 @@ fn puzzle5d_document_semantic_birth() -> RetainedCloneBirthDemand {
 //#region 🔖️PlayApp
 impl ArtifactEditor for Puzzle5dPlayApp {
     type Members = semio_s_artifact_puzzle_5d_kind_catalogs::standards::v1::subsets::any::schema::kind_catalogs::Puzzle5dMembers;
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_os_kernel::semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
+        semio_os_kernel::semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot)
+            .map_err(|error| Fault::from(error.to_string()))
+    }
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, ValueError> {
+        let document = snapshot.typed();
+        semio_s_artifact_puzzle_5d_kind_catalogs::standards::v1::subsets::any::schema::kind_catalogs::genesis_kind_catalogs_pack(
+            &document.kind_catalogs, &document.kind_catalogs_extra, slot, child_id,
+        )
+    }
+
     const DIALECT: semio_plugin::app::Dialect = crate::PUZZLE5D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA;
     type Snapshot = Puzzle5dPlaySnapshot;
@@ -95,9 +107,10 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         Some(document_store_owners::bounded_artifact_store_owners_with_semantic_preparations(grant, puzzle5d_document_semantic_birth(), || {
             (Arc::new(Puzzle5dStorePreparationFactory), Arc::new(Puzzle5dHistoryPreparation::default()))
         }).map(|(mut owners, progress)| {
+            owners.operation_wire.source = semio_s_artifact_puzzle_5d_mut_any_5::standards::v1::subsets::any::io::binary::mutations::prepared_operation_wire_source;
             owners.operation_wire = owners.operation_wire
                 .with_original_target(Self::Mutation::original_conflict_target)
-                .with_original_pack_value_receiving();
+                .with_original_binary_receiving();
             (owners, progress)
         }))
     }
@@ -378,6 +391,15 @@ impl ArtifactEditor for Puzzle5dPlayApp {
                 multiplicity: PortMultiplicity::Many,
             },
             MediaPortSpec {
+                id: crate::editor::puzzle5d::session::PUZZLE5D_REWRITE_INPUT_PORT.into(),
+                label: LocalizedLabel::native("Rewrite Rule", "Umschreibregel"),
+                direction: MediaPortDirection::In,
+                media_type: semio_s_artifact_trinity_rewriting_inferences::rule_media::REWRITE_MEDIA_TYPE,
+                kind_id: Some(semio_s_artifact_trinity_rewriting_inferences::rule_media::REWRITE_MEDIA_SCHEMA.into()),
+                required: false,
+                multiplicity: PortMultiplicity::One,
+            },
+            MediaPortSpec {
                 id: "design:out".into(),
                 label: LocalizedLabel::native("5D Puzzle Design", "5D-Puzzle-Entwurf"),
                 direction: MediaPortDirection::Out,
@@ -387,6 +409,15 @@ impl ArtifactEditor for Puzzle5dPlayApp {
                 multiplicity: PortMultiplicity::Many,
             },
         ])))
+    }
+
+    fn accepts_original_structured_media(port: &str, schema: &str, media_type: &MediaType) -> bool {
+        use semio_s_artifact_trinity_rewriting_inferences::rule_media::{REWRITE_MEDIA_SCHEMA, REWRITE_MEDIA_TYPE};
+        match port {
+            crate::editor::puzzle5d::session::PUZZLE5D_REWRITE_INPUT_PORT => schema == REWRITE_MEDIA_SCHEMA && media_type == &REWRITE_MEDIA_TYPE,
+            "kit:in" => schema == "kit.catalog" && media_type == &(MediaType { class: MediaClass::Kit, form: MediaForm::Type }),
+            _ => false,
+        }
     }
 
     /// 🧵️ The synchronous editor callback is deliberately closed: production import enters only

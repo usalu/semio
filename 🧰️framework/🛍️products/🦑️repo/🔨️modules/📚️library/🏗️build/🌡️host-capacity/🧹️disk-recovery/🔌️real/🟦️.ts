@@ -13,7 +13,7 @@ import {nativeShardHoldV1} from "../🧱️native-shards/🔒️hold/🟦️.ts"
 import {freeSpaceSyncV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🆓️free-space/🟦️.ts";
 import {handleTextV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 import {formatDiskBytesV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/💽️disk/🟦️.ts";
-import {DISK_RECOVERY_POLICY_V1,DISK_RECOVERY_TEXTS_V1,DISK_WRITERS_V1,diskReliefV1,requireDiskWritersV1,type DiskLanguageV1,type DiskWriterRowV1,type DiskWriterV1} from "../🟦️.ts";
+import {DISK_RECOVERY_POLICY_V1,DISK_RECOVERY_TEXTS_V1,DISK_WRITERS_V1,diskReliefV1,relieveVolumeFloorV1,requireDiskWritersV1,type DiskLanguageV1,type DiskWriterRowV1,type DiskWriterV1} from "../🟦️.ts";
 import {sweepWorkspaceSandboxImagesV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🧹️image-sweep/🟦️.ts";
 import {ownerPoolStagingIoV1,ownerPoolStagingSweepV1} from "../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧹️staging-sweep/🟦️.ts";
 import {casHostAreasV1} from "../../../🗄️cas/📂️areas/🟦️.ts";
@@ -23,6 +23,7 @@ import {collectCasV1} from "../../../🗄️cas/🧹️collector/🟦️.ts";
 import {casPartitionPolicyForV1,measureCasPartitionV1} from "../../../🗄️cas/🌡️partition/🟦️.ts";
 import {CAS_POLICY_V1} from "../../../🗄️cas/🧬️schema/🟦️.ts";
 import {casUsageV1} from "../../../🗄️cas/🗃️store/📏️usage/🟦️.ts";
+import {retireCompiledCacheV1} from "../🧺️bounds/📦️compiled-cache/🟦️.ts";
 import {applyBoundV1,boundedBytesV1,DISK_BOUNDS_V1,finishedReadVerdictV1,selectExpiredV1,selectRotatedV1,selectTemporaryV1} from "../🧺️bounds/🟦️.ts";
 
 /** 🔌️ Where the real writers live and what they may touch: the workspace, the home of the user, the temporary directory, the user id, the clock, the liveness of a process and the one spawn of the product's own collector; tests replace every one of them. */
@@ -122,6 +123,20 @@ export function realDiskWritersV1(context:RealDiskContextV1,rows:readonly DiskWr
     if(!dryRun)ownerPoolStagingSweepV1({parents:[temporaryRoot],own:"",io:ownerPoolStagingIoV1});
     return (await applyBoundV1({directory:temporaryRoot,limit,dryRun,signal,select:entries=>selectTemporaryV1(entries,now(),bounds.temporaryDirectories,alive)})).freedBytes;
    }};
+   case "wasmtime-compiled-cache":{
+    const cache=join(context.environment.SEMIO_HOME??context.home,".semio","cache","wasmtime");
+    return{...base,root:cache,measure:tree(cache),collect:async({signal})=>(await retireCompiledCacheV1(cache,{now:now(),dryRun,signal,limit,bound:bounds.compiledCache})).bytes};
+   }
+   case "fleet-store-staging":{
+    const storeRoot=readReplicaStoreRoleV1(context.workspace).storeRoot,staging=storeRoot===undefined?undefined:join(storeRoot,"v1","tmp");
+    return{...base,root:staging??"",measure:async signal=>{let bytes=0;if(staging!==undefined)for(const name of await readdir(staging).catch(()=>[] as string[]))bytes+=(await boundedBytesV1(join(staging,name),limit,signal)).bytes;return bytes;},collect:async({signal})=>{
+     if(storeRoot===undefined)return 0;
+     const{reclaimStagingTreesV1,STAGING_TREES_POLICY_V1}=await import("../../../../../🤝️shared-worktree/📒️journal/🧹️staging-trees/🟦️.ts"),{reclaimStagingV1}=await import("../../../../../🤝️shared-worktree/📒️journal/🟦️.ts"),originId=readReplicaStoreRoleV1(context.workspace).originId;
+     const trees=await reclaimStagingTreesV1(storeRoot,{...originId===undefined?{}:{originId},now:now(),dryRun,signal});
+     const files=dryRun?{bytes:0}:await reclaimStagingV1(storeRoot,{olderThanMilliseconds:STAGING_TREES_POLICY_V1.fileGraceMilliseconds,now:now()});
+     return trees.bytes+files.bytes;
+    }};
+   }
    case "nx-native-data":return{...base,measure:async()=>readNativeShardsV1(context.workspace).reduce((sum,fact)=>sum+planNativeShardReliefV1([fact]).reduce((bytes,item)=>bytes+item.bytes,0),0),collect:async({signal})=>(await relieveNativeShardsV1({facts:readNativeShardsV1(context.workspace),hold:nativeShardHoldV1(context.workspace),language:context.language??"en",dryRun,signal})).freedBytes};
    case "leaked-images":return{...base,measure:async()=>0,collect:async({signal})=>{if(process.platform==="darwin"&&!dryRun)await sweepWorkspaceSandboxImagesV1(context.workspace,signal);return 0;}};
    case "cas-lru":return{...base,measure:async signal=>(await casUsageV1(root,signal)).bytes,collect:async({signal})=>{
@@ -150,6 +165,12 @@ export function realDiskWritersV1(context:RealDiskContextV1,rows:readonly DiskWr
   }
  };
  return Object.freeze(rows.map(bind));
+}
+
+/** 🌊️ The volume floor of this machine for the cache host's service tick: frees the `floor` classes (compiled Wasmtime cache, staging directories of the shared store, leaked staging) oldest first until the volume that holds `root` has `targetFreeBytes` free, reading the volume with the store's own partition measurement; a volume that cannot be measured yields nothing. */
+export async function relieveMachineVolumeV1(context:RealDiskContextV1,request:Readonly<{root:string;targetFreeBytes:number;signal?:AbortSignal}>):Promise<void>{
+ const facts=()=>{const partition=measureCasPartitionV1(request.root);return partition===undefined?undefined:{partition:partition.partition,totalBytes:partition.totalBytes,freeBytes:partition.freeBytes};};
+ await relieveVolumeFloorV1({facts,targetFreeBytes:request.targetFreeBytes,writers:realDiskWritersV1(context),language:context.language??"en",...context.report===undefined?{}:{report:context.report},...request.signal===undefined?{}:{signal:request.signal}});
 }
 
 /** 🧺️ Applies the in-process bounds of the machine (waves, footprint logs, read verdicts, staging and temporary directories, the files the replica overwrote) as `repo cache gc` does after the ledger: each bound answers the bytes it freed, or would free in a dry run, and the line that says so in the language asked for. */

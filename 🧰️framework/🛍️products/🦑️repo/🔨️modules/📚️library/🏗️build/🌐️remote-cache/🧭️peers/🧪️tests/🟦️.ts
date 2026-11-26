@@ -53,7 +53,7 @@ const signed=(root:string,audience:"cache"="cache")=>fleetSignedFetchV1({root,au
 const across=(root:string,answering:Group)=>fleetSignedFetchV1({root,audience:"cache",fetch:sealedTo(answering.store,answering.id)});
 
 async function statusOf(group:Group){const response=await signed(group.member)(`${group.endpoint}/status`);expect(response.status).toBe(200);return await response.json() as {counters:Record<"ac"|"cas"|"nx",{hits:number;misses:number;puts:number}>;peers?:{hits:number;misses:number;errors:number;skipped:number;absent:number}};}
-const put=(group:Group,bytes:Uint8Array)=>signed(group.member)(`${group.endpoint}/semio/cas/${sha(bytes)}`,{method:"PUT",body:bytes});
+const put=(group:Group,bytes:Uint8Array<ArrayBuffer>)=>signed(group.member)(`${group.endpoint}/semio/cas/${sha(bytes)}`,{method:"PUT",body:bytes});
 
 test("a blob uploaded in group A is a hit for a machine of group B exactly once through the server of B and local afterwards, with no network check in the way",async()=>{
  const {a,b}=await pair();
@@ -102,7 +102,7 @@ test("when the link is down the group keeps working on its own, quickly and with
 });
 
 test("a peer group with no route (no attested endpoint, an empty mount) is absent: never asked, neither a miss nor an error nor a pause",async()=>{
- const mount=directory("empty-mount"),routed=directPeerTransportV1({group:"g3",endpoints:async()=>["http://127.0.0.1:1"],fetch:async()=>new Response("",{status:404}),maximumBytes:2**20});
+ const mount=directory("empty-mount"),routed=directPeerTransportV1({group:"g3",endpoints:async()=>["http://127.0.0.1:1"],fetch:Object.assign(async()=>new Response("",{status:404}),{preconnect:globalThis.fetch.preconnect}),maximumBytes:2**20});
  const through=createFleetPeerReadThroughV1({transports:[directPeerTransportV1({group:"g2",endpoints:async()=>[],fetch,maximumBytes:2**20}),relayedPeerTransportV1({group:"g4",ownGroup:"g1",ownStore:directory("own"),peerStore:mount,maximumBytes:2**20})],missMilliseconds:0});
  for(let round=0;round<5;round++)expect(await through.fetch("/semio/cas/"+sha("x"+round))).toBeUndefined();
  expect(through.counters()).toEqual({hits:0,misses:0,errors:0,skipped:0,absent:2,bytes:0});
@@ -216,7 +216,7 @@ test("an independent Python implementation agrees with the schema on every vecto
  for(const [peer,network,expected] of other.cidr as [string,string,boolean][])expect(fleetPeerAllowedV1(peer,[network]),`${peer} in ${network}`).toBe(expected);
  for(const [text,digest] of other.sha256 as [string,string][])expect(sha(text)).toBe(digest);
  const python=testPythonV1();
- if(python!==undefined){const run=spawnSync(python,["-I",join(import.meta.dirname,"🐍️oracle","🐍️.py"),"check"],{encoding:"utf8"});expect(run.status,run.stdout+run.stderr).toBe(0);}
+ if(python!==null){const run=spawnSync(python,["-I",join(import.meta.dirname,"🐍️oracle","🐍️.py"),"check"],{encoding:"utf8"});expect(run.status,run.stdout+run.stderr).toBe(0);}
 });
 
 type Tap={port:number;sent:Buffer[];received:Buffer[];stop():void};

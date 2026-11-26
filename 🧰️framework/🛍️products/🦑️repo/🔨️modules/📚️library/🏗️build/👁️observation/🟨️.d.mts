@@ -4,7 +4,7 @@ import type {ResourceLeaseControl} from "@semio-tech/process/leases";
 import type{ExactSourceReadBatchV1,ExactSourceFileV1}from"../📥️inputs/🧮️digest/📥️read/🟨️.mjs";
 
 /** 🚧️ The declared limits of the observation module: its schema file is their single source. */
-export const OBSERVATION_LIMITS_V1: Readonly<{settledReadMaximumFileBytes:number;settleRounds:number;conflictRounds:number;conflictPauseMilliseconds:number;holdNestingLimit:number;racyMilliseconds:number;sourceAnalysisBytes:number;sourceAnalysisOverheadBytes:number;settledReadBytes:number;fileRecordImageBytes:number;fileRecordImageMaximumBytes:number;verifiedBlockRows:number;blockMinimumRows:number;blockCutMask:number;blockRefusalMilliseconds:number;detachedLayerRows:number;leafReadChunkBytes:number;sweepGraceMilliseconds:number;fingerprintProgressRows:number;sweepHeaderProgressRows:number;sweepBlockProgressRows:number;maximumIdentifierCharacters:number;nativeRealpathMaximumCharacters:number}>;
+export const OBSERVATION_LIMITS_V1: Readonly<{settledReadMaximumFileBytes:number;settleRounds:number;conflictRounds:number;conflictPauseMilliseconds:number;holdNestingLimit:number;racyMilliseconds:number;sourceAnalysisBytes:number;sourceAnalysisOverheadBytes:number;settledReadBytes:number;fileRecordImageBytes:number;fileRecordImageMaximumBytes:number;verifiedBlockRows:number;blockMinimumRows:number;blockCutMask:number;blockRefusalMilliseconds:number;detachedLayerRows:number;leafReadChunkBytes:number;sweepGraceMilliseconds:number;fingerprintProgressRows:number;sweepHeaderProgressRows:number;sweepBlockProgressRows:number;maximumIdentifierCharacters:number;nativeRealpathMaximumCharacters:number;blockIdentityBytes:number;blockIdentityEntries:number;carriedVerdictMilliseconds:number;consistencyMemoRows:number;fieldMemoRows:number;fileDigestChunkBytes:number;holdMetadataPaths:number;holdProgressRows:number;registryOwnerBytes:number;registryOwnerEntries:number;rowStoreCharacters:number;rowStoreRows:number;trackMinimumEntries:number;yieldMilliseconds:number}>;
 
 /** 🧾️ Describes exactly one byte image admitted by the defining observation schema. */
 export type SourceFileFactV1 = Readonly<{size:number;mtimeMs:number;ctimeMs:number;ino:number;sha256:string}>;
@@ -19,7 +19,7 @@ export type SourceObservationV1 =
  | Readonly<{kind:"exists"|"fileExists"|"directoryExists";path:string;fact:boolean}>
  | Readonly<{kind:"stamp";path:string;fact:string}>
  | Readonly<{kind:"field";path:string;fact:Readonly<{format:string;pointer:string;digest:string;paths?:readonly string[]}>}>
- | Readonly<{kind:"stat"|"lstat"|"readdir"|"realpath"|"realpathNative"|"resolve"|"readdirNames"|"directories"|"typescriptText"|"typescriptRealpath"|"registry";path:string;fact:string}>;
+ | Readonly<{kind:"stat"|"lstat"|"readdir"|"realpath"|"realpathNative"|"resolve"|"readdirNames"|"directories"|"typescriptText"|"typescriptRealpath"|"registry"|"global";path:string;fact:string}>;
 /** 🎟️ Names the immutable parser handle; structural copies remain refused by the runtime registry. */
 export type SourceAnalysisProviderV1 = Readonly<{id:string;revision:string}>;
 /** 📸️ Captures the actual result and every original Source and load-authority observation. */
@@ -110,18 +110,18 @@ export function observationLookupClockV1():Record<string,number>;
 /** 🧪️ Whether one stored row still holds, probed against the tree now and remembered nowhere. */
 export function observationRowFreshV1(row:unknown):boolean;
 /** 🪪️ The stamps of the few files and directories whose state decides a set of rows that all hold now, `typed` rows (existence and type of a name, probed by name), `live` rows probed again by every verification, and the parser revisions it was taken under; undefined while it cannot be taken. */
-export type ObservationWitnessV1 = Readonly<{paths:readonly string[];tuples:readonly string[];typed:readonly (readonly [string,string,unknown])[];code:readonly (readonly [string,string])[];live:readonly string[]}>;
+export type ObservationWitnessV1 = Readonly<{paths:readonly string[];tuples:readonly string[];typed:readonly (readonly [string,string,unknown])[];code:readonly (readonly [string,string])[];live:readonly string[];base?:ObservationWitnessV1|null}>;
 export function observationWitnessV1(rows:Iterable<unknown>,options?:{since?:number}):ObservationWitnessV1|undefined;
-export function observationWitnessHoldsV1(witness:ObservationWitnessV1,options?:{tuples?:Map<string,string>;verdicts?:Map<string,boolean>;step?:()=>Promise<void>}):Promise<boolean>;
+export function observationWitnessHoldsV1(witness:ObservationWitnessV1,options?:{tuples?:Map<string,string>;verdicts?:Map<unknown,boolean>;step?:()=>Promise<void>}):Promise<boolean>;
 /** 🪪️ The same verdict without turns, for a synchronous judge. */
-export function observationWitnessHoldsSyncV1(witness:ObservationWitnessV1,options?:{tuples?:Map<string,string>;verdicts?:Map<string,boolean>}):boolean;
+export function observationWitnessHoldsSyncV1(witness:ObservationWitnessV1,options?:{tuples?:Map<string,string>;verdicts?:Map<unknown,boolean>}):boolean;
 /** 🏃️ The running validation round, if any. */
 export function observationRoundV1():object|undefined;
 export function forgetRoundReadsV1():void;
 /** 🔂️ Runs `compute` inside one validation round (the open one when there is one), so stored facts and memoized computations are validated once per round. */
 export function withObservationRoundV1<T>(compute:()=>T):T;
 /** ▶️ Runs a computation with its observations detached from the running inference; returns its rows and the shared row arrays it reused. */
-export function observeDetachedV1<T>(compute:()=>Promise<T>):Promise<{value:T;rows:unknown[];layers:(readonly unknown[])[]}>;
+export function observeDetachedV1<T>(compute:()=>T|Promise<T>):Promise<{value:T;rows:SourceObservationV1[];layers:(readonly unknown[])[]}>;
 /** 📚️ The facts a detached computation read before it failed, or undefined for an error that carries none. */
 export function detachedFailureV1(error:unknown):{rows:unknown[];layers:(readonly unknown[])[]}|undefined;
 /** 🧲️ Records the facts of a failed detached computation into the running observation. */
@@ -192,7 +192,7 @@ export function retainObservedRowsV1(rows:readonly unknown[]):void;
 /** 🪢️ Makes the rows of a stored or detached closure one live instance per distinct row, in place, and answers the same array. */
 export function shareObservationRowsV1<Row>(rows:Row[]):Row[];
 /** 🫧️ Runs a synchronous computation with its observations returned, not recorded into the running scope. */
-export function observeDetachedSyncV1<T>(compute:()=>T):Readonly<{value:T;rows:readonly unknown[];layers:readonly (readonly unknown[])[]}>;
+export function observeDetachedSyncV1<T>(compute:()=>T):Readonly<{value:T;rows:readonly SourceObservationV1[];layers:readonly (readonly SourceObservationV1[])[]}>;
 /** 🔁️ Runs a computation inside a caller-owned validation round. */
 export function withObservationPassRoundV1<T>(round:Map<unknown,unknown>,compute:()=>T):T;
 

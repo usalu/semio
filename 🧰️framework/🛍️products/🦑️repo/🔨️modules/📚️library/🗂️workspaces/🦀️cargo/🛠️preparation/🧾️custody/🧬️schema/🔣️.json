@@ -50,12 +50,18 @@
             }
           },
           "then": {
+            "properties": {
+              "suffix": {}
+            },
             "required": [
               "suffix"
             ]
           },
           "else": {
             "not": {
+              "properties": {
+                "suffix": {}
+              },
               "required": [
                 "suffix"
               ]

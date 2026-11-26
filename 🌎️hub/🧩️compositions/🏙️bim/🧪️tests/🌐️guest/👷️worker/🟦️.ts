@@ -2,7 +2,7 @@ import { decodeAppFrame } from "../../../../../../🧰️framework/🔨️module
 import { encodeAppCommand } from "../../../../../../🧰️framework/🔨️modules/🧾️app-channel/🎛️command-codec/🟦️.ts";
 import { decodeActorInstanceLifecycle, type ActorInstanceLifetime } from "../../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 import { createShardCommandIngressPages } from "../../../../../../🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
-import { shellFrameBytes } from "../../../../../../🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
+import { coerceTurnResult, shellFrameBytes, wireTurnStatusTag } from "../../../../../../🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
 
 export type GuestCheck = {
   moduleUrl: string;
@@ -46,10 +46,13 @@ async function exercise(input: GuestCheck): Promise<void> {
     let closeGeneration: bigint | undefined;
     let commandAdmitted = false, commandComplete = false, configReceived = false, retired = false, settled = false;
     for (let turn = 0; turn < policy.maximumTurns; turn++) {
-      const result = await api.poll(event ? [event] : [], phase === "read" && !commandAdmitted ? page : undefined, undefined, budget);
+      const raw: unknown = await api.poll(event ? [event] : [], phase === "read" && !commandAdmitted ? page : undefined, undefined, budget);
+      const result = coerceTurnResult(raw);
+      const status = wireTurnStatusTag(result.status);
+      const pendingWake = raw !== null && typeof raw === "object" && "nextWake" in raw && raw.nextWake != null;
       event = undefined;
-      if (result.status.tag === "faulted" || result.commandIngress?.tag === "fault") throw Error(`${appId} faulted during ${phase}`);
-      if (result.uiPatches.length || result.presence.length || result.uiPatchReceipt) throw Error(`${appId} issued an unexpected renderer update`);
+      if (status === "faulted" || result.commandIngress?.tag === "fault") throw Error(`${appId} faulted during ${phase}`);
+      if (result.uiPatches.length || result.presence?.length || result.uiPatchReceipt) throw Error(`${appId} issued an unexpected renderer update`);
       for (const effect of result.effects) {
         const bytes = shellFrameBytes(effect, instance);
         const frame = bytes && decodeAppFrame(bytes);
@@ -64,8 +67,10 @@ async function exercise(input: GuestCheck): Promise<void> {
         if (receipt.lifetime.instanceId !== instance || receipt.lifetime.activationGeneration !== activationGeneration || receipt.requestSequence !== (phase === "open" ? 1 : 2)) {
           throw Error(`${appId} acknowledged another lifecycle request`);
         }
-        if (receipt.kind === "captured" && phase === "open") lifetime = receipt.lifetime;
-        else if (receipt.kind !== "captured" && phase === "close" && receipt.lifetime.guestLifetime === lifetime?.guestLifetime) {
+        if (receipt.kind === "captured" && phase === "open") {
+          if (lifetime && lifetime.guestLifetime !== receipt.lifetime.guestLifetime) throw Error("BIM guest lifetime changed during capture");
+          lifetime = receipt.lifetime;
+        } else if (receipt.kind !== "captured" && phase === "close" && receipt.lifetime.guestLifetime === lifetime?.guestLifetime) {
           if (closeGeneration !== undefined && receipt.closeGeneration !== closeGeneration) throw Error("BIM close generation changed");
           closeGeneration = receipt.closeGeneration;
           retired ||= receipt.kind === "retired";
@@ -77,7 +82,7 @@ async function exercise(input: GuestCheck): Promise<void> {
         commandAdmitted ||= ingress === "page-accepted" || ingress === "command-pending" || ingress === "command-complete";
         commandComplete ||= ingress === "command-complete";
       }
-      if (event || result.status.tag !== "idle" || result.nextWake != null) continue;
+      if (event || status !== "idle" || pendingWake) continue;
       if (phase === "open") {
         if (!lifetime) throw Error(`${appId} settled without capturing its original instance`);
         phase = "read";

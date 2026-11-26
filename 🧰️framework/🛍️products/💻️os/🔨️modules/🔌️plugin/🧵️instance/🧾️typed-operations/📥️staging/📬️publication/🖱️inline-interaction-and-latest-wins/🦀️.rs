@@ -48,7 +48,6 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let Some(operation_id) = self.tools.latest_wins_order.items.front().copied() else { return Ok(()) };
         let mut pending = self.tools.latest_wins_commands.remove(operation_id).expect("exact pending keyed command");
         if pending.closing&&!pending.context_metadata_is_empty(){let result=pending.close_context_metadata(cx);self.tools.latest_wins_commands.insert_admitted(operation_id,pending);result?;return Ok(())}
-        if pending.context_phase>0&&pending.context_phase<3{let result=pending.prepare_context_metadata(cx);self.tools.latest_wins_commands.insert_admitted(operation_id,pending);result?;return Ok(())}
         if !pending.closing&&pending.lease.is_none(){
             let result=pending.admit_original_lease(&mut self.tools.tool_cancellations,cx);
             self.tools.latest_wins_commands.insert_admitted(operation_id,pending);
@@ -88,7 +87,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             }
         }
         if ready && !pending.closing {
-            if pending.context_phase<3{let result=pending.prepare_context_metadata(cx);self.tools.latest_wins_commands.insert_admitted(operation_id,pending);result?;return Ok(())}
+            if !pending.context_ready{let result=pending.prepare_context_metadata(cx);self.tools.latest_wins_commands.insert_admitted(operation_id,pending);result?;return Ok(())}
             if !pending.construction.terminal_is_empty(){let result=semio_plugin_job::original_steps::unbuilt(cx,&mut pending.construction);self.tools.latest_wins_commands.insert_admitted(operation_id,pending);result?;return Ok(())}
             let started=self.as_dispatch().start_typed_command_operation(&mut pending,cx).await;
             match started{

@@ -2,6 +2,9 @@
 """usage: native-receive-closure.py <plugin directory> [--roots=Type,Type] [--write]  (derives `semio_framework_value::NativeReceive` on every `FromValue` type reachable by field-type name from a type that already derives it, to a fixpoint inside the plugin directory)"""
 import os, re, sys
 root = sys.argv[1]; write = "--write" in sys.argv
+TARGET = ([a.split("=",1)[1] for a in sys.argv if a.startswith("--derive=")] or ["NativeReceive"])[0]
+SRC = ([a.split("=",1)[1] for a in sys.argv if a.startswith("--when=")] or [r"\bFromValue\b"])[0]
+PATH = ([a.split("=",1)[1] for a in sys.argv if a.startswith("--path=")] or ["semio_framework_value::NativeReceive"])[0]
 defs = {}
 files = {}
 item = re.compile(r'((?:[ \t]*///[^\n]*\n|[ \t]*#\[[^\n]*\]\n)*)[ \t]*pub(?:\([a-z]+\))? (struct|enum) (\w+)([^;{]*?)(\{|\(|;)', re.M)
@@ -25,8 +28,8 @@ for r, d, f in os.walk(root):
                     i += 1
                 body = s[start:i]
             defs.setdefault(m.group(3), []).append(dict(path=p, derive=derive, body=body, attrs_start=m.start(1), attrs=attrs))
-has = lambda d: "NativeReceive" in d["derive"]
-fromv = lambda d: re.search(r'\bFromValue\b', d["derive"]) is not None
+has = lambda d: TARGET in d["derive"]
+fromv = lambda d: re.search(SRC, d["derive"]) is not None
 seeds = [a.split("=",1)[1] for a in sys.argv if a.startswith("--roots=")]
 need = set(n for n, ds in defs.items() if any(has(d) for d in ds)) | {r for g in seeds for r in g.split(",") if r in defs}
 added = set()
@@ -50,8 +53,8 @@ if write:
         for d in sorted(ds, key=lambda d: -d["attrs_start"]):
             a = d["attrs"]
             m = list(re.finditer(r'#\[derive\(([^\]]*)\)\]', a))
-            g = [x for x in m if re.search(r'\bFromValue\b', x.group(1))][0]
-            new = g.group(0).replace("#[derive(", "#[derive(semio_framework_value::NativeReceive, ", 1)
+            g = [x for x in m if re.search(SRC, x.group(1))][0]
+            new = g.group(0).replace("#[derive(", "#[derive(" + PATH + ", ", 1)
             na = a[:g.start()] + new + a[g.end():]
             assert s[d["attrs_start"]:d["attrs_start"] + len(a)] == a
             s = s[:d["attrs_start"]] + na + s[d["attrs_start"] + len(a):]

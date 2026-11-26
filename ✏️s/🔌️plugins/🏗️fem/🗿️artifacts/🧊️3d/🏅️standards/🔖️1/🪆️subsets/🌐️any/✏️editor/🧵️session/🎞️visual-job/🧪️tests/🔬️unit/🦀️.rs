@@ -114,7 +114,9 @@ fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorize
     let mut backing = Fem3dBackingCredit::new();
     let mut fields = Fem3dSolverView::new(freshness(19), doc.nodes.len());
     let bank = semio_s_fem_receiving::testkit::numerical_stock();
-    let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(operation.operation, operation.generation, bank, || Some(1000), 1 << 40, 1 << 40);
+    static EPOCH: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+    let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(operation.operation, operation.generation, bank, || Some(1000 + EPOCH.get_or_init(std::time::Instant::now).elapsed().as_micros() as u64), 1 << 40, 1 << 40);
+    caller.slice_each_turn(INTERACTIVE_STEP_CEILING_US / 2);
     let mut idle = 0usize;
     let mut terminal = false;
     let mut last_stage = "initial";
@@ -179,6 +181,48 @@ fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorize
     assert!(has_modal);
     caller.retire(bank);
 }
+/// 🕳️ LAW: closing a numerical child that holds a live solve never answers a long run of empty receipts; a wait must be a real receipt, never an empty `Progress`.
+#[test]
+fn fem3d_numerical_child_close_with_live_solve_never_reports_a_run_of_empty_receipts() {
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::{FemAxis, FemDof, FemLoadCase, FemSolid, FemSupport};
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
+    use semio_s_fem_material::volumetric::FemMaterialValue;
+    use semio_s_fem_node::volumetric::FemNodeValue;
+
+    let doc = Doc::new(Fem3dSnapshot::from_reference(Fem3dSnapshotValue {
+        nodes: vec![FemNodeValue { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "n1".into(), x: 1.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "n2".into(), x: 1.0, y: 1.0, z: 0.0 }, FemNodeValue { id: "n3".into(), x: 0.0, y: 1.0, z: 0.0 }],
+        materials: vec![FemMaterialValue { id: "m".into(), name: "M".into(), e: 30e9, g: 12.5e9, nu: 0.2, rho: 2400.0 }],
+        solids: vec![FemSolid { id: "s".into(), name: "S".into(), outline: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]], holes: vec![], base_z: 0.0, height: 0.25, layers: 1, mesh_size: 2.0, material_id: "m".into(), axis: FemAxis::Z }],
+        supports: (0..4).map(|index| FemSupport { id: format!("f{index}"), node_id: format!("n{index}"), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] }).collect(),
+        load_cases: vec![FemLoadCase { id: "g".into(), name: "G".into(), loads: vec![], self_weight: true }],
+        ..Default::default()
+    }).expect("sealed test snapshot"));
+    let operation = semio_framework_job::Operation::new(OperationId(13), RevisionId(11), Generation(19), 23);
+    for solve_turns in [1usize, 3, 8, 20, 60, 200, 600] {
+        let mut child = Fem3dNumericalChild::new();
+        child.request = Fem3dResultRequest { mode: Some(0), ..Fem3dResultRequest::default() };
+        let mut backing = Fem3dBackingCredit::new();
+        let mut fields = Fem3dSolverView::new(freshness(19), doc.nodes.len());
+        let bank = semio_s_fem_receiving::testkit::numerical_stock();
+        let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(operation.operation, operation.generation, bank, || Some(1000), 1 << 40, 1 << 40);
+        for _ in 0..solve_turns {
+            let mut finished = false;
+            caller.turn(TEST_GRANT, |cx| { finished = matches!(child.step(&doc, &mut fields, &mut backing, freshness(19), operation, cx), Ok(true)); Ok(()) }).expect("original numerical turn");
+            if finished { break; }
+        }
+        let (mut run, mut longest, mut closed) = (0usize, 0usize, false);
+        for _ in 0..200_000 {
+            let (done, items, bytes) = close_with(&mut caller, &mut child, TEST_GRANT);
+            run = if !done && items == 0 && bytes == 0 { run + 1 } else { 0 };
+            longest = longest.max(run);
+            if done { closed = true; break; }
+        }
+        assert!(closed && child.terminal_is_empty(), "solve_turns {solve_turns}: close reaches its exact terminal");
+        assert!(longest < 8, "solve_turns {solve_turns}: {longest} consecutive empty close receipts while a live solve closes");
+        caller.retire(bank);
+    }
+}
+
 #[test]
 fn fem3d_numerical_child_classifies_every_lent_outcome_without_retaining_it() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../🧪️tests/🧫️fixtures/🧒️child-outcomes/🔣️.json")).expect("neutral child outcomes");

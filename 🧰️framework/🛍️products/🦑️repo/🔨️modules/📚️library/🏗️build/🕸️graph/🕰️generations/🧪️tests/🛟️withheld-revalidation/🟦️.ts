@@ -6,7 +6,7 @@ import policy from"../../../📥️load/🛟️owner-isolation/🧬️schema/�
 
 const limits=policy.$defs.Policy.const;
 const row=(path:string)=>({kind:"file",path:"/ws/"+path,fact:{sha256:"0".repeat(64),size:1,mtimeMs:1,ctimeMs:1,ino:1}});
-const setup=()=>{
+const setup=(reason?:()=>unknown)=>{
  let book:unknown,clock=5_000_000;const lines:string[]=[];
  const index=createFactIndexV1(new Map([["held",[row("h/c.ts")]],["plain",[row("p/c.ts")]]]) as never) as never;
  const manifest={identity:"i",global:"g",factIndex:"x",owners:{held:{root:"h",kind:"unavailable",config:"h/c.ts",fragment:"f1",bytes:1,edgesEnv:"e",targets:[]},plain:{root:"p",kind:"project",fragment:"f2",bytes:1,edgesEnv:"e",targets:[]}}};
@@ -14,9 +14,9 @@ const setup=()=>{
   readIndexView:async()=>index,fragmentNames:async()=>["g.json.br","f1.json.br","f2.json.br"],now:()=>clock,
   settler:{settle:async()=>({changed:new Map(),held:new Set(),kept:new Set(),failed:0,reused:0}),release:async()=>undefined} as never,
   derive:(()=>undefined) as never,hold:(async()=>true) as never,workspaceRoot:undefined,
-  ledger:{read:async()=>book,write:async(next:unknown)=>{book=next;}},say:text=>lines.push(text.en+" / "+text.de),
+  ledger:{read:async()=>book,write:async(next:unknown)=>{book=next;}},...reason?{reasonOf:async()=>reason()}:{},say:text=>lines.push(text.en+" / "+text.de),
  });
- const run=(only?:Set<string>)=>plan({current:{manifest} as never,identity:"i",changes:[],only,verifyAll:true} as never);
+ const run=(only?:Set<string>,implementation?:string)=>plan({current:{manifest} as never,identity:"i",changes:[],only,verifyAll:true,implementation} as never);
  return{run,advance:(milliseconds:number)=>{clock+=milliseconds;},lines,manifest};
 };
 
@@ -49,4 +49,21 @@ test("a read that selects other owners neither infers nor counts an unrelated wi
  expect(scoped.revalidated).toEqual([]);
  expect([...scoped.dirty]).toEqual([]);
  expect((await state.run(new Set(["held"]))).revalidated).toEqual(["held"]);
+},30_000);
+
+test("an exhausted withholding is inferred again when the inference implementation changed, and while its recorded reason is transient",async()=>{
+ const state=setup(()=>"Owner held failed: JavaScript heap out of memory / Speicher erschöpft");
+ await state.run(undefined,"i1");
+ for(let attempt=1;attempt<=limits.revalidateAttempts;attempt++){state.advance(limits.revalidateCooldownMilliseconds);expect((await state.run(undefined,"i1")).revalidated).toEqual(["held"]);}
+ state.advance(limits.revalidateCooldownMilliseconds-1);
+ expect((await state.run(undefined,"i1")).revalidated).toEqual([]);
+ state.advance(1);
+ expect((await state.run(undefined,"i1")).revalidated).toEqual(["held"]);
+ expect((await state.run(undefined,"i2")).revalidated).toEqual(["held"]);
+ const fixed=setup(()=>"Cannot find module './x.ts'");
+ await fixed.run(undefined,"i1");
+ for(let attempt=1;attempt<=limits.revalidateAttempts;attempt++){fixed.advance(limits.revalidateCooldownMilliseconds);await fixed.run(undefined,"i1");}
+ fixed.advance(10*limits.revalidateCooldownMilliseconds);
+ expect((await fixed.run(undefined,"i1")).revalidated).toEqual([]);
+ expect((await fixed.run(undefined,"i2")).revalidated).toEqual(["held"]);
 },30_000);

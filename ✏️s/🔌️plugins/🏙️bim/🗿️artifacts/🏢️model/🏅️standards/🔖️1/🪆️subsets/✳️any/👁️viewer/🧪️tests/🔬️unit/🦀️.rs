@@ -30,8 +30,8 @@ use semio_framework_value::FromValue;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 #[allow(unused_imports)]
 use std::collections::{BTreeMap, HashMap};
-use crate::viewer::bim::{BIM_VIEW_TOOL_IDS, view_emit, command_from_action};
-use crate::viewer::bim::*;
+use semio_os_kernel as protocol;
+use semio_s_artifact_bim_model_viewer::viewer::bim::*;
 use semio_s_artifact_bim_model_tests::viewer::bim::terminology;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
 use semio_plugin::{artifact_app_laws, ActionMeta, App, HistoryView, PluginApp, VcsArtifactApp, ViewWindowInstance, Axis};

@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { assert, awaitBeacon, dismissIntroduction, join, kinds, out, reuse, root, runJourneys, session, url, writeFile, type Browser, type Locator } from "./journey-kit.ts";
+import { assert, awaitBeacon, dismissIntroduction, join, out, root, runJourneys, session, url, writeFile, type Browser, type Locator } from "./journey-kit.ts";
 
 /** 🪵️ Sourcing curation editor journey (6081): boot, windows, pool, curation add/count/remove, drag both ways, filters, sort, example switch, undo/redo, grid canvas, preview, reload; English and German.
  * Usage: `bun sourcing-journey.ts [en|de ...]` with the native sourcing host answering on 6081 (override with `SOURCING_URL`).
@@ -8,7 +8,7 @@ import { assert, awaitBeacon, dismissIntroduction, join, kinds, out, reuse, root
 
 async function journey(browser: Browser, language: "en" | "de") {
   const s = await session(browser, language);
-  const { page, t, pool, curated, preview, rowIn, countIn, names, body, settle, eventually, step } = s;
+  const { page, t, pool, curated, preview, rowIn, countIn, names, body, settle, eventually, step, kinds, reuse, n } = s;
   try {
     await page.goto(url);
     const beacon = await awaitBeacon(page, Date.now() + 300_000);
@@ -37,7 +37,7 @@ async function journey(browser: Browser, language: "en" | "de") {
       return { canvases };
     });
     const total = (await names(pool())).length;
-    const target = "KVH C24 100×200";
+    const target = n("KVH C24 100×200");
     const curatedNames = () => names(curated());
     const poolCount = () => countIn(pool(), target).inputValue();
     const curatedCount = () => countIn(curated(), target).inputValue().catch(() => "absent");
@@ -87,7 +87,7 @@ async function journey(browser: Browser, language: "en" | "de") {
     await step("filter by query", async () => {
       const box = pool().getByRole("textbox", { name: t.search, exact: true });
       await box.fill("steel");
-      await eventually(async () => { const listed = await names(pool()); assert.ok(listed.includes("Steel IPE 200") && !listed.includes(kinds[0]), `query filter ${listed}`); });
+      await eventually(async () => { const listed = await names(pool()); assert.ok(listed.includes(n("Steel IPE 200")) && !listed.includes(kinds[0]), `query filter ${listed}`); });
       const listed = await names(pool());
       await box.fill("");
       await eventually(async () => assert.equal((await names(pool())).length, total, "query not cleared"));
@@ -96,7 +96,7 @@ async function journey(browser: Browser, language: "en" | "de") {
     await step("filter by module", async () => {
       const toggle = pool().locator('[id="window:sourcing-pool/sourcing-filter-module-slabs"]');
       await toggle.click();
-      await eventually(async () => { const listed = await names(pool()); assert.ok(listed.includes("CLT Slab 160mm") && !listed.includes(kinds[0]), `module filter ${listed}`); });
+      await eventually(async () => { const listed = await names(pool()); assert.ok(listed.includes(n("CLT Slab 160mm")) && !listed.includes(kinds[0]), `module filter ${listed}`); });
       const listed = await names(pool());
       await toggle.click();
       await eventually(async () => assert.equal((await names(pool())).length, total, "module not cleared"));
@@ -123,7 +123,7 @@ async function journey(browser: Browser, language: "en" | "de") {
       const input = pool().getByRole("spinbutton", { name: t.minimum, exact: true });
       try {
         await input.fill("25"); await input.press("Enter");
-        await eventually(async () => { const listed = await names(pool()); assert.ok(!listed.includes("Steel HEA 160") && listed.includes("KVH C24 100×200"), `min availability ${listed}`); });
+        await eventually(async () => { const listed = await names(pool()); assert.ok(!listed.includes(n("Steel HEA 160")) && listed.includes(n("KVH C24 100×200")), `min availability ${listed}`); });
         const listed = await names(pool());
         await input.fill("0"); await input.press("Enter");
         await eventually(async () => assert.equal((await names(pool())).length, total, "min availability not cleared"));

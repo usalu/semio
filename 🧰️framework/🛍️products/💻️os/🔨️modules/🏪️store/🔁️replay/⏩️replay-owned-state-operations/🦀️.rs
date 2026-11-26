@@ -120,6 +120,7 @@ impl<P,Mutation:super::Mutation<P>+OpBinary> ReplayOwnedState<P,Mutation>{
                 }
                 if !self.step_prepared_operation(edit,false,original,control.as_deref_mut(),deadline)?{deadline();return Ok(ReplayStep::Pending(self.progress));}
                 self.operation+=1;
+                self.progress.done=self.progress.done.saturating_add(1);
                 completed_operations=completed_operations.saturating_add(1);
                 if deadline()||completed_operations>=maximum_operations{return Ok(ReplayStep::Pending(self.progress));}
                 continue;
@@ -709,7 +710,7 @@ mod operation_preparation {
                 }
                 return Ok(true);
             }
-            let supersession = self.supersessions.get(&mutation_id);
+            let supersession = self.drafts.get(&mutation_id).or_else(|| self.supersessions.get(&mutation_id).map(|entry| &entry.replacement));
             self.operation_message_settlement = Some(OperationMessageSettlement::new(semio_os_spr::MutationReplayOutcome {
                 mutation_id,
                 edit_id: edit.id.clone(),
@@ -717,7 +718,7 @@ mod operation_preparation {
                 worst: None,
                 messages: prepared.messages,
                 superseded: supersession.is_some(),
-                withdrawn: !invalid && supersession.is_some_and(|entry| matches!(entry.replacement, InputReplacement::Withdrawn)),
+                withdrawn: !invalid && supersession.is_some_and(|replacement| matches!(replacement, InputReplacement::Withdrawn)),
             }));
             Ok(false)
         }

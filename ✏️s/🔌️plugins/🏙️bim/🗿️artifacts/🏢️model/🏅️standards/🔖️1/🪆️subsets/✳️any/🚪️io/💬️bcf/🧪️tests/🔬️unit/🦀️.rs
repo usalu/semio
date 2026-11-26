@@ -198,17 +198,20 @@ fn a_broken_container_is_refused() {
 #[semio_framework_async_macros::async_test]
 async fn the_serializer_writes_the_container_and_the_deserializer_reads_it_back_without_elements() {
     let model = model();
-    let payload = <ModelIntoBcf as Serializer<ModelSnapshot>>::serialize(&model, &ArchiveChildren::empty()).await.expect("serializes").value;
+    use semio_framework_async::poll::resolve_ready;
+    use semio_framework_test_original_snapshot_owners::{original_grant, with_decoding, with_encoding};
+    use semio_os_kernel::io::io_mechanism::IoRunControl;
+    let payload = with_encoding(|owner| resolve_ready(<ModelIntoBcf as Serializer<ModelSnapshot>>::serialize(&model, &ArchiveChildren::empty(), &mut IoRunControl::encoding(owner.native(), original_grant())))).expect("serializes").value;
     assert_eq!(<BcfIntoModel as Deserializer<ModelSnapshot>>::sniff(&payload).await, Confidence::High);
     assert_eq!(<BcfIntoModel as Deserializer<ModelSnapshot>>::sniff(&IoPayload::Binary(b"ISO-10303-21;".to_vec())).await, Confidence::None);
-    let read = <BcfIntoModel as Deserializer<ModelSnapshot>>::deserialize(&payload).await.expect("deserializes").value;
+    let read = with_decoding(|owner| resolve_ready(<BcfIntoModel as Deserializer<ModelSnapshot>>::deserialize(&payload, &mut IoRunControl::decoding(owner.native(), original_grant())))).expect("deserializes").value;
     assert_eq!((read.issues.len(), read.issue_comments.len()), (3, 2));
     assert!(read.walls.is_empty());
 }
 
 #[test]
 fn the_committed_container_is_the_current_export_of_the_frame() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../🧫️fixtures/🚪️bcf/🏢️frame");
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../🧪️tests/🧫️fixtures/🚪️bcf/🏢️frame");
     let bytes = export_bcf(&model()).expect("encodes");
     if std::env::var_os("BIM_BLESS").is_some() {
         std::fs::create_dir_all(&path).expect("directory");

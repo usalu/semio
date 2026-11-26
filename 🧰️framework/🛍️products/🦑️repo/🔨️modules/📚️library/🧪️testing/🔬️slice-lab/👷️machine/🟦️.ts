@@ -42,7 +42,7 @@ const finish=(ready:boolean)=>{
  controller.abort();
 };
 const watch=setInterval(()=>{
- if(ports.status.current().ready===true)return finish(true);
+ if(ports.status.current?.().ready===true)return finish(true);
  if(ports.state.read().failure!==null)return finish(false);
 },500);
 process.on("SIGTERM",()=>{clearInterval(watch);controller.abort();});

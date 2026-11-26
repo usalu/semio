@@ -1,0 +1,45 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-sourcing-curation-editor-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Test crate of semio-s-artifact-sourcing-curation: the editor tests that mount the app, one test executable per feature area"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+semio-s-artifact-sourcing-curation = { path = "../../../../../../../../📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", features = ["protocol-laws", "mutation-testing"] }
+semio-framework = { path = "../../../../../../../../../../../../../🧰️framework/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-plugin = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-async-macros = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-ui-scene = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
+semio-ui-contract-values = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-semio = { workspace = true }
+semio-framework-job = { workspace = true }
+serde_json.workspace = true
+
+[[test]]
+name = "editor_app"
+path = "../../🎯️targets/📱️app/🦀️.rs"
+
+[[test]]
+name = "editor_actions"
+path = "../../🎯️targets/🌉️actions/🦀️.rs"
+
+[[test]]
+name = "editor_windows"
+path = "../../🎯️targets/🪟️windows/🦀️.rs"
+
+[[test]]
+name = "editor_commands"
+path = "../../🎯️targets/🎮️commands/🦀️.rs"

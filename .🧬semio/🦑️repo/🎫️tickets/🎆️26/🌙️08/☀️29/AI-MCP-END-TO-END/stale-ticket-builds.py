@@ -27,10 +27,10 @@ cutoff=time.time()-args.age_minutes*60
 rows=[]
 for directory in roots:
     unit=directory.parent
-    if args.guest and unit.parent.name in {
+    name=unit.parent.name
+    if args.guest and (name.startswith("semio-s-artifact-note-note") or name in {
         "semio-hub-note", "semio-hub-note-component", "semio-hub-wfc", "semio-hub-wfc-component",
-        "semio-s-artifact-note-note", "semio-s-artifact-note-note-mutations",
-    }:
+    }):
         continue
     manifests=list(directory.glob("lib-*.json"))
     if len(manifests)!=1: continue

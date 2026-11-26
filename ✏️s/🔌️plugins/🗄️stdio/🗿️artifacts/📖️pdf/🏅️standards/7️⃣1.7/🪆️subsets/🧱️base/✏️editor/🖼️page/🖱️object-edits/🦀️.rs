@@ -30,7 +30,7 @@ pub(super) fn edit_object(snapshot: &PdfSnapshot, action: &str, object_id: &str,
         return edit_shading(snapshot, &object, action, x, y, width, height);
     }
     let page = snapshot.pages.get(object.page).ok_or_else(|| fault("pdf page is gone"))?;
-    let mut content = page.content.clone();
+    let mut content: Vec<PdfOp> = page.content.iter().cloned().collect();
     match action {
         "set-text" if object.kind == ObjectKind::Text => {
             let mut fonts = FontMeasurements::new(snapshot);
@@ -52,12 +52,12 @@ pub(super) fn edit_object(snapshot: &PdfSnapshot, action: &str, object_id: &str,
         "set-stroke" if object.kind == ObjectKind::Vector => set_stroke(&mut content, &object, red, green, blue, width),
         other => return Err(fault(format!("unknown pdf page action '{other}'"))),
     }
-    Ok(vec![PdfMutation::SetPageContent(SetPageContent { index: object.page, content })])
+    Ok(vec![PdfMutation::SetPageContent(SetPageContent { index: object.page, content: pdf_content(content) })])
 }
 
 pub(super) fn insert_object(snapshot: &PdfSnapshot, action: &str, page_index: usize, x: f64, y: f64, width: f64, height: f64, red: f64, green: f64, blue: f64, text: &str) -> Result<Vec<PdfMutation>, Fault> {
     let page = page_of(snapshot, page_index)?;
-    let mut content = page.content.clone();
+    let mut content: Vec<PdfOp> = page.content.iter().cloned().collect();
     let mut extra = Vec::new();
     match action {
         "insert-text" => {
@@ -99,7 +99,7 @@ pub(super) fn insert_object(snapshot: &PdfSnapshot, action: &str, page_index: us
         }
         other => return Err(fault(format!("unknown pdf page action '{other}'"))),
     }
-    extra.push(PdfMutation::SetPageContent(SetPageContent { index: page_index, content }));
+    extra.push(PdfMutation::SetPageContent(SetPageContent { index: page_index, content: pdf_content(content) }));
     Ok(extra)
 }
 
@@ -131,14 +131,14 @@ pub(super) fn replace_image_samples(snapshot: &PdfSnapshot, object_id: &str, wid
         return Ok(vec![PdfMutation::SetImage(SetImage { image, index: None })]);
     }
     let page = snapshot.pages.get(object.page).ok_or_else(|| fault("pdf page is gone"))?;
-    let mut content = page.content.clone();
+    let mut content: Vec<PdfOp> = page.content.iter().cloned().collect();
     let Some(PdfOp::InlineImage { image }) = content.get_mut(object.end) else { return Err(fault(format!("pdf image '{object_id}' is not a stored image"))) };
     image.width = pixel_width;
     image.height = pixel_height;
     image.body=PdfImageBody::Samples {packed};
     image.bits_per_component = 8;
     image.color_space = Some(color_space);
-    Ok(vec![PdfMutation::SetPageContent(SetPageContent { index: object.page, content })])
+    Ok(vec![PdfMutation::SetPageContent(SetPageContent { index: object.page, content: pdf_content(content) })])
 }
 
 pub(super) fn set_font_of_text(snapshot: &PdfSnapshot, object_id: &str, base_font: &str) -> Result<Vec<PdfMutation>, Fault> {
@@ -154,7 +154,7 @@ pub(super) fn set_font_of_text(snapshot: &PdfSnapshot, object_id: &str, base_fon
     let mut fonts = FontMeasurements::new(snapshot);
     let target = fonts.font_codec(&font).ok_or_else(|| fault("the selected PDF font is unavailable"))?;
     let page = snapshot.pages.get(object.page).ok_or_else(|| fault("pdf page is gone"))?;
-    let mut content = page.content.clone();
+    let mut content: Vec<PdfOp> = page.content.iter().cloned().collect();
     let paint = target.rebind_show(&content[object.end], fonts.codec(&object.font))
         .ok_or_else(|| fault("the selected PDF font cannot preserve the shown text"))?;
     restyle_text(&mut content, &object, paint, font.id.clone(), object.font_size)?;
@@ -162,7 +162,7 @@ pub(super) fn set_font_of_text(snapshot: &PdfSnapshot, object_id: &str, base_fon
     if let std::borrow::Cow::Owned(font) = font {
         mutations.push(PdfMutation::SetFont(SetFont { font, index: None }));
     }
-    mutations.push(PdfMutation::SetPageContent(SetPageContent { index: object.page, content }));
+    mutations.push(PdfMutation::SetPageContent(SetPageContent { index: object.page, content: pdf_content(content) }));
     Ok(mutations)
 }
 

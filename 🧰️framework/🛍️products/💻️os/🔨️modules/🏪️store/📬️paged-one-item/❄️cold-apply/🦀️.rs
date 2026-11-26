@@ -535,9 +535,21 @@ impl<S: Clone + RetireOwned + Send + Sync + 'static, M: Mutation<S> + ColdMutati
                 let applied = apply_diff_cold_into(&diff, post);
                 perform(effect, 1)?;
                 <M::ReferenceDiff as MutationDiff<S>>::retire_cold(diff);
-                applied.map_err(|_| ValueError::literal(ValueRefusalKind::InvalidValue, "cold replay mutation could not produce its post root"))?;
+                let mut messages = messages;
+                if let Err(error) = applied {
+                    messages.push(semio_os_spr::MutationMessage::fatal(error.code, error.message).at(error.target));
+                    *failed_flag = false;
+                    *applied_flag = true;
+                    return Ok(SemanticEditStep::Refused(progress, messages));
+                }
                 perform(effect, 1)?;
-                let inverse = ColdMutation::inverse(mutation, before.get())?;
+                let inverse = match ColdMutation::inverse(mutation, before.get()) {
+                    Ok(inverse) => inverse,
+                    Err(cause) => {
+                        messages.push(semio_os_spr::MutationMessage::fatal("mutation.inverse-refused", format!("the operation has no inverse on the replayed state: {cause}")).at_op(operation_index));
+                        Vec::new()
+                    }
+                };
                 *failed_flag = false;
                 *applied_flag = true;
                 Ok(SemanticEditStep::Complete(progress, inverse, messages, false))

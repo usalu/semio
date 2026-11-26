@@ -15,7 +15,7 @@ fn paged_ldlt_crosses_original_owner_and_checkpoint_boundaries() {
             if row + 1 < n { coo.add(row, row + 1, case["offDiagonal"].as_f64().unwrap()); }
         }
         let operation = Operation::new(semio_framework_job::OperationId(n as u64 + 80100), semio_framework_job::RevisionId(0), semio_framework_job::Generation(1), 0);
-        let mut job = LdltJob::new(operation, coo.to_csc_sym_upper(), 1);
+        let mut job = LdltJob::new(operation, coo.to_csc_sym_upper());
         let mut original = OriginalNumericalFixture::new(operation);
         let mut complete = false;
         for _ in 0..20_000_000 {

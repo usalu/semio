@@ -39,6 +39,14 @@ impl ArtifactAssembly {
             Self::Runtime(declaration) => declaration.definition(),
         }
     }
+
+    /// 🏠 Takes the executable declaration of a runtime assembly, for the host that runs it.
+    pub fn into_runtime(self) -> Result<ArtifactDeclaration, PluginAssemblyError> {
+        match self {
+            Self::Runtime(declaration) => Ok(*declaration),
+            Self::Definition(definition) => Err(failure(format!("{} is a definition-only artifact with no runtime to host", definition.identity()))),
+        }
+    }
 }
 
 /// ⚙️ One schema capability bound to its artifact-owned executable address.

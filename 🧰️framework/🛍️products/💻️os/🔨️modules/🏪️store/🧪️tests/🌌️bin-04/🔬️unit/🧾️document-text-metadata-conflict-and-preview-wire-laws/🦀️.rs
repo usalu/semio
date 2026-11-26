@@ -3,10 +3,9 @@
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trips_authoritative_metadata_messages_conflicts_and_cursor() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "severity-text", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetWarningN(SetWarningN { n: 3 })], transaction: None }, &mut identity).await.expect("apply warning");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetWarningN(SetWarningN { n: 3 })], transaction: None }, identity).await.expect("apply warning");
     let edit = store.envelope().vcs.edits.last().expect("one durable edit").clone();
     let messages = store.envelope().edit_messages.last().expect("durable outcome ledger").messages.clone();
     let kind = semio_os_spr::ConflictKind::Degraded { edit_ids: vec![edit.id.clone()] };
@@ -30,7 +29,7 @@ async fn document_text_round_trips_authoritative_metadata_messages_conflicts_and
     assert_eq!(parsed.snapshot, store.snapshot().expect("live snapshot"));
     test_support::retire_parsed_document(parsed);
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 /// 🔬️ `print_ops_log`'s `metadata `/`message `/`conflict ` records now build their `data`
@@ -108,10 +107,9 @@ fn ops_log_records_to_json_string_match_serde_json_byte_for_byte() {
 #[semio_framework_async_macros::async_test]
 async fn document_text_rejects_missing_metadata_and_dangling_transitions_without_synthesis() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "strict-text", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetWarningN(SetWarningN { n: 3 })], transaction: None }, &mut identity).await.expect("apply warning");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetWarningN(SetWarningN { n: 3 })], transaction: None }, identity).await.expect("apply warning");
     let files = print_document_text(store.envelope()).await.expect("print strict text");
     let missing_metadata = files.ops.lines().filter(|line| !line.starts_with("metadata ")).collect::<Vec<_>>().join("\n");
     assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &missing_metadata, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await, Err(error) if error.message.contains("no metadata records")));
@@ -126,17 +124,16 @@ async fn document_text_rejects_missing_metadata_and_dangling_transitions_without
     let dangling_text = format!("{}\n{}", files.ops.trim_end(), ops_line_from_transition(&dangling).expect("transition line").print_op());
     assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &dangling_text, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await, Err(error) if error.message.contains("unknown operation unknown-edit")));
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn document_text_preserves_non_contiguous_edit_sequences_and_rejects_invalid_ones() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "strict-sequence", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetN(SeveritySetN { n: 1 })], transaction: None }, &mut identity).await.expect("first edit");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetN(SeveritySetN { n: 2 })], transaction: None }, &mut identity).await.expect("second edit");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetN(SeveritySetN { n: 1 })], transaction: None }, identity).await.expect("first edit");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetN(SeveritySetN { n: 2 })], transaction: None }, identity).await.expect("second edit");
     let mut renumbered = owned_test_envelope(&store).await;
     renumbered.vcs.edits[0].sequence_number = 4;
     renumbered.vcs.edits[1].sequence_number = 17;
@@ -150,16 +147,15 @@ async fn document_text_preserves_non_contiguous_edit_sequences_and_rejects_inval
     let invalid = files.ops.replacen("sequence=4", "sequence=-1", 1);
     assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &invalid, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await, Err(error) if error.message.contains("invalid edit sequence -1")));
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn persisted_conflict_requires_a_global_owned_operation_index() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "conflict-index", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetWarningN(SetWarningN { n: 3 })], transaction: None }, &mut identity).await.expect("apply warning");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetWarningN(SetWarningN { n: 3 })], transaction: None }, identity).await.expect("apply warning");
     let edit = store.envelope().vcs.edits.last().expect("one edit").clone();
     let kind = semio_os_spr::ConflictKind::Degraded { edit_ids: vec![edit.id.clone()] };
     let mutation_ids = stable_mutation_ids_for_edit(&edit).await.expect("stable mutation ids");
@@ -177,7 +173,7 @@ async fn persisted_conflict_requires_a_global_owned_operation_index() {
     });
     assert!(matches!(validate_persisted_conflicts(store.envelope()).await, Err(VcsError::ValidationFailed(message)) if message.contains("operation index")));
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -321,12 +317,11 @@ async fn preview_wire_reports_a_fatal_message_for_undecodable_op_bytes_and_stops
 #[semio_framework_async_macros::async_test]
 async fn spr_round_trip_preserves_edit_messages_and_conflicts() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let initial = DemoSnapshot { n: Some(0) };
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "durable-outcomes", initial.clone(), None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     store.set_merge_policy(semio_os_spr::MergePolicy::LaissezFaire);
-    let receipt = store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetWarningN(SetWarningN { n: 2 })], transaction: None }, &mut identity).await.expect("warning is accepted");
+    let receipt = store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetWarningN(SetWarningN { n: 2 })], transaction: None }, identity).await.expect("warning is accepted");
     let edit_id = receipt.edit_ids.first().expect("one durable edit").clone();
     let messages = store.messages_for_edit(&edit_id).to_vec();
     let edit = store.envelope().vcs.edits.iter().find(|edit| edit.id == edit_id).expect("durable edit");
@@ -348,5 +343,5 @@ async fn spr_round_trip_preserves_edit_messages_and_conflicts() {
     assert_eq!(restored.messages_for_edit(&edit_id), messages);
     assert_eq!(restored.conflicts(), store.conflicts());
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }

@@ -3,9 +3,122 @@ import { treeDataActivation } from "@semio-tech/ui-react";
 import { createContinuationScheduler } from "@semio-tech/framework-async";
 import { createVirtualContinuationHost } from "@semio-tech/framework-async/continuation/testing/oracle";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { actionSemanticsForKind } from "@semio-tech/framework";
+import { SemioFaultError, actionSemanticsForKind, type Fault, type InvocationResponse } from "@semio-tech/framework";
 import { buildCommandCategoryTree, buildCommandCategoryTabs, encodeEffectActionInvocation, encodeEffectCommandInvocation, type ResolvedCommand, type ResolvedActionArgDef, dispatchOpenedFiles, IMPORT_CHUNK_BYTES, importPayloadChunks, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, requestMediaFramesSourceV1, runMediaFramesV1 } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import "../🧰️engine-contract-helpers/🟦️.ts";
+import { createDocumentLoadGateV1 } from "../../🧱️elements/🏛️ShellHost/⏳️document-load-gate/🟦️.ts";
+import { applyDispatchActionEffect } from "../../🧱️elements/🏛️ShellHost/⚡️host-effects/🔁️dispatch-media-and-extension-effects/🟦️.ts";
+import documentLoad from "./🔣️document-load.json" with { type: "json" };
+
+describe("a dispatched host effect and its document load", () => {
+  type Request = Parameters<typeof applyDispatchActionEffect>[0];
+  type GuestHandle = Request["loadedPluginsRef"]["current"][number]["handle"];
+  const pluginId = "procedural";
+  const instanceId = 9;
+  const response: InvocationResponse = { output: null, mutations: [], inverseGroup: { invocationId: "continuation", mutations: [], inverseMutations: [] } };
+  const continuationTurn = () => new Promise<void>(resolve => {
+    scheduleDispatchAction("test-observation", undefined, 0, async () => resolve());
+  });
+
+  function setup(action: string, kind: string | null, targetKind?: string) {
+    const gate = createDocumentLoadGateV1(), applyDeferredResponse = vi.fn<Request["applyDeferredResponse"]>().mockResolvedValue(undefined);
+    const handleAction = vi.fn<GuestHandle["handleAction"]>().mockResolvedValue(response);
+    const handle = { pluginId, handleAction } satisfies Pick<GuestHandle, "pluginId" | "handleAction">;
+    const viewState: ReturnType<Request["resolvedTargetViewState"]> = {
+      activeModeId: "edit", activeWindowKindId: "diagram", windowId: "source-window", locale: "en", terminology: "native",
+      windowInstances: [{ id: "source-window", windowKindId: "diagram" }, { id: "background-window", windowKindId: "preview" }],
+    };
+    const baseSession: Request["baseSession"] = {
+      pluginId, instanceId,
+      app: {
+        id: "generator", modes: [{ id: "edit" }],
+        windowKinds: [
+          { id: "diagram", actions: kind === null ? [] : [{ id: action, kind }] },
+          ...(targetKind === undefined ? [] : [{ id: "preview", actions: [{ id: action, kind: targetKind }] }]),
+        ],
+      } as unknown as Request["baseSession"]["app"],
+      viewState,
+    };
+    const effectOwner = { presentation: null, source: null, session: baseSession, plugin: null, creationCatalog: null, inputSeq: 11 };
+    let live = true;
+    const schedule = () => applyDispatchActionEffect({
+      loadedPluginsRef: { current: [{ handle }] } as unknown as Request["loadedPluginsRef"],
+      documentLoadGateRef: { current: gate }, isCurrentEffectOwner: owner => owner === effectOwner && live,
+      resolvedTargetViewState: () => viewState,
+      effect: { dispatchAction: { req: 1, action, args: { step: 7, ...(targetKind === undefined ? {} : { windowId: "background-window" }) }, delayMs: 0 } },
+      baseSession, effectOwner, applyDeferredResponse,
+    });
+    return { gate, schedule, retire: () => { live = false; }, handleAction, applyDeferredResponse, baseSession };
+  }
+
+  it.each(documentLoad.ready)("$action ($kind → $targetKind) reaches its owner during or after load (retired=$retired)", async row => {
+    const host = setup(row.action, row.kind, row.targetKind);
+    const release = host.gate.begin(pluginId, instanceId), releaseOther = host.gate.begin(pluginId, instanceId + 1);
+    try {
+      host.schedule();
+      await continuationTurn();
+      expect(host.handleAction).toHaveBeenCalledTimes(row.duringLoad);
+      expect(host.gate.deferred(pluginId, instanceId)).toBe(row.duringLoad === 0 ? 1 : 0);
+      if (row.retired) host.retire();
+      release();
+      await continuationTurn();
+      expect(host.handleAction).toHaveBeenCalledTimes(row.afterLoad);
+      expect(host.applyDeferredResponse).toHaveBeenCalledTimes(row.afterLoad);
+      expect(host.gate.loading(pluginId, instanceId + 1)).toBe(true);
+      if (row.afterLoad > 0) {
+        const [target, invocation, view] = host.handleAction.mock.lastCall!;
+        expect(target).toBe(instanceId);
+        const addressed = row.targetKind === undefined
+          ? { windowKindId: "diagram", windowInstanceId: "source-window" }
+          : { windowKindId: "preview", windowInstanceId: "background-window" };
+        expect(JSON.parse(invocation)).toMatchObject({ address: { pluginId, actionId: row.action, ...addressed }, arguments: { step: 7 } });
+        expect(view).toBe(host.baseSession.viewState);
+      }
+    } finally { release(); releaseOther(); }
+  });
+
+  it.each(documentLoad.fault)("$id", async row => {
+    const host = setup("advanceGeneration", "mutation");
+    const failure = row.origin === null
+      ? new Error(row.code)
+      : new SemioFaultError({ origin: row.origin as Fault["origin"], code: row.code, message: row.code, retryable: row.retryable, severity: "error", scope: {} });
+    const reported = vi.spyOn(console, "error").mockImplementation(() => {});
+    let release: (() => void) | undefined;
+    try {
+      host.handleAction.mockImplementationOnce(async () => {
+        release = host.gate.begin(pluginId, instanceId);
+        throw failure;
+      });
+      if (row.repeated) host.handleAction.mockRejectedValueOnce(failure);
+      host.schedule();
+      if (row.attempts > 1) await vi.waitFor(() => expect(host.gate.deferred(pluginId, instanceId)).toBe(1));
+      else await vi.waitFor(() => expect(reported).toHaveBeenCalled());
+      expect(host.handleAction).toHaveBeenCalledTimes(1);
+      expect(host.gate.deferred(pluginId, instanceId)).toBe(row.attempts - 1);
+      expect(host.applyDeferredResponse).not.toHaveBeenCalled();
+      release?.();
+      if (row.published > 0) await vi.waitFor(() => expect(host.applyDeferredResponse).toHaveBeenCalled());
+      else await vi.waitFor(() => expect(reported).toHaveBeenCalled());
+      expect(host.handleAction).toHaveBeenCalledTimes(row.attempts);
+      expect(host.applyDeferredResponse).toHaveBeenCalledTimes(row.published);
+      if (row.published === 0) expect(reported).toHaveBeenCalledExactlyOnceWith('scheduled dispatch of "advanceGeneration" failed', failure);
+      else expect(reported).not.toHaveBeenCalled();
+    } finally { release?.(); reported.mockRestore(); }
+  });
+
+  it("does not publish an in-flight response once its effect owner retires", async () => {
+    const host = setup("advanceGeneration", "mutation");
+    let answer!: (response: InvocationResponse) => void;
+    host.handleAction.mockImplementationOnce(() => new Promise<InvocationResponse>(resolve => { answer = resolve; }));
+    host.schedule();
+    await continuationTurn();
+    expect(host.handleAction).toHaveBeenCalledTimes(1);
+    host.retire();
+    answer(response);
+    await continuationTurn();
+    expect(host.applyDeferredResponse).not.toHaveBeenCalled();
+  });
+});
 
 describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette as a real bottom-middle Panel)", () => {
   const definition = (id: string, label: string, category: string, args: ResolvedActionArgDef[] = []): ResolvedCommand["definition"] => ({

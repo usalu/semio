@@ -191,10 +191,13 @@ async fn the_original_schedule_command_drains_the_rendered_csv_and_closes() {
     }
     assert!(cancelled.terminal_is_empty());
 
-    for _ in 0..8192 {
-        if instance.close_terminal_is_empty().expect("mounted owner observable") { break; }
-        caller.retirement_turn(grant, |cx| Ok(instance.close_inference_step(cx, grant))).expect("funded close turn").expect("mounted projection retires");
-    }
-    assert!(instance.close_terminal_is_empty().expect("mounted owner observable"));
     caller.retire(stock);
+    let maintenance = RetainedCloneGrant { maximum_copy_bytes: 1 << 16, ..stock };
+    let mut close = OriginalJobFixtureCaller::admit(OperationId(2), Generation(1), stock, || Some(1), 1000, 1 << 24);
+    for _ in 0..(1 << 18) {
+        if instance.close_terminal_is_empty().expect("mounted owner observable") { break; }
+        close.retirement_turn(maintenance, |cx| Ok(instance.close_step(cx, maintenance))).expect("funded close turn").expect("mounted projection retires");
+    }
+    assert!(instance.close_terminal_is_empty().expect("mounted owner observable"), "schedule owner demand {:?}, available {:?}", instance.inference_retirement_demands(maintenance.maximum_copy_bytes), close.remaining_grant());
+    close.retire(stock);
 }

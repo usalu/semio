@@ -35,7 +35,7 @@ const oracle=(targets:string[])=>JSON.parse(spawnSync(process.env.SEMIO_PYTHON??
 const workspace=(name:string,graph=GRAPH)=>{const root=join(base,name);mkdirSync(root,{recursive:true});copyFileSync(graph,join(root,"graph.json"));return realpathSync(root);};
 const environment=(name:string)=>{const dir=join(base,"run-"+name);mkdirSync(dir,{recursive:true});return{...process.env,XDG_RUNTIME_DIR:dir,TMPDIR:dir,LOCALAPPDATA:dir} as Record<string,string>;};
 const digestOf=(name:string)=>createHash("sha256").update(name).digest("hex");
-const checkPlan=(tasks:any[],targets:string[])=>{
+const checkPlan=(tasks:readonly Readonly<{id:string;dependsOn:readonly string[]}>[],targets:string[])=>{
  const expected=oracle(targets),position=new Map(tasks.map((task,at)=>[task.id,at]));
  expect(Object.fromEntries(tasks.map(task=>[task.id,task.dependsOn]))).toEqual(expected);
  for(const task of tasks)for(const dependency of task.dependsOn)expect(position.get(dependency)!).toBeLessThan(position.get(task.id)!);
@@ -242,7 +242,7 @@ describe("plan load statistics",()=>{
   const planner=createGraphPlannerPortV1({identify:async()=>digestOf("stats-key"),loadGraph:async()=>JSON.parse(graphText),loadSlice:async()=>({graph:JSON.parse(graphText),stats})});
   const service=createHostServiceV1({runtime,implementation,ports:{planner},policy:{residentCheckMilliseconds:50}});await service.start();
   const result=await requestPlanV1({root,implementation,targets:["app:test"],agent:"a",language:"en",environment:env,arguments:["run","app:test"]});
-  expect(JSON.parse(readFileSync(join(result.runtime.directory,"plans-"+result.runtime.tag,result.reply.slice.hash+".json"),"utf8")).stats).toBeUndefined();
+  expect(JSON.parse(readFileSync(join(result.runtime.directory,"plans-"+result.runtime.tag,result.reply.slice?.hash+".json"),"utf8")).stats).toBeUndefined();
   const status=await requestHostStatusV1({implementation,environment:env});
   expect(status!.plans!.load).toEqual(stats);expect(status!.plans!.computed).toBe(1);expect(validatorV1("ServiceStatus")(status)).toEqual([]);
   await service.stop("test");
@@ -310,7 +310,7 @@ describe("host service in process",()=>{
  test("a spill directory out of room evicts the oldest slices first, never the one being written, and drops failed temporary writes",()=>{
   const directory=mkdtempSync(join(tmpdir(),"spill-room-"));
   try{
-   for(const [name,age] of [["old.json",30],["mid.json",20],["keep.json",40],["new.json",10]]){writeFileSync(join(directory,name),"x");utimesSync(join(directory,name),new Date(Date.now()-age*1000),new Date(Date.now()-age*1000));}
+   for(const [name,age] of [["old.json",30],["mid.json",20],["keep.json",40],["new.json",10]] as const){writeFileSync(join(directory,name),"x");utimesSync(join(directory,name),new Date(Date.now()-age*1000),new Date(Date.now()-age*1000));}
    writeFileSync(join(directory,"half.json.ab12cd34.tmp"),"partial");
    makeRoomV1(directory,"keep.json",Number.MAX_SAFE_INTEGER);
    expect(readdirSync(directory).sort()).toEqual(["keep.json"]);
@@ -545,7 +545,7 @@ describe("host service reports recorded tasks up to date",()=>{
   const files=new Map<string,string>();
   const derived=createDerivedGraphV1({rules:KIND_RULES_V1,world:{read:async(path:string)=>files.has(path)?Buffer.from(files.get(path)!):undefined,files:async()=>[...files.keys()]},environment:{},verifyObserved:verifyObservedV1});
   const planner=createGraphPlannerPortV1({identify:async()=>"k".repeat(64),loadGraph:async()=>graph,taskState:async()=>({graph:derived,recorder})});
-  const index=await planner.load({root,workspace:"wkeys"}),ask=()=>planner.plan({index:index as never,targets:[...(index as {value:{tasks:Map<string,unknown>}}).value.tasks.keys()],root,workspace:"wkeys",agent:"a",revision:"r"} as never) as Promise<{tasks:{id:string;stale:boolean;key?:string|null;outputs:string[]}[]}>;
+  const index=await planner.load({root,workspace:"wkeys"}),ask=()=>planner.plan({index:index as never,targets:[...(index as {value:{tasks:Map<string,unknown>}}).value.tasks.keys()],root,workspace:"wkeys",agent:"a",revision:"r"} as never);
   const planned=await ask();
   expect(planned.tasks.length).toBeGreaterThan(0);expect(planned.tasks.every(task=>task.stale)).toBe(true);expect(planned.tasks.every(task=>/^[0-9a-f]{64}$/u.test(task.key??""))).toBe(true);
   for(const task of planned.tasks)for(const output of task.outputs){mkdirSync(dirname(join(root,output)),{recursive:true});writeFileSync(join(root,output),"built\n");}

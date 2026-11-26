@@ -22,6 +22,8 @@ path = "../../🦀️.rs"
 doctest = false
 
 [dependencies]
+semio-plugin-actor-input-decoder = { path = "../../🛬️decoder/📦️packages/🦀️rust" }
+semio-plugin-actor-input-wire = { path = "../../📡️wire/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-actor = { path = "../../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

@@ -1,3 +1,4 @@
+import{descriptorRefusalV1}from"../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧷️descriptor/🟦️.ts";
 import { createHash } from "node:crypto";
 import { closeSync, constants, fstatSync, fsyncSync, lstatSync, mkdirSync, openSync, readSync, writeFileSync, type BigIntStats, type Stats } from "node:fs";
 import { basename, dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
@@ -117,9 +118,9 @@ function scaffoldExistingFile(absolute: string, path: string, progress: (bytesRe
   if (!before.isFile() || before.isSymbolicLink()) throw new Error(`Authoring target is not a regular file: ${path}`);
   const fd = openSync(absolute, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
   try {
-    if (!scaffoldSameVersion(before, fstatSync(fd, { bigint: true }))) throw new Error(`Authoring target identity changed: ${path}`);
+    if (!scaffoldSameVersion(before, fstatSync(fd, { bigint: true }))) throw descriptorRefusalV1("immutable",path,{en:"Authoring target",de:"Schreibziel"});
     const evidence = scaffoldFile(fd, path, progress), current = lstatSync(absolute, { bigint: true });
-    if (!current.isFile() || current.isSymbolicLink() || !scaffoldSameVersion(before, current)) throw new Error(`Authoring target identity changed: ${path}`);
+    if (!current.isFile() || current.isSymbolicLink() || !scaffoldSameVersion(before, current)) throw descriptorRefusalV1("immutable",path,{en:"Authoring target",de:"Schreibziel"});
     return evidence;
   } finally { closeSync(fd); }
 }

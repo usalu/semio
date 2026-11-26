@@ -7,6 +7,80 @@
       "enum": "StdioApps",
       "label": "Stdio",
       "main": true,
+      "appLibraries": [
+        {
+          "root": "🗃️apps/🌐️html/🦀️.rs",
+          "enum": "StdioHtmlApps",
+          "variants": [
+            "HtmlEditor",
+            "HtmlViewer"
+          ]
+        },
+        {
+          "root": "🗃️apps/📝️md/🦀️.rs",
+          "enum": "StdioMarkdownApps",
+          "variants": [
+            "MdEditor",
+            "MdViewer"
+          ]
+        },
+        {
+          "root": "🗃️apps/📋️csv/🦀️.rs",
+          "enum": "StdioCsvApps",
+          "variants": [
+            "CsvEditor",
+            "CsvViewer"
+          ]
+        },
+        {
+          "root": "🗃️apps/📑️tsv/🦀️.rs",
+          "enum": "StdioTsvApps",
+          "variants": [
+            "TsvEditor",
+            "TsvViewer"
+          ]
+        },
+        {
+          "root": "🗃️apps/🔤️txt/🦀️.rs",
+          "enum": "StdioTextApps",
+          "variants": [
+            "TxtEditor",
+            "TxtViewer"
+          ]
+        },
+        {
+          "root": "🗃️apps/🧬️json/🌐️any/🦀️.rs",
+          "enum": "StdioJsonApps",
+          "variants": [
+            "JsonAnyEditor",
+            "JsonAnyViewer"
+          ]
+        },
+        {
+          "root": "🗃️apps/🧬️json/🔒️i-json/🦀️.rs",
+          "enum": "StdioIJsonApps",
+          "variants": [
+            "JsonIJsonEditor",
+            "JsonIJsonViewer"
+          ]
+        },
+        {
+          "root": "🗃️apps/🏷️xml/🌐️any/🦀️.rs",
+          "enum": "StdioXmlApps",
+          "variants": [
+            "XmlAnyEditor",
+            "XmlAnyViewer"
+          ]
+        },
+        {
+          "root": "🗃️apps/🏷️xml/✅️valid/🦀️.rs",
+          "enum": "StdioValidXmlApps",
+          "variants": [
+            "XmlValidEditor",
+            "XmlValidViewer"
+          ]
+        }
+      ],
       "shards": []
     },
     {

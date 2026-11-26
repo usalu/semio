@@ -64,7 +64,7 @@ test.skipIf(!python)("the retention plan equals an independent Python model on 3
  const model=JSON.parse(result.stdout.toString()) as {key:string;size:number;reason:string;storedAt?:number}[][];const reasons=new Set<string>();
  requests.forEach((request,index)=>{
   const input=inputs[index]!,ours=planRemoteCacheCollectionV1(input.rows,{maximumBytes:request.bounds.maximumBytes!,maximumAgeMilliseconds:request.bounds.maximumAge!,now:request.bounds.now!,need:request.bounds.need!,reserved:request.bounds.reserved!},new Set(request.dangling),{metas:input.metas,graceMilliseconds:request.retention.grace,claimed:key=>input.claimed.has(key),...input.verdicts===undefined?{}:{verdicts:input.verdicts}});
-  expect(ours,`round ${index}`).toEqual(model[index]!);for(const drop of ours)reasons.add(drop.reason);
+  expect<unknown>(ours,`round ${index}`).toEqual(model[index]!);for(const drop of ours)reasons.add(drop.reason);
   for(const drop of ours)expect(input.claimed.has(drop.key)&&drop.reason!=="dangling","a claimed entry is never taken").toBe(false);
  });
  expect([...reasons].sort()).toEqual(["age","budget","dangling","stale"]);
@@ -245,7 +245,7 @@ test("a server that runs for days is not taken for dead: the lock is renewed, ta
 });
 
 const varint=(value:number):number[]=>{const out:number[]=[];let rest=value;while(rest>=0x80){out.push((rest&0x7f)|0x80);rest=Math.floor(rest/0x80);}out.push(rest);return out;};
-const named=(files:readonly {path:string;bytes:Uint8Array}[]):Uint8Array=>{
+const named=(files:readonly {path:string;bytes:Uint8Array}[]):Uint8Array<ArrayBuffer>=>{
  const parts:number[]=[];
  for(const file of files){const text=new TextEncoder().encode(sha(file.bytes)),path=new TextEncoder().encode(file.path),digest=[0x0a,0x40,...text,0x10,...varint(file.bytes.length)],entry=[0x0a,...varint(path.length),...path,0x12,...varint(digest.length),...digest];parts.push(0x12,...varint(entry.length),...entry);}
  return new Uint8Array(parts);

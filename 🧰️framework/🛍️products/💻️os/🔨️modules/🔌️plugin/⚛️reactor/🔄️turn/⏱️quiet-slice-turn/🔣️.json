@@ -59,6 +59,17 @@
       {"paid":1,"ready":true,"cancelled":false,"yielding":false,"elapsedUs":2}
     ],"outcome":[1,1,0]}
   ],
+  "archiveMaintenance": [
+    { "name": "funded load after earlier work", "idleIngress": true, "cancelled": false, "yielding": false, "startedUs": 59000, "currentUs": 66999, "funded": true, "queries": 1, "open": true },
+    { "name": "unfunded or awaiting host", "idleIngress": true, "cancelled": false, "yielding": false, "startedUs": 10, "currentUs": 11, "funded": false, "queries": 1, "open": false },
+    { "name": "event or ingress page to service", "idleIngress": false, "cancelled": false, "yielding": false, "startedUs": 10, "currentUs": 11, "funded": true, "queries": 0, "open": false },
+    { "name": "parent cancellation", "idleIngress": true, "cancelled": true, "yielding": false, "startedUs": 10, "currentUs": 11, "funded": true, "queries": 0, "open": false },
+    { "name": "deadline or original fuel limit", "idleIngress": true, "cancelled": false, "yielding": true, "startedUs": 10, "currentUs": 11, "funded": true, "queries": 0, "open": false },
+    { "name": "slice exhausted", "idleIngress": true, "cancelled": false, "yielding": false, "startedUs": 10000, "currentUs": 18000, "funded": true, "queries": 0, "open": false },
+    { "name": "clock lost", "idleIngress": true, "cancelled": false, "yielding": false, "startedUs": 10, "currentUs": null, "funded": true, "queries": 0, "open": false },
+    { "name": "clock regressed", "idleIngress": true, "cancelled": false, "yielding": false, "startedUs": 11, "currentUs": 10, "funded": true, "queries": 0, "open": false }
+  ],
+  "archivePump": { "calls": 19030, "unitUs": 200, "limit": 32, "crossings": 595 },
   "drain": [
     { "name": "microsecond units share one turn", "units": 10048, "unitUs": 50, "turns": 63 },
     { "name": "one and a half millisecond units share a slice of six", "units": 10048, "unitUs": 1500, "turns": 1675 },

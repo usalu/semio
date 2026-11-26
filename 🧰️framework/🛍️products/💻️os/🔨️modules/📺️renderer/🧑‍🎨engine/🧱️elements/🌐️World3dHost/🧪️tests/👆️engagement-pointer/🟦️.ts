@@ -21,6 +21,7 @@ for (const row of fixture) it(row.id, async () => {
   const pass = () => ({ kind: "single" });
   const core = {
     activeUtility: "cut",
+    interaction: { activeUtility: "cut" },
     cameraRef: { current: camera },
     cameraState: { position: [0, 0, 2], target: [0, 0, 0] },
     hostRef: { current: { getBoundingClientRect: () => new DOMRect(0, 0, 100, 100) } },
@@ -47,7 +48,7 @@ for (const row of fixture) it(row.id, async () => {
         case "move": hook.result.current.handlePointerMove(pointer); break;
         case "down": hook.result.current.handlePointerDown(pointer); break;
         case "settle": frames.shift()?.(0); requests.shift()?.(); break;
-        case "select": hook.rerender({ next: { ...core, activeUtility: "select", selection: { engagementSessionActive: false } } }); break;
+        case "select": hook.rerender({ next: { ...core, activeUtility: "select", interaction: { activeUtility: "select" }, selection: { engagementSessionActive: false } } }); break;
         case "arm": hook.rerender({ next: core }); break;
       }
     });

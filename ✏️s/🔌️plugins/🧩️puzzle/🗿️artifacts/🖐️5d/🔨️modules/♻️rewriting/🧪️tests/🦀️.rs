@@ -1,6 +1,6 @@
 use super::*;
 use semio_framework_pack_json::{JsonMemberPolicy, from_json_str};
-use crate::standards::v1::subsets::any::schema::mutations::artifact_items_6::apply_puzzle5d_mutation;
+use semio_s_artifact_puzzle_5d_mut_any_5::apply_puzzle5d_mutation;
 
 fn fixture<T: FromValue>(key: &str) -> T {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🔣️fixture.json")).unwrap();

@@ -16,7 +16,7 @@ import {detectWorkerRustcV1} from "../../🚀️offload/🧰️toolchain/🟦️
 import {detectWorkerCommandsV1} from "../../🚀️offload/🧰️command/🛠️worker-tools/🟦️.ts";
 import {remoteExecutionWorkerWhyV1} from "../../🌡️load/🔎️why/🟦️.ts";
 import {checkRemoteExecutionAgentReadinessV1} from "../../🛰️agent/🩺️readiness/🟦️.ts";
-import {readRemoteExecutionPolicyV1} from "../../🟦️.ts";
+import {readRemoteExecutionPolicyV1,type RemoteExecutionSandboxV1} from "../../🟦️.ts";
 import {type RemoteExecutionSidecarContextV1,sleep,remoteExecutionPortsV1,remoteExecutionWorkerApiV1} from "../🧰️shared/🟦️.ts";
 import {resolveRemoteExecutionEndpointV1} from "../../🧭️endpoint/🟦️.ts";
 
@@ -48,9 +48,9 @@ export function superviseGraphChildV1(context:RemoteExecutionSidecarContextV1,en
 
 /** 👷️ The build agent (worker and load reporter) of this machine (which also keeps the fleet mirror state of the machine fresh, so a machine that has nothing to install still learns whether the mirror is healthy): finds the scheduler through the fleet facts (waiting, with the facts refreshed, until one is published), joins it with the fleet credential and runs the worker and the load reporter until the scheduler moves or the signal aborts. A worker that cannot be offered for a reason that is not the disk (no policy, no worker key, no sandbox, no compiler) is looked at again every 15 seconds and joins as soon as the reason is gone; free disk space is judged by the running worker with every admission, not here. */
 export async function runAgent(context:RemoteExecutionSidecarContextV1):Promise<void>{
- const policy=readRemoteExecutionPolicyV1(),environment={...context.environment,SEMIO_WORKSPACE_ROOT:context.root},say=context.write,code=remoteExecutionSidecarWatchV1("agent").baseline.slice(0,16);
+ const policy=readRemoteExecutionPolicyV1(),environment:Record<string,string|undefined>={...context.environment,SEMIO_WORKSPACE_ROOT:context.root},say=context.write,code=remoteExecutionSidecarWatchV1("agent").baseline.slice(0,16);
  const graph=superviseGraphChildV1(context,join(import.meta.dir,"..","🟦️.ts")),pool=superviseGraphChildV1(context,join(import.meta.dir,"..","🟦️.ts"),"pool"),spool=superviseGraphChildV1(context,join(import.meta.dir,"..","🟦️.ts"),"spool");
- const ready=context.environment.SEMIO_FLEET_ORIGIN!==undefined&&context.environment.SEMIO_FLEET_ORIGIN===`${context.environment.SEMIO_FLEET_GROUP}-server`?undefined:superviseGraphChildV1(context,join(import.meta.dir,"..","🟦️.ts"),"ready");
+ const ready=superviseGraphChildV1(context,join(import.meta.dir,"..","🟦️.ts"),"ready");
  await syncFleetIdentityV1({root:context.root}).then(result=>{if(result.error!==undefined)say(`fleet identity: ${result.error}`);},()=>undefined);
  const own=readFleetMachineV1(context.root),addressStop=new AbortController(),addressWatch=own?.storeRoot===undefined?Promise.resolve():watchFleetAddressSetV1({storeRoot:own.storeRoot,origin:own.originId,hostname:hostname(),interfaces:networkInterfaces,signal:AbortSignal.any([context.signal,addressStop.signal]),language:context.environment.SEMIO_LANGUAGE==="de"?"de":"en",report:say});
  const language=context.environment.SEMIO_LANGUAGE==="de"?"de" as const:"en" as const;
@@ -85,8 +85,8 @@ export async function runAgent(context:RemoteExecutionSidecarContextV1):Promise<
   try{
    await runRemoteExecutionAgentV1({
     root:context.root,code,environment,scheduler,token,cacheToken:token,fetch:schedulerCall,cacheFetch:cacheCall,actions:policy.worker.actions as "rustc"|"any"|"none",concurrency:policy.worker.concurrency===0?availableParallelism():policy.worker.concurrency,
-    directory,sandbox:policy.worker.sandbox,materialize:policy.worker.materialize as "clone"|"copy",maximumBlobBytes:policy.worker.maximumBlobBytes,inlineOutputBytes:policy.worker.inlineOutputBytes,
-    network:policy.worker.network,confinement:policy.worker.confinement,loadIntervalSeconds:policy.worker.loadIntervalSeconds,extraProperties:[...rustc?.properties??[],...commands.properties],...rustc?{tools:rustc.tools}:{},commands:commands.tools,worker:why===undefined,ready:()=>rustc!==undefined&&rustc.toolchain.targets.length>0&&Object.values(rustc.tools).every(tool=>existsSync(tool.path)),disk:policy.worker.disk,...why===undefined?{retryWorkerSeconds:30}:{why},signal:controller.signal,...context.drain?{drain:context.drain}:{},...context.work?{onRunning:running=>{context.work!.busy=running>0;context.work!.running=running;}}:{},
+    directory,sandbox:policy.worker.sandbox as "auto"|RemoteExecutionSandboxV1,materialize:policy.worker.materialize as "clone"|"copy",maximumBlobBytes:policy.worker.maximumBlobBytes,inlineOutputBytes:policy.worker.inlineOutputBytes,
+    network:policy.worker.network as "deny"|"allow",confinement:policy.worker.confinement as "required"|"best-effort",loadIntervalSeconds:policy.worker.loadIntervalSeconds,extraProperties:[...rustc?.properties??[],...commands.properties],...rustc?{tools:rustc.tools}:{},commands:commands.tools,worker:why===undefined,ready:()=>rustc!==undefined&&rustc.toolchain.targets.length>0&&Object.values(rustc.tools).every(tool=>existsSync(tool.path)),disk:policy.worker.disk,...why===undefined?{retryWorkerSeconds:30}:{why},signal:controller.signal,...context.drain?{drain:context.drain}:{},...context.work?{onRunning:running=>{context.work!.busy=running>0;context.work!.running=running;}}:{},
     onEvent:event=>{say(`worker ${event.stage}: ${event.detail}`);},onReport:event=>{say(`load report ${event.stage}: ${event.detail}`);},
    });
   }finally{clearInterval(watch);if(recheck!==undefined)clearTimeout(recheck);context.signal.removeEventListener("abort",stop);}

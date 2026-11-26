@@ -32,7 +32,7 @@ test("path dependencies follow aliases, target tables and workspace inheritance 
  const requests=corpus.dependencies.map(row=>{const manifest=plain(parse(row.toml));return{manifest,workspace:row.workspace};});
  const answers=ask(requests);
  for(const[index,row]of corpus.dependencies.entries()){
-  expect(nativeDependencies(requests[index]!.manifest,row.workspace),row.name).toEqual(row.expected);
+  expect<unknown>(nativeDependencies(requests[index]!.manifest,row.workspace),row.name).toEqual(row.expected);
   expect(answers[index],row.name).toEqual(row.expected);
  }
 });

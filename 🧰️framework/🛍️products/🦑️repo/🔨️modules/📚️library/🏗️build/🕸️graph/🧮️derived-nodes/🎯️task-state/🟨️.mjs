@@ -12,6 +12,7 @@ export const TASK_STATE_POLICY_V1=Object.freeze({version:1,maximumTasks:262144})
 
 /**
  * 🔑️ The key of every planned task: the digest of its complete declaration (`task-key` node: executor options, configurations, outputs, resolved inputs, environment) the ordered forwarded arguments and the keys of the tasks it depends on, so an edit that reaches a dependency changes the key of every task above it. `tasks` maps a task id to `{root, target, declaration, dependsOn, cacheable}`; ids come in dependency order. A task whose declaration cannot be keyed has the key `null` and is never up to date.
+ * @param {{graph:*;tasks:*;order:*;environment?:object;forwarded?:readonly unknown[];signal?:AbortSignal}} options
  * @see ../🧩️kinds/🟨️.mjs
  */
 export async function taskKeysV1({graph,tasks,order,environment={},forwarded=[],signal}){

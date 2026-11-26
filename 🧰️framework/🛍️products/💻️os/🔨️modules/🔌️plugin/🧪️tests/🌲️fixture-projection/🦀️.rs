@@ -39,7 +39,7 @@ fn fixture_projection_retires_exact_tree_before_return_error_or_panic() {
         root.bindings.try_push(serde_json::from_value(payloads["binding"].clone()).unwrap()).unwrap();
         root.menu = Some(serde_json::from_value(payloads["menu"].clone()).unwrap());
         let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            semio_plugin_testing_laws::artifact_app_laws::observe_and_retire_fixture_tree(semio_ui_runtime::ComponentTree::new(root), |_| -> Result<&str, &str> {
+            semio_plugin_testing_instance_laws::observe_and_retire_fixture_tree(semio_ui_runtime::ComponentTree::new(root), |_| -> Result<&str, &str> {
                 match mode {
                     "success" => Ok("observed"),
                     "rejection" => Err("rejected"),

@@ -4,7 +4,7 @@
  */
 
 import { SemioFaultError, type Effect, type Fault, type InvocationResponse } from "@semio-tech/framework";
-import { encodePackValue } from "@semio-tech/framework/packs";
+import { encodeFaultPack } from "@semio-tech/framework/packs";
 import { type SpawnedAppEntry } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { type ActiveSession, type LoadedProgramState } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { resolveManifestLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
@@ -167,7 +167,7 @@ async function runCapturedExtensionEffect(
       origin: "os", code: "extension.invoke-failed", severity: "error", message: error instanceof Error ? error.message : String(error),
       scope: { pluginId: extensionId, instanceId: String(instanceId) }, retryable: false,
     };
-    outcome = { fault: encodePackValue(fault) };
+    outcome = { fault: encodeFaultPack(fault) };
   }
   completion.assertActive();
   const response = await completion.complete(outcome);

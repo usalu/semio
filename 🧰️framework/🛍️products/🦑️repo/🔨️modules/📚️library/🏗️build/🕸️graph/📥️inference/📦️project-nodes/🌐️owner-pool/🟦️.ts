@@ -106,7 +106,10 @@ export function ownerPoolOpenWavesV1(waves:readonly OwnerPoolWaveV1[],now:number
 }
 
 /** 🧾️ The stage and closed cache refusal of a wave offer. */
-export type OwnerPoolPublishRefusalV1=Readonly<{stage:(typeof schema.definitions.PublishStage.enum)[number];code:GraphRefusalV1["code"]|"unavailable";status:number|null;transient:boolean;timeout?:GraphPutTimeoutV1}>;
+export type OwnerPoolPublishRefusalV1=Readonly<{stage:(typeof schema.definitions.PublishStage.enum)[number];code:GraphRefusalV1["code"]|"unavailable";status:number|null;transient:boolean;detail?:string;timeout?:GraphPutTimeoutV1}>;
+
+/** 🧾️ How the cache server opens the capacity detail of its 507 (the only response text a refusal log carries: the server writes it itself, as bytes, limits and holders, never a request text). */
+const CAPACITY_DETAIL_PREFIX="Insufficient storage: ";
 
 const WRITTEN=new Set<string>();
 
@@ -115,7 +118,7 @@ export async function publishOwnerPoolV1(input:Readonly<{client:GraphFleetClient
  const {client,owner,manifest}=input,{head}=manifest,now=(input.now??Date.now)();
  const refused=(stage:OwnerPoolPublishRefusalV1["stage"],why?:GraphRefusalV1,timeout?:GraphPutTimeoutV1)=>{
   const evidence=why?.code==="no-answer"&&timeout!==undefined&&(timeout.request==="cas-put"||timeout.request==="action-result-put")&&Number.isSafeInteger(timeout.deadlineMilliseconds)&&timeout.deadlineMilliseconds>0;
-  input.onRefused?.({stage,code:why?.code??"unavailable",status:why?.status??null,transient:why?.transient??true,...(evidence?{timeout:{request:timeout.request,deadlineMilliseconds:timeout.deadlineMilliseconds}}:{})});
+  input.onRefused?.({stage,code:why?.code??"unavailable",status:why?.status??null,transient:why?.transient??true,...(why?.code==="capacity"&&why.detail.startsWith(CAPACITY_DETAIL_PREFIX)?{detail:why.detail.slice(CAPACITY_DETAIL_PREFIX.length)}:{}),...(evidence?{timeout:{request:timeout.request,deadlineMilliseconds:timeout.deadlineMilliseconds}}:{})});
   return false;
  };
  const state=ownerPoolStateV1("manifest",head.id),site=client.settings.endpoint+"\u0000"+client.settings.instance+"\u0000"+owner+"\u0000"+head.id,intact=async():Promise<boolean>=>{const present=await readOwnerPoolV1(client,head.id);return present!==undefined&&ownerPoolIdV1(present.head,present.units)===head.id;};
@@ -182,7 +185,7 @@ export function ownerPoolRandomV1(state:number):Readonly<{value:number;state:num
 export type OwnerPoolAskV1=Readonly<{megabytes:number;alone:boolean}>;
 
 /** 🏠️ What the host says about itself for the sizing of the pool: the machine, the memory it has available, how loud it is and what its own work (builds, setup, a wave) holds. */
-export type OwnerPoolHostV1=Readonly<{cores:number;totalMegabytes:number;availableMegabytes:number;pressure:"normal"|"warn"|"critical";load:number|null;idleCores?:number|null;swapOutMegabytesPerSecond:number|null;foreground:Readonly<{cpu:number;unrealizedMegabytes:number;waiters:number;waitingMegabytes?:number;oldestWaitMilliseconds?:number;ask?:OwnerPoolAskV1}>}>;
+export type OwnerPoolHostV1=Readonly<{cores:number;totalMegabytes:number;availableMegabytes:number;pressure:"normal"|"warn"|"critical";load:number|null;idleCores?:number|null;swapOutMegabytesPerSecond:number|null;foreground:Readonly<{cpu:number;unrealizedMegabytes:number;retainedUnrealizedMegabytes?:number;waiters:number;waitingMegabytes?:number;oldestWaitMilliseconds?:number;ask?:OwnerPoolAskV1}>}>;
 /** 🎯️ How many children the pool runs and why it runs fewer than it could. */
 export type OwnerPoolTargetV1=Readonly<{children:number;reason:"pressure"|"yielding"|"nothing-fits"|"waiting"|null;limit?:OwnerPoolLimitV1}>;
 /** 🔢️ The numbers behind a target that is below the cores: which rule binds (`memory`, `cores`, `load`, `pressure`, `waiting`, `none`), what one more child needs, what is free for it above the floor, what the machine's own work holds back, the floor, and the cores (all, booked by the machine's own work, idle by measurement, `null` when not measured). */
@@ -237,7 +240,8 @@ export function writeOwnerPoolWaveFilesV1(directories:readonly string[],files:Re
  * @see ./🧪️tests/🧫️fixtures/🐍️oracle.py */
 export function ownerPoolSizingV1(input:Readonly<{host:OwnerPoolHostV1;children:number;childMegabytes:number}>,policy:typeof P=P):OwnerPoolTargetV1&Readonly<{limit:OwnerPoolLimitV1}>{
  const {host}=input,floor=clamp(Math.floor(host.totalMegabytes*policy.floorShareBasisPoints/10000),policy.floorMinimumMegabytes,policy.floorMaximumMegabytes),foreground=host.foreground,need=input.childMegabytes,ask=foreground.ask;
- const hold=foreground.waiters>0&&foreground.waitingMegabytes===undefined?foreground.unrealizedMegabytes:Math.min(foreground.unrealizedMegabytes,Math.floor(host.totalMegabytes*policy.ownHoldShareBasisPoints/10000)),roomNow=host.availableMegabytes-floor-hold,roomDrained=roomNow+input.children*need;
+ const forecastHold=foreground.waiters>0&&foreground.waitingMegabytes===undefined?foreground.unrealizedMegabytes:Math.min(foreground.unrealizedMegabytes,Math.floor(host.totalMegabytes*policy.ownHoldShareBasisPoints/10000));
+ const hold=forecastHold+(foreground.retainedUnrealizedMegabytes??0),roomNow=host.availableMegabytes-floor-hold,roomDrained=roomNow+input.children*need;
  const blocked=(megabytes:number)=>megabytes>roomNow&&megabytes<=roomDrained,counted=(megabytes:number)=>megabytes<=roomDrained?megabytes:0;
  const held=hold+counted(foreground.waitingMegabytes??0)+counted(ask?.megabytes??0),spare=host.availableMegabytes-floor-held;
  const reserved=foreground.waiters>0?Math.ceil(host.cores*policy.foregroundCoreShareBasisPoints/10000):0,booked=Math.max(0,host.cores-foreground.cpu-reserved),idle=host.idleCores??null,waited=foreground.oldestWaitMilliseconds??0,swap=host.swapOutMegabytesPerSecond??0;

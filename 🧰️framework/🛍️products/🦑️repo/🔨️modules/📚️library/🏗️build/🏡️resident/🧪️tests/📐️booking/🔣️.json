@@ -1,4 +1,14 @@
 {
+  "workerBudgets": [
+    {"learned": 6627, "grant": 2891, "configured": null},
+    {"learned": 6627, "grant": 6553, "configured": null},
+    {"learned": 0, "grant": 2048, "configured": null},
+    {"learned": 6627, "grant": 2048, "configured": null},
+    {"learned": 6627, "grant": 2891, "configured": 1250},
+    {"learned": 0, "grant": 2048, "configured": 4096},
+    {"learned": 6627, "grant": null, "configured": 4096},
+    {"learned": 0, "grant": 2048, "configured": 4096, "capacityOff": true}
+  ],
   "cases": [
     {
       "id": "older request with sufficient memory",

@@ -1,4 +1,5 @@
 import { terminateOwnedProcessTree } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {processPidExistsV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawn } from "node:child_process";
@@ -165,12 +166,9 @@ export async function runTransactionV2Shards(options: TransactionV2ShardOptions)
   process.off("SIGINT", interrupt);
   process.off("SIGTERM", terminate);
   for (const pid of registeredPids()) {
-    try {
-      process.kill(pid, 0);
+    if (processPidExistsV1(pid)) {
       killTree(pid);
       failure ??= new Error(`Transaction v2 aggregate left child ${pid} alive`);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
     }
   }
   return {

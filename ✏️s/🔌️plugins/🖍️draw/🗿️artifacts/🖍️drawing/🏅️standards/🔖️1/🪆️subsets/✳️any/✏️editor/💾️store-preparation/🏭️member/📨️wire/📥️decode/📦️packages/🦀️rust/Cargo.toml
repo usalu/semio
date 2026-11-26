@@ -1,0 +1,22 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-draw-member-decode"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Draw member original operation JSON decoding"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-pack-json = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
+semio-s-artifact-draw-drawing-mutations = { workspace = true }

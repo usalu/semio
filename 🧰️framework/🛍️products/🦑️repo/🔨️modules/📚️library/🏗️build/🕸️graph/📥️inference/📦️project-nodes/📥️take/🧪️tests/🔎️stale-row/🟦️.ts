@@ -2,7 +2,7 @@
  * @see ../../🟨️.mjs `createTakeLedgerV1` */
 import{expect,test}from"bun:test";
 import{createTakeLedgerV1}from"../../🟨️.mjs";
-import source from"../../../🟨️.mjs"with{type:"text"};
+const source=await Bun.file(new URL("../../../🟨️.mjs",import.meta.url)).text();
 
 test("the stale row line names the owner and the row in English and German",()=>{
  const ledger=createTakeLedgerV1(3),row={kind:"closure",path:"[\"/r\",\"abc\",[\"generated\"]]",fact:"[]"};

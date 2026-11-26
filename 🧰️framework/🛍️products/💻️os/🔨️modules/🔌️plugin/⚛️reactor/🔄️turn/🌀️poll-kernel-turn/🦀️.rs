@@ -31,7 +31,8 @@ pub(super) async fn poll_kernel_turn<PA: semio_plugin_reactor_app::PluginApp, T,
     let close_instances: Vec<u32> = events.iter().filter_map(|event| if let Event::InstanceClose(request) = event { Some(request.lifetime.instance_id) } else { None }).collect();
     let mut effects: Vec<Effect> = Vec::new();
     trace_turn_phase_retention("lifecycle");
-    let close_cleanup_work = drive_turn_retirement(runtime, cx)?;
+    let idle_ingress = events.is_none() && command_page.is_none() && cold_pair_page.is_none();
+    let close_cleanup_work = drive_turn_retirement(runtime, idle_ingress, cx)?;
     semio_plugin_runtime_instances::inst_opening::plugin_resume_actor_openings(runtime, identity, cx, |ready, progressed, cx| {
         opening_slice_open(opening_pacing, ready, progressed, cx.is_cancelled(), cx.should_yield(), guest_turn_executing_us())
     }).await?;

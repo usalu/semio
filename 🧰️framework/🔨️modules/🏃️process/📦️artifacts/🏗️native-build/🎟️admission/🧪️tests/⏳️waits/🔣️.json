@@ -1,0 +1,67 @@
+{
+  "rows": [
+    {
+      "name": "queued behind running units",
+      "row": {
+        "unit": "syn",
+        "reason": "queue",
+        "predictedMegabytes": 612,
+        "seconds": 41,
+        "place": 2,
+        "count": 3,
+        "running": 3,
+        "heldMegabytes": 420,
+        "budgetMegabytes": 512,
+        "grantMegabytes": 1536
+      },
+      "published": 1700000000000,
+      "now": 1700000004000
+    },
+    {
+      "name": "idle stall",
+      "row": {
+        "unit": "serde_derive",
+        "reason": "idle",
+        "predictedMegabytes": 300,
+        "seconds": 95,
+        "place": 1,
+        "count": 1,
+        "running": 0,
+        "heldMegabytes": 0,
+        "budgetMegabytes": 2048,
+        "grantMegabytes": 1536
+      },
+      "published": 1700000000000,
+      "now": 1700000000000
+    },
+    {
+      "name": "grant growth",
+      "row": {
+        "unit": "syn",
+        "reason": "growth",
+        "predictedMegabytes": 2617,
+        "seconds": 12,
+        "place": 0,
+        "count": 0,
+        "running": 0,
+        "heldMegabytes": 0,
+        "budgetMegabytes": 0,
+        "grantMegabytes": 0
+      },
+      "published": 1700000000000,
+      "now": 1700000009000
+    }
+  ],
+  "lines": {
+    "en": [
+      "[capacity]   unit wait, pid 4242: unit syn waits in the broker queue (place 2 of 3): it needs about 612 MB, the 3 running unit(s) hold 420 MB of the 512 MB budget; waited 45 s",
+      "[capacity]   unit wait, pid 4242: unit serde_derive waits in the broker queue (place 1 of 1) although nothing runs: it needs about 300 MB, the budget is 2048 MB and the grant 1536 MB; waited 95 s",
+      "[capacity]   unit wait, pid 4242: unit syn waits for a wider memory grant: it needs about 2617 MB; waited 21 s"
+    ],
+    "de": [
+      "[capacity]   Einheit wartet, pid 4242: Einheit syn wartet in der Warteschlange des Brokers (Platz 2 von 3): sie braucht etwa 612 MB, die 3 laufenden Einheiten halten 420 MB des Budgets von 512 MB; 45 s gewartet",
+      "[capacity]   Einheit wartet, pid 4242: Einheit serde_derive wartet in der Warteschlange des Brokers (Platz 1 von 1), obwohl nichts läuft: sie braucht etwa 300 MB, das Budget beträgt 2048 MB und die Zuteilung 1536 MB; 95 s gewartet",
+      "[capacity]   Einheit wartet, pid 4242: Einheit syn wartet auf eine größere Speicherzuteilung: sie braucht etwa 2617 MB; 21 s gewartet"
+    ]
+  }
+}

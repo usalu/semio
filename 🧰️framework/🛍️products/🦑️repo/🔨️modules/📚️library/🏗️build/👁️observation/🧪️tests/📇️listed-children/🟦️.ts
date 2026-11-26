@@ -9,7 +9,7 @@ import fixture from"./🔣️.json";
 
 const python=testPythonV1(),oracle=join(import.meta.dir,"🐍️.py");
 type Row={kind:string;name:string;fact:unknown};
-type Scenario={name?:string;entries:Record<string,string>;rows:Row[]};
+type Scenario={name?:string;entries:Readonly<Record<string,string|undefined>>;rows:Row[]};
 const scratch:string[]=[];
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 
@@ -17,7 +17,7 @@ const model=(scenarios:readonly Scenario[])=>{
  const run=Bun.spawnSync([python!,"-I",oracle],{stdin:Buffer.from(JSON.stringify({scenarios}))});
  expect(run.exitCode).toBe(0);return JSON.parse(run.stdout.toString()).answers as boolean[][];
 };
-const build=(entries:Record<string,string>)=>{
+const build=(entries:Scenario["entries"])=>{
  const base=realpathSync(mkdtempSync(join(tmpdir(),"listed-children-")));scratch.push(base);
  for(const[name,type]of Object.entries(entries)){if(type==="directory")mkdirSync(join(base,name));else writeFileSync(join(base,name),"x\n");}
  return base;
@@ -32,8 +32,8 @@ const hold=async(base:string,row:Row,listed:boolean)=>{
 };
 
 test("with the listing in the call every verdict equals the model and a confirmed child costs no probe; without it every child is probed",async()=>{
- const answers=model(fixture.scenarios as Scenario[]);
- for(const[at,scenario]of(fixture.scenarios as Scenario[]).entries()){
+ const answers=model(fixture.scenarios);
+ for(const[at,scenario]of(fixture.scenarios satisfies Scenario[]).entries()){
   const base=build(scenario.entries);
   for(const[index,row]of scenario.rows.entries()){
    const expected=answers[at]![index]!,withListing=await hold(base,row,true),without=await hold(base,row,false);

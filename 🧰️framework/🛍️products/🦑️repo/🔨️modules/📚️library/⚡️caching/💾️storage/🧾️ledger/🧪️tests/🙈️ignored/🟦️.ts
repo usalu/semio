@@ -27,7 +27,7 @@ beforeAll(()=>{
 afterAll(()=>{rmSync(workspace,{recursive:true,force:true});});
 
 test("the declared ledger classifies the three entries the doctor listed as declared and equals the independent Python reading",()=>{
- expect(cases.map(([root,path])=>classifyCachePathV1(ledger,root,path).kind)).toEqual(cases.map(row=>row[2]));
+ expect<unknown>(cases.map(([root,path])=>classifyCachePathV1(ledger,root,path).kind)).toEqual(cases.map(row=>row[2]));
  expect(python()).toEqual(cases.map(row=>row[2]));
 });
 

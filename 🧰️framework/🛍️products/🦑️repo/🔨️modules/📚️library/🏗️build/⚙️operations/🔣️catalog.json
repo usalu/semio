@@ -90,6 +90,24 @@
       "description": { "en": "Maximum number of concurrent tasks.", "de": "Höchstzahl gleichzeitiger Tasks." }
     },
     {
+      "name": "--no-importers",
+      "value": "none",
+      "operations": ["typecheck"],
+      "description": { "en": "Check only the named files, not the files that import them.", "de": "Prüft nur die genannten Dateien, nicht die Dateien, die sie importieren." }
+    },
+    {
+      "name": "--all-errors",
+      "value": "none",
+      "operations": ["typecheck"],
+      "description": { "en": "Count every compiler error of the program that was read, also in files the call did not name or import-link; by default only errors in the named files and their importers fail the call.", "de": "Zählt jeden Compilerfehler des gelesenen Programms, auch in Dateien, die der Aufruf weder nennt noch über Importe verbindet; standardmäßig scheitern nur Fehler in den genannten Dateien und ihren Importeuren." }
+    },
+    {
+      "name": "--declarations",
+      "value": "none",
+      "operations": ["typecheck"],
+      "description": { "en": "Also compare every hand-written .d.mts below the library with its .mjs (names and parameter counts), not only the touched pairs; no path is needed then.", "de": "Vergleicht zusätzlich jede handgeschriebene .d.mts der Bibliothek mit ihrer .mjs (Namen und Parameterzahl), nicht nur die berührten Paare; dann ist kein Pfad nötig." }
+    },
+    {
       "name": "--bail",
       "value": "none",
       "operations": ["run", "run-many", "affected", "test-file"],
@@ -116,10 +134,10 @@
     {
       "name": "--dry-run",
       "value": "none",
-      "operations": ["run", "run-many", "affected", "exec", "cache", "remote-cache", "doctor", "test-file"],
+      "operations": ["run", "run-many", "affected", "exec", "cache", "remote-cache", "doctor", "test-file", "typecheck"],
       "description": {
-        "en": "Print the task graph as a DryRunPlan on stdout and execute nothing; the same for every tool. With cache gc or remote-cache gc: list what would be removed and remove nothing. With test-file: print the route of every file and run nothing.",
-        "de": "Gibt den Task-Graphen als DryRunPlan auf stdout aus und führt nichts aus; für jedes Werkzeug gleich. Mit cache gc oder remote-cache gc: listet auf, was entfernt würde, und entfernt nichts. Mit test-file: gibt den Ablauf jeder Datei aus und führt nichts aus."
+        "en": "Print the task graph as a DryRunPlan on stdout and execute nothing; the same for every tool. With cache gc or remote-cache gc: list what would be removed and remove nothing. With test-file: print the route of every file and run nothing. With typecheck: list the files to check and do not run the compiler.",
+        "de": "Gibt den Task-Graphen als DryRunPlan auf stdout aus und führt nichts aus; für jedes Werkzeug gleich. Mit cache gc oder remote-cache gc: listet auf, was entfernt würde, und entfernt nichts. Mit test-file: gibt den Ablauf jeder Datei aus und führt nichts aus. Mit typecheck: nennt die zu prüfenden Dateien und führt den Compiler nicht aus."
       }
     },
     {
@@ -171,7 +189,7 @@
     {
       "name": "--json",
       "value": "none",
-      "operations": ["graph", "show", "incremental", "concurrency", "bench", "capacity", "fleet", "scheduler", "leases", "cache", "remote-cache", "doctor", "tools", "conformance", "units", "service", "session", "test-file"],
+      "operations": ["graph", "show", "incremental", "concurrency", "bench", "capacity", "fleet", "scheduler", "leases", "cache", "remote-cache", "doctor", "tools", "conformance", "units", "service", "session", "test-file", "typecheck"],
       "description": { "en": "Print lists as JSON instead of one entry per line.", "de": "Gibt Listen als JSON statt eines Eintrags je Zeile aus." }
     },
     {
@@ -634,7 +652,7 @@
       "value": "required",
       "valueName": "area[,area]",
       "operations": ["doctor"],
-      "description": { "en": "doctor: limit the report to these areas (tools, storage, leases, capacity, sessions, graph, dependencies, caches, processes, host).", "de": "doctor: beschränkt den Bericht auf diese Bereiche (tools, storage, leases, capacity, sessions, graph, dependencies, caches, processes, host)." }
+      "description": { "en": "doctor: limit the report to these areas (tools, storage, leases, capacity, sessions, graph, dependencies, caches, processes, typecheck, host).", "de": "doctor: beschränkt den Bericht auf diese Bereiche (tools, storage, leases, capacity, sessions, graph, dependencies, caches, processes, typecheck, host)." }
     },
     {
       "name": "--strict",
@@ -963,6 +981,36 @@
         {
           "en": "A path is resolved against the current directory when it exists there, else against the checkout; it must be a regular TypeScript or JavaScript file inside the checkout. Stdout carries one line per file and the totals, or with --json one result document (version, status, seconds, bail, counts, one row per file with status passed|failed|skipped|not-run, bun's pass and fail counts and, for a failure, the error and the tail of its output); the test output itself goes to stderr under --json. A suite not declared for this host is reported skipped, which never reads as a pass. Exit code 0 when every file passed, 1 when a file failed, 2 when a file or an option is refused. Progress goes to stderr; Ctrl-C or SIGTERM cancels the run and its children.",
           "de": "Ein Pfad wird gegen das aktuelle Verzeichnis aufgelöst, wenn er dort existiert, sonst gegen den Checkout; er muss eine reguläre TypeScript- oder JavaScript-Datei im Checkout sein. Stdout trägt eine Zeile je Datei und die Summen oder mit --json ein Ergebnisdokument (Version, Status, Sekunden, bail, Zähler, eine Zeile je Datei mit Status passed|failed|skipped|not-run, den Pass- und Fail-Zahlen von bun und bei einem Fehler dem Fehler und dem Ende seiner Ausgabe); die Testausgabe selbst geht mit --json nach stderr. Eine Suite, die für diesen Rechner nicht deklariert ist, wird als übersprungen gemeldet, was nie als bestanden gilt. Exit-Code 0, wenn jede Datei bestand, 1, wenn eine Datei fehlschlug, 2, wenn eine Datei oder eine Option abgelehnt wird. Der Fortschritt geht nach stderr; Strg-C oder SIGTERM bricht den Lauf und seine Kinder ab."
+        }
+      ]
+    },
+    {
+      "name": "typecheck",
+      "requires": "none",
+      "synopsis": "typecheck [--json] [--dry-run] [--no-importers] [--all-errors] [--declarations] [--] <path>...",
+      "summary": { "en": "Type-check the files a change touched and the files that import them in seconds, without reading the project graph, and compare every touched hand-written .d.mts with its .mjs.", "de": "Prüft die Typen der geänderten Dateien und der Dateien, die sie importieren, in Sekunden ohne den Projektgraphen zu lesen, und vergleicht jede berührte handgeschriebene .d.mts mit ihrer .mjs." },
+      "dryRun": true,
+      "progress": true,
+      "cancellable": true,
+      "flags": ["--json", "--dry-run", "--no-importers", "--all-errors", "--declarations"],
+      "examples": [
+        {
+          "command": "repo typecheck path/to/changed-file.ts",
+          "description": { "en": "Check one file and its direct importers; exit 0 when no error lies in them and no declaration drifts.", "de": "Prüft eine Datei und ihre direkten Importeure; Exit 0, wenn darin kein Fehler liegt und keine Deklaration abweicht." }
+        },
+        {
+          "command": "repo typecheck path/to/folder",
+          "description": { "en": "Check every TypeScript source below a folder and its importers.", "de": "Prüft jede TypeScript-Quelle unterhalb eines Ordners und ihre Importeure." }
+        },
+        {
+          "command": "repo typecheck --declarations",
+          "description": { "en": "Compare every hand-written .d.mts of the library with its .mjs; no compiler call.", "de": "Vergleicht jede handgeschriebene .d.mts der Bibliothek mit ihrer .mjs; kein Compiler-Aufruf." }
+        }
+      ],
+      "notes": [
+        {
+          "en": "One incremental compiler call per project (the library with the process module, else the workspace configuration) over exactly the named files plus the files that import them directly (at most 400, else only the named files); the build state and the import index live in the machine cache (SEMIO_TYPECHECK_CACHE overrides it), so a repeated call takes seconds and nothing in the checkout is written. A path is resolved against the current directory when it exists there, else against the checkout; a folder stands for every source below it, a .mjs for its .d.mts. --dry-run lists the files that would be checked and does not start the compiler. Errors in other files the program reads are counted as elsewhere and do not fail the call unless --all-errors is given. A .d.mts must declare every export of its .mjs and no function, constant or class the .mjs lacks, with the same parameter count. Exit code: 0 clean, 1 errors or drift, 2 refused.",
+          "de": "Ein inkrementeller Compiler-Aufruf je Projekt (die Bibliothek mit dem Prozessmodul, sonst die Workspace-Konfiguration) über genau die genannten Dateien und die Dateien, die sie direkt importieren (höchstens 400, sonst nur die genannten); der Build-Zustand und der Importindex liegen im Maschinen-Cache (SEMIO_TYPECHECK_CACHE überschreibt ihn), sodass ein wiederholter Aufruf Sekunden dauert und nichts im Checkout geschrieben wird. Ein Pfad wird gegen das aktuelle Verzeichnis aufgelöst, wenn er dort existiert, sonst gegen den Checkout; ein Ordner steht für jede Quelle darunter, eine .mjs für ihre .d.mts. --dry-run nennt die zu prüfenden Dateien und startet den Compiler nicht. Fehler in anderen Dateien, die das Programm liest, zählen als anderswo und lassen den Aufruf nicht scheitern, außer mit --all-errors. Eine .d.mts muss jeden Export ihrer .mjs deklarieren und keine Funktion, Konstante oder Klasse, die der .mjs fehlt, mit gleicher Parameterzahl. Exit-Code: 0 sauber, 1 Fehler oder Abweichung, 2 abgelehnt."
         }
       ]
     },
@@ -1908,7 +1956,7 @@
       ],
       "notes": [
         { "en": "doctor reads state only: it takes no lease and no capacity grant, so it answers even while a build holds everything, and it never starts a heavy command.", "de": "doctor liest nur Zustand: Es nimmt weder eine Lease noch eine Kapazitätszusage und antwortet daher auch dann, wenn ein Build alles hält; es startet nie einen schweren Befehl." },
-        { "en": "Areas: tools, storage, leases, capacity, sessions, graph, dependencies, caches, processes, host. Exit status 1 when an error remains (a warning too with --strict), 130 when cancelled.", "de": "Bereiche: tools, storage, leases, capacity, sessions, graph, dependencies, caches, processes, host. Exit-Status 1, wenn ein Fehler bleibt (mit --strict auch eine Warnung), 130 bei Abbruch." },
+        { "en": "Areas: tools, storage, leases, capacity, sessions, graph, dependencies, caches, processes, typecheck, host. Exit status 1 when an error remains (a warning too with --strict), 130 when cancelled.", "de": "Bereiche: tools, storage, leases, capacity, sessions, graph, dependencies, caches, processes, typecheck, host. Exit-Status 1, wenn ein Fehler bleibt (mit --strict auch eine Warnung), 130 bei Abbruch." },
         { "en": "--fix applies only repairs that are declared safe in the doctor policy; every other finding names the command to run or whom to ask.", "de": "--fix wendet nur Reparaturen an, die in der doctor-Richtlinie als sicher deklariert sind; jeder andere Befund nennt den Befehl oder wen man fragen soll." }
       ]
     },

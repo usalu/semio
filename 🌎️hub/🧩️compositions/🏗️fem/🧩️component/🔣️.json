@@ -106,7 +106,157 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "setResultDisplay",
+                "label": {
+                  "native": {
+                    "en": "Set Result Display",
+                    "de": "Ergebnisanzeige festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Result Display",
+                    "de": "Ergebnisanzeige festlegen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "eye",
+                "args": [
+                  {
+                    "id": "sourceId",
+                    "label": {
+                      "native": {
+                        "en": "Source",
+                        "de": "Source"
+                      },
+                      "reuse": {
+                        "en": "Source",
+                        "de": "Source"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "mode",
+                    "label": {
+                      "native": {
+                        "en": "Mode",
+                        "de": "Mode"
+                      },
+                      "reuse": {
+                        "en": "Mode",
+                        "de": "Mode"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "static",
+                          "label": {
+                            "native": {
+                              "en": "Static",
+                              "de": "Static"
+                            },
+                            "reuse": {
+                              "en": "Static",
+                              "de": "Static"
+                            }
+                          }
+                        },
+                        {
+                          "value": "modal",
+                          "label": {
+                            "native": {
+                              "en": "Modal",
+                              "de": "Modal"
+                            },
+                            "reuse": {
+                              "en": "Modal",
+                              "de": "Modal"
+                            }
+                          }
+                        },
+                        {
+                          "value": "buckling",
+                          "label": {
+                            "native": {
+                              "en": "Buckling",
+                              "de": "Buckling"
+                            },
+                            "reuse": {
+                              "en": "Buckling",
+                              "de": "Buckling"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "modeIndex",
+                    "label": {
+                      "native": {
+                        "en": "Mode Index",
+                        "de": "Mode Index"
+                      },
+                      "reuse": {
+                        "en": "Mode Index",
+                        "de": "Mode Index"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": true,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Chooses which analysis result the view shows: the static result of a load case or combination, or a numbered vibration or buckling mode; the model is not changed.",
+                      "de": "Wählt, welches Analyseergebnis die Ansicht zeigt: das statische Ergebnis eines Lastfalls oder einer Kombination oder eine nummerierte Eigen- oder Knickform; das Modell ändert sich nicht."
+                    },
+                    "reuse": {
+                      "en": "Chooses which analysis result the view shows: the static result of a load case or combination, or a numbered vibration or buckling mode; the model is not changed.",
+                      "de": "Wählt, welches Analyseergebnis die Ansicht zeigt: das statische Ergebnis eines Lastfalls oder einer Kombination oder eine nummerierte Eigen- oder Knickform; das Modell ändert sich nicht."
+                    }
+                  }
+                }
+              }
+            ],
             "utilities": [
               "selectDirect",
               "selectMarquee",
@@ -1873,155 +2023,6 @@
                 "reuse": {
                   "en": "Replaces the whole 2D structural model with one of the plugin's bundled examples, by example id.",
                   "de": "Ersetzt das gesamte 2D-Tragwerksmodell durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
-                }
-              }
-            }
-          },
-          {
-            "id": "setResultDisplay",
-            "label": {
-              "native": {
-                "en": "Set Result Display",
-                "de": "Ergebnisanzeige festlegen"
-              },
-              "reuse": {
-                "en": "Set Result Display",
-                "de": "Ergebnisanzeige festlegen"
-              }
-            },
-            "kind": "view",
-            "iconId": "eye",
-            "args": [
-              {
-                "id": "sourceId",
-                "label": {
-                  "native": {
-                    "en": "Source",
-                    "de": "Source"
-                  },
-                  "reuse": {
-                    "en": "Source",
-                    "de": "Source"
-                  }
-                },
-                "schema": {
-                  "kind": "string"
-                },
-                "required": false
-              },
-              {
-                "id": "mode",
-                "label": {
-                  "native": {
-                    "en": "Mode",
-                    "de": "Mode"
-                  },
-                  "reuse": {
-                    "en": "Mode",
-                    "de": "Mode"
-                  }
-                },
-                "schema": {
-                  "kind": "string",
-                  "options": [
-                    {
-                      "value": "static",
-                      "label": {
-                        "native": {
-                          "en": "Static",
-                          "de": "Static"
-                        },
-                        "reuse": {
-                          "en": "Static",
-                          "de": "Static"
-                        }
-                      }
-                    },
-                    {
-                      "value": "modal",
-                      "label": {
-                        "native": {
-                          "en": "Modal",
-                          "de": "Modal"
-                        },
-                        "reuse": {
-                          "en": "Modal",
-                          "de": "Modal"
-                        }
-                      }
-                    },
-                    {
-                      "value": "buckling",
-                      "label": {
-                        "native": {
-                          "en": "Buckling",
-                          "de": "Buckling"
-                        },
-                        "reuse": {
-                          "en": "Buckling",
-                          "de": "Buckling"
-                        }
-                      }
-                    }
-                  ]
-                },
-                "required": false
-              },
-              {
-                "id": "modeIndex",
-                "label": {
-                  "native": {
-                    "en": "Mode Index",
-                    "de": "Mode Index"
-                  },
-                  "reuse": {
-                    "en": "Mode Index",
-                    "de": "Mode Index"
-                  }
-                },
-                "schema": {
-                  "kind": "number",
-                  "integer": false
-                },
-                "required": false
-              }
-            ],
-            "inPalette": true,
-            "semantics": {
-              "effects": {
-                "reads": [
-                  "config:{self}"
-                ],
-                "external": false,
-                "destructive": false,
-                "reversible": false
-              },
-              "policy": {
-                "scopes": [
-                  "artifacts.read",
-                  "shell.observe"
-                ],
-                "approval": "never"
-              },
-              "execution": {
-                "preview": "none",
-                "undo": {
-                  "kind": "none"
-                },
-                "idempotency": "none",
-                "expectedRevision": false,
-                "cancellable": true,
-                "class": "interactive",
-                "interactiveJob": "migrated"
-              },
-              "description": {
-                "native": {
-                  "en": "Chooses which analysis result the view shows: the static result of a load case or combination, or a numbered vibration or buckling mode; the model is not changed.",
-                  "de": "Wählt, welches Analyseergebnis die Ansicht zeigt: das statische Ergebnis eines Lastfalls oder einer Kombination oder eine nummerierte Eigen- oder Knickform; das Modell ändert sich nicht."
-                },
-                "reuse": {
-                  "en": "Chooses which analysis result the view shows: the static result of a load case or combination, or a numbered vibration or buckling mode; the model is not changed.",
-                  "de": "Wählt, welches Analyseergebnis die Ansicht zeigt: das statische Ergebnis eines Lastfalls oder einer Kombination oder eine nummerierte Eigen- oder Knickform; das Modell ändert sich nicht."
                 }
               }
             }
@@ -8656,7 +8657,157 @@
                 "kind": "none"
               }
             },
-            "actions": [],
+            "actions": [
+              {
+                "id": "setResultDisplay",
+                "label": {
+                  "native": {
+                    "en": "Set Result Display",
+                    "de": "Ergebnisanzeige festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Result Display",
+                    "de": "Ergebnisanzeige festlegen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "eye",
+                "args": [
+                  {
+                    "id": "sourceId",
+                    "label": {
+                      "native": {
+                        "en": "Source",
+                        "de": "Source"
+                      },
+                      "reuse": {
+                        "en": "Source",
+                        "de": "Source"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "mode",
+                    "label": {
+                      "native": {
+                        "en": "Mode",
+                        "de": "Mode"
+                      },
+                      "reuse": {
+                        "en": "Mode",
+                        "de": "Mode"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "static",
+                          "label": {
+                            "native": {
+                              "en": "Static",
+                              "de": "Static"
+                            },
+                            "reuse": {
+                              "en": "Static",
+                              "de": "Static"
+                            }
+                          }
+                        },
+                        {
+                          "value": "modal",
+                          "label": {
+                            "native": {
+                              "en": "Modal",
+                              "de": "Modal"
+                            },
+                            "reuse": {
+                              "en": "Modal",
+                              "de": "Modal"
+                            }
+                          }
+                        },
+                        {
+                          "value": "buckling",
+                          "label": {
+                            "native": {
+                              "en": "Buckling",
+                              "de": "Buckling"
+                            },
+                            "reuse": {
+                              "en": "Buckling",
+                              "de": "Buckling"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "modeIndex",
+                    "label": {
+                      "native": {
+                        "en": "Mode Index",
+                        "de": "Mode Index"
+                      },
+                      "reuse": {
+                        "en": "Mode Index",
+                        "de": "Mode Index"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": true,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Chooses which analysis result the view shows: the static result of a load case or combination, or a numbered vibration or buckling mode; the model is not changed.",
+                      "de": "Wählt, welches Analyseergebnis die Ansicht zeigt: das statische Ergebnis eines Lastfalls oder einer Kombination oder eine nummerierte Eigen- oder Knickform; das Modell ändert sich nicht."
+                    },
+                    "reuse": {
+                      "en": "Chooses which analysis result the view shows: the static result of a load case or combination, or a numbered vibration or buckling mode; the model is not changed.",
+                      "de": "Wählt, welches Analyseergebnis die Ansicht zeigt: das statische Ergebnis eines Lastfalls oder einer Kombination oder eine nummerierte Eigen- oder Knickform; das Modell ändert sich nicht."
+                    }
+                  }
+                }
+              }
+            ],
             "utilities": [],
             "interactions": [
               "fem3d"
@@ -9655,7 +9806,8 @@
                   "kind": "number",
                   "integer": false
                 },
-                "required": true
+                "required": false,
+                "default": 0.0
               },
               {
                 "id": "wz",
@@ -10357,7 +10509,8 @@
                 "schema": {
                   "kind": "boolean"
                 },
-                "required": true
+                "required": false,
+                "default": true
               }
             ],
             "inPalette": true,
@@ -10718,155 +10871,6 @@
                 "reuse": {
                   "en": "Replaces the whole 3D structural model with one of the plugin's bundled examples, by example id.",
                   "de": "Ersetzt das gesamte 3D-Tragwerksmodell durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
-                }
-              }
-            }
-          },
-          {
-            "id": "setResultDisplay",
-            "label": {
-              "native": {
-                "en": "Set Result Display",
-                "de": "Ergebnisanzeige festlegen"
-              },
-              "reuse": {
-                "en": "Set Result Display",
-                "de": "Ergebnisanzeige festlegen"
-              }
-            },
-            "kind": "view",
-            "iconId": "eye",
-            "args": [
-              {
-                "id": "sourceId",
-                "label": {
-                  "native": {
-                    "en": "Source",
-                    "de": "Source"
-                  },
-                  "reuse": {
-                    "en": "Source",
-                    "de": "Source"
-                  }
-                },
-                "schema": {
-                  "kind": "string"
-                },
-                "required": false
-              },
-              {
-                "id": "mode",
-                "label": {
-                  "native": {
-                    "en": "Mode",
-                    "de": "Mode"
-                  },
-                  "reuse": {
-                    "en": "Mode",
-                    "de": "Mode"
-                  }
-                },
-                "schema": {
-                  "kind": "string",
-                  "options": [
-                    {
-                      "value": "static",
-                      "label": {
-                        "native": {
-                          "en": "Static",
-                          "de": "Static"
-                        },
-                        "reuse": {
-                          "en": "Static",
-                          "de": "Static"
-                        }
-                      }
-                    },
-                    {
-                      "value": "modal",
-                      "label": {
-                        "native": {
-                          "en": "Modal",
-                          "de": "Modal"
-                        },
-                        "reuse": {
-                          "en": "Modal",
-                          "de": "Modal"
-                        }
-                      }
-                    },
-                    {
-                      "value": "buckling",
-                      "label": {
-                        "native": {
-                          "en": "Buckling",
-                          "de": "Buckling"
-                        },
-                        "reuse": {
-                          "en": "Buckling",
-                          "de": "Buckling"
-                        }
-                      }
-                    }
-                  ]
-                },
-                "required": false
-              },
-              {
-                "id": "modeIndex",
-                "label": {
-                  "native": {
-                    "en": "Mode Index",
-                    "de": "Mode Index"
-                  },
-                  "reuse": {
-                    "en": "Mode Index",
-                    "de": "Mode Index"
-                  }
-                },
-                "schema": {
-                  "kind": "number",
-                  "integer": false
-                },
-                "required": false
-              }
-            ],
-            "inPalette": true,
-            "semantics": {
-              "effects": {
-                "reads": [
-                  "config:{self}"
-                ],
-                "external": false,
-                "destructive": false,
-                "reversible": false
-              },
-              "policy": {
-                "scopes": [
-                  "artifacts.read",
-                  "shell.observe"
-                ],
-                "approval": "never"
-              },
-              "execution": {
-                "preview": "none",
-                "undo": {
-                  "kind": "none"
-                },
-                "idempotency": "none",
-                "expectedRevision": false,
-                "cancellable": true,
-                "class": "interactive",
-                "interactiveJob": "migrated"
-              },
-              "description": {
-                "native": {
-                  "en": "Chooses which analysis result the view shows: the static result of a load case or combination, or a numbered vibration or buckling mode; the model is not changed.",
-                  "de": "Wählt, welches Analyseergebnis die Ansicht zeigt: das statische Ergebnis eines Lastfalls oder einer Kombination oder eine nummerierte Eigen- oder Knickform; das Modell ändert sich nicht."
-                },
-                "reuse": {
-                  "en": "Chooses which analysis result the view shows: the static result of a load case or combination, or a numbered vibration or buckling mode; the model is not changed.",
-                  "de": "Wählt, welches Analyseergebnis die Ansicht zeigt: das statische Ergebnis eines Lastfalls oder einer Kombination oder eine nummerierte Eigen- oder Knickform; das Modell ändert sich nicht."
                 }
               }
             }

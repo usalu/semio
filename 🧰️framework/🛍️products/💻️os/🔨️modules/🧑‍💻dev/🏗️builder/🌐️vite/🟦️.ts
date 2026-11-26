@@ -3,6 +3,7 @@ import type { OwnedBuildConfig } from "../../../../../../🔨️modules/🖱️u
 import type { AssetDeliveryProviderV1, AssetDeliveryDeclarationV1 } from "../../../../../../🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";
 import type { DeployedRegistryEntryV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 import type { PlaygroundEntry } from "../../../🔌️plugin/📇️registry/🎮️playground/📋️contract/🟦️.ts";
+import type { ActivationReceipt } from "../../♻️activation/🟦️.ts";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, componentOwnerRootV1, type ModuleDirectory } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
@@ -18,7 +19,7 @@ import { semioAgentBridgeRendezvousVitePlugin } from "../../🔌️vite-plugins/
 import { semioAgentCredentialInstallVitePlugin } from "../../🔌️vite-plugins/🔐️agent-credential-install/🟦️.ts";
 import { playgroundOptimizerEntryV1 } from "./📥️entry/🟦️.ts";
 
-export type FrameworkOsDevBuildInventoryV1 = { readonly plugins: readonly DeployedRegistryEntryV1[]; readonly extensions: readonly DeployedRegistryEntryV1[]; readonly playgrounds: readonly (Omit<PlaygroundEntry,"assets"> & { readonly assets: readonly AssetDeliveryDeclarationV1[] })[]; readonly moduleDirectories: readonly ModuleDirectory[]; readonly assetProviders: readonly AssetDeliveryProviderV1[]; readonly defaultVariant?: string;readonly browserHost?:()=>Readonly<{moduleRoot:string;activationRoot:string;extensionsRoot:string}>|undefined };
+export type FrameworkOsDevBuildInventoryV1 = { readonly plugins: readonly DeployedRegistryEntryV1[]; readonly extensions: readonly DeployedRegistryEntryV1[]; readonly playgrounds: readonly (Omit<PlaygroundEntry,"assets"> & { readonly assets: readonly AssetDeliveryDeclarationV1[] })[]; readonly moduleDirectories: readonly ModuleDirectory[]; readonly assetProviders: readonly AssetDeliveryProviderV1[]; readonly defaultVariant?: string;readonly browserHost?:()=>Readonly<{moduleRoot:string;activationRoot:string;extensionsRoot:string}>|undefined;readonly activation?:()=>ActivationReceipt|undefined };
 
 /** 📦️ Config-shaped graph: the heavy build owners load once, at config-resolve time, through one opaque dynamic import (esbuild does not follow a computed specifier),
  * so Vite's native config parse/watch set stays inside the declared module bound (see fixtures config-graph). */
@@ -43,7 +44,7 @@ const distributionLayout=distributionLayoutForModeV1(repoRoot,repositoryCachePar
 const runtimeRoot = developmentRuntimeRoot(repoRoot, plugin, profile, "react");
 const testBrowserHost = command === "serve" ? options.inventory.browserHost?.() : undefined;
 const receiptDirectory = testBrowserHost?.activationRoot ?? path.join(runtimeRoot, "activation");
-const activated = command === "serve" ? readActivationReceipt(receiptDirectory) : undefined;
+const activated = command === "serve" ? (options.inventory.activation?.() ?? readActivationReceipt(receiptDirectory)) : undefined;
 const pluginModulesDir = testBrowserHost?.moduleRoot ?? builtPluginModulesRootIn(repoRoot, buildMode);
 const installedExtensionsDir = command === "build" ? pluginModulesDir : testBrowserHost ? testBrowserHost.extensionsRoot : path.join(runtimeRoot, "extensions");
 const fontsDir = stagedInputs.fonts;

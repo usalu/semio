@@ -17,7 +17,7 @@ role = "hub"
 deployment-directory = "🎪️demonstrator"
 component-kind = "plugin"
 consumes = ["process.machines", "sourcing.module"]
-depends-on = ["process", "sourcing"]
+depends-on = ["cad", "gis", "procedural", "process", "puzzle", "sourcing"]
 
 [[package.metadata.semio.playground]]
 variant = "demonstrator"

@@ -1,5 +1,11 @@
 {
   "ephemeralNoteActionId": "noteShellCommand",
+  "scheduled": [
+    {"case":"loaded","live":true,"attempts":1},
+    {"case":"retired","live":false,"attempts":0},
+    {"case":"refusal","live":true,"attempts":2},
+    {"case":"fatal","live":true,"attempts":1}
+  ],
   "policy": [
     {
       "action": "noteShellCommand",

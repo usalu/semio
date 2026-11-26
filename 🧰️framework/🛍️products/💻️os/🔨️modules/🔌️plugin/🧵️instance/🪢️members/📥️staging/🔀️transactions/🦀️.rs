@@ -104,7 +104,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         }
         let label = ops.first().map(|op| protocol::SemanticMutation::<A::Snapshot>::label(op));
         self.stores.store.dispatch(ArtifactCommand::Apply { mutations: ops, transaction: None }, identity).await.map_err(|error| MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", format!("{error:?}")))?;
-        self.history.cache = None;
+        self.history.invalidate_cache();
         self.stores.store.stamp_tail_group_id(&txn_id).await.map_err(|error| MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", format!("{error:?}")))?;
         self.stores.store.stamp_tail_origin(origin).await.map_err(|error| MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", format!("{error:?}")))?;
         let edit_id = self.stores.store.envelope().vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default();

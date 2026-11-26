@@ -7,12 +7,12 @@ import{TAKE_POLICY_V1,createAdoptCountersV1,createHotNamesV1,recordTakeLookFailu
 import schema from"../../🧬️schema/🔣️.json"with{type:"json"};
 
 const seeded=(seed:number)=>()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
-const outcomes=["fetched","present","stale","incomplete","miss","fault","bogus"],lanes=["adopt","infer","pass","poll"],kinds=["file","closure","analysis","readdirNames","exists",undefined,""];
+const outcomes=["fetched","present","stale","incomplete","miss","fault","bogus"],lanes=["adopt","infer","pass","poll"] as const,kinds=["file","closure","analysis","readdirNames","exists",undefined,""];
 
 test("200 seeded event sequences: the counters equal the independent Python model",()=>{
  const python=Bun.which("python3")??"python3",oracle=join(import.meta.dir,"🐍️.py");
  for(let seed=1;seed<=200;seed++){
-  const next=seeded(seed),pick=<T,>(list:T[])=>list[Math.floor(next()*list.length)]!,counters=createAdoptCountersV1(),events:any[]=[];
+  const next=seeded(seed),pick=<T,>(list:readonly T[])=>list[Math.floor(next()*list.length)]!,counters=createAdoptCountersV1(),events:any[]=[];
   for(let step=0;step<60;step++){
    const kind=pick(["list","look","outcome","staleRow","skip","gate","inferredListed"]);
    if(kind==="list"){const names=Array.from({length:Math.floor(next()*5)},()=>"o"+Math.floor(next()*20));counters.list(names);events.push({k:kind,names});}

@@ -10,6 +10,7 @@
     "clockUs",
     "deadlineUs",
     "maximumTurns",
+    "maximumWindowRestoreTurns",
     "maximumCloseTurns",
     "maximumIdleTurns",
     "grant",
@@ -48,6 +49,11 @@
       "maximum": 4294967295
     },
     "maximumTurns": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    },
+    "maximumWindowRestoreTurns": {
       "type": "integer",
       "minimum": 1,
       "maximum": 4294967295

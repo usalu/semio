@@ -10,6 +10,7 @@ import {buildGraphWriterOptionalPathAdmittedV1,isBuildGraphOptionalCachePathV1} 
 import {optionalAcceleratorV1,optionalEntryOfV1,retireBuildGraphOptionalGroupsLruV1} from "../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts";
 import {openOwnerCheckpointV1} from "../🟦️.ts";
 import {observeOwnerFactsMemoizedV1} from "../../🟦️.ts";
+import type * as observationV1 from "../../../../👁️observation/🟨️.mjs";
 import {readAdmissionMemoV1} from "../../🧠️admission-memo/🟦️.ts";
 
 const digest=(letter:string)=>letter.repeat(64);
@@ -19,8 +20,9 @@ const suffix=(index:number)=>{
 };
 const result=(index:number,revision:number)=>({
  facts:{project:{name:cases.questions[index]!.owner,targets:{}},files:["manifest-"+index],dependencies:[]},
- rows:[{kind:"exists",path:"/root/manifest-"+index,fact:revision===1}],
+ rows:[{kind:"exists"as const,path:"/root/manifest-"+index,fact:revision===1}],
 });
+const observed=(rows:readonly observationV1.SourceObservationV1[],retained:()=>void):Pick<typeof observationV1,"captureObservedSourceInputsV1"|"retainObservedRowsV1">=>({captureObservedSourceInputsV1:async<T>(observe:()=>T|PromiseLike<T>)=>({value:await observe(),observations:[...rows],authorityObservations:[]}),retainObservedRowsV1:retained});
 const port=(signal?:AbortSignal)=>({
  check:()=>signal?.throwIfAborted(),
  yieldContinuation:async()=>signal?.throwIfAborted(),
@@ -46,7 +48,7 @@ test("an interrupted discovery lends only exact questions holding current observ
    recover:async()=>reopened.read(suffix(index)),
    persist:entry=>reopened.save(suffix(index),entry),
    hold:async rows=>JSON.stringify(rows)===JSON.stringify(capture.rows),
-   observation:{captureObservedSourceInputsV1:async observe=>({value:await observe(),observations:capture.rows as never}),retainObservedRowsV1:()=>reused.push(index)},
+   observation:observed(capture.rows,()=>{reused.push(index);}),
    observe:async()=>{discovered.push(index);return capture.facts;},
   });
  }
@@ -161,7 +163,7 @@ test("a full journal rolls its oldest slot and oversized leaves are ordinary mis
 
 test("a stale complete memo can borrow a newer durable owner repair",()=>fixture(async directory=>{
  const scope=digest("e"),key=scope+"\0"+cases.format+"\0"+suffix(0),stale=result(0,1),fresh=result(0,2);
- const observation={captureObservedSourceInputsV1:async(observe:()=>Promise<unknown>)=>({value:await observe(),observations:stale.rows as never}),retainObservedRowsV1:()=>{}};
+ const observation=observed(stale.rows,()=>{});
  await observeOwnerFactsMemoizedV1({key,observation,hold:async()=>true,observe:async()=>stale.facts});
  (await openOwnerCheckpointV1(directory,scope,cases.format,port())).save(suffix(0),fresh);
  const checkpoint=await openOwnerCheckpointV1(directory,scope,cases.format,port());

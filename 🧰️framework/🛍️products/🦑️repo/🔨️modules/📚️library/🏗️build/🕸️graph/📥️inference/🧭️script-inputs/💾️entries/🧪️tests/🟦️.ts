@@ -1,8 +1,9 @@
 import{expect,test}from"bun:test";
-import{mkdtempSync,realpathSync,rmSync}from"node:fs";
+import{mkdtempSync,readdirSync,realpathSync,rmSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{createClosureStoreV1}from"../🟨️.mjs";
+import{closureStoreKeyV1}from"../../🟨️.mjs";
 
 /** 💾️ Loaded closure entries that name the same stored layers share the derived facts of a layer: the sidecar fact of a layer exists once however many entries name it (measured on the real store: 274 layers per entry, 3 766 entries held 4 GB of per-entry copies on a worker taking 180 owners). A command walk is no layer (it is one `closure-graph` row of its entry), so a sidecar names facts only. */
 test("many loaded entries that share their layers hold the sidecar fact of a layer once, not once per entry",async()=>{
@@ -23,4 +24,32 @@ test("many loaded entries that share their layers hold the sidecar fact of a lay
   expect(new Set(held.flatMap(item=>item.sidecar.facts)).size).toBeLessThanOrEqual(pool);
   expect(grown).toBeLessThan(10);
  }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+/** 🔍️ `why` names the first step that makes `load` answer undefined, so a take that finds an entry absent says whether the file is missing or damaged. */
+test("why names the reason an entry does not load and says loads for one that does",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"closure-entries-why-"));
+ try{
+  const directory=join(root,"ce"),store=createClosureStoreV1({directory});
+  await store.save("present",{recipe:{fn:"fixture"},value:[1],rows:[],layers:[],sidecar:null});
+  expect(await store.why("present")).toBe("loads");
+  expect(await store.load("present")).not.toBeUndefined();
+  expect(await store.why("never-stored")).toContain("no entry file");
+  expect(await store.load("never-stored")).toBeUndefined();
+  const file=join(directory,"e",readdirSync(join(directory,"e")).find(name=>name.endsWith(".json.br"))!);
+  writeFileSync(file,"not brotli");
+  expect(await store.why("present")).toBe("entry file unreadable");
+  expect(await store.load("present")).toBeUndefined();
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+/** 🔑️ Two directories of one workspace never share an open store, so a store opened where the directory resolved to the bare inference root cannot answer for the selection store: every entry of the selection would read as absent. */
+test("the open store of a workspace is named by its directory and mode, not by the workspace alone",()=>{
+ const key=(directory:string,bound?:{writable:boolean;limits?:Record<string,number>})=>closureStoreKeyV1("/w",directory,bound);
+ expect(key("/inference/selections/a/ce")).toBe(key("/inference/selections/a/ce"));
+ expect(key("/inference/selections/a/ce")).not.toBe(key("/inference/ce"));
+ expect(key("/inference/selections/a/ce")).not.toBe(key("/inference/selections/b/ce"));
+ expect(key("/x",{writable:true})).not.toBe(key("/x",{writable:false}));
+ expect(key("/x",{writable:true})).not.toBe(key("/x",{writable:true,limits:{closureStampCacheEntries:1}}));
+ expect(closureStoreKeyV1("/w","/x")).not.toBe(closureStoreKeyV1("/v","/x"));
 });

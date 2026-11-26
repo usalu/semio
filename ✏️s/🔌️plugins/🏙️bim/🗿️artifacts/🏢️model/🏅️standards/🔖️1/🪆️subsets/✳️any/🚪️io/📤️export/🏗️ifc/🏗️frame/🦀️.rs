@@ -8,7 +8,7 @@ use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export
 use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::ifc::frames::{ccw, profile_top};
 use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, V};
 use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
-use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::columns::footprint;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::columns::{column_solid, footprint, profile_loop};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Profile, TopConstraint, Vertex};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Column, ModelSnapshot};
 use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::vertical_of;
@@ -109,7 +109,7 @@ pub fn can_emit_cold_column(snapshot: &ModelSnapshot, row: &Column) -> bool {
 
 /// 🎟️ Emits one admitted rectangular column from the original storey-level loan.
 pub fn emit_cold_column(x: &mut Export<'_>, id: &str, row: &Column, level: &dyn Fn(&str) -> Option<StoreyLevel>) {
-    let Some(Profile::Rectangle { width, depth }) = x.model.column_types.get(&row.column_type).map(|kind| &kind.profile) else {
+    let Some(profile @ Profile::Rectangle { .. }) = x.model.column_types.get(&row.column_type).map(|kind| &kind.profile) else {
         return;
     };
     let own = level(&row.storey);
@@ -117,11 +117,13 @@ pub fn emit_cold_column(x: &mut Export<'_>, id: &str, row: &Column, level: &dyn 
         TopConstraint::Storey { storey, .. } if *storey != row.storey => level(storey),
         _ => None,
     };
-    let vertical = own.map(|own| vertical_of(row.base_offset, &row.top, &own, target.as_ref()));
-    let quantities = vertical.map(|(base, top)| {
-        use semio_framework_geometry::loops::{area, Vertex};
-        let (x, y) = (width / 2.0, depth / 2.0);
-        let area = area(&[Vertex::corner(-x, -y), Vertex::corner(x, -y), Vertex::corner(x, y), Vertex::corner(-x, y)]);
+    let vertical = own.and_then(|own| {
+        let solid = column_solid(x.model, row, &own, target.as_ref());
+        (!solid.is_empty()).then_some((solid.bounds.min.z, solid.bounds.max.z))
+    });
+    let quantities = own.map(|own| {
+        let (base, top) = vertical_of(row.base_offset, &row.top, &own, target.as_ref());
+        let area = semio_framework_geometry::loops::area(&profile_loop(profile));
         let length = (top - base).max(0.0);
         let volume = area * length;
         [length, area, volume, volume]

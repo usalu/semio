@@ -24,6 +24,7 @@ Standalone use (no test host needed):
 import json
 import math
 import sys
+from collections import Counter
 from pathlib import Path
 
 import ifcopenshell
@@ -44,7 +45,7 @@ TOLERANCE = 1e-9
 NEWLINE = chr(10)
 
 
-MEASURED = ["IfcWallStandardCase", "IfcWall", "IfcColumn", "IfcBeam", "IfcSlab", "IfcCovering", "IfcFurnishingElement", "IfcFlowTerminal", "IfcBuildingElementProxy", "IfcFlowSegment"]
+MEASURED = ["IfcWallStandardCase", "IfcWall", "IfcColumn", "IfcBeam", "IfcSlab", "IfcCovering", "IfcFurnishingElement", "IfcFlowTerminal", "IfcBuildingElementProxy", "IfcFlowSegment", "IfcFurniture", "IfcSanitaryTerminal", "IfcLightFixture", "IfcAirTerminal", "IfcElectricAppliance", "IfcDuctSegment", "IfcPipeSegment", "IfcCableCarrierSegment"]
 
 
 def identity(element):
@@ -553,6 +554,26 @@ def volume_problems(model, table):
     return problems
 
 
+def ramp_volume_problems(model):
+    """🛝️ Verify closed flight and landing meshes and compare their combined kernel volume with the ramp quantity."""
+    problems = []
+    kernel = settings()
+    for ramp in model.by_type("IfcRamp"):
+        parts = [part for part in ifcopenshell.util.element.get_parts(ramp) if part.is_a("IfcRampFlight") or part.is_a("IfcSlab")]
+        for part in parts:
+            for shape in part.Representation.Representations if part.Representation else []:
+                for mesh in shape.Items:
+                    if mesh.is_a("IfcTriangulatedFaceSet"):
+                        edges = Counter((face[i], face[(i + 1) % 3]) for face in mesh.CoordIndex for i in range(3))
+                        if not edges or any(n != 1 or edges[b, a] != 1 for (a, b), n in edges.items()):
+                            problems.append("%s has an open or non-manifold triangle mesh" % part.Tag)
+        volumes = [kernel_volume(kernel, part) for part in parts]
+        quantity = written_volume(ramp)
+        if not parts or quantity is None or None in volumes or not math.isclose(sum(volumes), quantity, rel_tol=1e-6, abs_tol=1e-6):
+            problems.append("%s has flight and landing volumes %s for its base quantity %s" % (ramp.Tag, volumes, quantity))
+    return problems
+
+
 def attached_problems(snapshot, table):
     """🗂️ Every holder carries exactly the (system, code) cells of its record."""
     problems = []
@@ -567,7 +588,7 @@ def attached_problems(snapshot, table):
 def audit(model, snapshot, table):
     """⚖️ Every place where the file leaves the snapshot, the schema or the kernel."""
     snapshot = {**{key: {} for key in EMPTY_COLLECTIONS}, **snapshot}
-    problems = schema_problems(model) + count_problems(model, snapshot, table) + volume_problems(model, table) + operation_problems(model, snapshot) + placement_problems(model) + attached_problems(snapshot, table) + property_problems(model, snapshot)
+    problems = schema_problems(model) + count_problems(model, snapshot, table) + volume_problems(model, table) + ramp_volume_problems(model) + operation_problems(model, snapshot) + placement_problems(model) + attached_problems(snapshot, table) + property_problems(model, snapshot)
     if snapshot.get("property_templates") or snapshot.get("classification_systems"):
         problems += library_problems(model, snapshot, library_table(model))
     log = ifcopenshell.validate.json_logger()

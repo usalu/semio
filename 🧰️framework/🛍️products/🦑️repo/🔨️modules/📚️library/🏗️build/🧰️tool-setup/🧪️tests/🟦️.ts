@@ -171,7 +171,7 @@ describe("verification", () => {
       const outputs = Object.fromEntries(Object.entries(row.executables)) as Record<string,string>;
       const context = machine({platform:"win32",home:windowsNode.home,environment,read,present:Object.keys(outputs),outputs});
       const {status,location,found} = await verifyToolV1(candidate,context,signal);
-      expect({status,location,found},row.name).toEqual(row.expected);
+      expect<unknown>({status,location,found},row.name).toEqual(row.expected);
     }
   });
 
@@ -286,7 +286,7 @@ describe("setup", () => {
   });
 
   test("selects a group, refuses an unknown tool and keeps the order of the table", () => {
-    const host = process.platform, scoped = TOOL_SETUP_V1.tools.filter(row => row.platforms !== undefined && !row.platforms.includes(host)).map(row => row.id);
+    const host = process.platform, scoped = TOOL_SETUP_V1.tools.filter(row => row.platforms !== undefined && !row.platforms.some(platform => platform === host)).map(row => row.id);
     expect(toolRowsV1("all").map(row => row.id)).toEqual(TOOL_SETUP_V1.groups.all.filter(id => !scoped.includes(id)));
     expect(toolRowV1("micromamba").platforms).toEqual(["darwin"]);
     expect(toolRowsV1("all").some(row => row.id === "micromamba")).toBe(host === "darwin");

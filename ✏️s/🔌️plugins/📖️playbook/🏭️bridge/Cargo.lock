@@ -3448,7 +3448,8 @@ dependencies = [
  "semio-os-kernel-neural-engine",
  "semio-framework-pack",
  "semio-framework-pack-json",
- "semio-plugin",
+ "semio-plugin-extension",
+ "semio-plugin-ownership",
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-native-owned",
@@ -10138,7 +10139,6 @@ dependencies = [
  "semio-s-artifact-stdio-json-schema",
  "semio-s-artifact-stdio-json-schema-2",
  "semio-s-artifact-stdio-json-tests",
- "semio-s-artifact-stdio-txt",
  "serde_json",
 ]
 
@@ -10172,7 +10172,6 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-json-schema",
  "semio-s-artifact-stdio-json-schema-2",
- "semio-s-artifact-stdio-txt",
  "serde_json",
 ]
 
@@ -10208,7 +10207,6 @@ dependencies = [
  "semio-s-artifact-stdio-json-number",
  "semio-s-artifact-stdio-json-schema",
  "semio-s-artifact-stdio-json-schema-2",
- "semio-s-artifact-stdio-txt",
  "serde_json",
 ]
 
@@ -10237,7 +10235,6 @@ dependencies = [
  "semio-ui-locale",
  "semio-framework-value",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
  "serde_json",
 ]
 
@@ -10269,7 +10266,7 @@ dependencies = [
  "semio-framework-value-native-owned",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-json-number",
- "semio-s-artifact-stdio-txt",
+ "semio-s-artifact-stdio-txt-schema",
  "serde_json",
 ]
 
@@ -10301,7 +10298,6 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-json-number",
  "semio-s-artifact-stdio-json-schema",
- "semio-s-artifact-stdio-txt",
  "serde_json",
 ]
 
@@ -10335,7 +10331,6 @@ dependencies = [
  "semio-s-artifact-stdio-json-number",
  "semio-s-artifact-stdio-json-schema",
  "semio-s-artifact-stdio-json-schema-2",
- "semio-s-artifact-stdio-txt",
  "serde_json",
 ]
 
@@ -14163,42 +14158,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-stdio-txt"
-version = "0.1.0"
-dependencies = [
- "semio-framework",
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dispatch-macros",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-job",
- "semio-os-command",
- "semio-os-kernel",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-plugin",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-ui-locale",
- "semio-framework-value-derive",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt-examples",
- "semio-s-artifact-stdio-txt-inferences",
- "semio-s-artifact-stdio-txt-mutations",
- "semio-s-artifact-stdio-txt-schema",
- "semio-s-artifact-stdio-txt-tests",
- "serde_json",
-]
-
-[[package]]
 name = "semio-s-artifact-stdio-txt-examples"
 version = "0.1.0"
 dependencies = [
@@ -14224,73 +14183,6 @@ dependencies = [
  "semio-ui-locale",
  "semio-s-artifact-stdio-binary",
  "semio-s-artifact-stdio-contract",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-txt-inferences"
-version = "0.1.0"
-dependencies = [
- "semio-framework",
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dispatch-macros",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-job",
- "semio-os-kernel",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-plugin",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-ui-locale",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt-schema",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-txt-mutations"
-version = "0.1.0"
-dependencies = [
- "semio-framework",
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dispatch-macros",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-job",
- "semio-os-command",
- "semio-os-kernel",
- "semio-os-store-one-item",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-plugin",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-ui-locale",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt-inferences",
- "semio-s-artifact-stdio-txt-schema",
  "serde_json",
 ]
 
@@ -14324,42 +14216,6 @@ dependencies = [
  "semio-s-artifact-stdio-binary",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-txt-examples",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-txt-tests"
-version = "0.1.0"
-dependencies = [
- "semio-framework",
- "semio-framework-2d-compute",
- "semio-framework-action-bus",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dispatch-macros",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-job",
- "semio-os-kernel",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-plugin",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-ui-locale",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt-examples",
- "semio-s-artifact-stdio-txt-inferences",
- "semio-s-artifact-stdio-txt-mutations",
- "semio-s-artifact-stdio-txt-schema",
  "serde_json",
 ]
 

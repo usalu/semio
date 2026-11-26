@@ -13,7 +13,7 @@ spec.loader.exec_module(gate)
 class MissingReport(unittest.TestCase):
     def test_lists_missing_modules_with_staging_state(self):
         cases = {"pluginIds": ["alpha", "beta"], "extensionIds": ["gamma"]}
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory(dir=TICKET / "🗑️generated") as directory:
             root = Path(directory)
             (root / "modules" / "🅰️beta").mkdir(parents=True)
             (root / "modules" / "🅰️beta" / gate.RECEIPT).write_text("{}")

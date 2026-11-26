@@ -46299,18 +46299,18 @@
       "profile": [
        [
         0,
+        0.035
+       ],
+       [
+        0.3,
+        0.035
+       ],
+       [
+        0.3,
         0
        ],
        [
         0,
-        0.035
-       ],
-       [
-        0.3,
-        0.035
-       ],
-       [
-        0.3,
         0
        ]
       ],
@@ -50769,6 +50769,50 @@
       }
      },
      {
+      "id": "idler-cross-pin",
+      "kind": "revolve",
+      "bone": "undercarriage",
+      "material": "track-steel",
+      "role": "detail",
+      "tone": 0.48,
+      "profile": [
+       [
+        0,
+        0.043
+       ],
+       [
+        0.305,
+        0.043
+       ],
+       [
+        0.305,
+        0
+       ],
+       [
+        0,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       0,
+       1
+      ],
+      "origin": [
+       1.825,
+       0.45,
+       1.04
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        0,
+        0,
+        -2.38
+       ]
+      }
+     },
+     {
       "id": "bucket-shell",
       "kind": "extrude",
       "bone": "bucket",
@@ -51565,6 +51609,11 @@
      {
       "id": "th-idler-yoke-inner",
       "of": "idler-yoke-inner",
+      "region": "tracks"
+     },
+     {
+      "id": "th-idler-cross-pin",
+      "of": "idler-cross-pin",
       "region": "tracks"
      },
      {
@@ -53107,8 +53156,8 @@
       "de": "Die offenen Ketten behalten je Seite acht Laufrollen, die Stützrollen sowie Leit- und Antriebsrad. Die Leitradachse durchläuft zwei gebohrte Gabelbleche. Die Spannstange stützt sich an der Gabel ab."
      },
      {
-      "en": "Rework 10: track and bucket modelled anew for the 75 mm feature: one 125 mm band (shoe and chain), plain sprocket and idler discs, plain rollers, a closed box track frame with two 75 mm idler arms, and a bucket of 75 mm shell, cheeks and ears with its five teeth.",
-      "de": "Überarbeitung 10: Kette und Löffel für das 75-mm-Merkmal neu modelliert: ein 125-mm-Band (Platte und Kette), glatte Antriebs- und Leitradscheiben, glatte Laufrollen, geschlossener Kastenrahmen mit zwei 75-mm-Leitradarmen, Löffel mit 75 mm Schale, Wangen und Laschen und seinen fünf Zähnen."
+      "en": "Rework 10: track and bucket modelled anew for the 75 mm feature: one 125 mm band (shoe and chain), plain sprocket and idler discs, plain rollers, a closed box track frame with two 75 mm idler arms, and a bucket of 75 mm shell, cheeks and ears with its five teeth. The idler cross pin is one round of its 86 mm head diameter through hub and yoke arms.",
+      "de": "Überarbeitung 10: Kette und Löffel für das 75-mm-Merkmal neu modelliert: ein 125-mm-Band (Platte und Kette), glatte Antriebs- und Leitradscheiben, glatte Laufrollen, geschlossener Kastenrahmen mit zwei 75-mm-Leitradarmen, Löffel mit 75 mm Schale, Wangen und Laschen und seinen fünf Zähnen. Der Querbolzen des Leitrads ist ein Rundstab seines 86-mm-Kopfdurchmessers durch Nabe und Gabelarme."
      },
      {
       "en": "Rework 10: floating parts joined: monitor and left mirror on arms, consoles against the seat, boom lines on the boom, grouser ribs seated in the shoe band, link pins at 1:100, the boom foot pin at 1:200 and the boom cylinder foot pin at 1:500.",

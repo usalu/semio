@@ -1,4 +1,4 @@
-# Norm end-to-end verification on November 25
+# Norm end-to-end verification, November 25–26, 2026
 
 ## Current status
 
@@ -8,13 +8,23 @@
 | DSL examples and command registration | 79 examples across 15 families, 15 editors and 75 actions checked. |
 | One-worker WebAssembly builds | EN 1995 mutations, EN 1996 mutation/schema/editor and EN 1999 diff/detail packages compiled. |
 | EN 1999 native visual laws | 11 passed. |
-| EN 1990 mutation library | After moving the editor rules and inverse computations, a fresh native compiler observation measured 763,954,832 bytes (729 MiB). All 134 mutation identities and all four wire contract files matched their pre-carve baselines. Physical replay advanced to the public factory, which did not complete under the test’s turn budget. |
+| EN 1990 mutation library | The native compiler recorded a 763,954,832-byte (729 MiB) peak after the carve. All 134 mutation identities and four wire contract files matched their pre-carve baselines. |
+| EN 1990 physical replay | The native retained-projection law passed, including copy and cancellation accounting. The last full attempt met a second live package change when a newly added paged-text cursor reached the encoder after Cargo had already compiled its producer. Repository restart detection worked. A subsequent standalone attempt received its full 2,663 MiB grant, then exited 1 when the warden cancelled Cargo under critical swap pressure. The physical test had not started. After the updated warden went live, another attempt exposed a capacity-accounting error. The gate stopped charging an active 3,870 MiB graph reservation after 60 seconds. We stopped only our Cargo process tree and verified the graph job continued. No physical test verdict was produced. [Replay evidence](codex-en1990-geometry-replay-2026-11-25.md) · [Cargo recovery audit](en1990-cargo-failure-churn-audit.md) |
 | DIN 4108 native scene | 20 passed, including roof depth and 1,000-element projection. Projection took 66.42 ms under its existing five-second limit, down from 80.22 s. |
 | Rust fixture relocation | The native parent and its relocated child passed using the refreshed scheduler. Two source units were admitted. |
 | Installed delivery | The five installed wrapper receipts and 15 descriptors matched their published bytes. The receipts predate the current carves. |
-| Publication and signed browser journey from current source | Open. The standard Materials controller started with 2,048 MiB and refreshed the descriptor emitter. The measured final link requires a larger local grant or a compatible remote worker. Both strict 15-route browser attempts timed out before Chromium started. |
+| Fresh publication | Open. Materials reached its component controller before the shared hub manifest changed. Energy’s native 5,232 MiB reservation timed out after 1,801 seconds at 4,343 MiB spare. The separately admitted 2,048 MiB fleet controller needed a fresh local descriptor emitter. Critical host pressure stopped that prerequisite before the final could be assigned. [Publication evidence](materials-controller-admission-2026-11-26.md) |
+| Signed browser journey | Open. Both 15-route strict attempts timed out before Chromium started. The last had 2,091 MiB spare against the 6,144 MiB requirement. |
 
 ## Verification record
+
+On November 26 the exact Energy query returned 12 compatible workers and zero current slots at 5,357 MiB. The installed descriptor emitter had 57 changed source or schema inputs and three changed Cargo inputs. Its sealed 584-unit build and the current dependency graph both include DSL and replication through several real owners. Changing only the emitter’s direct manifest or kernel import leaves the resolved graph intact. [Emitter dependency audit](descriptor-emitter-dependency-closure-2026-11-26.md)
+
+Graph-plan and explicitly sized command reservations now remain charged until release. A separate process waited for a graph worker to exit before receiving its full grant. [Durable reservation test](durable-graph-grant-integration-2026-11-26.md)
+
+The fleet reader now preserves worker readiness when optional replica comparison times out. A live five-second timeout retained 16 worker rows. [Fleet-status verification](fleet-worker-status-deadline.md)
+
+At 04:52 CET on November 26 the ledger had no running grants, the warden reported warning pressure and only 1,216 MiB were available above the desktop reserve. The next EN 1990 verification required 2,663 MiB. Its replication-history dependency changed again during observation. No further compiler was launched.
 
 A two-checkout compiler-wrapper test reproduced reuse of the first checkout’s embedded path in the second. That defect could send a test binary to the wrong fixture directory. The fixture helpers now resolve their directory at runtime. The compiler cache scopes outputs containing checkout paths to their producing paths, including restored dependency identities. The focused cache suites passed 42 tests with 494 assertions. Corrected remapped compiler keys cause a one-time cache miss for previously cached units. [Fixture audit](fixture-cache-path-audit.md) · [Cache reproduction and fix](compiler-cache-checkout-path-audit.md)
 

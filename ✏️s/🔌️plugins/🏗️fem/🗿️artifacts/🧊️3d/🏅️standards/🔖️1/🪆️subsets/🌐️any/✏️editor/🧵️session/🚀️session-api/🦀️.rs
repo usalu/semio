@@ -296,7 +296,7 @@ impl Fem3dResultBorrow<'_> {
     }
     pub fn mode_values(&self, index: usize) -> Option<([f64; 6], f64)> {
         let equations = self.child.equations(index)?;
-        let mode = self.child.request.mode?;
+        let mode = self.child.request.mode.or(self.child.request.buckling)?;
         let mut eigenvalue = 0.0;
         let values = std::array::from_fn(|axis| equations[axis].and_then(|equation| self.child.subspace.as_ref()?.visual_mode_scalar(mode, equation)).map_or(0.0, |(value, eigen)| { eigenvalue = eigen; value }));
         Some((values, eigenvalue))
@@ -321,7 +321,7 @@ pub(super) fn same_result_source(old: &Fem3dSnapshot, old_request: Fem3dResultRe
 }
 
 /// 🧵️ Rendering borrows completed pages; pending or stale generations never trigger a solver.
-pub fn with_result_fields<R>(render: Option<AppRenderOperationContext>, _snapshot: &Fem3dSnapshot, authority: Option<semio_plugin::WindowConfigAuthorityIdentity>, _request: Fem3dResultRequest, read: impl FnOnce(Option<Fem3dResultBorrow<'_>>) -> R) -> R {
+pub fn with_result_fields<R>(render: Option<AppRenderOperationContext>, _snapshot: &Fem3dSnapshot, authority: Option<semio_plugin::WindowConfigAuthorityIdentity>, request: Fem3dResultRequest, read: impl FnOnce(Option<Fem3dResultBorrow<'_>>) -> R) -> R {
     let Some(render) = render else { return read(None) };
     let shell = MOUNTED.with(|registry| {
         let registry = registry.borrow();
@@ -343,6 +343,7 @@ pub fn with_result_fields<R>(render: Option<AppRenderOperationContext>, _snapsho
     let Ok(owner) = shell.try_borrow() else { return read(None) };
     let Some(state) = owner.as_ref() else { return read(None) };
     let (Some(solver), Some(child), Some(snapshot)) = (state.solver.as_ref(), state.numerical.as_ref(), state.snapshot.as_ref()) else { return read(None) };
+    if (request.mode.is_some() || request.buckling.is_some()) && (child.request.mode != request.mode || child.request.buckling != request.buckling) { return read(None) }
     read(Some(Fem3dResultBorrow { solver, child, snapshot, current_revision: render.matches_revision(state.identity.app_instance_id, state.identity.base_revision, state.identity.generation, &state.identity.canonical_base_revision) }))
 }
 

@@ -15,7 +15,7 @@ const harness=(maximum:number)=>{
  const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum,heartbeatMilliseconds:20,graceMilliseconds:50,hostMegabytes:16384,elasticity,unlearnedMegabytes:2048,
   reaper:{reap:async()=>0,killNow:()=>undefined},
   reserve:async({megabytes}:{megabytes:number})=>({megabytes,attach:()=>undefined,release:()=>undefined}),
-  createWorker:(_url:URL,data:{root:string;name:string})=>{const listeners:Record<string,(value:unknown)=>void>={};started.push(data.name);finish.set(data.name,()=>listeners.message?.({type:"done",graph:{}}));return{pid:undefined,on:(event:string,listener:(value:unknown)=>void)=>{listeners[event]=listener;},terminate:async()=>0};}});
+  createWorker:(_url:URL,data)=>{const name=String(data.name);const listeners:Record<string,(value:unknown)=>void>={};started.push(name);finish.set(name,()=>listeners.message?.({type:"done",graph:{}}));return{pid:undefined,on:(event:string,listener:(value:unknown)=>void)=>{listeners[event]=listener;},terminate:async()=>0};}});
  return{pool,started,finish};
 };
 const until=async(check:()=>boolean)=>{for(let wait=0;!check()&&wait<200;wait++)await new Promise(done=>setTimeout(done,10));expect(check()).toBe(true);};

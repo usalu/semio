@@ -191,6 +191,7 @@ macro_rules! bim_label_rows_commands {
     cmd_export_model_describe: "Writes the whole model as an IFC 2x3 or IFC4 file, a binary glTF scene, an SVG sheet of its views or a CSV report and offers it as a download. The analysis the file shows runs in steps with progress and can be cancelled; the analysis done so far is kept.", "Schreibt das ganze Modell als IFC-2x3- oder IFC4-Datei, als binäre glTF-Szene, als SVG-Blatt seiner Ansichten oder als CSV-Bericht und bietet es zum Download an. Die Analyse, die die Datei zeigt, läuft in Schritten mit Fortschritt und lässt sich abbrechen; die bisherige Analyse bleibt erhalten.";
     measure_export: "Export", "Export";
     export_ifc2x3: "IFC 2x3 (STEP)", "IFC 2x3 (STEP)";
+    export_gbxml: "gbXML (energy analysis)", "gbXML (Energieanalyse)";
     export_ifc4: "IFC4 (STEP)", "IFC4 (STEP)";
     export_glb: "glTF binary (3D)", "glTF binär (3D)";
     export_svg: "SVG sheet (views)", "SVG-Blatt (Ansichten)";

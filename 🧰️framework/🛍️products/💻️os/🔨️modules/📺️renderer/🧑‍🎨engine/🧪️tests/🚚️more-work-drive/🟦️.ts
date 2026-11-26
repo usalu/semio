@@ -26,6 +26,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { continueOpeningTurns, driveShardTurnMoreWorkV1, shardTurnCarriesNothingV1, shardTurnDriveBudgetMsV1, shardTurnDriveStepsV1, type ShardTurnCarriers } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🚚️more-work-drive/🟦️.ts";
+import { evaluateGeneratedSourceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 
 /** 🧬️ The materialization module is READ, never imported: it reaches the repo library's lease store
  * (`node:sqlite`) and cannot be bundled into a renderer test environment — the same reason its own
@@ -280,7 +281,7 @@ describe("🚚️ the generated shard worker", () => {
     const begin = source.indexOf("//#region drive-input-scope");
     const end = source.indexOf("//#endregion drive-input-scope");
     expect(begin, "the worker declares its drive-input scope region").toBeGreaterThanOrEqual(0);
-    const scope = new Function(`${source.slice(begin, end)}; return { noteHostInput, hostInputMoved };`)() as { noteHostInput: (actorId?: unknown) => unknown; hostInputMoved: (mark: unknown, actorId: string) => boolean };
+    const scope = evaluateGeneratedSourceV1(source.slice(begin, end), "{ noteHostInput, hostInputMoved }") as { noteHostInput: (actorId?: unknown) => unknown; hostInputMoved: (mark: unknown, actorId: string) => boolean };
     for (const row of law.rows) {
       const mark = scope.noteHostInput(law.driving);
       for (const message of row.traffic) scope.noteHostInput(message.actorId);

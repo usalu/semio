@@ -634,6 +634,36 @@
           "additionalProperties": false
         },
         {
+          "description": "Starts or changes the fleet watch of this connection: the daemon answers with `fleet` snapshots of the shared store for this request until the watch ends. The request is `#/definitions/Request` of the fleet schema (`🧬️schema/📊️fleet/🔣️.json`).",
+          "type": "object",
+          "required": [
+            "type",
+            "request"
+          ],
+          "properties": {
+            "type": {
+              "const": "fleet_watch"
+            },
+            "request": {
+              "type": "object"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "Ends the fleet watch of this connection.",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "fleet_unwatch"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
           "type": "object",
           "required": [
             "type"
@@ -824,6 +854,23 @@
           "properties": {
             "type": {
               "const": "pong"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "One compact fleet snapshot for the watch of this connection, sent when its content changed (and as a heartbeat), at most once per the refresh time of the range. The snapshot is `#/definitions/Snapshot` of the fleet schema (`🧬️schema/📊️fleet/🔣️.json`).",
+          "type": "object",
+          "required": [
+            "type",
+            "snapshot"
+          ],
+          "properties": {
+            "type": {
+              "const": "fleet"
+            },
+            "snapshot": {
+              "type": "object"
             }
           },
           "additionalProperties": false

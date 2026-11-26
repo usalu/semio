@@ -21,5 +21,10 @@ export function transcodeFactIndexV1(bytes:Uint8Array,options:{mapText:(text:str
 export function collectFactStringsV1(value:unknown,strings:Set<string>):void;
 export function writeFactValueV1(sink:FactSinkV1,value:unknown,textId:(text:string)=>number,depth:number):void;
 export function writeFactListV1(sink:FactSinkV1,list:ArrayLike<number>):void;
-export function createFactSinkV1(maximumBytes:number):FactSinkV1;
+export function createFactSinkV1(maximumBytes:number,initialBytes?:number):FactSinkV1;
 export function openFactIndexV1(bytes:Uint8Array,options?:{maximumBytes?:number;share?:(text:string)=>string;name?:string}):FactCodecOpenIndexV1;
+
+/** 🪪️ The identity of a value: its canonical text when that is at most `limit` characters, else `#` and the SHA-256 of the canonical text, which is hashed in bounded pieces while it is written so that a fact of megabytes never exists as one string (the same answer as hashing `canonicalJsonV1`). */
+export function canonicalKeyV1(value: unknown, limit: number): string;
+/** 🧷️ Counts the bytes of an unsigned fact-index integer. */
+export function factVarintBytesV1(value: number): number;

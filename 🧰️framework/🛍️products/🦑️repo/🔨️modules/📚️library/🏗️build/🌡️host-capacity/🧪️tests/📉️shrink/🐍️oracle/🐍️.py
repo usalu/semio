@@ -12,7 +12,7 @@ def decide(case,p):
     if minimum is not None and minimum>limit: return ["wait",0,"never"]
     if room>=need: return ["admit",need,"fits"]
     if minimum is not None and minimum<need and room>=minimum: return ["admit",room,"shrunk"]
-    if minimum is not None and minimum<need and case["waited"]>=p["overrideAfterMilliseconds"]: return ["wait",0,"starved"]
+    if minimum is None and need<case["fixed"] and case["waited"]>=p["starvedMilliseconds"]: return ["wait",0,"starved"]
     return ["wait",0,"memory"]
 if __name__=="__main__":
     data=json.load(sys.stdin)

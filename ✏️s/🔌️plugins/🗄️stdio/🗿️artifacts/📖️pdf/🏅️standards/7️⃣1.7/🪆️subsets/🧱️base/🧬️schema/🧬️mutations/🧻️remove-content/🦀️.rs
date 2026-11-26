@@ -40,7 +40,7 @@ where
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.pages.get(self.index).filter(|page| self.at + self.count <= page.content.len()).map(|page| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::insert_content::InsertContent { index: self.index, at: self.at, content: page.content[self.at..self.at + self.count].to_vec() })).into_iter().collect()
+        base.pages.get(self.index).filter(|page| self.at + self.count <= page.content.len()).map(|page| Op::from(crate::standards::v1_7::subsets::base::schema::mutations::insert_content::InsertContent { index: self.index, at: self.at, content: page.content.iter().skip(self.at).take(self.count).cloned().collect() })).into_iter().collect()
     
     })())
 }

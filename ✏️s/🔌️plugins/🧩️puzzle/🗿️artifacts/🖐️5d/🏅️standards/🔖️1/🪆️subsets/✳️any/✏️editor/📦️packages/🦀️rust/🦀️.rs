@@ -17,5 +17,3 @@ pub use crate::editor::puzzle5d::artifact_items_4::{artifact_kind};
 mod mirror;
 pub use mirror::*;
 
-#[path = "../../../../../../../🔨️modules/♻️rewriting/🦀️.rs"]
-mod puzzle5d_rewriting;

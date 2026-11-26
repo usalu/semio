@@ -186,8 +186,7 @@ impl Fem3dNumericalChild {
     /// 📡 Publishes one stress scalar.
     pub(super) fn step_publish_stress_scalar(&mut self, solver: &mut Fem3dSolverView, freshness: Fem3dVisualFreshness) -> Result<bool, Fem3dNumericalFailure> {
         if self.node_cursor == self.analysis_node_ids.len() {
-            if self.request.buckling.is_some() { return Err((b"fem3d.numerical-buckling-owner-missing".to_vec()).into()); }
-            self.stage = if self.request.mode.is_some() { Fem3dNumericalStage::BeginModal } else { Fem3dNumericalStage::PublishProgress };
+            self.stage = if self.request.buckling.is_some() { Fem3dNumericalStage::BeginBuckling } else if self.request.mode.is_some() { Fem3dNumericalStage::BeginModal } else { Fem3dNumericalStage::PublishProgress };
         } else {
             let mut scalar = solver.scalar(self.node_cursor).ok_or_else(|| b"fem3d.numerical-stress-scalar".to_vec())?;
             scalar.contour = self.stress(self.node_cursor).unwrap_or(0.0);

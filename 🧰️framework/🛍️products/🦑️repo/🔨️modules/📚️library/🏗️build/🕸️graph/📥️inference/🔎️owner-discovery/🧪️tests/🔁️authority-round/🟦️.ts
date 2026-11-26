@@ -21,7 +21,7 @@ function workspace(){
  return {root,names:Object.keys(crates)};
 }
 
-class ProbeMap extends Map<string,unknown>{rounds=new Set<boolean>();override get(key:string){this.rounds.add(observation.observationRoundV1()!==undefined);return super.get(key);}}
+class ProbeMap extends Map<string,never>{rounds=new Set<boolean>();override get(key:string){this.rounds.add(observation.observationRoundV1()!==undefined);return super.get(key);}}
 
 test("the assembly authority equals an independent closure digest and walks the closure inside one validation round",()=>{
  expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
@@ -30,8 +30,8 @@ test("the assembly authority equals an independent closure digest and walks the 
  const oracle=Bun.spawnSync([python!,"-I",join(import.meta.dir,"🐍️.py")],{stdin:Buffer.from(JSON.stringify({root,crates:names,projects}))});
  expect(oracle.exitCode,String(oracle.stderr)).toBe(0);
  const expected=JSON.parse(String(oracle.stdout)) as Record<string,string>,byRoot=new Map(Object.entries(projects)),inside=new ProbeMap(),outside=new ProbeMap(),closures=new Map(),others=new Map();
- for(const name of names)expect(discovery.projectAssemblyAuthorityV1(root,"crates/"+name,byRoot,undefined,inside as Map<string,never>,closures),name).toBe(expected[name]);
- for(const name of names)manifests.nativeDependencyRoots("crates/"+name,root,true,outside as Map<string,never>,others);
+ for(const name of names)expect(discovery.projectAssemblyAuthorityV1(root,"crates/"+name,byRoot,undefined,inside,closures),name).toBe(expected[name]);
+ for(const name of names)manifests.nativeDependencyRoots("crates/"+name,root,true,outside,others);
  expect([...inside.rounds]).toEqual([true]);
  expect([...outside.rounds]).toEqual([false]);
 });

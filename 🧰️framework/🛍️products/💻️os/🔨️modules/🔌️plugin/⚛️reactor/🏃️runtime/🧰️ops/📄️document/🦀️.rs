@@ -184,6 +184,7 @@ pub async fn plugin_begin_document_archive_load<PA:PluginApp>(runtime:&PluginRun
     let cell=runtime_instance_cell(runtime,instance_id)?;
     let mut instance=cell.host_instance().ok_or_else(||plugin_internal_fault("archive admission requires its exact available instance"))?;
     let admitted = instance.app.begin_document_archive_load(operation, archive, admission, cx)?;
+    cell.instance_progress_epoch.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
     if admitted { cell.pending_effects.retain(); }
     Ok(admitted)
 }
@@ -212,7 +213,9 @@ pub fn plugin_document_archive_maintenance_is_runnable<PA: PluginApp>(
 /// `AppCommand::PollDocumentArchiveLoad`.
 pub async fn plugin_poll_document_archive_load<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, operation: u64, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<protocol::DocumentArchiveLoadStatus, Fault> {
     with_instances_mut(runtime, |list| {
+        let cell = list.get(instance_id).ok_or_else(|| plugin_internal_fault(format!("unknown instance: {instance_id}")))?;
         let mut instance = find_instance(list, instance_id)?;
+        cell.instance_progress_epoch.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         drive_self_waking_ready(instance.app.poll_document_archive_load(operation, identity, cx))
     })
     .await
@@ -253,8 +256,7 @@ pub fn document_backbone_effects(owner: &store::os_store::backbone::ActorBackbon
 }
 fn live_document_backbone_for_uri<PA: PluginApp>(runtime: &PluginRuntime<PA>, uri: &str) -> Result<Option<(u32, u64, store::os_store::backbone::ActorBackboneChannelOwner)>, Fault> {
     let bindings = runtime.document_backbones.try_borrow().map_err(|_| plugin_internal_fault("document backbone binding authority is busy"))?;
-    for index in 0..PLUGIN_RUNTIME_INSTANCE_SLOTS {
-        let Some((instance_id, binding)) = bindings.entry_at(index) else { continue };
+    for (instance_id, binding) in bindings.entries() {
         if binding.uri.as_deref() == Some(uri) {
             if let Some(channel) = &binding.channel {
                 return Ok(Some((instance_id, binding.generation, channel.clone())));
@@ -379,8 +381,7 @@ pub async fn plugin_receive_document_backbone<PA: PluginApp>(runtime: &PluginRun
 pub fn plugin_drain_document_backbones<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> Result<Vec<Effect>, Fault> {
     let bindings = runtime.document_backbones.try_borrow().map_err(|_| plugin_internal_fault("document backbone binding authority is busy"))?;
     let mut effects = Vec::new();
-    for index in 0..PLUGIN_RUNTIME_INSTANCE_SLOTS {
-        let Some((_, binding)) = bindings.entry_at(index) else { continue };
+    for (_, binding) in bindings.entries() {
         let (Some(uri), Some(owner)) = (binding.uri.as_deref(), binding.channel.as_ref()) else { continue };
         effects.extend(document_backbone_effects(owner, uri)?);
     }

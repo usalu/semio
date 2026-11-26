@@ -174,7 +174,7 @@ impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
     }
 
     fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> { semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
-        self.close_owners.close_step(cx)
+        self.close_owners.close_batch(cx)
     }) }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {

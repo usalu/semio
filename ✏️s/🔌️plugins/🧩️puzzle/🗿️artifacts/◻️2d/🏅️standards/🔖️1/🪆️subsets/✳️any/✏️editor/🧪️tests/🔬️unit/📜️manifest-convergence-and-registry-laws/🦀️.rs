@@ -6,10 +6,17 @@ fn app_definition_has_three_lod_pane_window_kinds() {
     let definition = create_puzzle2d_app();
     let ids: Vec<&str> = definition.window_kinds.iter().map(|window| window.id.as_str()).collect();
     assert_eq!(ids, vec![crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID]);
-    for window in &definition.window_kinds {
-        assert!(window.options.engagement.as_option().is_some(), "pane {} must have engagement", window.id);
-        assert!(!window.options.measures.is_empty(), "pane {} must have LOD/suggestion measures", window.id);
+    let mut app = app();
+    for kind in ids {
+        let window_id = format!("{kind}-instance");
+        let view = window_view(kind, &window_id);
+        let engagements = block_on(app.0.window_engagements(&view));
+        assert!(engagements.contains_key(&window_id), "pane {kind} must have engagement");
+        let measures = block_on(app.0.window_measures(&view));
+        let lod_id = format!("{kind}-lod");
+        assert!(measures[&window_id].iter().any(|measure| matches!(measure, semio_plugin::WindowMeasure::Select { id, .. } if id == &lod_id)), "pane {kind} must have its own LOD measure");
     }
+    close_app(&mut app);
 }
 
 /// 🕹️ Every action DISPATCHABLE in one window: its OWN roster plus every app-level row no window
@@ -111,20 +118,22 @@ fn tool_registry_declares_fill_tool() {
 /// impossible under whole-document `setSnapshot` snapshots, which would clobber one side.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_node_edits_via_backbone() {
-    let mut instance_a = app();
-    let mut instance_b = app();
-    let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://puzzle2d-convergence", "mem://puzzle2d-convergence").await;
-    instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
-    instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
-
+    let mut instance_a = app_for_actor("puzzle-author-a");
+    let mut instance_b = app_for_actor("puzzle-author-b");
+    let source_a = attach_fixture_actor_backbone(&mut instance_a, "actor://puzzle-convergence-a").await;
+    let source_b = attach_fixture_actor_backbone(&mut instance_b, "actor://puzzle-convergence-b").await;
     dispatch(&mut instance_a, "addNode", Some(&json!({ "kind": "seed" })), None).expect("a adds node");
     dispatch(&mut instance_b, "addNode", Some(&json!({ "kind": "other" })), None).expect("b adds node");
-
-    dispatch(&mut instance_a, "commitCheckpoint", None, None).expect("pump a");
-    dispatch(&mut instance_b, "commitCheckpoint", None, None).expect("pump b");
-
-    assert_eq!(board_snapshot_nodes(&fixture_of(&instance_a)).len(), 2, "instance A must contain both nodes");
-    assert_eq!(board_snapshot_nodes(&fixture_of(&instance_b)).len(), 2, "instance B must contain both nodes");
+    let frames_a = drain_fixture_actor_outbound(&mut instance_a, &source_a);
+    let frames_b = drain_fixture_actor_outbound(&mut instance_b, &source_b);
+    assert_eq!(ingest_fixture_actor_frames(&mut instance_a, &frames_b).await, 1);
+    assert_eq!(ingest_fixture_actor_frames(&mut instance_b, &frames_a).await, 1);
+    let nodes = |app: &Puzzle2dApp| board_snapshot_nodes(&fixture_of(app)).iter().map(|node| node["id"].as_str().expect("node identity").to_owned()).collect::<std::collections::BTreeSet<_>>();
+    let a = nodes(&instance_a);
+    assert_eq!(a.len(), 2, "each author contributed a distinct node");
+    assert_eq!(a, nodes(&instance_b));
+    source_a.begin_retire().expect("retire author a's port");
+    source_b.begin_retire().expect("retire author b's port");
     instance_a.detach_backbone().await.expect("a releases its backbone");
     instance_b.detach_backbone().await.expect("b releases its backbone");
     close_app(&mut instance_a);
@@ -134,23 +143,18 @@ async fn two_instances_converge_disjoint_node_edits_via_backbone() {
 #[semio_framework_async_macros::async_test]
 async fn ingest_operations_is_idempotent() {
     let mut sender = app();
-    let (near, mut far) = MemoryBackbone::pair("mem://puzzle2d-doc", "mem://puzzle2d-doc").await;
-    sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach");
+    let channel = attach_fixture_actor_backbone(&mut sender, "actor://puzzle2d-idempotent").await;
     dispatch(&mut sender, "addNode", Some(&json!({ "kind": "seed" })), None).expect("add");
-
-    let mut envelopes = Vec::new();
-    for message in far.receive().await.expect("receive") {
-        if let BackboneMessage::Mutations { envelopes: operations } = message {
-            envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
-        }
-    }
-    assert!(!envelopes.is_empty(), "the applied operation must flow onto the channel");
-    let operations = protocol::encode_envelopes(&envelopes);
+    let frames = drain_fixture_actor_outbound(&mut sender, &channel);
+    assert!(!frames.is_empty(), "the applied operation must flow onto the channel");
 
     let mut receiver = app();
-    receiver.0.ingest_operations(&operations, &mut semio_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest once");
-    receiver.0.ingest_operations(&operations, &mut semio_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest twice");
+    assert_eq!(ingest_fixture_actor_frames(&mut receiver, &frames).await, 1);
+    let original = fixture_of(&receiver);
+    assert_eq!(ingest_fixture_actor_frames(&mut receiver, &frames).await, 1);
+    assert_eq!(fixture_of(&receiver), original);
     assert_eq!(board_snapshot_nodes(&fixture_of(&receiver)).len(), 1, "feeding the same operation twice must not double-apply");
+    channel.begin_retire().expect("retire the original actor port");
     sender.detach_backbone().await.expect("sender releases its backbone");
     close_app(&mut receiver);
     close_app(&mut sender);

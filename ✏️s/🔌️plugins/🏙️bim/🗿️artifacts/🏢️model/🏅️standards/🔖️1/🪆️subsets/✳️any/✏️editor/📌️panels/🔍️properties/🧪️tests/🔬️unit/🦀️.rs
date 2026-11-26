@@ -49,6 +49,7 @@ fn demo() -> (ModelSnapshot, ModelInference) {
 }
 
 fn text(snapshot: &ModelSnapshot, inference: &ModelInference, elements: &[&str], library: &[&str], locale: Locale) -> String {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let own = |ids: &[&str]| ids.iter().map(|id| id.to_string()).collect::<Vec<_>>();
     let view = semio_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native);
     let node = render(snapshot, inference, &own(elements), &own(library), semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view)).expect("the properties panel renders");

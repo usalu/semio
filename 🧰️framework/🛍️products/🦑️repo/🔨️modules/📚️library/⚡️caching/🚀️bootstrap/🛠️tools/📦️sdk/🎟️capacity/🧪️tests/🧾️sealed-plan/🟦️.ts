@@ -1,6 +1,6 @@
 import{test,expect}from"bun:test";
 import{createHash}from"node:crypto";
-import toolsSource from"../../../../🟦️.ts"with{type:"text"};
+const toolsSource=await Bun.file(new URL("../../../../🟦️.ts",import.meta.url)).text();
 import{nxSdkDerivativeDispositionV1}from"../../../../📦️sdk/📥️source/🔗️derivative/🟦️.ts";
 const plan=()=>import("../../🧾️sealed-plan/🟦️.ts");
 const snapshot="a".repeat(64),digest=(value:string)=>createHash("sha256").update(value).digest("hex");

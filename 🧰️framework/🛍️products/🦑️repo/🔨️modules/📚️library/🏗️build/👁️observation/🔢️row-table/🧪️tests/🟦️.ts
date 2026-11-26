@@ -135,13 +135,13 @@ test("graph authority stores shared semantic observations once and retains root 
  expect(result).toEqual(fixture.roots.map(index=>oracle[index]));
  const db=new Database(":memory:");
  try{
-  const resolved=db.query("select json_extract(?1, '$[' || root.value || '].path') path from json_each(?2) root order by root.key").all(JSON.stringify(fixture.records),JSON.stringify(fixture.roots));
+  const resolved=db.query<{path:string},[string,string]>("select json_extract(?1, '$[' || root.value || '].path') path from json_each(?2) root order by root.key").all(JSON.stringify(fixture.records),JSON.stringify(fixture.roots));
   expect(result.map(({path})=>({path}))).toEqual(resolved);
-  const nested=db.query("select json_extract(?1, '$[' || edge.value || '].path') path from json_each(json_extract(?1, '$[3].fact.nestedObservations')) edge order by edge.key").all(JSON.stringify(fixture.records));
+  const nested=db.query<{path:string},[string]>("select json_extract(?1, '$[' || edge.value || '].path') path from json_each(json_extract(?1, '$[3].fact.nestedObservations')) edge order by edge.key").all(JSON.stringify(fixture.records));
   expect((result[0]!.fact as {nestedObservations:Row[]}).nestedObservations.map(({path})=>({path}))).toEqual(nested);
  }finally{db.close();}
  expect(result[0]).toBe(result[3]);
- expect((result[0]!.fact as {nestedObservations:Row[]}).nestedObservations[0]).toBe(result[2]);
+ expect<unknown>((result[0]!.fact as {nestedObservations:Row[]}).nestedObservations[0]).toBe(result[2]);
  expect(JSON.parse(encodeAuthorityObservationsV1(result,10240))).toEqual(indexed);
  const scale=Array(4096).fill(result[0]);
  expect(encodeAuthorityObservationsV1(scale,16384).length).toBeLessThan(JSON.stringify(scale).length/100);

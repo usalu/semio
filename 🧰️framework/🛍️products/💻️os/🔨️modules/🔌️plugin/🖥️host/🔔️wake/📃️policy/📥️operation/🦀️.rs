@@ -96,8 +96,24 @@ const CORE_GUEST_RETAINED_LIMIT:RetainedCloneGrant=RetainedCloneGrant{
 };
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn consumable_remaining(total:RetainedCloneGrant,reserve:RetainedCloneGrant)->Result<RetainedCloneGrant,ValueError>{
+ checked_retained_remaining(total,reserve,None)
+}
+fn remaining_beside_reserve(total:RetainedCloneGrant,reserve:RetainedCloneGrant,purpose:&'static str)->Result<RetainedCloneGrant,ValueError>{
+ checked_retained_remaining(total,reserve,Some(purpose))
+}
+fn checked_retained_remaining(total:RetainedCloneGrant,reserve:RetainedCloneGrant,live_reserve:Option<&'static str>)->Result<RetainedCloneGrant,ValueError>{
  if reserve.maximum_depth>total.maximum_depth{return Err(invalid("cleanup depth exceeds the operation ceiling"))}
- Ok(RetainedCloneGrant{maximum_items:total.maximum_items.checked_sub(reserve.maximum_items).ok_or_else(||invalid("cleanup items exceed operation currency"))?,maximum_copy_bytes:total.maximum_copy_bytes.checked_sub(reserve.maximum_copy_bytes).ok_or_else(||invalid("cleanup copy exceeds operation currency"))?,maximum_capacity_bytes:total.maximum_capacity_bytes.checked_sub(reserve.maximum_capacity_bytes).ok_or_else(||invalid("cleanup capacity exceeds operation currency"))?,maximum_release_bytes:total.maximum_release_bytes.checked_sub(reserve.maximum_release_bytes).ok_or_else(||invalid("cleanup release exceeds operation currency"))?,maximum_depth:total.maximum_depth})
+ let remaining=|available:usize,required:usize,axis:&str,invalid_message:&'static str|available.checked_sub(required).ok_or_else(||match live_reserve{
+  Some(purpose)=>ValueError::new(ValueRefusalKind::WorkLimit,format!("operation currency exhausted beside the {purpose} reserve: dimension={axis}, available={available}, reserved={required}")),
+  None=>invalid(invalid_message),
+ });
+ Ok(RetainedCloneGrant{
+  maximum_items:remaining(total.maximum_items,reserve.maximum_items,"retained items","cleanup items exceed operation currency")?,
+  maximum_copy_bytes:remaining(total.maximum_copy_bytes,reserve.maximum_copy_bytes,"copy bytes","cleanup copy exceeds operation currency")?,
+  maximum_capacity_bytes:remaining(total.maximum_capacity_bytes,reserve.maximum_capacity_bytes,"capacity bytes","cleanup capacity exceeds operation currency")?,
+  maximum_release_bytes:remaining(total.maximum_release_bytes,reserve.maximum_release_bytes,"release bytes","cleanup release exceeds operation currency")?,
+  maximum_depth:total.maximum_depth,
+ })
 }
 
 #[cfg(test)]
@@ -127,7 +143,7 @@ pub(super) fn physical_policy(original:&super::WakeDriverState,policy:RetainedCl
 }
 fn physical_drive_balance(operation:&OperationBudget,policy:RetainedCloneGrant,available:RetainedCloneGrant)->Result<RetainedCloneGrant,ValueError>{
  if operation.cleanup{return Ok(intersect(policy,available))}
- consumable_remaining(available,operation.reserve.retained).map(|after_reserve|intersect(policy,after_reserve))
+ remaining_beside_reserve(available,operation.reserve.retained,"cleanup").map(|after_reserve|intersect(policy,after_reserve))
 }
 /// 📒️ The interpreter ledger and the copy the operation spent outside it, by poll stage.
 fn guest_report(original:&super::WakeDriverState)->String{

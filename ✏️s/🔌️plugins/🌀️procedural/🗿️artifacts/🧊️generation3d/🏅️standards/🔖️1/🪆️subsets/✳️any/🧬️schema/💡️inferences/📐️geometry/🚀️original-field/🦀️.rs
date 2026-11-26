@@ -222,7 +222,7 @@ fn source(snapshot:&GeometryInput<'_>,key:&str,cx:&mut StepContext<'_>)->Result<
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn open(cx:&StepContext<'_>)->bool{let grant=cx.retained_grant();!cx.should_yield()&&!cx.is_cancelled()&&grant.maximum_items>0&&grant.maximum_depth>0}
 fn post(cx:&mut StepContext<'_>,receipt:RetainedCloneProgress)->Result<(),OriginalTurnFailure>{let result=cx.consume_retained(receipt);cx.consume_fuel(1);result.map_err(|error|error.with_retained_progress(receipt).into())}
-fn close_owner<T:semio_framework_value::retirement::RetireOwned>(owner:&mut ControlledRetirement<T>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;Ok(())}
+fn close_owner<T:semio_framework_value::retirement::RetireOwned>(owner:&mut ControlledRetirement<T>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{let body=cx.retained_grant().maximum_copy_bytes;let demand=owner.selected_demand(body)?;semio_framework_job::close_original_source_effect_step(cx,demand,|effect|owner.step(body,effect))?;Ok(())}
 
 fn outside_range(port: &Port, value: &GeometryValue) -> bool {
  let number = match value { GeometryValue::Number(number) => *number, GeometryValue::Integer(number) => *number as f64, _ => return false };

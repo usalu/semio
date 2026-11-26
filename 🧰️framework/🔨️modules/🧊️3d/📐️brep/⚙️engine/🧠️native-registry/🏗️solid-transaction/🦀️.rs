@@ -5,12 +5,12 @@ use semio_framework_3d_brep_construction::{circular_prism::CircularPrism,conical
 use semio_framework_3d_brep_representation::arena::{ArenaId, FaceId, ShellId, SolidId, Store};
 use semio_framework_3d_brep_representation::contract::{AnnularRevolution,BoxSectionDraft,ClippedBox,ClippedBoxBoundary,PerforatedPrism,PERFORATED_RING_SIZES,BorePreviewSource,RoundedBox,SphericalCaps,SphericalShell,TorusSector};
 use semio_framework_3d_brep_representation::topology::{Body, Coedge, Edge, EntityRef, Face, Loop, Shell, Solid, Vertex, dummy_coedge, history::{LabelSource, PersistentLabel}};
-use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_surface::{Surface,curved_boolean::{SphericalCornerBox,SphericalTorusCut}};
 use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_vector::{Pnt3,matrix::Frame3};
 use semio_framework_value::{RetainedAllocationEffect, RetainedCloneGrant as Grant, RetainedCloneProgress as Progress, RetainedCloneStep as Step, RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::retained_clone_grant_admits;
-use semio_framework_3d_brep_solid_topology::{clip_boundary, rounded_box_boundary, sector_boundary, spherical_cap_boundary};
+use semio_framework_3d_brep_solid_topology::{clip_boundary, rounded_box_boundary, sector_boundary, spherical_box_boundary, spherical_cap_boundary, spherical_torus_boundary};
 use std::mem::{size_of, take};
 
 use semio_framework_3d_brep_spline_construction::nurbs_cuboid::{self, Payload as SplinePayload, Recipe as SplineRecipe};
@@ -109,6 +109,8 @@ pub enum SolidProvenance {
     Annular(AnnularRevolution,u64),
     SphericalShell(SphericalShell,u64),
     SphericalCaps(SphericalCaps,u64),
+    SphericalTorusCut(SphericalTorusCut,u64),
+    SphericalCornerBox(SphericalCornerBox,u64),
     RoundedBox(RoundedBox,u64),
     ClippedBox(ClippedBox),
     Orthogonal(OrthogonalCells),
@@ -139,6 +141,8 @@ impl SolidProvenance {
             Self::Annular(source,_) => Some(source.volume()),
             Self::SphericalShell(source,_)=>Some(source.volume()),
             Self::SphericalCaps(source,_)=>Some(source.volume()),
+            Self::SphericalTorusCut(source,_)=>Some(source.volume()),
+            Self::SphericalCornerBox(source,_)=>Some(source.volume()),
             Self::RoundedBox(source,_)=>Some(source.volume()),
             Self::PlanarBoundary(..) | Self::Orthogonal(_) | Self::PlacedOrthogonal(..) | Self::ClippedBox(_) => None,
         }
@@ -160,6 +164,8 @@ pub enum SolidBoundary {
     Annular(AnnularRevolution),
     SphericalShell(SphericalShell),
     SphericalCaps(SphericalCaps),
+    SphericalTorusCut(SphericalTorusCut),
+    SphericalCornerBox(SphericalCornerBox),
     RoundedBox(RoundedBox),
     ClippedBox(ClippedBoxBoundary,ClippedBox),
     Hull(HullBoundary),
@@ -183,13 +189,13 @@ impl From<SolidExchangeBoundary> for SolidBoundary {
 
 impl SolidBoundary {
     fn vertex_count(&self) -> usize {
-        match self { Self::Analytic(p) => p.vertex_count(), Self::Orthogonal(p) => p.vertex_count(), Self::Prism(p) | Self::BoxPrism(p, _) => p.vertex_count(), Self::PerforatedBox(..) => 16, Self::Bore(_) => 10, Self::CircularPrism(p) => p.vertex_count(), Self::Frustum(_) | Self::TorusSector(_) => 2, Self::SphericalShell(p) => shell_recipe::exterior(*p).vertex_count()+2, Self::SphericalCaps(p)=>p.vertex_count(), Self::Annular(p) => p.vertex_count(), Self::Hull(p) => p.vertex_count(), Self::ChamferedBox(p) => p.vertex_count(), Self::ClippedBox(p,_)=>p.vertex_count(), Self::RoundedBox(p) => p.vertex_count() }
+        match self { Self::Analytic(p) => p.vertex_count(), Self::Orthogonal(p) => p.vertex_count(), Self::Prism(p) | Self::BoxPrism(p, _) => p.vertex_count(), Self::PerforatedBox(..) => 16, Self::Bore(_) => 10, Self::CircularPrism(p) => p.vertex_count(), Self::Frustum(_) | Self::TorusSector(_) => 2, Self::SphericalShell(p) => shell_recipe::exterior(*p).vertex_count()+2, Self::SphericalCaps(p)=>p.vertex_count(), Self::SphericalTorusCut(_)=>SphericalTorusCut::VERTICES, Self::SphericalCornerBox(_)=>SphericalCornerBox::VERTICES, Self::Annular(p) => p.vertex_count(), Self::Hull(p) => p.vertex_count(), Self::ChamferedBox(p) => p.vertex_count(), Self::ClippedBox(p,_)=>p.vertex_count(), Self::RoundedBox(p) => p.vertex_count() }
     }
     fn edge_count(&self) -> usize {
-        match self { Self::Analytic(p) => p.edge_count(), Self::Orthogonal(p) => p.edge_count(), Self::Prism(p) | Self::BoxPrism(p, _) => p.edge_count(), Self::PerforatedBox(..) => 24, Self::Bore(_) => 15, Self::CircularPrism(p) => p.edge_count(), Self::Frustum(_) | Self::TorusSector(_) => 3, Self::SphericalShell(p) => shell_recipe::exterior(*p).edge_count()+3, Self::SphericalCaps(p)=>p.edge_count(), Self::Annular(p) => p.edge_count(), Self::Hull(p) => p.edge_count(), Self::ChamferedBox(p) => p.edge_count(), Self::ClippedBox(p,_)=>p.edge_count(), Self::RoundedBox(p) => p.edge_count() }
+        match self { Self::Analytic(p) => p.edge_count(), Self::Orthogonal(p) => p.edge_count(), Self::Prism(p) | Self::BoxPrism(p, _) => p.edge_count(), Self::PerforatedBox(..) => 24, Self::Bore(_) => 15, Self::CircularPrism(p) => p.edge_count(), Self::Frustum(_) | Self::TorusSector(_) => 3, Self::SphericalShell(p) => shell_recipe::exterior(*p).edge_count()+3, Self::SphericalCaps(p)=>p.edge_count(), Self::SphericalTorusCut(_)=>SphericalTorusCut::EDGES, Self::SphericalCornerBox(_)=>SphericalCornerBox::EDGES, Self::Annular(p) => p.edge_count(), Self::Hull(p) => p.edge_count(), Self::ChamferedBox(p) => p.edge_count(), Self::ClippedBox(p,_)=>p.edge_count(), Self::RoundedBox(p) => p.edge_count() }
     }
     fn ring_sizes(&self) -> &[usize] {
-        match self { Self::Analytic(p) => p.ring_sizes(), Self::Orthogonal(p) => p.ring_sizes(), Self::Prism(p) | Self::BoxPrism(p, _) => p.ring_sizes(), Self::PerforatedBox(..) => &PERFORATED_RING_SIZES, Self::Bore(_) => &[4,4,4,4,4,4,4,1,1], Self::CircularPrism(p) => p.ring_sizes(), Self::Frustum(_) | Self::TorusSector(_) => &[4,1,1], Self::SphericalShell(p) => shell_recipe::rings(*p), Self::SphericalCaps(p)=>p.ring_sizes(), Self::Annular(p) => annular_boundary::ring_sizes(*p), Self::Hull(p) => p.ring_sizes(), Self::ChamferedBox(p) => p.ring_sizes(), Self::ClippedBox(p,_)=>p.ring_sizes(), Self::RoundedBox(p) => p.ring_sizes() }
+        match self { Self::Analytic(p) => p.ring_sizes(), Self::Orthogonal(p) => p.ring_sizes(), Self::Prism(p) | Self::BoxPrism(p, _) => p.ring_sizes(), Self::PerforatedBox(..) => &PERFORATED_RING_SIZES, Self::Bore(_) => &[4,4,4,4,4,4,4,1,1], Self::CircularPrism(p) => p.ring_sizes(), Self::Frustum(_) | Self::TorusSector(_) => &[4,1,1], Self::SphericalShell(p) => shell_recipe::rings(*p), Self::SphericalCaps(p)=>p.ring_sizes(), Self::SphericalTorusCut(_)=>&SphericalTorusCut::RINGS, Self::SphericalCornerBox(_)=>&SphericalCornerBox::RINGS, Self::Annular(p) => annular_boundary::ring_sizes(*p), Self::Hull(p) => p.ring_sizes(), Self::ChamferedBox(p) => p.ring_sizes(), Self::ClippedBox(p,_)=>p.ring_sizes(), Self::RoundedBox(p) => p.ring_sizes() }
     }
     fn face_count(&self) -> usize {
         if let Self::Annular(shape)=self {shape.face_count()} else if let Self::Bore(shape)=self {shape.preview_source(0).face_count()} else if matches!(self,Self::PerforatedBox(..)) {10} else { self.ring_sizes().len() }
@@ -209,6 +215,7 @@ impl SolidBoundary {
         matches!(self, Self::Bore(_)) && face >= 6
             || matches!(self,Self::SphericalShell(shape) if face+1==shell_recipe::rings(*shape).len())
             || matches!(self,Self::SphericalCaps(shape) if shape.is_inward(face))
+            || matches!(self,Self::SphericalTorusCut(_) if face==2)
             || matches!(self,Self::Annular(shape) if annular_boundary::face_flipped(*shape,face))
             || matches!(self,Self::CircularPrism(shape) if shape.face_flipped(face))
     }
@@ -233,16 +240,16 @@ impl SolidBoundary {
         }
     }
     fn vertex(&self, i: usize) -> Pnt3 {
-        match self { Self::Analytic(p) => p.vertex(i), Self::Orthogonal(p) => p.vertex(i), Self::Prism(p) | Self::BoxPrism(p, _) => p.vertex(i), Self::PerforatedBox(p, _) => p.vertex(i), Self::Bore(p) => p.vertex(i), Self::CircularPrism(p) => p.vertex(i), Self::Frustum(p) => p.vertex(i), Self::TorusSector(p) => p.vertex(i), Self::Annular(p) => p.vertex(i), Self::SphericalShell(p)=>shell_recipe::vertex(*p,i), Self::SphericalCaps(p)=>p.vertex(i), Self::Hull(p) => p.vertex(i), Self::ChamferedBox(p) => p.vertex(i), Self::ClippedBox(p,_)=>p.vertex(i), Self::RoundedBox(p) => p.vertex(i) }
+        match self { Self::Analytic(p) => p.vertex(i), Self::Orthogonal(p) => p.vertex(i), Self::Prism(p) | Self::BoxPrism(p, _) => p.vertex(i), Self::PerforatedBox(p, _) => p.vertex(i), Self::Bore(p) => p.vertex(i), Self::CircularPrism(p) => p.vertex(i), Self::Frustum(p) => p.vertex(i), Self::TorusSector(p) => p.vertex(i), Self::Annular(p) => p.vertex(i), Self::SphericalShell(p)=>shell_recipe::vertex(*p,i), Self::SphericalCaps(p)=>p.vertex(i), Self::SphericalTorusCut(p)=>p.vertex(i), Self::SphericalCornerBox(p)=>p.vertex(i), Self::Hull(p) => p.vertex(i), Self::ChamferedBox(p) => p.vertex(i), Self::ClippedBox(p,_)=>p.vertex(i), Self::RoundedBox(p) => p.vertex(i) }
     }
     fn edge(&self, i: usize) -> PrimitiveEdge {
-        match self { Self::Analytic(p) => p.edge(i), Self::Orthogonal(p) => p.edge(i), Self::Prism(p) | Self::BoxPrism(p, _) => p.edge(i), Self::PerforatedBox(p, _) => oriented_box::perforated_edge(p,i), Self::Bore(p) => p.edge(i), Self::CircularPrism(p) => p.edge(i), Self::Frustum(p) => p.edge(i), Self::TorusSector(p) => sector_boundary::edge(*p,i), Self::Annular(p) => annular_boundary::edge(*p,i), Self::SphericalShell(p)=>shell_recipe::edge(*p,i), Self::SphericalCaps(p)=>{let (curve,range,vertices)=p.edge(i);PrimitiveEdge{curve,range,vertices}}, Self::Hull(p) => p.edge(i), Self::ChamferedBox(p) => p.edge(i), Self::ClippedBox(p,_)=>clip_boundary::edge(p,i), Self::RoundedBox(p) => rounded_box_boundary::edge(*p,i) }
+        match self { Self::Analytic(p) => p.edge(i), Self::Orthogonal(p) => p.edge(i), Self::Prism(p) | Self::BoxPrism(p, _) => p.edge(i), Self::PerforatedBox(p, _) => oriented_box::perforated_edge(p,i), Self::Bore(p) => p.edge(i), Self::CircularPrism(p) => p.edge(i), Self::Frustum(p) => p.edge(i), Self::TorusSector(p) => sector_boundary::edge(*p,i), Self::Annular(p) => annular_boundary::edge(*p,i), Self::SphericalShell(p)=>shell_recipe::edge(*p,i), Self::SphericalCaps(p)=>{let (curve,range,vertices)=p.edge(i);PrimitiveEdge{curve,range,vertices}}, Self::SphericalTorusCut(p)=>spherical_torus_boundary::edge(*p,i), Self::SphericalCornerBox(p)=>spherical_box_boundary::edge(*p,i), Self::Hull(p) => p.edge(i), Self::ChamferedBox(p) => p.edge(i), Self::ClippedBox(p,_)=>clip_boundary::edge(p,i), Self::RoundedBox(p) => rounded_box_boundary::edge(*p,i) }
     }
     fn surface(&self, i: usize) -> Surface {
-        match self { Self::Analytic(p) => p.surface(i), Self::Orthogonal(p) => p.surface(i), Self::Prism(p) | Self::BoxPrism(p, _) => p.surface(i), Self::PerforatedBox(p, _) => Surface::Plane{frame:p.frame(i)}, Self::Bore(p) => p.surface(i), Self::CircularPrism(p) => p.surface(i), Self::Frustum(p) => p.surface(i), Self::TorusSector(p) => sector_boundary::surface(*p,i), Self::Annular(p) => annular_boundary::surface(*p,i), Self::SphericalShell(p)=>shell_recipe::surface(*p,i), Self::SphericalCaps(p)=>spherical_cap_boundary::surface(*p,i), Self::Hull(p) => p.surface(i), Self::ChamferedBox(p) => p.surface(i), Self::ClippedBox(p,_)=>Surface::Plane{frame:p.frame(i)}, Self::RoundedBox(p) => rounded_box_boundary::surface(*p,i) }
+        match self { Self::Analytic(p) => p.surface(i), Self::Orthogonal(p) => p.surface(i), Self::Prism(p) | Self::BoxPrism(p, _) => p.surface(i), Self::PerforatedBox(p, _) => Surface::Plane{frame:p.frame(i)}, Self::Bore(p) => p.surface(i), Self::CircularPrism(p) => p.surface(i), Self::Frustum(p) => p.surface(i), Self::TorusSector(p) => sector_boundary::surface(*p,i), Self::Annular(p) => annular_boundary::surface(*p,i), Self::SphericalShell(p)=>shell_recipe::surface(*p,i), Self::SphericalCaps(p)=>spherical_cap_boundary::surface(*p,i), Self::SphericalTorusCut(p)=>spherical_torus_boundary::surface(*p,i), Self::SphericalCornerBox(p)=>spherical_box_boundary::surface(*p,i), Self::Hull(p) => p.surface(i), Self::ChamferedBox(p) => p.surface(i), Self::ClippedBox(p,_)=>Surface::Plane{frame:p.frame(i)}, Self::RoundedBox(p) => rounded_box_boundary::surface(*p,i) }
     }
     fn trim(&self, i: usize, member: usize) -> PrimitiveTrim {
-        match self { Self::Analytic(p) => p.trim(i, member), Self::Orthogonal(p) => p.trim(i, member), Self::Prism(p) | Self::BoxPrism(p, _) => p.trim(i, member), Self::PerforatedBox(p, _) => oriented_box::perforated_trim(p,i,member), Self::Bore(p) => p.trim(i, member), Self::CircularPrism(p) => p.trim(i, member), Self::Frustum(p) => p.trim(i, member), Self::TorusSector(p) => sector_boundary::trim(*p,i, member), Self::Annular(p) => annular_boundary::trim(*p,i, member), Self::SphericalShell(p)=>shell_recipe::trim(*p,i,member), Self::SphericalCaps(p)=>spherical_cap_boundary::trim(*p,i,member), Self::Hull(p) => p.trim(i, member), Self::ChamferedBox(p) => p.trim(i, member), Self::ClippedBox(p,_)=>clip_boundary::trim(p,i,member), Self::RoundedBox(p) => rounded_box_boundary::trim(*p,i, member) }
+        match self { Self::Analytic(p) => p.trim(i, member), Self::Orthogonal(p) => p.trim(i, member), Self::Prism(p) | Self::BoxPrism(p, _) => p.trim(i, member), Self::PerforatedBox(p, _) => oriented_box::perforated_trim(p,i,member), Self::Bore(p) => p.trim(i, member), Self::CircularPrism(p) => p.trim(i, member), Self::Frustum(p) => p.trim(i, member), Self::TorusSector(p) => sector_boundary::trim(*p,i, member), Self::Annular(p) => annular_boundary::trim(*p,i, member), Self::SphericalShell(p)=>shell_recipe::trim(*p,i,member), Self::SphericalCaps(p)=>spherical_cap_boundary::trim(*p,i,member), Self::SphericalTorusCut(p)=>spherical_torus_boundary::trim(*p,i,member), Self::SphericalCornerBox(p)=>spherical_box_boundary::trim(*p,i,member), Self::Hull(p) => p.trim(i, member), Self::ChamferedBox(p) => p.trim(i, member), Self::ClippedBox(p,_)=>clip_boundary::trim(p,i,member), Self::RoundedBox(p) => rounded_box_boundary::trim(*p,i, member) }
     }
 }
 
@@ -673,6 +680,8 @@ impl SolidPublication {
             SolidBoundary::Annular(shape) => Some(SolidProvenance::Annular(*shape,self.first_label)),
             SolidBoundary::SphericalShell(shape) => Some(SolidProvenance::SphericalShell(*shape,self.first_label)),
             SolidBoundary::SphericalCaps(shape)=>Some(SolidProvenance::SphericalCaps(*shape,self.first_label)),
+            SolidBoundary::SphericalTorusCut(shape)=>Some(SolidProvenance::SphericalTorusCut(*shape,self.first_label)),
+            SolidBoundary::SphericalCornerBox(shape)=>Some(SolidProvenance::SphericalCornerBox(*shape,self.first_label)),
             SolidBoundary::RoundedBox(shape)=>Some(SolidProvenance::RoundedBox(*shape,self.first_label)),
             SolidBoundary::ClippedBox(_,proof)=>Some(SolidProvenance::ClippedBox(*proof)),
             SolidBoundary::Orthogonal(shape) => Some(match shape.placement(){

@@ -1,0 +1,4 @@
+import{memoryUsage}from"node:process";
+const B="/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build",F="/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🏗️build";
+const steps:[string,string][]=[["ready-like: warden loop + gate",F+"/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts"],["unit-cache counters (ready imports)",B+"/../⚡️caching/🦀️cargo/🗃️unit-cache/🛰️fleet/📊️counters/🟦️.ts"],["cas store",B+"/🗄️cas/🗃️store/🟦️.ts"],["nx-cache",B+"/../⚡️caching/🚀️bootstrap/📊️nx-cache/🟦️.ts"],["counter-ledger",B+"/📈️counter-ledger/🟦️.ts"],["offload counters",B+"/🌐️remote-execution/🚀️offload/📊️counters/🟦️.ts"],["metrics collector",F+"/📈️metrics/🛰️collector/🟦️.ts"],["host sources",F+"/📈️metrics/🛰️collector/🔌️host/🟦️.ts"]];
+for(const [label,path] of steps){const b=memoryUsage.rss();await import(path);console.log(label.padEnd(40),((memoryUsage.rss()-b)/1048576).toFixed(1),"MB");}

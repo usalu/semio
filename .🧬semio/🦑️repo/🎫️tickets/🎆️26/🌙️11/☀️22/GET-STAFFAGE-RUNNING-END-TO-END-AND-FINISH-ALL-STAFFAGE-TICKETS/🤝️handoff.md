@@ -210,3 +210,9 @@ Goal of the dev: "Get staffage running end to end. Many assets were interrupted 
 ## Added 2026-11-26 02:35: limit reset
 
 - The dev reported the Fable limit reset at 02:30: MV-L1, MA and MV-3 resumed by message; MV-L2 launched (Fable) for `norway-maple`, `multi-stem-birch`, `pampas-grass`, `miscanthus-grass`, `rowan` (1:50 and re-check of 1:100/1:200), `used-timpani-pair` 1:1000.
+
+## Added 2026-11-26 09:40: catalog frozen, closing verification started
+
+- FINAL since 02:35: MA (13/13), MV-3 (11/11), MV-L1 (`hawthorn`), MV-L2 (6/6), MV-L3 (`field-maple`, `black-alder`, chairs 1:500: 21 of 22 cured, 1 `language-geometry` cell open), MX-3 (pocket and body-following rules live 08:34, `🧊️catalog-silhouette` 385/385 before and after; D62 to D70).
+- Every batch lane is FINAL; no lane writes the catalog. Manifest synced (375, 0 issues; re-run by MZ at the end).
+- Lane MZ (Sonnet) runs `🧰️closing/run.sh`: full matrix (`MM/full.sh`), proof sheets, every staffage suite, check CLI over all categories, React and site suites, release build and smoke, type checks. Report `closing.md`, multiview closing summary `K/📦️handoff.md`.

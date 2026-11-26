@@ -14,7 +14,7 @@ afterAll(()=>{for(const root of scratch)removeV1(root);});
 const put=(root:string,files:Record<string,string>)=>{for(const[path,text]of Object.entries(files)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}};
 const sha=(path:string)=>createHash("sha256").update(readFileSync(path)).digest("hex");
 const done=(outcome:HermeticOutcomeV1)=>{expect(outcome.kind,JSON.stringify(outcome)).toBe("done");return outcome as Extract<HermeticOutcomeV1,{kind:"done"}>;};
-const refused=(outcome:HermeticOutcomeV1,code:string)=>{expect(outcome.kind,JSON.stringify(outcome)).toBe("refused");const row=outcome as Extract<HermeticOutcomeV1,{kind:"refused"}>;expect(row.code).toBe(code);expect(row.en.length).toBeGreaterThan(10);expect(row.de.length).toBeGreaterThan(10);expect(row.de).not.toBe(row.en);return row;};
+const refused=(outcome:HermeticOutcomeV1,code:string)=>{expect(outcome.kind,JSON.stringify(outcome)).toBe("refused");const row=outcome as Extract<HermeticOutcomeV1,{kind:"refused"}>;expect<unknown>(row.code).toBe(code);expect(row.en.length).toBeGreaterThan(10);expect(row.de.length).toBeGreaterThan(10);expect(row.de).not.toBe(row.en);return row;};
 
 const crate=(root:string,trim=true)=>{
  put(root,{

@@ -47,3 +47,7 @@ All 83 inspected listed source/config paths resolve to <=256 UTF16 units. Maximu
 Execution component/guest, Hub lock, dependency storage/schema/receipt/native vectors/static13entries and size fixtures are already inventoried. Runtime added exact22-path scope to browser-runtime.md. Root compiler configuration lexical repair still needs its exact root-owned source path in final combined list; unrelated compiler peer changes are not assigned here. Root lock metadata must likewise be explicitly attributed by its owner.
 
 Retain ticket Markdown and input scripts/configs for closure. Generated-output cleanup remains deferred until full success. Future fresh descriptor pair/generated registry output is not yet claimed.
+
+## November 26 path check
+
+The reconciled 832-entry working inventory, including the affected workspace locks, has a longest present absolute pathname of 208 UTF-16 code units on this checkout. Generated output is excluded.

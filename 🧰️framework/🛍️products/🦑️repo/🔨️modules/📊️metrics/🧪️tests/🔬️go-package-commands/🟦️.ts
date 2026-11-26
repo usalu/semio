@@ -15,7 +15,7 @@ function goEnvironment(repoRoot: string): NodeJS.ProcessEnv {
 
 /** 🏃️ Runs the `BuildScript` command under the caller's roots and invocation. */
 export async function runBuildScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): Promise<void> {
-  await runCanonicalGoBuild(PACKAGE_DIR, ["./..."], { control: scriptCompilerAdmissionControlV1(context.invocation, "go:build", 0),  env: goEnvironment(context.repoRoot), budgetMs: buildBudgetMs(),  });
+  await runCanonicalGoBuild(PACKAGE_DIR, ["./..."], { invocation: context.invocation, control: scriptCompilerAdmissionControlV1(context.invocation, "go:build", 0),  env: goEnvironment(context.repoRoot), budgetMs: buildBudgetMs(),  });
 }
 
 /** ▶️ Runs the `TestScript` command under the caller's roots and invocation. */

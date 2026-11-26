@@ -1,5 +1,5 @@
 import {ROSTER_RULES_V1} from "../🧭️roster/🟨️.mjs";
-import {isOpaqueSourcePathV1} from "../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import{isOpaqueSourcePathV1}from"../../📥️inputs/👻️opaque-source/🟨️.mjs";
 import {selectPackageManagerV1} from "../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
 import * as observationV1 from "../../👁️observation/🟨️.mjs";
 import {readInventoryRecordLeanV1,rememberInventoryRecordV1} from "../../📥️inputs/🪶️lean-inventory/🟨️.mjs";

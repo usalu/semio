@@ -8,7 +8,7 @@ def digest(path):
  with path.open("rb") as f:
   for block in iter(lambda:f.read(1<<20),b""):h.update(block)
  return h.hexdigest()
-candidates=list((g/"requester-final-objects").glob("*"))+list((g/"math-variadic-wasi2").glob("*.wasm"))+list((g/"current-math-graph-variadic").glob("*.rlib"))
+candidates=list((g/"requester-final-objects").glob("*"))+list((g/"math-variadic-wasi2").glob("*.wasm"))+list((g/"current-math-graph-variadic").glob("*.rlib"))+list((g/"math-variadic-wasi2/deps").glob("*-math-wasi-live.rlib"))+[g/"b4/proc.fold1.wasm",g/"b4/proc.fold2.wasm",g/"b4/proc.core.wasm"]
 for p in sorted(candidates,key=lambda x:-x.stat().st_size):
  if p.is_symlink() or not p.is_file() or p.stat().st_size<5<<20:continue
  sig=p.stat()

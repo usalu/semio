@@ -25,7 +25,7 @@
     },
     "graph": {
       "description": "EN: The commands that read the project graph and so run under the memory cap of a graph child: every command of the kernels in `kinds`, except the verbs in `freeVerbs`, which never load the graph; help requests, the preflight, cache, cargo, dependency and utility commands are never capped. DE: Die Befehle, die den Projektgraphen lesen und daher unter der Speicherobergrenze eines Graph-Kindprozesses laufen: jeder Befehl der Kerne in `kinds` außer den Verben in `freeVerbs`, die den Graphen nie laden; Hilfeanfragen sowie Preflight-, Cache-, Cargo-, Abhängigkeits- und Hilfsbefehle werden nie begrenzt.",
-      "const": {"kinds": ["runtime", "task"], "freeVerbs": ["tools", "reset", "remote-execution", "leases", "doctor", "capacity", "fleet", "scheduler", "test-file"]}
+      "const": {"kinds": ["runtime", "task"], "freeVerbs": ["tools", "reset", "remote-execution", "leases", "doctor", "capacity", "fleet", "scheduler", "test-file", "typecheck"]}
     },
     "cases": {
       "type": "array",

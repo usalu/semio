@@ -22,8 +22,8 @@ const python=requireTestToolV1("python"),oracle=join(import.meta.dir,"🐍️ora
 const ask=(request:Record<string,unknown>):any=>{const run=spawnSync(python,["-I",oracle],{input:JSON.stringify(request),encoding:"utf8"});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout||"{}");};
 const ajv=new Ajv({strict:false,allowUnionTypes:true}),validator=(name:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${name}`});
 const store=(name:string)=>createCasStoreV1({root:scratch(name)});
-type Fixture={name:string;files:Record<string,{text:string;executable?:boolean}>;paths:string[];absent?:string[]};
-const write=(root:string,files:Fixture["files"]):void=>{for(const [path,file] of Object.entries(files)){const full=join(root,...path.split("/"));mkdirSync(dirname(full),{recursive:true});writeFileSync(full,file.text);chmodSync(full,file.executable?0o755:0o644);}};
+type Fixture={name:string;files:Partial<Record<string,{text:string;executable?:boolean}>>;paths:string[];absent?:string[]};
+const write=(root:string,files:Fixture["files"]):void=>{for(const [path,file] of Object.entries(files)){if(file===undefined)continue;const full=join(root,...path.split("/"));mkdirSync(dirname(full),{recursive:true});writeFileSync(full,file.text);chmodSync(full,file.executable?0o755:0o644);}};
 const workspaceOf=(fixture:Fixture,name:string):string=>{const root=scratch(name);write(root,fixture.files);return root;};
 const options=(cas:ReturnType<typeof store>,root:string,paths:string[],extra:Record<string,unknown>={})=>({cas,root,workspace:"w1",paths,holder:"agent-a",journalCursor:"c1",...extra}) as Parameters<typeof pinRevisionV1>[0];
 const bytesOf=(value:Uint8Array|undefined):string=>Buffer.from(value!).toString("utf8");
@@ -328,7 +328,7 @@ test("a captured plan sees one snapshot while files change, its pin equals what 
  const reference=scratch("capture-ref");write(reference,{"src/a.ts":{text:"a1\n"},"src/b.ts":{text:"b2\n"},"bin/run.sh":{text:"#!/bin/sh\n",executable:true}});
  const tar=join(scratch("capture-tar"),"r.tar");ask({op:"snapshot",root:reference,paths,tar});
  expect(outcome.pinned.manifest.digest,"the tarball oracle agrees").toBe(ask({op:"digest",tar}).digest);
- expect(readCasPinsV1(cas.root)).toBeDefined();
+ expect(readCasPinsV1(cas.root,Date.now())).toBeDefined();
 });
 
 test("a plan that reads nothing pins the empty revision and a failing plan seals nothing",async()=>{

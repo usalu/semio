@@ -1,0 +1,20 @@
+[
+  {
+    "id": "static",
+    "extensionManagement": false,
+    "controls": [
+      "framework.marketplace.extension.bundle.enable"
+    ]
+  },
+  {
+    "id": "local-store",
+    "extensionManagement": true,
+    "controls": [
+      "framework.marketplace.extension.bundle.enable",
+      "framework.marketplace.extension.bundle.uninstall",
+      "framework.marketplace.extensions.install.file",
+      "framework.marketplace.extensions.install.file.trigger",
+      "framework.marketplace.extensions.install.url"
+    ]
+  }
+]

@@ -67,7 +67,7 @@ async fn a_stage_change_ships_its_generation_in_the_same_turn_and_a_verb_stamped
     while app.take_typed_operation_ui_progress().is_some() {}
     let reviewed = app.time_travel.session().generation;
     let mutation = seeded_mutation(&app, 2);
-    let begun = verb(&mut app, &fixture, "historyEditBegin", vec![("mutationId".into(), DslValue::String(mutation))], mounted_policy, &mut identity, cx).await;
+    let begun = dispatch(&mut app, "historyEditBegin", Some(DslValue::Object(vec![("mutationId".into(), DslValue::String(mutation))])), &meta(&fixture), mounted_policy, &mut identity, cx).await.expect("Begin dispatches");
     let generation = app.time_travel.session().generation;
     assert_ne!(generation, reviewed, "Begin from a review bumps the generation");
     let status = |patch: &semio_framework::kernel::HistoryPatch| patch.time_travel.as_ref().map(|status| (status.stage, status.generation));
@@ -80,7 +80,7 @@ async fn a_stage_change_ships_its_generation_in_the_same_turn_and_a_verb_stamped
     let generation_arg = |value: u32| vec![(semio_framework::history_edit::HISTORY_EDIT_ARG_GENERATION.to_string(), DslValue::uint(u64::from(value)))];
     let stale = verb(&mut app, &fixture, "historyEditDiscard", generation_arg(reviewed), mounted_policy, &mut identity, cx).await;
     assert_eq!(rejected(&stale), Some("timeTravel.stale"), "the previous generation is stale");
-    let discarded = verb(&mut app, &fixture, "historyEditDiscard", generation_arg(generation), mounted_policy, &mut identity, cx).await;
+    let discarded = dispatch(&mut app, "historyEditDiscard", Some(DslValue::Object(generation_arg(generation))), &meta(&fixture), mounted_policy, &mut identity, cx).await.expect("Discard dispatches");
     assert_eq!(rejected(&discarded), None, "the published generation applies: {:?}", discarded.output);
     let deadline=std::time::Instant::now()+std::time::Duration::from_secs(30);
     let mut reviewing_progress=false;
@@ -114,7 +114,7 @@ async fn the_alternatives_section_lists_each_alternative_and_switching_reproject
     let fixture = fixture();
     let actor = text(&fixture["actor"]).to_string();
     let (mut app, probe) = replica(&fixture, "history-alternatives", &actor, true, mounted_policy, &mut identity).await;
-    commit_scenario(&mut app, &fixture, "a-new-alternative-keeps-the-original", mounted_policy, &mut identity).await;
+    commit_scenario(&mut app, &fixture, "a-new-alternative-keeps-the-original", mounted_policy, &mut identity, cx).await;
     assert_eq!(head(&app).1, "b", "the edited alternative is current");
     let history = app.render_ctx().test_history().await;
     let listed: Vec<(&str, bool, bool)> = history.alternatives.iter().map(|alternative| (alternative.name.as_str(), alternative.current, alternative.edited)).collect();
@@ -177,10 +177,14 @@ async fn opening_a_history_edit_and_a_remote_edit_deliver_host_events_to_every_w
     assert_eq!(TOY_HOST_EVENTS.with(|events| events.borrow_mut().take()), every(|window_id| HostEvent::TimeTravelFrozen { window_id }), "only opening the session freezes the windows");
     dispatch(&mut local, "historyEditExit", None, &under, mounted_policy, &mut identity, cx).await.expect("exit");
     pump_until(&mut local, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await;
-    remote.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: 9 }.into()], transaction: None }, &mut identity).await.expect("a remote edit");
+    remote.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: 9 }.into()], transaction: None }, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("a remote edit");
     TOY_HOST_EVENTS.with(|events| events.borrow_mut().clear());
     relay(&mut remote_probe, &mut local_probe, &mut local, mounted_policy, &mut identity, cx).await;
-    assert_eq!(TOY_HOST_EVENTS.with(|events| events.borrow_mut().take()), every(|window_id| HostEvent::BaseMoved { window_id }), "the remote edit moved the base");
+    for _ in 0..8 {
+        local.advance_typed_operation_publication(&mut identity, cx).await.expect("driver turn");
+        collect_original_history_command_receipt(&mut local);
+    }
+    assert!(TOY_HOST_EVENTS.with(|events| events.borrow_mut().take()).is_empty(), "an instance without a mounted runtime announces no base move (windows exist only under a mounted instance); the mounted seam asserts BaseMoved per window");
     drop((local_probe, remote_probe));
     close(&mut local,cx);
     close(&mut remote,cx);

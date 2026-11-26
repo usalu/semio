@@ -28,6 +28,10 @@ pub(super) fn combine(a:SolidPrimitive,b:SolidPrimitive,op:BooleanOp)->Result<So
         return nested_primitives(box_shape,sphere,!sphere_is_a,op).map(SolidBoundary::Analytic);
     }
     if length(far)<=radius{return nested_primitives(sphere,box_shape,sphere_is_a,op).map(SolidBoundary::Analytic);}
+    if matches!(op,BooleanOp::Unite) {
+        return SphericalCornerBox::new(frame.origin,radius,origin,[width,depth,height],Tol::DEFAULT.value())
+            .map(SolidBoundary::SphericalCornerBox).ok_or_else(unsupported);
+    }
     let sign=match op{
         BooleanOp::Intersect=>1.,BooleanOp::Cut if sphere_is_a=>-1.,_=>return Err(unsupported()),
     };

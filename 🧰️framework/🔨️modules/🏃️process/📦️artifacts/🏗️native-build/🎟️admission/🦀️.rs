@@ -336,8 +336,15 @@ fn retry_while<T>(mut open: impl FnMut() -> std::io::Result<T>, retryable: impl 
 /// 🔗️ A line-oriented connection to the driver's broker: a Unix socket, or a named pipe on Windows.
 struct Broker {
     writer: Mutex<Box<dyn Write + Send>>,
-    reader: Mutex<Box<dyn BufRead + Send>>,
+    lines: Mutex<std::sync::mpsc::Receiver<std::io::Result<String>>>,
+    #[cfg(unix)]
+    closer: std::os::unix::net::UnixStream,
 }
+
+/// 🔇️ How long the broker may stay silent (no verdict and no queue heartbeat) before the request is dropped and sent again; equals `Policy.bounds.silenceMilliseconds` of the admission schema.
+const ADMISSION_SILENCE: Duration = Duration::from_millis(180_000);
+/// 🔁️ How many times one admission request is sent in total (a broker that restarted answers the second one); equals `Policy.bounds.attempts`.
+const ADMISSION_ATTEMPTS: u32 = 5;
 
 impl Broker {
     /// 🔌️ Connects to the broker endpoint, waiting out a momentarily full pipe.
@@ -347,7 +354,23 @@ impl Broker {
         #[cfg(windows)]
         let stream = retry_while(|| std::fs::OpenOptions::new().read(true).write(true).open(endpoint), pipe_busy, PIPE_BUSY_ATTEMPTS, PIPE_BUSY_DELAY)?;
         let reader = stream.try_clone()?;
-        Ok(Broker { writer: Mutex::new(Box::new(stream)), reader: Mutex::new(Box::new(BufReader::new(reader))) })
+        #[cfg(unix)]
+        let closer = stream.try_clone()?;
+        let (sender, lines) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let mut reader = BufReader::new(reader);
+            loop {
+                let mut line = String::new();
+                let item = match reader.read_line(&mut line) {
+                    Ok(0) => Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "broker closed")),
+                    Ok(_) => Ok(line),
+                    Err(error) => Err(error),
+                };
+                let last = item.is_err();
+                if sender.send(item).is_err() || last { break; }
+            }
+        });
+        Ok(Broker { writer: Mutex::new(Box::new(stream)), lines: Mutex::new(lines), #[cfg(unix)] closer })
     }
 
     /// 📤️ Sends one protocol line.
@@ -357,12 +380,22 @@ impl Broker {
         writer.flush()
     }
 
-    /// 📥️ Waits for the next verdict; `true` once admitted.
-    fn verdict(&self) -> std::io::Result<bool> {
-        let mut line = String::new();
-        let mut reader = self.reader.lock().map_err(|_| std::io::Error::other("broker reader poisoned"))?;
-        if reader.read_line(&mut line)? == 0 { return Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "broker closed")); }
-        decode_verdict(line.trim_end())
+    /// 📥️ Waits for the next verdict; `true` once admitted. A broker that sends no line for `silence` is reported as `TimedOut`.
+    fn verdict(&self, silence: Duration) -> std::io::Result<bool> {
+        let lines = self.lines.lock().map_err(|_| std::io::Error::other("broker reader poisoned"))?;
+        match lines.recv_timeout(silence) {
+            Ok(line) => decode_verdict(line?.trim_end()),
+            Err(std::sync::mpsc::RecvTimeoutError::Timeout) => Err(std::io::Error::new(std::io::ErrorKind::TimedOut, format!("broker silent for {silence:?}"))),
+            Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "broker closed")),
+        }
+    }
+}
+
+impl Drop for Broker {
+    /// 🔌️ Closes the socket so the broker forgets this request and the reader thread ends.
+    fn drop(&mut self) {
+        #[cfg(unix)]
+        let _ = self.closer.shutdown(std::net::Shutdown::Both);
     }
 }
 
@@ -465,14 +498,25 @@ fn bounded_argfiles(args: &[OsString], tokens: Option<usize>) -> Result<(Vec<OsS
 }
 
 /// 🧵️ Reads the compiler mode from direct arguments and response files before spending the run's parallelism.
+/// The concrete WASI actor decoder measured 1,173 MiB with the serial policy; wider codegen exceeded its library memory ceiling.
 fn compiler_parallelism(args: &[OsString], tokens: Option<usize>) -> Result<(usize, bool), String> {
     let mut expects_type = false;
+    let mut expects_crate = false;
+    let mut expects_target = false;
     let mut final_component = false;
+    let mut actor_decoder = false;
+    let mut wasip2 = false;
     let mut nightly = false;
     let mut inspect = |argument: &str| {
         let types = argument.strip_prefix("--crate-type=").or_else(|| expects_type.then_some(argument));
+        let name = argument.strip_prefix("--crate-name=").or_else(|| expects_crate.then_some(argument));
+        let target = argument.strip_prefix("--target=").or_else(|| expects_target.then_some(argument));
         final_component |= types.is_some_and(|types| types.split(',').any(|kind| kind == "cdylib"));
+        actor_decoder |= name == Some("semio_plugin_actor_input_decoder");
+        wasip2 |= target == Some("wasm32-wasip2");
         expects_type = argument == "--crate-type";
+        expects_crate = argument == "--crate-name";
+        expects_target = argument == "--target";
         nightly |= argument.starts_with("-Z");
     };
     for argument in args {
@@ -487,7 +531,9 @@ fn compiler_parallelism(args: &[OsString], tokens: Option<usize>) -> Result<(usi
         }
     }
     let grant = tokens.filter(|count| *count > 0);
-    Ok((if final_component { 1 } else { grant.unwrap_or(1) }, grant == Some(1) || (final_component && (nightly || grant.is_some()))))
+    let serial_unit = final_component || (actor_decoder && wasip2);
+    let workers = if serial_unit { 1 } else { grant.unwrap_or(1) };
+    Ok((workers, grant == Some(1) || (serial_unit && (nightly || grant.is_some()))))
 }
 
 /// 🎟️ The admitted parallelism of this run, from the variable the launcher sets for every child of its jobserver.
@@ -525,20 +571,44 @@ fn passthrough(rustc: &OsString, args: &[OsString], waits: bool) -> ExitCode {
     }
 }
 
+/// 🔁️ Whether an admission fault means the broker is gone, restarting or silent (the request is sent again) rather than answering with a refusal.
+fn transient_admission(error: &std::io::Error) -> bool {
+    use std::io::ErrorKind::*;
+    matches!(error.kind(), TimedOut | UnexpectedEof | ConnectionReset | ConnectionRefused | ConnectionAborted | BrokenPipe | NotFound)
+}
+
+/// 🔁️ Runs one admission attempt after another while the broker is unreachable or silent, at most `attempts` times; a refusal or a malformed line ends at once.
+/// @see ./🧪️tests/⌛️deadlines/🟦️.ts
+fn admit_with_retries<T>(mut attempt: impl FnMut() -> std::io::Result<T>, attempts: u32, pause: impl Fn(u32) -> Duration) -> std::io::Result<T> {
+    let mut number = 1;
+    loop {
+        match attempt() {
+            Err(error) if number < attempts && transient_admission(&error) => {
+                std::thread::sleep(pause(number));
+                number += 1;
+            }
+            other => return other,
+        }
+    }
+}
+
 /// ⏳️ Waits for the broker's admission while KEEPING the jobserver token Cargo gave this job. The token is never written back: Cargo's helper
 /// thread reads every freed token to start or park for another unit, so a unit that handed its token back could not reacquire it while the
 /// units that took it wait for admission in turn (no rustc running, fifo empty). Holding it cannot starve admission: a broker with nothing
 /// running can admit a waiter within its parent grant, or refuse the job without starting rustc.
-fn await_admission(mut verdict: impl FnMut() -> Result<bool, String>) -> Result<(), String> {
+fn await_admission(mut verdict: impl FnMut() -> std::io::Result<bool>) -> std::io::Result<()> {
     while !verdict()? {}
     Ok(())
 }
 
 /// 🔏️ Admits, runs and reports one rustc unit through the broker.
 fn scheduled(rustc: &OsString, args: &[OsString], unit: &Unit, endpoint: &str, pass: &str) -> Result<ExitCode, String> {
-    let broker = Arc::new(Broker::connect(endpoint).map_err(|error| format!("build broker unreachable at {endpoint}: {error}"))?);
-    broker.send(&admit_request(unit, pass, std::process::id())).map_err(|error| format!("broker admission request failed: {error}"))?;
-    await_admission(|| broker.verdict().map_err(|error| format!("{} ({}): compiler broker verdict failed: {error}", unit.crate_name, unit.target)))?;
+    let broker = admit_with_retries(|| {
+        let broker = Arc::new(Broker::connect(endpoint)?);
+        broker.send(&admit_request(unit, pass, std::process::id()))?;
+        await_admission(|| broker.verdict(ADMISSION_SILENCE))?;
+        Ok(broker)
+    }, ADMISSION_ATTEMPTS, |attempt| Duration::from_secs((1u64 << attempt).min(15))).map_err(|error| format!("{} ({}): compiler broker admission failed at {endpoint} after up to {ADMISSION_ATTEMPTS} attempts: {error}", unit.crate_name, unit.target))?;
     let start_ms = now_ms();
     let mut child = Command::new(rustc).args(args).env_remove("SEMIO_RUSTC_UNIT_LOCAL_INPUT_KEY").stdin(Stdio::inherit()).stdout(Stdio::inherit()).stderr(Stdio::piped()).spawn().map_err(|error| format!("cannot run {}: {error}", rustc.to_string_lossy()))?;
     let stderr = child.stderr.take().ok_or("rustc stderr unavailable")?;
@@ -720,10 +790,53 @@ mod tests {
         for refusals in [0usize, 1, 7] {
             let mut calls = 0;
             let result = await_admission(|| { calls += 1; Ok(calls > refusals) });
-            assert_eq!(result, Ok(()));
+            assert!(result.is_ok());
             assert_eq!(calls, refusals + 1);
         }
-        assert_eq!(await_admission(|| Err("broker closed".to_string())), Err("broker closed".to_string()));
+        assert_eq!(await_admission(|| Err(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "broker closed"))).unwrap_err().to_string(), "broker closed");
+    }
+
+    /// 🔇️ A broker that never answers is reported after the silence bound, and the request is sent again until it is answered or the attempts are used up; a refusal is never repeated.
+    #[cfg(unix)]
+    #[test]
+    fn silent_broker_is_dropped_and_asked_again() {
+        let directory = env::temp_dir().join(format!("semio-silent-broker-{}", std::process::id()));
+        std::fs::create_dir_all(&directory).unwrap();
+        let path = directory.join("broker.sock");
+        let _ = std::fs::remove_file(&path);
+        let listener = std::os::unix::net::UnixListener::bind(&path).unwrap();
+        let held = std::thread::spawn(move || {
+            let mut kept = Vec::new();
+            for index in 0..2 {
+                let (mut stream, _) = listener.accept().unwrap();
+                let mut line = String::new();
+                BufReader::new(stream.try_clone().unwrap()).read_line(&mut line).unwrap();
+                if index == 1 { stream.write_all(b"{\"v\":1,\"op\":\"verdict\",\"admitted\":false}\n{\"v\":1,\"op\":\"verdict\",\"admitted\":true}\n").unwrap(); }
+                kept.push(stream);
+            }
+            kept
+        });
+        let endpoint = path.to_str().unwrap().to_string();
+        let mut attempts = 0;
+        let result = admit_with_retries(|| {
+            attempts += 1;
+            let broker = Broker::connect(&endpoint)?;
+            broker.send("{\"v\":1,\"op\":\"admit\"}\n")?;
+            await_admission(|| broker.verdict(Duration::from_millis(300)))?;
+            Ok(())
+        }, 5, |_| Duration::ZERO);
+        assert!(result.is_ok());
+        assert_eq!(attempts, 2);
+        drop(held.join().unwrap());
+        let mut calls = 0;
+        let refused = admit_with_retries(|| { calls += 1; Err::<(), _>(std::io::Error::new(std::io::ErrorKind::PermissionDenied, "refused")) }, 5, |_| Duration::ZERO);
+        assert_eq!(refused.unwrap_err().kind(), std::io::ErrorKind::PermissionDenied);
+        assert_eq!(calls, 1);
+        let mut gone = 0;
+        let exhausted = admit_with_retries(|| { gone += 1; Err::<(), _>(std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "restarting")) }, 3, |_| Duration::ZERO);
+        assert_eq!(exhausted.unwrap_err().kind(), std::io::ErrorKind::ConnectionRefused);
+        assert_eq!(gone, 3);
+        let _ = std::fs::remove_dir_all(&directory);
     }
 
     /// 🧱️ Terminal parent and placement refusals prevent execution and keep actionable diagnostics.

@@ -67,7 +67,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
 
         let report = if action == "undo" { CompositionCoordinator::undo_group(&parent_ref, &mut *self.stores.store, &mut children, group_id, identity).await } else { CompositionCoordinator::redo_group(&parent_ref, &mut *self.stores.store, &mut children, group_id, identity).await };
         drop(children);
-        self.history.cache = None;
+        self.history.invalidate_cache();
         for (reference, _) in report.undone.iter().filter(|(reference, _)| reference.artifact_id != parent_id) {
             let Some(key) = self.child_composition.children.keyed_entries().find(|(_, entry)| entry.reference.artifact_id == reference.artifact_id).map(|(key, _)| key.to_key()) else {
                 return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("transaction.group-history-root"), "group history moved a child without exact immutable-root authority"));

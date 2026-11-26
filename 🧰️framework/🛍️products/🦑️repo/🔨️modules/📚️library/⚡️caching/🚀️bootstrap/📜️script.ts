@@ -3,6 +3,7 @@ import{withRepositoryCompilerRuntimeEntriesV1}from"../../🏗️build/📥️sou
 import{projectionAdmissionV1}from"../../🏗️build/📥️source/🔏️closure/🔁️dependencies/🟦️.ts";
 import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {createNxBootstrapCapabilitiesV1,readNxBootstrapAuthoringCapabilitiesV1} from "./📥️caller/🟦️.ts";
+import {processPidExistsV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 import{isToolingHeadroomRefusalV1,type ToolingHeadroomRefusalV1}from"./🛠️tools/🧹️retention/📏️headroom/🟦️.ts";
 import {withNxCollectionAdmissionStoreV1,NX_COLLECTION_ADMISSION_MAXIMUM_BYTES_V1} from "./📥️admission/💾️storage/🟦️.ts";
 import {repositoryCacheBudgetV1} from "../💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
@@ -21,6 +22,7 @@ import {resolveRemoteCacheV1} from "../../🏗️build/🌐️remote-cache/🛰�
 import {nxRemoteCacheV1} from "./🛠️tools/🌐️remote-cache/🟦️.ts";
 import {createNxFailureTailV1,nxFinalStatusV1,settleNxRunReportedV1,type NxFailureTailV1} from "../../🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🟦️.ts";
 import {readBuildCountersV1,unitLedgerLinesV1,unitLedgerV1} from "../🦀️cargo/🗃️unit-cache/🛰️fleet/📊️counters/🟦️.ts";
+import {createNxCacheCounterV1} from "./📊️nx-cache/🟦️.ts";
 import {withRepositoryNxStorageV1,boundedNxNamespaceV1,boundedNxSocketNamespaceV1,type BoundNxNamespaceV1} from "../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { createScriptProcessEnvelope, readScriptProcessEnvelope, scriptProcessEnvironment, SCRIPT_PROCESS_INVOCATION_ENV, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -509,12 +511,13 @@ export class NxScript extends Script {
       const child = spawnNxProcess(tooling.bun, [nxCli, ...args], {windowsHide:true, cwd: this.root, env: {...nxChildEnvironment(ownedEnvironment, args, Boolean(invocation.watch)),SEMIO_BUILD_INVOCATION_PIDS:leaseInvocationChainV1(ownedEnvironment)}, stdio: spooled || monitored ? ["inherit", "pipe", "pipe"] : capture ? ["inherit", "pipe", "inherit"] : "inherit", detached: process.platform !== "win32" });
       if (monitored) {
         const state = { changed: false, slotsTaken: false, executing: false, tail: "", output: createNxFailureTailV1() }; graphChanges.set(child, state);
+        const nxCache = createNxCacheCounterV1(this.root);child.once("close", () => nxCache.flush());
         const started = Date.now(), progress = setInterval(() => { if (!state.executing) sayBootstrapV1("nx.graph-and-hash-preparation-running",{elapsedMs:String(Date.now() - started)}); }, 10000);
         progress.unref();
         child.once("close", () => clearInterval(progress));
         child.once("error", () => clearInterval(progress));
         for (const [input, output] of [[child.stdout!, process.stdout], [child.stderr!, process.stderr]] as const) input.on("data", chunk => {
-          state.output.push(chunk, output === process.stderr ? "stderr" : "stdout"); state.tail = (state.tail + String(chunk)).slice(-4096);
+          state.output.push(chunk, output === process.stderr ? "stderr" : "stdout"); if (output === process.stdout) nxCache.push(chunk); state.tail = (state.tail + String(chunk)).slice(-4096);
           state.executing ||= />\s+nx run\s/.test(state.tail) || state.tail.includes("[script]");
           state.changed ||= state.tail.includes("Dependency resolution authority changed during graph construction");
            state.slotsTaken ||= state.tail.includes(NX_DAEMON_SLOTS_EXHAUSTED_KEY_V1);
@@ -617,8 +620,8 @@ export class NxScript extends Script {
       void nxFleet?.finish(false).catch(()=>undefined);
       if (invocation.watch && children.length && !cancelled) stop("SIGTERM");
       if (cancelled && process.platform !== "win32") {
-        const alive = (child: ReturnType<typeof spawnNxProcess>): boolean => { try { if (child.pid) { process.kill(-child.pid, 0); return true; } } catch {} return false; };
-        const descendantAlive = (pid: number): boolean => { try { process.kill(pid, 0); return true; } catch { return false; } };
+        const alive = (child: ReturnType<typeof spawnNxProcess>): boolean => child.pid !== undefined && child.pid > 0 && processPidExistsV1(-child.pid);
+        const descendantAlive = (pid: number): boolean => processPidExistsV1(pid);
         while ((children.some(alive) || [...descendants].some(descendantAlive)) && Date.now() < cancellationDeadline) await new Promise((accept) => setTimeout(accept, 25));
         killAll("SIGKILL");
         const settle = Date.now() + 1000;

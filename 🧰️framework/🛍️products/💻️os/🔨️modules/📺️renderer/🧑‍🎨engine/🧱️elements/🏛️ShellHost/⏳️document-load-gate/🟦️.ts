@@ -98,3 +98,19 @@ export function documentLoadRefusalDetailV1(owner: { readonly documentLoad?: Doc
 export function documentLoadRunningV1(state: string): boolean {
   return state === "pending" || state === "running";
 }
+
+/** ⏯️ Delivers an owned continuation after its target document settles, including a load that raced the first dispatch. */
+export async function dispatchAfterDocumentLoadV1(gate: DocumentLoadGateV1, pluginId: string, instanceId: number, current: () => boolean, dispatch: () => Promise<void>, loadingRefusal: (error: unknown) => boolean): Promise<void> {
+  let retried = false;
+  while (current()) {
+    while (gate.loading(pluginId, instanceId)) {
+      if (await gate.settled(pluginId, instanceId) === "queue-full") throw new Error(DOCUMENT_LOADING_CODE_V1 + ": queue-full");
+      if (!current()) return;
+    }
+    try { await dispatch(); return; }
+    catch (error) {
+      if (retried || !loadingRefusal(error)) throw error;
+      retried = true;
+    }
+  }
+}

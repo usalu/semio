@@ -26,7 +26,7 @@ export class DevScript extends Script {
       const argv = ["dev", ...segments];
       const { rootDevPlaygroundRequestV1 } = await import("./🌱️birth/🟦️.ts");
       const request = rootDevPlaygroundRequestV1(argv);
-      if (!request) throw Error("usage: dev playground <variant> <react|wgpu|native> <prototype|release>");
+      if (!request) throw Error("usage: dev playground <variant> <react|wgpu|native> <prototype|release> [--published-emitter <binary:receipt:index> for React prototype]");
       const { readOwnedBuildInvocationV1 } = await import("../../🏗️build/📥️caller/🟦️.ts");
       const original = readOwnedBuildInvocationV1(this.repoRoot, this.invocation, argv);
       if (original.buildMode !== request.profile) throw Error("Playground profile must match the original native request");

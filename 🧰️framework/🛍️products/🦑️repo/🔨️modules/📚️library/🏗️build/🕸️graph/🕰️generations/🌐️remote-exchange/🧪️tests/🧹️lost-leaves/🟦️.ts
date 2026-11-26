@@ -145,7 +145,7 @@ test("closure recovery is scoped to the missing memoized digest and preserves th
     return mode==="corrupt"?Buffer.alloc(maximumBytes!,0):leaves.read(namespace,key,maximumBytes);
    }}})!;
    expect((await publisher.publish({root,fs:files,stale:0,signal:controller.signal})).status,mode).toBe("failed");
-   expect({actions,reads,memo:JSON.parse(readFileSync(sentFile,"utf8")).keys.length},mode).toEqual(model.get({$mode:mode}));
+   expect<unknown>({actions,reads,memo:JSON.parse(readFileSync(sentFile,"utf8")).keys.length},mode).toEqual(model.get({$mode:mode}));
    expect(await content.readActionResult("main",head),mode).toEqual(prior);
   }
  }finally{await proxy.stop(true);}
@@ -176,8 +176,8 @@ test("a head with a missing global closure is partial and can be upgraded for th
    if(held)expect(published.head?.manifest).toBe(manifest);
    else manifest=published.head?.manifest;
    const expected=model.get({$held:held}) as {state:string;restore:string};
-   expect((await reader.look(options)).state).toBe(expected.state);
-   expect((await reader.restore(options)).status).toBe(expected.restore);
+   expect<unknown>((await reader.look(options)).state).toBe(expected.state);
+   expect<unknown>((await reader.restore(options)).status).toBe(expected.restore);
    expect((await writer.publish({root,fs:files,stale:0,ifAbsent:true})).status).toBe("current");
   }
  }
@@ -205,7 +205,7 @@ test("the closure entry limit maintains partial truth even when missing reports 
   expect(published.closures?.named).toBe(named);
   const result=decodeProtobufV1(REAPI_V1.actionResult,action!),note=JSON.parse(Buffer.from(result.stdout_raw as Uint8Array).toString("utf8"));
   const entries=result.output_directories.reduce((count:number,row:{tree_digest:{hash:string}})=>count+decodeProtobufV1(REAPI_V1.tree,trees.get(row.tree_digest.hash)!).root.files.length,0);
-  expect({entries,reported:published.closures?.missing.length,stale:note.stale??null}).toEqual(model.get({$named:named,$limit:maximumClosures,$reports:maximumClosureReports,$global:Number(global)}));
+  expect<unknown>({entries,reported:published.closures?.missing.length,stale:note.stale??null}).toEqual(model.get({$named:named,$limit:maximumClosures,$reports:maximumClosureReports,$global:Number(global)}));
   expect(published.closures?.missing.map(row=>row.key)).toEqual(keys.slice(maximumClosures,named).slice(0,maximumClosureReports));
  }
 });

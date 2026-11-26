@@ -33,8 +33,8 @@ export function unfoundedWithheldOwnersV1(index,owners,separator=sep){
 }
 
 /** 🧭️ Verifies selected owners' facts and maps membership changes to their roots. An absent frontier diff requires a cold plan. */
-export function createGenerationPlanV1({readIndexView,fragmentNames,now,doubt,settler,derive,hold,workspaceRoot,ledger,say}){
- return async function plan({current,identity,changes,journalDirty,only,repairBase,forcedOwners,verifyAll=false,skipEnvironment=false,signal,progress}){
+export function createGenerationPlanV1({readIndexView,fragmentNames,now,doubt,settler,derive,hold,workspaceRoot,ledger,say,reasonOf}){
+ return async function plan({current,identity,implementation,changes,journalDirty,only,repairBase,forcedOwners,verifyAll=false,skipEnvironment=false,signal,progress}){
   const cold=reason=>({kind:"cold",reason,dirty:new Set(),added:[],removed:[],pending:[],envStale:true,checked:0});
   const manifest=repairBase??current?.manifest;
   if(!manifest)return cold(current?(current.missing?"manifest":"invalidated"):"empty");
@@ -57,7 +57,7 @@ export function createGenerationPlanV1({readIndexView,fragmentNames,now,doubt,se
   }
   for(const[name,row]of owners)if((!only||only.has(name))&&!present.has(row.fragment+".json.br"))dirty.add(name);
   const unfounded=unfoundedWithheldOwnersV1(index,manifest.owners);for(const name of unfounded)dirty.add(name);
-  const revalidated=ledger?await revalidatedWithheldOwnersV1(manifest.owners,{ledger,now,include:name=>!only||only.has(name),say}):[];for(const name of revalidated)dirty.add(name);
+  const revalidated=ledger?await revalidatedWithheldOwnersV1(manifest.owners,{ledger,now,include:name=>!only||only.has(name),say,implementation,reasonOf}):[];for(const name of revalidated)dirty.add(name);
   const scope=only?new Set(skipEnvironment?only:[...only,P.envOwner]):undefined,selection=selectFactClassesV1(index,scope?scopeWithDerivedV1(index,scope):undefined);
   const factsAt=now(),verifiable=verifiableRowIdsV1(index,selection.ids),candidates=doubt&&!verifyAll?await profilePhaseV1("graph.plan.doubt",()=>selectDoubtfulRowsV1(index,verifiable,doubt,{signal,progress,chunk:P.doubtChunkRows})):verifiable;
   const{stale}=await profilePhaseV1("graph.plan.facts",()=>staleFactRowsV1(index,candidates,hold,{signal,progress,...doubt?{budget:Infinity}:{}}));

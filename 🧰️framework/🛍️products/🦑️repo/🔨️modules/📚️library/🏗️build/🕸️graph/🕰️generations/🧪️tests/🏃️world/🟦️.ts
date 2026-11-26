@@ -3,7 +3,7 @@ import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";
 import {lstat,mkdir,readFile,readdir,rm,writeFile,utimes} from "node:fs/promises";
 import {basename,dirname,join,posix} from "node:path";
-import {renderGenerationMessageV1} from "../../🔌️load/🟨️.mjs";
+import {renderGenerationMessageV1,type GenerationPartV1} from "../../🔌️load/🟨️.mjs";
 import {createGraphPhaseClockV1} from "../../../⏱️phases/🟨️.mjs";
 import {createEdgeReadsRecorderV1,type EdgeReadsV1} from "../../🧵️edge-reads/🟨️.mjs";
 import {environmentDigestV1,environmentPartsV1} from "../../🌍️environment/🟨️.mjs";
@@ -139,7 +139,7 @@ export function createMembership(dir:string,counter?:{walks:number}){
  };
 }
 
-export interface World{dir:string;store:GenerationStoreV1;log:ReturnType<typeof createLog>;holdsLog:{resource:string;heldMs:number;waitedMs:number;endedAt:number}[];refresh:(options?:{policy?:"fresh"|"current";only?:string[];signal?:AbortSignal;progress?:(event:unknown)=>void;bypassBuilder?:boolean;published?:(generation:number)=>unknown;wave?:(info:{generation:number;done:number;total:number})=>unknown})=>ReturnType<GenerationStoreV1["refresh"]>;refreshClosure:(roots:string[],options?:{policy?:"fresh"|"current";signal?:AbortSignal;progress?:(event:unknown)=>void})=>ReturnType<GenerationStoreV1["refreshClosure"]>;graph:(current:Awaited<ReturnType<GenerationStoreV1["refresh"]>>["current"],names?:string[])=>Promise<unknown>}
+export interface World{dir:string;store:GenerationStoreV1;log:ReturnType<typeof createLog>;holdsLog:{resource:string;heldMs:number;waitedMs:number;endedAt:number}[];refresh:(options?:{policy?:"fresh"|"current";only?:string[];signal?:AbortSignal;progress?:(event:unknown)=>void;bypassBuilder?:boolean;published?:(generation:number,info:{done:number;total:number;phases?:Record<string,number>})=>unknown;wave?:(info:{generation:number;done:number;total:number})=>unknown})=>ReturnType<GenerationStoreV1["refresh"]>;refreshClosure:(roots:string[],options?:{policy?:"fresh"|"current";signal?:AbortSignal;progress?:(event:unknown)=>void})=>ReturnType<GenerationStoreV1["refreshClosure"]>;graph:(current:Awaited<ReturnType<GenerationStoreV1["refresh"]>>["current"],names?:string[])=>Promise<unknown>}
 const createLog=()=>[] as Parameters<typeof createCompute>[1];
 
 export function createWorld(dir:string,options:{store?:string;identity?:string;lease?:boolean;holdsWrap?:(holds:ReturnType<typeof createHolds>)=>ReturnType<typeof createHolds>;computeWrap?:(compute:ReturnType<typeof createCompute>)=>ReturnType<typeof createCompute>;sharedHoldsLog?:World["holdsLog"];sharedLog?:World["log"];now?:()=>number;ownerDelayMs?:number;stepped?:(step:string)=>unknown}={}):World{
@@ -195,8 +195,10 @@ if(import.meta.main&&process.argv[2]==="child"){
 
 
 /** 🧩️ The partial inference of the synthetic workspace in repository terms (what `discoverPart` returns): owners with their facts, the edges of every processed owner, the environment, and the facts of the whole capture. */
+type DiscoveredPartV1=Omit<GenerationPartV1,"owners">&{owners:(GenerationPartV1["owners"][number]&{nodeRows:GenerationRowV1[]})[]};
+
 export function createPartDiscover(dir:string,log:{full:string[];edges:string[];cold:boolean}[]=[],ownerDelayMs=0,stamps?:StampTableV1){
- return async(spec:GenerationComputeSpecV1,signal?:AbortSignal)=>{
+ return async(spec:GenerationComputeSpecV1,signal?:AbortSignal):Promise<DiscoveredPartV1>=>{
   signal?.throwIfAborted();
   const{owners,rows:envRows}=await readOwners(dir),envDigest=environmentDigest(owners);
   const roots=new Set([...spec.owners.map(name=>spec.stubs[name]!.root),...spec.discover.map(path=>dirname(path))]);
@@ -207,7 +209,7 @@ export function createPartDiscover(dir:string,log:{full:string[];edges:string[];
   log.push({full:inferred.map(row=>row.name).sort(),edges:edgeOnly.map(row=>row.name).sort(),cold:spec.cold});
   const capture=[...inferred,...extra].flatMap(row=>row.rows);
   return{
-   owners:inferred.map(row=>({name:row.name,root:row.root,config:row.config,...(row.kind==="unavailable"?{unavailable:row.node}:{node:row.node}),...(row.reads?{reads:row.reads}:{}),nodeRows:row.rows})),
+   owners:inferred.map((row):DiscoveredPartV1["owners"][number]=>({name:row.name,root:row.root,config:row.config,...(row.kind==="unavailable"?{unavailable:row.node}:{node:row.node}),...(row.reads?{reads:row.reads}:{}),nodeRows:row.rows})),
    edgeOnly,carried,readsOf:(name:string)=>edgeReads.get(name),edges:[...inferred,...extra].flatMap(row=>row.edges) as never[],externalNodes:{},parseUnavailable:[],
    rows:capture,env:{digest:envDigest,rows:envRows,parts:environmentParts(owners)},replaceTags:[],
   };

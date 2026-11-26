@@ -21,6 +21,7 @@ async fn every_fixture_scenario_reaches_its_status_body_and_rows() {
                 assert_eq!(rejected(&result), None, "{id}: step {step} was refused: {:?}", result.output);
             }
         }
+        if commits { pump_until(&mut app, "the finalize retires", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity,cx).await; }
         let status = app.time_travel.status();
         match scenario["status"].as_object() {
             None => assert!(status.is_none(), "{id}: the session closed"),
@@ -108,6 +109,91 @@ async fn an_open_session_freezes_document_verbs_and_refuses_stale_or_invalid_dra
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
+/// 🌐️ Delivers one remote `SetCount` edit to `app` through its probe backbone and ingests it.
+async fn ingest_remote_edit(app: &mut ToyApp, probe: &mut MemoryBackbone, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) {
+    let mut remote = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("remote".into()), mounted_policy, identity).await;
+    let (remote_backbone, mut remote_probe) = MemoryBackbone::pair("time-travel-queued-peer", "time-travel-queued-peer").await;
+    remote.attach_backbone(store::os_store::backbone::Backbones::Memory(remote_backbone)).await.expect("attach remote probe");
+    remote.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: 9 }.into()], transaction: None }, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("remote edit");
+    for message in remote_probe.receive().await.expect("remote outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
+        probe.send(message).await.expect("forward remote edit");
+    }
+    let generation = app.stores.store.generation();
+    app.tick_backbone(&mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("ingest remote edit");
+    assert!(app.stores.store.generation() > generation, "the remote edit is ingested");
+    drop(remote_probe);
+    close(&mut remote, cx);
+}
+
+/// ⚖️ LAW: a base move while the draft preview is still live never drops the preview of the new base: its effect stays
+/// queued on the ledger (pending work, cancellation requested first) until the old owner closed, then shows.
+#[semio_framework_async_macros::async_test]
+async fn a_base_move_during_a_live_preview_queues_and_then_shows_the_preview_of_the_new_base() {
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
+    let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
+    let mut observer=|_|true;
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let fixture = fixture();
+    let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
+    let (backbone, mut probe) = MemoryBackbone::pair("time-travel-queued", "time-travel-queued").await;
+    app.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone)).await.expect("attach probe backbone");
+    run_step(&mut app, &fixture, &serde_json::json!({ "begin": 1 }), mounted_policy, &mut identity, cx).await;
+    let acting = ActionMeta { view_state: meta(&fixture).view_state, ..artifact_app_laws::meta(app.stores.store.local_actor_id().0.as_str()) };
+    let args = DslValue::Object(vec![("path".into(), DslValue::String("/value".into())), ("value".into(), DslValue::String("b".into()))]);
+    let input = dispatch(&mut app, "historyEditInput", Some(args), &acting, mounted_policy, &mut identity, cx).await.expect("the input is admitted");
+    assert_eq!(rejected(&input), None);
+    assert!(app.time_travel.preview_live(), "the draft preview is still running when the base moves");
+    ingest_remote_edit(&mut app, &mut probe, mounted_policy, &mut identity, cx).await;
+    let queued = std::cell::Cell::new(false);
+    pump_until(&mut app, "the queued preview of the new base shows", |app| {
+        queued.set(queued.get() | !app.time_travel.queued.is_empty());
+        app.time_travel.queued.is_empty() && !app.time_travel.preview_live() && app.time_travel.preview_progress().is_none() && app.time_travel.session().base.content_revision == app.stores.store.content_revision()
+    }, mounted_policy, &mut identity, cx).await;
+    assert!(queued.get(), "the preview effect was queued, never dropped, while the old owner settled");
+    assert_eq!(app.time_travel.session().stage, TimeTravelStage::Editing);
+    assert!(render_body(&mut app, cx).await.contains("label=b"), "the preview of the new base shows the draft");
+    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity, cx).await;
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity, cx).await;
+    drop(probe);
+    close(&mut app, cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
+}
+
+/// ⚖️ LAW: a base move while the Report replay is still live never drops the replacement replay: it stays queued until
+/// the old replay closed, then replays the kept drafts over the new base and the reviewed head keeps the draft.
+#[semio_framework_async_macros::async_test]
+async fn a_base_move_during_a_live_replay_queues_and_then_replays_the_new_base() {
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
+    let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
+    let mut observer=|_|true;
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let fixture = fixture();
+    let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
+    let (backbone, mut probe) = MemoryBackbone::pair("time-travel-queued-replay", "time-travel-queued-replay").await;
+    app.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone)).await.expect("attach probe backbone");
+    for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } }), serde_json::json!({ "accept": null })] {
+        run_step(&mut app, &fixture, &step, mounted_policy, &mut identity, cx).await;
+    }
+    assert!(app.time_travel.replaying() && app.time_travel.session().stage == TimeTravelStage::Replaying, "the replay is still running when the base moves");
+    ingest_remote_edit(&mut app, &mut probe, mounted_policy, &mut identity, cx).await;
+    let queued = std::cell::Cell::new(false);
+    pump_until(&mut app, "the queued replay of the new base completes", |app| {
+        queued.set(queued.get() | !app.time_travel.queued.is_empty());
+        app.time_travel.queued.is_empty() && app.time_travel.session().stage == TimeTravelStage::Reviewing && app.time_travel.session().report.is_some() && app.time_travel.session().base.content_revision == app.stores.store.content_revision()
+    }, mounted_policy, &mut identity, cx).await;
+    assert!(queued.get(), "the replay effect was queued, never dropped, while the old replay closed");
+    assert!(render_body(&mut app, cx).await.contains("label=b"), "the replayed head keeps the draft over the new base");
+    verb(&mut app, &fixture, "historyEditExit", Vec::new(), mounted_policy, &mut identity, cx).await;
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity, cx).await;
+    drop(probe);
+    close(&mut app, cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
+}
+
 /// ⚖️ LAW: cancelling a running replay keeps the drafts and reviews without a report; a remote edit arriving while
 /// reviewing moves the base and replays again, and the reviewed head includes the remote edit.
 #[semio_framework_async_macros::async_test]
@@ -145,7 +231,7 @@ async fn cancel_keeps_drafts_and_a_remote_edit_replays_again() {
     let (remote_backbone, mut remote_probe) = MemoryBackbone::pair("time-travel-remote-peer", "time-travel-remote-peer").await;
     remote.attach_backbone(store::os_store::backbone::Backbones::Memory(remote_backbone)).await.expect("attach remote probe");
     assert_eq!(remote.stores.store.local_actor_id(), &protocol::ActorId("remote".into()));
-    remote.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: 9 }.into()], transaction: None }, &mut identity).await.expect("remote edit");
+    remote.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: 9 }.into()], transaction: None }, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("remote edit");
     for message in remote_probe.receive().await.expect("remote outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
         probe.send(message).await.expect("forward remote edit");
     }

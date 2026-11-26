@@ -139,7 +139,9 @@ impl<PA: PluginApp> semio_plugin_job::reserved_job_outcomes::CleanupJob for Runt
 impl<PA: PluginApp> RuntimeLiveCleanupJob<PA> {
     pub fn advance(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{
         let Self{instance_id,cell,progress,contended,..}=self;let Some(original)=cell.as_ref()else{return CleanupTurn::Cancelled};
-        match cx.with_original_native_weak_source(original,|cell,cx|Ok(Self::advance_source(cell,*instance_id,progress,contended,cx))){Ok(turn)=>turn,Err(original)=>CleanupTurn::OriginalFailure(original)}
+        let turn=match cx.with_original_native_weak_source(original,|cell,cx|Ok(Self::advance_source(cell,*instance_id,progress,contended,cx))){Ok(turn)=>turn,Err(original)=>CleanupTurn::OriginalFailure(original)};
+        if runtime_cleanup_reading_is_starved(*progress,runtime_live_pass_budget_spent(cx)){*contended=true}
+        turn
     }
     pub fn advance_source(cell:&RuntimeAppCell<PA>,instance_id:u32,outcome_progress:&mut Option<PluginLifecycleStep>,contended:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{
         cx.set_stage("plugin-runtime-live-cleanup");
@@ -265,14 +267,22 @@ pub fn runtime_drain_maintenance_source<PA:PluginApp>(cell:&RuntimeAppCell<PA>,c
         })
     })
 }
-/// 🌫️ True when a close step read an empty ladder only because the host had already spent the step's own budget (deadline or fuel).
+/// 🌫️ True when a close or live-maintenance step read an empty ladder only because the host had already spent the step's own budget (deadline or fuel).
 ///
 /// Such a reading is scheduling latency, not evidence: the ladder was never given its turn, so it must neither buy nor clear stall debt. The
-/// close job reports it as `contended`, the one reading `runtime_close_stall_verdict` ignores. Only an observed `Pending { 0, 0 }` is judged;
+/// close and live jobs report it as `contended`, the one reading `runtime_close_stall_verdict` ignores. Only an observed `Pending { 0, 0 }` is judged;
 /// real progress and external waits are never reclassified. Before 2026-11-25 a loaded browser turned this into `plugin.internal.zero-progress`.
 #[doc(hidden)]
-pub fn runtime_close_reading_is_starved(progress: Option<PluginLifecycleStep>, budget_spent: bool) -> bool {
+pub fn runtime_cleanup_reading_is_starved(progress: Option<PluginLifecycleStep>, budget_spent: bool) -> bool {
     budget_spent && matches!(progress, Some(PluginLifecycleStep::Progress(receipt)) if receipt == RetainedCloneProgress::default())
+}
+/// 🪫️ True when the turn can no longer fund a live maintenance unit: its deadline or fuel is spent, or its retained item or depth stock is empty.
+///
+/// The worker session refuses to step (`Idle`, receipt zero) the same way for each of these, so an empty reading taken in any of them is scheduling latency. The repeated live pump of a quiet turn spends the item stock on its first pass and reads empty ladders for the rest.
+#[doc(hidden)]
+pub fn runtime_live_pass_budget_spent(cx: &semio_framework_job::StepContext<'_>) -> bool {
+    let stock = cx.retained_grant();
+    cx.should_yield() || stock.maximum_items == 0 || stock.maximum_depth == 0
 }
 #[doc(hidden)]
 pub struct RuntimeCloseCleanupJob<PA: PluginApp> {
@@ -298,7 +308,7 @@ impl<PA: PluginApp> RuntimeCloseCleanupJob<PA> {
     pub fn advance(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{
         let Self{state,progress,contended,..}=self;let Some(original)=state.as_ref()else{return CleanupTurn::Cancelled};
         let turn=match cx.with_original_native_weak_source(original,|state,cx|Ok(Self::advance_source(state,progress,contended,cx))){Ok(turn)=>turn,Err(original)=>CleanupTurn::OriginalFailure(original)};
-        if runtime_close_reading_is_starved(*progress,cx.retirement_should_yield()){*contended=true}
+        if runtime_cleanup_reading_is_starved(*progress,cx.retirement_should_yield()){*contended=true}
         turn
     }
     pub fn advance_source(state:&RuntimeCloseWorkerState<PA>,outcome_progress:&mut Option<PluginLifecycleStep>,contended:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->CleanupTurn{

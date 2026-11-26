@@ -57,6 +57,10 @@ impl<A: Puzzle2dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
         self.tool_id
     }
 
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(size_of::<Self>())
+    }
+
     fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         (self.extent)(command, snapshot, interaction)
     }
@@ -102,6 +106,10 @@ pub struct Puzzle2dExportWork {
 impl<A: Puzzle2dEditor> semio_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle2dExportWork {
     fn tool_id(&self) -> &'static str {
         "exportSnapshot"
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(size_of::<Self>())
     }
 
     fn extent(&self, _command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {

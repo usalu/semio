@@ -76,6 +76,16 @@ export function createClosureStoreV1({directory,limits=INFERENCE_LIMITS_V1,readO
    return{bytes:text.length+8*digests.length,digests,digest:sha(rowsText+digests.join(",")+image.digest)};
   },
   /** 📖️ The stored entry of `id` (recipe, value, rows, shared layers, size), or undefined while it is absent, damaged or of another format; a layer it names that is lost is found when the layer is read, which every verification of the entry does, so loading never probes the layers one by one. */
+  /** 🔍️ Why `load(id)` answers `undefined`, in the words of the first failing step: no entry file (with the directory), unreadable, other format, other id, malformed, digest mismatch or a lost value; `loads` when the entry loads. A diagnosis only, it never changes the store. */
+  async why(id){
+   const bytes=await readFile(entryPath(id)).catch(()=>undefined);if(!bytes)return"no entry file "+sha(id).slice(0,12)+" in "+entries;
+   let record;try{record=JSON.parse(unpack(bytes));}catch{return"entry file unreadable";}
+   if(record?.version!==3)return"entry format "+String(record?.version);
+   if(record.id!==id)return"entry names another id";
+   if(typeof record.valueDigest!=="string"||!Array.isArray(record.rows)||!Array.isArray(record.layers))return"entry malformed";
+   if(sha(JSON.stringify(record.rows)+record.layers.join(",")+record.valueDigest)!==record.digest)return"entry digest mismatch";
+   return valueSync(record.valueDigest)===undefined?"value "+record.valueDigest.slice(0,12)+" lost":"loads";
+  },
   async load(id){
    try{
     const bytes=await readFile(entryPath(id)).catch(()=>undefined);if(!bytes)return undefined;

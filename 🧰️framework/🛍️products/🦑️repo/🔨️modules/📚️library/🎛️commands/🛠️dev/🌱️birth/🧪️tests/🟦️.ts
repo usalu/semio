@@ -1,4 +1,6 @@
 import { expect, setDefaultTimeout, test } from "bun:test";
+import { repositoryCachePartitionRootDataV1 } from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
+import { nextActivationReceipt } from "@semio-tech/framework-os-dev/activation";
 
 setDefaultTimeout(60000);
 import { Database } from "bun:sqlite";
@@ -11,6 +13,7 @@ import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import cases from "../🧫️fixtures/🔣️.json" with { type: "json" };
 
 import playgroundCases from "../🧫️fixtures/playground.json" with { type: "json" };
+import pinnedPlaygroundCases from "../🧫️fixtures/playground-pinned.json" with { type: "json" };
 import coldPlaygroundCases from "../🧫️fixtures/playground-cold-start.json" with { type: "json" };
 import stagingCases from "../🧫️fixtures/playground-staging.json" with { type: "json" };
 import descriptorCases from "../🧫️fixtures/descriptor-emitter.json" with { type: "json" };
@@ -56,6 +59,8 @@ test("fresh dev MCP receives original providers and both declared native childre
 });
 
 test("graph-free playground admits exact renderer requests and keeps their original profiles", async () => {
+  const { generatedPrerequisiteArgumentsV1 } = await import("../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🏭️generated-owner/🟦️.ts");
+  const { generatedScanPortsV1 } = await import("../../📡️scan-feed/🟦️.ts");
   const root = resolve(import.meta.dirname, "../../../../../../../../..");
   const validate = new Ajv({ strict: true }).compile(schema.$defs.PlaygroundRequest);
   for (const { argv, profile } of playgroundCases) {
@@ -64,8 +69,8 @@ test("graph-free playground admits exact renderer requests and keeps their origi
       validate({ variant, renderer, profile: suppliedProfile });
     expect(selected ? suppliedProfile : null).toBe(profile);
     const requestData = rootDevPlaygroundRequestV1(argv);
-    expect(requestData?.profile ?? null).toBe(profile);
-    expect(requestData?.renderer ?? null).toBe(profile ? renderer : null);
+    expect<unknown>(requestData?.profile ?? null).toBe(profile);
+    expect<unknown>(requestData?.renderer ?? null).toBe(profile ? renderer : null);
     const capabilities = await rootDevPlaygroundFreshCapabilitiesV1(root, argv, {});
     if (!profile || !capabilities) {
       expect(capabilities).toBeNull();
@@ -75,17 +80,32 @@ test("graph-free playground admits exact renderer requests and keeps their origi
     expect(capabilities.buildMode).toBe(profile);
     expect(capabilities.arguments).toEqual(request);
     expect(capabilities.selection).toEqual(request);
-    const { generatedPrerequisiteArgumentsV1 } = await import("../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🏭️generated-owner/🟦️.ts");
-    expect(capabilities.launches).toEqual([request, ...(await generatedPrerequisiteArgumentsV1(root)).map(child => ["repo", ...child])]);
+    expect(capabilities.launches).toEqual([request, ...(await generatedPrerequisiteArgumentsV1(root, generatedScanPortsV1(root))).map(child => ["repo", ...child])]);
     const envelope = createScriptProcessEnvelope({ version: 1, owner: "test:dev-playground", maximumElapsedMilliseconds: 10000 }, capabilities, Date.now());
     await withScriptProcessEnvelope(envelope, async original => {
-      expect(readOwnedBuildInvocationV1(root, original, argv).buildMode).toBe(profile);
+      expect<unknown>(readOwnedBuildInvocationV1(root, original, argv).buildMode).toBe(profile);
       expect(() => readOwnedBuildInvocationV1(root, original, [...argv.slice(0, 2), "different", ...argv.slice(3)])).toThrow("Undeclared original Repo build selection");
     });
   }
   await expect(rootDevPlaygroundFreshCapabilitiesV1(root, playgroundCases[0]!.argv, { SEMIO_BUILD_MODE: "release" })).rejects.toThrow("Playground profile disagrees");
 });
 
+
+test("React prototype admits exactly one published emitter selection", () => {
+  const validate = new Ajv({ strict: true }).compile(schema.$defs.PlaygroundRequest);
+  const { pin, cases: selection } = pinnedPlaygroundCases;
+  for (const { request, suffix, profile, pinned } of selection) {
+    const operands = suffix.map(word => word === "{pin}" ? pin : word);
+    const [variant, renderer, selectedProfile] = request;
+    const [flag, publishedEmitter] = operands;
+    const argsValid = operands.length === 0 || operands.length === 2 && flag === "--published-emitter";
+    const independent = argsValid && validate({ variant, renderer, profile: selectedProfile, ...(operands.length ? { publishedEmitter } : {}) });
+    expect(independent ? selectedProfile : null).toBe(profile);
+    const admitted = rootDevPlaygroundRequestV1(["dev", "playground", ...request, ...operands]);
+    expect<unknown>(admitted?.profile ?? null).toBe(profile);
+    expect(admitted?.publishedEmitter).toBe(pinned ? pin : undefined);
+  }
+});
 
 test("graph-free native playground selects the authored host recipe for both profiles", async () => {
   const workspace = resolve(import.meta.dirname, "../../../../../../../../..");
@@ -118,7 +138,7 @@ test("graph-free native playground selects the authored host recipe for both pro
 test("the native host child receives the exact playground Original and profile", async () => {
   const workspace = resolve(import.meta.dirname, "../../../../../../../../..");
   const argv = playgroundCases.find(row => row.argv[3] === "native" && row.profile === "prototype")!.argv;
-  const capabilities = await rootDevPlaygroundFreshCapabilitiesV1(workspace, argv, {});
+  const capabilities = (await rootDevPlaygroundFreshCapabilitiesV1(workspace, argv, {}))!;
   const { nativeCallerPhaseV1 } = await import("../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts");
   const { captureOwnedCommandV1 } = await import("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
   const envelope = createScriptProcessEnvelope({ version: 1, owner: "test:native-host-child", maximumElapsedMilliseconds: 10000 }, capabilities, Date.now());
@@ -126,7 +146,7 @@ test("the native host child receives the exact playground Original and profile",
     const phase = nativeCallerPhaseV1(original, workspace, createIssuedResourceControlV1(original, "test:native-host-child", 0));
     const options = phase.options({ ...process.env, SEMIO_BUILD_MODE: "prototype" });
     const source = `console.log(JSON.stringify({ profile: process.env.SEMIO_BUILD_MODE, capabilities: JSON.parse(process.env[${JSON.stringify(SCRIPT_PROCESS_INVOCATION_ENV)}]).capabilities }));`;
-    const output = await captureOwnedCommandV1(process.execPath, ["-e", source], workspace, { ...options, control: phase.leaseControl });
+    const output = await captureOwnedCommandV1(process.execPath, ["-e", source], workspace, { env: options.env, signal: options.signal, output: options.output, control: phase.leaseControl });
     expect(JSON.parse(output)).toEqual({ profile: "prototype", capabilities });
   });
 });
@@ -183,6 +203,7 @@ test("graph-free playground stages a missing selected-mode descriptor emitter", 
   try {
     for (const row of descriptorCases) {
       const expected = request.get(row.mode, row.platform) as { root: string; binary: string };
+      if (row.mode !== "prototype" && row.mode !== "release") throw new Error(`Unknown descriptor mode ${row.mode}`);
       expect(playgroundDescriptorEmitterMissingV1(products, row.mode, row.platform, (root, files) => {
         expect(root).toBe(join(products, expected.root));
         expect(files).toEqual([".semio-artifact.json", expected.binary]);
@@ -247,7 +268,7 @@ test("graph-free component transpile cache identifies the actual native executab
   const database = new Database(":memory:");
   try {
     const native = ["a".repeat(64), "b".repeat(64)];
-    const stages = native.map(hash => transpileStageRequestV1("component", "jco", "materialization", "base", hash));
+    const stages = native.map(hash => transpileStageRequestV1("component", "materialization", "base", hash));
     const actual = database.query(`SELECT json_extract(value, '$.tools."native-transpile"') AS native FROM json_each(?1) ORDER BY key`).all(JSON.stringify(stages));
     expect(actual).toEqual(native.map(hash => ({ native: hash })));
   } finally { database.close(); }
@@ -257,14 +278,14 @@ test("graph-free component transpile cache identifies the actual native executab
 test("standalone GIS and Space select their own Vite entry and engine facet", async () => {
   const workspace = resolve(import.meta.dirname, "../../../../../../../../..");
   const catalog = join(workspace, gisContribution.catalog);
-  const [{ resolvePlaygroundFilter }, { loadDevContribution }, engines, { specificOsDevBuildInventoryV1 }, { createAssetBuildPluginsV1 }] = await Promise.all([
+  const [{ resolvePlaygroundFilter }, { loadDevContribution }, engines, { specificOsDevBuildInventoryV1, withSpecificOsDevActivationV1 }, { createAssetBuildPluginsV1 }] = await Promise.all([
     import("@semio-tech/framework-plugin/build/plan"),
     import("../../../../../../../💻️os/🔨️modules/🧑‍💻dev/🧩️contribution/📥️loading/🟦️.ts"),
     import("../../../../../../../💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts"),
     import("../../../../../../../../../✏️s/🧑‍💻dev/🧩️catalog/🏗️builder/🟦️.ts"),
     import("@semio-tech/assets/resolver/dispatch"),
   ]);
-  const previousCatalog = process.env.SEMIO_PLUGIN_CATALOG, previousPlugin = process.env.SEMIO_PLUGIN, database = new Database(":memory:");
+  const previousCatalog = process.env.SEMIO_PLUGIN_CATALOG, previousPlugin = process.env.SEMIO_PLUGIN, previousViteCache = process.env.SEMIO_VITE_CACHE_DIRECTORY, database = new Database(":memory:");
   process.env.SEMIO_PLUGIN_CATALOG = catalog;
   const select = database.query(`SELECT value ->> '$.devContribution' AS contribution, value ->> '$.app' AS app
     FROM json_each(?1) WHERE value ->> '$.variant' = ?2`);
@@ -286,7 +307,7 @@ test("standalone GIS and Space select their own Vite entry and engine facet", as
       const { default: viteConfig } = await import(pathToFileURL(join(workspace, selected!.viteConfig)).href);
       expect(typeof viteConfig).toBe("function");
       const facet = engines.frameworkOsEngineFacetV1(selected?.browserSessionFactories ?? []);
-      expect(facet).toBe(expectedFacet);
+      expect<unknown>(facet).toBe(expectedFacet);
       expect(selected?.browserSessionFactories?.map(({ module }) => module) ?? []).toEqual(factoryModules);
       const entry = readFileSync(join(workspace, browserEntry), "utf8");
       expect(entry.includes("@semio-tech/puzzle-2d")).toBe(factoryModules.length > 0);
@@ -296,13 +317,16 @@ test("standalone GIS and Space select their own Vite entry and engine facet", as
         const routes = row.routes.map(route => "tile-proxy-serve" + route);
         expect(createAssetBuildPluginsV1(workspace, target.assets, inventory.assetProviders).map(plugin => plugin.name)).toEqual(routes);
         process.env.SEMIO_PLUGIN = variant;
-        const configured = await viteConfig({ command: "serve", mode: "prototype" });
+        process.env.SEMIO_VITE_CACHE_DIRECTORY = join(repositoryCachePartitionRootDataV1(workspace, "products"), "vite-test-cache", variant);
+        const configured = await withSpecificOsDevActivationV1<{ plugins: { flat(depth: number): { name?: string }[] } }>(nextActivationReceipt(variant, "prototype", [{ pluginId: "gis", artifactSha256: "a".repeat(64) }]), () => viteConfig({ command: "serve", mode: "prototype" }));
         expect(configured.plugins.flat(Infinity).map((plugin: { name?: string } | undefined) => plugin?.name)
           .filter((name: string | undefined) => name?.startsWith("tile-proxy-serve"))).toEqual(routes);
       }
     }
   } finally {
     database.close();
+    if (previousViteCache === undefined) delete process.env.SEMIO_VITE_CACHE_DIRECTORY;
+    else process.env.SEMIO_VITE_CACHE_DIRECTORY = previousViteCache;
     if (previousPlugin === undefined) delete process.env.SEMIO_PLUGIN;
     else process.env.SEMIO_PLUGIN = previousPlugin;
     if (previousCatalog === undefined) delete process.env.SEMIO_PLUGIN_CATALOG;
@@ -415,7 +439,7 @@ test("cold playground retains the original runtime through import, closed stores
     for (const row of coldPlaygroundCases) {
       expect(oracle.get({ $steps: JSON.stringify(row.steps) }), row.id).toEqual({ valid: Number(row.valid) });
     }
-    expect(actual).toEqual(coldPlaygroundCases.find(row => row.valid)?.steps);
+    expect<unknown>(actual).toEqual(coldPlaygroundCases.find(row => row.valid)?.steps);
   } finally {
     database.close();
   }

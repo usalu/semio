@@ -264,3 +264,38 @@ test("the frame port draws the same root successor across realms", async () => {
   await expect(remote.succeed(admission)).rejects.toThrow("kernel-resource-denied");
   await expect(remote.succeed({ ...admission })).rejects.toThrow("foreign-admission");
 });
+
+test("a gated turn never receives the reserve, so one poll cannot drain the stock, while cleanup and succession spend it", () => {
+  const db = new Database(":memory:");
+  try {
+    for (const row of fixture.reserve) {
+      const source = new OriginalOperationSource({ operation: 1n, generation: 1n, grant: operation.grant, fuel: operation.fuel, maximumElapsedUs: 10n }, () => 0n);
+      const first = source.issue();
+      source.receive({ input: first.input, spent: none, workUnitsSpent: operation.fuel - row.remaining });
+      if ("exhausted" in row) { expect(() => source.requireStock(), row.name).toThrow(OriginalStockExhausted); continue; }
+      const oracle = db.query("SELECT ?1 - (?2 + ?3 - 1) / ?3 AS issued").get(row.remaining, operation.fuel, policy.reserveDivisor) as { issued: number };
+      expect(oracle.issued, row.name).toBe(row.gatedIssue);
+      source.requireStock();
+      const gated = source.issue();
+      expect(gated.budgetFuel, row.name).toBe(row.gatedIssue);
+      expect(gated.fuel, row.name).toBe(row.remaining);
+      source.receive({ input: gated.input, spent: none, workUnitsSpent: gated.budgetFuel });
+      expect(source.fuelRemaining, row.name).toBe(source.reserveFuel);
+      expect(() => source.requireStock(), row.name).toThrow(OriginalStockExhausted);
+      source.spendReserve();
+      const spent = source.issue();
+      expect([spent.budgetFuel, spent.fuel], row.name).toEqual([row.remaining - row.gatedIssue, row.remaining - row.gatedIssue]);
+    }
+  } finally { db.close(); }
+});
+
+test("a gated turn whose granted fuel was spent leaves the stock typed-exhausted at the next gate instead of overrunning", () => {
+  const source = new OriginalOperationSource({ operation: 1n, generation: 1n, grant: operation.grant, fuel: 64, maximumElapsedUs: 10n }, () => 0n);
+  for (let turns = 0; turns < 64; turns++) {
+    try { source.requireStock(); } catch (failure) { expect(failure).toBeInstanceOf(OriginalStockExhausted); expect(source.fuelRemaining).toBeGreaterThanOrEqual(source.reserveFuel); return; }
+    const turn = source.issue();
+    expect(turn.budgetFuel).toBe(source.fuelRemaining - source.reserveFuel);
+    source.receive({ input: turn.input, spent: none, workUnitsSpent: turn.budgetFuel });
+  }
+  throw new Error("the stock never settled typed");
+});

@@ -17,7 +17,7 @@ use semio_plugin::plugin_app_close_prelude::TypedOperationResultLane;
 //#region 🧪️RetainedConfigOracle
 #[semio_framework_async_macros::async_test]
 async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners() {
-    let oracle: Vec<crate::ObjectKind> = semio_framework_pack_json::from_json_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📦️expected-stock.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let oracle: Vec<crate::ObjectKind> = semio_framework_pack_json::from_json_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/📦️expected-stock.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for example_id in [DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID] {
         let mut app = new_app().await;
         app.bind_instance_id(7).await;
@@ -55,7 +55,7 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
 /// authored stock rather than trap the instance.
 #[semio_framework_async_macros::async_test]
 async fn example_load_settles_through_the_host_document_archive_door() {
-    let oracle: Vec<crate::ObjectKind> = semio_framework_pack_json::from_json_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📦️expected-stock.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let oracle: Vec<crate::ObjectKind> = semio_framework_pack_json::from_json_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/📦️expected-stock.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut app = new_app().await;
     app.bind_instance_id(7).await;
     semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_plugin::ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: 7, view_state: None }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();

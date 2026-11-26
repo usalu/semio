@@ -1,5 +1,5 @@
 {
-  "_comment": "Inputs hand-authored; the expected admission second of the large request is computed by the independent Python oracle (python3 🐍️.py), never by the TypeScript implementation.",
+  "_comment": "Inputs hand-authored (the foreign scenario: a 7680 MB request waits while foreign memory holds the room and only dips for one step per period, beside a stream of small requests); the expected admission second of the large request is computed by the independent Python oracle (python3 🐍️.py), never by the TypeScript implementation.",
   "stepSeconds": 5,
   "horizonSeconds": 1500,
   "agingSeconds": 300,
@@ -12,5 +12,6 @@
     "sessionCapBasisPoints": 4000
   },
   "heavy": {"session": "heavy", "heldMegabytes": 4000, "bigMegabytes": 3500},
-  "light": {"session": "light", "requestMegabytes": 500, "runSeconds": 100, "firstArrivalSecond": 5, "arrivalEverySeconds": 10, "initialEndSeconds": [20, 30, 40, 50, 60, 70]}
+  "light": {"session": "light", "requestMegabytes": 500, "runSeconds": 100, "firstArrivalSecond": 5, "arrivalEverySeconds": 10, "initialEndSeconds": [20, 30, 40, 50, 60, 70]},
+  "foreign": {"bigMegabytes": 7680, "smallMegabytes": 500, "runSeconds": 100, "arrivalEverySeconds": 10, "initialEndSeconds": [20, 30, 40, 50, 60, 70, 80, 90], "highMegabytes": 6500, "lowMegabytes": 1500, "periodSeconds": 120, "lowAtSecond": 60}
 }

@@ -20,6 +20,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 # 🧩️ Composition Dependencies
+semio-hub-stdio-catalog-projection = { workspace = true }
 semio-s-artifact-stdio-ifc = { workspace = true }
 semio-s-artifact-stdio-ifc-catalog = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base = { workspace = true }

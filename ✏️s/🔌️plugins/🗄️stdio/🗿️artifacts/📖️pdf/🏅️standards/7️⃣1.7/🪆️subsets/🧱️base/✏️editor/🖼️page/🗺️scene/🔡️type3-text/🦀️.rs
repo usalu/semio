@@ -5,7 +5,7 @@ use semio_s_artifact_stdio_pdf_fonts::standards::v1_7::subsets::base::modules::f
 
 pub(super) enum Piece<'a> { Text(&'a str), Codes(&'a [u32]), Adjust(f64) }
 
-pub(super) fn paint_type3_text<'a>(snapshot: &'a PdfSnapshot, page: &PdfPage, item: &Placed, content: &[PdfOp], layers: &mut Vec<Value>, paint: &mut FormPaint<'a>) -> bool {
+pub(super) fn paint_type3_text<'a>(snapshot: &'a PdfSnapshot, page: &PdfPage, item: &Placed, content: &dyn PdfProgram, layers: &mut Vec<Value>, paint: &mut FormPaint<'a>) -> bool {
     let Some(font) = snapshot.font(&item.object.font) else { return false; };
     let PdfFontKind::Type3 { font_matrix, encoding, first_char, widths, char_procs, .. } = &font.kind else { return false; };
     let Some(position) = item.object.text_placement.as_ref() else { return false; };

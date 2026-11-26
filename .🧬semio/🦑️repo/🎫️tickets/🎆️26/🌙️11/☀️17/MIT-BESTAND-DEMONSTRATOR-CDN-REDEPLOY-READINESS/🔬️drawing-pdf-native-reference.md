@@ -15,4 +15,6 @@ SEMIO_OFFLOAD=never repo cargo --store=shared --configuration=prototype --parall
 
 The generated graph, cancellation and earlier full test logs are in `🗑️generated` beside the fixture.
 
+After the later actor-input wire and text-registry changes, actual pinned Cargo refused the earlier generated lock. Offline resolution repaired only the generated private lock and a second offline locked query passed. The selected native package set is now 776. It added actor-input wire and four existing local testing owners and dropped four TXT leaf packages. External versions and checksums are identical. The 8 GiB estimate and primary-lane priority still apply. See `🗑️generated/pdfref-current-{preflight,refresh,locked,package-delta,selected-delta}.log`.
+
 This fixture work updated the ticket input `drawing-reference-fixture.py`. It reads the existing repository test at `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.7/✳️any/🧪️tests/🔬️unit/🦀️.rs` without editing it.

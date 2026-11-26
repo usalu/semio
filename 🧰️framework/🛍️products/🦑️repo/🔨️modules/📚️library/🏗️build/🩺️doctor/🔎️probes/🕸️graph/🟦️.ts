@@ -1,4 +1,4 @@
-import {isOpaqueSourcePathV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import{isOpaqueSourcePathV1}from"../../../📥️inputs/👻️opaque-source/🟨️.mjs";
 import {existsSync,lstatSync,readdirSync,statSync} from "node:fs";
 import {join} from "node:path";
 import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};

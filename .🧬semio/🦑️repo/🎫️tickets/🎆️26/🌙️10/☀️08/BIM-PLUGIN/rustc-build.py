@@ -15,13 +15,44 @@ if crate in ("semio_s_artifact_stdio_pdf_model_graphics","semio_s_artifact_bim_m
     args.extend(["-Zno-parallel-backend", "-Zthreads=1"])
 if crate == "semio_hub_bim_component" and "wasm32-wasip2" in args:
     args.extend(["-Clink-arg=--threads=1", "-Clink-arg=--strip-all"])
+catalog = crate.startswith(("semio_s_artifact_stdio_ifc4_catalog_", "semio_s_artifact_stdio_ifc2x3_catalog_"))
+if catalog:
+    args.extend(["-Zno-parallel-backend", "-Zthreads=1", "-Ccodegen-units=64"])
+
+def compile_unit(output):
+    if crate in ('semio_hub_bim_component','semio_renderer_wgpu_component') and '--target' in args:
+        from bim_link import large_link
+        with large_link():
+            return subprocess.run([compiler,*args],stderr=output,close_fds=False)
+    if not catalog:
+        return subprocess.run([compiler, *args], stderr=output, close_fds=False)
+    gate_name = "catalog-types-compiler.lock" if "_catalog_types_" in crate else "catalog-compiler.lock"
+    gate = Path(__file__).resolve().parent / "🗑️generated" / gate_name
+    with gate.open("a+b") as lock:
+        if os.name == "nt":
+            import msvcrt
+            if lock.tell() == 0:
+                lock.write(b"0")
+                lock.flush()
+            while True:
+                lock.seek(0)
+                try:
+                    msvcrt.locking(lock.fileno(), msvcrt.LK_NBLCK, 1)
+                    break
+                except OSError:
+                    time.sleep(0.5)
+        else:
+            import fcntl
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+        return subprocess.run([compiler, *args], stderr=output, close_fds=False)
+
 if not (crate.startswith("semio_s_artifact_bim") or crate.startswith("semio_hub_bim")):
     if not crate:
         os.execv(compiler, [compiler, *args])
     scratch = Path(__file__).resolve().parent / "🗑️generated"
     for attempt in range(5):
         with tempfile.TemporaryFile(dir=scratch) as stream:
-            completed = subprocess.run([compiler, *args], stderr=stream, close_fds=False)
+            completed = compile_unit(stream)
             if completed.returncode not in (-9, -15) or attempt == 4:
                 stream.seek(0)
                 shutil.copyfileobj(stream, sys.stderr.buffer)
@@ -40,7 +71,7 @@ retry = directory / (name + ".retry")
 failure = directory / (name + ".stop")
 for attempt in range(12):
     with report.open("wb") as capture:
-        completed = subprocess.run([compiler, *args], stderr=capture, close_fds=False)
+        completed = compile_unit(capture)
     if completed.returncode == 0:
         if crate in {"semio_s_artifact_bim_model_entity_records", "semio_s_artifact_bim_model_mut_any_190", "semio_s_artifact_bim_model_snapshot", "semio_s_artifact_bim_model_ifc", "semio_s_artifact_bim_model_svg", "semio_hub_bim_component", "semio_s_artifact_bim_model_bim", "semio_s_artifact_bim_model_viewer"}:
             try:

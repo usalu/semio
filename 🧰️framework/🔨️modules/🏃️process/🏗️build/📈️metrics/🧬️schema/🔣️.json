@@ -1,0 +1,133 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/metrics/v1",
+  "title": "Metrics: the catalogue, the tiers and the ring files of the multi-resolution metric store",
+  "definitions": {
+    "Ring": {
+      "description": "One ring file per tier, `<Files.directory>/<tier id><Files.extension>`, little endian, written in place with pwrite and never appended. Layout: [0] magic `SMRG` (4 bytes), [4] version u16, [6] tier index u16, [8] bucketMs u32, [12] bucketCount u32, [16] metricCount u32, [20] idsBytes u32 (raw length of the ids table), [24] rowBytes u32, [28] dataOffset u32, [32] idsDigest u64 (FNV-1a 64 over the raw ids table bytes), [40] head u64 (start of the newest row of this tier in milliseconds, 0 when empty; written after the row it names), [48] createdMs u64, [56] reserved u64, [64] ids table (metric ids joined by LF, UTF-8, zero padded to a multiple of 8 bytes; its order is the column order), [dataOffset] bucketCount rows of rowBytes. Row = start u64, then metricCount slots, then the same start u64 (tail stamp). Slot = count u32, min f64, max f64, sum f64, last f64 (36 bytes; count 0 means no data, the other fields are 0). A row at index (start / bucketMs) mod bucketCount is valid only when head stamp, tail stamp and the start expected for its index agree, so a torn or overwritten row reads as absent. A u64 is two u32 halves, low first; a time is milliseconds since the epoch and a multiple of bucketMs. Tier n+1 rows are the exact fold of the tier n rows of their window (count and sum add, min and max combine, last is the last of the newest non-empty row); a window is written when the first row of a later window arrives, rows are written before they are folded upwards, so a restart rebuilds the open windows from disk and rewriting a row is idempotent. A catalogue change (another ids digest) starts empty rings: there is no migration.",
+      "const": {
+        "magic": "SMRG",
+        "version": 1,
+        "headerBytes": 64,
+        "slotBytes": 36,
+        "stampBytes": 8,
+        "idsAlignment": 8,
+        "maximumMetrics": 4096,
+        "maximumTiers": 16
+      }
+    },
+    "Files": {
+      "const": {
+        "directory": "metrics",
+        "extension": ".ring"
+      }
+    },
+    "Tiers": {
+      "description": "Round-robin tiers, finest first. A bucket of a tier is an exact multiple of the bucket of the tier before it. Sizes are schema data: the series of an older tier is never finer than its bucket.",
+      "const": [
+        {"id": "t0", "bucketMs": 1000, "buckets": 300, "label": {"en": "5 minutes at 1 s", "de": "5 Minuten zu 1 s"}},
+        {"id": "t1", "bucketMs": 10000, "buckets": 360, "label": {"en": "1 hour at 10 s", "de": "1 Stunde zu 10 s"}},
+        {"id": "t2", "bucketMs": 60000, "buckets": 1440, "label": {"en": "24 hours at 1 min", "de": "24 Stunden zu 1 Min."}},
+        {"id": "t3", "bucketMs": 600000, "buckets": 1008, "label": {"en": "7 days at 10 min", "de": "7 Tage zu 10 Min."}},
+        {"id": "t4", "bucketMs": 3600000, "buckets": 2160, "label": {"en": "90 days at 1 h", "de": "90 Tage zu 1 Std."}}
+      ]
+    },
+    "Kinds": {
+      "const": {
+        "gauge": {"label": {"en": "Gauge: a level read at each tick", "de": "Pegel: ein bei jedem Takt gelesener Stand"}},
+        "counter": {"label": {"en": "Counter: the delta since the last tick, buckets add it up", "de": "Zähler: der Zuwachs seit dem letzten Takt, Zeitfenster addieren ihn"}},
+        "state": {"label": {"en": "State: a small enumerated number", "de": "Zustand: eine kleine Aufzählungszahl"}}
+      }
+    },
+    "Scopes": {
+      "description": "Where a metric is measured. `origin`: by every machine for itself, stored in the rings of that machine (`origins/<origin>/metrics/`). `fleet`: a fact of the whole fleet that one service knows (the scheduler, the cache server); the machine that runs the service writes it into the fleet rings `fleet/metrics/<source>/` of the store, one writer per source, so the fleet has one series, never one per machine.",
+      "const": {
+        "origin": {"label": {"en": "Origin: measured by each machine for itself", "de": "Herkunft: von jeder Maschine für sich gemessen"}},
+        "fleet": {"label": {"en": "Fleet: one series for the whole fleet, written by the machine that runs the service", "de": "Flotte: eine Reihe für die ganze Flotte, geschrieben von der Maschine, die den Dienst betreibt"}}
+      }
+    },
+    "Units": {
+      "const": {
+        "percent": {"label": {"en": "percent", "de": "Prozent"}},
+        "bytes": {"label": {"en": "bytes", "de": "Bytes"}},
+        "bytesPerSecond": {"label": {"en": "bytes per second", "de": "Bytes pro Sekunde"}},
+        "count": {"label": {"en": "count", "de": "Anzahl"}},
+        "seconds": {"label": {"en": "seconds", "de": "Sekunden"}},
+        "milliseconds": {"label": {"en": "milliseconds", "de": "Millisekunden"}},
+        "microseconds": {"label": {"en": "microseconds", "de": "Mikrosekunden"}},
+        "ratio": {"label": {"en": "ratio", "de": "Verhältnis"}},
+        "state": {"label": {"en": "state", "de": "Zustand"}}
+      }
+    },
+    "Sources": {
+      "description": "The collectors that feed metrics. A metric whose source is not declared here has no collector and is refused by the law test.",
+      "const": {
+        "host-sampler": {"label": {"en": "Host sampler: memory, CPU, swap, disk, files", "de": "Host-Sampler: Speicher, CPU, Swap, Platte, Dateien"}},
+        "warden": {"label": {"en": "Memory warden state", "de": "Zustand des Speicherwächters"}},
+        "process-tree": {"label": {"en": "Classification of the repo process tree", "de": "Klassifizierung des Repo-Prozessbaums"}},
+        "scheduler": {"label": {"en": "Fair build queue of the machine", "de": "Faire Build-Warteschlange der Maschine"}},
+        "unit-counters": {"label": {"en": "Monotonic unit cache counters", "de": "Monotone Zähler des Einheiten-Caches"}},
+        "local-cache": {"label": {"en": "Hot cache of the machine", "de": "Heißer Cache der Maschine"}},
+        "remote-cache": {"label": {"en": "Remote cache server counters", "de": "Zähler des Remote-Cache-Servers"}},
+        "offload-counters": {"label": {"en": "Offload counters", "de": "Auslagerungszähler"}},
+        "remote-execution": {"label": {"en": "Remote execution service", "de": "Remote-Ausführungsdienst"}},
+        "owner-pool": {"label": {"en": "Owner pool status", "de": "Status des Eigentümer-Pools"}},
+        "graph-service": {"label": {"en": "Graph service fact index", "de": "Faktenindex des Graphdienstes"}},
+        "ready": {"label": {"en": "Readiness status", "de": "Bereitschaftsstatus"}},
+        "journal": {"label": {"en": "Shared worktree journal", "de": "Journal des geteilten Arbeitsbaums"}},
+        "self": {"label": {"en": "The sampler measuring itself", "de": "Der Sampler misst sich selbst"}}
+      }
+    },
+    "Metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "unit", "scope", "source", "label"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)+$", "maxLength": 64},
+        "kind": {"enum": ["gauge", "counter", "state"]},
+        "unit": {"enum": ["percent", "bytes", "bytesPerSecond", "count", "seconds", "milliseconds", "microseconds", "ratio", "state"]},
+        "scope": {"enum": ["origin", "fleet"]},
+        "platforms": {"description": "The operating systems that can measure this metric (`darwin`, `linux`, `win32`); absent means all. On a machine of another platform the metric is not a gap but `n/a`: the platform has no cheap source for it.", "type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["darwin", "linux", "win32"]}},
+        "source": {"type": "string", "minLength": 1},
+        "label": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["en", "de"],
+          "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "Catalogue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$schema", "metrics"],
+      "properties": {
+        "$schema": {"type": "string"},
+        "metrics": {"type": "array", "minItems": 1, "maxItems": 4096, "items": {"$ref": "#/definitions/Metric"}}
+      }
+    },
+    "Point": {
+      "description": "One point of a merged series, the same in every implementation: `[start, width, tier, count, min, max, sum, last, partial]`: start (ms, aligned to the bucket of its tier), width (ms, the bucket of its tier, or only its visible part when partial), tier (index), count, min, max, sum (mean is sum / count), last and partial (1 or 0). Points of one metric are ordered by start, never overlap and are finer the newer they are. A merged series is read from the files `t0.ring`, `t1.ring`, ... (at most maximumTiers, a file of another ids digest than the first is skipped): going from the finest tier to the coarsest, a tier contributes its valid rows that lie inside the range, inside its ring horizon (head + bucket - bucketCount * bucket) and end no later than the start of the oldest row already taken from a finer tier (the range end for the finest), plus, when a finer tier contributed and its oldest start is not aligned to this tier's bucket, the one row containing that start as a partial point: start = the row start, width = oldest start - row start, partial = 1, statistics of the whole row (the part after the oldest start is shown by the finer tier, so points still never overlap and leave no gap); the head is the header head advanced while the next row is valid, or the newest valid start of a scan when the header head row is invalid; a row of a metric with count 0 gives no point; rows that start before the range but end after it are included.",
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "foreign": "The ring file {path} is not a metrics ring of this version.",
+          "ids": "The metric ids {ids} are not in the catalogue.",
+          "range": "The range from {from} to {to} is empty or reversed."
+        },
+        "de": {
+          "foreign": "Die Ringdatei {path} ist kein Metrikring dieser Version.",
+          "ids": "Die Metrik-Kennungen {ids} stehen nicht im Katalog.",
+          "range": "Der Bereich von {from} bis {to} ist leer oder umgekehrt."
+        }
+      }
+    },
+    "Exempt": {
+      "const": []
+    }
+  }
+}

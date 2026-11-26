@@ -188,6 +188,17 @@ impl<T> RuntimeInstanceRegistry<T> {
     pub fn entry_at(&self, index: usize) -> Option<(u32, &T)> {
         self.entry(index).map(|(instance_id, value)| (*instance_id, value))
     }
+    /// 🗂️ Visits occupied slots once in increasing slot order.
+    pub fn entries(&self) -> impl Iterator<Item = (u32, &T)> {
+        let mut cursor = 0;
+        std::iter::from_fn(move || {
+            if cursor >= self.slots.len() { return None; }
+            let (index, id, value) = self.next_entry_from(cursor)?;
+            if index < cursor { return None; }
+            cursor = index + 1;
+            Some((id, value))
+        })
+    }
     pub fn next_entry_from(&self, start: usize) -> Option<(usize, u32, &T)> {
         let start = start % PLUGIN_RUNTIME_INSTANCE_SLOTS;
         let word = start / u64::BITS as usize;

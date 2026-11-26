@@ -30,7 +30,7 @@ test("the sealed door entry captures no backend adapter, no verb kernel and no w
 
 test("every command still resolves to an existing verb kernel",()=>{
  const directory=fileURLToPath(new URL("../../../⌨️command/",import.meta.url)),kinds=new Set(Object.keys(selection.properties.kernels.const));
- for(const row of fixture.cases){const kernel=repositoryCommandKernelV1(row.args,{});expect({args:row.args,kind:kernel.kind,known:kinds.has(kernel.kind),exists:existsSync(kernel.entry)}).toEqual({args:row.args,kind:row.kind,known:true,exists:true});}
+ for(const row of fixture.cases){const kernel=repositoryCommandKernelV1(row.args,{});expect<unknown>({args:row.args,kind:kernel.kind,known:kinds.has(kernel.kind),exists:existsSync(kernel.entry)}).toEqual({args:row.args,kind:row.kind,known:true,exists:true});}
  for(const file of Object.values(selection.properties.kernels.const))expect(existsSync(join(directory,file)),file).toBe(true);
  for(const row of catalog.operations){const kernel=repositoryCommandKernelV1([row.name],{});expect({name:row.name,known:kinds.has(kernel.kind),exists:existsSync(kernel.entry)}).toEqual({name:row.name,known:true,exists:true});}
 });

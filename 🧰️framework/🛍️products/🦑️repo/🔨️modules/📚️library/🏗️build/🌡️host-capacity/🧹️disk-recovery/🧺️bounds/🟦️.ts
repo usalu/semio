@@ -3,7 +3,7 @@ import {join,sep} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 
 /** 📐️ The bounds of the writers that had none: waves, footprint logs, read verdicts, temporary directories and the files the replica overwrote (single source: the schema document of the recovery, definition `Bounds`). */
-export type DiskBoundsV1=Readonly<{version:1;waves:Readonly<{maximumAgeMilliseconds:number;keepNewest:number}>;footprintLogs:Readonly<{maximumAgeMilliseconds:number;keepNewest:number}>;readVerdicts:Readonly<{maximumAgeMilliseconds:number;directoryPattern:string}>;temporaryDirectories:Readonly<{minimumAgeMilliseconds:number;maximumAgeMilliseconds:number;prefix:string}>;replicaLost:Readonly<{maximumAgeMilliseconds:number;keepNewest:number}>}>;
+export type DiskBoundsV1=Readonly<{version:1;waves:Readonly<{maximumAgeMilliseconds:number;keepNewest:number}>;footprintLogs:Readonly<{maximumAgeMilliseconds:number;keepNewest:number}>;readVerdicts:Readonly<{maximumAgeMilliseconds:number;directoryPattern:string}>;temporaryDirectories:Readonly<{minimumAgeMilliseconds:number;maximumAgeMilliseconds:number;prefix:string}>;replicaLost:Readonly<{maximumAgeMilliseconds:number;keepNewest:number}>;compiledCache:Readonly<{maximumBytes:number;maximumAgeMilliseconds:number;minimumIdleMilliseconds:number;scratchGraceMilliseconds:number}>}>;
 export const DISK_BOUNDS_V1:DiskBoundsV1=Object.freeze(JSON.parse(JSON.stringify(schema.definitions.Bounds.const)));
 
 /** 📄️ One entry of a directory a bound judges: its name, the newest write below it and the bytes it holds. */

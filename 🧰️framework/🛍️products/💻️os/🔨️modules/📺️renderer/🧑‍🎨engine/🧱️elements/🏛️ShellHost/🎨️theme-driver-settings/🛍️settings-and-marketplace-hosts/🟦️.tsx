@@ -185,7 +185,7 @@ export function useSettingsHost({ session, uiTerminology, uiDriverId, uiDriverBa
 }
 
 /** 🏪 Builds the marketplace host api and the framework task manager tab. */
-export function useMarketplaceHostAndTaskManager({ registry, extensionIdSet, pluginSource, hubOnlyPlugins, loadedPlugins, pluginStatusById, primaryPluginId, session, catalog, extensionLedger, installPlugin, uninstallPlugin, reloadPlugin, installExtension, installExtensionFromFile, uninstallExtension, setExtensionEnabled, marketplaceHostRef, uiLocale, agentBridge, onActionStable, pluginInstallAbortsRef, uiLocaleRef, installingPluginIds, toolRunPanelNode, focusedProgram }: Pick<ReturnType<typeof useThemeAndDriverState>, "registry" | "extensionIdSet" | "pluginSource" | "loadedPlugins" | "pluginStatusById" | "primaryPluginId" | "session" | "catalog" | "extensionLedger" | "installPlugin" | "uninstallPlugin" | "reloadPlugin" | "installExtension" | "installExtensionFromFile" | "uninstallExtension" | "setExtensionEnabled" | "uiLocale" | "agentBridge" | "onActionStable" | "pluginInstallAbortsRef" | "uiLocaleRef" | "installingPluginIds" | "toolRunPanelNode" | "focusedProgram"> & Pick<ReturnType<typeof useSettingsHost>, "hubOnlyPlugins" | "marketplaceHostRef">) {
+export function useMarketplaceHostAndTaskManager({ canManageExtensions, registry, extensionIdSet, pluginSource, hubOnlyPlugins, loadedPlugins, pluginStatusById, primaryPluginId, session, catalog, extensionLedger, installPlugin, uninstallPlugin, reloadPlugin, installExtension, installExtensionFromFile, uninstallExtension, setExtensionEnabled, marketplaceHostRef, uiLocale, agentBridge, onActionStable, pluginInstallAbortsRef, uiLocaleRef, installingPluginIds, toolRunPanelNode, focusedProgram }: Pick<ReturnType<typeof useThemeAndDriverState>, "registry" | "extensionIdSet" | "pluginSource" | "loadedPlugins" | "pluginStatusById" | "primaryPluginId" | "session" | "catalog" | "extensionLedger" | "installPlugin" | "uninstallPlugin" | "reloadPlugin" | "installExtension" | "installExtensionFromFile" | "uninstallExtension" | "setExtensionEnabled" | "uiLocale" | "agentBridge" | "onActionStable" | "pluginInstallAbortsRef" | "uiLocaleRef" | "installingPluginIds" | "toolRunPanelNode" | "focusedProgram"> & Pick<ReturnType<typeof useSettingsHost>, "hubOnlyPlugins" | "marketplaceHostRef"> & Readonly<{ canManageExtensions: boolean }>) {
   const marketplaceHost: MarketplaceHostApi = useMemo(
     () => ({
       plugins: [
@@ -233,9 +233,11 @@ export function useMarketplaceHostAndTaskManager({ registry, extensionIdSet, plu
       installPlugin: (pluginId) => void installPlugin(pluginId),
       uninstallPlugin: (pluginId) => void uninstallPlugin(pluginId),
       reloadPlugin: (pluginId) => void reloadPlugin(pluginId),
-      installExtensionFromUrl: (sourceUri) => void installExtension(sourceUri),
-      installExtensionFromFile: (file) => void installExtensionFromFile(file),
-      uninstallExtension: (extensionId) => void uninstallExtension(extensionId),
+      ...(canManageExtensions ? { extensionManagement: {
+        installFromUrl: installExtension,
+        installFromFile: installExtensionFromFile,
+        remove: uninstallExtension,
+      } } : {}),
       setExtensionEnabled: (extensionId, enabled) => void setExtensionEnabled(extensionId, enabled),
     }),
     [
@@ -249,6 +251,7 @@ export function useMarketplaceHostAndTaskManager({ registry, extensionIdSet, plu
       pluginSource.id,
       primaryPluginId,
       session?.pluginId,
+      canManageExtensions,
       installPlugin,
       uninstallPlugin,
       reloadPlugin,

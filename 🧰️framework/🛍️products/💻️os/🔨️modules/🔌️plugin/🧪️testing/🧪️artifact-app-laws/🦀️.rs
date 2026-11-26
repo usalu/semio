@@ -155,6 +155,10 @@ pub use registered_app_construction_and_typed_operation_settlement::{
 };
 
 
+#[path = "🔁️live-cleanup-zero-progress-law/🦀️.rs"]
+mod live_cleanup_zero_progress_law;
+pub use live_cleanup_zero_progress_law::{LiveCleanupFixture, LiveCleanupReport};
+
 #[path = "👥️presence-round-trip-law/🦀️.rs"]
 mod presence_round_trip_law;
 pub use presence_round_trip_law::{assert_presence_round_trip, publish_fixture_presence_roster};

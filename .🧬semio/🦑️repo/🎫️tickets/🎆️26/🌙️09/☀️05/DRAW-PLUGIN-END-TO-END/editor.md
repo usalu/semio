@@ -155,3 +155,102 @@ The observed unit graph already uses opt-level s, 16 codegen units, LTO off, sym
 ### Current optional statement DSL execution
 
 The first issued native rerun exposed a stale cached `semio-framework-dsl-record-ownership` provider missing the current `retirement::retire_field` API. The focused driver now rebuilds that owner in the same fingerprint-directed closure before the current model. Under `repo capacity run --memory=1536 --cpu=1 --jobs=1`, all seven compile steps settled and the one exact optional statement law passed. This is an executed current-source law, including both the direct optional cursor and Draw's generated statements/block route and the full cancellation corpus. The running product component retained its original input snapshot throughout the diagnostic.
+
+### Applied member wire split and real target verification
+
+The eight-file patch was applied to the shared worktree after the old product build became terminal. Both full Cargo locks, Draw workspace membership and the normal library owner row match the new manifest under independent TOML and registry validation. Both units then compiled and linked serially on `wasm32-wasip2` with the measured production prototype profile, using one CPU and a 3,072 MiB admission for each run.
+
+| Unit | Peak RSS bytes | Ceiling-rounded MiB | Elapsed seconds | Authored budget |
+|---|---:|---:|---:|---:|
+| Before split, member wire | 1,691,175,168 | 1,613 | 115.142 | 1,536 MiB |
+| New original JSON decode | 1,601,847,296 | 1,528 | 104.189 | 1,536 MiB |
+| Remaining member wire | 444,841,984 | 425 | 3.729 | 1,536 MiB |
+
+The neutral memory law and independent SQLite oracle both accepted each fresh measurement. The decoder archive carries 49,215 WebAssembly functions and the transport archive carries 275, which confirms the intended monomorphization boundary. The decoder has 8 MiB of rounded headroom in this isolated run. Package-scoped CGU tuning remains unmeasured and is unnecessary for these two measured units. The isolated build linked both libraries against the admitted WASI dependency artifacts. It did not execute a fresh full-product mutation or replay journey after the carve.
+
+Production files changed include the new `📨️wire/📥️decode/🦀️.rs` and `📨️wire/📥️decode/📦️packages/🦀️rust/Cargo.toml`, the parent wire source and manifest, the Draw workspace manifest, the Draw and hub lockfiles and root `📋️build-owners.json`.
+
+## Current native Draw verification sequence
+
+The Draw workspace now has 40 Cargo members. The previous 38-entry check/test catalog omitted the two member wire packages introduced by the WASI carves. The existing neutral membership law reproduced the real mismatch (40 vs. 38). Both packages now participate in test and check. The catalog schema accepts the usual Draw prefix and the one short physical crate name `semio-draw-member-decode`. The new hostile names fixture continues rejecting other short package names. Bun TOML resolves actual workspace members, Ajv validates the schema, and independent SQLite compares both exact sets. The admitted rerun passed that catalog test plus seven direct Draw/SQLite source tests. The relational edit and nonempty asset cases, orphan refusal, cancellation, and binary64 assertions all executed. Draw’s separate descriptor parity function returned 45 checks for eight mappings, and the direct canvas ownership oracle passed under a 512 MiB one-job admission.
+
+| Required behavior | Actual Cargo test owner | Source mount |
+|---|---|---|
+| Native registration and eight I/O descriptors | `semio-s-artifact-draw-drawing` | Draw root `🦀️.rs` directly defines `io_descriptor_tests::io_descriptors_match_neutral_fixture` using actual `io().entries`. |
+| Native SQLite snapshot and actual erased capability, owned asset/base parity, exact cancellation, all IEEE words | `semio-s-artifact-draw-drawing-model-tests` | `🧬️schema/🧪️tests/🥣️companion/🦀️.rs` includes the SQLite source as `io::sqlite::snapshot::tests`. |
+| Live editor Canvas, PDF, pointer, and window ownership | `semio-s-artifact-draw-drawing-editor-tests` | `✏️editor/🧪️tests/🥣️companion/🦀️.rs` mounts the editor unit tree and the exact window laws, using the direct artifact app and editor-tool dependencies. |
+| Direct read-only viewer canvas | `semio-s-artifact-draw-drawing-viewer` | Viewer lib mounts its own `cfg(test)` and its canvas module separately mounts the direct window assertions. |
+| Direct bounds and editing geometry | `semio-s-artifact-draw-drawing-geometry` | Geometry lib directly mounts the bounds and path edit tests under `cfg(test)`; the model companion also owns the separate affine, inferences and fill laws. |
+| Live mounted vector preparation and source/canvas retirement | `semio-s-artifact-draw-drawing-scene-mounted` | Mounted scene lib directly includes `🧪️tests/🔬️unit/🦀️.rs`. |
+| Inspector's localized selection and geometry commands | `semio-s-artifact-draw-drawing-editor-interaction-tests` | Interaction companion mounts `panels::properties::tests`. Existing native binary traces confirm the actual prefix. |
+
+The four config/window native laws previously compiled in editor-tool, whose test manifest does not own the full app dependency and whose crate has no `crate::editor::drawing` path. The focused route selected the artifact root and therefore could match zero. The tests now use editor-tool's public canvas config/transient API from the existing full editor companion, with no production behavior, Cargo features or dependency changes. The standalone focused canvas selector takes the current companion and module name. The inspector exact route likewise selects the interaction companion and its actual module prefix.
+
+Run the following only after the component pipeline releases the machine. Keep the same session and prototype configuration so the test and check stages use the repository's normal reused dependent artifacts:
+
+```sh
+SEMIO_OFFLOAD=never SEMIO_BUILD_MODE=prototype repo capacity run --memory=4608 --cpu=1 --jobs=1 -- repo run @semio-tech/draw-drawing-rs:test --lang=en --parallel=1 -- long --no-fail-fast --status-level=pass
+SEMIO_OFFLOAD=never SEMIO_BUILD_MODE=prototype repo capacity run --memory=4608 --cpu=1 --jobs=1 -- repo run @semio-tech/draw-drawing-rs:check --lang=en --parallel=1
+```
+
+The owned test runner groups all 40 selections by workspace into one managed Nextest execution and builds its graph/native-coverage prerequisites. The owned check command selects the same 40 packages in one Cargo invocation. An additional native SQLite-only command is redundant after the full pass. The generic `test-snapshot-sqlite native` door currently iterates the full artifact test catalog by package and should stay out of this sequence. The source-only descriptor, SQLite and canvas tests already ran independently without Rust. With the full native build idle, the ticket's `verify-draw-native-current26.py --run-native` runs the same serial route and refuses a green result unless the native output explicitly records passing descriptor, SQLite, Canvas, viewer, geometry and mounted source laws. Its default planning route was exercised without Rust. Its `--verify-log` mode can check the named receipts on an existing managed log.
+
+The earlier cached native SQLite run remains two pass and two fail. Both positive cases failed in actual erased import on `assets.field owner has no controlled native projection implementation`. The live DSL PagedMap binding now implements `to_value_controlled` through `project_keyed_entries`, and the previously linked independent projection probe passed. Current native end-to-end positives still need a freshly linked model companion. The passing SQLite source suite exercises the same authored asset and exact binary64 law through the TypeScript/SQLite path and proves neither current Rust erased import nor the moved native canvas tests. The final native log must supply those receipts.
+
+## Descriptor Emitter Selection
+
+The [prototype pin report](descriptor-emitter-pin26.md) records the registered command, managed compiler evidence, model binding and targeted verification. The [custody investigation](descriptor-emitter-custody26.md) and [normal Cargo diagnostic fallback](draw-cargo-fallback26.md) cover the earlier investigation and independent diagnostic capture.
+
+Production files changed for the prototype pin are listed below relative to `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin`.
+
+- `🏗️build/🧩️driver-stages/📜️script.ts`
+- `🏗️build/🧩️driver-stages/🟦️.ts`
+- `🖨️describe/🛠️emitter/🧬️schema/🔣️.json`
+- `🖨️describe/🛠️emitter/📋️contract/🟦️.ts`
+- `🖨️describe/🛠️emitter/🟦️.ts`
+- `🖨️describe/🛠️emitter/🧪️tests/📏️request/🟦️.ts`
+- `🖨️describe/🛠️emitter/🧪️tests/📏️request/🔣️pin.json`
+- `🖨️describe/🛂️descriptor-emission/🟦️.ts`
+- `🖨️describe/🧩️component-stage/🟦️.ts`
+- `📦️model/🟦️.ts`
+- `📦️model/📋️contract/🟦️.ts`
+- `📦️model/👓️reading/🟦️.ts`
+
+The model and emitter artifact contract expectation was also updated in `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts`.
+
+The ticket inputs added for the independent Cargo diagnostic are `draw-cargo-component26.py` and `verify-cargo-draw26.ts`.
+
+## WASI Closure Ownership
+
+The [Draw WASI closure budget audit](draw-wasi-closure-budget26.md) records the retained graph, local RSS, owner-source checksum checks and the Binary role and TXT snapshot decisions. Four neutral Bun laws with independent SQLite comparisons passed. The Binary carve and XML/DXF/Draw source edits required no Rust process. The coordinated Cargo lock synchronization is owned separately.
+
+My source and manifest edits for that section were:
+
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.toml`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/📦️packages/🦀️rust/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧬️schema/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/📸️snapshot/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/🔺️diff/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🦀️rust/Cargo.toml`
+
+Ticket inputs are `stdio-role-carve26.json`, `verify-stdio-role-carve26.ts`, `stdio-snapshot-deps26.json`, `verify-stdio-snapshot-deps26.ts`.

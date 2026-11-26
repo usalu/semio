@@ -28,7 +28,29 @@ use semio_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault, NoConfig, N
 use value_derive::{FromValue, ToValue};
 use semio_s_artifact_bim_model_bim::editor::bim::commands::export_model::{ExportJob, Output, Advance, stem, encode, FORMATS, handle, ExportModel};
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{ctx, demo, empty_instance, run};
+use semio_framework::RetainedCloneGrant;
+use semio_framework_job::{Generation, OperationId, OriginalJobFixtureCaller};
 use protocol::Inference;
+
+const CLOSE_STOCK: RetainedCloneGrant = RetainedCloneGrant {
+    maximum_items: 1 << 20,
+    maximum_copy_bytes: 1 << 26,
+    maximum_capacity_bytes: 1 << 26,
+    maximum_release_bytes: 1 << 26,
+    maximum_depth: 128,
+};
+const CLOSE_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_copy_bytes: 1 << 16, ..CLOSE_STOCK };
+
+fn close_projection(owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle, caller: &mut OriginalJobFixtureCaller) {
+    for _ in 0..(1 << 18) {
+        if owner.close_terminal_is_empty().expect("inference state") {
+            return;
+        }
+        caller.retirement_turn(CLOSE_GRANT, |cx| Ok(owner.close_inference_step(cx, CLOSE_GRANT)))
+            .expect("funded inference retirement").expect("the projection closes");
+    }
+    panic!("the inference owner did not retire, next demand {:?}", owner.inference_retirement_demands(CLOSE_GRANT.maximum_copy_bytes));
+}
 
 fn finished(job: &mut ExportJob, snapshot: &ModelSnapshot) -> (Output, Vec<&'static str>) {
     let mut stages = Vec::new();
@@ -47,8 +69,7 @@ fn fresh(snapshot: &ModelSnapshot) -> ModelInference {
 
 #[semio_framework_async_macros::async_test]
 async fn the_mounted_work_cancels_and_retires_between_ifc_families() {
-    use semio_framework_job::{Generation, OperationId, OriginalJobFixtureCaller, RevisionId};
-    use semio_framework_value::RetainedCloneGrant;
+    use semio_framework_job::RevisionId;
     use semio_plugin::retained_command::ArtifactCommandSnapshotRead;
     use semio_plugin::{AppOperationContext, AppRenderOperationContext, ChildContentView, HistoryView, MountedOwnerPolicyV1};
     use semio_s_artifact_bim_model_bim::editor::bim::commands::export_model::ModelExportWork;
@@ -98,7 +119,7 @@ async fn the_mounted_work_cancels_and_retires_between_ifc_families() {
         operation: &operation,
     };
     let mut work = ModelExportWork::new("exportModel", owner.clone());
-    let mut caller = OriginalJobFixtureCaller::admit(OperationId(1), Generation(1), grant, || Some(1), 1000, 1 << 20);
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(1), Generation(1), CLOSE_STOCK, || Some(1), 1000, 1 << 24);
     let mut stages = Vec::new();
     for _ in 0..64 {
         let step = caller.turn(grant, |cx| work.step(&input, cx)).expect("funded export turn");
@@ -116,27 +137,19 @@ async fn the_mounted_work_cancels_and_retires_between_ifc_families() {
     let cancelled = caller.turn(grant, |cx| Ok(work.step(&input, cx))).expect("cancellation inspection");
     assert!(cancelled.is_err(), "cancellation must never produce a download");
     work.begin_close();
-    for _ in 0..16_384 {
+    for _ in 0..(1 << 18) {
         if work.terminal_is_empty() {
             break;
         }
-        caller.turn(grant, |cx| work.close_step(cx)).expect("funded writer retirement");
+        caller.retirement_turn(CLOSE_GRANT, |cx| work.close_step(cx)).expect("funded writer retirement");
     }
     assert!(work.terminal_is_empty(), "the partially written IFC graph must retire");
-    for _ in 0..16_384 {
-        if owner.close_terminal_is_empty().expect("inference state") {
-            break;
-        }
-        caller.turn(grant, |cx| Ok(owner.close_inference_step(cx, grant))).expect("funded inference retirement").expect("the projection closes");
-    }
-    assert!(owner.close_terminal_is_empty().expect("inference state"));
-    caller.retire(grant);
+    close_projection(&owner, &mut caller);
+    caller.retire(CLOSE_STOCK);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rectangular_columns_from_a_cold_mounted_operation_match_both_full_ifc_graphs() {
-    use semio_framework_job::{Generation, OperationId, OriginalJobFixtureCaller};
-    use semio_framework_value::RetainedCloneGrant;
     use semio_plugin::retained_command::ArtifactCommandSnapshotRead;
     use semio_plugin::{AppOperationContext, HistoryView};
     use semio_s_artifact_bim_model_bim::editor::bim::commands::export_model::ModelExportWork;
@@ -144,7 +157,7 @@ async fn rectangular_columns_from_a_cold_mounted_operation_match_both_full_ifc_g
     use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Column, ColumnType, GridLine};
 
     let source = demo();
-    let mut snapshot = ModelSnapshot { sites: source.sites, buildings: source.buildings, storeys: source.storeys, ..ModelSnapshot::default() };
+    let mut snapshot = ModelSnapshot { project: source.project, sites: source.sites, buildings: source.buildings, storeys: source.storeys, ..ModelSnapshot::default() };
     let mut basement = snapshot.storeys["st-ground"].clone();
     basement.name = "Basement".into();
     basement.level = -1;
@@ -166,8 +179,9 @@ async fn rectangular_columns_from_a_cold_mounted_operation_match_both_full_ifc_g
         });
     }
     let owner = empty_instance();
+    let empty_projection = owner.inference_retirement_demands(CLOSE_GRANT.maximum_copy_bytes).expect("fresh inference registry");
     let grant = RetainedCloneGrant { maximum_items: 1 << 12, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 128 };
-    for (n, (format, cancel_at)) in [("ifc2x3", None), ("ifc4", None), ("ifc4", Some("bim-export-storey-levels")), ("ifc4", Some("frames"))].into_iter().enumerate() {
+    for (n, (format, cancel_at)) in [("ifc2x3", None), ("ifc4", None), ("ifc4", Some("bim-export-storey-levels")), ("ifc4", Some("frames")), ("ifc4", Some("structure"))].into_iter().enumerate() {
         let operation_id = 41 + n as u64;
         let operation = AppOperationContext {
             app_instance_id: 1, parent_document_id: "bim-model".into(), operation_id, generation: 1,
@@ -181,7 +195,7 @@ async fn rectangular_columns_from_a_cold_mounted_operation_match_both_full_ifc_g
             hover: &Default::default(), context: None, operation: &operation,
         };
         let mut work = ModelExportWork::new("exportModel", owner.clone());
-        let mut caller = OriginalJobFixtureCaller::admit(OperationId(operation_id), Generation(1), grant, || Some(1), 1000, 1 << 20);
+        let mut caller = OriginalJobFixtureCaller::admit(OperationId(operation_id), Generation(1), CLOSE_STOCK, || Some(1), 1000, 1 << 24);
         let denied = RetainedCloneGrant { maximum_copy_bytes: 1, maximum_capacity_bytes: 0, ..grant };
         let denied = caller.turn(denied, |cx| work.step(&input, cx)).expect("small grant is pending");
         assert!(matches!(denied, ArtifactCommandWorkStep::Pending { stage: "bim-export-column-plan", .. }));
@@ -189,12 +203,14 @@ async fn rectangular_columns_from_a_cold_mounted_operation_match_both_full_ifc_g
         let mut effects = None;
         let mut planned = 0;
         let mut frames = 0;
+        let mut structure = 0;
         for _ in 0..2048 {
             match caller.turn(grant, |cx| work.step(&input, cx)).expect("funded spatial IFC turn") {
                 ArtifactCommandWorkStep::Progress { stage, .. } => {
                     planned += usize::from(stage == "bim-export-storey-levels");
                     frames += usize::from(stage == "frames");
-                    if cancel_at == Some(stage) && (stage == "frames" || planned == snapshot.storeys.len() + 4) {
+                    structure += usize::from(stage == "structure");
+                    if cancel_at == Some(stage) && (stage != "bim-export-storey-levels" || planned == snapshot.storeys.len() + 4) {
                         caller.cancel().cancel().await;
                         let stopped = caller.turn(grant, |cx| Ok(work.step(&input, cx))).expect("inspect cancellation");
                         assert!(stopped.is_err());
@@ -210,28 +226,33 @@ async fn rectangular_columns_from_a_cold_mounted_operation_match_both_full_ifc_g
         if cancel_at.is_some() {
             assert!(effects.is_none());
         } else {
-            assert!(frames >= snapshot.columns.len());
+            assert_eq!(frames, snapshot.columns.len());
+            assert_eq!(structure, if format == "ifc4" { snapshot.columns.len() } else { 1 });
             let effects = effects.expect("spatial IFC publishes a download");
             let [Effect::DownloadMediaExport { data, .. }] = effects.as_slice() else { panic!("one spatial IFC download") };
             let expected = encode(format, &snapshot, &fresh(&snapshot)).expect("the full IFC computation");
             assert_eq!(*data, expected.data);
             assert!(data.contains("IFCBUILDINGSTOREY"));
             assert!(data.contains("IFCGRIDAXIS"));
-            assert_eq!(data.matches("=IFCCOLUMN(").count(), snapshot.columns.len());
+            assert_eq!(data.matches("IFCCOLUMN(").count(), snapshot.columns.len());
             assert!(data.contains("IFCEXTRUDEDAREASOLID"));
+            if format == "ifc4" {
+                assert_eq!(data.matches("IFCSTRUCTURALCURVEMEMBER(").count(), snapshot.columns.len());
+            }
         }
         work.begin_close();
-        for _ in 0..2048 {
+        for _ in 0..(1 << 18) {
             if work.terminal_is_empty() { break; }
-            caller.turn(grant, |cx| work.close_step(cx)).expect("spatial IFC closes under funding");
+            caller.retirement_turn(CLOSE_GRANT, |cx| work.close_step(cx)).expect("spatial IFC closes under funding");
         }
-        assert!(work.terminal_is_empty());
-        caller.retire(grant);
+        assert!(work.terminal_is_empty(), "spatial IFC did not retire, next demand {:?}", work.next_close_release_byte_demand());
+        caller.retire(CLOSE_STOCK);
     }
+    assert_eq!(owner.inference_retirement_demands(CLOSE_GRANT.maximum_copy_bytes).expect("inference registry after cold exports"), empty_projection);
     snapshot.columns.get_mut("col-ground").expect("the ground column").tilt = Some(Slope { direction: 0.0, angle: 0.1 });
     let command = BimCommand::ExportModel(ExportModel { format: "ifc4".into(), pressed: None });
     let operation = AppOperationContext {
-        app_instance_id: 1, parent_document_id: "bim-model".into(), operation_id: 45, generation: 1,
+        app_instance_id: 1, parent_document_id: "bim-model".into(), operation_id: 46, generation: 1,
         canonical_base_revision: [8; 32], retained: grant, authoring_seed: String::new(),
     };
     let input = ArtifactCommandInputs::<EditorApp<BimModelApp>> {
@@ -241,7 +262,7 @@ async fn rectangular_columns_from_a_cold_mounted_operation_match_both_full_ifc_g
         hover: &Default::default(), context: None, operation: &operation,
     };
     let mut work = ModelExportWork::new("exportModel", owner.clone());
-    let mut caller = OriginalJobFixtureCaller::admit(OperationId(45), Generation(1), grant, || Some(1), 1000, 1 << 20);
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(46), Generation(1), CLOSE_STOCK, || Some(1), 1000, 1 << 24);
     let refusal = (0..128).find_map(|_| {
         match caller.turn(grant, |cx| Ok(work.step(&input, cx))).expect("funded IFC turn") {
             Err(failure) => Some(failure),
@@ -251,7 +272,8 @@ async fn rectangular_columns_from_a_cold_mounted_operation_match_both_full_ifc_g
     }).expect("a cold tilted column should produce a refusal");
     assert!(refusal.primary_value().is_some_and(|error| error.message.contains("a tilted axis")));
     assert!(work.terminal_is_empty());
-    caller.retire(grant);
+    close_projection(&owner, &mut caller);
+    caller.retire(CLOSE_STOCK);
     assert!(owner.inference_is_empty());
 }
 
@@ -282,9 +304,8 @@ async fn every_format_is_written_from_the_inference_exactly_like_its_serializer_
 async fn the_job_reports_progress_in_bounded_steps_and_writes_the_same_file_for_every_format() {
     let snapshot = demo();
     let inferred = fresh(&snapshot);
-    for format in FORMATS {
-        let instance = empty_instance();
-        let mut job = ExportJob::new(format.into(), Some(&instance));
+    for &format in FORMATS {
+        let mut job = ExportJob::new(format.into(), None);
         let (output, stages) = finished(&mut job, &snapshot);
         assert_eq!(output, encode(format, &snapshot, &inferred).expect("the file"), "{format}: the stepped job writes the one-shot file");
         assert_eq!(stages.first(), Some(&"bim-export-infer"));
@@ -296,9 +317,8 @@ async fn the_job_reports_progress_in_bounded_steps_and_writes_the_same_file_for_
 
 #[semio_framework_async_macros::async_test]
 async fn the_progress_of_a_job_never_decreases() {
-    let instance = empty_instance();
     let snapshot = demo();
-    let mut job = ExportJob::new("csv".into(), Some(&instance));
+    let mut job = ExportJob::new("csv".into(), None);
     let mut seen = vec![job.fraction()];
     loop {
         match job.advance_cold(&snapshot, 3).expect("a step") {
@@ -327,6 +347,9 @@ async fn a_cancelled_job_keeps_the_finished_nodes_and_the_next_job_finishes_the_
     assert_eq!(output, encode("ifc2x3", &snapshot, &fresh(&snapshot)).expect("the file"));
     let rest = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::report(Some(&instance));
     assert!(rest.reused >= report.computed, "the nodes the cancelled job finished were not computed again: {rest:?}");
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(2), Generation(1), CLOSE_STOCK, || Some(1), 1000, 1 << 24);
+    close_projection(&instance, &mut caller);
+    caller.retire(CLOSE_STOCK);
 }
 
 #[semio_framework_async_macros::async_test]

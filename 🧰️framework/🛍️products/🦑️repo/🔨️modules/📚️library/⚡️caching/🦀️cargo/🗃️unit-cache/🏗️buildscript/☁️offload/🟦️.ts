@@ -119,7 +119,7 @@ export async function offloadBuildScriptRunV1(input:Readonly<{real:string;args:r
  const binaryRefusal=buildScriptBinaryRefusalV1(binary);if(binaryRefusal!==undefined)return refuse(binaryRefusal);
  const variables=buildScriptEnvironmentV1(environment,source);if("refusal" in variables)return refuse(variables.refusal);
  const limits=offload.COMMAND_POLICY_V1.limits,files=manifestInputsV1(manifestDir,{maximumFiles:limits.maximumInputFiles-4,maximumBytes:limits.maximumInputBytes});
- if(!(files instanceof Map))return refuse(files.refusal);
+ if("refusal" in files)return refuse(files.refusal);
  const tools=join(root,policy.layout.tools),toolText=buildScriptToolTextV1(),toolDigest=sha256(toolText),tool=join(tools,toolDigest.slice(0,32));
  let scratch:string|undefined;
  try{

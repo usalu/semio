@@ -8310,42 +8310,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-stdio-txt"
-version = "0.1.0"
-dependencies = [
- "semio-framework",
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dispatch-macros",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-job",
- "semio-os-command",
- "semio-os-kernel",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-plugin",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-ui-locale",
- "semio-framework-value-derive",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt-examples",
- "semio-s-artifact-stdio-txt-inferences",
- "semio-s-artifact-stdio-txt-mutations",
- "semio-s-artifact-stdio-txt-schema",
- "semio-s-artifact-stdio-txt-tests",
- "serde_json",
-]
-
-[[package]]
 name = "semio-s-artifact-stdio-txt-examples"
 version = "0.1.0"
 dependencies = [
@@ -8371,73 +8335,6 @@ dependencies = [
  "semio-ui-locale",
  "semio-s-artifact-stdio-binary",
  "semio-s-artifact-stdio-contract",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-txt-inferences"
-version = "0.1.0"
-dependencies = [
- "semio-framework",
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dispatch-macros",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-job",
- "semio-os-kernel",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-plugin",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-ui-locale",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt-schema",
- "serde_json",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-txt-mutations"
-version = "0.1.0"
-dependencies = [
- "semio-framework",
- "semio-framework-2d",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dispatch-macros",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-job",
- "semio-os-command",
- "semio-os-kernel",
- "semio-os-store-one-item",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-plugin",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-ui-locale",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt-inferences",
- "semio-s-artifact-stdio-txt-schema",
  "serde_json",
 ]
 
@@ -8475,42 +8372,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-stdio-txt-tests"
-version = "0.1.0"
-dependencies = [
- "semio-framework",
- "semio-framework-2d-compute",
- "semio-framework-action-bus",
- "semio-framework-artifact-reference",
- "semio-framework-async",
- "semio-framework-diagnostic",
- "semio-framework-dispatch-macros",
- "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-job",
- "semio-os-kernel",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-plugin",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-ui-locale",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-s-artifact-stdio-binary",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt-examples",
- "semio-s-artifact-stdio-txt-inferences",
- "semio-s-artifact-stdio-txt-mutations",
- "semio-s-artifact-stdio-txt-schema",
- "serde_json",
-]
-
-[[package]]
 name = "semio-s-artifact-stdio-xml"
 version = "0.1.0"
 dependencies = [
@@ -8534,7 +8395,6 @@ dependencies = [
  "semio-ui-locale",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
  "semio-s-artifact-stdio-xml-inferences",
  "semio-s-artifact-stdio-xml-mutations",
  "semio-s-artifact-stdio-xml-schema",
@@ -8570,7 +8430,6 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
  "semio-s-artifact-stdio-xml-snapshot",
  "serde_json",
 ]
@@ -8601,7 +8460,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
+ "semio-s-artifact-stdio-txt-schema",
  "semio-s-artifact-stdio-xml-inferences",
  "semio-s-artifact-stdio-xml-schema",
  "semio-s-artifact-stdio-xml-snapshot",
@@ -8633,7 +8492,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
+ "semio-s-artifact-stdio-txt-schema",
  "semio-s-artifact-stdio-xml-snapshot",
  "serde_json",
 ]
@@ -8664,7 +8523,6 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
  "semio-s-artifact-stdio-xml-inferences",
  "semio-s-artifact-stdio-xml-mutations",
  "semio-s-artifact-stdio-xml-schema",
@@ -8700,7 +8558,6 @@ dependencies = [
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
  "serde_json",
 ]
 
@@ -8726,7 +8583,6 @@ dependencies = [
  "semio-framework-schema-state",
  "semio-ui-locale",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
  "semio-s-artifact-stdio-xml-mutations",
  "semio-s-artifact-stdio-xml-schema",
  "semio-s-artifact-stdio-xml-snapshot",
@@ -8757,7 +8613,6 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
  "semio-s-artifact-stdio-xml-inferences",
  "semio-s-artifact-stdio-xml-mutations",
  "semio-s-artifact-stdio-xml-schema",
@@ -8790,7 +8645,6 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-txt",
  "semio-s-artifact-stdio-xml-mutations",
  "semio-s-artifact-stdio-xml-schema",
  "semio-s-artifact-stdio-xml-schema-2",

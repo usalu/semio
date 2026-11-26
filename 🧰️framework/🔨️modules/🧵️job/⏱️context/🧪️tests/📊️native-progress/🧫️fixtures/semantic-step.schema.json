@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["physicalFuel", "stepFuel", "completed", "limit", "nestedFuel", "physicalSpend", "laterCompleted", "earlierCompleted", "narrowerLimit", "physicalFuelAfter"],
+  "properties": {
+    "physicalFuel": { "$ref": "#/$defs/count" },
+    "stepFuel": { "$ref": "#/$defs/count" },
+    "completed": { "$ref": "#/$defs/count" },
+    "limit": { "$ref": "#/$defs/count" },
+    "nestedFuel": { "$ref": "#/$defs/count" },
+    "physicalSpend": { "$ref": "#/$defs/count" },
+    "laterCompleted": { "$ref": "#/$defs/count" },
+    "earlierCompleted": { "$ref": "#/$defs/count" },
+    "narrowerLimit": { "$ref": "#/$defs/count" },
+    "physicalFuelAfter": { "$ref": "#/$defs/count" }
+  },
+  "$defs": {
+    "count": { "type": "integer", "minimum": 0 }
+  }
+}

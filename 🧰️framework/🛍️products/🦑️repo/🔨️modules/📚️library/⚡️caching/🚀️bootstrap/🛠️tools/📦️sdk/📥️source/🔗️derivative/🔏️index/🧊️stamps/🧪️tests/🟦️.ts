@@ -36,10 +36,10 @@ test("a memo document is read as warm exactly when the oracle says so",async()=>
   resetNxSdkStampMemosV1();
   const directory="/virtual/sdk/"+row.name,file=nxSdkStampMemoFileV1(base,directory,row.sourceIndex);
   mkdirSync(dirname(file),{recursive:true});
-  const text="raw"in row?row.raw:JSON.stringify(row.document);
+  const text="raw"in row&&row.raw!==undefined?row.raw:JSON.stringify(row.document);
   writeFileSync(file,text);
   const memo=await openNxSdkStampMemoV1(directory,row.sourceIndex,{environment:environment(),now:()=>row.now});
-  const path="document"in row&&Object.keys(row.document.stamps??{})[0]||"node_modules/a";
+  const path="document"in row&&Object.keys(row.document?.stamps??{})[0]||"node_modules/a";
   results.push(memo.has(path,first));
  }
  const expected=oracle.documents.map((warm:boolean,index:number)=>warm&&"document"in corpus.documents[index]!&&Object.keys(corpus.documents[index]!.document!.stamps).length>0);

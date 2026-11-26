@@ -61,7 +61,7 @@ test.skipIf(process.platform!=="darwin")("on a throwaway image two short-lived h
    }};
   const first=await acquireResourceLease({directory:leases,resource,mode:"shared",signal:new AbortController().signal}),second=await acquireResourceLease({directory:leases,resource,mode:"shared",signal:new AbortController().signal});
   const busy=await compactOnIdleV1({partitions:["x"],ports,minimumIntervalMilliseconds:HOUR,maximumMilliseconds:120000});
-  expect(busy[0]!.result).toBe("busy");expect(blocks()).toBe(before);expect(tool("/sbin/mount").stdout).toContain(root);
+  expect(busy[0]!.result).toBe("busy");expect(blocks()).toBe(before);expect(tool("/sbin/mount",[]).stdout).toContain(root);
   first.release();
   expect((await compactOnIdleV1({partitions:["x"],ports,minimumIntervalMilliseconds:HOUR,maximumMilliseconds:120000}))[0]!.result).toBe("busy");
   second.release();

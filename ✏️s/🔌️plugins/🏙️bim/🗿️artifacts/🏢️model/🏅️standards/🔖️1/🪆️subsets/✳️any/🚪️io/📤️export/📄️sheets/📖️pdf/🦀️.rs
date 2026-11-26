@@ -216,7 +216,7 @@ pub fn pdf_page(layout: &SheetLayout, drawings: &BTreeMap<&str, &ViewLinework>, 
     marks.captions.iter().chain(&marks.title_block).chain(&marks.revisions).for_each(|mark| ink.mark(mark));
     ink.ops.push(PdfOp::Restore);
     let mut page = PdfPage::new(layout.width * POINTS_PER_MM, height);
-    page.content = ink.ops;
+    page.content = ink.ops.into_iter().collect();
     Ok(page)
 }
 

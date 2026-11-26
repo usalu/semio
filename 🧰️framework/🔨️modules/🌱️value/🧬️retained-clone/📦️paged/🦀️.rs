@@ -1,6 +1,6 @@
 //! 📦️ Retained cloning and retirement for schema-preserving paged carriers.
 
-use super::{RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, admit_retained_clone_progress};
+use super::{RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, RetainedFieldCursor, admit_retained_clone_progress};
 use crate::{ValueError, ValueRefusalKind, paged::{PAGED_BYTES_CHUNK_BYTES, PagedBytes, PagedMap, PagedUtf8}, retirement::{RetireOwned, RetirementCursor}};
 use semio_framework_value_persistent::list::PagedList;
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
@@ -218,7 +218,7 @@ impl<const N: usize> RetainedClone for PagedBytes<N> {
 }
 
 pub struct PagedUtf8Cursor<const N: usize> {
-    inner: <PagedList<String, N> as RetainedClone>::Cursor,
+    inner: RetainedFieldCursor<PagedList<String, N>>,
     chunks: Option<PagedList<String, N>>,
     output: Option<PagedUtf8<N>>,
     source: Option<RetainedCloneBinding>,
@@ -231,7 +231,7 @@ pub struct PagedUtf8Cursor<const N: usize> {
 
 impl<const N: usize> Default for PagedUtf8Cursor<N> {
     fn default() -> Self {
-        Self { inner: PagedList::retained_clone_cursor(), chunks: None, output: None, source: None, phase: 0, closing: false, close: RetainedCloneClose::default(), close_route: None, child_pending: 0 }
+        Self { inner: Default::default(), chunks: None, output: None, source: None, phase: 0, closing: false, close: RetainedCloneClose::default(), close_route: None, child_pending: 0 }
     }
 }
 

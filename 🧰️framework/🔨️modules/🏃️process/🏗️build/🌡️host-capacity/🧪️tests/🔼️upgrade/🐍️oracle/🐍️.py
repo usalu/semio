@@ -60,7 +60,7 @@ def evaluate(policy,host,ledger,waiters,now):
     drained_budget=cap*policy["memory"]["budgetBasisPoints"]//10000
     aged=[{**w,"request":{**w["request"],"priority":"interactive"}} if w["request"]["priority"]=="batch" and now-w["arrivedAtMs"]>=policy["wait"]["agingMilliseconds"] else w for w in waiters]
     growing={w["request"]["id"] for w in waiters if w.get("upgrade") is True}
-    decisions=[];heads=[];state={"blocked":False,"waits":False,"admitted":0,"own":ledger_cpu,"rampers":len([g for g in active if g.get("rampSlot") is True and ramping(g)]),"quiet_left":policy["memory"]["maximumQuiet"]-len([g for g in active if g.get("quiet") is True]),"soft_left":policy["memory"].get("quietSoftStopGrants",0)-len([g for g in active if g.get("quiet") is True]),"room_observed":room_observed,"room_budget":room_budget,"load_room":load_room,"sessions":set()}
+    decisions=[];heads=[];state={"blocked":False,"reserved":False,"waits":False,"admitted":0,"own":ledger_cpu,"rampers":len([g for g in active if g.get("rampSlot") is True and ramping(g)]),"quiet_left":policy["memory"]["maximumQuiet"]-len([g for g in active if g.get("quiet") is True]),"soft_left":policy["memory"].get("quietSoftStopGrants",0)-len([g for g in active if g.get("quiet") is True]),"room_observed":room_observed,"room_budget":room_budget,"load_room":load_room,"sessions":set()}
     w_=policy["wait"]
     ordered=order(aged,[{"session":g.get("session"),"reservedMegabytes":committed_of(g)} for g in active],now,policy["wait"]["agingMilliseconds"])
     for at,waiter in enumerate(ordered):
@@ -108,6 +108,8 @@ def evaluate(policy,host,ledger,waiters,now):
         if state["blocked"] and not (quiet and state["quiet_left"]>0):
             if quiet:count("quietBlockedByLimit")
             refuse("queue-order");continue
+        if state["reserved"] and not quiet and (len(active)-(1 if replaced else 0)>0 or state["admitted"]>0):
+            refuse("queue-order");continue
         if quiet and state["quiet_left"]<=0:
             count("quietLimit");refuse("quiet-limit");continue
         if r.get("rampSlot") is True and free_rampers>=policy["memory"]["maximumRamping"]:refuse("ramp");continue
@@ -140,9 +142,12 @@ def evaluate(policy,host,ledger,waiters,now):
             if replaced:count("upgradeWait")
             if elastic:count("elasticWait")
             if reason in ("memory","load") and not quiet and not elastic:
-                drains=soft is None and need(r["minimumJobs"])<=min(drained_room,drained_budget) and r["minimumJobs"]*r["cpuPerJob"]<=ceiling
+                reservable=soft is None and r.get("minimumMegabytes",r["fixedMegabytes"]+r["minimumJobs"]*r["perJobMegabytes"])<=drained_budget and r["minimumJobs"]*r["cpuPerJob"]<=ceiling
+                drains=reservable and need(r["minimumJobs"])<=min(drained_room,drained_budget)
                 bypasses=len([g for g in ledger if g["id"]!=r["id"] and g.get("quiet") is not True and g["admittedAtMs"]>=waiter["arrivedAtMs"]])
-                if drains and (waited>=w_["bypassMilliseconds"] or bypasses>=w_["maximumBypasses"]):state["blocked"]=True
+                if reservable and (waited>=w_["bypassMilliseconds"] or bypasses>=w_["maximumBypasses"]):
+                    if drains:state["blocked"]=True
+                    else:state["reserved"]=True
                 elif drains:heads.append({"bypasses":bypasses})
     return {"floorMegabytes":floor,"unrealizedMegabytes":unrealized,"headroomMegabytes":headroom,"binding":binding,"loadRoom":reported,"decisions":decisions}
 

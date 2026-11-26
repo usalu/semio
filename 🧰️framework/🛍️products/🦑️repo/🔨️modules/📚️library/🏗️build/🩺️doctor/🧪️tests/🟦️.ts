@@ -115,8 +115,8 @@ test("an independent Python implementation reproduces every case",()=>{
   expect(python.verdict,item.name).toBe(item.expect.verdict);
   expect(python.counts,item.name).toEqual(item.expect.counts);
   const plan=imageRepairPlanV1(item.facts.storage).map(row=>[row.id,[...row.steps]]);
-  expect(python.imageRepairs,item.name+" image repairs").toEqual(plan);
-  expect(plan,item.name+" image repairs stated by hand").toEqual(item.expect.imageRepairs??[]);
+  expect<unknown>(python.imageRepairs,item.name+" image repairs").toEqual(plan);
+  expect<unknown>(plan,item.name+" image repairs stated by hand").toEqual(item.expect.imageRepairs??[]);
  });
 });
 

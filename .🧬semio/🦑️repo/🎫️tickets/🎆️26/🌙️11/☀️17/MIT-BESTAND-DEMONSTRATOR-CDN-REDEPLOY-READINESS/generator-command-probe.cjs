@@ -167,7 +167,7 @@ function traceGuestTurn(source, file) {
   return source;
 }
 
-function traceShardWire({ stopOnControlTurns, traceHost }) {
+function traceShardWire({ stopOnControlTurns, traceHost, traceHostAlways = false }) {
   const NativeWorker = window.Worker;
   const counts = { sent: 0, returned: 0, turns: 0, lastRequest: "", lastReply: "", lastStatus: "" };
   const currencies = new Map();
@@ -181,6 +181,16 @@ function traceShardWire({ stopOnControlTurns, traceHost }) {
   const decoder = new TextDecoder();
   const pageMagic = "semio.typed-operation-page.v1\0";
   let controlWindows = 0;
+  const wire = value => {
+    const val = value?.val ?? value;
+    if (!Array.isArray(val) && !ArrayBuffer.isView(val)) return null;
+    const bytes = Uint8Array.from(val);
+    return {
+      bytes: bytes.length,
+      prefix: Array.from(bytes.subarray(0, 32)),
+      base64: bytes.length <= 2304 ? btoa(String.fromCharCode(...bytes)) : undefined,
+    };
+  };
   window.Worker = class extends NativeWorker {
     constructor(...args) {
       super(...args);
@@ -225,6 +235,13 @@ function traceShardWire({ stopOnControlTurns, traceHost }) {
           counts.turns += 1;
           counts.lastStatus = turn.status?.tag ?? String(turn.status ?? "");
           for (const effect of turn.effects) {
+            if (traceHostAlways && effect.tag === "respond") {
+              const reply = effect.val ?? effect;
+              console.info("[DEBUG] generator extension wire", JSON.stringify({
+                direction: "actor-effect", actor: data.actorId ?? pending.get(data.requestId)?.actor, kind: effect.tag, id: String(reply.req ?? reply.id ?? ""),
+                requestId: data.requestId, tag: reply.outcome?.tag ?? reply.result?.tag, return: wire(reply.outcome ?? reply.result),
+              }));
+            }
             if (effect.tag !== "send-message" || effect.val?.target?.tag !== "shell") continue;
             const payload = effect.val.payload;
             if (payload?.[0] === 25) console.info("[DEBUG] generator completion raw", JSON.stringify(Array.from(payload.slice(0, 12))));
@@ -259,6 +276,19 @@ function traceShardWire({ stopOnControlTurns, traceHost }) {
       if (traceHost && globalThis.probeFlowHost && !data.requestId && data.actorId) {
         remember(["host-frame", data.actorId, data.kind, data.frame?.kind]);
       }
+      if (traceHostAlways && Array.isArray(data.events)) {
+        for (const event of data.events) {
+          const body = event.payload ?? event.val ?? event;
+          if (event.kind === "completed" || event.kind === "http-chunk" ||
+              (event.kind === "request" && String(data.actorId).includes("flow-extension"))) {
+            console.info("[DEBUG] generator extension wire", JSON.stringify({
+              direction: "host-event", actor: data.actorId, kind: event.kind, id: String(body.req ?? body.id ?? ""),
+              requestId: data.requestId, tag: body.outcome?.tag ?? body.result?.tag,
+              return: wire(body.outcome ?? body.result ?? body.params?.bytes ?? body.payload),
+            }));
+          }
+        }
+      }
       counts.sent += 1;
       counts.lastRequest = `${data.kind}/${data.requestId ?? ""}/${data.events?.map(event => event.kind).join(",") ?? ""}`;
       return super.postMessage(data, ...args);
@@ -267,7 +297,7 @@ function traceShardWire({ stopOnControlTurns, traceHost }) {
   setInterval(() => {
     const frequent = [...currencies].sort((a, b) => b[1] - a[1]).slice(0, 5);
     console.info("[DEBUG] generator shard wire", JSON.stringify({ ...counts, receiptCurrencies: frequent, originalSources: Object.fromEntries(originalSources) }));
-    if (traceHost && globalThis.probeFlowHost) {
+    if (traceHost && (traceHostAlways || globalThis.probeFlowHost)) {
       console.info("[DEBUG] generator host tail", JSON.stringify({ flow: globalThis.probeFlowHost, recent, pending: Object.fromEntries(pending) }));
     }
     const control = currencies.size === 2 && currencies.has("1/89/89/0/0") && currencies.has("0/0/0/0/10");
@@ -517,7 +547,9 @@ async function main() {
   }
 }
 
-main().catch((error) => {
+module.exports.traceShardWire = traceShardWire;
+
+if (require.main === module) main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });

@@ -4,7 +4,7 @@ import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {casUsageHintPathV1} from "../../../../🗄️cas/🧹️collector/🟦️.ts";
-import {resetCasGuardsV1} from "../../../../🗄️cas/🚦️guard/🟦️.ts";
+import {createCasGuardV1,resetCasGuardsV1} from "../../../../🗄️cas/🚦️guard/🟦️.ts";
 import {readCasTransientsV1,CAS_LEASE_HEADER_V1} from "../../../../🗄️cas/📌️pins/🟦️.ts";
 import {createCasStoreV1} from "../../../../🗄️cas/🗃️store/🟦️.ts";
 import {CAS_POLICY_V1,type CasPolicyV1} from "../../../../🗄️cas/🧬️schema/🟦️.ts";
@@ -12,18 +12,26 @@ import {startRemoteCacheServerV1} from "../../🟦️.ts";
 
 const scratch:string[]=[];
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
-const MIB=1024*1024,sha=(bytes:Uint8Array):string=>createHash("sha256").update(bytes).digest("hex");
+const MIB=1024*1024,sha=(bytes:Uint8Array<ArrayBuffer>):string=>createHash("sha256").update(bytes).digest("hex");
+
+test("CAS PUT reports temporary host errors as 503 and proven capacity as 507",async()=>{
+ const base=mkdtempSync(join(tmpdir(),"rcache-status-"));scratch.push(base);const {CasCapRefusalV1}=await import("../../../../🗄️cas/🚦️guard/🟦️.ts");let capacity=false;
+ const original=createCasStoreV1({root:join(base,"cas")}),host={...original,putChecked:async()=>{if(capacity)throw new CasCapRefusalV1(2,1);throw Error("synthetic host I/O");}};
+ const server=await startRemoteCacheServerV1({directory:join(base,"cache"),host:"127.0.0.1",port:0,maximumBytes:2**30,maximumEntryBytes:2**24,maximumAgeDays:30,defaultInstance:"main",tokens:{write:"t"},validation:"off",hostStore:host});
+ try{const bytes=new TextEncoder().encode("x"),url=`${server.url}/main/cas/${sha(bytes)}`,put=(authorization:string)=>fetch(url,{method:"PUT",headers:{authorization},body:bytes});expect((await put("Bearer wrong")).status).toBe(401);expect((await put("Bearer t")).status).toBe(503);capacity=true;expect((await put("Bearer t")).status).toBe(507);}finally{await server.stop();}
+});
 
 test("a 507 names the bound and the largest holders, an input upload is admitted over the cap, ends its lease on DELETE, and a bare DELETE is refused",async()=>{
  resetCasGuardsV1();
  const base=mkdtempSync(join(tmpdir(),"rcache-admission-"));scratch.push(base);
- const policy:CasPolicyV1={...CAS_POLICY_V1,capBytes:4*MIB,minimumCapBytes:1,minAgeMs:0,admissionBudgetMs:200,transientGraceMs:1000},root=join(base,"cas"),host=createCasStoreV1({root,policy,refuseOverCap:true});
+ const policy:CasPolicyV1={...CAS_POLICY_V1,capBytes:4*MIB,minimumCapBytes:1,minAgeMs:0,admissionBudgetMs:200,transientGraceMs:1000},root=join(base,"cas");let freeBytes=180000*MIB;
+ const guard=createCasGuardV1({root,policy,refuseOverCap:true,partition:()=>({partition:base,totalBytes:200000*MIB,freeBytes,role:"worker"})}),host=createCasStoreV1({root,policy,guard});
  const held=[randomBytes(MIB),randomBytes(MIB),randomBytes(MIB),randomBytes(MIB),randomBytes(MIB)],digests:string[]=[];
  for(const bytes of held)digests.push((await host.put(bytes)).hash);
  await host.pin("test-holder",digests,600000);
  mkdirSync(join(root,"v1"),{recursive:true});writeFileSync(casUsageHintPathV1(root),JSON.stringify({version:1,bytes:5*MIB,atMs:Date.now()}));
  const server=await startRemoteCacheServerV1({directory:join(base,"dir"),host:"127.0.0.1",port:0,maximumBytes:2**30,maximumEntryBytes:2**24,maximumAgeDays:30,defaultInstance:"main",tokens:{write:"t"},validation:"off",hostStore:host});
- const auth={authorization:"Bearer t"},put=(bytes:Uint8Array,extra:Record<string,string>={})=>fetch(`${server.url}/main/cas/${sha(bytes)}`,{method:"PUT",headers:{...auth,...extra},body:bytes});
+ const auth={authorization:"Bearer t"},put=(bytes:Uint8Array<ArrayBuffer>,extra:Record<string,string>={})=>fetch(`${server.url}/main/cas/${sha(bytes)}`,{method:"PUT",headers:{...auth,...extra},body:bytes});
  try{
   const plain=randomBytes(MIB),refused=await put(plain),text=await refused.text();
   expect(refused.status).toBe(507);expect(text).toContain("Insufficient storage");expect(text).toContain("cap in force");expect(text).toContain("largest holders");expect(text).toContain("Grenze");
@@ -36,6 +44,7 @@ test("a 507 names the bound and the largest holders, an input upload is admitted
   expect((await fetch(`${server.url}/main/cas/${key}`,{method:"HEAD",headers:auth})).status).toBe(200);
   const forbidden=await fetch(`${server.url}/main/cas/${key}`,{method:"DELETE",headers:{[CAS_LEASE_HEADER_V1]:"input"}});expect([401,403]).toContain(forbidden.status);await forbidden.arrayBuffer();
   const bare=await fetch(`${server.url}/main/cas/${key}`,{method:"DELETE",headers:auth});expect(bare.status).toBe(405);expect(bare.headers.get("allow")).toBe("GET, HEAD, PUT, DELETE");await bare.arrayBuffer();
+  freeBytes=MIB;const low=await put(randomBytes(MIB),{[CAS_LEASE_HEADER_V1]:"input:low-space"});expect(low.status).toBe(507);await low.arrayBuffer();
  }finally{await server.stop();}
 },60000);
 

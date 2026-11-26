@@ -135,6 +135,8 @@ members = [
     "🧩️compositions/🕸️dag/📦️packages/🦀️rust",
     "🧩️compositions/🕸️dag/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🖍️draw/📦️packages/🦀️rust",
+    "🧩️compositions/🖍️draw/🗃️apps/✏️editor/📦️packages/🦀️rust",
+    "🧩️compositions/🖍️draw/🗃️apps/👁️viewer/📦️packages/🦀️rust",
     "🧩️compositions/🖍️draw/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🖍️draw/🧪️tests/🌐️guest/📦️packages/🦀️rust",
     "🧩️compositions/🖨️raster/📦️packages/🦀️rust",
@@ -146,6 +148,15 @@ members = [
     "🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/🏗️projection/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️definition/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🗃️apps/🌐️html/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🗃️apps/🏷️xml/✅️valid/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🗃️apps/🏷️xml/🌐️any/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🗃️apps/📋️csv/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🗃️apps/📑️tsv/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🗃️apps/📝️md/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🗃️apps/🔤️txt/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🗃️apps/🧬️json/🌐️any/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🗃️apps/🧬️json/🔒️i-json/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/🧩️component/📦️packages/🦀️rust",
@@ -218,6 +229,8 @@ edition = "2021"
 rust-version = "1.95"
 
 [workspace.dependencies]
+semio-hub-draw-editor-app = { path = "🧩️compositions/🖍️draw/🗃️apps/✏️editor/📦️packages/🦀️rust" }
+semio-hub-draw-viewer-app = { path = "🧩️compositions/🖍️draw/🗃️apps/👁️viewer/📦️packages/🦀️rust" }
 semio-hub-fem-2d-editor-app = { path = "🧩️compositions/🏗️fem/🗃️apps/◻️2d/✏️editor/📦️packages/🦀️rust" }
 semio-hub-fem-2d-viewer-app = { path = "🧩️compositions/🏗️fem/🗃️apps/◻️2d/👁️viewer/📦️packages/🦀️rust" }
 semio-hub-fem-3d-editor-app = { path = "🧩️compositions/🏗️fem/🗃️apps/🧊️3d/✏️editor/📦️packages/🦀️rust" }

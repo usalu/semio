@@ -60,7 +60,7 @@ posix("a different requested stage reconciles only proven exits of the detached 
    const result=await f.launch(f.ports(plan),plan[0]!);
    const physical=f.original.state.read().stages.workspace;
    observations.push([row.name,result.attribution??null,physical!==undefined]);
-   expect(result.stage).toBe("workspace");expect(result.exit).toBe(row.exit);expect(result.attribution??null).toBe(row.result);
+   expect(result.stage).toBe("workspace");expect(result.exit).toBe(row.exit);expect<string|null>(result.attribution??null).toBe(row.result);
    expect(readFileSync(f.runs,"utf8")).toBe("workspace\n");
    expect(existsSync(prior.exitFile)).toBe(false);expect(existsSync(f.running)).toBe(false);
    if(physical!==undefined)expect(physical.digest).toBe((await f.original.digests()).stages[2]!.digest);

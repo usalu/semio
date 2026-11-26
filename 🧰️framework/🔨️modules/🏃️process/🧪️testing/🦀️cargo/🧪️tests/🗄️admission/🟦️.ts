@@ -5,6 +5,7 @@ import {mkdirSync,writeFileSync,readFileSync,lstatSync} from "node:fs";
 import {join,dirname,isAbsolute,relative,sep} from "node:path";
 import {withBuildTestInvocationV1,registerBuildTestFixtureV1} from "../../../📥️invocation/🟦️.ts";
 import {createIssuedResourceControlV1,withRequestedIssuedResourceControlV1,withScriptInvocationSignalV1,scriptInvocationEnvironment,type IssuedScriptInvocationV1} from "../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {readBuildMode} from "../../../../🏗️build/🎚️mode/🟦️.ts";
 import {withAdmittedCompilerStoreV1,type CompilerStoreViewV1} from "../../🔌️provider/🟦️.ts";
 import type {CargoTestAdmissionV1} from "../../🟦️.ts";
@@ -40,9 +41,9 @@ const fixture=registerBuildTestFixtureV1<HeldCargoLawV1>(async(original,retain)=
   original.control.signal.throwIfAborted();
   if(maximumElapsedMilliseconds<=0)throw Error("Original Cargo fixture preparation budget exhausted");
   return repository.invoke(privateOriginal=>withScriptInvocationSignalV1(privateOriginal,original.control.signal,actual=>{
-  const workspace=actual.capabilities.workspaceRoot;
+  const authority=readNativeCallerAuthorityV1(actual.capabilities),workspace=authority.repositoryRoot;
   if(typeof workspace!=="string"||!isAbsolute(workspace))throw Error("Original Cargo law workspace required");
-  return withAdmittedCompilerStoreV1(workspace,readBuildMode(actual.capabilities.buildMode),createIssuedResourceControlV1(actual,"law:cargo-fixture",0),scriptInvocationEnvironment(actual,process.env),async(store,control)=>{
+  return withAdmittedCompilerStoreV1(workspace,readBuildMode(authority.original.buildMode),createIssuedResourceControlV1(actual,"law:cargo-fixture",0),scriptInvocationEnvironment(actual,process.env),async(store,control)=>{
    mkdirSync(store.captureDirectory,{recursive:true});
    const enter=AsyncLocalStorage.snapshot();
    await retain({workspace,store,control,invocation:actual,run:body=>enter(body)});

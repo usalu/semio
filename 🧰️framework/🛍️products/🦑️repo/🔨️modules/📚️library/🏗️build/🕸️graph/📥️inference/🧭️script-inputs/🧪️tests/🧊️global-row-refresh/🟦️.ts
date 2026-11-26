@@ -5,7 +5,7 @@ import{dirname,join}from"node:path";
 import{privateRepositoryWorkspaceV1}from"../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 import{declareLibraryBuildTestEnvelopeV1}from"../../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 const repository=await privateRepositoryWorkspaceV1("graph");
-declareLibraryBuildTestEnvelopeV1({suite:"build-inference",scratch:"checkout"});
+declareLibraryBuildTestEnvelopeV1({suite:"build-inference-script-inputs"});
 const inference=await import("../../../🟨️.mjs"),{createScriptInputCache,libraryBootstrap}=inference as any;
 await libraryBootstrap;
 const scriptInputs=await import("../../🟨️.mjs") as any,observation=await import("../../../../../👁️observation/🟨️.mjs") as any;

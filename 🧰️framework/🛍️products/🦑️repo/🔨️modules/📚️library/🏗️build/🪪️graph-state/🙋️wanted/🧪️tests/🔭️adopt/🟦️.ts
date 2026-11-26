@@ -59,7 +59,7 @@ test("the next process adopts the read in flight: no second read, the fresh proj
   expect(existsSync(join(steer,"pending.json")),"the read's own pending file was not removed").toBe(true);
   const last=await readServedV1({client:requester,requester:"g1-m06"});expect(last?.projects).toEqual(names);expect(last?.generation).toBe(9);
   expect(lines.some(line=>line.includes("served 6 projects for g1-m06"))).toBe(true);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },90000);
 
 test("without an adoptable read the server behaves as before: it starts one read when a request is held and memory allows",async()=>{
@@ -72,7 +72,7 @@ test("without an adoptable read the server behaves as before: it starts one read
    quietMilliseconds:async()=>10**9,say:()=>{},signal:new AbortController().signal,now:time,sleep:async()=>{await Bun.sleep(5);},rounds:3});
   expect(asked).toBe(1);expect(inferred).toBe(1);
   expect((await readServedV1({client:requester,requester:"g1-m06"}))?.generation).toBe(2);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("a server that is stopped lets go of the adopted read: it answers nobody and waits for the detach, not for the end of the read",async()=>{
@@ -87,5 +87,5 @@ test("a server that is stopped lets go of the adopted read: it answers nobody an
   expect(detached).toBe(true);
   const served=await readServedV1({client:requester,requester:"g1-m06"});expect(served?.generation ?? null,"not answered as complete").toBeNull();
   expect(readPendingV1(steer)).toBeUndefined();
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);

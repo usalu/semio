@@ -100,7 +100,7 @@
  {"op": "loft", "scale": "500", "bone": "humerus-fn", "id": "near-fore-upper", "side": true},
  {"op": "loft", "scale": "500", "bone": "radius-fn", "id": "near-forearm", "side": true},
  {"op": "loft", "scale": "500", "bone": "cannon-fn", "id": "near-fore-lower", "side": true, "max": 9, "own": false},
- {"op": "loft", "scale": "500", "bone": "lumbar", "id": "hindbody", "plan": "loin"},
+ {"op": "loft", "scale": "500", "bone": "lumbar", "id": "hindbody", "plan": "loin", "swell": 0.004},
  {"op": "loft", "scale": "500", "bone": "thorax", "id": "chest"},
  {"op": "loft", "scale": "500", "bone": "neck-1", "id": "neck-a", "front": "neck-girth-a"},
  {"op": "loft", "scale": "500", "bone": "neck-2", "id": "neck-b", "front": "neck-girth-b"},

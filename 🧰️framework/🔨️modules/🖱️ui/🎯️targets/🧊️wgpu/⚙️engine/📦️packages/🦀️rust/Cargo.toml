@@ -52,5 +52,6 @@ ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️ru
 semio-ui-wgpu-paint-reference = { path = "../../../🖌️paint/🔬️reference/📦️packages/🦀️rust", optional = true }
 
 [dev-dependencies]
+semio-framework-job = { path = "../../../../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-ui-wgpu-paint-reference = { path = "../../../🖌️paint/🔬️reference/📦️packages/🦀️rust" }
 semio-ui-wgpu-hosting = { path = "../../../🧭️hosting/📦️packages/🦀️rust", features = ["testkit"] }

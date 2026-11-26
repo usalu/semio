@@ -3,10 +3,10 @@ import { expect, test } from "bun:test";
 import { optimizeComponentCoresV1 } from "../../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts";
 import { Database } from "bun:sqlite";
 import { formatStampProtocolV1 } from "../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🟨️.mjs";
-import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
-import { type LinkedComponentV1, type NativeBuildStageV1 } from "../../🟦️.ts";
+import { NATIVE_BUILD_DRIVER_POLICY_V1, type LinkedComponentV1, type NativeBuildStageV1 } from "../../🟦️.ts";
 import { type NativeBuildJobV1, type NativeBuildPlanV1 } from "../../📋️contract/🟦️.ts";
 import { artifacts, stubCargo, stubWorkspace, runStub, stubJob } from "../🎭️stub/🟦️.ts";
 
@@ -56,6 +56,68 @@ process.exit(${row.exit});
   }, /exit 3/u);
   else test(row.name, run, 60_000);
 }
+
+for (const row of fixture.describeDrain.cases) registerIsolatedBuildTestV1(import.meta.path, row.name, { bodyMilliseconds: 120_000, scope: { kind: "body" } }, async checkpoint => {
+  const vector = fixture.describeDrain, root = mkdtempSync(join(artifacts, "dd-")), cargo = stubCargo(root);
+  const first = stubWorkspace(root, "first", ["comp-a"], "release"), queued = stubWorkspace(root, "queued", ["comp-b"], "release");
+  const tool = stubJob(root, "describe-tool", [], 0);
+  const events = join(root, "events"), linked = join(root, "linked"), failed = join(root, "tool-failed");
+  writeFileSync(tool.command[1]!, `import { appendFileSync, existsSync } from "node:fs";
+appendFileSync(${JSON.stringify(events)}, "tool-start\\n");
+const deadline = Date.now() + ${vector.seconds * 1000};
+while (!existsSync(${JSON.stringify(linked)}) && Date.now() < deadline) await Bun.sleep(25);
+if (!existsSync(${JSON.stringify(linked)})) process.exit(90);
+process.exit(${vector.exit});`);
+  const cargoSource = readFileSync(cargo.args[0]!, "utf8"), beforeLink = 'if (process.env.STUB_MODE === "hang")';
+  expect(cargoSource).toContain(beforeLink);
+  writeFileSync(cargo.args[0]!, cargoSource.replace(beforeLink, `
+appendFileSync(${JSON.stringify(events)}, "cargo-start\\n");
+writeFileSync(${JSON.stringify(linked)}, "");
+const deadline = Date.now() + ${vector.seconds * 1000};
+while (!readFileSync(${JSON.stringify(failed)}, "utf8").includes("failed") && Date.now() < deadline) await Bun.sleep(25);
+appendFileSync(${JSON.stringify(events)}, "cargo-linked\\n");
+${beforeLink}`));
+  writeFileSync(failed, "");
+  const seen: string[] = [], cancellation = new AbortController();
+  const cancelled = Error("User interrupted the guest drain");
+  const result = runStub(root, { version: 1, passes: [first, queued], jobs: [tool], stageAfter: { describe: ["job:describe-tool"] } }, cargo, {
+    partialProvenance: true,
+    ...(row.cancel ? { cancel: { signal: cancellation.signal, milliseconds: 90_000 } } : {}),
+    log(line) {
+      if (line.includes("job:describe-tool job: exit 3")) {
+        appendFileSync(events, "tool-failed\n");
+        if (!row.cancel) writeFileSync(failed, "failed");
+      }
+      if (row.cancel && line.includes("draining issued guest Cargo")) cancellation.abort(cancelled);
+    },
+    stages: linked => [
+      { name: "transpile", capacity: "io", after: [], async run() { expect(existsSync(linked.staged)).toBe(true); } },
+      { name: "optimize", capacity: "io", after: ["transpile", "provenance:" + linked.pass.id], async run(context) {
+        expect((await context.provenance()).units).toBe(1);
+        appendFileSync(events, "optimize\n");
+        seen.push(linked.package.name);
+      } },
+      { name: "describe", capacity: "io", after: [], async run() { throw Error("descriptor escaped its prerequisite"); } },
+      { name: "model", capacity: "io", after: ["describe"], async run() { throw Error("receipt escaped its prerequisite"); } },
+      { name: "browser", capacity: "io", after: ["model"], async run() { throw Error("browser escaped its prerequisite"); } },
+      { name: "discard", capacity: "cleanup", after: ["browser", "optimize"], async run() { appendFileSync(events, "discard\n"); } },
+    ],
+  }, "observe-describe-drain", ({ held }) => {
+    const policy = NATIVE_BUILD_DRIVER_POLICY_V1, runs = join(held.root, "cache", policy.warmRoot);
+    const report = join(runs, readdirSync(runs)[0]!, policy.stores.report, policy.provenanceDirectory);
+    expect(JSON.parse(readFileSync(join(report, policy.provenanceReadsFile), "utf8")).closed).toBe(!row.cancel);
+    expect(readdirSync(report).filter(path => path.startsWith("cargo-unit-provenance-"))).toHaveLength(row.cancel ? 0 : 1);
+  });
+  await expect(result).rejects.toThrow(row.cancel ? cancelled.message : /job:describe-tool/u);
+  expect(seen).toEqual(row.cancel ? [] : ["comp-a"]);
+  expect(readFileSync(cargo.calls, "utf8")).not.toContain(queued.manifest);
+  const oracle = new Database(":memory:");
+  try {
+    const expected = oracle.query<{ event: string }, [string]>("select value as event from json_each(?) order by key").all(JSON.stringify(row.events));
+    expect(readFileSync(events, "utf8").trim().split("\n")).toEqual(expected.map(({ event }) => event));
+  } finally { oracle.close(); }
+  checkpoint();
+}, row.cancel ? undefined : /Native build failed: job:describe-tool/u);
 
 test("jobs start as soon as the jobs they name complete, and post-link stages stream per component after the job they name", async () => {
   const root = mkdtempSync(join(artifacts, "j-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a", "comp-b"], "release");
@@ -251,3 +313,29 @@ test("a job that exits with the shared restart status runs again once with the s
   expect(outcome.failed).toEqual([]);
   expect(readFileSync(join(root, "starts.log"), "utf8")).toBe("xx");
 }, 60_000);
+
+test("a native attempt carries its private response request and settles before describe starts", async () => {
+  const root=mkdtempSync(join(artifacts,"jr-")),cargo=stubCargo(root),pass=stubWorkspace(root,"hub",["comp-a"],"release");
+  const job=stubJob(root,"describe-tool",[],0),reply=join(root,"reply"),starts=join(root,"starts");
+  const environmentName="SEMIO_TEST_NATIVE_ATTEMPT_REQUEST",request="typed-job-attempt-request",restart=formatStampProtocolV1().exitCode;
+  writeFileSync(job.command[1]!, `import {appendFileSync,writeFileSync} from "node:fs";
+appendFileSync(${JSON.stringify(starts)}, "x");
+writeFileSync(${JSON.stringify(reply)}, process.env[${JSON.stringify(environmentName)}] ?? "", {flag:"wx"});
+process.exit(${restart});
+`);
+  let settled=false;
+  const outcome=await runStub(root,{version:1,passes:[pass],jobs:[job],stageAfter:{describe:["job:describe-tool"]}},cargo,{
+    jobAttempt(actual){
+      expect(actual.id).toBe(job.id);
+      return {environment:{[environmentName]:request},async settle(exit){
+        expect(exit).toBe(restart);
+        expect(readFileSync(reply,"utf8")).toBe(request);
+        settled=true;
+        return 0;
+      }};
+    },
+    stages:()=>[{name:"describe",after:[],capacity:"io",async run(){expect(settled).toBe(true);}}],
+  });
+  expect(outcome.failed).toEqual([]);
+  expect(readFileSync(starts,"utf8")).toBe("x");
+},60_000);

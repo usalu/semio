@@ -81,7 +81,7 @@ function bareResolveDoubtfulV1(root,key,row,index,installed){
 /** 🔌 Wraps `membership` and `holds` of the host. `journal` reads the watcher journal, `store` keeps the cursor (and the paths still owed a check) at which each generation was verified, `ports` are the frontier ports of the host, `membership`/`holds` the unchanged scan used by a verify epoch (and, for a port that `watches` only the `governed` shared files, by every read: the port then decides the facts and the scan proves the membership), `adopt(files)` receives the member list like the scan stores it and `notify` announces every verify epoch. A verify epoch of a full load commits its cursor as soon as the fact verification ends (`factsVerified`), with the changes and stale rows found so far as a carry that stays doubtful, so a scan that dies later resumes instead of repeating. */
 export function journalGraphSeamsV1({root,journal,store,ports,digest,membership,holds,classify=async changes=>changes,adopt=()=>undefined,notify=()=>undefined,install=async()=>undefined,now=()=>Date.now(),maximumCarry=GRAPH_HOOKS_POLICY_V1.maximumCarry}){
  const stats={advanced:0,verified:0,checked:0,trusted:0,doubtful:0,resumed:0};
- let pending,full,observed;const memory=new Map();
+ let pending,full,observed;const memory=new Map(),remember=(key,value)=>{memory.delete(key);memory.set(key,value);while(memory.size>GRAPH_HOOKS_POLICY_V1.maximumCarriedCursors)memory.delete(memory.keys().next().value);};
  const track=async(rows,signal)=>{
   const ok=await holds(rows,signal);
   const held=pending;
@@ -113,6 +113,7 @@ export function journalGraphSeamsV1({root,journal,store,ports,digest,membership,
   const filed=FILE_ROWS.has(row.kind);
   if(!filed&&!TRUSTED.has(row.kind))return 1;
   const memo=filed?held.fileLevels??=new Map():held.levels??=new Map();
+  if(memo.size>=GRAPH_HOOKS_POLICY_V1.levelMemoEntries)memo.clear();
   let level=memo.get(row.path);
   if(level===undefined){level=pathLevel(held,filed,row.path);memo.set(row.path,level);}
   return level;
@@ -204,7 +205,7 @@ export function journalGraphSeamsV1({root,journal,store,ports,digest,membership,
    const held=pending;
    if(full!==true||!held?.cursor||held.generation===undefined||held.index||held.owed===undefined)return;
    const cursor=withInstall(held.cursor,held.install),carry={exact:[...new Set([...held.owed.exact,...held.stale])].sort(),subtrees:[...held.owed.subtrees].sort()};
-   memory.set(cursorKey(held.generation),{...cursor,carry});
+   remember(cursorKey(held.generation),{...cursor,carry});
    if(!held.overflow)store.set(cursorKey(held.generation),cursor,carry);
   },
   /** 📍 Records, for a generation a build published before it finished, the cursor and the paths still owed that the pass in progress verified against: the next read of that generation resumes from them (a cursor never vouches for more than the pass checked, a recomputed owner is only checked again). Nothing is recorded where the pass could not persist its carry (overflow) or knows no cursor. */

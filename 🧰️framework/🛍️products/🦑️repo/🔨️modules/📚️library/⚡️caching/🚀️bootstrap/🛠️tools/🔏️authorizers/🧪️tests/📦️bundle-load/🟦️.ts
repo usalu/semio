@@ -42,6 +42,8 @@ test("the compiler bundle loads from a directory far away from the source tree",
  try{Bun.spawnSync(["mkdir","-p",deep]);const program=join(deep,".semio-authorizer-compiler.mjs");writeFileSync(program,sealed.bytes);
   const run=Bun.spawnSync([process.execPath,program],{cwd:deep,env:{PATH:process.env.PATH??""}}),text=run.stderr.toString()+run.stdout.toString();
   expect(text,"the bundle read a sibling of the source tree while loading").not.toContain("ENOENT");
+  expect(text,"the bundle left a data import to be resolved from its own directory (it must carry its JSON schemas)").not.toMatch(/Cannot find module|Require stack/u);
+  expect(Buffer.from(sealed.bytes).includes("readTimeoutMilliseconds:15000"),"the process identity schema is inlined").toBe(true);
   expect(text).toContain("Original parent Script process invocation required");
  }finally{rmSync(far,{recursive:true,force:true});}
 },300000);

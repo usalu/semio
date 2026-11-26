@@ -96,7 +96,7 @@ fn ephemeral_one_item_publication_fixture_matches_the_third_party_json_oracle() 
 
 #[test]
 fn one_item_publication_source_denies_generic_or_unbounded_shortcuts() {
-    let source = ["../../../../⚙️engine/🧱️store-components/📥️lifted/🏪️store/🦀️.rs", "../../../../⚙️engine/📥️lifted/🏪️store/🦀️.rs", "../../../../🎮️one-item/📬️publication/🦀️.rs"].iter().map(|file| std::fs::read_to_string(fixture_path!(file)).unwrap_or_else(|error| panic!("read {file}: {error}"))).collect::<String>();
+    let source = ["../../../../🎮️one-item/📬️publication/🦀️.rs", "../../../../⚙️engine/🧳️bundle/🦀️.rs", "../../../../⚙️engine/🧱️store-components/📥️lifted/🏪️store/📬️store-owners-batch-fold-and-history/🦀️.rs"].iter().map(|file| std::fs::read_to_string(fixture_path!(file)).unwrap_or_else(|error| panic!("read {file}: {error}"))).collect::<String>();
     let authority_start = source.find("pub struct ArtifactStoreOneItemLiveAuthority").expect("private live authority");
     let authority_end = source[authority_start..].find("impl ArtifactStoreOneItemLiveAuthority").map(|offset| authority_start + offset).expect("authority helper");
     let authority_shape = &source[authority_start..authority_end];
@@ -109,21 +109,21 @@ fn one_item_publication_source_denies_generic_or_unbounded_shortcuts() {
     assert!(!prepared_shape.contains("pub edit:"));
     assert!(!prepared_shape.contains("pub edit_digest:"));
     assert!(!prepared_shape.contains("cursor"), "domain-prepared envelope cannot carry cursor or history fabrication fields");
-    let start = source.find("pub fn advance_apply_batch(").expect("retained batched advance");
-    let end = source[start..].find("pub fn cancel_apply_batch(").map(|offset| start + offset).expect("retained batched cancel");
+    let start = source.find("pub fn advance_apply_batch<").expect("retained batched advance");
+    let end = source[start..].find("fn spend_item_close_grant<").map(|offset| start + offset).expect("retained item close spender");
     let advance = &source[start..end];
     for forbidden in [".diff(", ".inverse(", "apply_mutation(", "replay_mutations(", "apply_command(", "flush_outbound(", "try_reserve_exact(", "post_snapshot.clone()", "current.as_ref().clone()", ".to_vec()"] {
         assert!(!advance.contains(forbidden), "batched advance contains forbidden shortcut {forbidden}");
     }
-    let close_start = source.find("pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant)").expect("one-item close");
-    let close_end = source[close_start..].find("pub fn terminal_is_empty").map(|offset| close_start + offset).expect("one-item terminal witness");
+    let close_start = source.find("fn spend_item_close_grant<").expect("one-item close");
+    let close_end = source[close_start..].find("//#endregion 📬️OneItemPublication").map(|offset| close_start + offset).expect("one-item close region end");
     let close = &source[close_start..close_end];
-    assert!(close.contains("maximum_items: 1"), "a close turn hands each nested owner exactly one item");
-    assert!(close.contains("maximum_release_bytes") && close.contains("maximum_copy_bytes") && close.contains("maximum_capacity_bytes"), "a close turn gates on every independent byte axis");
+    assert!(close.contains("maximum_items == 0"), "a close turn refuses to run without its one item");
+    assert!(close.contains("maximum_release_bytes") && close.contains("admit_retained_clone_close"), "a close turn gates the release axis itself and admits the child receipt on every other independent byte axis");
     assert!(close.contains("terminal_is_empty"));
     assert!(!close.contains(".clear()"));
     assert!(!advance.contains("prepared_edit_digest("), "Store commit validation must not reserialize retained edits");
-    let fold_start = source.find("fn fold_batch_item(").expect("retained batched fold");
+    let fold_start = source.find("pub fn fold_batch_item(").expect("retained batched fold");
     let fold_end = source[fold_start..].find("fn empty_batch_stage(").map(|offset| fold_start + offset).expect("retained batched stage shell");
     let fold = &source[fold_start..fold_end];
     assert!(fold.contains("authority.validate_prepared(candidate)"), "Store validation must verify its private exact-owner seal before folding an item");
@@ -136,9 +136,9 @@ fn one_item_publication_source_denies_generic_or_unbounded_shortcuts() {
 }
 
 /// 🧹️ Takes one returned owner through the grant-admitting probe, handing back the exact registered `Arc`.
-fn take_one_returned<T: Send + Sync + 'static>(registry: &semio_framework_value_snapshot_read::SnapshotReadRegistryHandle) -> Result<Option<Arc<T>>, SnapshotReadLeaseRefusal> {
+fn take_one_returned<T: Send + Sync + 'static>(registry: &semio_framework_value_snapshot_read::SnapshotReadRegistryHandle) -> Result<Option<Arc<T>>, semio_framework_value_snapshot_read::SnapshotReadReturnedRefusal> {
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 1 };
-    registry.try_admit_one_returned::<T, Arc<T>>(grant, |owner, _| semio_framework_value::RetainedWorkOutcome { result: Ok((owner, RetainedCloneProgress::default())), work: 1 }).result.map(|(owner, _)| owner)
+    effect_tests::with_effect(grant, effect_tests::CPU, |effect| registry.try_admit_one_returned::<T, Arc<T>>(effect, |owner, _| semio_framework_value::RetainedWorkOutcome { result: Ok(owner.take().map(|owner| (owner, RetainedCloneProgress::default()))), work: 1 })).0.result.map(|(owner, _)| owner)
 }
 
 
@@ -194,7 +194,7 @@ fn dropped_snapshot_read_remains_observable_until_one_slot_per_step_cleanup_take
     assert!(registry.contains(index, generation));
     let mut retired = None;
     for _ in 0..SNAPSHOT_READ_LEASE_CAPACITY {
-        if let Some(owner) = registry.try_admit_one_returned::<String,_>(physical_test_close_grant(),|original,_|semio_framework_value::RetainedWorkOutcome{result:Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}).result.map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed cleanup probe") {
+        if let Some(owner) = effect_tests::with_effect(physical_test_close_grant(),effect_tests::CPU,|effect|registry.try_admit_one_returned::<String,_>(effect,|original,_|semio_framework_value::RetainedWorkOutcome{result:Ok(original.take().map(|original|(original,RetainedCloneProgress{copied_items:1,..Default::default()}))),work:1})).0.result.map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed cleanup probe") {
             retired = Some(owner);
             break;
         }

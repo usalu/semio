@@ -6,6 +6,7 @@ import type {RemoteExecutionDigestV1} from "../../../🟦️.ts";
 import {validateRemoteExecutionRustcActionV1} from "../../../🧱️actions/🟦️.ts";
 import {testScratchRootV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import {OFFLOAD_POLICY_V1} from "../../📐️policy/🟦️.ts";
+import {readRemoteCachePolicyV1} from "../../../../🌐️remote-cache/🟦️.ts";
 import type {OffloadPlanV1} from "../../🗺️paths/🟦️.ts";
 import {buildOffloadActionV1,offloadRustcCommandV1} from "../🟦️.ts";
 
@@ -59,14 +60,20 @@ test("the macOS object prefix is part of the command only for an Apple target, d
  expect(offloadRustcCommandV1(value,"x86_64-pc-windows-msvc").arguments.some(argument=>argument.includes("oso_prefix"))).toBe(false);
 });
 
-test("a tree larger than the upload bound is no reason to stay: blobs the store already holds do not travel, and only what is missing counts against the bound",async()=>{
- const input=plan("/",0o644,"large"),big=[...input.files.values()][0]!;truncateSync(big,policy.limits.maximumUploadBytes+1048576);
- const held=new class extends Sink{override async missing(_:string,digests:readonly RemoteExecutionDigestV1[]){return digests.filter(row=>row.size_bytes<1048576);}}();
- const digest=(path:string):string|null=>path===big?"a".repeat(64):null;
- const shipped=await buildOffloadActionV1({plan:input,content:held,instance:"main",platform,digest:path=>digest(path)??"b".repeat(64)});
- expect("declined" in shipped,"the large blob is already in the store").toBe(false);
+test("a tree larger than the upload bound is no reason to stay: blobs the store already holds do not travel, and only what is missing counts against the bound; one blob past the per-entry limit of the store can never be held, so it declines at once",async()=>{
+ const server=readRemoteCachePolicyV1().server,entry=Math.min(server.maximumEntryBytes,Math.floor(server.maximumBytes/2)),seed=plan("/",0o644,"large"),extra=new Map<string,string>(),base=mkdtempSync(join(testScratchRootV1("rexec-action"),"big-"));scratch.push(base);
+ const big=Array.from({length:Math.floor(policy.limits.maximumUploadBytes/entry)+1},(_,at)=>{const path=join(base,`big-${at}.bin`);writeFileSync(path,"");truncateSync(path,entry);extra.set(`.semio-offload/p/big-${at}.bin`,path);return path;});
+ const input:OffloadPlanV1=Object.freeze({...seed,files:new Map([...seed.files,...extra])});
+ const held=new class extends Sink{override async missing(_:string,digests:readonly RemoteExecutionDigestV1[]){return digests.filter(row=>row.size<1048576);}}();
+ const digest=(path:string):string=>{const at=big.indexOf(path);return at<0?"b".repeat(64):String(at).repeat(64).slice(0,64);};
+ const shipped=await buildOffloadActionV1({plan:input,content:held,instance:"main",platform,digest});
+ expect("declined" in shipped,"the large blobs are already in the store").toBe(false);
  if(!("declined" in shipped)){expect(shipped.bytes).toBeGreaterThan(policy.limits.maximumUploadBytes);expect(shipped.uploaded).toBeLessThan(shipped.files+4);}
- const refused=await buildOffloadActionV1({plan:input,content:new Sink(),instance:"main",platform,digest:path=>digest(path)??"b".repeat(64)});
+ const refused=await buildOffloadActionV1({plan:input,content:new Sink(),instance:"main",platform,digest});
  expect("declined" in refused&&refused.declined).toBe("inputs-too-large");
  expect("declined" in refused&&refused.detail.startsWith("upload ")).toBe(true);
+ truncateSync(big[0]!,entry+1);
+ const oversized=await buildOffloadActionV1({plan:input,content:held,instance:"main",platform,digest});
+ expect("declined" in oversized&&oversized.declined).toBe("inputs-too-large");
+ expect("declined" in oversized&&oversized.detail).toContain("per entry");
 });

@@ -1,4 +1,5 @@
 import { lstatOrNull } from "../📁️input/🟦️.ts";
+import {processPidExistsV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 import { sourceAdmissionAssertLexical } from "../🚪️source-admission/📁️io/🟦️.ts";
 import { readFileSync, readdirSync } from "node:fs";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
@@ -47,15 +48,7 @@ export function readTransactionLease(root: string, filename: string, planDigest:
 }
 
 export function transactionLeaseProcessIsAlive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    const code = String((error as NodeJS.ErrnoException).code);
-    if (code === "EPERM") return true;
-    if (code === "ESRCH") return false;
-    throw error;
-  }
+  return processPidExistsV1(pid);
 }
 
 export function assertTransactionLeaseRepositoryAuthority(authority: TransactionRepositoryAuthority, request: { kind: "acquire"; attemptRelative: string; backupRelative: string; leaseDirectory: string; filename: string; previousName: string } | { kind: "release"; expectedLogicalLeasePath: string; handle: TransactionLeaseHandle }): void {

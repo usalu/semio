@@ -7,6 +7,6 @@ shift; n=0
 for item in "$@"; do
   n=$((n + 1)); suite="${item%%=*}"; log="$GEN/vt-$label-$n.log"
   filter=(); [[ "$item" == *=* ]] && filter=(-t "${item#*=}")
-  (cd "$P" && /usr/bin/time -l timeout 3000 "$B" x vitest run --reporter verbose --config "../../🧪️tests/🎚️config/🟦️.ts" "../../🧪️tests/$suite/🟦️.ts" $filter) > "$log" 2>&1
+  (cd "$P" && /usr/bin/time -l timeout "${VT_TIMEOUT:-3000}" "$B" x vitest run --reporter verbose --config "../../🧪️tests/🎚️config/🟦️.ts" "../../🧪️tests/$suite/🟦️.ts" $filter) > "$log" 2>&1
   echo "$suite exit $? $(grep -E '^ *(Test Files|Tests) ' "$log" | tr -s ' ' | tr '\n' ';') peak $(( $(grep 'maximum resident' "$log" | awk '{print $1}') / 1048576 )) MB $(date +%H:%M)"
 done

@@ -169,7 +169,7 @@ fn paged_native_object_keys_clone_without_contiguous_key_capacity() {
         let grant=funded_grant(&cursor,source.borrow(),4096,grant);
         let step = crate::effect::advance(&mut cursor, source.borrow(), 4096, crate::effect::CPU, grant).result.unwrap();
         let progress = step.progress();
-        assert!(progress.copied_items <= 1 && progress.copied_bytes <= crate::retained_clone::RETAINED_CLONE_BULK_PAGE_BYTES && progress.retained_capacity_bytes + progress.released_bytes <= 4096,"turn {turn} grant {grant:?} progress {progress:?}");
+        assert!(progress.copied_items <= 1 && progress.copied_bytes <= crate::retained_clone::RETAINED_CLONE_BULK_PAGE_BYTES && progress.retained_capacity_bytes < key.len() && progress.released_bytes <= crate::retained_clone::RETAINED_CLONE_BULK_PAGE_BYTES,"turn {turn} grant {grant:?} progress {progress:?}");
         if matches!(step, RetainedCloneStep::Complete(_)) { break; }
     }
     let copied = take_value(&mut cursor).unwrap();

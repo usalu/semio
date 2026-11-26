@@ -7,13 +7,13 @@ import {readRemoteExecutionPolicyV1} from "../../🟦️.ts";
 export type RemoteExecutionCodegenPolicyV1=Readonly<{maximumThreads:number;reserveCores:number;extraMegabytesPerThread:number;fairShareThreads:number}>;
 
 /** 🧵️ What the grant of one unit reads: the machine's cores and load, the cores its other running actions hold (one each, the grant of a linked unit for itself), the spare memory of the machine before this unit, the peak this unit was admitted with and whether the machine's memory pressure is raised (then one thread). */
-export type RemoteExecutionCodegenAskV1=Readonly<{cores:number;load:number;others:number;spareMegabytes:number;peakMegabytes:number;pressured?:boolean}>;
+export type RemoteExecutionCodegenAskV1=Readonly<{cores:number;load:number|null;others:number;spareMegabytes:number;peakMegabytes:number;pressured?:boolean}>;
 
 /** 🧵️ How many code generation threads one linked unit gets on this worker: the cores that neither its other actions nor the machine's own load use, less the reserve, but never fewer than the fair share while the cores granted to the other remote actions leave room (an operating system divides a busy machine by threads, so more threads win a larger share of it), at most the maximum, and at most one thread plus as many as the spare memory above the unit's own peak holds, where the fair share's threads are already covered by the unit's reservation (a declared peak is a high estimate of what one thread uses, the ledger raises it after a parallel run, and a machine packed to its limit by admission has no spare above the peak it just admitted, which made every grant one), never less than one. A raised memory pressure grants one. Pure.
  * @see ./🧪️tests/🔣️.json */
 export function remoteExecutionCodegenThreadsV1(ask:RemoteExecutionCodegenAskV1,policy:RemoteExecutionCodegenPolicyV1=readRemoteExecutionPolicyV1().worker.codegen):number{
  if(ask.pressured===true)return 1;
- const others=Math.max(0,Math.floor(ask.others)),cores=Math.floor(ask.cores)-policy.reserveCores,idle=cores-Math.max(others,Math.ceil(Math.max(0,ask.load))),byCores=Math.min(cores-others,Math.max(idle,policy.fairShareThreads));
+ const others=Math.max(0,Math.floor(ask.others)),cores=Math.floor(ask.cores)-policy.reserveCores,idle=cores-Math.max(others,Math.ceil(Math.max(0,ask.load??0))),byCores=Math.min(cores-others,Math.max(idle,policy.fairShareThreads));
  const byMemory=1+Math.floor(Math.max(0,ask.spareMegabytes-Math.max(0,ask.peakMegabytes)+(policy.fairShareThreads-1)*policy.extraMegabytesPerThread)/policy.extraMegabytesPerThread);
  return Math.max(1,Math.min(policy.maximumThreads,byCores,byMemory));
 }

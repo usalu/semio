@@ -121,7 +121,7 @@ test("an implementation that changed while a read was cancelled after a wave res
    const resumed=await world.store.refresh({identity:IDENTITY,implementation,membership:createMembership(dir),compute:createCompute(dir,log)});
    expect(resumed.published).toBe(true);expect(resumed.computed).toBe(COUNT-GENERATION_POLICY_V1.ownerWave);
    expect(log.flatMap(entry=>entry.full).some(name=>finished.has(name))).toBe(false);
-   expect(resumed.current.manifest.implementation).toBe(implementation);
+   expect(resumed.current.manifest?.implementation).toBe(implementation);
    const{generation:_g,membership:_m,...rest}=await world.store.assemble(resumed.current,{});
    expect(JSON.parse(canonicalJsonV1(rest))).toEqual(pythonGraph(dir));
   }finally{rmSync(dir,{recursive:true,force:true});}
@@ -135,7 +135,7 @@ test("a graph read served by the graph server takes the asked-for owners in its 
   await seed(dir,ringFiles(COUNT+3));
   const world=createWorld(dir);
   await world.refresh();
-  const names=Object.keys((await world.store.read())!.manifest.owners).sort(),asked=names.slice(-3).concat(names.slice(-60,-58));
+  const names=Object.keys((await world.store.read())!.manifest!.owners).sort(),asked=names.slice(-3).concat(names.slice(-60,-58));
   await edit(dir,COUNT);
   process.env.SEMIO_GRAPH_STEER_DIRECTORY=steer;writePriorityV1(steer,asked,7);
   world.log.length=0;

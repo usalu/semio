@@ -173,7 +173,7 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
       const refusal = nativeRefusalError(originalSource.nativeRefusal, refusalDetail);
       if (refusal !== undefined) throw refusal;
       if (contextReady) await succession.advance();
-      if (!cleanup) originalSource.requireStock(succession.refusal);
+      if (cleanup) originalSource.spendReserve(); else originalSource.requireStock(succession.refusal);
       return run();
     });
     sourceTail = work.then(() => {}, () => {});

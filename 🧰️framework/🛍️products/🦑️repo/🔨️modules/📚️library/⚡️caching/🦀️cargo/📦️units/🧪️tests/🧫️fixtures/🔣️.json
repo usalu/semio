@@ -565,7 +565,7 @@
     {
       "program": "/invented/rustc",
       "triple": "aarch64-apple-darwin",
-      "reason": "Original complete Rust compiler generation required"
+      "reason": "missing bootstrap.tools.rust-compiler-generation-required"
     }
   ],
   "compilerEvidence": {

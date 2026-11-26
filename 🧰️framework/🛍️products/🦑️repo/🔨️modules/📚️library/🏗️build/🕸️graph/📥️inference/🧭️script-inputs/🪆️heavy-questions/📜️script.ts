@@ -8,7 +8,7 @@ const{HEAVY_QUESTION_POLICY_V1}=await import("./🟨️.mjs"),{openPlannerDerive
 const[root,output]=process.argv.slice(2),limit=Number(process.env[HEAVY_QUESTION_POLICY_V1.environment])*1048576;
 let phase="boot",beatAt=Date.now();
 setInterval(()=>{const now=Date.now();process.stderr.write("\u0001alive "+phase+" "+Math.max(0,now-beatAt-HEAVY_QUESTION_POLICY_V1.heartbeatMilliseconds)+"\n");beatAt=now;},HEAVY_QUESTION_POLICY_V1.heartbeatMilliseconds).unref();
-setInterval(()=>{if(process.memoryUsage().rss>limit){process.stderr.write("resident memory cap of "+process.env[HEAVY_QUESTION_POLICY_V1.environment]+" MB exceeded\n");process.exit(137);}},HEAVY_QUESTION_POLICY_V1.pollMilliseconds).unref();
+setInterval(()=>{if(process.memoryUsage().rss>limit){process.stderr.write("resident memory cap of "+process.env[HEAVY_QUESTION_POLICY_V1.environment]+" MB exceeded (resident "+Math.round(process.memoryUsage().rss/1048576)+" MB)\n");process.exit(137);}},HEAVY_QUESTION_POLICY_V1.pollMilliseconds).unref();
 try{
  phase="read";
  const request=JSON.parse(await Bun.stdin.text());phase="open";

@@ -5,7 +5,7 @@
   "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-carriers/🦀️.rs",
   "beforeSha256": "1a6e4b02e3e35be9621489b34636cb86e03d978f5401fd09604b8ba5f06b0b31",
   "beforeBytes": 881829,
-  "beforeAssertions": 1123,
+  "beforeAssertions": 1135,
   "records": [
     {
       "name": "reserved_section_carrier_pages_a_payload_past_one_node_of_children",
@@ -3189,10 +3189,10 @@
     },
     {
       "name": "retained_latest_wins_raw_capacity_is_not_initialized_byte_retirement",
-      "sha256": "30b3c456430f295fc5b4561f1502f38d872b59d5ce6d3d57ff19e2dc02f84284",
-      "assertions": 0,
+      "sha256": "13e810789bcc8a59c902b7762a8f6181912e1548851367e3cc3b96f6e4442478",
+      "assertions": 12,
       "law": true,
-      "bytes": 160
+      "bytes": 3521
     },
     {
       "name": "retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close",

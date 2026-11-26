@@ -1,4 +1,3 @@
-use semio_s_artifact_fem_2d_editor::editor::fem2d::create_fem2d_app;
 use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
 use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dPlayApp;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model as model_window;
@@ -10,7 +9,6 @@ use semio_plugin::artifact_app_laws::{
     new_app_with_registry_boxed, render_registered_fixture_app, settle_history_verb,
     settle_registered_typed_operation,
 };
-use semio_plugin::App;
 use semio_plugin::EditorApp;
 use semio_plugin::Effect;
 use semio_plugin::InvocationResult;
@@ -56,7 +54,9 @@ fn view(kind: &str) -> ViewModel {
     ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: kind.into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
-pub(super) fn manifest() -> App { App { definition: create_fem2d_app(), examples: Vec::new() } }
+#[path = "../🚀️initialized-manifest/🦀️.rs"]
+mod initialized_manifest;
+pub(super) use initialized_manifest::manifest;
 
 semio_plugin::history_edit_acceptance_law!("fem", Fem2dPlayApp, manifest, "../../../../../../..");
 

@@ -6,7 +6,7 @@ use semio_s_artifact_stdio_pdf_fonts::standards::v1_7::subsets::base::modules::f
 use std::collections::HashMap;
 
 pub(super) fn paint_truetype_text(
-    item: &Placed, content: &[PdfOp], mode: u32, color: [f32; 4], stroke: [f32; 4],
+    item: &Placed, content: &dyn PdfProgram, mode: u32, color: [f32; 4], stroke: [f32; 4],
     layers: &mut Vec<Value>, paint: &mut FormPaint<'_>,
 ) -> bool {
     let Some(segments) = truetype_outline(&item.object, content.get(item.object.start), &mut paint.metrics, &mut paint.remaining_ops, |x, y| (x, y)) else { return false; };

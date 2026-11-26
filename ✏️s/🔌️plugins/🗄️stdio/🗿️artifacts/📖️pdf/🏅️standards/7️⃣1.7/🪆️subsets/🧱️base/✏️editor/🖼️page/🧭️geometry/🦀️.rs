@@ -27,7 +27,7 @@ pub fn form_objects(snapshot: &PdfSnapshot, form: &PdfFormXObject, placement: &P
     content_objects(snapshot, placement.page, &snapshot.pages[placement.page], &form.content, state, metrics)
 }
 
-pub fn content_objects(snapshot: &PdfSnapshot, page_index: usize, page: &PdfPage, content: &[PdfOp], initial: Graphics, metrics: &mut FontMeasurements<'_>) -> Vec<PageObject> {
+pub fn content_objects(snapshot: &PdfSnapshot, page_index: usize, page: &PdfPage, content: &dyn PdfProgram, initial: Graphics, metrics: &mut FontMeasurements<'_>) -> Vec<PageObject> {
     let mut found = Vec::new();
     let mut stack = vec![initial];
     let mut pending_clip = None;

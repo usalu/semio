@@ -198,6 +198,9 @@ fn history_edit(app: &mut Puzzle2dApp, verb: &str, args: Value, what: &str) {
     let meta = ActionMeta { view_state: Some(std::sync::Arc::new(focused_view())), ..meta("local") };
     let result = block_on(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(semio_framework_value::ToValue::to_value(&args)), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::artifact_app_laws::fixture_mounted_policy().close)).unwrap_or_else(|fault| panic!("{what}: {verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{what}: {verb} was refused: {:?}", result.output);
+    if session(app).is_some_and(|status| status.stage == HistoryTimeTravelStage::Editing) {
+        pump(app, what, |app| !app.time_travel_ledger().has_pending_work());
+    }
 }
 
 /// 🚦️ The live session as the history wire carries it (`None`: no session).
@@ -205,19 +208,26 @@ fn session(app: &mut Puzzle2dApp) -> Option<HistoryTimeTravel> {
     block_on(app.history_snapshot()).expect("history").time_travel
 }
 
+/// 🔭️ Captures the mounted fixture's exact outstanding owners and native turn at a stalled boundary.
+fn history_diagnostic(app: &mut Puzzle2dApp) -> String {
+    let status = session(app);
+    let owners = app.time_travel_ledger().original_close_diagnostic();
+    let history = app.time_travel_ledger().original_history_diagnostic();
+    let queues = app.typed_operation_diagnostic();
+    let cx = app.1.cx();
+    format!("{status:?}; {owners}; {history}; {queues}; retained {:?}, remaining {:?}, work {}, fuel {}, yielded {}", cx.retained_progress(), cx.retained_grant(), cx.original_work_units_spent(), cx.fuel_remaining(), cx.should_yield())
+}
+
 /// ⏯️ Driver turns until `done` holds.
 fn pump(app: &mut Puzzle2dApp, what: &str, done: impl Fn(&mut Puzzle2dApp) -> bool) {
-    for turn in 0usize..100_000 {
+    for _ in 0..100_000 {
         if done(app) {
             return;
         }
-        block_on(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
+        drive_history_turn(app, what);
         while app.take_typed_operation_ui_progress().is_some() {}
-        if what == "the remote change is adopted" && turn + 1 >= 1024 && (turn + 1).is_power_of_two() {
-            let patch = block_on(app.history_snapshot()).expect("remote replay progress history");
-        }
     }
-    panic!("{what} never settled: {:?}", session(app));
+    panic!("{what} never settled: {}", history_diagnostic(app));
 }
 
 /// 🧾️ The document edit rows, oldest first; a history transition's own row is none of them.
@@ -368,13 +378,13 @@ fn run(app: &mut Puzzle2dApp, seed: usize, step: &Value, what: &str) {
         "withdraw" => history_edit(app, "historyEditWithdraw", json!({}), what),
         "accept" => {
             history_edit(app, "historyEditAccept", json!({}), what);
-            pump(app, what, |app| session(app).map(|status| status.stage) != Some(HistoryTimeTravelStage::Replaying));
+            pump(app, what, |app| app.time_travel_ledger().status().map(|status| status.stage) != Some(HistoryTimeTravelStage::Replaying));
         }
         "acceptPending" => history_edit(app, "historyEditAccept", json!({}), what),
         "cancelReplay" => history_edit(app, "historyEditCancelReplay", json!({}), what),
         "rerun" => {
             history_edit(app, "historyEditRerun", json!({}), what);
-            pump(app, what, |app| session(app).map(|status| status.stage) != Some(HistoryTimeTravelStage::Replaying));
+            pump(app, what, |app| app.time_travel_ledger().status().map(|status| status.stage) != Some(HistoryTimeTravelStage::Replaying));
         }
         "exit" => {
             history_edit(app, "historyEditExit", json!({}), what);
@@ -387,7 +397,7 @@ fn run(app: &mut Puzzle2dApp, seed: usize, step: &Value, what: &str) {
                 None => json!({ "name": spec["alternative"] }),
             };
             history_edit(app, "historyEditCommit", commit, what);
-            pump(app, what, |app| session(app).is_none() && !app.time_travel_ledger().has_pending_work());
+            pump(app, what, |app| app.time_travel_ledger().status().is_none() && !app.time_travel_ledger().has_pending_work());
         }
         "undo" | "redo" => history_lane(app, action, what),
         "reload" => reload(app, spec.as_str().expect("reload form"), what),
@@ -499,34 +509,43 @@ fn long_drags(targets: &[&str], count: usize) -> String {
 /// completion with the ready review. The reviewed head moves the long downstream by the edited offset.
 #[test]
 fn replay_progress_rides_the_ui_frames_over_a_long_downstream() {
+    const DOWNSTREAM_EDITS: usize = 3;
+    const OPERATIONS_PER_EDIT: usize = 300;
+    const TURN_BUDGET_PER_OPERATION: usize = 225;
     let corpus = corpus();
     let mut app = seeded_app(&corpus["board"]);
     let seed = edits(&mut app).len();
     run(&mut app, seed, &json!({ "translate": { "select": ["left"], "dx": 1.0, "dy": 0.0, "step": 10.0 } }), "seed drag");
-    for _ in 0..3 {
-        block_on(app.ingest_operations_text(&long_drags(&["left"], 300), &mut semio_plugin::artifact_app_laws::fixture_identity())).expect("a long downstream edit");
+    for _ in 0..DOWNSTREAM_EDITS {
+        block_on(app.ingest_operations_text(&long_drags(&["left"], OPERATIONS_PER_EDIT), &mut semio_plugin::artifact_app_laws::fixture_identity())).expect("a long downstream edit");
     }
     run(&mut app, seed, &json!({ "begin": { "row": 0 } }), "begin");
     run(&mut app, seed, &json!({ "input": { "path": "/dx", "value": 30.0 } }), "input");
     run(&mut app, seed, &json!({ "acceptPending": null }), "accept");
     while app.take_typed_operation_ui_progress().is_some() {}
-    let mut stages = Vec::new();
-    for _ in 0..100_000 {
-        block_on(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("driver turn");
+    let mut completed = 0;
+    let mut last_frame = None;
+    for _ in 0..DOWNSTREAM_EDITS * OPERATIONS_PER_EDIT * TURN_BUDGET_PER_OPERATION {
+        drive_history_turn(&mut app, "progress is painted");
         while let Some(progress) = app.take_typed_operation_ui_progress() {
             let Some(status) = progress.history_patch.and_then(|patch| patch.time_travel) else { continue };
             if status.stage == HistoryTimeTravelStage::Replaying {
-                assert!(status.done.zip(status.total).is_some_and(|(done, total)| done <= total && total > 0), "progress is bounded: {status:?}");
+                if status.done.is_none() && status.total.is_none() {
+                    continue;
+                }
+                let (done, total) = status.done.zip(status.total).expect("determinate replay progress has both counts");
+                assert!(done >= completed && done <= total && total > 0, "progress is bounded and monotone: {status:?}");
+                completed = done;
             }
-            stages.push(status.stage);
+            last_frame = Some(status);
         }
-        if session(&mut app).is_some_and(|status| status.stage == HistoryTimeTravelStage::Reviewing) && !app.time_travel_ledger().has_pending_work() {
+        if app.time_travel_ledger().status().is_some_and(|status| status.stage == HistoryTimeTravelStage::Reviewing) && !app.time_travel_ledger().has_pending_work() {
             break;
         }
     }
-    assert!(stages.contains(&HistoryTimeTravelStage::Replaying) && stages.last() == Some(&HistoryTimeTravelStage::Reviewing), "the replay ships its progress, then its completion: {stages:?}");
+    assert!(completed > OPERATIONS_PER_EDIT as u32 && last_frame.as_ref().is_some_and(|status| status.stage == HistoryTimeTravelStage::Reviewing), "the replay ships operation progress, then its completion: {last_frame:?}; {}", history_diagnostic(&mut app));
     let left = board_snapshot_nodes(&painted_fixture(&mut app)).iter().find(|node| node["id"] == "left").map(|node| node["x"].as_f64().expect("x")).expect("left is painted");
-    assert_eq!(left, -200.0 + 30.0 + 900.0, "the reviewed head replays the 900 downstream drags over the edited one");
+    assert_eq!(left, -200.0 + 30.0 + (DOWNSTREAM_EDITS * OPERATIONS_PER_EDIT) as f64, "the reviewed head replays all downstream drags over the edited one");
     run(&mut app, seed, &json!({ "exit": null }), "exit");
     close_app(&mut app);
 }
@@ -538,11 +557,61 @@ fn painted_fixture(app: &mut Puzzle2dApp) -> Value {
 }
 
 /// 🔀️ Every event batch `from` published since the last relay, delivered into `to` through its probe `into` and ingested.
-fn relay(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mut Puzzle2dApp) {
-    for message in block_on(from.receive()).expect("replica outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
-        block_on(into.send(message)).expect("relay an event batch");
+fn relay(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mut Puzzle2dApp) -> usize {
+    relay_messages(block_on(from.receive()).expect("replica outbox"), into, to)
+}
+
+/// 🔁️ Delivers each exact causal message and validates the receiver's ordered acknowledgements.
+fn relay_messages(messages: impl IntoIterator<Item = BackboneMessage>, into: &mut MemoryBackbone, to: &mut Puzzle2dApp) -> usize {
+    let mut sent = Vec::new();
+    for message in messages {
+        if let BackboneMessage::Mutations { envelopes } = &message {
+            sent.extend(protocol::decode_envelopes(envelopes).expect("relayed event envelopes").into_iter().map(|envelope| envelope.mutation_id.0));
+            block_on(into.send(message)).expect("relay an event batch");
+        }
     }
     block_on(to.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), to.1.cx())).expect("ingest the relayed events");
+    let acknowledged: Vec<_> = block_on(into.receive()).expect("replica acknowledgements").into_iter().flat_map(|message| {
+        match message {
+            BackboneMessage::Ack { op_ids } => op_ids,
+            _ => Vec::new(),
+        }
+    }).collect();
+    assert_eq!(acknowledged, sent, "the receiving backbone acknowledges the complete event stream in order");
+    sent.len()
+}
+
+/// 🔗️ Attaches the original replicas and delivers enough genuine edits to pressure displaced ownership.
+fn replicas_after_long_stream() -> (Puzzle2dApp, MemoryBackbone, Puzzle2dApp, MemoryBackbone, usize) {
+    let corpus = corpus();
+    let mut local = seeded_app(&corpus["board"]);
+    let mut remote = app_with_registry();
+    let (local_backbone, mut local_probe) = block_on(MemoryBackbone::pair("mem://puzzle2d-remote-replay-local", "mem://puzzle2d-remote-replay-local"));
+    let (remote_backbone, mut remote_probe) = block_on(MemoryBackbone::pair("mem://puzzle2d-remote-replay-remote", "mem://puzzle2d-remote-replay-remote"));
+    block_on(local.attach_backbone(store::os_store::backbone::Backbones::Memory(local_backbone))).expect("attach the local replica");
+    block_on(remote.attach_backbone(store::os_store::backbone::Backbones::Memory(remote_backbone))).expect("attach the remote replica");
+    let initial_rows = edits(&mut local);
+    let seed = initial_rows.len();
+    let initial_operations = initial_rows.iter().map(|row| row.mutations.len()).sum::<usize>();
+    assert_eq!(relay(&mut local_probe, &mut remote_probe, &mut remote), initial_operations);
+    let seed_drag = leaf(&json!({ "mutation": "dragSelection", "targets": ["left"], "dx": 10.0, "dy": 0.0 })).print_op();
+    block_on(local.ingest_operations_text(&seed_drag, &mut semio_plugin::artifact_app_laws::fixture_identity())).expect("the seed drag");
+    assert_eq!(relay(&mut local_probe, &mut remote_probe, &mut remote), 1);
+    for _ in 0..3 {
+        block_on(local.ingest_operations_text(&long_drags(&["mid"], 120), &mut semio_plugin::artifact_app_laws::fixture_identity())).expect("a long downstream edit");
+        assert_eq!(relay(&mut local_probe, &mut remote_probe, &mut remote), 120);
+    }
+    assert_eq!(board_snapshot_nodes(&fixture_of(&remote)), board_snapshot_nodes(&fixture_of(&local)), "the remote replica holds the history");
+    (local, local_probe, remote, remote_probe, seed)
+}
+
+#[test]
+fn remote_transport_acknowledges_long_bursts_under_displaced_owner_pressure() {
+    let (mut local, _local_probe, mut remote, _remote_probe, _) = replicas_after_long_stream();
+    block_on(local.detach_backbone()).expect("local releases its backbone");
+    block_on(remote.detach_backbone()).expect("remote releases its backbone");
+    close_app(&mut local);
+    close_app(&mut remote);
 }
 
 /// ⚖️ LAW (design §16.6, G9): a remote history change whose replay exceeds one turn's budget
@@ -552,26 +621,16 @@ fn relay(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mut Puzzle2d
 /// - Replay again resumes it, and the adoption equals the author's head.
 #[test]
 fn a_long_remote_history_change_replays_over_turns_pauses_and_resumes_on_the_board() {
-    let corpus = corpus();
-    let mut local = seeded_app(&corpus["board"]);
-    let mut remote = app_with_registry();
-    let (local_backbone, mut local_probe) = block_on(MemoryBackbone::pair("mem://puzzle2d-remote-replay-local", "mem://puzzle2d-remote-replay-local"));
-    let (remote_backbone, mut remote_probe) = block_on(MemoryBackbone::pair("mem://puzzle2d-remote-replay-remote", "mem://puzzle2d-remote-replay-remote"));
-    block_on(local.attach_backbone(store::os_store::backbone::Backbones::Memory(local_backbone))).expect("attach the local replica");
-    block_on(remote.attach_backbone(store::os_store::backbone::Backbones::Memory(remote_backbone))).expect("attach the remote replica");
-    let seed = edits(&mut local).len();
-    run(&mut local, seed, &json!({ "translate": { "select": ["left"], "dx": 1.0, "dy": 0.0, "step": 10.0 } }), "seed drag");
-    relay(&mut local_probe, &mut remote_probe, &mut remote);
-    for _ in 0..3 {
-        block_on(local.ingest_operations_text(&long_drags(&["mid"], 120), &mut semio_plugin::artifact_app_laws::fixture_identity())).expect("a long downstream edit");
-        relay(&mut local_probe, &mut remote_probe, &mut remote);
-    }
-    assert_eq!(board_snapshot_nodes(&fixture_of(&remote)), board_snapshot_nodes(&fixture_of(&local)), "the remote replica holds the history");
+    let (mut local, _local_probe, mut remote, mut remote_probe, seed) = replicas_after_long_stream();
     let before = fixture_of(&remote);
+    block_on(local.detach_backbone()).expect("release the cold author backbone");
+    let actor = block_on(attach_fixture_actor_backbone(&mut local, "actor://puzzle2d-history"));
     for step in [json!({ "begin": { "row": 0 } }), json!({ "input": { "path": "/dx", "value": 30.0 } }), json!({ "accept": null }), json!({ "finalize": "overwrite" })] {
         run(&mut local, seed, &step, "the local history edit");
     }
-    relay(&mut local_probe, &mut remote_probe, &mut remote);
+    let frames = drain_fixture_actor_outbound(&mut local, &actor);
+    let messages = frames.iter().map(|frame| store::os_store::backbone::decode_backbone_message_exact(frame).expect("decode the original history publication"));
+    assert_eq!(relay_messages(messages, &mut remote_probe, &mut remote), 1);
     let waiting = block_on(remote.history_snapshot()).expect("history").reprojection.expect("the remote history change waits for its replay");
     assert!(waiting.total > 0 && waiting.done < waiting.total && !waiting.paused && waiting.kind == semio_framework::kernel::HistoryReprojectionKind::Remote && waiting.fault.is_none(), "{waiting:?}");
     assert_eq!(fixture_of(&remote), before, "the replica shows the history before the change");
@@ -580,7 +639,7 @@ fn a_long_remote_history_change_replays_over_turns_pauses_and_resumes_on_the_boa
     assert!(cancelled.output.get("rejected").is_none(), "{:?}", cancelled.output);
     assert!(remote.time_travel_ledger().reprojection_paused(), "cancel pauses the remote replay");
     for _ in 0..4 {
-        block_on(remote.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), remote.1.cx())).expect("driver turn");
+        drive_history_turn(&mut remote, "remote replay remains paused");
     }
     assert_eq!(fixture_of(&remote), before, "paused, the change is not adopted");
     assert_eq!(block_on(remote.history_snapshot()).expect("history").reprojection.map(|replay| replay.paused), Some(true), "the wire says paused");
@@ -588,6 +647,7 @@ fn a_long_remote_history_change_replays_over_turns_pauses_and_resumes_on_the_boa
     assert!(resumed.output.get("rejected").is_none(), "{:?}", resumed.output);
     pump(&mut remote, "the remote change is adopted", |app| block_on(app.history_snapshot()).expect("history").reprojection.is_none());
     assert_eq!(board_snapshot_nodes(&fixture_of(&remote)), board_snapshot_nodes(&fixture_of(&local)), "the adoption equals the author's head");
+    actor.begin_retire().expect("retire the original author port");
     block_on(local.detach_backbone()).expect("local releases its backbone");
     block_on(remote.detach_backbone()).expect("remote releases its backbone");
     close_app(&mut local);
@@ -633,26 +693,28 @@ fn switching_to_a_long_alternative_replays_over_turns_and_cancel_leaves_zero_tra
         pump(&mut app, "the trunk is shown", |app| !app.time_travel_ledger().has_pending_work() && block_on(app.history_snapshot()).expect("history").reprojection.is_none());
         let before = board_trace(&mut app);
         assert_eq!(before.1, None, "the trunk viewer head stays implicit after checkout");
-        dispatch(&mut app, "switchAlternative", Some(&json!({ "alternativeId": long })), None).expect("the switch answers at once");
+        let meta = ActionMeta { view_state: Some(std::sync::Arc::new(focused_view())), ..meta("local") };
+        let args = semio_framework_value::ToValue::to_value(&json!({ "alternativeId": long }));
+        let admitted = block_on(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "switchAlternative", Some(args), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::artifact_app_laws::fixture_mounted_policy().close)).expect("admit the switch");
+        block_on(semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx())).expect("the switch answers at once");
         let waiting = block_on(app.history_snapshot()).expect("history").reprojection.expect("the switch waits for its replay");
         assert!(waiting.kind == semio_framework::kernel::HistoryReprojectionKind::Step && waiting.total >= 360 && waiting.fault.is_none(), "{waiting:?}");
         assert_eq!(board_trace(&mut app), before, "nothing of the switch shows before its adoption");
         assert_eq!(dispatch(&mut app, "undo", None, None).err().map(|fault| fault.code.0), Some("history.replaying".to_string()), "a further history step waits");
         let first = edits(&mut app)[seed].mutations[0].mutation_id.clone();
-        let meta = ActionMeta { view_state: Some(std::sync::Arc::new(focused_view())), ..meta("local") };
         let busy = block_on(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "historyEditBegin", Some(semio_framework_value::ToValue::to_value(&json!({ "mutationId": first }))), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::artifact_app_laws::fixture_mounted_policy().close)).expect("begin answers");
         assert_eq!(busy.output.get("rejected").and_then(semio_framework_value::DslValue::as_str), Some("timeTravel.busy"), "history editing waits for the step");
         if cancel {
             history_edit(&mut app, "historyEditCancelReplay", json!({}), "cancel the switch");
             for _ in 0..4 {
-                block_on(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("driver turn");
+                drive_history_turn(&mut app, "the cancelled step remains unchanged");
             }
             assert_eq!(board_trace(&mut app), before, "a cancelled switch leaves zero trace");
         } else {
             let mut turns = 0;
             while block_on(app.history_snapshot()).expect("history").reprojection.is_some_and(|replay| replay.kind == semio_framework::kernel::HistoryReprojectionKind::Step) {
                 let done = block_on(app.history_snapshot()).expect("history").reprojection.map_or(0, |replay| replay.done);
-                block_on(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("driver turn");
+                drive_history_turn(&mut app, "the history step advances");
                 while app.take_typed_operation_ui_progress().is_some() {}
                 if let Some(after) = block_on(app.history_snapshot()).expect("history").reprojection.map(|replay| replay.done) {
                     assert!(after.saturating_sub(done) as usize <= semio_plugin::app::time_travel::TIME_TRAVEL_REPLAY_OPERATIONS, "one turn replays at most one budget: {done} → {after}");

@@ -29,6 +29,9 @@ mod controls;
 #[path = "📂️sources/🦀️.rs"]
 mod sources;
 
+#[path = "📊️fleet/🦀️.rs"]
+mod fleet;
+
 
 use controls::Flow;
 use windows::{Dashboard, Effect};

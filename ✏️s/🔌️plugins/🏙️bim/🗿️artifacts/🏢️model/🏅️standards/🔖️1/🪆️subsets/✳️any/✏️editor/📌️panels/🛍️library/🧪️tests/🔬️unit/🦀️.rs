@@ -31,6 +31,7 @@ use semio_plugin::ViewModel;
 use semio_ui_locale::{Locale, Terminology};
 
 fn text(snapshot: &ModelSnapshot, locale: Locale) -> String {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let view = ViewModel::new(locale, Terminology::Native);
     let node = render(snapshot, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &TreeWindows::for_body(&view, BODY_KEY)).expect("the library renders");
     semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("projects")

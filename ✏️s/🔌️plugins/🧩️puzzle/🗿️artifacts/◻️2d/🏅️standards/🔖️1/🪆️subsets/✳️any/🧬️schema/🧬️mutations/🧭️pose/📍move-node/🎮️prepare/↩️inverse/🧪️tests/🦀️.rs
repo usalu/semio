@@ -18,7 +18,19 @@ use crate::standards::v1::subsets::any::schema::preparation::move_node_preparati
 use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
 use semio_framework_test_fixtures::repo_text;
 
-fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 64), 1 => RetainedCloneGrant::one_payload_turn(4096, 64), _ => RetainedCloneGrant::one_release_turn(4096, 64) } }
+fn exact_grant(demand: semio_framework_value::RetirementDemand) -> RetainedCloneGrant {
+    assert!(demand.copy_bytes + demand.capacity_bytes + demand.release_bytes <= 4096, "{demand:?}");
+    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }
+}
+
+fn grant(cursor: &Puzzle2dMoveNodeInverseCursor, mutation: &MoveNode, turn: usize, body: usize) -> RetainedCloneGrant {
+    match turn % 4 {
+        0 => RetainedCloneGrant::one_capacity_turn(4096, 64),
+        1 => RetainedCloneGrant::one_payload_turn(4096, 64),
+        2 => RetainedCloneGrant::one_release_turn(4096, 64),
+        _ => cursor.advance_test_demand(mutation, body).unwrap().map_or_else(|| RetainedCloneGrant::one_payload_turn(4096, 64), exact_grant),
+    }
+}
 
 fn observed(grant: RetainedCloneGrant, action: impl FnOnce() -> Result<RetainedCloneStep, ValueError>) -> RetainedCloneStep {
     let (result, allocation) = semio_framework_trace::observe_heap_allocations_on_this_thread(action);
@@ -44,9 +56,9 @@ fn retire(inverse: PagedList<Puzzle2dMutation, {usize::MAX}>) {
     assert_eq!(allocation.requested_bytes, 0);
     assert_eq!(allocation.released_bytes, 0);
     let mut owner = match owner { Ok(owner) => owner, Err((error, _)) => panic!("{error:?}") };
-    for turn in 0..1_000_000 {
+    for _ in 0..1_000_000 {
         if owner.terminal_is_empty() { return; }
-        let permit = grant(turn);
+        let permit = exact_grant(owner.selected_demand(4096).unwrap());
         observed(permit, || test_source_custody::close_turn(permit, |effect| owner.step(4096, effect)));
     }
     panic!("returned inverse did not retire its native paged owner");
@@ -71,11 +83,11 @@ fn history_edit_puzzle2d_owned_move_inverse_preserves_literal_ids_and_controlled
         assert_eq!(observed(RetainedCloneGrant::default(), || test_source_custody::run(RetainedCloneGrant::default(), |effect| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect))).progress(), RetainedCloneProgress::default());
         let mut complete = false;
         for turn in 0..1_000_000 {
-            let permit = grant(turn);
+            let permit = grant(&cursor, &payload, turn, 4096);
             let step = observed(permit, || test_source_custody::run(permit, |effect| cursor.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect)));
             if matches!(step, RetainedCloneStep::Complete(_)) { complete = true; break; }
         }
-        assert!(complete, "owned inverse did not complete");
+        assert!(complete, "owned inverse did not complete for {} at phase {}", case["id"], cursor.phase);
         let inverse = cursor.take().unwrap();
         assert_eq!(inverse.len(), usize::from(!case["inverse"].is_null()));
         if let Some(Puzzle2dMutation::MoveNode(inverse)) = inverse.first() {
@@ -92,16 +104,31 @@ fn history_edit_puzzle2d_owned_move_inverse_preserves_literal_ids_and_controlled
             let mut cancelled = Puzzle2dMoveNodeInverseCursor::default();
             let mut copied = 0;
             for turn in 0..1_000_000 {
-                let copying = cancelled.phase == 2;
-                let permit = grant(turn);
-                let step = observed(permit, || test_source_custody::run(permit, |effect| cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect)));
+                let permit = grant(&cancelled, &payload, turn, 64);
+                let step = observed(permit, || test_source_custody::run(permit, |effect| cancelled.advance(source.borrow(&snapshot), mutation.borrow(&payload), 64, effect)));
                 assert!(!matches!(step, RetainedCloneStep::Complete(_)));
-                if copying { copied += step.progress().copied_bytes; }
+                copied = cancelled.current_identifier_chunk_bytes();
                 if copied >= corpus["inverseOwnership"]["cancelAfterBodyBytes"].as_u64().unwrap() as usize { break; }
             }
-            assert!(copied > 0);
+            assert!(copied >= corpus["inverseOwnership"]["cancelAfterBodyBytes"].as_u64().unwrap() as usize);
             close(&mut cancelled);
             assert!(cancelled.take().is_none());
+
+            let mut prepared = Puzzle2dMoveNodeInverseCursor::default();
+            let mut complete = false;
+            for turn in 0..1_000_000 {
+                let permit = grant(&prepared, &payload, turn, 4096);
+                let step = observed(permit, || test_source_custody::run(permit, |effect| {
+                    prepared.advance(source.borrow(&snapshot), mutation.borrow(&payload), 4096, effect)
+                }));
+                if matches!(step, RetainedCloneStep::Complete(_)) {
+                    complete = true;
+                    break;
+                }
+            }
+            assert!(complete, "owned inverse could not prepare its untaken output");
+            close(&mut prepared);
+            assert!(prepared.take().is_none());
         }
         test_source_custody::close(&mut source);test_source_custody::close(&mut mutation);
     }
@@ -119,8 +146,8 @@ async fn the_prepared_family_inverse_sums_to_the_negative_diff() {
         };
     }
     for (before, mutation) in [
-    vector!("📍move-node", "📍️moves-node-a"),
-    vector!("📍move-node", "📍️moves"),
+    vector!("🧭️pose/📍move-node", "📍️moves-node-a"),
+    vector!("🧭️pose/📍move-node", "📍️moves"),
     ] {
         let before: crate::Puzzle2dSnapshot = semio_framework_pack_json::from_json_str(before, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes");
         let mutation: crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation = semio_framework_pack_json::from_json_str(mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes");

@@ -290,7 +290,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 
 #[test]
 fn retained_table_lanes_restore_complete_neutral_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚚️retained-table/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🚚️retained-table/🔣️.json")).unwrap();
     let scene = semio_plugin::TableScene::base(fixture["columnsJson"].as_str().unwrap(), fixture["rowsJson"].as_str().unwrap());
     let node = semio_plugin::scene_surface("neutral-retained-table", semio_plugin::plugin_app_close_prelude::SurfaceKind::Table, &scene, "Retained table", None).unwrap();
     assert_eq!(node.children.len(), 2);

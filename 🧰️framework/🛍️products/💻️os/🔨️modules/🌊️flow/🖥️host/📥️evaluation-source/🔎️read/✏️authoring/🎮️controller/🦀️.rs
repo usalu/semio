@@ -7,34 +7,34 @@ use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneClose,retained_clone_grant_admits};
 use std::mem::{ManuallyDrop,size_of};
-use super::storage::{storage_demands,storage_ready,storage_close_demands,storage_close_step};
-use semio_framework_value_native_storage::NativeOwnedStorage;
+use super::storage::{Slot,vacant,work_demands,work_ready,work_close_demands,work_close_step};
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"Flow authoring changed its original source, catalogue, request or operation")}
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
-enum Child{Remove(NativeOwnedStorage<RemoveWork>),Add(NativeOwnedStorage<AddWork>),Insert(NativeOwnedStorage<InsertWork>),Connect(NativeOwnedStorage<ConnectWork>),Reorganize(NativeOwnedStorage<ReorganizeWork>)}
+vacant!(RemoveWork,RemoveWork::new(true));vacant!(AddWork,AddWork::new());vacant!(InsertWork,InsertWork::new());vacant!(ConnectWork,ConnectWork::new());vacant!(ReorganizeWork,ReorganizeWork::new());
+enum Child{Remove(Slot<RemoveWork>),Add(Slot<AddWork>),Insert(Slot<InsertWork>),Connect(Slot<ConnectWork>),Reorganize(Slot<ReorganizeWork>)}
 impl Child{
- fn new(request:FlowAuthoringRequest<'_>)->Self{match request{FlowAuthoringRequest::RemoveWidget{..}|FlowAuthoringRequest::Disconnect{..}=>Self::Remove(NativeOwnedStorage::empty()),FlowAuthoringRequest::AddWidget{..}=>Self::Add(NativeOwnedStorage::empty()),FlowAuthoringRequest::InsertPort{..}=>Self::Insert(NativeOwnedStorage::empty()),FlowAuthoringRequest::ConnectPorts{..}=>Self::Connect(NativeOwnedStorage::empty()),FlowAuthoringRequest::Reorganize{..}=>Self::Reorganize(NativeOwnedStorage::empty())}}
+ fn new(request:FlowAuthoringRequest<'_>)->Self{match request{FlowAuthoringRequest::RemoveWidget{..}|FlowAuthoringRequest::Disconnect{..}=>Self::Remove(Slot::empty()),FlowAuthoringRequest::AddWidget{..}=>Self::Add(Slot::empty()),FlowAuthoringRequest::InsertPort{..}=>Self::Insert(Slot::empty()),FlowAuthoringRequest::ConnectPorts{..}=>Self::Connect(Slot::empty()),FlowAuthoringRequest::Reorganize{..}=>Self::Reorganize(Slot::empty())}}
  fn next_demands(&self,source:&dyn FlowSnapshotSource,infos:&HistoryFoldIndex<String,OperatorInfo>,request:FlowAuthoringRequest<'_>,copy:usize)->Result<RetirementDemand,ValueError>{match(self,request){
-  (Self::Remove(slot),FlowAuthoringRequest::RemoveWidget{id}|FlowAuthoringRequest::Disconnect{id})=>storage_demands(slot,|w|w.next_demands(source,id,copy)),
-  (Self::Add(slot),FlowAuthoringRequest::AddWidget{descriptor,..})=>storage_demands(slot,|w|w.next_demands(descriptor,infos,copy)),
-  (Self::Insert(slot),FlowAuthoringRequest::InsertPort{id,input,..})=>storage_demands(slot,|w|w.next_demands(source,infos,id,input,copy)),
-  (Self::Connect(slot),FlowAuthoringRequest::ConnectPorts{from,from_port,to,to_port})=>storage_demands(slot,|w|w.next_demands(source,infos,from,from_port,to,to_port,copy)),
-  (Self::Reorganize(slot),FlowAuthoringRequest::Reorganize{options})=>storage_demands(slot,|w|w.next_demands(source,infos,options,copy)),
+  (Self::Remove(slot),FlowAuthoringRequest::RemoveWidget{id}|FlowAuthoringRequest::Disconnect{id})=>work_demands(slot,|w|w.next_demands(source,id,copy)),
+  (Self::Add(slot),FlowAuthoringRequest::AddWidget{descriptor,..})=>work_demands(slot,|w|w.next_demands(descriptor,infos,copy)),
+  (Self::Insert(slot),FlowAuthoringRequest::InsertPort{id,input,..})=>work_demands(slot,|w|w.next_demands(source,infos,id,input,copy)),
+  (Self::Connect(slot),FlowAuthoringRequest::ConnectPorts{from,from_port,to,to_port})=>work_demands(slot,|w|w.next_demands(source,infos,from,from_port,to,to_port,copy)),
+  (Self::Reorganize(slot),FlowAuthoringRequest::Reorganize{options})=>work_demands(slot,|w|w.next_demands(source,infos,options,copy)),
   _=>Err(invalid()),
  }}
  fn step(&mut self,source:&dyn FlowSnapshotSource,infos:&HistoryFoldIndex<String,OperatorInfo>,request:FlowAuthoringRequest<'_>,serials:&mut FlowAuthoringSerials,cx:&mut StepContext<'_>)->Result<Option<Result<Vec<FlowMutation>,FlowCoreError>>,OriginalTurnFailure>{match(self,request){
-  (Self::Remove(slot),FlowAuthoringRequest::RemoveWidget{id})=>{if !storage_ready(slot,cx,||RemoveWork::new(true))?{return Ok(None)}slot.get_mut().ok_or_else(invalid)?.step(source,id,cx)},
-  (Self::Remove(slot),FlowAuthoringRequest::Disconnect{id})=>{if !storage_ready(slot,cx,||RemoveWork::new(false))?{return Ok(None)}slot.get_mut().ok_or_else(invalid)?.step(source,id,cx)},
-  (Self::Add(slot),FlowAuthoringRequest::AddWidget{descriptor,x,y})=>{if !storage_ready(slot,cx,AddWork::new)?{return Ok(None)}let work=slot.get_mut().ok_or_else(invalid)?;let result=work.step(source,infos,descriptor,x,y,cx)?;if let Some(serial)=work.serial(){serials.widget=serial}Ok(result)},
-  (Self::Insert(slot),FlowAuthoringRequest::InsertPort{id,input,index})=>{if !storage_ready(slot,cx,InsertWork::new)?{return Ok(None)}slot.get_mut().ok_or_else(invalid)?.step(source,infos,id,input,index,cx)},
-  (Self::Connect(slot),FlowAuthoringRequest::ConnectPorts{from,from_port,to,to_port})=>{if !storage_ready(slot,cx,ConnectWork::new)?{return Ok(None)}slot.get_mut().ok_or_else(invalid)?.step(source,infos,&mut serials.synapse,from,from_port,to,to_port,cx)},
-  (Self::Reorganize(slot),FlowAuthoringRequest::Reorganize{options})=>{if !storage_ready(slot,cx,ReorganizeWork::new)?{return Ok(None)}slot.get_mut().ok_or_else(invalid)?.step(source,infos,options,cx)},
+  (Self::Remove(slot),FlowAuthoringRequest::RemoveWidget{id})=>{if !work_ready(slot,cx)?{return Ok(None)}slot.get_mut().ok_or_else(invalid)?.step(source,id,cx)},
+  (Self::Remove(slot),FlowAuthoringRequest::Disconnect{id})=>{if !work_ready(slot,cx)?{return Ok(None)}let work=slot.get_mut().ok_or_else(invalid)?;work.disconnect_only();work.step(source,id,cx)},
+  (Self::Add(slot),FlowAuthoringRequest::AddWidget{descriptor,x,y})=>{if !work_ready(slot,cx)?{return Ok(None)}let work=slot.get_mut().ok_or_else(invalid)?;let result=work.step(source,infos,descriptor,x,y,cx)?;if let Some(serial)=work.serial(){serials.widget=serial}Ok(result)},
+  (Self::Insert(slot),FlowAuthoringRequest::InsertPort{id,input,index})=>{if !work_ready(slot,cx)?{return Ok(None)}slot.get_mut().ok_or_else(invalid)?.step(source,infos,id,input,index,cx)},
+  (Self::Connect(slot),FlowAuthoringRequest::ConnectPorts{from,from_port,to,to_port})=>{if !work_ready(slot,cx)?{return Ok(None)}slot.get_mut().ok_or_else(invalid)?.step(source,infos,&mut serials.synapse,from,from_port,to,to_port,cx)},
+  (Self::Reorganize(slot),FlowAuthoringRequest::Reorganize{options})=>{if !work_ready(slot,cx)?{return Ok(None)}slot.get_mut().ok_or_else(invalid)?.step(source,infos,options,cx)},
   _=>Err(invalid().into()),
  }}
  fn begin_close(&mut self){macro_rules! close{($slot:ident)=>{if let Some(work)=$slot.get_mut(){work.begin_close()}}}match self{Self::Remove(s)=>close!(s),Self::Add(s)=>close!(s),Self::Insert(s)=>close!(s),Self::Connect(s)=>close!(s),Self::Reorganize(s)=>close!(s)}}
- fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{macro_rules! quote{($slot:ident)=>{storage_close_demands($slot,|work|work.close_demands(copy),|work|work.terminal_is_empty())}}match self{Self::Remove(s)=>quote!(s),Self::Add(s)=>quote!(s),Self::Insert(s)=>quote!(s),Self::Connect(s)=>quote!(s),Self::Reorganize(s)=>quote!(s)}}
- fn close_step(&mut self,grant:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{macro_rules! close{($slot:ident)=>{storage_close_step($slot,effect,|work,g,effect|work.close_step(g,effect),|work|work.terminal_is_empty())}}match self{Self::Remove(s)=>close!(s),Self::Add(s)=>close!(s),Self::Insert(s)=>close!(s),Self::Connect(s)=>close!(s),Self::Reorganize(s)=>close!(s)}}
+ fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{macro_rules! quote{($slot:ident)=>{work_close_demands($slot,|work|work.close_demands(copy),|work|work.terminal_is_empty())}}match self{Self::Remove(s)=>quote!(s),Self::Add(s)=>quote!(s),Self::Insert(s)=>quote!(s),Self::Connect(s)=>quote!(s),Self::Reorganize(s)=>quote!(s)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{macro_rules! close{($slot:ident)=>{work_close_step($slot,effect,|work,g,effect|work.close_step(g,effect),|work|work.terminal_is_empty())}}match self{Self::Remove(s)=>close!(s),Self::Add(s)=>close!(s),Self::Insert(s)=>close!(s),Self::Connect(s)=>close!(s),Self::Reorganize(s)=>close!(s)}}
  fn terminal_is_empty(&self)->bool{match self{Self::Remove(s)=>s.terminal_is_empty(),Self::Add(s)=>s.terminal_is_empty(),Self::Insert(s)=>s.terminal_is_empty(),Self::Connect(s)=>s.terminal_is_empty(),Self::Reorganize(s)=>s.terminal_is_empty()}}
 }
 /// 🎮️ All six operations share one original admission and preserve their complete output through close.

@@ -10,6 +10,16 @@
       "text"
     ]
   },
+  "optionDefaults": {
+    "pointer": "/part/anchor",
+    "default": "fixed",
+    "options": ["fixed", "derived"],
+    "cases": [
+      { "before": { "part": {} }, "expected": ["derived"] },
+      { "before": { "part": { "anchor": "derived" } }, "expected": ["fixed"] },
+      { "before": { "part": { "anchor": null } }, "expected": ["fixed", "derived"] }
+    ]
+  },
   "cases": [
     {
       "id": "text",

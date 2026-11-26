@@ -36,8 +36,13 @@ pub fn bim_io() -> AppIo {
 //#endregion 🔖️Io
 
 //#region 🔖️RetainedCommands
-fn bim_bounded_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(BIM_BOUNDED_RAW_BYTES, BIM_BOUNDED_WORK_ITEMS, 1, 262_144, 7_500)
+pub(crate) const fn is_model_export_tool(tool_id: &str) -> bool {
+    matches!(tool_id.as_bytes(), b"exportModel")
+}
+
+pub(crate) fn bim_bounded_contract(model_export: bool) -> ToolExecutionContract {
+    let (work, output) = if model_export { (export_model::MOUNTED_WORK_UNITS, semio_plugin::app::ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES) } else { (1, 262_144) };
+    ToolExecutionContract::bounded_first_step(BIM_BOUNDED_RAW_BYTES, BIM_BOUNDED_WORK_ITEMS, work, output, 7_500)
 }
 
 pub(crate) fn bim_bounded_extent(command: &BimCommand) -> Option<usize> {
@@ -98,17 +103,48 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for BimCommandWork {
     }
 }
 
-pub(crate) struct BimCommandJobFactory {
+const MODEL_EXPORT_PUBLICATION: [ArtifactToolPublicationContract; 1] = [ArtifactToolPublicationContract {
+    tool_id: "exportModel", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly],
+}];
+
+const COMMAND_PUBLICATION: [ArtifactToolPublicationContract; BIM_TOOL_IDS.len() - 1] = {
+    let mut output = [BIM_PUBLICATION_CONTRACTS[0]; BIM_TOOL_IDS.len() - 1];
+    let mut source = 0;
+    let mut target = 0;
+    while source < BIM_PUBLICATION_CONTRACTS.len() {
+        let contract = BIM_PUBLICATION_CONTRACTS[source];
+        if !is_model_export_tool(contract.tool_id) {
+            output[target] = contract;
+            target += 1;
+        }
+        source += 1;
+    }
+    assert!(target == output.len());
+    output
+};
+
+const COMMAND_IDS: [&str; COMMAND_PUBLICATION.len()] = {
+    let mut output = [""; COMMAND_PUBLICATION.len()];
+    let mut index = 0;
+    while index < output.len() {
+        output[index] = COMMAND_PUBLICATION[index].tool_id;
+        index += 1;
+    }
+    output
+};
+
+pub(crate) struct BimCommandJobFactory<const MODEL_EXPORT: bool> {
     pub(crate) keys: Vec<ToolFactoryKey>,
 }
 
-impl BimCommandJobFactory {
+impl<const MODEL_EXPORT: bool> BimCommandJobFactory<MODEL_EXPORT> {
     pub(crate) fn new(controller_id: &str) -> Self {
-        Self { keys: BIM_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+        let tool_ids = <Self as semio_plugin::ArtifactOwnedToolJobFactory>::TOOL_IDS;
+        Self { keys: tool_ids.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }
 
-impl semio_framework::ToolJobFactory for BimCommandJobFactory {
+impl<const MODEL_EXPORT: bool> semio_framework::ToolJobFactory for BimCommandJobFactory<MODEL_EXPORT> {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<BimModelApp>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<BimModelApp>>;
 
@@ -125,18 +161,18 @@ impl semio_framework::ToolJobFactory for BimCommandJobFactory {
     }
 
     fn execution_contract(&self) -> ToolExecutionContract {
-        bim_bounded_contract()
+        bim_bounded_contract(MODEL_EXPORT)
     }
 
     semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: BIM_BOUNDED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
-impl semio_plugin::ArtifactOwnedToolJobFactory for BimCommandJobFactory {
+impl<const MODEL_EXPORT: bool> semio_plugin::ArtifactOwnedToolJobFactory for BimCommandJobFactory<MODEL_EXPORT> {
     type Owner = EditorApp<BimModelApp>;
-    const TOOL_IDS: &'static [&'static str] = BIM_TOOL_IDS;
+    const TOOL_IDS: &'static [&'static str] = if MODEL_EXPORT { &["exportModel"] } else { &COMMAND_IDS };
     const DOCUMENT_SCHEMA: &'static str = BIM_MODEL_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = BIM_PUBLICATION_CONTRACTS;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = if MODEL_EXPORT { &MODEL_EXPORT_PUBLICATION } else { &COMMAND_PUBLICATION };
 }
 //#endregion 🔖️RetainedCommands
 

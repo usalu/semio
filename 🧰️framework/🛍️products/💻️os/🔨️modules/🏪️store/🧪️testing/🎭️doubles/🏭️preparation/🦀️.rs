@@ -70,6 +70,14 @@ impl semio_framework_value::FactoryPayloadRetirement for DemoOneItemPreparationF
         Ok(Default::default())
     }
     fn close_state_step(state:&mut Self::CloseState,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll { let result=DemoOneItemPreparationFactory::close_result(state,body,effect);semio_framework_value::RetirementPollExit::settle(effect,result) }
+    fn close_state_work_demand(state:&Self::CloseState,body:usize)->Result<u64,ValueError> {
+        use semio_framework_value::FactoryPayloadRetirement as _;
+        if state.published.is_some() { return Ok(1); }
+        if !DemoPublishedRootWitness::close_state_terminal_is_empty(&state.published_close) { return DemoPublishedRootWitness::close_state_work_demand(&state.published_close,body).map(|work|work.max(1)); }
+        if state.identity.is_some() { return Ok(1); }
+        if !state.issuers.terminal_is_empty() { return state.issuers.next_computational_work(body).map(|work|work.max(1)); }
+        Ok(0)
+    }
     fn close_state_terminal_is_empty(state:&Self::CloseState)->bool {
         use semio_framework_value::FactoryPayloadRetirement as _;
         state.published.is_none()&&DemoPublishedRootWitness::close_state_terminal_is_empty(&state.published_close)&&state.identity.is_none()&&state.issuers.terminal_is_empty()

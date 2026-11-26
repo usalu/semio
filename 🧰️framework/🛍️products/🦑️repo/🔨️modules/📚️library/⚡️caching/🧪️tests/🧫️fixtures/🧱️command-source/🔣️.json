@@ -15,9 +15,6 @@
         "CACHE_POLICY_PATH",
         "CacheSourceEntry",
         "CacheSourceOperations",
-        "SOURCE_OPACITY_PROTOCOL_V1",
-        "isOpaqueSourcePathV1",
-        "opaqueSourceInputExclusionsV1",
         "slash",
         "sourceFiles"
       ]

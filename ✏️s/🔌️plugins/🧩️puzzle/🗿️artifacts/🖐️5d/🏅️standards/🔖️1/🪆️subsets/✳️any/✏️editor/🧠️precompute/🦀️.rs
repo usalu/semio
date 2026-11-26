@@ -595,6 +595,10 @@ impl Puzzle5dPlannerToolRunJob {
 }
 
 impl InteractiveJob for Puzzle5dPlannerToolRunJob {
+    fn checkpoint_follows_preview(&self) -> bool {
+        self.pending.is_empty() && self.inner.checkpoint_follows_preview()
+    }
+
     fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,claim:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(cx,claim))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {

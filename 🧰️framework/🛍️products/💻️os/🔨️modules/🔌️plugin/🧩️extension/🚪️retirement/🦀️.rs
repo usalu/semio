@@ -96,7 +96,7 @@ impl ExtensionBundle {
             return;
         }
         self.closing = true;
-        if let Some(gateway)=self.inference_gateway.get_mut().expect("exclusive inference gateway").as_mut(){gateway.begin_close();}
+        if let Some(gateway)=self.inference_gateway.get_mut().as_mut(){gateway.begin_close();}
         if let Some(owner) = &mut *self.resource_owner {
             owner.begin_close();
         }
@@ -138,7 +138,7 @@ impl ExtensionBundle {
         if self.closing{return empty(Some(crate::artifact_inference::ArtifactInferenceGatewayFailure::Literal("extension inference owner is closing").into()))}
         let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0||cx.should_yield(){return empty(None)}
         let context=self.resource_owner.as_ref().and_then(|owner|owner.inference_context());
-        let mut slot=match self.inference_gateway.lock(){Ok(slot)=>slot,Err(_)=>return empty(Some(crate::artifact_inference::ArtifactInferenceGatewayFailure::Literal("original inference gateway owner is poisoned").into()))};
+        let Ok(mut slot)=self.inference_gateway.try_lock() else{return empty(None)};
         if slot.is_none(){*slot=Some(crate::inference_gateway::ArtifactInferenceGateway::new(cx.operation().0,cx.generation().0,request));}
         let answer=slot.as_mut().unwrap().step(request,cx,context);
         if answer.payload.is_some(){assert!(slot.as_ref().unwrap().terminal_is_empty(),"original inference source remains owned before publication");*slot=None;}
@@ -182,9 +182,9 @@ impl ExtensionBundle {
             let released_bytes = size_of_val(owner.as_ref());self.resource_owner.take();
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..idle }));
         }
-        if let Some(gateway)=self.inference_gateway.get_mut().expect("exclusive inference gateway").as_mut(){
+        if let Some(gateway)=self.inference_gateway.get_mut().as_mut(){
             gateway.child_closed();
-            if gateway.terminal_is_empty(){*self.inference_gateway.get_mut().expect("exclusive inference gateway")=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}
+            if gateway.terminal_is_empty(){*self.inference_gateway.get_mut()=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}
             return gateway.close_step(&mut effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant})).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);
         }
         if !self.metadata_retirement.is_empty() {
@@ -212,7 +212,7 @@ impl ExtensionBundle {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.closing && self.inference_gateway.lock().is_ok_and(|slot|slot.is_none()) && self.resource_owner.is_none() && self.handlers.is_empty() && self.handlers.capacity() == 0 && self.manifest_retired && self.manifest.payload_is_empty() && self.metadata_retirement.is_empty()
+        self.closing && self.inference_gateway.try_lock().is_ok_and(|slot|slot.is_none()) && self.resource_owner.is_none() && self.handlers.is_empty() && self.handlers.capacity() == 0 && self.manifest_retired && self.manifest.payload_is_empty() && self.metadata_retirement.is_empty()
     }
 
     /// 📏️ Exact per-axis admission required by the next retained allocation move, birth or release.
@@ -220,7 +220,7 @@ impl ExtensionBundle {
         if let Some(owner) = self.resource_owner.as_ref() {
             return if owner.terminal_is_empty() { Ok(RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() }) } else { nested(owner.retirement_demands(maximum_body_bytes)?) };
         }
-        if let Some(gateway)=self.inference_gateway.lock().map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"original inference gateway owner is poisoned"))?.as_ref(){
+        if let Some(gateway)=self.inference_gateway.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"original inference gateway owner is busy"))?.as_ref(){
             return if gateway.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{nested(gateway.retirement_demands(maximum_body_bytes)?)};
         }
         if !self.metadata_retirement.is_empty() {

@@ -48,20 +48,20 @@ test("a lean read farms with one child on a two-core machine; the declared farm 
  expect(leanFarmPolicyV1(GRAPH_FARM_POLICY_V1,leanSlicePlanV1({limitMegabytes:Infinity,environment:env()}))).toBe(GRAPH_FARM_POLICY_V1);
 });
 
-test("the ledger grants the first project child on every declared machine from 8 GB up, whatever the parent holds, and more children only where the limit has room after the parent",()=>{
+test("the ledger grants the declared project child on every declared machine from 6 GB up, whatever the parent holds, at the typical child footprint, and more children only where the hard share of the tree has room after the parent footprint",()=>{
  const input=(host:number,resident:number)=>({hostMegabytes:host,residentMegabytes:resident,environment:env()});
  for(const resident of[900,1500,2300,3000]){
   const lease=reserveFarmV1({...input(8192,resident),kind:"project-farm",workerMegabytes:1536,wanted:4});
   expect(lease.workers,"8 GB, parent "+resident).toBe(1);
-  expect(farmReservationsV1()).toEqual([{kind:"project-farm",megabytes:1700}]);lease.release();
+  expect(farmReservationsV1()).toEqual([{kind:"project-farm",megabytes:900}]);lease.release();
  }
  const sixteen=reserveFarmV1({...input(16384,1500),kind:"project-farm",workerMegabytes:1536,wanted:8});
- expect(sixteen.workers).toBe(Math.floor((16384*share-1500)/1700));sixteen.release();
- const none=reserveFarmV1({...input(8192,4800),kind:"project-farm",workerMegabytes:1536,wanted:2});
- expect(none.workers,"parent plus one child past the ceiling: no child, the caller says so").toBe(0);
+ expect(sixteen.workers,"16 GB: four children beside the parent footprint").toBe(4);expect(farmReservationsV1()).toEqual([{kind:"project-farm",megabytes:3600}]);sixteen.release();
+ const none=reserveFarmV1({...input(4096,900),kind:"project-farm",workerMegabytes:1536,wanted:2});
+ expect(none.workers,"parent footprint plus one child at its cap past the hard share of 4 GB: no child, the caller says so").toBe(0);
  const serve=reserveFarmV1({...input(65536,1500),kind:"project-farm",workerMegabytes:1536,wanted:5});expect(serve.workers).toBe(5);
  const off=reserveFarmV1({hostMegabytes:8192,residentMegabytes:900,environment:env({SEMIO_SLICE_LEAN:"off"}),kind:"project-farm",workerMegabytes:1536,wanted:4});
- expect(off.workers,"lean off keeps the old law: the parent floor of 3600 leaves nothing").toBe(0);
+ expect(off.workers,"the declared child footprint decides the width, lean or not").toBe(1);off.release();
  expect(leanSliceV1({hostMegabytes:8192,environment:env()}).lean).toBe(true);expect(leanSliceV1({hostMegabytes:65536,environment:env()}).lean).toBe(false);
  expect(farmReservationsV1()).toEqual([]);
 });
@@ -90,7 +90,7 @@ test("the walk farm gives its children back to the first project child; random l
 
 test("real processes under a declared small machine: owners inferred in children that exit after a batch keep the summed tree under the plan limit and the parent does not grow per owner; owners inferred in the parent do",async()=>{
  const plan=leanSlicePlanV1({limitMegabytes:3276,cores:2,environment:env()}),owners=12,perOwner=60,ballast=(count:number)=>`const b=[];for(let i=0;i<${count};i++){const x=Buffer.alloc(${perOwner}*1048576);for(let k=0;k<x.length;k+=4096)x[k]=1;b.push(x);}setTimeout(()=>process.exit(0),700);`;
- const sample=async(work:()=>Promise<void>)=>{let peak=0,stop=false;const loop=(async()=>{while(!stop){peak=Math.max(peak,await observeHostTreeMegabytesV1(process.pid));await new Promise(done=>setTimeout(done,100));}})();await work();stop=true;await loop;return peak;};
+ const sample=async(work:()=>Promise<void>)=>{let peak=0,stop=false;const loop=(async()=>{while(!stop){peak=Math.max(peak,(await observeHostTreeMegabytesV1(process.pid))??0);await new Promise(done=>setTimeout(done,100));}})();await work();stop=true;await loop;return peak;};
  const before=process.memoryUsage().rss/MB;
  const treePeak=await sample(async()=>{for(let at=0;at<owners;at+=plan.ownersPerChild){const child=spawn(process.execPath,["-e",ballast(Math.min(plan.ownersPerChild,owners-at))],{stdio:"ignore"});await new Promise(done=>child.on("exit",done));}});
  const lean=process.memoryUsage().rss/MB-before;

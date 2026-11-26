@@ -34,3 +34,21 @@ test('producer command and neutral generated boundaries retain actual ownership'
  const outputs=new Map([["producer",consumesGenerated(expectedProducer)],["consumer",consumesGenerated(consumer)]]),database=new Database(":memory:");
  try{for(const row of vectors.cases){const actual=outputs.get(row.entry)!;expect(actual,row.id).toBe(row.generated);const producer=project.name+":wasm",consumerName=project.name+":"+row.target,oracle=database.query("SELECT CASE WHEN ? = 1 AND ? = ? THEN 1 ELSE 0 END AS refused").get(Number(actual),producer,consumerName) as {refused:number};let refused=false;try{const result=applyBuildGeneratedTaskDependenciesV1({name:project.name,targets:{[row.target]:{inputs:["default"],dependsOn:[] as string[]}}},{[row.target]:actual?[producer]:[]});if(actual)expect(result.targets[row.target].dependsOn).toContain(producer);}catch(error){if(!String(error).includes("Generated task cannot consume its own output"))throw error;refused=true;}expect(refused,row.id).toBe(Boolean(oracle.refused));expect(refused,row.id).toBe(row.refused);}}finally{database.close();}
 });
+
+test("standalone Flow keeps its bridge exports and uses only the evaluation owners from the plugin SDK", () => {
+ const family=resolve(import.meta.dir,"../../..");
+ const evaluation=resolve(family,"🧩️extensions/🕸️wasm"),packages=resolve(evaluation,"📦️packages/🦀️rust");
+ const manifest=Bun.TOML.parse(readFileSync(resolve(packages,"Cargo.toml"),"utf8")) as {dependencies:Record<string,{path:string}>};
+ const actualOwners=Object.keys(manifest.dependencies).filter(name=>name==="semio-plugin"||name.startsWith("semio-plugin-")).sort();
+ expect(actualOwners).toEqual(Object.keys(vectors.evaluationOwners).sort());
+ const parts=["📥️request","🧩️extension-resources-topic-and-command"].map(part=>readFileSync(resolve(evaluation,part,"🦀️.rs"),"utf8")).join("\n");
+ for(const [name,types] of Object.entries(vectors.evaluationOwners)){
+  const source=Bun.TOML.parse(readFileSync(resolve(packages,manifest.dependencies[name]!.path,"Cargo.toml"),"utf8")) as {package:{name:string}};
+  expect(source.package.name).toBe(name);
+  for(const type of types)expect(parts).toMatch(new RegExp(`use ${name.replaceAll("-","_")}::[^;]*\\b${type}\\b`,"u"));
+ }
+ const bridge=resolve(family,"🕸️wasm"),policy=JSON.parse(readFileSync(resolve(bridge,"🌐️browser/📦️publication/🧬️schema/🔣️.json"),"utf8")) as {definitions:{Protocol:{const:{bridgeExports:string[]}}}};
+ const linearMemory=readFileSync(resolve(bridge,"🔗️linear-memory/🦀️.rs"),"utf8");
+ const exports=Array.from(linearMemory.matchAll(/extern "C" fn (flow_bridge_\w+)/gu),entry=>entry[1]).sort();
+ expect(exports).toEqual([...policy.definitions.Protocol.const.bridgeExports].sort());
+});

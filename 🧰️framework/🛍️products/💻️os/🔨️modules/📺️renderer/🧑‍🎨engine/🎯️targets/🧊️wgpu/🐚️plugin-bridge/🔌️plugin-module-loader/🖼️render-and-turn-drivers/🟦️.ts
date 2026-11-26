@@ -1,8 +1,8 @@
 /** 🖼️ The serialized surface render, the spawned job and typed operation drains and the queued turn driver.
  *
  * 🧱️ Child module of {@link ../🟦️.ts | loadPluginModule}: each function builds one group of the handle's closure state and helpers and returns them for the later groups. */
-import { createTurnOutcomeBroadcast, type Effect, type PluginDispatchHintV1, type PluginWasmHandle as KernelPluginWasmHandle, type SpawnedJobCompletion, type TurnOutcome } from "@semio-tech/framework";
-import { encodePackValue } from "@semio-tech/framework-os";
+import { FRAMEWORK_RESERVED_JOB_KIND, createTurnOutcomeBroadcast, type Effect, type PluginDispatchHintV1, type PluginWasmHandle as KernelPluginWasmHandle, type SpawnedJobCompletion, type TurnOutcome } from "@semio-tech/framework";
+import { encodePackValue } from "@semio-tech/framework/packs";
 import { stashOperationProgress, stashOperationPublication, WGPU_TYPED_OPERATION_DRAIN_BUDGET, WGPU_TYPED_OPERATION_EFFECT_CAPACITY, WGPU_TYPED_OPERATION_SETTLE_LIMIT, WgpuTypedOperationDrive } from "../../🧾️typed-operations-and-handle/🟦️.ts";
 import { admitSpawnedJob, declareWgpuBootSubphase, forgetSpawnedJobs, leftoverFriendlyEffects, pendingTurnEffects, shellFrameAnswersACaller, stashLeftoverHostEffects, takeSpawnedJobs, WGPU_SPAWNED_JOB_ROUNDS, wgpuHostEffect, type WgpuSpawnedJobDrain } from "../../🎛️contributions-and-effects/🟦️.ts";
 import { getShardClient, serializeWgpuActorCall, submitTurn } from "../../🧵️shard-and-actor-calls/🟦️.ts";
@@ -72,6 +72,7 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
     const port: SpawnedJobPort = {
       startJob: (job, kind, input) => client.startJob(actorId, job, kind, input),
       stepJob: (job, budget) => client.stepJob(actorId, job, budget),
+      cancelJob: (job) => client.cancelJob(actorId, job),
     };
     for (let round = 0; round < WGPU_SPAWNED_JOB_ROUNDS; round += 1) {
       const jobs = takeSpawnedJobs(instanceId);
@@ -80,7 +81,13 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
         const started = performance.now();
         let completion: SpawnedJobCompletion;
         try {
-          completion = await driveSpawnedJob({ job: job.job, kind: job.kind, input: job.input, port });
+          completion = await driveSpawnedJob({
+            job: job.job, kind: job.kind, input: job.input, port,
+            continueAfterAdmission: job.kind === FRAMEWORK_RESERVED_JOB_KIND ? async () => {
+              await yieldWgpuUi();
+              if (state.disposing || closingInstances.has(instanceId) || actorIdByInstance.get(instanceId) !== actorId) throw new Error("wgpu-job.owner-retired");
+            } : undefined,
+          });
         } catch (error) {
           const detail = error instanceof Error ? error.message : String(error);
           completion = { steps: 0, outcome: { fault: new TextEncoder().encode(detail) } };

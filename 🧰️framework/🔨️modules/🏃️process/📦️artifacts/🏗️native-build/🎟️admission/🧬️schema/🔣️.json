@@ -11,6 +11,13 @@
         "floorBytes": 268435456,
         "coldBaseBytes": 644245094,
         "coldBytesPerKloc": 41943040,
+        "coldExternalBaseBytes": 402653184,
+        "coldExternalBytesPerKloc": 4194304,
+        "externalSourceMarkers": [
+          "/registry/src/",
+          "/git/checkouts/",
+          "/vendor/"
+        ],
         "componentFinalBytes": 6442450944,
         "componentColdQuantile": 0.5,
         "componentColdMinimumRows": 3,
@@ -27,6 +34,7 @@
         "storeDirectory": "build-telemetry",
         "storeFile": "units.jsonl",
         "sourceExtension": ".rs",
+        "packageManifestFile": "Cargo.toml",
         "forecastSizeToleranceBasisPoints": 2500,
         "sourceSkipDirectories": [
           "target",
@@ -43,12 +51,28 @@
           "cancelledMemoryMilliseconds": 3600000
         },
         "growth": {
-          "description": "Grant growth: a unit that needs more than the parent memory grant asks the host for a supplementary reservation of the difference (the fair queue of the host capacity gate decides against free memory, the warden thresholds and the interactive reserve) and waits for it at most `waitMilliseconds`, printing a progress line every `progressMilliseconds`. A unit that no memory this host can ever hold carries is queued for a larger machine; a unit that no machine of the fleet can hold is refused. `fleetDirectory` is the folder below the fleet store that holds one `memory.json` per origin.",
+          "description": "Grant growth: a unit that needs more than the parent memory grant asks the host for a supplementary reservation of the difference (the fair queue of the host capacity gate decides against free memory, the warden thresholds and the interactive reserve) and waits for it at most `waitMilliseconds` (a unit that fits the grant by itself and only misses the driver's own memory waits at most `overheadWaitMilliseconds` and then runs alone with the rest of the grant), printing a progress line every `progressMilliseconds`. A unit that no memory this host can ever hold carries is queued for a larger machine; a unit that no machine of the fleet can hold is refused. `fleetDirectory` is the folder below the fleet store that holds one `memory.json` per origin.",
           "waitMilliseconds": 900000,
+          "overheadWaitMilliseconds": 30000,
           "progressMilliseconds": 30000,
           "fleetDirectory": "origins",
           "fleetFile": "memory.json",
           "fleetStalenessMilliseconds": 86400000
+        },
+        "waits": {
+          "description": "Visible waiting: the broker prints a progress line for every unit that waits in its queue (and for a grant growth, see `growth`) at least every `progressMilliseconds`, saying what it waits for and for how long in both languages, and hands the rows of all waiting units to its `onWaits` port every `publishMilliseconds`, so `repo capacity status` shows the stall.",
+          "publishMilliseconds": 10000,
+          "progressMilliseconds": 30000
+        },
+        "bounds": {
+          "description": "Every client-to-broker request ends in a verdict, never in silence: a unit that waits in the broker queue is told so every `heartbeatMilliseconds` (the wrapper treats `silenceMilliseconds` without any line as a lost broker, drops the connection, and sends the request again, at most `attempts` times with a growing pause, so a request survives a broker that restarted); estimating the memory of a unit is bounded by `predictMilliseconds`; a grant growth by its own wait plus `growthGraceMilliseconds`; a unit that waits with nothing running for `stallMilliseconds` runs alone beside the budget it cannot get; a unit that waits longer than `queueMilliseconds` is refused. The Rust scheduler keeps `silenceMilliseconds` and `attempts` as constants and a test compares them.",
+          "heartbeatMilliseconds": 30000,
+          "silenceMilliseconds": 180000,
+          "attempts": 5,
+          "predictMilliseconds": 120000,
+          "growthGraceMilliseconds": 30000,
+          "stallMilliseconds": 90000,
+          "queueMilliseconds": 2700000
         },
         "unitCeiling": {
           "description": "The compile-memory budget per worker class: the most one compile unit may hold at its peak so that it fits the smallest worker (a 16 GB Mac that runs several agents). A library unit (everything but a `cdylib`) stays within `libraryMegabytes`; only a final `cdylib` link unit may use the higher `finalMegabytes`, and it must use the serial back end. `workerClass` names the class the fleet is carved for. `carving` is the closed list of units known to exceed their budget, each with its measured peak and the reduction it waits for; the list may only shrink. Every carving entry declares `budgetMegabytes`, the budget the host warden enforces at runtime for that unit (at least its measured peak, at most 10 percent above it): a unit on the list is cancelled while it runs once its resident footprint exceeds it; an unlisted unit is cancelled above the budget of its kind. `families` is the closed list of homogeneous generated shard families (a regular expression over the whole crate name plus a target) whose per-shard peaks vary from run to run: its `measuredMegabytes` is the class measurement, the largest peak observed over any shard of the family (the `source` names the log lines), and its `budgetMegabytes` the budget every shard of the family may reach (at least the class measurement, at most 10 percent above it). A unit with its own carving entry uses that entry, else the family it matches.",
@@ -247,8 +271,8 @@
             {
               "crate": "semio_hub_sourcing",
               "target": "wasm32-wasip2",
-              "measuredMegabytes": 4000,
-              "budgetMegabytes": 4400,
+              "measuredMegabytes": 2824,
+              "budgetMegabytes": 3100,
               "action": "split-app-fleet"
             },
             {
@@ -536,6 +560,15 @@
             "swap": "unit {unit} is held back: the host is actively swapping (it needs about {predicted} MB); waited {seconds} s",
             "cancelled": "unit {unit} was cancelled by the host warden before and is held back until it fits: it needs about {predicted} MB, the host has {available} MB available with a margin of {margin} MB (warden level {level}); waited {seconds} s"
           },
+          "waits": {
+            "queued": "unit {unit} waits in the broker queue (place {place} of {count}): it needs about {predicted} MB, the {running} running unit(s) hold {held} MB of the {budget} MB budget; waited {seconds} s",
+            "idle": "unit {unit} waits in the broker queue (place {place} of {count}) although nothing runs: it needs about {predicted} MB, the budget is {budget} MB and the grant {grant} MB; waited {seconds} s",
+            "growth": "unit {unit} waits for a wider memory grant: it needs about {predicted} MB; waited {seconds} s",
+            "stalled": "unit {unit} waited {seconds} s with nothing running although it needs about {predicted} MB and the budget is {budget} MB: it runs alone now so that the build cannot stand still",
+            "expired": "unit {unit} waited {seconds} s in the broker queue, longer than the bound of {minutes} min: it is refused so that the build ends instead of waiting for ever; retry on a quieter host or a fleet worker",
+            "late": "unit {unit}: the broker did not finish estimating its memory within {seconds} s, the request is dropped and the compiler asks again",
+            "row": "[capacity]   unit wait, pid {pid}: {text}"
+          },
           "growth": {
             "asking": "unit {unit} needs about {predicted} MB but its memory grant is {grant} MB: asking the host to grow the grant by {extra} MB (at most {minutes} min)",
             "waiting": "unit {unit} still waits for {extra} MB of grant growth: it needs about {predicted} MB, grant {grant} MB, host {available} MB available, {reserve} MB reserved; waited {seconds} s",
@@ -543,7 +576,8 @@
             "timeout": "unit {unit} got no grant growth within {minutes} min: it needs about {predicted} MB, grant {grant} MB; the host may be busy, retry or use a fleet worker",
             "beyondHost": "unit {unit} needs about {predicted} MB but this host can hold at most {holdable} MB beside its reserves: it is queued for a larger machine (the largest holds {largest} MB) and never compiles here",
             "refused": "no machine of the fleet can hold unit {unit}: it needs about {predicted} MB and the largest host ({origin}) holds at most {largest} MB",
-            "cancelled": "unit {unit}: waiting for grant growth was cancelled after {seconds} s"
+            "cancelled": "unit {unit}: waiting for grant growth was cancelled after {seconds} s",
+            "serial": "unit {unit}: its estimate of {predicted} MB does not fit the {grant} MB grant beside the driver and no wider grant came in time: it runs alone with the rest of the grant instead of being refused or waiting for good"
           },
           "unitCeiling": {
             "kinds": {
@@ -562,6 +596,15 @@
             "swap": "Einheit {unit} wird zurückgehalten: der Host lagert aktiv Speicher aus (die Einheit braucht etwa {predicted} MB); {seconds} s gewartet",
             "cancelled": "Einheit {unit} wurde zuvor vom Host-Warden abgebrochen und wird zurückgehalten, bis sie passt: sie braucht etwa {predicted} MB, der Host hat {available} MB verfügbar bei einem Abstand von {margin} MB (Warden-Stufe {level}); {seconds} s gewartet"
           },
+          "waits": {
+            "queued": "Einheit {unit} wartet in der Warteschlange des Brokers (Platz {place} von {count}): sie braucht etwa {predicted} MB, die {running} laufenden Einheiten halten {held} MB des Budgets von {budget} MB; {seconds} s gewartet",
+            "idle": "Einheit {unit} wartet in der Warteschlange des Brokers (Platz {place} von {count}), obwohl nichts läuft: sie braucht etwa {predicted} MB, das Budget beträgt {budget} MB und die Zuteilung {grant} MB; {seconds} s gewartet",
+            "growth": "Einheit {unit} wartet auf eine größere Speicherzuteilung: sie braucht etwa {predicted} MB; {seconds} s gewartet",
+            "stalled": "Einheit {unit} wartete {seconds} s, obwohl nichts lief: sie braucht etwa {predicted} MB und das Budget beträgt {budget} MB; sie läuft jetzt allein, damit der Bau nicht stillsteht",
+            "expired": "Einheit {unit} wartete {seconds} s in der Warteschlange des Brokers, länger als die Grenze von {minutes} min: sie wird abgelehnt, damit der Bau endet, statt ewig zu warten; auf einem ruhigeren Host oder einem Flotten-Worker erneut versuchen",
+            "late": "Einheit {unit}: der Broker hat die Speicherschätzung nicht innerhalb von {seconds} s abgeschlossen, die Anfrage wird verworfen und der Compiler fragt erneut",
+            "row": "[capacity]   Einheit wartet, pid {pid}: {text}"
+          },
           "growth": {
             "asking": "Einheit {unit} braucht etwa {predicted} MB, ihre Speicherzuteilung beträgt aber {grant} MB: der Host wird gebeten, die Zuteilung um {extra} MB zu vergrößern (höchstens {minutes} min)",
             "waiting": "Einheit {unit} wartet weiter auf {extra} MB Zuteilungswachstum: sie braucht etwa {predicted} MB, Zuteilung {grant} MB, Host {available} MB verfügbar, {reserve} MB reserviert; {seconds} s gewartet",
@@ -569,7 +612,8 @@
             "timeout": "Einheit {unit} bekam innerhalb von {minutes} min kein Zuteilungswachstum: sie braucht etwa {predicted} MB, Zuteilung {grant} MB; der Host ist womöglich ausgelastet, erneut versuchen oder einen Flotten-Worker nutzen",
             "beyondHost": "Einheit {unit} braucht etwa {predicted} MB, dieser Host kann neben seinen Reserven höchstens {holdable} MB halten: sie wird für eine größere Maschine eingereiht (die größte hält {largest} MB) und wird hier nie kompiliert",
             "refused": "Keine Maschine der Flotte kann Einheit {unit} halten: sie braucht etwa {predicted} MB, der größte Host ({origin}) hält höchstens {largest} MB",
-            "cancelled": "Einheit {unit}: das Warten auf Zuteilungswachstum wurde nach {seconds} s abgebrochen"
+            "cancelled": "Einheit {unit}: das Warten auf Zuteilungswachstum wurde nach {seconds} s abgebrochen",
+            "serial": "Einheit {unit}: ihre Schätzung von {predicted} MB passt neben dem Treiber nicht in die Zuteilung von {grant} MB und keine größere Zuteilung kam rechtzeitig: sie läuft allein mit dem Rest der Zuteilung, statt abgelehnt zu werden oder ewig zu warten"
           },
           "unitCeiling": {
             "kinds": {
@@ -866,6 +910,10 @@
         },
         "wait": {
           "type": "boolean"
+        },
+        "fleetOnly": {
+          "description": "The pass is fleet-only: local compilation is refused, so a wrapper has no headroom to wait for.",
+          "const": true
         }
       }
     },

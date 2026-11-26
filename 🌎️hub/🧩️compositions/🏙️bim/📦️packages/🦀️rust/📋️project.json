@@ -47,7 +47,6 @@
         "cwd": "{projectRoot}",
         "command": "repo ./📜️script.ts guest-instance-check"
       },
-      "metadata": { "workspaceCommand": ["check", "bim-guest-instance"] },
       "outputs": [],
       "cache": false
     }

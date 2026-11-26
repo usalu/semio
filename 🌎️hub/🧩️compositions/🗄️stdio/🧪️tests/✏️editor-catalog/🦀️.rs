@@ -19,7 +19,7 @@ fn coordinate(dialect: &semio_framework::ArtifactDialect) -> String {
 fn stdio_packages_assembled() {
     static ASSEMBLED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
     ASSEMBLED.get_or_init(|| {
-        semio_hub_stdio::plugin().expect("stdio assembles");
+        semio_hub_stdio_router::plugin().expect("stdio assembles");
         semio_hub_stdio_image::plugin().expect("stdio-image assembles");
         semio_hub_stdio_media::plugin().expect("stdio-media assembles");
         semio_hub_stdio_cad::plugin().expect("stdio-cad assembles");

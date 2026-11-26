@@ -7,9 +7,9 @@ use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::expor
 use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
 use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::en;
 use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
-use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::{strip_of, RampRun, RampStrip};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::{strip_of, RampRun};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ramp;
-use semio_framework_geometry::Point;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::ramps::{body_mesh, stations_of};
 
 /// 🏷️ The `Semio_Authoring` row that holds the authored ramp record.
 pub const RECORD_ROW: &str = "Ramp";
@@ -22,31 +22,6 @@ fn ramp_type(ramp: &Ramp, run: &RampRun) -> &'static str {
         (false, 3) => "TWO_STRAIGHT_RUN_RAMP",
         _ => "USERDEFINED",
     }
-}
-
-fn station(strip: &RampStrip, at: [f64; 3]) -> f64 {
-    let point = Point::new(at[0], at[1]);
-    strip
-        .centre
-        .iter()
-        .enumerate()
-        .map(|(index, segment)| {
-            let closest = segment.closest(point);
-            (closest.distance, strip.starts[index] + closest.t * segment.length())
-        })
-        .min_by(|a, b| a.0.total_cmp(&b.0))
-        .map_or(0.0, |best| best.1)
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Piece {
-    Flight(usize),
-    Landing(usize),
-}
-
-fn piece_of(run: &RampRun, s: f64) -> Piece {
-    let covers = |from: f64, to: f64| s >= from - 1e-6 && s <= to + 1e-6;
-    run.flights.iter().position(|flight| covers(flight.from, flight.to)).map(Piece::Flight).or_else(|| run.landings.iter().position(|landing| covers(landing.from, landing.to)).map(Piece::Landing)).unwrap_or(Piece::Landing(0))
 }
 
 pub fn ramp(x: &mut Export<'_>, id: &str, row: &Ramp) {
@@ -67,21 +42,25 @@ pub fn ramp(x: &mut Export<'_>, id: &str, row: &Ramp) {
     let entity = x.product("IFCRAMP", id, &row.name, placement, None, vec![en(match (ramp_type(row, run), x.schema()) { ("USERDEFINED", semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema::Ifc4) => "NOTDEFINED", (kind, _) => kind })]);
     x.contain(&row.storey, id, entity);
     let body = |part: &str| part == semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::BODY;
+    let mut stations = stations_of(&strip, run);
+    for station in &mut stations { station.z -= storey.elevation; }
     let mut components = Vec::new();
-    let part_of = |x: &mut Export<'_>, entity: &str, key: String, piece: Piece, tail: Vec<semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::V>| {
-        let shape = brep_definition(&mut x.ifc, &mesh_where(solid, storey.elevation, |group, centroid| body(&group.part) && piece_of(run, station(&strip, centroid)) == piece));
+    let part_of = |x: &mut Export<'_>, entity: &str, key: String, from: f64, to: f64, tail: Vec<semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::V>| {
+        let first = stations.partition_point(|station| station.s < from - 1e-9);
+        let end = stations.partition_point(|station| station.s <= to + 1e-9);
+        let shape = brep_definition(&mut x.ifc, &body_mesh(&stations[first..end], row.thickness));
         let axis = x.ifc.axis3([0.0, 0.0, 0.0], None, None);
         let place = x.ifc.place(Some(storey.placement), axis);
         x.product(entity, &key, &row.name, place, shape, tail)
     };
     for (index, flight) in run.flights.iter().enumerate() {
         let flight_tail = x.by(Vec::new(), vec![en(if row.path.iter().take(row.path.len().saturating_sub(1)).any(|vertex| vertex.bulge != 0.0) { "SPIRAL" } else { "STRAIGHT" })]);
-        let part = part_of(x, "IFCRAMPFLIGHT", format!("{id}:flight{index}"), Piece::Flight(index), flight_tail);
+        let part = part_of(x, "IFCRAMPFLIGHT", format!("{id}:flight{index}"), flight.from, flight.to, flight_tail);
         x.links.quantities.push((part, "Qto_RampFlightBaseQuantities", vec![Quantity::Length("Length", flight.length), Quantity::Length("Width", run.width)]));
         components.push(part);
     }
     for (index, landing) in run.landings.iter().enumerate() {
-        let part = part_of(x, "IFCSLAB", format!("{id}:landing{index}"), Piece::Landing(index), vec![en("LANDING")]);
+        let part = part_of(x, "IFCSLAB", format!("{id}:landing{index}"), landing.from, landing.to, vec![en("LANDING")]);
         x.links.quantities.push((part, "Qto_SlabBaseQuantities", vec![Quantity::Length("Width", run.width), Quantity::Length("Length", landing.length)]));
         components.push(part);
     }
@@ -95,8 +74,7 @@ pub fn ramp(x: &mut Export<'_>, id: &str, row: &Ramp) {
     if let Some(definition) = x.links.material_defs.get(&row.material).copied() {
         x.links.materials.entry(definition).or_default().push(entity);
     }
-    let v4 = x.schema() == semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema::Ifc4;
-    x.quantify(entity, "Qto_RampBaseQuantities", id, |row| vec![Quantity::Length("Length", row.length), Quantity::Length("Width", row.width), Quantity::Length("Height", if v4 { row.height.abs() } else { row.height }), Quantity::Area("GrossArea", row.gross_area), Quantity::Volume("GrossVolume", row.gross_volume)]);
+    x.quantify(entity, "Qto_RampBaseQuantities", id, |row| vec![Quantity::Length("Length", row.length), Quantity::Length("Width", row.width), Quantity::Length("Height", row.height.abs()), Quantity::Area("GrossArea", row.gross_area), Quantity::Volume("GrossVolume", row.gross_volume)]);
     x.links.authoring.push((entity, vec![(RECORD_ROW, label(&semio_framework_pack_json::to_json_string(row)))]));
 }
 

@@ -14,7 +14,7 @@ The staged patch gives Draw the same mounted editor and viewer crate boundary as
 
 The stage generator, unified patch and in-memory law are under the ticket's generated directory. The law used the actual artifact's constructor contract, independently parsed the projected TOML, lockfile and owner registry, validated the neutral role fixture with Ajv, and checked that only the intended nine paths change. The longest projected source or actual-lane object path was 192 UTF-16 units. The full changed Cargo graph path gate still needs its normal managed run.
 
-The live source, hub workspace manifest, lock and owner registry were left untouched while the prior source snapshot finished. Re-run `stage-draw-app-carve.py` against the current shared tree before applying `draw-hub-app-carve-26.patch`. The member decoder carve has independent lock and registry entries. Apply both without replacing either maintainer's unrelated edits.
+After the prior source snapshot retired, the live nine-file carve was regenerated, validated and applied against the updated shared hub lock and owner registry. Both member decoder and hub role entries are present. The resumed managed component build measures the actual production units serially using the warmed prototype lane.
 
 After the earlier component process has retired, resolve locked offline metadata and use one managed Cargo invocation to measure each new role and the composition, with no parallel Rust compiler. Start with the existing warmed prototype store. Scheduler telemetry should identify one actually compiled unit for each of the three names and the `wasm32-wasip2` target. A restored object or metadata-only unit supplies no peak measurement.
 
@@ -22,8 +22,16 @@ After the earlier component process has retired, resolve locked offline metadata
 SEMIO_OFFLOAD=never SEMIO_COMPILER_PARALLELISM=1 \
   repo capacity run --memory=4608 -- repo cargo --store=shared \
   --configuration=prototype --parallelism=1 -- build --locked \
-  --manifest-path "🌎️hub/Cargo.toml" --target wasm32-wasip2 --lib \
+  --manifest-path "🌎️hub/Cargo.toml" --target wasm32-wasip2 --profile prototype --lib \
   -p semio-hub-draw-editor-app -p semio-hub-draw-viewer-app -p semio-hub-draw
 ```
 
-Compare all three measured peaks with 1,536 MiB. Then run the regular Draw component publication and existing native and browser laws against that publication. The staged source law passed. No Rust build was started.
+Compare all three measured peaks with 1,536 MiB. Then run the regular Draw component publication and existing native and browser laws against that publication. The staged source law passed. The parent started the managed serial component build after the member-wire measurement retired. The new role peaks remain pending at this writing.
+
+## Fresh measurement gate
+
+The ticket budget verifier accepts `hub <start-in-epoch-milliseconds>` after the measurement history path. It checks the two mounted role units and their composition against the registered prototype WASI library ceiling and the independent SQLite oracle. The lower timestamp bound excludes old facade measurements. Controlled cases accepted the exact 1,536 MiB ceiling, rejected one byte above it, and rejected a run with only older observations. A real managed compile must still provide all three peaks.
+
+## Live serial compiler
+
+During the admitted WASI library pass, process-table capture identified the actual rustc child (PID 58732) in the pacb6dd lane with opt-level=s, codegen-units=16, strip=symbols, threads=1, and no-parallel-backend. The enclosing wrapper and scheduler carried the authored threads=0 argument. The child observation confirms the single-token rewrite took effect on a real compilation unit. Individual mounted-role peaks require those actual units to finish.

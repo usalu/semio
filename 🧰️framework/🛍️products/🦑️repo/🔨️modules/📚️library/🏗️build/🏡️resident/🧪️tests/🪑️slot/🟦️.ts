@@ -62,7 +62,7 @@ test("cancellation during a replay detaches only the late slice subscriber",asyn
   const worker=await began.promise;
   worker.emit("message",{type:"progress",...step});
   await seen.promise;
-  let replayed;
+  let replayed:unknown;
   const joined=pool.run(request,{signal:late.signal,onProgress:(_ms:number,detail:unknown)=>{replayed=detail;late.abort(reason);}});
   void joined.catch(()=>undefined);pending.push(joined);
   expect(replayed).toEqual(step);

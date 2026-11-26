@@ -2,7 +2,7 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {createGraphPhaseClockV1} from "../../../../../⏱️phases/🟨️.mjs";
 import {runWarmLanesV1,warmLineV1} from "../../🟨️.mjs";
-import source from "../../../🟨️.mjs" with {type:"text"};
+const source=await Bun.file(new URL("../../../🟨️.mjs",import.meta.url)).text();
 import fixture from "./🔣️.json" with {type:"json"};
 
 test("warm attempts and preparations stay outside completed inference",async()=>{

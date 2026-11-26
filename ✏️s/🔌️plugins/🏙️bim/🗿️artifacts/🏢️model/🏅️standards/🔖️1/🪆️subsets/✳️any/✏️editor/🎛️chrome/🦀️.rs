@@ -121,7 +121,7 @@ fn plan_measures(snapshot: &ModelSnapshot, config: &semio_s_artifact_bim_model_k
 
 /// 📤️ One download toggle per export format: each runs the stepped, cancellable `exportModel` job.
 fn export_toggles(labels: &BimLabels) -> Vec<WindowMeasure> {
-    [("ifc2x3", labels.export_ifc2x3.as_str()), ("ifc4", labels.export_ifc4.as_str()), ("glb", labels.export_glb.as_str()), ("svg", labels.export_svg.as_str()), ("csv", labels.export_csv.as_str())]
+    [("ifc2x3", labels.export_ifc2x3.as_str()), ("ifc4", labels.export_ifc4.as_str()), ("gbxml", labels.export_gbxml.as_str()), ("glb", labels.export_glb.as_str()), ("svg", labels.export_svg.as_str()), ("csv", labels.export_csv.as_str())]
         .into_iter()
         .map(|(format, label)| WindowMeasure::Toggle { id: format!("bim.measure.world.export.{format}"), icon_id: "download".into(), label: Some(label.to_string()), pressed: false, text: None, on_change: bim_window_action("exportModel", Some(DslValue::object([("format".to_string(), DslValue::String(format.to_string()))]))) })
         .collect()

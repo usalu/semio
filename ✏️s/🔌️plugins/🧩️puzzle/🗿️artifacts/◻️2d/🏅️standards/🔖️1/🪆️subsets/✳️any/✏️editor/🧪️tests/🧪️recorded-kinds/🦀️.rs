@@ -269,8 +269,16 @@ fn target_region_commands_emit_region_kinds() {
 
 #[test]
 fn force_layout_emits_only_node_moves() {
-    let rows = rows_of("forceLayout", json!({}), &[]);
+    let demand = Puzzle2dForceLayoutWork::original_birth_demands().expect("force workspace layout");
+    let grant = semio_plugin::artifact_app_laws::fixture_mounted_policy().preparation;
+    assert!(demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes, "the complete supported force workspace must fit an interactive construction turn: {demand:?} under {grant:?}");
+    let mut app = app_with_registry();
+    seed_board(&mut app, &board());
+    let before = app.stores.store.envelope().vcs.edits.len();
+    dispatch(&mut app, "forceLayout", None, Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("settle the force-layout job");
+    let rows: Vec<_> = app.stores.store.envelope().vcs.edits.iter().skip(before).flat_map(|edit| &edit.forwards).collect();
     assert!(!rows.is_empty() && rows.iter().all(|row| matches!(row, Puzzle2dMutation::MoveNode(_))), "{rows:?}");
+    close_app(&mut app);
 }
 
 #[test]

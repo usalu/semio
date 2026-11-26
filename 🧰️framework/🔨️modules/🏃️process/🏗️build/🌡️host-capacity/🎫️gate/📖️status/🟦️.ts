@@ -95,12 +95,19 @@ export function hostGrantPidReusedV1(facts:Readonly<{grant:Pick<HostGrantV1,"adm
 export function readGrants(directory:string,now:number,policy:HostCapacityPolicyV1,startOf:(pid:number)=>number|undefined=processStartMillisecondsV1,signal?:AbortSignal,reclaim=true):HostGrantV1[]{
  const rows:HostGrantV1[]=[],boot=hostBootAtV1(directory,now);
  for(const name of names(directory,"grants",{retry:{signal}})){
-  const path=join(directory,"grants",name),modifiedAtMs=modified(path),value=readJson(path);
-  if(!isHostCapacityV1("Grant",value)){if(reclaim&&now-modifiedAtMs>policy.wait.lockStaleMilliseconds)reclaimStale(path,modifiedAtMs);continue;}
+  const path=join(directory,"grants",name),modifiedAtMs=modified(path),value=readJson(path),heartbeatAgeMs=now-modifiedAtMs,id=name.slice(0,-5);
+  if(modifiedAtMs===0)continue;
+  type Owner=Pick<HostGrantV1,"pid"|"startMs"|"admittedAtMs"|"bootAtMs">;
+  const currentOwner=(grant:Owner):boolean=>alive(grant.pid,grant.startMs)&&!(heartbeatAgeMs>2*policy.wait.heartbeatMilliseconds&&hostGrantPidReusedV1({grant,heartbeatAgeMs,heartbeatMs:policy.wait.heartbeatMilliseconds,startMs:startOf(grant.pid)}));
+  if(!isHostCapacityV1("Grant",value)){
+   const owner=isHostCapacityV1("GrantOwner",value)?value as Owner:undefined;
+   const live=owner===undefined?heartbeatAgeMs<=policy.wait.staleMilliseconds:Math.abs(owner.bootAtMs-boot)<=protocol.bootToleranceMilliseconds&&currentOwner(owner);
+   if(live)throw hostCapacityErrorV1("unrecognizedGrant",{id});
+   if(reclaim)reclaimStale(path,modifiedAtMs);
+   continue;
+  }
   const grant=value as HostGrantV1;
-  const heartbeatAgeMs=now-modifiedAtMs;
-  const pidAlive=alive(grant.pid,grant.startMs)&&!(heartbeatAgeMs>2*policy.wait.heartbeatMilliseconds&&hostGrantPidReusedV1({grant,heartbeatAgeMs,heartbeatMs:policy.wait.heartbeatMilliseconds,startMs:startOf(grant.pid)}));
-  if(isCurrentHostGrantV1({grant,expectedId:name.slice(0,-5),pidAlive,nowMs:now,bootAtMs:boot,modifiedAtMs},policy))rows.push(grant);
+  if(isCurrentHostGrantV1({grant,expectedId:id,pidAlive:currentOwner(grant),nowMs:now,bootAtMs:boot,modifiedAtMs},policy))rows.push(grant);
   else if(reclaim)reclaimStale(path,modifiedAtMs);
  }
  return rows;

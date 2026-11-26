@@ -32,15 +32,15 @@ test("one machine computes and publishes a record, another takes it without eval
   const first=await resolveStampV1({id:"toy",declared,root:toy,directory:temp("store-a"),runners,provider,fleet:a});
   expect(first.status).toBe("computed");
   await Bun.sleep(300);
-  const published=await b.get("toy",first.key);
+  const published=await b.get("toy",first.key!);
   expect(recordHoldsV1(published,{id:"toy",key:first.key,declared})).toBe(true);
   const before=evaluations,second=await resolveStampV1({id:"toy",declared,root:toy,directory:temp("store-b"),runners,provider,fleet:b});
   expect(second.status).toBe("fleet");expect(evaluations).toBe(before);expect(second.stamp).toBe(first.stamp);
   expect(await b.get("toy","f".repeat(64))).toBeUndefined();
-  expect(await conformanceFleetPortV1({client:client("c"),owner:"x",platform:"linux-x64"}).get("toy",first.key)).toBeUndefined();
+  expect(await conformanceFleetPortV1({client:client("c"),owner:"x",platform:"linux-x64"}).get("toy",first.key!)).toBeUndefined();
   expect(conformanceStateV1("toy","k").frame.platform).not.toBe("");
   expect(conformanceStateV1("toy","k").digest).not.toBe(conformanceStateV1("toy","k2").digest);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("an unreachable cache answers nothing and publishes nothing, without throwing",async()=>{

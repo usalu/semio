@@ -1,12 +1,16 @@
 #!/usr/bin/env repo
 import { resolve } from "node:path";
 import { spawn } from "node:child_process";
+import { setTimeout as sleep } from "node:timers/promises";
 import { terminateOwnedChildTreeGracefullyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts";
+import { OwnedCommandFailure, ownedCommandExitCodeV1, type OwnedCommandOutcome } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📪️outcome/🟦️.ts";
 import { newHostCapacityIdV1, readLiveHostCapacityReservationV1, withHostCapacityV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts";
 import { sizeHostRequestV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
 import { hostCapacityDirectoryV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/📖️status/🟦️.ts";
 import { ensureHostWardenV1, readHostWardenStateV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts";
 import { BUILD_HOST_CAPACITY_POLICY_V1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🎛️control/🟦️.ts";
+import { formatStampProtocolV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🟨️.mjs";
+import { runWithStaleReexecV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🔄️reexec/🟨️.mjs";
 import { agentSessionAddressV1, currentAgentSessionV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../..");
@@ -27,6 +31,7 @@ const memory = browserBudget ? browserBudget.megabytes : command.fixedMegabytes;
 const cpu = browserBudget ? browserBudget.cpu : command.cpuPerJob;
 const controller = new AbortController();
 const signal = controller.signal;
+const restart = formatStampProtocolV1();
 const handlers = (["SIGINT", "SIGTERM"] as const).map(name => [name, () => controller.abort(name)] as const);
 const control = {
   signal,
@@ -37,13 +42,13 @@ const control = {
 
 function requireReservation(env: NodeJS.ProcessEnv): void {
   const grant = readLiveHostCapacityReservationV1(env, policy);
-  if (!grant || grant.reservedMegabytes < memory || grant.cpu < cpu) {
-    throw Error(`native-exec requires a live reservation of ${memory} MiB and ${cpu} core(s)`);
+  if (grant?.retainReservation !== true || grant.reservedMegabytes < memory || grant.cpu < cpu) {
+    throw Error(`native-exec requires a live retained reservation of ${memory} MiB and ${cpu} core(s)`);
   }
 }
 
 /** 🪂️ Launches a target with its original script envelope after validating the task grant. Native compiler controllers keep their own compiler admission and count under the task grant. */
-async function launch(env: NodeJS.ProcessEnv): Promise<number> {
+async function launch(env: NodeJS.ProcessEnv): Promise<OwnedCommandOutcome> {
   requireReservation(env);
   signal.throwIfAborted();
   const { createScriptProcessEnvelope, readScriptPolicy, scriptProcessEnvironment } = await import(resolve(root, "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"));
@@ -60,31 +65,48 @@ async function launch(env: NodeJS.ProcessEnv): Promise<number> {
   };
   signal.addEventListener("abort", stop, { once: true });
   try {
-    const status = await new Promise<number>((accept, reject) => {
+    const outcome = await new Promise<OwnedCommandOutcome>((accept, reject) => {
       child.once("error", reject);
-      child.once("exit", (code, reason) => accept(code ?? (reason === "SIGINT" ? 130 : reason === "SIGTERM" ? 143 : reason === "SIGKILL" ? 137 : 1)));
+      child.once("close", (status, signal) => accept({ version: 1, status, signal }));
     });
     signal.throwIfAborted();
-    return status;
+    return outcome;
   } finally {
     try { await cleanup; }
     finally { signal.removeEventListener("abort", stop); }
   }
 }
 
+/** 🔄️ Reopens the Original child under the same live capacity grant when it yields to the repository restart protocol. */
+async function launchWithRestart(env: NodeJS.ProcessEnv): Promise<number> {
+  let status = 0;
+  const outcome = await runWithStaleReexecV1(async () => {
+    const terminal = await launch({ ...env });
+    if (terminal.signal === null && terminal.status === restart.exitCode) throw new OwnedCommandFailure("native-exec", terminal);
+    status = ownedCommandExitCodeV1(terminal);
+  }, {
+    environment: env,
+    outermost: true,
+    ranMilliseconds: 0,
+    sleep: (milliseconds: number) => sleep(milliseconds, undefined, { signal }),
+    launch: ({ environment }) => launchWithRestart(environment),
+  });
+  return outcome.status === "completed" ? status : outcome.code;
+}
+
 for (const [name, handler] of handlers) process.on(name, handler);
 try {
   if (environment.SEMIO_HOST_CAPACITY_GRANT !== undefined || environment.SEMIO_HOST_CAPACITY_PLAN !== undefined) {
-    process.exitCode = await launch(environment);
+    process.exitCode = await launchWithRestart(environment);
   } else {
-    const request = { ...command, fixedMegabytes: memory, minimumMegabytes: memory, cpuPerJob: cpu, label: "native-exec" };
+    const request = { ...command, fixedMegabytes: memory, minimumMegabytes: memory, cpuPerJob: cpu, retainReservation: true, label: "native-exec" };
     const session = currentAgentSessionV1({ environment });
     const capacityDirectory = hostCapacityDirectoryV1(environment);
     ensureHostWardenV1();
     process.exitCode = await withHostCapacityV1({
       request, policy, environment, control, directory: capacityDirectory, warden: () => readHostWardenStateV1(capacityDirectory),
       session: { address: agentSessionAddressV1(session), weight: session.budget.weight },
-    }, handle => launch({ ...environment, ...handle.environment }));
+    }, handle => launchWithRestart({ ...environment, ...handle.environment }));
   }
 } catch (error) {
   if (!signal.aborted) throw error;

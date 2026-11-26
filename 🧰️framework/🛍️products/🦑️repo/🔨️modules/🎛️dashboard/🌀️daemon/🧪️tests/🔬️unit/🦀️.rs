@@ -708,3 +708,30 @@ fn every_scenario_of_the_daemon_features_is_proved_by_a_test() {
         ("Cancel a launch that is still starting", &["a_cancelled_launch_never_starts_the_members_still_waiting"]),
     ]);
 }
+
+// #region 🔖️Fleet
+#[test]
+fn fleet_messages_round_trip_on_the_wire_and_validate_their_request() {
+    use dashboard_fleet::{Range, Request};
+    let watch = ClientMsg::FleetWatch { request: Request { range: Range::Hours24, columns: 32, origin: Some("g1-m01".into()) } };
+    assert!(watch.validate().is_ok());
+    let frame = ipc::control_frame(&watch).unwrap();
+    let mut buffer = ipc::FrameBuffer::default();
+    buffer.extend(&frame);
+    let (kind, payload) = buffer.next_frame().unwrap().unwrap();
+    assert_eq!(kind, ipc::KIND_CONTROL);
+    assert_eq!(ipc::decode_control::<ClientMsg>(payload).unwrap(), watch);
+    assert_eq!(String::from_utf8_lossy(payload), r#"{"type":"fleet_watch","request":{"range":"24h","columns":32,"origin":"g1-m01"}}"#);
+    for bad in [Request { range: Range::Hour1, columns: 2, origin: None }, Request { range: Range::Hour1, columns: 16, origin: Some("a/b".into()) }] {
+        assert!(ClientMsg::FleetWatch { request: bad }.validate().is_err());
+    }
+    assert!(ClientMsg::FleetUnwatch {}.validate().is_ok());
+    let snapshot = dashboard_fleet::read_snapshot(None, &Request { range: Range::Minutes5, columns: 16, origin: None }, 1_800_000_000_000);
+    let told = ServerMsg::Fleet { snapshot: Box::new(snapshot) };
+    let frame = ipc::control_frame(&told).unwrap();
+    let mut buffer = ipc::FrameBuffer::default();
+    buffer.extend(&frame);
+    let (_, payload) = buffer.next_frame().unwrap().unwrap();
+    assert_eq!(ipc::decode_control::<ServerMsg>(payload).unwrap(), told);
+}
+// #endregion 🔖️Fleet

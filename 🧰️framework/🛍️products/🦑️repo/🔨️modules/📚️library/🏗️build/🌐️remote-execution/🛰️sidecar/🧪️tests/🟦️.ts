@@ -34,8 +34,8 @@ const attachPartitions=(worktree:string,areas:readonly string[]):void=>{
  }
  for(const mount of mounts){
   mkdirSync(mount,{recursive:true});
-  const image=`${mount}.test-partition.dmg`;
-  expect(spawnSync("hdiutil",["create","-size","96m","-fs","APFS","-volname","semio-test","-ov",image]).status,"hdiutil create").toBe(0);
+  const image=`${mount}.test-partition.sparseimage`;
+  expect(spawnSync("hdiutil",["create","-type","SPARSE","-size","24g","-fs","APFS","-volname","semio-test","-ov",image]).status,"hdiutil create").toBe(0);
   expect(spawnSync("hdiutil",["attach",image,"-mountpoint",mount,"-nobrowse","-noverify"]).status,"hdiutil attach").toBe(0);
   detachers.push(()=>{spawnSync("hdiutil",["detach",mount,"-force"]);});
  }

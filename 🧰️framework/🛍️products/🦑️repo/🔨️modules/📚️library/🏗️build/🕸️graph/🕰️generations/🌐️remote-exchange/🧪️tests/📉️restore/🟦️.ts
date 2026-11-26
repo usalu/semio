@@ -16,7 +16,7 @@ import schema from "./🧬️schema/🔣️.json";
 test("remote restore stages small batches and publishes only after all required bytes qualify",async()=>{
  expect(new Ajv({strict:true}).validate(schema,cases)).toBe(true);
  using oracle=new Database(":memory:");
- const rule=oracle.query(`SELECT CASE $defect WHEN 'none' THEN 'restored' WHEN 'manifest' THEN 'incomplete'
+ const rule=oracle.query<{status:string;sealed:number},Record<string,string>>(`SELECT CASE $defect WHEN 'none' THEN 'restored' WHEN 'manifest' THEN 'incomplete'
   WHEN 'abort' THEN 'aborted' ELSE 'failed' END AS status,CAST($defect='none' AS INTEGER) AS sealed`);
  const scratch=await mkdtemp(join(tmpdir(),"graph-restore-batches-"));
  let receiver:ReturnType<typeof Bun.serve>|undefined;
@@ -65,7 +65,7 @@ test("remote restore stages small batches and publishes only after all required 
    const options={root,fs,implementation:note.implementation,requireComplete:true as const};
    const outcome=await exchange.restore({...options,fs:files,signal:controller.signal});
    const status=controller.signal.aborted?"aborted":outcome.status;
-   expect({status,sealed:Number((await fs.read(pointer))!==undefined)},row.name).toEqual(rule.get({$defect:row.defect}));
+   expect({status,sealed:Number((await fs.read(pointer))!==undefined)},row.name).toEqual(rule.get({$defect:row.defect})!);
    if(row.defect==="none")expect(events.indexOf("stage")).toBeLessThan(events.lastIndexOf("payload"));
    if(row.defect==="manifest")expect(events).toEqual(["payload"]);
    if(row.defect!=="none"){

@@ -56,6 +56,7 @@ pub struct Client {
     pub id: u64,
     pub stream: Stream,
     pub environment: Option<Vec<(String, String)>>,
+    pub fleet: Option<super::fleet::Watch>,
     pub watching: bool,
     pub attached: bool,
     pub closing: bool,
@@ -71,7 +72,7 @@ pub struct Client {
 
 impl Client {
     pub fn new(id: u64, stream: Stream) -> Self {
-        Self { id, stream, environment: None, watching: false, attached: false, closing: false, inbound: ipc::FrameBuffer::default(), subs: BTreeMap::new(), control: VecDeque::new(), front: Vec::new(), sent: 0, rotation: 0, resync: false, replaying_all: false }
+        Self { id, stream, environment: None, fleet: None, watching: false, attached: false, closing: false, inbound: ipc::FrameBuffer::default(), subs: BTreeMap::new(), control: VecDeque::new(), front: Vec::new(), sent: 0, rotation: 0, resync: false, replaying_all: false }
     }
 
     /// ✉️ Queues one control message behind everything queued before it.

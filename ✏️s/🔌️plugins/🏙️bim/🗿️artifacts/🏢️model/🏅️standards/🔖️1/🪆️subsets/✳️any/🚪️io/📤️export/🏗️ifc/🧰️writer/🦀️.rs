@@ -225,10 +225,11 @@ impl Ifc {
         id
     }
 
-    /// 🏷️ Allocates a rooted instance: `GlobalId` from `guid_key`, the shared owner history, `Name`, `Description`, then `tail`.
+    /// 🏷️ Allocates an IFC root header and its tail. An `IfcProject` always has a `Name` label, including when its authored name is empty.
     pub fn rooted(&mut self, entity: &str, guid_key: &str, name: &str, description: &str, tail: Vec<V>) -> u64 {
         let owner = if self.owner == 0 { unset() } else { rf(self.owner) };
-        let mut args = vec![text(global_id(&format!("{entity}:{guid_key}"))), owner, opt_text(name), opt_text(description)];
+        let name = if entity.eq_ignore_ascii_case("IFCPROJECT") { text(name) } else { opt_text(name) };
+        let mut args = vec![text(global_id(&format!("{entity}:{guid_key}"))), owner, name, opt_text(description)];
         args.extend(tail);
         self.add(entity, args)
     }

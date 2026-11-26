@@ -21,5 +21,5 @@ fn semantic_identity_is_owned_by_this_leaf() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
     let (before, _after) = testkit::snapshots(fixture_bytes!("../../../../../../../🧪️tests/🧫️fixtures/✏️set-page-content/⬅️before.pdf"), fixture_bytes!("../../../../../../../🧪️tests/🧫️fixtures/✏️set-page-content/➡️after.pdf"));
-    assert_mutation_inverse_sum_law(&PdfMutation::SetPageContent(SetPageContent { index: 0, content: vec![PdfOp::Save, PdfOp::Restore] }), &before).await;
+    assert_mutation_inverse_sum_law(&PdfMutation::SetPageContent(SetPageContent { index: 0, content: vec![PdfOp::Save, PdfOp::Restore].into() }), &before).await;
 }

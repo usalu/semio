@@ -32,7 +32,7 @@ test("the capacity plan equals an independent Python model on 300 seeded cases (
  }
  const run=spawnSync(testPythonV1()??"python3",["-I",fileURLToPath(new URL("./🐍️oracle.py",import.meta.url))],{input:JSON.stringify(cases),encoding:"utf8"});
  expect(run.status).toBe(0);
- const expected=JSON.parse(run.stdout) as {entries:string[];digests:string[];freedBytes:number}[];
+ const expected=JSON.parse(run.stdout) as {entries:string[];digests:string[];freedBytes:number;protectedEntries:number}[];
  cases.forEach((row,index)=>{const plan=planCasHolderEvictionV1(row.entries,new Map(Object.entries(row.blobs)),row.need,new Map(Object.entries(row.floors)));expect({entries:plan.entries,digests:[...plan.digests].sort(),freedBytes:plan.freedBytes,protectedEntries:plan.protectedEntries},`case ${index}`).toEqual(expected[index]!);});
  expect(cases.some((row,index)=>expected[index]!.entries.length>1)).toBe(true);expect(expected.some(row=>row.protectedEntries>0)).toBe(true);
 });

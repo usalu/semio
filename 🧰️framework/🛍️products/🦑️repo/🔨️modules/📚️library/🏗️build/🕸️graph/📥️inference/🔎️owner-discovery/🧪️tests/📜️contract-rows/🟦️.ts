@@ -17,7 +17,7 @@ function fixture(){
  return {root,write,functions,cleanup:()=>rmSync(root,{recursive:true,force:true})};
 }
 
-const record=async(functions:any,root:string,read:(contracts:Contracts)=>void)=>(await observation.captureObservedSourceInputsV1(async()=>{read(functions.ownerGeneratorContractsV1(root));},undefined,false)).observations as {kind:string;path:string}[];
+const record=async(functions:any,root:string,read:(contracts:Contracts)=>void)=>[...(await observation.captureObservedSourceInputsV1(async()=>{read(functions.ownerGeneratorContractsV1(root));},undefined,false)).observations];
 
 test("an owner admission that read one generator contract stays valid exactly while that read keeps its answer, as an independent oracle says",async()=>{
  const {root,write,functions,cleanup}=fixture();

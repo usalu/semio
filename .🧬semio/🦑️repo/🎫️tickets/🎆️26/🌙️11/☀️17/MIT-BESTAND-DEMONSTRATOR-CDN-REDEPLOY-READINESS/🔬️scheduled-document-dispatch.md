@@ -1,0 +1,5 @@
+# Scheduled Generator start during document loading
+
+The real Procedural guest's English and German Generator boot and undo/redo scenarios exposed two distinct runtime failures. The standalone Flow Wasm delivered by the Vite page lacked all seven runtime bridge exports. The guest's scheduled tool start also reached the document during archive loading and was refused before dispatch. The preview holds a single outstanding start, so discarding a refused start leaves the pane busy.
+
+The host now holds scheduled document work on its existing per-plugin, per-instance load gate, and checks the effect owner after release. View and interaction verbs and replay cancellation remain available. A framework-origin retryable document-loading refusal racing the host check gets one further dispatch on the same live owner. Other faults propagate. The neutral gate and connected policy tests passed 21 cases with 49 assertions. A DOM-backed renderer integration and the fresh Vite/Flow browser replay are pending.

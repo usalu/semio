@@ -84,7 +84,7 @@ COUNTED = [
     "IfcRelVoidsElement", "IfcRelFillsElement", "IfcRelAggregates", "IfcRelContainedInSpatialStructure", "IfcRelDefinesByType", "IfcRelAssociatesMaterial",
     "IfcRelAssociatesClassification", "IfcMaterialLayerSet", "IfcMaterialLayerSetUsage", "IfcWallType", "IfcSlabType", "IfcBuildingElementProxyType", "IfcColumnType",
     "IfcBeamType", "IfcWindowStyle", "IfcDoorStyle", "IfcFacetedBrep", "IfcClassification", "IfcClassificationReference", "IfcAnnotation", "IfcTextLiteralWithExtent", "IfcPolyline", "IfcPlanarExtent", "IfcCovering", "IfcCoveringType", "IfcRamp", "IfcRampFlight", "IfcRelConnectsElements",
-    "IfcFurnishingElement", "IfcFurnitureType", "IfcFlowTerminal", "IfcFlowTerminalType", "IfcSanitaryTerminalType", "IfcLightFixtureType", "IfcBuildingElementProxy", "IfcFlowSegment", "IfcDuctSegmentType", "IfcPipeSegmentType",
+    "IfcFurnishingElement", "IfcFurnitureType", "IfcFlowTerminal", "IfcAirTerminalType", "IfcElectricApplianceType", "IfcSanitaryTerminalType", "IfcLightFixtureType", "IfcBuildingElementProxy", "IfcFlowSegment", "IfcDuctSegmentType", "IfcPipeSegmentType",
     "IfcCableCarrierSegmentType", "IfcSystem", "IfcRelAssignsToGroup",
 ]
 """📊️ The classes whose instances are counted."""
@@ -209,9 +209,10 @@ def audit(model, snapshot, table, committed=None):
     walls = table["counts"]["IfcWall"] + table["counts"]["IfcWallStandardCase"]
     if walls != len(snapshot["walls"]):
         problems.append("walls: %d in the file, %d in the snapshot" % (walls, len(snapshot["walls"])))
-    openings = [opening for opening in snapshot["openings"].values() if "Void" not in opening["kind"]]
-    if table["counts"]["IfcWindow"] + table["counts"]["IfcDoor"] != len(openings):
-        problems.append("fillings: %d in the file, %d in the snapshot" % (table["counts"]["IfcWindow"] + table["counts"]["IfcDoor"], len(openings)))
+    expected_fills = sorted((tag, tag, "Ifc" + kind) for tag, opening in snapshot["openings"].items() for kind in ("Door", "Window") if kind in opening["kind"])
+    actual_fills = sorted((relation.RelatingOpeningElement.Tag, relation.RelatedBuildingElement.Tag, relation.RelatedBuildingElement.is_a()) for relation in model.by_type("IfcRelFillsElement"))
+    if actual_fills != expected_fills:
+        problems.append("opening fillings: %s in the file, %s from the authored door and window openings" % (actual_fills, expected_fills))
     for storey, tags in table["containment"].items():
         annotations = {row.get("name") or key for kind in ("dimensions", "tags", "text_notes", "leaders") for key, row in snapshot.get(kind, {}).items()}
         for tag in tags:

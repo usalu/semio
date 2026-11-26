@@ -77,16 +77,13 @@ export function buildBaseState() {
     ["rebind_keyed", "scope.operation.generation = generation"],
     ["advance_typed_operation_publication_unit", "self.tools.next_advanceable_typed_operation()"],
     ["advance_typed_operation_publication_unit", "self.tools.typed_publication_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS"],
-    ["next_advanceable_typed_operation", "(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset|"],
-    ["next_advanceable_typed_operation", "(self.typed_publication_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS"],
-    ["next_advanceable_typed_operation", "self.tool_operations.entry(index)"],
+    ["next_advanceable_typed_operation", "self.tool_operations.entries_from(self.typed_publication_cursor)"],
     ["next_advanceable_typed_operation", "operation.stage != MountedTypedCommandFullOperationStage::AwaitingAck"],
-    ["next_advanceable_typed_operation", ".map(|(id, _)| (index, *id))"],
-    ["take_typed_operation_result_page", "(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset|"],
-    ["take_typed_operation_result_page", "(self.tools.typed_result_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS"],
-    ["take_typed_operation_result_page", "self.tools.tool_operations.entry(index)"],
-    ["take_typed_operation_result_page", "operation.meta.instance_id == receiver"],
-    ["take_typed_operation_result_page", "!operation.result_page_presented && operation.result_page.is_some()"],
+    ["next_advanceable_typed_operation", ".map(|(index, (id, _))| (index, *id))"],
+    ["selected_typed_result_page", "self.tools.tool_operations.entries_from(self.tools.typed_result_cursor)"],
+    ["selected_typed_result_page", "operation.meta.instance_id == receiver"],
+    ["selected_typed_result_page", "!operation.result_page_presented && operation.result_page.is_some()"],
+    ["take_typed_operation_result_page", "self.selected_typed_result_page(receiver)"],
     ["take_typed_operation_result_page", "self.tools.typed_result_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS"],
     ["take_typed_operation_result_page", "self.tools.tool_operations.get_mut(operation_id)?.take_result_page()"],
     ["take_result_page", "if self.result_page_presented"],
@@ -153,8 +150,9 @@ export function buildBaseState() {
     const oracle=Buffer.from(allocation).subarray(0,law.initializedBytes);
     if (law.initializedBytes > law.capacity || oracle.byteLength !== law.initializedBytes || oracle.buffer !== allocation || law.expectedCopiedBytes !== 0 || rawFixture.maximumCopyBytes !== 0 || oracle.buffer.byteLength !== law.expectedReleasedBytes) throw new Error(`retained raw allocation copy and physical release oracle: ${law.id}`);
   }
-  const rawSource = readModuleTreeSource(join(base, "🧵️retained-command/🦀️.rs"));
-  const rawCloseSignature = "fn close_one_original(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>";
+  const rawTest = readFileSync(join(base,"🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🆔️request-context-serializer-and-shared-job/🦀️.rs"),"utf8");
+  const rawSource = [readModuleTreeSource(join(base, "🧵️retained-command/🦀️.rs")),rawTest].join("\n");
+  const rawCloseSignature = "fn close_one_original(&mut self,cx:&mut StepContext<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>";
   const rawCloseBlock = (text: string) => {
     const start = text.indexOf(rawCloseSignature);
     return start < 0 ? undefined : toolJobRustBlock(text, text.indexOf("{", start + rawCloseSignature.length - 1));

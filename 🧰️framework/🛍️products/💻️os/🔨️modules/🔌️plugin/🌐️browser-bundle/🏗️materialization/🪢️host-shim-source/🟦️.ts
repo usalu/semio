@@ -36,6 +36,7 @@ export function createActorHost(actorId, activationGeneration) {
   let originalClock;
   function __bindOriginalClock(clock) { if (originalClock || typeof clock !== "function") throw new Error("original-turn.clock-binding-refused"); originalClock = clock; }
   function operationClockUs() { if (!originalClock) throw new Error("original-turn.clock-unbound"); return originalClock(); }
+  function actorExecutionClockUs() { return undefined; }
   let originalTurn;
   let originalProducer;
   function __checkoutOriginal(turn) { if (originalTurn || !turn || typeof turn.deadlineUs !== "bigint") throw new Error("original-turn.checkout-refused"); originalTurn = turn; }
@@ -176,7 +177,7 @@ export function createActorHost(actorId, activationGeneration) {
   function emitPatch(patch) {
     postFireAndForget("ui-patch-emit", patch);
   }
-  return Object.freeze({ __bindOriginalClock, operationClockUs, __checkoutOriginal, __returnOriginal, operationBegin, operationProgress, operationAllocation, operationReserveReturn, operationFinish, log, __takeActorFault, nowMs, traceSpan, __resolveEffect, __rejectEffect, storageRead, storageWrite, storageDelete, blobLoad, blobWrite, blobRead, httpFetch, artifactRead, documentWrite, linkResolve, registryQuery, ioCompose, ioRun, cacheDerive, cacheRead, invokeExtension, openWindow, openDialog, dispatchAction, spawnPluginInstance, requestFileOpen, requestMediaFrames, requestCapability, spawnJob, emit, emitPatch });
+  return Object.freeze({ __bindOriginalClock, operationClockUs, actorExecutionClockUs, __checkoutOriginal, __returnOriginal, operationBegin, operationProgress, operationAllocation, operationReserveReturn, operationFinish, log, __takeActorFault, nowMs, traceSpan, __resolveEffect, __rejectEffect, storageRead, storageWrite, storageDelete, blobLoad, blobWrite, blobRead, httpFetch, artifactRead, documentWrite, linkResolve, registryQuery, ioCompose, ioRun, cacheDerive, cacheRead, invokeExtension, openWindow, openDialog, dispatchAction, spawnPluginInstance, requestFileOpen, requestMediaFrames, requestCapability, spawnJob, emit, emitPatch });
 }
 `;
 }

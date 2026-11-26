@@ -6,6 +6,9 @@ import {join} from "node:path";
 import Ajv from "ajv";
 import {adoptInstalledNxToolkitIdentityV1,adoptInstalledToolV1,requireAdoptedReadOnlyV1} from "../🟦️.ts";
 import {testCheckoutRootV1} from "../../📥️invocation/🟦️.ts";
+import {privateRepositoryWorkspaceV1} from "../../🟦️.ts";
+import {captureNxAuthorizerSourcesV1} from "../../../../⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
+import {adoptAuthorizerSourcesForV1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 const checkout=testCheckoutRootV1();
 test("the adoption policy and every adoption row are closed schema data",()=>{
@@ -49,3 +52,9 @@ test("a toolkit identity the suite runner granted is adopted read-only in place,
  const absent:NodeJS.ProcessEnv={};expect(adoptInstalledNxToolkitIdentityV1(checkout,absent)).toBe(newest.identity);expect(absent.SEMIO_NX_TOOLING_IDENTITY).toBe(newest.identity);
  expect(adoptInstalledNxToolkitIdentityV1("/nonexistent-checkout",{})).toBeUndefined();expect(adoptInstalledNxToolkitIdentityV1("/nonexistent-checkout",{SEMIO_NX_TOOLING_IDENTITY:"a".repeat(64)})).toBe("a".repeat(64));
 });
+test("the Source closure of an authorizer entry adopted into a private repository captures to the digest the checkout captures to",async()=>{
+ const entry="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/📥️entry/📜️script.ts",repository=await privateRepositoryWorkspaceV1("graph"),signal=new AbortController().signal;
+ const written=await adoptAuthorizerSourcesForV1(repository.root,checkout,entry);expect(written).toBeGreaterThan(0);expect(await adoptAuthorizerSourcesForV1(repository.root,checkout,entry)).toBe(0);
+ const original=await captureNxAuthorizerSourcesV1(checkout,entry,signal),adopted=await captureNxAuthorizerSourcesV1(repository.root,entry,signal);
+ expect(adopted.digest).toBe(original.digest);expect(adopted.manifest.sources).toEqual(original.manifest.sources);
+},120000);

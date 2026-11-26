@@ -31,6 +31,8 @@ semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust" }
 semio-framework-schema-composition = { path = "../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-job-native-decode = { path = "../../../../../../../🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
+semio-framework-pack-json-output-receiving = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🫴️unique/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }

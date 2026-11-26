@@ -174,6 +174,11 @@
       ],
       "pattern": "^[a-z][a-z0-9-]*$"
     },
+    "runtimeHost": {
+      "description": "🏠️ The composition owner whose component hosts this artifact's complete runtime: the catalog owner then assembles only the definition (identity ownership never moves) and the host publishes the runtime catalog topic.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
     "symbolPackages": {
       "description": "🔤️ The further crates the contribution's app types, factories and mutation descriptors may name.",
       "type": "array",

@@ -13,6 +13,7 @@
  * @see ./🧬️schema/🔣️.schema.json — the manifest schema
  * @see ../🎬️cli/🟦️.ts — the general export command */
 import { createHash } from "node:crypto";
+import {processPidExistsV1} from "../../../../../../🧰️framework/🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 import { readFileSync, realpathSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
@@ -347,12 +348,7 @@ function parentOf(value: string | undefined): number | undefined {
 
 /** 🔭 Tells whether a process exists; `EPERM` means it exists but belongs to someone else. */
 export function processAlive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    return (error as NodeJS.ErrnoException).code === "EPERM";
-  }
+  return processPidExistsV1(pid);
 }
 
 /** 🐕 Calls `gone` once when the watched process has vanished, so a hard-killed caller never leaves this exporter running; returns the function that stops watching. */

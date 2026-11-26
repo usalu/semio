@@ -155,11 +155,20 @@ test("optional HEAD does not block an accepted manifest from publishing its poin
   }) as typeof fetch});
   const stored=await publishOwnerPoolV1({client,owner:"fixture",manifest,onRefused:refusal=>refusals.push(refusal)});
   const expected=database.query("select ?1 is null as stored, ?1 is null as usable, ?1 is null as pointerRead, case when ?1 is null then null else 'no-answer' end as refusal").get(row.requiredTimeout) as {stored:number;usable:number;pointerRead:number;refusal:string|null};
-  expect({stored,usable:client.usable(),pointerRead:methods.includes("GET ac"),refusal:refusals[0]?.code??null},row.id).toEqual({stored:Boolean(expected.stored),usable:Boolean(expected.usable),pointerRead:Boolean(expected.pointerRead),refusal:expected.refusal});
+  expect<unknown>({stored,usable:client.usable(),pointerRead:methods.includes("GET ac"),refusal:refusals[0]?.code??null},row.id).toEqual({stored:Boolean(expected.stored),usable:Boolean(expected.usable),pointerRead:Boolean(expected.pointerRead),refusal:expected.refusal});
   expect(methods.filter(method=>method==="PUT ac")).toHaveLength(row.requiredTimeout==="cas"?0:row.requiredTimeout==="ac"?1:2);
   if(row.headTimeout)expect(headTimedOut).toBe(true);
   if(row.requiredTimeout!==null)expect(refusals).toMatchObject([{stage:"manifest",code:"no-answer",status:null,transient:true}]);
  }}finally{database.close();}
+});
+
+test("a 507 of the cache server names the exhausted resource with its numbers in English and German in the logged refusal",async()=>{
+ const detail="The store holds 52.67 GiB of its 15.3 GiB cap in force (role cache-host, 36.7 GiB free on the partition, hard reserve 74.08 GiB); largest holders: unit-cache 25.98 GiB / Der Speicher hält 52.67 GiB seiner wirksamen Grenze von 15.3 GiB (Rolle cache-host, 36.7 GiB frei auf der Partition, harte Reserve 74.08 GiB); größte Halter: unit-cache 25.98 GiB",refusals:OwnerPoolPublishRefusalV1[]=[];
+ const client=graphFleetClientV1({endpoint:"https://fixture.invalid",instance:"test",token:"fixture",upload:true,stateDirectory:temp("capacity-detail")},{fetch:(async(_input,init)=>init?.method==="PUT"?new Response("Insufficient storage: "+detail,{status:507}):new Response(null,{status:404})) as typeof fetch});
+ const stored=await publishOwnerPoolV1({client,owner:"fixture",manifest:manifestOf(unitsOf(1),"capacity-detail","a".repeat(64),{fixture:true}),onRefused:refusal=>refusals.push(refusal)});
+ expect(stored).toBe(false);
+ expect(refusals[0]).toMatchObject({stage:"manifest",code:"capacity",status:507,transient:true});
+ expect(refusals[0]?.detail).toContain("hard reserve 74.08 GiB");expect(refusals[0]?.detail).toContain("harte Reserve 74.08 GiB");
 });
 
 test("manifest timeout log identifies the required write and its effective deadline",async()=>{

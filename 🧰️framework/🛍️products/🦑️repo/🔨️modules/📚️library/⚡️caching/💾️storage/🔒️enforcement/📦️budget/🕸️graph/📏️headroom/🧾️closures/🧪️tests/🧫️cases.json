@@ -197,6 +197,12 @@
       "fundedBy": "refused",
       "optionalCalls": 1,
       "orphanRetained": true
+    },
+    {
+      "scenario": "pack-unproven",
+      "fundedBy": "optional-groups",
+      "optionalCalls": 1,
+      "orphanRetained": true
     }
   ],
   "retirementStates": [

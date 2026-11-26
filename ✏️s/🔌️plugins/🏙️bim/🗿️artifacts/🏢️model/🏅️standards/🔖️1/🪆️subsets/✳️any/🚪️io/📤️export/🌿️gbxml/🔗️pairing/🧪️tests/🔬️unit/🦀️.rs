@@ -2,7 +2,7 @@ use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::infe
 use std::collections::BTreeMap;
 #[allow(unused_imports)]
 use std::collections::BTreeSet;
-use semio_s_artifact_bim_model_components::standards::v1::subsets::any::io::export::gbxml::pairing::merge;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::io::export::gbxml::pairing::{merge, PairingScore};
 use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
 
 fn v(x: f64, y: f64, z: f64) -> Vec3 {
@@ -76,4 +76,34 @@ fn outer_surfaces_are_never_paired() {
     let merged = merge(&envelopes);
     assert_eq!(merged.len(), 1);
     assert_eq!(merged[0].spaces(), vec!["low"]);
+}
+
+#[test]
+fn pairing_uses_reciprocal_hosts_and_keeps_the_lowest_id_at_equal_overlap() {
+    let mut envelopes = partition();
+    let other = &mut envelopes.get_mut("b").expect("opposite room").surfaces;
+    let mut earlier = other[0].clone();
+    earlier.id = "b/a".into();
+    let mut wrong_room = earlier.clone();
+    wrong_room.id = "b/0".into();
+    wrong_room.adjacent = "outside".into();
+    other.extend([earlier, wrong_room]);
+    let merged = merge(&envelopes);
+    assert_eq!(merged.len(), 3);
+    assert_eq!(merged[0].other.map(|(_, candidate)| candidate.id.as_str()), Some("b/a"));
+    assert_eq!(merged[0].children.iter().map(|(_, child)| child.id.as_str()).collect::<Vec<_>>(), ["a/o1"]);
+    assert_eq!(merged[1].children.iter().map(|(_, child)| child.id.as_str()).collect::<Vec<_>>(), ["b/o1"]);
+    assert_eq!(merged[2].surface.id, "b/0");
+}
+
+#[test]
+fn reciprocal_geometry_scores_identically_across_yield_boundaries() {
+    let envelopes = partition();
+    let (east, west) = (&envelopes["a"].surfaces[0], &envelopes["b"].surfaces[0]);
+    let mut score = PairingScore::new(east, west).expect("walls can pair");
+    assert_eq!(score.advance(east, west, 0), None);
+    for _ in 0..9 {
+        assert_eq!(score.advance(east, west, 1), None);
+    }
+    assert!((score.advance(east, west, 1).unwrap().unwrap() - 9.0).abs() < 1e-12);
 }

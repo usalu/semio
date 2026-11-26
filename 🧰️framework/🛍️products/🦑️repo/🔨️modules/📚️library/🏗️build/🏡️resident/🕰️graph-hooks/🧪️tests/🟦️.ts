@@ -283,7 +283,7 @@ describe("resuming a verify epoch",()=>{
  const setup2=async()=>{
   const root=sandbox("dirty-resume-");build(root,fixtures.tree);
   const{ports}=counting(root),journal=fakeJournal(),store=memoryStore(),notices:any[]=[],scans={membership:0,holds:[] as string[][]};
-  const scan=async()=>{scans.membership++;const frontier=createFrontierV1({capturedAt:Date.now(),...await walkFrontierV1(ports)});return{digest:"d"+scans.membership,frontier,changes:[{path:"a/x/new.ts",kind:"added",directory:false},{path:"b/dir",kind:"added",directory:true}]};};
+  const scan=async()=>{scans.membership++;const frontier=createFrontierV1({capturedAt:Date.now(),...await walkFrontierV1(ports)});return{digest:"d"+scans.membership,frontier,changes:[{path:"a/x/new.ts",kind:"added" as const,directory:false},{path:"b/dir",kind:"added" as const,directory:true}]};};
   const failing=new Set<string>();
   const seams=journalGraphSeamsV1({root,journal:journal.port,store,ports,digest:members=>"m"+members.length,membership:scan,holds:async rows=>{scans.holds.push(rows.map(row=>row.path));return !rows.some(row=>failing.has(row.path));},notify:notice=>notices.push(notice)});
   return{root,ports,journal,store,notices,scans,seams,failing};

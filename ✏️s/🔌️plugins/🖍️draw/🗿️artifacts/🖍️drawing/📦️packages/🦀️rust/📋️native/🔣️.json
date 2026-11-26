@@ -32,6 +32,18 @@
       "test": true
     },
     {
+      "name": "semio-s-artifact-draw-drawing-editor-member-wire",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
+      "name": "semio-draw-member-decode",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/📥️decode/📦️packages/🦀️rust/Cargo.toml",
+      "check": true,
+      "test": true
+    },
+    {
       "name": "semio-s-artifact-draw-drawing-editor",
       "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml",
       "check": true,

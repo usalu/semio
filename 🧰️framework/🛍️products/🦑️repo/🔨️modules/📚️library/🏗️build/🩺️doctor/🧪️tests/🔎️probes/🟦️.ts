@@ -23,6 +23,7 @@ import {sessionsProbeV1} from "../../🔎️probes/🪪️sessions/🟦️.ts";
 import {elasticGrowTargetV1,imageGrowPlanV1,imageRepairPlanV1,storageProbeV1} from "../../🔎️probes/💾️storage/🟦️.ts";
 import {acquireResourceLease,requireMaterializedPathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {toolsProbeV1} from "../../🔎️probes/🔧️tools/🟦️.ts";
+import {typecheckProbeV1} from "../../🔎️probes/🔬️typecheck/🟦️.ts";
 
 const roots:string[]=[],children:{kill:()=>void}[]=[];
 const fresh=():string=>{const root=mkdtempSync(join(tmpdir(),"dr-"));roots.push(root);return root;};
@@ -468,7 +469,7 @@ test("--fix end to end: a dry run changes nothing, the real run repairs, reads a
 test("every probe is declared once, in contract order, and every area but doctor and host has a probe",()=>{
  const areas=DOCTOR_PROBES_V1.map(probe=>probe.area);
  expect(new Set(areas).size).toBe(areas.length);
- expect(areas.sort()).toEqual(["tools","storage","leases","capacity","sessions","graph","dependencies","caches","processes"].sort());
+ expect(areas.sort()).toEqual(["tools","storage","leases","capacity","sessions","graph","dependencies","caches","processes","typecheck"].sort());
  expect(DOCTOR_PROBES_V1.find(probe=>probe.area==="processes")!.phase).toBe(2);
 });
 
@@ -538,3 +539,25 @@ test.skipIf(process.platform!=="darwin")("storage-grow: a mounted image below it
   expect(await repair.run(port,context(),false)).toMatchObject({removed:0,status:"nothing"});
  }finally{releaseImage(image);}
 },120000);
+
+test("typecheck: reads the stored whole-library report, measures again only when the area is named and the report is not fresh, and says so when nothing was measured or the module is missing",async()=>{
+ const root=fresh();type Stored={atMs:number;errors:number;product:number;tests:number;areas:{area:string;errors:number;product:number}[]};
+ let stored:Stored|undefined,runs=0;
+ const api={typecheckCacheDirectoryV1:()=>join(root,"cache"),readTypecheckLibraryReportV1:()=>stored,async runTypecheckLibraryV1(){runs++;stored={atMs:Date.now(),errors:4,product:1,tests:3,areas:[{area:"build/x",errors:4,product:1}]};return stored;}};
+ const port=ports(root,{optional:(async(name:string)=>name==="typecheck"?api:undefined) as never});
+ expect("unavailable" in await typecheckProbeV1.read(port,context())).toBe(true);
+ expect(runs).toBe(0);
+ const named=context({requested:new Set(["typecheck"])});
+ expect(await read(typecheckProbeV1,port,named)).toEqual({typecheck:{errors:4,product:1,tests:3,ageSeconds:0,areas:[{area:"build/x",errors:4,product:1}]}});
+ expect(runs).toBe(1);
+ await read(typecheckProbeV1,port,named);
+ expect(runs).toBe(1);
+ stored={...stored!,atMs:Date.now()-3_600_000};
+ expect((await read(typecheckProbeV1,port,context()) as {typecheck:{ageSeconds:number}}).typecheck.ageSeconds).toBeGreaterThanOrEqual(3600);
+ expect(runs).toBe(1);
+ await read(typecheckProbeV1,port,named);
+ expect(runs).toBe(2);
+ const facts=await read(typecheckProbeV1,port,context()) as {typecheck:unknown};
+ expect(validateDoctorV1("Facts",{version:1,atMs:1,platform:"darwin",probes:[],typecheck:facts.typecheck})).toEqual([]);
+ expect("unavailable" in await typecheckProbeV1.read(ports(root,{optional:(async()=>undefined) as never}),context())).toBe(true);
+});

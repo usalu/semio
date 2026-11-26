@@ -1,4 +1,4 @@
-import {isOpaqueSourcePathV1,opaqueSourceInputExclusionsV1} from "../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import{isOpaqueSourcePathV1,opaqueSourceInputExclusionsV1}from"./👻️opaque-source/🟨️.mjs";
 import { buildSchedulingDomainOfV1 } from "../📥️source/🔏️closure/🗓️scheduling/🟦️.ts";
 import{REVISION_POLICY_V1,physicalSourceOriginV1}from"./🔏️revision/🟨️.mjs";
 import limitsSchema from"./🧬️schema/🔣️.json"with{type:"json"};
@@ -81,7 +81,7 @@ const VERIFIED_CLOSURES_V1=new Map();
 
 /** 📤️ Publishes identical closure bytes crash-safely (synced temporary file, rename, synced directory); a replaced directory entry uses the bounded read retry, while stable identity violations fail. An unchanged verified stamp avoids reading bytes again. A stable leaf whose bytes differ from the content addressed bytes is a torn or corrupt cache entry and is retired by atomically replacing it with the correct bytes under this writer's custody. */
 function publishInputClosureV1(path,contract){
- const verify=()=>retryOnConcurrentEditSyncV1("read",()=>{const row=lstatSync(path);if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1){const current=lstatSync(path);if(current.dev!==row.dev||current.ino!==row.ino)throw concurrentEditV1("identity",path);throw Error("Original immutable input closure bytes required");}if(row.size!==Buffer.byteLength(contract)){const current=lstatSync(path);if(current.dev!==row.dev||current.ino!==row.ino)throw concurrentEditV1("identity",path);return false;}const known=VERIFIED_CLOSURES_V1.get(path);if(known&&known.ino===row.ino&&known.size===row.size&&known.mtimeMs===row.mtimeMs&&known.ctimeMs===row.ctimeMs)return true;if(!readFileSync(path).equals(Buffer.from(contract)))return false;VERIFIED_CLOSURES_V1.set(path,{ino:row.ino,size:row.size,mtimeMs:row.mtimeMs,ctimeMs:row.ctimeMs});return true;});
+ const verify=()=>retryOnConcurrentEditSyncV1("read",()=>{const row=lstatSync(path);if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1){const current=lstatSync(path);if(current.dev!==row.dev||current.ino!==row.ino)throw concurrentEditV1("identity",path);throw Error("Original immutable input closure bytes required");}if(row.size!==Buffer.byteLength(contract)){const current=lstatSync(path);if(current.dev!==row.dev||current.ino!==row.ino)throw concurrentEditV1("identity",path);return false;}const known=VERIFIED_CLOSURES_V1.get(path);if(known&&known.ino===row.ino&&known.size===row.size&&known.mtimeMs===row.mtimeMs&&known.ctimeMs===row.ctimeMs)return true;if(!readFileSync(path).equals(Buffer.from(contract)))return false;if(VERIFIED_CLOSURES_V1.size>=VERIFIED_CLOSURES_LIMIT_V1)VERIFIED_CLOSURES_V1.clear();VERIFIED_CLOSURES_V1.set(path,{ino:row.ino,size:row.size,mtimeMs:row.mtimeMs,ctimeMs:row.ctimeMs});return true;});
  if(persistedExists(path)&&verify())return;
  const temporary=join(dirname(path),"~"+randomUUID());if([path,temporary].some(value=>value.length>REVISION_POLICY_V1.maximumPathUnits||[...value].length>REVISION_POLICY_V1.maximumPathUnits))throw Error("Input closure staging path exceeds "+REVISION_POLICY_V1.maximumPathUnits+" characters");try{VERIFIED_CLOSURES_V1.delete(path);publishFileDurablySyncV1(temporary,path,Buffer.from(contract));if(!verify())throw Error("Original immutable input closure bytes required");noteBuildGraphStagedLeafV1(path);}finally{rmSync(temporary,{force:true});}
 }
@@ -137,9 +137,11 @@ export function cargoLockInput(manifest, workspaceRoot) {
   return { env: `SEMIO_CARGO_LOCK_${key}` };
 }
 
-const INVENTORY_MEMO_V1 = new Map(), INVENTORY_MEMO_LIMIT_V1 = limitsSchema.definitions.Limits.const.inventoryMemoLimit, CHUNK_CUTS_V1 = new Map(), CHUNK_CUTS_LIMIT_V1 = limitsSchema.definitions.Limits.const.chunkCutsLimit;
+const INVENTORY_MEMO_V1 = new Map(), INVENTORY_MEMO_LIMIT_V1 = limitsSchema.definitions.Limits.const.inventoryMemoLimit, CHUNK_CUTS_V1 = new Map(), CHUNK_CUTS_LIMIT_V1 = limitsSchema.definitions.Limits.const.chunkCutsLimit, VERIFIED_CLOSURES_LIMIT_V1 = limitsSchema.definitions.Limits.const.verifiedClosureLimit;
 /** 🕊️ Forgets the in-process memo of captured inventories and verified closure stamps (they only save recomputation). */
 export function releaseInputMemoryV1() { INVENTORY_MEMO_V1.clear(); VERIFIED_CLOSURES_V1.clear(); CHUNK_CUTS_V1.clear(); }
+/** 🧮️ The memos of this module as rows of the report of retained memory. */
+export function inputCollectionsV1() { return [{ name: "inputs:inventoryMemo", entries: INVENTORY_MEMO_V1.size, sample: () => [...INVENTORY_MEMO_V1.values()].slice(0, 16) }, { name: "inputs:verifiedClosures", entries: VERIFIED_CLOSURES_V1.size, bytes: VERIFIED_CLOSURES_V1.size * 200 }, { name: "inputs:chunkCuts", entries: CHUNK_CUTS_V1.size, sample: () => [...CHUNK_CUTS_V1.values()].slice(0, 16) }]; }
 
 /** 🏷️ Names a library helper file relative to the inferred workspace, or nothing when the library does not live inside it: an isolated dataset workspace holds only authored Source, so the helper is implementation authority there, never a workspace input. */
 function inWorkspaceV1(workspaceRoot, path) {

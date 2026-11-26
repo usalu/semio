@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
-import { chromium } from "playwright";
+import { browserLaunchOptionsV1, launchBrowserV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { MODULE_PLUGIN_ROUTE } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import type { GuestCheck } from "./👷️worker/🟦️.ts";
 
@@ -32,7 +32,7 @@ export async function verifyBimGuest(modules: string, plugin: { pluginId: string
   });
   try {
     signal.throwIfAborted();
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchBrowserV1(browserLaunchOptionsV1());
     const abort = () => { void browser.close(); };
     signal.addEventListener("abort", abort, { once: true });
     try {

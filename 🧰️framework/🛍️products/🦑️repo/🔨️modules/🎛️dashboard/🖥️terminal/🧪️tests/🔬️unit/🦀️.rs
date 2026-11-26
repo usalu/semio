@@ -109,6 +109,8 @@ include!("🖼️window-focus-and-sessions/🦀️.rs");
 
 include!("🩺️runtime-audit/🦀️.rs");
 
+include!("📊️fleet/🦀️.rs");
+
 include!("🧭️scenario-proofs-and-batching/🦀️.rs");
 
 

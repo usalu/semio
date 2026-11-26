@@ -31,7 +31,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             let reserved = original_lifecycle_delta(reserved_before, cx.reserved_return_progress())?;
             let fresh = original_lifecycle_delta(reserved, spent)?;
             let remaining = semio_plugin_reactor_app::remaining_plugin_turn_grant(loan, fresh);
-            if cx.should_yield() || remaining.maximum_items == 0 { return Ok(PluginLifecycleStep::Progress(spent)); }
+            if cx.should_yield() || remaining.maximum_items == 0 { semio_plugin_reactor_app::maintenance_starved_mark(); return Ok(PluginLifecycleStep::Progress(spent)); }
             let step = self.maintenance_ladder_unit_step(cx, remaining)?;
             spent = original_lifecycle_delta(before, cx.retained_progress())?;
             if !matches!(step, PluginLifecycleStep::Progress(progress) if progress.copied_items != 0) {
@@ -43,19 +43,18 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
     fn maintenance_ladder_unit_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         LAST_MAINTENANCE_STAGE.store(u64::MAX,std::sync::atomic::Ordering::Relaxed);let empty=RetainedCloneProgress::default();let cursor=self.maintenance.maintenance_stage;let mut awaiting=None;let mut blocked=None;let archive_pending=self.ladder_ref().maintenance_unit_demand(MaintenanceUnit::Stage(24),loan.maximum_copy_bytes,cx.fuel_remaining())?.is_some_and(|demand|demand!=empty_demand());
         for position in 0..MAINTENANCE_POSITIONS{
-            if cx.should_yield(){return Ok(PluginLifecycleStep::Progress(empty))}
-            let grant=semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,loan);if grant.maximum_items==0{return Ok(PluginLifecycleStep::Progress(empty))}
+            if cx.should_yield(){semio_plugin_reactor_app::maintenance_starved_mark();return Ok(PluginLifecycleStep::Progress(empty))}
+            let grant=semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,loan);if grant.maximum_items==0{semio_plugin_reactor_app::maintenance_starved_mark();return Ok(PluginLifecycleStep::Progress(empty))}
             let Some(unit)=self.ladder_ref().maintenance_unit_at(position,cursor)else{cx.consume_fuel(1);continue};
             let archive=matches!(unit,MaintenanceUnit::Stage(24));
             let available_items=loan.maximum_items.min(cx.retained_grant().maximum_items);
             if archive_pending{
                 let archive_dependency = matches!(unit, MaintenanceUnit::Stage(8 | 14 | 15));
-                if archive && available_items < DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS { cx.consume_fuel(1); continue; }
-                if !archive && !archive_dependency && available_items <= DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS { cx.consume_fuel(1); continue; }
+                if archive && available_items < DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS || !archive && !archive_dependency && available_items <= DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS { semio_plugin_reactor_app::maintenance_starved_mark(); cx.consume_fuel(1); continue; }
             }
             let Some(demand)=self.ladder_ref().maintenance_unit_demand(unit,grant.maximum_copy_bytes,cx.fuel_remaining())?else{cx.consume_fuel(1);continue};
             let (loan,grant)=if semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){(loan,grant)}else{let widened=semio_plugin_mounted_owner::covering_grant(loan,demand,cx.retained_grant());(widened,semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,widened))};
-            if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){cx.consume_fuel(1);continue}
+            if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){semio_plugin_reactor_app::maintenance_starved_mark();cx.consume_fuel(1);continue}
             if matches!(unit,MaintenanceUnit::MediaRefusal)&&self.media.quoted_media_refusal_selected(){return self.ladder_ctx().maintenance_unit_step(unit,cx,grant)}
             let step=if matches!(unit,MaintenanceUnit::ToolOverlay)&&self.tools.original_tool_follow.is_some(){
                 LAST_MAINTENANCE_STAGE.store(unit.trace(),std::sync::atomic::Ordering::Relaxed);
@@ -71,6 +70,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
                     Ok((step,true))
                 })?
             };
+            let step=match(unit,step){(MaintenanceUnit::Stage(14|24)|MaintenanceUnit::Pressure(14|24),PluginLifecycleStep::Progress(progress))if progress==empty=>PluginLifecycleStep::AwaitingInput{reason:"funded archive or replacement phase awaits its original host, worker or replacement owner"},(_,step)=>step};
             match step{PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)if progress!=empty=>return Ok(PluginLifecycleStep::Progress(progress)),step@PluginLifecycleStep::AwaitingInput{..}=>awaiting=awaiting.or(Some(step)),step@PluginLifecycleStep::Blocked{..}=>blocked=blocked.or(Some(step)),PluginLifecycleStep::Progress(_)|PluginLifecycleStep::Complete(_)=>{}}
         }
         if awaiting.is_none() && self.ladder_ref().document_archive_waits_for_host() {

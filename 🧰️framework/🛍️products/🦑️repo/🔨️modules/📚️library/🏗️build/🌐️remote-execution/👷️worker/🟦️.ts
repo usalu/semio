@@ -1,4 +1,5 @@
 import {spawn,spawnSync} from "node:child_process";
+import {ownProcessIdentityV1,processRecordAliveV1} from "../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import {createHash,randomBytes,randomUUID} from "node:crypto";
 import {accessSync,constants,createReadStream,createWriteStream,statSync} from "node:fs";
 import {readFile} from "node:fs/promises";
@@ -33,12 +34,15 @@ export type RemoteExecutionWorkerEventV1=Readonly<{stage:"registered"|"reconnect
 export type RemoteExecutionUnitAskV1=Readonly<{stage:"poll";held:readonly RemoteExecutionHeldUnitV1[]}>|Readonly<{stage:"task";megabytes:number;held:readonly RemoteExecutionHeldUnitV1[]}>;
 
 /** 🧵️ What a worker tells its host to size the code generation threads of one linked unit: the cores its other running actions hold (the grant of a linked unit, else one each), the peak this unit was admitted with (0: none declared) and the peaks of the other running units. */
-export type RemoteExecutionThreadsAskV1=Readonly<{others:number;peakMegabytes:number;held:readonly RemoteExecutionHeldUnitV1[]}>;
+export type RemoteExecutionThreadsAskV1=Readonly<{others:number;peakMegabytes:number;held:readonly RemoteExecutionHeldUnitV1[];reservation?:string}>;
+
+/** 🎟️ Acquires the task's host reservation before running its preparation and holds it through terminal cleanup. */
+export type RemoteExecutionReserveV1=(task:Readonly<{megabytes:number;observedMegabytes:()=>number|null}>,run:(reservation?:string)=>Promise<void>)=>Promise<Readonly<{admit:true;finished:Promise<void>}>|Extract<RemoteExecutionAdmissionV1,{admit:false}>>;
 
 export type RemoteExecutionWorkerOptionsV1=Readonly<{
  scheduler:string;token?:string|undefined;cacheToken?:string|undefined;fetch?:typeof fetch|undefined;cacheFetch?:typeof fetch|undefined;actions?:RemoteExecutionActionPolicyV1;unconfinedForTests?:boolean;name?:string;concurrency:number;directory:string;sandbox:"auto"|RemoteExecutionSandboxV1;materialize:"clone"|"copy";maximumBlobBytes:number;inlineOutputBytes:number;
  properties?:readonly RemoteExecutionPropertyV1[];platform?:string;signal:AbortSignal;onEvent?:(event:RemoteExecutionWorkerEventV1)=>void;content?:RemoteExecutionContentV1;keepWork?:boolean;
- origin?:string;capacity?:Readonly<{cores:number;memoryMegabytes:number}>;network?:"deny"|"allow";tools?:RemoteExecutionToolsV1;commands?:RemoteExecutionToolsV1;confinement?:"required"|"best-effort";admit?:(running:number,unit:RemoteExecutionUnitAskV1)=>Promise<RemoteExecutionAdmissionV1>;observe?:(state:RemoteExecutionWorkerStateV1)=>void;admitRetryMilliseconds?:number;threads?:(ask:RemoteExecutionThreadsAskV1)=>Promise<number>;
+ origin?:string;capacity?:Readonly<{cores:number;memoryMegabytes:number}>;network?:"deny"|"allow";tools?:RemoteExecutionToolsV1;commands?:RemoteExecutionToolsV1;confinement?:"required"|"best-effort";admit?:(running:number,unit:RemoteExecutionUnitAskV1)=>Promise<RemoteExecutionAdmissionV1>;reserve?:RemoteExecutionReserveV1;observe?:(state:RemoteExecutionWorkerStateV1)=>void;admitRetryMilliseconds?:number;threads?:(ask:RemoteExecutionThreadsAskV1)=>Promise<number>;
 }>;
 
 /** 🛠️ The tools a worker owns by name: an action whose program is `@tool:<name>` runs the tool of that name, and its confined process may read the listed directories. The toolchain itself is never shipped, a worker that lacks the tool refuses the action with a precondition failure. */
@@ -167,25 +171,25 @@ export class RemoteExecutionBlobCacheV1{
 }
 
 const WORK_OWNER_FILE_V1=".owner";
-const processAliveV1=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
+const processAliveV1=(pid:number,startMs?:number):boolean=>processRecordAliveV1(pid,startMs);
 
 /** 🏷️ Marks the work folder of this worker process with its owner, the proof of liveness every later sweep reads: the folder of a process that is gone holds the private roots of actions that were running when it ended. */
 export async function claimRemoteExecutionWorkV1(work:string,pid:number=process.pid,now:number=Date.now()):Promise<void>{
  await mkdir(work,{recursive:true});
- await writeFile(join(work,WORK_OWNER_FILE_V1),JSON.stringify({version:1,pid,startedMs:now}));
+ await writeFile(join(work,WORK_OWNER_FILE_V1),JSON.stringify({version:1,pid,...pid===process.pid?{startMs:ownProcessIdentityV1().startMs}:{},startedMs:now}));
 }
 
 /** 🪦️ Retires the private action roots of dead workers: every folder below `work/` except `keep` whose owner record names a process that is gone is removed at once, one without a readable record once it was untouched for `ownerlessSeconds`; a folder of a live owner is never touched (a pid that answers `EPERM` is alive). Answers how many worker folders and action roots went; with `dryRun` nothing is removed. Event-driven: a worker runs it when it starts and whenever an action ended, `repo cache gc` runs it for a machine without a worker. @see 👷️worker */
-export async function retireRemoteExecutionWorkV1(work:string,rules:Readonly<{keep?:string;ownerlessSeconds:number;alive?:(pid:number)=>boolean;now?:number;dryRun?:boolean;signal?:AbortSignal}>):Promise<Readonly<{workers:number;roots:number}>>{
+export async function retireRemoteExecutionWorkV1(work:string,rules:Readonly<{keep?:string;ownerlessSeconds:number;alive?:(pid:number,startMs?:number)=>boolean;now?:number;dryRun?:boolean;signal?:AbortSignal}>):Promise<Readonly<{workers:number;roots:number}>>{
  const alive=rules.alive??processAliveV1,now=rules.now??Date.now();let workers=0,roots=0;
  for(const name of await readdir(work).catch(()=>[] as string[])){
   if(rules.signal?.aborted===true)break;
   if(name===rules.keep)continue;
   const folder=join(work,name),info=await lstat(folder).catch(()=>undefined);
   if(info===undefined||!info.isDirectory())continue;
-  const owner=await readFile(join(folder,WORK_OWNER_FILE_V1),"utf8").then(text=>{try{return JSON.parse(text) as {pid?:unknown};}catch{return undefined;}},()=>undefined);
+  const owner=await readFile(join(folder,WORK_OWNER_FILE_V1),"utf8").then(text=>{try{return JSON.parse(text) as {pid?:unknown;startMs?:unknown};}catch{return undefined;}},()=>undefined);
   const pid=typeof owner?.pid==="number"&&Number.isSafeInteger(owner.pid)?owner.pid:undefined;
-  if(pid!==undefined?alive(pid):now-info.mtimeMs<rules.ownerlessSeconds*1000)continue;
+  if(pid!==undefined?alive(pid,typeof owner?.startMs==="number"?owner.startMs:undefined):now-info.mtimeMs<rules.ownerlessSeconds*1000)continue;
   const tasks=(await readdir(folder).catch(()=>[] as string[])).filter(entry=>entry!==WORK_OWNER_FILE_V1).length;
   if(rules.dryRun!==true)await rm(folder,{recursive:true,force:true,maxRetries:3}).catch(()=>{});
   workers++;roots+=tasks;
@@ -478,7 +482,7 @@ export async function runRemoteExecutionWorkerV1(options:RemoteExecutionWorkerOp
  say("sandbox",`${sandbox.name} ${confinement==="full"?"confined":"UNCONFINED"} network ${network}`);
  ensureWardenV1();
  let registered:RemoteExecutionWorkerRegisteredV1|undefined,content=options.content;
- const meter=createRemoteExecutionMeterV1(remoteExecutionProcessTableV1,1000),running=new Map<string,AbortController>(),demands=new Map<string,number>(),grants=new Map<string,number>(),resumable=new Map<string,Readonly<{instance:string;action:{hash:string;size:number}}>>();
+ const meter=createRemoteExecutionMeterV1(remoteExecutionProcessTableV1,1000),running=new Map<string,AbortController>(),demands=new Map<string,number>(),grants=new Map<string,number>(),resumable=new Map<string,Readonly<{instance:string;action:{hash:string;size:number}}>>(),pending=new Set<Promise<void>>();
  const heldUnits=(tasks:readonly string[]):readonly RemoteExecutionHeldUnitV1[]=>{const used=new Map(meter.usage().map(row=>[row.task,row.megabytes]));return tasks.map(task=>({megabytes:demands.get(task)??0,usedMegabytes:used.get(task)??0}));};
  let registering:Promise<void>|undefined;
  const registerOnce=async():Promise<void>=>{
@@ -532,23 +536,29 @@ export async function runRemoteExecutionWorkerV1(options:RemoteExecutionWorkerOp
    }
   }
  };
- const finishTask=async(task:RemoteExecutionTaskV1,controller:AbortController):Promise<void>=>{
+ const finishTask=async(task:RemoteExecutionTaskV1,controller:AbortController,reservation?:string):Promise<void>=>{
   ensureWardenV1();
   say("started",`${task.id} ${task.action.hash.slice(0,12)}`);
   const limit=setTimeout(()=>{controller.abort();},(task.timeoutSeconds+readRemoteExecutionPolicyV1().server.cancelGraceSeconds)*1000);
-  const result=await executeRemoteExecutionActionV1({properties,instance:task.instance,action:task.action,timeoutSeconds:task.timeoutSeconds,content:content!,directory:options.directory,work:workDirectory,workerName:name,sandbox,network:network==="allowed",actions,materialize:options.materialize,inlineOutputBytes:options.inlineOutputBytes,signal:controller.signal,meter:{attach:pid=>{meter.attach(task.id,pid);},peak:()=>meter.finish(task.id)},...(options.threads?{threads:async()=>{const others=[...running.keys()].filter(id=>id!==task.id),count=await options.threads!({others:others.reduce((sum,id)=>sum+(grants.get(id)??1),0),peakMegabytes:task.peakMegabytes??0,held:heldUnits(others)});grants.set(task.id,count);return count;}}:{}),...(options.keepWork?{keepWork:true}:{}),...(options.tools?{tools:options.tools}:{}),...(options.commands?{commands:options.commands}:{}),blobs:store}).finally(()=>{clearTimeout(limit);meter.finish(task.id);});
+   const result=await executeRemoteExecutionActionV1({properties,instance:task.instance,action:task.action,timeoutSeconds:task.timeoutSeconds,content:content!,directory:options.directory,work:workDirectory,workerName:name,sandbox,network:network==="allowed",actions,materialize:options.materialize,inlineOutputBytes:options.inlineOutputBytes,signal:controller.signal,meter:{attach:pid=>{meter.attach(task.id,pid);},peak:()=>meter.finish(task.id)},...(options.threads?{threads:async()=>{const others=[...running.keys()].filter(id=>id!==task.id),count=await options.threads!({others:others.reduce((sum,id)=>sum+(grants.get(id)??1),0),peakMegabytes:task.peakMegabytes??0,held:heldUnits(others),...reservation===undefined?{}:{reservation}});grants.set(task.id,count);return count;}}:{}),...(options.keepWork?{keepWork:true}:{}),...(options.tools?{tools:options.tools}:{}),...(options.commands?{commands:options.commands}:{}),blobs:store}).finally(()=>{clearTimeout(limit);meter.finish(task.id);});
   const report:RemoteExecutionTaskResultV1={version:1,outcome:result.outcome,status:result.status,actionResult:result.actionResult?Buffer.from(result.actionResult).toString("base64"):null,...result.outcome==="refused"?{refusal:result.refusal??"warden-cancelled"}:{}};
   await send(task.id,report);
   say(result.outcome==="cancelled"?"cancelled":result.outcome==="refused"?"refused":"finished",`${task.id} ${result.outcome} ${result.status.code}`);
-  running.delete(task.id);demands.delete(task.id);grants.delete(task.id);resumable.delete(task.id);publish();wake?.();
   if(Date.now()-pruned>30000){pruned=Date.now();void store.prune().catch(()=>{});}
   retire();
+ };
+ const unavailable=(error:unknown):Extract<RemoteExecutionAdmissionV1,{admit:false}>=>{
+  say("refused",`Host capacity unavailable: ${String(error)}`);
+  return {admit:false,reason:"not-ready"};
+ };
+ const admit=async(unit:RemoteExecutionUnitAskV1):Promise<RemoteExecutionAdmissionV1>=>{
+  try{return await options.admit?.(running.size,unit)??{admit:true};}catch(error){return unavailable(error);}
  };
  try{
   while(!options.signal.aborted){
    if(running.size>=options.concurrency){refusing=false;publish();await new Promise<void>(resolve=>{wake=resolve;options.signal.addEventListener("abort",()=>{resolve();},{once:true});});continue;}
    if(options.admit){
-    const verdict=await options.admit(running.size,{stage:"poll",held:heldUnits([...demands.keys()])}).catch(()=>({admit:true as const}));
+     const verdict=await admit({stage:"poll",held:heldUnits([...demands.keys()])});
     refusing=!verdict.admit;publish();
     if(!verdict.admit){await new Promise<void>(resolve=>{const timer=setTimeout(resolve,options.admitRetryMilliseconds??2000);wake=()=>{clearTimeout(timer);resolve();};options.signal.addEventListener("abort",()=>{clearTimeout(timer);resolve();},{once:true});});continue;}
    }
@@ -559,19 +569,31 @@ export async function runRemoteExecutionWorkerV1(options:RemoteExecutionWorkerOp
    if(!answer.known){await register();continue;}
    cancel(answer.cancel);
    if(answer.task){
-    const verdict=options.admit?await options.admit(running.size,{stage:"task",megabytes:answer.task.peakMegabytes??0,held:heldUnits([...demands.keys()])}).catch(()=>({admit:true as const})):{admit:true as const};
+     const task=answer.task,megabytes=task.peakMegabytes??0,active=await admit({stage:"task",megabytes,held:heldUnits([...demands.keys()])});
+     const run=async(reservation?:string):Promise<void>=>{
+      const controller=new AbortController();
+      if(options.signal.aborted)controller.abort();
+      running.set(task.id,controller);demands.set(task.id,megabytes);resumable.set(task.id,{instance:task.instance,action:{hash:task.action.hash,size:task.action.size}});
+      try{publish();await finishTask(task,controller,reservation);}
+      catch(error){await send(task.id,{version:1,outcome:"failed",status:{code:14,message:String(error)},actionResult:null});}
+      finally{running.delete(task.id);demands.delete(task.id);grants.delete(task.id);resumable.delete(task.id);publish();wake?.();}
+     };
+     const verdict=!active.admit?active:options.reserve===undefined?{admit:true as const,finished:run()}:await options.reserve({megabytes,observedMegabytes:()=>meter.usage().find(row=>row.task===task.id)?.megabytes??0},run).catch(unavailable);
     if(!verdict.admit){
      refusing=true;publish();say("refused",`${answer.task.id} ${verdict.reason}`);
      await send(answer.task.id,{version:1,outcome:"refused",status:{code:8,message:`The machine has no headroom: ${verdict.reason}`},actionResult:null,refusal:verdict.reason});
      continue;
     }
-    const controller=new AbortController();running.set(answer.task.id,controller);demands.set(answer.task.id,answer.task.peakMegabytes??0);resumable.set(answer.task.id,{instance:answer.task.instance,action:{hash:answer.task.action.hash,size:answer.task.action.size}});publish();void finishTask(answer.task,controller);
+     const finished=verdict.finished;
+     pending.add(finished);
+     void finished.catch(error=>{unavailable(error);}).finally(()=>{pending.delete(finished);});
    }
   }
  }finally{
-  clearInterval(heartbeat);meter.close();
+   clearInterval(heartbeat);
   for(const controller of running.values())controller.abort();
-  const settle=Date.now()+10000;while(running.size>0&&Date.now()<settle)await runtimeSleepV1(50);
+   await Promise.allSettled(pending);
+   meter.close();
   await call("DELETE",`/v1/workers/${registered.id}`,undefined,AbortSignal.timeout(5000)).catch(()=>{});
   say("stopped",name);
  }

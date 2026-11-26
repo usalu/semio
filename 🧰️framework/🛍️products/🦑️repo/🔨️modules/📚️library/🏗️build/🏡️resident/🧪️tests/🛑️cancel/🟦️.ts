@@ -88,7 +88,7 @@ describe("the host service cancels the job of a client that is gone",()=>{
   expect(await waitFor(()=>h.service.counters.coalesced===FIXTURE.coalescing.boundContent.clients-1,15000)).toBe(true);
   await sleep(200);expect(h.calls.length).toBe(FIXTURE.coalescing.boundContent.jobs);
   h.release();const[ra,rb]=await Promise.all([a.promise,b.promise]);
-  expect(ra.reply.pin.holder).toBe("h-"+digestOf(h.root).slice(0,16));expect(rb.reply.pin.holder).toBe("h-"+digestOf(other).slice(0,16));expect(ra.reply.pin.holder).not.toBe(rb.reply.pin.holder);
+  expect(ra.reply.pin?.holder).toBe("h-"+digestOf(h.root).slice(0,16));expect(rb.reply.pin?.holder).toBe("h-"+digestOf(other).slice(0,16));expect(ra.reply.pin?.holder).not.toBe(rb.reply.pin?.holder);
   expect(ra.plan.tasks).toEqual(rb.plan.tasks);await h.service.stop("test");
  },30000);
 
@@ -201,9 +201,9 @@ describe("the allocator purge setting of the policy reaches every process the se
  test("the schema declares it in both languages and a slice worker's environment carries it next to the token",async()=>{
   const purge=HOST_POLICY_V1.memoryPurge;
   expect(purge.environmentVariable).toBe("MIMALLOC_PURGE_DELAY");expect(purge.delayMilliseconds).toBe(0);expect(purge.description.en.length).toBeGreaterThan(20);expect(purge.description.de.length).toBeGreaterThan(20);expect(purge.description.de).not.toBe(purge.description.en);
-  let seen:Record<string,string>|undefined;
+  let seen:Readonly<Record<string,string|undefined>>|undefined;
   const listeners:Record<string,(value:unknown)=>void>={},fake={on:(event:string,listener:(value:unknown)=>void)=>{listeners[event]=listener;},terminate:async()=>0};
-  const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,graceMilliseconds:50,createWorker:(_url:URL,_data:unknown,env:Record<string,string>)=>{seen=env;queueMicrotask(()=>listeners.message?.({type:"done",graph:{}}));return fake;}});
+  const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,graceMilliseconds:50,createWorker:(_url:URL,_data:unknown,env:Readonly<Record<string,string|undefined>>)=>{seen=env;queueMicrotask(()=>listeners.message?.({type:"done",graph:{}}));return fake;}});
   await pool.run({root:base});
   expect(seen![purge.environmentVariable]).toBe(String(purge.delayMilliseconds));expect(seen!.SEMIO_SLICE_JOB).toMatch(/^[0-9]+\.1\.[a-z0-9]+$/u);expect(seen!.PATH).toBe(process.env.PATH);
   await pool.close();
@@ -215,7 +215,9 @@ describe("a large slice result crosses the process boundary as a file",()=>{
   const{readdirSync}=await import("node:fs"),{scratchHomeV1}=await import("../../../../../../../../🔨️modules/🏃️process/🧹️scratch/🟦️.ts"),spools=()=>{try{return readdirSync(scratchHomeV1()).filter(name=>/^[0-9]+-slice-/u.test(name)).length;}catch{return 0;}},before=spools();
   const pool=createSlicePoolV1({workerUrl:new URL("./🧒️spawning-worker.mjs",import.meta.url),maximum:1,graceMilliseconds:200});
   const result=await pool.run({root:base,mode:"big"});
-  expect(Object.keys(result.graph.projects).length).toBe(60000);expect(result.graph.projects.p59999.root).toBe("libs/p59999");expect(result.generationPin).toBe("big");
+  const graph=result.graph;if(typeof graph!=="object"||graph===null||!("projects" in graph))throw new Error("The slice result carries no projects");
+  const projects=graph.projects as Record<string,{root:string}>;
+  expect(Object.keys(projects).length).toBe(60000);expect(projects.p59999?.root).toBe("libs/p59999");expect(result.generationPin).toBe("big");
   expect(await waitFor(()=>spools()<=before,5000)).toBe(true);await pool.close();
  },30000);
 });
@@ -253,7 +255,7 @@ describe("every slice load gets a hard memory limit of its own where cgroups are
  });
  test("a plan that waits for its reservation reports the wait, starts no worker while it waits, and a cancellation during the wait ends it without a worker",async()=>{
   const log:string[]=[],progress:any[]=[],controller=new AbortController();let started=0;
-  const pool=createSlicePoolV1({hostMegabytes:0,workerUrl:new URL("file:///unused.mjs"),maximum:1,heartbeatMilliseconds:20,headroom:()=>({limitBytes:L.headroom.limitMegabytes*MiB,currentBytes:L.headroom.currentMegabytes*MiB,availableBytes:1024*MiB}),marginMegabytes:L.marginMegabytes,limiter:{create:async()=>undefined} as never,reserve:({signal}:{signal:AbortSignal})=>new Promise((_resolve,reject)=>{signal.addEventListener("abort",()=>reject(signal.reason),{once:true});}),createWorker:()=>{started++;throw new Error("no worker may start");}});
+  const pool=createSlicePoolV1({hostMegabytes:0,workerUrl:new URL("file:///unused.mjs"),maximum:1,heartbeatMilliseconds:20,headroom:()=>({limitBytes:L.headroom.limitMegabytes*MiB,currentBytes:L.headroom.currentMegabytes*MiB,availableBytes:1024*MiB}),marginMegabytes:L.marginMegabytes,limiter:{create:async()=>undefined} as never,reserve:({signal})=>new Promise((_resolve,reject)=>{signal?.addEventListener("abort",()=>reject(signal.reason),{once:true});}),createWorker:()=>{started++;throw new Error("no worker may start");}});
   const running=pool.run({root:base},{signal:controller.signal,onProgress:(_ms:number,detail:any)=>progress.push(detail)}).then(()=>undefined,error=>error);
   expect(await waitFor(()=>progress.length>=2,5000)).toBe(true);
   expect(progress[0]).toEqual({phase:"reservation",reservation:{requested:L.expect.memoryMaxMegabytes}});

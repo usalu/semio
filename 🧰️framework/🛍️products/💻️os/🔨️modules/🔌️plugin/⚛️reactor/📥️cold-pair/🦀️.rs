@@ -197,6 +197,7 @@ pub struct ColdDocumentPairIngressRegistry<const N: usize> {
     pub closes: [Option<ColdDocumentPairCloseState>; N],
     reserved_bytes: usize,
     reserved_pages: u32,
+    reserved_closes: usize,
     pub close_cursor: usize,
 }
 
@@ -210,7 +211,7 @@ struct ColdDocumentPairCloseState {
 impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
     pub fn new() -> Self {
         assert!(N > 0, "cold pair ingress requires fixed capacity");
-        Self { slots: std::array::from_fn(|_| None), closes: [None; N], reserved_bytes: 0, reserved_pages: 0, close_cursor: 0 }
+        Self { slots: std::array::from_fn(|_| None), closes: [None; N], reserved_bytes: 0, reserved_pages: 0, reserved_closes: 0, close_cursor: 0 }
     }
 
     fn slot_index(lifetime: ActorInstanceLifetime) -> usize {
@@ -376,6 +377,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         self.preflight_close_instance(key)?;
         let index = Self::slot_index(key.lifetime());
         if self.closes[index].is_none() {
+            self.reserved_closes += 1;
             self.closes[index] = Some(ColdDocumentPairCloseState { key, active: false, complete: false });
         }
         Ok(())
@@ -395,6 +397,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
     }
 
     pub fn advance_close_one(&mut self) -> bool {
+        if self.reserved_closes == 0 { return false; }
         let Some(index) = (0..N).map(|offset| (self.close_cursor + offset) % N).find(|index| self.closes[*index].is_some_and(|close| close.active && !close.complete)) else {
             return false;
         };
@@ -415,6 +418,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
             return Err("cold pair close receipt is not terminal");
         }
         self.closes[index] = None;
+        self.reserved_closes -= 1;
         Ok(())
     }
 

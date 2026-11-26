@@ -66,7 +66,6 @@ semio-s-plugin-puzzle-jobs = { workspace = true }
 semio-s-plugin-puzzle-retained = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-wasm-bindgen = { workspace = true }
 
 [dev-dependencies]
 geo = { version = "0.31.0", default-features = false }
@@ -85,5 +84,6 @@ serde_json = { workspace = true }
 semio-s-artifact-puzzle-2d-records = { path = "../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️records/📦️packages/🦀️rust", features = ["testkit"] }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
+wasm-bindgen = { workspace = true }
 js-sys = { workspace = true }
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }

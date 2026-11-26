@@ -289,9 +289,9 @@ test("bounds on a real directory: only expired entries inside the root go, a lin
  symlinkSync(outside,join(root,"link"));const old=(now-500*3600000)/1000;
  const select=(entries:readonly {name:string;newestMs:number}[])=>entries.filter(entry=>now-entry.newestMs>24*3600000).map(entry=>entry.name);
  const dry=await applyBoundV1({directory:root,limit:1000,dryRun:true,select});
- expect(dry.removed.sort()).toEqual(["old-a","old-b"]);expect(readdirSync(root).length).toBe(5);
+ expect([...dry.removed].sort()).toEqual(["old-a","old-b"]);expect(readdirSync(root).length).toBe(5);
  const real=await applyBoundV1({directory:root,limit:1000,dryRun:false,select});
- expect(real.removed.sort()).toEqual(["old-a","old-b"]);expect(real.freedBytes).toBeGreaterThan(0);
+ expect([...real.removed].sort()).toEqual(["old-a","old-b"]);expect(real.freedBytes).toBeGreaterThan(0);
  expect(existsSync(join(root,"old-a"))).toBe(false);expect(existsSync(join(root,"new-a"))).toBe(true);expect(existsSync(join(outside,"precious"))).toBe(true);
  utimesSync(root,old,old);
  const escape=await applyBoundV1({directory:root,limit:1000,dryRun:false,select:()=>["link","../x","",".."]});

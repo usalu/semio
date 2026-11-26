@@ -23,3 +23,13 @@ F52 23:18 remote-execution endpoint tests, fleet tests, replica sidecars tests, 
 F57 02:30 🧪️testing/🗂️suites/🧪️tests, step-overdue, generations load, sidecar restart, offload 40/1, launchd service (sequential)
 F60 02:47 admission/📈️growth, host-capacity/📈️unit-growth, admission tests (main, parent, probe, sibling, unit-ceiling, beyond-host) sequential
 F57 02:45 sidecar 🧪️tests, offload 🧪️tests, service tests, remote-execution step-overdue (sequential)
+F61 🧪️entries tests + take/why 03:24
+F65 04:12 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🟦️.ts 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🛗️requires/🟦️.ts 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🧪️tests/🧭️help-offline/🟦️.ts 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/🧪️tests/🟦️.ts 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔬️typecheck/🧪️tests/🟦️.ts
+F64 04:25 admission ⏳️waits/🧭️cold-external/growth/sibling/parent/probe/beyond-host, host-capacity ⏳️unit-waits/main/unit-growth (sequential)
+F68 04:50 units, retention negative, remote-cache tests
+F72 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts
+F70 05:37 🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🏁️settlement/🧪️tests (read-only run)
+F70 05:48 graph-hooks tests, cutoff tests (sequential, read-only runs)
+F74 06:52 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts + mapping/leases/rust-graph tests (sequential, own runs)
+- 11-26 09:40 F77: 7 typecheck-fix test files (scope, reuse, presence, refusal, publication boundary, owner-checkpoint, optional-cache), one at a time
+F91 12:30 type-only edits, running repo test-file once each:       42 files (see 🗑️generated/F91/files.txt while it exists)

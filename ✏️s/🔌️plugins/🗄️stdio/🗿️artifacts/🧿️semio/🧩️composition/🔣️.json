@@ -447,6 +447,7 @@
   ],
   "openTargets": [],
   "catalogPackage": "semio-s-artifact-stdio-semio-catalog",
+  "runtimeHost": "stdio-semio",
   "symbolPackages": [
     "semio-s-artifact-stdio-semio-animation",
     "semio-s-artifact-stdio-semio-audio",

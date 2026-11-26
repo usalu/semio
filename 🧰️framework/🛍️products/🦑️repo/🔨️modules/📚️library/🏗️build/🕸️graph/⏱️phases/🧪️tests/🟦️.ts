@@ -7,10 +7,12 @@ import {createGraphPhaseClockV1} from "../🟨️.mjs";
 import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import {fileURLToPath} from "node:url";
 
-type PhaseStepV1={readonly op:string;readonly phase:string;readonly at:number;readonly total?:number;readonly done?:number;readonly running?:{name:string;seconds:number;kind?:string;rows?:number}[];readonly decision?:{key:"waiting"|"serial"|"resumed"|"learning";used:number;budget:number;kind?:string}};
+type PhaseStepV1={readonly op:string;readonly phase:string;readonly at:number;readonly total?:number;readonly done?:number;readonly running?:{name:string;seconds:number;kind?:string;rows?:number}[];readonly decision?:{key:string;used:number;budget:number;kind?:string}};
+const decisionKeys=["waiting","serial","resumed","learning"] as const;
+const decisionOf=(decision:PhaseStepV1["decision"])=>{if(decision===undefined)return undefined;const key=decisionKeys.find(known=>known===decision.key);if(key===undefined)throw new Error("Unknown decision key "+decision.key);return {...decision,key};};
 const replay=async(steps:readonly PhaseStepV1[],minimumMilliseconds:number,options:Record<string,number>={})=>{
  let at=0;const published:string[]=[],written:unknown[]=[],clock=createGraphPhaseClockV1({...options,now:()=>at,minimumMilliseconds,publish:resource=>{published.push(resource);},write:row=>{written.push(row);}}),rows:unknown[]=[];
- for(const step of steps){at=step.at;if(step.op==="begin")await clock.begin(step.phase,step.total!);else if(step.op==="advance")await clock.advance(step.phase,step.done!);else if(step.op==="running")await clock.running(step.phase,step.running!,step.decision);else rows.push(await clock.end(step.phase));}
+ for(const step of steps){at=step.at;if(step.op==="begin")await clock.begin(step.phase,step.total!);else if(step.op==="advance")await clock.advance(step.phase,step.done!);else if(step.op==="running")await clock.running(step.phase,step.running!,decisionOf(step.decision));else rows.push(await clock.end(step.phase));}
  return {published,rows,written,clock};
 };
 

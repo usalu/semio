@@ -140,7 +140,7 @@ fn expose_prepared_header()->u64{match with_entry(|entry|entry.expose_source_hea
 fn poll_owned_step<PA:semio_plugin_reactor_app::PluginApp+'static>(runtime:&semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,budget:kernel::OriginalJobBudget,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
   ORIGINAL_OWNED_OUTPUT.with(|output|{
    let mut output=output.try_borrow_mut().map_err(|_|busy())?;
-   if output.get().is_some(){if output.capture_step::<OriginalTurnFailure>(cx,|_|Err(busy().into()))?{output.encode_step(cx)?;}return Ok(())}
+   if output.get().is_some(){if output.capture_step::<OriginalTurnFailure>(cx,|_|Err(busy().into()))?{output.encode_batch_step(cx)?;}return Ok(())}
    if budget.cancelled{if !original_cancel_flag_step(cx)?{return Ok(())}return Err(ValueError::literal(ValueRefusalKind::Canceled,"original Poll cancelled before kernel production").into())}
    ORIGINAL_OWNED_INPUT.with(|slot|{
     let mut slot=slot.try_borrow_mut().map_err(|_|busy())?;let owner=slot.as_mut().ok_or_else(busy)?;
@@ -148,7 +148,7 @@ fn poll_owned_step<PA:semio_plugin_reactor_app::PluginApp+'static>(runtime:&semi
     owner.with_poll_step(cx,|poll,event,cx|{
      let authority=kernel::OriginalJobBudget{retained_policy:cx.retained_grant(),fuel:cx.fuel_remaining(),deadline_us:cx.deadline_us(),..budget};let kernel_budget=poll.limits.narrow(authority);
      output.capture_step(cx,|cx|{
-      let mut result=None;semio_plugin_abi::operation_authority::with_actor_operation_authority(|identity|{result=Some(semio_plugin_runtime_ops::ops_typed_operations::drive_self_waking_ready(semio_plugin_reactor_turn::poll_kernel_owned(runtime,event,&mut poll.command_page,poll.cold_pair_page.as_ref(),kernel_budget,identity,cx)));Ok(())})?;
+      let mut result=None;semio_plugin_abi::operation_authority::with_actor_operation_authority(|identity|{result=Some(semio_plugin_runtime_ops::ops_typed_operations::drive_self_waking_ready(semio_plugin_reactor_turn::poll_kernel_owned(runtime,event,&mut poll.command_page,poll.cold_pair_page.as_ref(),kernel_budget,actor_execution_clock,identity,cx)));Ok(())})?;
       result.ok_or_else(||OriginalTurnFailure::from(busy()))?
      })?;Ok(())
     })?;Ok(())
@@ -172,6 +172,7 @@ pub fn close_turn_output_owned(budget:kernel::OriginalJobBudget)->u64{let input=
 
 #[doc(hidden)]
 pub fn original_job_clock()->Option<u64>{ORIGINAL_CLOCK_BINDING.with(|binding|semio_plugin_abi::wasip2::semio::framework::pure::operation_clock_us(binding.get()))}
+fn actor_execution_clock()->Option<u64>{ORIGINAL_CLOCK_BINDING.with(|binding|semio_plugin_abi::wasip2::semio::framework::pure::actor_execution_clock_us(binding.get()))}
 #[doc(hidden)]
 pub fn job_budget(budget:JobsWire::JobBudget)->Result<kernel::OriginalJobBudget,ValueError>{Ok(kernel::OriginalJobBudget{input:native_input(budget.input)?,retained_policy:native_grant(budget.retained_policy)?,fuel:budget.fuel,deadline_us:budget.deadline_us,cancelled:budget.cancelled})}
 fn job_failure(failure:OriginalActorEntryFailure)->kernel::OriginalJobCallFailure{match failure{OriginalActorEntryFailure::Authority(error)=>{report_authority(&error);kernel::OriginalJobCallFailure::Authority(error.kind)},OriginalActorEntryFailure::Semantic=>kernel::OriginalJobCallFailure::Semantic}}

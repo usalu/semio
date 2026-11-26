@@ -109,4 +109,15 @@ impl ArtifactOutputPages {
 
     pub(super) fn pages(&self) -> &Vec<Page> { &self.pages }
     pub(super) fn into_pages(self) -> Vec<Page> { self.pages }
+
+    pub(super) fn drained_release(&self) -> Option<(usize, u64)> {
+        if self.len != 0 || self.pages.len() > 16 { return None; }
+        let mut bytes = self.table_capacity_bytes();
+        let mut work = 1;
+        for page in &self.pages {
+            bytes = bytes.checked_add(page.capacity().checked_mul(size_of::<Option<Chunk>>())?)?;
+            work += 1 + page.len() as u64;
+        }
+        Some((bytes, work))
+    }
 }

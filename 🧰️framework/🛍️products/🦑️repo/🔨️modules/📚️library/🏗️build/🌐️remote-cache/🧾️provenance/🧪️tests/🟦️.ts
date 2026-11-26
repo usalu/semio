@@ -88,7 +88,7 @@ test("evidence keeps both sides of a divergence, replaces one per key and origin
  await first.evidence.keep(input("a".repeat(64),"unit"));
  const entry=first.evidence.list()[0]!;
  expect(entry.differing).toEqual(["out/x.rlib"]);expect(entry.files.map(file=>file.name).sort()).toEqual(["kept.1","kept.ac","refused.1","refused.ac"]);
- expect(Array.from(await first.evidence.read(entry.id,"kept.1")!)).toEqual([1,2,3]);expect(Array.from(await first.evidence.read(entry.id,"refused.1")!)).toEqual([4,5,6]);
+ expect(Array.from((await first.evidence.read(entry.id,"kept.1"))!)).toEqual([1,2,3]);expect(Array.from((await first.evidence.read(entry.id,"refused.1"))!)).toEqual([4,5,6]);
  expect(await first.evidence.read(entry.id,"../meta.json")).toBeUndefined();expect(await first.evidence.read("nothing","kept.ac")).toBeUndefined();
  now=200;await first.evidence.keep(input("a".repeat(64),"unit"));expect(first.evidence.list().length).toBe(1);
  for(let index=0;index<70;index++){now=300+index;await first.evidence.keep(input(String(index).padStart(64,"0"),"project-inference"));}

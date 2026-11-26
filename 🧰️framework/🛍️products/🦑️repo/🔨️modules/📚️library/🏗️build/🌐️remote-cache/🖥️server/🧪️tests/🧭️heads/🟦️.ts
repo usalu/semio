@@ -32,7 +32,7 @@ async function fleet(){
 }
 
 test("a head is replaced by the other origin only with the digest of what it holds; a stale or wrong expectation is refused and is no divergence",async()=>{
- const world=await fleet(),key=sha("head"),put=(root:string,bytes:Uint8Array,expect?:string)=>world.signed(root)(`${world.base}/ac/${key}`,{method:"PUT",body:bytes,headers:expect===undefined?{}:{"x-semio-expect":expect}});
+ const world=await fleet(),key=sha("head"),put=(root:string,bytes:Uint8Array<ArrayBuffer>,expect?:string)=>world.signed(root)(`${world.base}/ac/${key}`,{method:"PUT",body:bytes,headers:expect===undefined?{}:{"x-semio-expect":expect}});
  const one=result("one"),two=result("two"),three=result("three");
  expect((await put(world.a,one,"none")).status,"first writer of an empty head").toBe(200);
  expect((await put(world.b,two,"none")).status,"expects an empty head but it holds a value").toBe(409);
@@ -67,7 +67,7 @@ test("a publisher retries its merge when another machine changes the exact point
   const client=clientOf(world.a),competitor=clientOf(world.b);
   const pointerKey=graphEntryKeyV1(ownerPoolStateV1("pointer"));
   const [initial,ours,theirs]=pointerRace.waves.map((wave):OwnerPoolManifestV1=>({
-   head:{version:1,id:sha(wave.publisher),createdMs:now+wave.offset,publisher:wave.publisher,identity:"fixture",globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"t",late:false}},
+   head:{version:1,id:sha(wave.publisher),createdMs:now+wave.offset,publisher:wave.publisher,identity:"fixture",globals:{registryDigest:"r",commandRevision:"t",late:false}},
    session:new Uint8Array(0),
    units:Array.from({length:wave.units},(_,index)=>({name:String(index),kind:"fixture",expectedMilliseconds:1000,json:{}})),
   }));
@@ -90,7 +90,7 @@ test("a publisher retries its merge when another machine changes the exact point
 
 test("concurrent signed head replacements of the same result admit one writer",async()=>{
  const world=await fleet(),fixture=pointerRace.samePrior,key=sha("simultaneous-head"),store=world.running.store;
- const put=(root:string,bytes:Uint8Array,expect:string)=>world.signed(root)(`${world.base}/ac/${key}`,{method:"PUT",body:bytes,headers:{"x-semio-expect":expect}});
+ const put=(root:string,bytes:Uint8Array<ArrayBuffer>,expect:string)=>world.signed(root)(`${world.base}/ac/${key}`,{method:"PUT",body:bytes,headers:{"x-semio-expect":expect}});
  const original=result(fixture.base),prior=sha(original);
  expect((await put(world.a,original,"none")).status).toBe(200);
  const write=store.put.bind(store);

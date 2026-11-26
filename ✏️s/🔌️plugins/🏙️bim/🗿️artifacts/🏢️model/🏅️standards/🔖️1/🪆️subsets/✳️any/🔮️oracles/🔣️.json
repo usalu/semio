@@ -9,7 +9,8 @@
       "package": "shapely",
       "version": "2.1.2",
       "capabilities": [
-        "bim-1-infer"
+        "bim-1-infer",
+        "bim-1-modify"
       ],
       "comparisonProfiles": [
         "floating-point-v1"
@@ -343,6 +344,63 @@
         "family": "ifcopenshell",
         "implementation": "IfcOpenShell C++/Python IFC engine",
         "version": "0.8.4.post1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "bim-1-numpy-shapely-geometry",
+      "ecosystem": "python",
+      "package": "numpy",
+      "version": "2.5.0",
+      "packages": [
+        {
+          "package": "shapely",
+          "version": "2.1.2",
+          "license": "BSD-3-Clause",
+          "role": "GEOS projection, boxes, orientation and areas of the authoring gestures",
+          "homepage": "https://shapely.readthedocs.io"
+        }
+      ],
+      "capabilities": [
+        "bim-1-author"
+      ],
+      "comparisonProfiles": [
+        "floating-point-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "homepage": "https://numpy.org",
+      "rationale": "numpy recomputes the numbers behind the keyboard-driven authoring tools from the committed cases with libraries that have never seen this repository: the point a typed line names (own grammar, trigonometry and vector arithmetic), the cursor after a run of arrow keys (vector sums), the face and depth axis of a wall-mounted component (GEOS projection, rotation matrices), the length of a route (segment norms) and the rotation after a run of turn keys (modular sums); shapely measures projections, boxes, orientation and areas of the remaining gesture cases.",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "numpy-shapely",
+        "implementation": "numpy ndarray arithmetic and shapely (GEOS) geometry over the CPython interpreter",
+        "version": "2.5.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "bim-1-sympy-costs",
+      "ecosystem": "python",
+      "package": "sympy",
+      "version": "1.14.0",
+      "capabilities": [
+        "bim-1-infer"
+      ],
+      "comparisonProfiles": [
+        "floating-point-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "homepage": "https://www.sympy.org",
+      "rationale": "sympy rationals are exact arithmetic that has never seen this repository. The oracle reads every price, factor and quantity as the rational of its shortest round-trip decimal string, multiplies exactly, rounds half up with floor(x * 10^precision + 1/2), sums exactly per element, type, storey, item and project and currency, and converts only the published amounts to the nearest double; an amount no double holds is an overflow diagnostic. Invalid items, links and quantities are diagnosed by the same rules the authored schema states.",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "sympy-rational",
+        "implementation": "sympy Rational arithmetic over the CPython interpreter",
+        "version": "1.14.0"
       },
       "productionReachable": false,
       "networkDuringExecution": false
@@ -12242,5 +12300,148 @@
       ]
     }
   ],
-  "testEvidence": []
+  "testEvidence": [],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-framework-geometry",
+      "path": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
+      "rationale": "📐️ The modify cases measure loops (area, centroid, orientation) with the framework loop kernel the modify mutations are built on."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-authored",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📏️authored/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-bim",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns.",
+      "features": [
+        "testkit"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-coordination",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🤝️coordination/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-costs",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💰️costs/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-diff",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-dispatch-context",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📮️dispatch-context/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-examples",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏡️house/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-gbxml",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🌿️gbxml/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-gestures",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️gestures/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-ifc",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-ifc-2",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🏗️ifc/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-inferences",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-io",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-modify",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧙️modify/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-move-storey",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪜️move-storey/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-mut-any-190",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-ramp-runs",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🛝️ramp-runs/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-schema",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-snapshot",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-storey-levels",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🏢️storey-levels/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-tests-5",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-bim-model-wall-geometry",
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦉️wall-geometry/📦️packages/🦀️rust",
+      "rationale": "🧱️ The subject half of the cases of this subset drives the production code this crate owns."
+    }
+  ]
 }

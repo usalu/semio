@@ -288,12 +288,14 @@ fn the_report_lists_templates_systems_declarations_and_associations() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_serializer_returns_the_file_as_a_binary_payload_with_a_diagnostic_per_skipped_item() {
-    let clean = ModelIntoIfc4::serialize(&psets(), &ArchiveChildren::empty()).await.expect("the psets model serializes");
+    use semio_framework_test_original_snapshot_owners::{original_grant, with_encoding};
+    use semio_os_kernel::io::io_mechanism::IoRunControl;
+    let clean = with_encoding(|owner| semio_framework_async::poll::resolve_ready(ModelIntoIfc4::serialize(&psets(), &ArchiveChildren::empty(), &mut IoRunControl::encoding(owner.native(), original_grant())))).expect("the psets model serializes");
     assert!(matches!(clean.value, IoPayload::Binary(ref bytes) if bytes.starts_with(b"ISO-10303-21")));
     assert!(clean.diagnostics.is_empty());
     assert_eq!(<ModelIntoIfc4 as Serializer<ModelSnapshot>>::INTO.standard.0, "4");
     let mut broken = psets();
     broken.property_templates.cold_insert("pt-empty".into(), PropertyTemplate { name: "Pset_Empty".into(), applies_to: Vec::new(), properties: Vec::new() });
-    let outcome = ModelIntoIfc4::serialize(&broken, &ArchiveChildren::empty()).await.expect("it still serializes");
+    let outcome = with_encoding(|owner| semio_framework_async::poll::resolve_ready(ModelIntoIfc4::serialize(&broken, &ArchiveChildren::empty(), &mut IoRunControl::encoding(owner.native(), original_grant())))).expect("it still serializes");
     assert!(outcome.diagnostics.iter().any(|diagnostic| diagnostic.message.contains("pt-empty")));
 }

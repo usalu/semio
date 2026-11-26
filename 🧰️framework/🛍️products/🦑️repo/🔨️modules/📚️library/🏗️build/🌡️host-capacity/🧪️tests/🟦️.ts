@@ -164,7 +164,7 @@ test("an explicit capacity command waits for its entire reservation while catalo
 test("an explicit capacity command may reuse only a sufficient active inherited reservation",async()=>{
  for(const row of fixture.capacityCommand.inherited){
   const directory=fresh(),environment={LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory},sample=async()=>({host:host(),swappedOutMegabytes:0});
-  const id=newHostCapacityIdV1(),request={...sizeHostRequestV1(fast,{id,operation:"command"})!,fixedMegabytes:row.memory,cpuPerJob:row.cpu};
+  const id=newHostCapacityIdV1(),request={...sizeHostRequestV1(fast,{id,operation:"command"})!,fixedMegabytes:row.memory,cpuPerJob:row.cpu,...row.condition==="forecast"?{}:{retainReservation:true}};
   const control=createCapacityControlV1();
   try{
    await withHostCapacityV1({directory,environment,sample,request,control:control.control,policy:fast,write:()=>undefined},async outer=>{

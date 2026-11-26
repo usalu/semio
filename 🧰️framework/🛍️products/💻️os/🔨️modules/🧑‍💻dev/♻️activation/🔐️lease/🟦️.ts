@@ -1,6 +1,7 @@
 /** 🧩️ Semantic activation lease owner. */
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
+import {processPidExistsV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
@@ -31,15 +32,10 @@ function pluginBuildLeasePath(variant: string): string {
   return join(pluginBuildLeaseDir(), `plugin-build-${variant}.json`);
 }
 
-/** 💀️ True when `pid` no longer exists on this machine (cross-platform: `process.kill(pid, 0)`
- * is a liveness probe on POSIX and Windows alike, never an actual kill). */
+/** 💀️ True when `pid` no longer exists on this machine (cross-platform: the identity module probes the process table
+ * on POSIX and Windows alike, never an actual kill). */
 function isPidAlive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
-  }
+  return processPidExistsV1(pid);
 }
 
 function readPluginBuildLease(path: string): PluginBuildLease | undefined {

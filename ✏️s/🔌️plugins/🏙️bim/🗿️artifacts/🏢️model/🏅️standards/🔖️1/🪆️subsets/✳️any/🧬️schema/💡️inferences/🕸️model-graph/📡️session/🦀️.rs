@@ -327,6 +327,23 @@ impl ModelInferenceSession {
         protocol::try_infer_field::<ModelSnapshot, ModelGraph<WANT>>(snapshot, Some(&mut self.cache)).map(project)
     }
 
+    /// 🎛️ Lets the original IO caller inspect cancellation between slices of a selective reference probe.
+    pub fn probe_checked<const WANT: u64, E>(&mut self, snapshot: &ModelSnapshot, mut checkpoint: impl FnMut() -> Result<(), E>) -> Result<Result<ModelInference, InferenceError>, E> {
+        let mut update = self.engine.begin_update::<ModelSnapshot, ModelGraph<WANT>, _>(&Everything, self.cache.enabled());
+        loop {
+            checkpoint()?;
+            match step_field_cold::<ModelSnapshot, ModelGraph<WANT>>(snapshot, &mut self.cache, &mut update, 16) {
+                Ok(report) if report.done => {
+                    checkpoint()?;
+                    return Ok(Ok(project(update.values().clone())));
+                }
+                Ok(_) => (),
+                Err(InferenceWorkFailure::Driver(error)) => return Ok(Err(error)),
+                Err(_) => unreachable!("reference inference does not invoke an original caller producer"),
+            }
+        }
+    }
+
     fn complete(&mut self,mut run:SessionRun,snapshot:&ModelSnapshot)->Result<&ModelInference,InferenceError>{
         let _ = self.step_cold(&mut run, snapshot, usize::MAX);
         self.finish_cold(run,snapshot)

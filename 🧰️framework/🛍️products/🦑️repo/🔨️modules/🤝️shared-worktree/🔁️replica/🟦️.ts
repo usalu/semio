@@ -2,6 +2,7 @@ import {createHash,randomBytes} from "node:crypto";
 import {createReplicaProgressWatchV1,replicaProgressRestartDueV1,type ReplicaProgressScopeV1} from "./💓️progress/🟦️.ts";
 import {createStagedPutsV1,stagedPutStampV1} from "./📥️staged-put/🟦️.ts";
 import {bootModuleRelativeV1} from "./🧭️boot-path/🟦️.ts";
+import {ignoreWatchEventV1} from "./👁️watch-ignore/🟦️.ts";
 import {closeSync,createReadStream,fsyncSync,lstatSync,openSync,readlinkSync,watch,type BigIntStats,type Stats} from "node:fs";
 import {chmod,copyFile,link,lstat,mkdir,mkdtemp,open,opendir,readdir,readFile,readlink,rename,rm,rmdir,stat,symlink,truncate,unlink,utimes,writeFile} from "node:fs/promises";
 import {homedir,tmpdir,uptime,userInfo} from "node:os";
@@ -3046,7 +3047,7 @@ export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:Repl
   if(options.watch!==false)watcher=watch(settings.worktree,{recursive:true,persistent:false},(kind,name)=>{
    if(name===null||name===undefined)return;
    const path=String(name).split(sep).join("/").normalize("NFC");
-   if(path===".cache/f"||path.startsWith(".cache/f/")||(gitPrivateV1(path)&&path!==".git/index")||(path.split("/").includes(".git")&&!path.startsWith(".git/")&&path!==".git")||(!(path===".git"||path.startsWith(".git/"))&&replica.ignore.ignores(path,false)))return;
+   if(path===".cache/f"||path.startsWith(".cache/f/")||(gitPrivateV1(path)&&path!==".git/index")||(path.split("/").includes(".git")&&!path.startsWith(".git/")&&path!==".git")||(!(path===".git"||path.startsWith(".git/"))&&ignoreWatchEventV1(settings.worktree,path,replica.ignore,replica.files.has(path)||replica.manifest.has(path))))return;
    noteViewDirtV1(replica,[path]);
    if(path===".gitignore"||touched.size>5000){full=true;touched.clear();}
    else{touched.add(path);if(kind==="rename")touched.add(`${path}/`);replica.hot.note(path,settings.now());}

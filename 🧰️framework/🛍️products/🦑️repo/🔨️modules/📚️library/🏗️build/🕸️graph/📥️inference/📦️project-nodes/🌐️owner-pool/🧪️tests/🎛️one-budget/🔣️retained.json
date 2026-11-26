@@ -1,0 +1,20 @@
+{
+ "hostMegabytes":16384,
+ "floorMegabytes":2048,
+ "softShareBasisPoints":1500,
+ "farmShareBasisPoints":2500,
+ "childMegabytes":800,
+ "cases":[
+  {"name":"exact controller blocks another child","available":6000,"children":0,"grants":[{"id":"exact","operation":"command","reserved":3870,"observed":null,"retainReservation":true}],"expected":0},
+  {"name":"graph plan fills its reservation before sharing","available":6000,"children":0,"grants":[{"id":"graph","operation":"graph-plan","reserved":3870,"observed":0}],"expected":0},
+  {"name":"one child fits exactly beside the graph","available":6718,"children":0,"grants":[{"id":"graph","operation":"graph-plan","reserved":3870,"observed":0}],"expected":1},
+  {"name":"sample already contains observed memory","available":6000,"children":0,"grants":[{"id":"graph","operation":"graph-plan","reserved":3870,"observed":1000}],"expected":1},
+  {"name":"soft and retained commitments charge independently","available":7300,"children":0,"grants":[{"id":"graph","operation":"graph-plan","reserved":3870,"observed":0},{"id":"farm","operation":"run","label":"graph-farm","reserved":4000,"observed":0},{"id":"quiet","operation":"command","reserved":250,"observed":50,"retainReservation":true,"quiet":true},{"id":"lent","operation":"command","reserved":9000,"observed":0,"retainReservation":true,"lentSinceMs":100}],"expected":0},
+  {"name":"attached old farm grant is within retained parent","available":6718,"children":0,"grants":[{"id":"graph","operation":"graph-plan","reserved":3870,"observed":0},{"id":"farm","operation":"run","label":"graph-farm","reserved":4000,"observed":0,"holder":"graph"}],"expected":1},
+  {"name":"ordinary forecast still follows the soft share","available":6000,"children":0,"grants":[{"id":"ordinary","operation":"command","reserved":3870,"observed":0}],"expected":1},
+  {"name":"retained commitment drains one existing child","available":5600,"children":2,"grants":[{"id":"graph","operation":"graph-plan","reserved":3870,"observed":0}],"expected":1},
+  {"name":"a resident child is already out of available memory","available":6000,"children":1,"grants":[{"id":"graph","operation":"graph-plan","reserved":3870,"observed":0}],"expected":1},
+  {"name":"host sample without ledger rows keeps minimum progress","available":2848,"children":0,"expected":1},
+  {"name":"host sample without ledger rows still protects the floor","available":2847,"children":0,"expected":0}
+ ]
+}

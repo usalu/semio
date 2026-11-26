@@ -12,6 +12,6 @@ mkdir -p "$out/artifacts"
 SEMIO_TEST_ARTIFACT_DIR="$out/artifacts"; export SEMIO_TEST_ARTIFACT_DIR
 cd "$root/$workspace"
 status=0
-repo cargo --store=shared --configuration="${CONFIGURATION:-prototype}" -- "$@" > "$out/$label.txt" 2>&1 || status=$?
+repo cargo --store=shared --offload=never --configuration="${CONFIGURATION:-prototype}" -- "$@" > "$out/$label.txt" 2>&1 || status=$?
 echo "exit $status -> $out/$label.txt"
 exit "$status"

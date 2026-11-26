@@ -294,7 +294,7 @@ impl FlowEvalSession {
     /// 📤️ Advances the original live evaluation lease while preserving progress and preview owners.
     pub fn publish_eval_json(&mut self,eval_json:&mut Option<SharedOwner<String>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
         let incoming=eval_json.as_ref().ok_or_else(||ValueError::invariant("original live evaluation lease is absent"))?;
-        if self.state.eval_json.as_ref().is_some_and(|current|current.identity()==incoming.identity()){drop(eval_json.take());return Ok(Some(Default::default()))}
+        if self.state.eval_json.as_ref().is_some_and(|current|current.identity()==incoming.identity()){let alias=eval_json.take().expect("checked live evaluation lease");return match alias.retire_shared_alias(){Ok(())=>Ok(Some(Default::default())),Err(alias)=>{*eval_json=Some(alias);Err(ValueError::invariant("original unchanged evaluation lease is not a counted alias"))}}}
         self.state.retirement.preflight(effect.grant())?;
         let Some(original)=self.state.eval_json.take()else{self.state.eval_json=eval_json.take();return Ok(Some(RetainedCloneProgress{copied_items:1,..Default::default()}))};
         let mut displaced=Some(SessionCollectionOwner::SourceLease(original));

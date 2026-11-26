@@ -23,5 +23,21 @@
     {"id": "caching-suite-table", "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🧪️tests/🟦️.ts"},
     {"id": "process-routing", "file": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📈️progress/🟦️.ts"},
     {"id": "plain-law", "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📦️package-export-targets/🧪️tests/🟦️.ts"}
+  ],
+  "oracleArguments": [
+    {"id": "path-to-form", "file": "pkg/🧪️tests/a/🐍️.py", "text": "usage:\n    python 🐍️.py check <path to 🧫️fixtures/💡️inferences/q>     # exit 1\n", "exists": ["pkg/🧪️tests/🧫️fixtures/💡️inferences/q"], "expected": ["check", "pkg/🧪️tests/🧫️fixtures/💡️inferences/q"]},
+    {"id": "standalone-form", "file": "pkg/🧪️tests/a/🐍️.py", "text": "Run standalone: `python 🐍️.py check <S>/🧫️fixtures/🧬️mutations` (exit 1).", "exists": ["pkg/🧪️tests/🧫️fixtures/🧬️mutations"], "expected": ["check", "pkg/🧪️tests/🧫️fixtures/🧬️mutations"]},
+    {"id": "file-path", "file": "pkg/🧪️tests/a/🐍️.py", "text": "python 🐍️.py check <path to 🧫️fixtures/🧙️modify/🔣️.json>", "exists": ["pkg/🧪️tests/🧫️fixtures/🧙️modify/🔣️.json"], "expected": ["check", "pkg/🧪️tests/🧫️fixtures/🧙️modify/🔣️.json"]},
+    {"id": "optional-case-tail-ignored", "file": "pkg/🧪️tests/a/🐍️.py", "text": "python 🐍️.py check <path to 🧫️fixtures> [case...]", "exists": ["pkg/🧪️tests/🧫️fixtures"], "expected": ["check", "pkg/🧪️tests/🧫️fixtures"]},
+    {"id": "nearest-ancestor-wins", "file": "pkg/🧪️tests/a/b/🐍️.py", "text": "python 🐍️.py check <path to 🧫️fixtures/x>", "exists": ["pkg/🧪️tests/a/🧫️fixtures/x", "pkg/🧫️fixtures/x"], "expected": ["check", "pkg/🧪️tests/a/🧫️fixtures/x"]},
+    {"id": "write-only-runs-bare", "file": "pkg/🧪️tests/a/🐍️.py", "text": "python 🐍️.py write <path to 🧫️fixtures/x>", "exists": ["pkg/🧪️tests/🧫️fixtures/x"], "expected": []},
+    {"id": "no-usage-runs-bare", "file": "pkg/🧪️tests/a/🐍️.py", "text": "usage: 🐍️.py   exit 0 when every vector agrees", "exists": [], "expected": []},
+    {"id": "declared-path-missing", "file": "pkg/🧪️tests/a/🐍️.py", "text": "python 🐍️.py check <path to 🧫️fixtures/gone>", "exists": [], "refusal": "oracle.fixtures-missing"}
+  ],
+  "oracleOwners": [
+    {"id": "entry-owns-itself", "file": "pkg/🧪️tests/a/🐍️.py", "entries": ["pkg/🧪️tests/a/🐍️.py"], "expected": "pkg/🧪️tests/a/🐍️.py"},
+    {"id": "module-runs-its-parent", "file": "pkg/🧪️tests/a/m/🐍️.py", "entries": ["pkg/🧪️tests/a/🐍️.py"], "expected": "pkg/🧪️tests/a/🐍️.py"},
+    {"id": "nearest-parent-wins", "file": "pkg/🧪️tests/a/b/m/🐍️.py", "entries": ["pkg/🧪️tests/a/🐍️.py", "pkg/🧪️tests/a/b/🐍️.py"], "expected": "pkg/🧪️tests/a/b/🐍️.py"},
+    {"id": "module-without-oracle", "file": "pkg/🧪️tests/a/m/🐍️.py", "entries": [], "refusal": "oracle.orphan"}
   ]
 }

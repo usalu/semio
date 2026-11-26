@@ -327,14 +327,14 @@ export function clipTriangle(t: readonly Vec[], axis: number, plane: number, kee
 }
 
 /** ✏️ The 2D shapes of one viewpoint as the slender solids follow them: the bone, whether the shape is closed and filled, its rings and the pen width in metres at the scale (the shape's own `penMm`, else the pen of its role). */
-export type Drawn = readonly { readonly bone: string; readonly material?: string; readonly closed: boolean; readonly filled: boolean; readonly rings: readonly Ring[]; readonly penM: number }[];
+export type Drawn = readonly { readonly bone: string; readonly material?: string; readonly body?: boolean; readonly closed: boolean; readonly filled: boolean; readonly rings: readonly Ring[]; readonly penM: number }[];
 
 const DRAWN = new WeakMap<object, Drawn>();
 
 /** ✏️ {@link Drawn} of the evaluated shapes of one viewpoint at 1:`scale`, memoised per array. */
-export function drawnOf(evaluated: readonly { readonly shape: { readonly bone?: string; readonly material?: string; readonly role: string; readonly penMm?: number; readonly filled?: boolean }; readonly rings: readonly Ring[]; readonly closed: boolean }[], scale: number, pens: Readonly<Record<string, number | null>>): Drawn {
+export function drawnOf(evaluated: readonly { readonly shape: { readonly kind?: string; readonly bone?: string; readonly material?: string; readonly role: string; readonly penMm?: number; readonly filled?: boolean }; readonly rings: readonly Ring[]; readonly closed: boolean }[], scale: number, pens: Readonly<Record<string, number | null>>): Drawn {
   let hit = DRAWN.get(evaluated);
-  if (hit === undefined) DRAWN.set(evaluated, (hit = evaluated.map((s) => ({ bone: s.shape.bone ?? "", ...(s.shape.material === undefined ? {} : { material: s.shape.material }), closed: s.closed, filled: s.shape.filled !== false, rings: s.rings, penM: (((s.shape.penMm ?? pens[s.shape.role]) ?? 0) * scale) / 1000 }))));
+  if (hit === undefined) DRAWN.set(evaluated, (hit = evaluated.map((s) => ({ bone: s.shape.bone ?? "", ...(s.shape.material === undefined ? {} : { material: s.shape.material }), ...(s.shape.kind === "loft" ? { body: true } : {}), closed: s.closed, filled: s.shape.filled !== false, rings: s.rings, penM: (((s.shape.penMm ?? pens[s.shape.role]) ?? 0) * scale) / 1000 }))));
   return hit;
 }
 
@@ -390,6 +390,19 @@ export function followedWidth(bone: string | undefined, centre: readonly Point[]
   return width;
 }
 
+/** 🫧️ Whether a `loft` shape of the bone (and material), filled and closed, is the body of a slender solid itself (a drawing that carries the sections of the solid; any other filled shape is compared at the width it is drawn with): nine tenths of the points of its projected centre line lie inside the shape or within half the true width of its outline. A `loft` or `member` drawn from the sections of the solid is such a shape: the reference is then the solid as it is (its projected triangles, tapering included), not a stroke of one width. */
+export function drawsBody(bone: string | undefined, centre: readonly Point[], drawn: Drawn, material: string | undefined, truthM: number): boolean {
+  const inside = (p: Point, ring: readonly Point[]): boolean => {
+    let odd = false;
+    for (let i = 0, k = ring.length - 1; i < ring.length; k = i++) {
+      const [a, b] = [ring[k]!, ring[i]!];
+      if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) odd = !odd;
+    }
+    return odd;
+  };
+  return drawn.some((d) => d.bone === bone && d.body === true && d.closed && d.filled && d.rings.length > 0 && (material === undefined || d.material === undefined || d.material === material) && centre.filter((p) => d.rings.some((ring) => inside(p, ring)) || distanceToPolylines(p, polylines(d)) <= truthM / 2).length >= 0.9 * centre.length);
+}
+
 /** 🧵️ The strokes a slender solid is drawn as (C24 refined): per copy of its `repeat`, its centre line (curved or closed as the solid is, see {@link centreLineOf}; a straight principal axis where the mesh gives none) widened to the width of the 2D shape it follows ({@link followedWidth}), else to its true projected width, and where no drawing is given to the larger of the pen of its role and that true width. One quadrilateral per segment of the centre line, like the strokes of the drawing. */
 export function strokesOf(view: Viewpoint, solid: World, drawn?: Drawn): readonly Ring[] {
   const per = solid.copyVertices ?? solid.positions.length / 3;
@@ -408,6 +421,10 @@ export function strokesOf(view: Viewpoint, solid: World, drawn?: Drawn): readonl
     const step = Math.max(1, Math.ceil(vertices.length / 300));
     const offsets = vertices.filter((_, i) => i % step === 0).map((v) => Math.min(...segments.map(([a, b]) => distanceToPolylines(v, [[a, b]])))).sort((x, y) => x - y);
     const truth = Math.max(1e-4, 2 * (offsets[Math.floor(0.9 * (offsets.length - 1))] ?? 0));
+    if (drawn !== undefined && drawsBody(solid.bone, centre, drawn, solid.material, truth)) {
+      for (let t = 0; t + 2 < local.length; t += 3) out.push([0, 1, 2].map((k) => vertices[local[t + k]!]!));
+      continue;
+    }
     const followed = drawn === undefined ? undefined : followedWidth(solid.bone, centre, drawn, solid.material, truth);
     const width = followed ?? (drawn === undefined ? Math.max(solid.penM ?? 0, truth) : truth);
     for (const [a, b] of segments) out.push(strokeQuad(a, b, width));
@@ -672,6 +689,51 @@ export class Mask {
     }
   }
 
+  /** 🧽️ The hairline closing of {@link seal} for filled rings (the drawn shapes): a cell that no ring covers, that is covered on both sides along a row, a column or a diagonal, and whose disc of an eighth of a cell lies entirely within an eighth of a cell of the filled rings, is covered. One ring is filled by the non-zero winding rule, several by the even-odd rule, as {@link fill} fills them. A gap wider than a quarter of a cell, a hole and the outer boundary are never changed. */
+  sealRings(groups: readonly Group[]): void {
+    const { width, height, cells, box, cell } = this;
+    const reach = cell / 8;
+    const candidates: number[] = [];
+    for (let j = 1; j < height - 1; j++)
+      for (let i = 1; i < width - 1; i++) {
+        const k = j * width + i;
+        if (cells[k]) continue;
+        if ((cells[k - 1] && cells[k + 1]) || (cells[k - width] && cells[k + width]) || (cells[k - width - 1] && cells[k + width + 1]) || (cells[k - width + 1] && cells[k + width - 1])) candidates.push(k);
+      }
+    if (candidates.length === 0) return;
+    const boxes = groups.map((g) => boundsOf(g));
+    const inside = (g: Group, p: Point): boolean => {
+      let [winding, crossings] = [0, 0];
+      for (const ring of g)
+        for (let i = 0, k = ring.length - 1; i < ring.length; k = i++) {
+          const [a, b] = [ring[k]!, ring[i]!];
+          if (a.y <= p.y === b.y <= p.y) continue;
+          if (a.x + ((p.y - a.y) / (b.y - a.y)) * (b.x - a.x) <= p.x) continue;
+          crossings++;
+          winding += b.y > a.y ? 1 : -1;
+        }
+      return g.length === 1 ? winding !== 0 : crossings % 2 === 1;
+    };
+    const toEdge = (g: Group, p: Point): number => {
+      let best = Infinity;
+      for (const ring of g)
+        for (let i = 0, k = ring.length - 1; i < ring.length; k = i++) {
+          const [a, b] = [ring[k]!, ring[i]!];
+          const [dx, dy] = [b.x - a.x, b.y - a.y];
+          const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy || 1)));
+          best = Math.min(best, Math.hypot(p.x - a.x - t * dx, p.y - a.y - t * dy));
+        }
+      return best;
+    };
+    const probes = [[0, 0], ...[0.5, 1].flatMap((r) => [[r, 0], [-r, 0], [0, r], [0, -r], [0.7071 * r, 0.7071 * r], [-0.7071 * r, 0.7071 * r], [0.7071 * r, -0.7071 * r], [-0.7071 * r, -0.7071 * r]])] as const;
+    for (const k of candidates) {
+      const c: Point = { x: box.minX + ((k % width) + 0.5) * cell, y: box.minY + (Math.floor(k / width) + 0.5) * cell };
+      const near = groups.filter((_, n) => c.x >= boxes[n]![0] - 2 * reach && c.x <= boxes[n]![1] + 2 * reach && c.y >= boxes[n]![2] - 2 * reach && c.y <= boxes[n]![3] + 2 * reach);
+      if (near.length === 0) continue;
+      if (probes.every(([dx, dy]) => near.some((g) => inside(g, { x: c.x + dx * reach, y: c.y + dy * reach }) || toEdge(g, { x: c.x + dx * reach, y: c.y + dy * reach }) <= reach))) cells[k] = 1;
+    }
+  }
+
   /** 🖌️ Fills the rings: one ring by the non-zero winding rule (a self-crossing polygon is filled where it winds around), several rings by the even-odd rule (a polygon with holes); `seal` marks a triangle for {@link seal}. */
   fill(rings: Group, seal = false): void {
     const { box, cell, width, height, cells } = this;
@@ -870,13 +932,25 @@ export function fillSmallHoles(mask: Uint8Array, width: number, height: number, 
   return out;
 }
 
-/** 📈️ The spread of the boundary distances of `a` and `b` over the cells of `core` (enclosed holes of at most `holeCells` cells are filled first: they are not outline); cells within three cells of `soft` count as soft; distances are limited to `bins - 1` cells. */
+/** 🤝️ Both masks with their small enclosed holes filled by ONE decision per cell: a cell of an enclosed hole of at most `maxCells` cells of one mask is filled when the other mask is covered there or has such a hole there too (a seam between overlapping shapes, a gap between slats, a void both agree on); where the other mask is open (the outside, or a void too large to be a pocket) the cell stays empty in both, so the rim of that pocket is outline in both masks and is compared like every other outline. A pocket that one mask encloses and the other leaves open by a slit, and a hole one cell above the limit in one mask and at it in the other, are therefore never filled in one mask alone. */
+export function agreedPockets(a: Uint8Array, b: Uint8Array, width: number, height: number, maxCells: number): readonly [Uint8Array, Uint8Array] {
+  const [fa, fb] = [fillSmallHoles(a, width, height, maxCells), fillSmallHoles(b, width, height, maxCells)];
+  const [oa, ob] = [Uint8Array.from(a), Uint8Array.from(b)];
+  for (let k = 0; k < a.length; k++) {
+    if (fa[k] && !a[k] && fb[k]) oa[k] = 1;
+    if (fb[k] && !b[k] && fa[k]) ob[k] = 1;
+  }
+  return [oa, ob];
+}
+
+/** 📈️ The spread of the boundary distances of `a` and `b` over the cells of `core` (enclosed holes of at most `holeCells` cells that both masks agree on are filled first, {@link agreedPockets}: they are not outline); cells within three cells of `soft` count as soft; distances are limited to `bins - 1` cells. */
 export function boundarySpread(a: Uint8Array, b: Uint8Array, soft: Uint8Array | undefined, width: number, height: number, cell: number, core: { readonly i0: number; readonly i1: number; readonly j0: number; readonly j1: number }, bins: number, holeCells = 64): Spread {
   const hard = new Array<number>(bins).fill(0);
   const softer = new Array<number>(bins).fill(0);
   let worst = 0;
   const holes = Math.max(1, Math.round(holeCells));
-  const [ba, bb] = [boundaryOf(fillSmallHoles(a, width, height, holes), width, height), boundaryOf(fillSmallHoles(b, width, height, holes), width, height)];
+  const [fa, fb] = agreedPockets(a, b, width, height, holes);
+  const [ba, bb] = [boundaryOf(fa, width, height), boundaryOf(fb, width, height)];
   const anyB = bb.some((x) => x === 1);
   const anyA = ba.some((x) => x === 1);
   const reach = Math.min(SEARCH_CELLS, bins - 1);
@@ -1181,6 +1255,7 @@ export function measureView(asset: Asset, state: Evaluated, solids: readonly Wor
   const ink = new Mask(box, cell);
   const area = new Mask(box, cell);
   for (const g of filled) area.fill(g);
+  area.sealRings(filled);
   for (const g of outlines) ink.fill(g);
   let both = 0;
   let either = 0;

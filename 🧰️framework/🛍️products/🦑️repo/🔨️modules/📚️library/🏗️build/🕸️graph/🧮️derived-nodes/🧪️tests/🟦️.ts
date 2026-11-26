@@ -15,7 +15,7 @@ import fixture from"./🔣️.json";
 type Step={name:string;edit:Record<string,string|null>;touch?:string[];expect?:{recomputedByKind?:Record<string,number>;changedByKind?:Record<string,number>}};
 type Scenario={id:string;files:Record<string,string>;projects:Record<string,{manifests:string[]}>;actions?:Record<string,{env?:Record<string,string>}>;closures?:Record<string,{members:string[]}>;requests:string[];steps:Step[]};
 const python=testPythonV1(),oracle=join(dirname(fileURLToPath(import.meta.url)),"🐍️oracle/🐍️.py");
-const scenarios=(()=>{if(!new Ajv2020({strict:false}).validate({$ref:"#/definitions/Fixture",definitions:schema.definitions},fixture))throw Error("Closed derived-nodes fixture required");return(fixture as {scenarios:Scenario[]}).scenarios;})();
+const scenarios=(()=>{const loaded:unknown=fixture;if(!new Ajv2020({strict:false}).validate<{scenarios:Scenario[]}>({$ref:"#/definitions/Fixture",definitions:schema.definitions},loaded))throw Error("Closed derived-nodes fixture required");return loaded.scenarios;})();
 const model=(scenario:Scenario)=>{const run=Bun.spawnSync([python!,"-I",oracle,"run"],{stdin:Buffer.from(JSON.stringify(scenario))});expect(run.stderr.toString()).toBe("");expect(run.exitCode).toBe(0);return JSON.parse(run.stdout.toString()).steps as {name:string;values:Record<string,unknown>;recomputed:string[];changed:string[];created:string[]}[];};
 const labelOf=(id:string)=>id.split("\0").slice(0,2).join("|");
 const kindOf=(label:string)=>label.slice(0,label.indexOf("|"));

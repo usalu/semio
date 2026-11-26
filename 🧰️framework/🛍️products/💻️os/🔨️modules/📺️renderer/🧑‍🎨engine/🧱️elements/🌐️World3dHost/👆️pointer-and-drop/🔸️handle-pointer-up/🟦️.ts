@@ -3,16 +3,16 @@ import * as React from "../../../⚛️react-port/🟦️.ts";
 import { useCallback, useEffect, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { getActiveCatalogueDragPayload } from "@semio-tech/ui-react";
 import { celebrateWorldInstances } from "../../🎨️mesh-render/🎊️instance-celebration/🟦️.ts";
-import { clientPointOverHost, hoveredInteractionTargetV1, world3dLeftReleaseIsDrag, world3dMissedClickBelongsToPickRelease, worldInstancePickBlocked } from "../../🔗️instance-selection/🟦️.ts";
+import { clientPointOverHost, hoveredInteractionTargetV1, world3dClickRepeatsPaddedPick, world3dLeftReleaseIsDrag, world3dMissedClickBelongsToPickRelease, worldInstancePickBlocked } from "../../🔗️instance-selection/🟦️.ts";
 import { paneSuffixFromSurfaceId, resolveClickInstanceId, resolveWorldMergeMode } from "../../🎯️marquee-and-bridges/🟦️.tsx";
 import { clearWorldCatalogueDropPreview, parsePuzzle3dCatalogueDragPayload, resolveCatalogueDropOrigin, setWorldCatalogueDropPreview, worldCatalogueDropHostContainsPoint } from "../../🗂️catalogue-drop/🟦️.tsx";
 import { axisDragParam } from "../../🪟️window-view-store/🟦️.tsx";
 import { world3dSelectionActionArgs, world3dSelectionTargetsActionArgs } from "../../🖱️interaction-domain-args/🟦️.ts";
 import type { useActiveUtilityState } from "../🔶️active-utility/🟦️.ts";
 
-/** 🔹 Builds handlePointerUp, handleEmptyClick, clearCatalogueDrop, readCatalogueDragEncoded of useWorldPointerAndDrop. */
+/** 🔹 Builds handlePointerUp, handleEmptyClick, handleInstanceClick, clearCatalogueDrop, readCatalogueDragEncoded of useWorldPointerAndDrop. */
 export function useHandlePointerUpState({ gestureRecognizer, setMarqueePath, marqueeStartRef, endHandleDrag, endRelocateDrag, faceDragSession, setFaceDragSession, hostRef, cameraRef, dispatch, node, finalizeMarqueeSelection, marqueeDragActiveRef, paintMode, selection, activeUtility, toLocalPoint, instancesRef, meshesRef, handleInstancePointerDown, setVortexPointerArm, connectDropConsumedRef, handleConnectDragCancel, interactionDomainId, interactionGranularity, persistentSelectionMode, selectionMode, marqueeDown, wasMarqueeDragRef, contextMenu, dismissContextMenu, interaction, handleSuggestionClose, hoveredInstanceInteractionTargetRef, catalogueDragEncodedRef, catalogueDragDepthRef, gridSnapEnabled, gridFactor, pendingCelebrateCatalogueDropIdsRef, instances }: Pick<ReturnType<typeof useActiveUtilityState>, "gestureRecognizer" | "setMarqueePath" | "marqueeStartRef" | "endHandleDrag" | "endRelocateDrag" | "faceDragSession" | "setFaceDragSession" | "hostRef" | "cameraRef" | "dispatch" | "node" | "finalizeMarqueeSelection" | "marqueeDragActiveRef" | "paintMode" | "selection" | "activeUtility" | "toLocalPoint" | "instancesRef" | "meshesRef" | "handleInstancePointerDown" | "setVortexPointerArm" | "connectDropConsumedRef" | "handleConnectDragCancel" | "interactionDomainId" | "interactionGranularity" | "persistentSelectionMode" | "selectionMode" | "marqueeDown" | "wasMarqueeDragRef" | "contextMenu" | "dismissContextMenu" | "interaction" | "handleSuggestionClose" | "hoveredInstanceInteractionTargetRef" | "catalogueDragEncodedRef" | "catalogueDragDepthRef" | "gridSnapEnabled" | "gridFactor" | "pendingCelebrateCatalogueDropIdsRef" | "instances">) {
-  const paddedPickReleaseRef = useRef<number | null>(null);
+  const paddedPickRef = useRef<{ readonly id: string; readonly timeStamp: number } | null>(null);
   const wholePickEnabled = !selection.targets?.exclusive || selection.targets.mesh === true;
   const handlePointerUp = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
@@ -60,7 +60,7 @@ export function useHandlePointerUpState({ gestureRecognizer, setMarqueePath, mar
           const local = toLocalPoint(event);
           const id = resolveClickInstanceId(instancesRef.current, meshesRef.current, local, rect, camera);
           if (id) {
-            paddedPickReleaseRef.current = event.timeStamp;
+            paddedPickRef.current = { id, timeStamp: event.timeStamp };
             const index = instancesRef.current.findIndex((entry) => entry.id === id);
             handleInstancePointerDown(id, index < 0 ? 0 : index, event);
           }
@@ -92,14 +92,22 @@ export function useHandlePointerUpState({ gestureRecognizer, setMarqueePath, mar
     };
   }, [finalizeMarqueeSelection, marqueeDown, paintMode, selection.engagementSessionActive]);
 
+  const handleInstanceClick = useCallback(
+    (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean; nativeEvent?: { readonly timeStamp: number } }) => {
+      if (event.nativeEvent && world3dClickRepeatsPaddedPick(paddedPickRef.current, id, event.nativeEvent.timeStamp)) return;
+      handleInstancePointerDown(id, index, event);
+    },
+    [handleInstancePointerDown],
+  );
+
   const handleEmptyClick = useCallback(
     (event: globalThis.MouseEvent) => {
       if (wasMarqueeDragRef.current) {
         wasMarqueeDragRef.current = false;
         return;
       }
-      const pickRelease = paddedPickReleaseRef.current;
-      paddedPickReleaseRef.current = null;
+      const pickRelease = paddedPickRef.current?.timeStamp ?? null;
+      paddedPickRef.current = null;
       if (world3dMissedClickBelongsToPickRelease(pickRelease, event.timeStamp)) return;
       if (selection.engagementSessionActive || paintMode) return;
       if (contextMenu) dismissContextMenu();
@@ -174,5 +182,5 @@ export function useHandlePointerUpState({ gestureRecognizer, setMarqueePath, mar
     pendingCelebrateCatalogueDropIdsRef.current = null;
     celebrateWorldInstances(added);
   }, [instances]);
-  return { updateCatalogueDropPreviewAt, commitCatalogueDropAt, clearCatalogueDrop, handleEmptyClick, handlePointerUp };
+  return { updateCatalogueDropPreviewAt, commitCatalogueDropAt, clearCatalogueDrop, handleEmptyClick, handleInstanceClick, handlePointerUp };
 }

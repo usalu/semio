@@ -159,6 +159,8 @@ impl SubspaceRestoreCursor {
                 converged_count: value(9) as usize,
                 converged: value(10) != 0,
                 checkpoint_due: false,
+                publication_floor: SUBSPACE_PUBLICATION_MINIMUM_ITERATIONS,
+                pace: PublicationPace::default(),
                 preview_due: value(12) != 0,
                 admission_fault: value(13) != 0,
                 factor_validation_cursor: value(14) as usize,
@@ -266,7 +268,7 @@ impl SubspaceRestoreCursor {
         if self.payload.is_none() {
             if !numerical_restore_admit(context, RetirementDemand { copy_bytes: size_of::<SubspaceCheckpoint>() + size_of::<SubspaceIterationJob>(), depth: 1, ..Default::default() })? { return Ok(None); }
             let state = self.state.take().ok_or(NumericalCheckpointFault::Truncated)?;
-            return Ok(Some(SubspaceIterationJob { operation: self.operation, state, preview_writer: None, preview_page_cursor: 0, terminal_writer: None, terminal_page_cursor: 0, checkpoint_writer: None, checkpoint_cursor: NumericalPageCursor::new(), terminal_published: false, desk: NumericalOutcomeDesk::default() }));
+            return Ok(Some(SubspaceIterationJob { operation: self.operation, state, preview_writer: None, preview_page_cursor: 0, terminal_writer: None, terminal_page_cursor: 0, checkpoint_writer: None, checkpoint_cursor: NumericalPageCursor::new(), terminal_published: false, branch: 0, desk: NumericalOutcomeDesk::default() }));
         }
         if self.close_due {
             let payload = self.payload.as_mut().ok_or(NumericalCheckpointFault::Truncated)?;

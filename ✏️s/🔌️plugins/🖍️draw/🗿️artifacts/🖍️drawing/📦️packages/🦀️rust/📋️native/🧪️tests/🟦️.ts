@@ -36,6 +36,7 @@ test("Drawing native catalog covers every workspace test and check owner", () =>
       if (row.effect === "omit") value.packages.pop();
       if (row.effect === "duplicate") value.packages.push({ ...value.packages[0]! });
       if (row.effect === "unknown") value.packages[0]!.name = "semio-s-artifact-draw-drawing-unknown";
+      if (row.effect === "foreign-package") value.packages[0]!.name = "semio-draw-foreign-package";
       if (row.effect === "wrong-manifest") value.packages[0]!.manifest = "unknown/Cargo.toml";
       if (row.effect === "omit-check") value.packages[0]!.check = false;
       if (row.effect === "omit-test") value.packages[0]!.test = false;

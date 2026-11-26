@@ -88,7 +88,7 @@ test("the platform names the linker world only for kinds that link and the CPU o
  const rlib=platform(library),exe=platform(program),native=platform(library,["-C","target-cpu=native"]);
  expect(rlib.linker).toBe("");expect(exe.linker).toBe(process.platform==="darwin"?"darwin-"+require("node:os").release().split(".")[0]:"");
  expect(rlib.cpu).toBe("");expect(native.cpu).not.toBe("");
- expect(rlib.os).toBe(process.platform);expect(rlib.arch).toBe(process.arch);expect(rlib.rustc).toBe("c".repeat(64));
+ expect<unknown>(rlib.os).toBe(process.platform);expect(rlib.arch).toBe(process.arch);expect(rlib.rustc).toBe("c".repeat(64));
  const ajv=new Ajv({strict:false});ajv.addSchema(schema);expect(ajv.getSchema(`${schema.$id}#/definitions/Platform`)!(exe)).toBe(true);
  expect(FLEET_POLICY_V1.tokens.cwd).toBe("@@semio-cwd@@");
 });

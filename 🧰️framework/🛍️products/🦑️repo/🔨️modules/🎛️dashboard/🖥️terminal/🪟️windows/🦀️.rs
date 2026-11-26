@@ -40,13 +40,14 @@ pub enum Body {
     Diagnostics,
     KeymapEditor(Box<dashboard_keymap_editor::Editor>),
     Help,
+    Fleet(super::fleet::FleetView),
     Launcher(Box<LauncherState>),
     Output { session: Option<Box<SessionInfo>>, sent: Size },
 }
 
 /// 🧱️ Which body to build.
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Kind { Files, Document, Overview, Settings, Diagnostics, KeymapEditor, Help, Launcher, Output }
+pub enum Kind { Files, Document, Overview, Settings, Diagnostics, KeymapEditor, Help, Fleet, Launcher, Output }
 
 /// 📍️ Where a new window goes among the others.
 #[derive(Clone, Copy)]
@@ -132,6 +133,7 @@ pub struct Dashboard {
     pub menu: Option<ContextMenu>,
     pub glyphs: GlyphSet,
     pub waker: Option<semio_ui_tui_terminal::backend::Waker>,
+    pub fleet: super::fleet::FleetState,
 }
 
 pub fn node_constraint() -> Constraint { Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), direction: Direction::Column, ..Default::default() } }
@@ -149,7 +151,7 @@ impl Dashboard {
         let light = preferences.appearance == "light";
         let mut dashboard = Self {
             root, source: Default::default(), source_effects: Vec::new(), registry: None, inventory: None, phase: None, last_progress: 0, preferences, preference_path, shared_preferences, saving_preferences: None, opening_url: None, keymap, locale, light, layout, shell, windows: Vec::new(), next_serial: 2, armed: false, armed_at: None, input_mode: false, restore_focus: false,
-            link: Link::default(), state: LinkState::Connecting, notice: None, diagnostics: Default::default(), sessions: BTreeMap::new(), hidden: HashSet::new(), shutdown_since: None, effects: Vec::new(), quit_requested: false, last_focus: std::cell::Cell::new(0), menu: None, glyphs: GlyphSet::Unicode, waker: None,
+            link: Link::default(), state: LinkState::Connecting, notice: None, diagnostics: Default::default(), sessions: BTreeMap::new(), hidden: HashSet::new(), shutdown_since: None, effects: Vec::new(), quit_requested: false, last_focus: std::cell::Cell::new(0), menu: None, glyphs: GlyphSet::Unicode, waker: None, fleet: Default::default(),
         };
         let (id, chrome) = dashboard.shell.windows[0].clone();
         let window = dashboard.build_window(tui, id, chrome, Kind::Overview, None);
@@ -239,7 +241,7 @@ impl Dashboard {
                 tree_node = Some(tree);
                 (list, Some(input), Some(caption), Body::Launcher(Box::new(launcher)))
             }
-            Kind::Overview | Kind::Settings | Kind::Diagnostics | Kind::KeymapEditor | Kind::Help => (add_widget(tui, root, list_state(), Dimension::Weight(1)), None, None, match kind { Kind::Overview => Body::Overview, Kind::Settings => Body::Settings, Kind::Diagnostics => Body::Diagnostics, Kind::KeymapEditor => Body::KeymapEditor(Box::new(dashboard_keymap_editor::Editor::new(&self.preferences))), _ => Body::Help }),
+            Kind::Overview | Kind::Settings | Kind::Diagnostics | Kind::KeymapEditor | Kind::Help | Kind::Fleet => (add_widget(tui, root, list_state(), Dimension::Weight(1)), None, None, match kind { Kind::Overview => Body::Overview, Kind::Fleet => Body::Fleet(Default::default()), Kind::Settings => Body::Settings, Kind::Diagnostics => Body::Diagnostics, Kind::KeymapEditor => Body::KeymapEditor(Box::new(dashboard_keymap_editor::Editor::new(&self.preferences))), _ => Body::Help }),
         };
         DashboardWindow { id, chrome, root, list, input, editor_slot: None, caption, tree: tree_node, body, pane: Pane::default() }
     }
@@ -373,6 +375,7 @@ impl Dashboard {
             Body::Overview => text.title_tasks.as_str().into(),
             Body::Settings => text.title_settings.as_str().into(),
             Body::Help => text.title_keyboard.as_str().into(),
+            Body::Fleet(_) => text.title_fleet.as_str().into(),
             Body::Diagnostics => text.diagnostics_title.as_str().into(),
             Body::KeymapEditor(_) => text.keymap_title.as_str().into(),
             Body::Launcher(_) => text.title_commands.as_str().into(),

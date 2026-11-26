@@ -41,7 +41,7 @@
     },
     "work": {
       "const": {
-        "admit": 1,
+        "admit": 2,
         "lease": 1,
         "denied": 0,
         "null": 1,

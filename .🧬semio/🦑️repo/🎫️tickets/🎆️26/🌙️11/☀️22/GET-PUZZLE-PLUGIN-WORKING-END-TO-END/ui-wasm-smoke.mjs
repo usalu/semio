@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import Ajv from 'ajv';
 
 const packageRoot = resolve(process.argv[2]);
 const puzzle = '✏️s/🔌️plugins/🧩️puzzle';
@@ -21,17 +22,32 @@ const wasm = await import(pathToFileURL(join(packageRoot, 'semio_puzzle.js')).hr
 await wasm.default({ module_or_path: readFileSync(join(packageRoot, 'semio_puzzle_bg.wasm')) });
 console.log('[DEBUG] Initialized staged browser WASM');
 
-const boardSnapshot = JSON.parse(wasm.puzzle2dParseDslJson(exampleDsl('◻️2d', 'nakagin-capsule-tower')));
+const boardSnapshotJson = wasm.puzzle2dParseDslJson(exampleDsl('◻️2d', 'nakagin-capsule-tower'));
+const boardSnapshot = JSON.parse(boardSnapshotJson);
 assert.equal(boardSnapshot.nodes.length, 180);
 assert.equal(boardSnapshot.edges.length, 179);
+assert(boardSnapshot.nodes.some(node => 'anchor' in node));
+assert(boardSnapshot.edges.some(edge => 'gap' in edge));
+console.log('[DEBUG] Parsed the shipped Nakagin document with its domain fields');
+if (process.argv[3] === '--emit-board-document') {
+  writeFileSync(resolve(process.argv[4]), boardSnapshotJson);
+  process.exit(0);
+}
+const projected = readFileSync(resolve(process.argv[3]), 'utf8');
+const boardSchema = JSON.parse(readFileSync('🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/📸️snapshot/🔣️.json', 'utf8'));
+const validate = new Ajv().compile(boardSchema);
+const painted = JSON.parse(projected);
+assert(validate(painted), JSON.stringify(validate.errors));
+assert.deepEqual(painted.nodes.map(node => [node.id, node.x, node.y, node.handles]), boardSnapshot.nodes.map(node => [node.id, node.x, node.y, node.handles]));
+assert.deepEqual(painted.edges.map(edge => [edge.id, edge.source, edge.target]), boardSnapshot.edges.map(edge => [edge.id, edge.source, edge.target]));
+assert.deepEqual(painted.targetRegions, boardSnapshot.targetRegions);
+assert.deepEqual(painted.meta, boardSnapshot.meta);
+console.log('[DEBUG] Ajv validated the production board snapshot against the strict schema');
 const board = new wasm.BoardSession();
 try {
-  const nodeFields = new Set(['id', 'x', 'y', 'shape', 'radius', 'width', 'height', 'scale', 'text', 'label', 'iconKind', 'nodeKind', 'draggable', 'selected', 'style', 'userData', 'root', 'hidden', 'visible', 'locked', 'handles']);
-  const edgeFields = new Set(['id', 'source', 'target', 'edgeKind', 'sourceTip', 'targetTip', 'label', 'text', 'selected', 'style', 'userData', 'hidden', 'visible', 'locked']);
-  const pick = (row, fields) => Object.fromEntries(Object.entries(row).filter(([key]) => fields.has(key)));
-  const engineSnapshot = { ...boardSnapshot, nodes: boardSnapshot.nodes.map(row => pick(row, nodeFields)), edges: boardSnapshot.edges.map(row => pick(row, edgeFields)) };
-  assert(board.loadBoardSnapshotJson(JSON.stringify(engineSnapshot)));
-  console.log('[DEBUG] Loaded the projected Nakagin snapshot into the board session (180 nodes and 179 edges)');
+  assert.equal(board.loadBoardSnapshotJson(boardSnapshotJson), false);
+  assert(board.loadBoardSnapshotJson(projected));
+  console.log('[DEBUG] Loaded the unmodified production Nakagin board projection into the board session (180 nodes and 179 edges)');
   const source = { id: 'alpha', nodeKind: 'seed', x: 0, y: 0, shape: 'circle', radius: 44, handles: [] };
   assert(board.loadBoardSnapshotJson(JSON.stringify({ schema: 'board.ports.directed.v1', camera: { x: 0, y: 0, zoom: 1 }, nodes: [source], edges: [] })));
   board.setSize(800, 600, 1);

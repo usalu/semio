@@ -1,8 +1,9 @@
 {
   "title": "Fleet Monitoring With Multi-Resolution Metrics In The Dashboard",
   "emoji": "📈",
-  "status": "open",
+  "status": "closed",
   "description": "Complete monitoring of the fleet across all workers: CPU, memory, disk, compilation tasks, graph reads, cache hits (local and remote), remote execution, readiness. Multi-resolution sampling: dense recent samples, progressively squashed older windows (tiered downsampling). Minimal overhead, cross-platform (macOS, Linux, Windows), zero-touch on every worker, aggregated across the fleet via the shared store, visualized in the repo dashboard TUI. Fully end to end. Related fleet ticket: 26/11/13 FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION.",
+  "summary": "Fleet monitoring end to end: schema-first 69-metric en/de catalogue (origin/fleet scope, per-platform support), multi-resolution RRD-style rings (1 s → 1 h tiers, exact folds, clipped partial buckets, TS writer/reader + Rust reader + golden vectors + Python oracle), collector inside the readiness service (0.11–0.25 % core, ~2.8 KB/s publication) live on 15/16 origins across macOS/Linux/Windows, persisted cumulative cache/scheduler counters and local hit counters, store hygiene, TUI chart widgets and a Fleet window in repo dashboard (overview, totals, zoom 5 min–90 d, drill-down, n/a cells, live-store headless render). Details in summary.md and result-M1..M8.md.",
   "goal": "🎯runningrepo",
   "sessions": [
     "49855521-5ce8-4de1-b163-2916b8f96717"
@@ -18,6 +19,77 @@
       "prompt": "Complete monitoring of the fleet across all workers: CPU, memory, disk, compilation tasks, graph reads, cache hits (local and remote), remote execution, readiness. Multi-resolution sampling: dense recent samples, progressively squashed older windows (tiered downsampling). Minimal overhead, cross-platform (macOS, Linux, Windows), zero-touch on every worker, aggregated across the fleet via the shared store, visualized in the repo dashboard TUI. Fully end to end. Related fleet ticket: 26/11/13 FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION.",
       "llm": "opus-5-5",
       "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-26 06:01:59",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "7cfd33e7b906542567f74dfe36b9ef484b90dca5",
+      "summary": "Fleet monitoring end to end: schema-first 69-metric en/de catalogue (origin/fleet scope, per-platform support), multi-resolution RRD-style rings (1 s → 1 h tiers, exact folds, clipped partial buckets, TS writer/reader + Rust reader + golden vectors + Python oracle), collector inside the readiness service (0.11–0.25 % core, ~2.8 KB/s publication) live on 15/16 origins across macOS/Linux/Windows, persisted cumulative cache/scheduler counters and local hit counters, store hygiene, TUI chart widgets and a Fleet window in repo dashboard (overview, totals, zoom 5 min–90 d, drill-down, n/a cells, live-store headless render). Details in summary.md and result-M1..M8.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️⚙️preferences🗃️⌨️keymap⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🌀️daemon💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🖥️terminal💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🧬️schema🗃️🌀️daemon⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🌀️daemon🗃️📦️packages🛅🦀️rust⚙️cargo"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🖥️terminal🗃️📡️sessions💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🖥️terminal🗃️🧪️tests🗃️🏛️laws🗃️📦️packages🛅🦀️rust⚙️cargo"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🖥️terminal🗃️📦️packages🛅🦀️rust⚙️cargo"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🖥️terminal🗃️🧪️tests🗃️🔬️unit💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🌀️daemon🗃️🧪️tests🗃️🔬️unit💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🌀️daemon🗃️🧪️tests🗃️🧊️integration💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🌀️daemon🗃️🧵️wire🗃️📦️packages🛅🦀️rust⚙️cargo"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🧪️tests🗃️🧫️fixtures🗃️🌀️controlplane⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🌀️daemon🗃️👥️clients💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🖥️terminal🗃️🪟️windows💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🖥️terminal🗃️⌨️controls💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🖥️terminal🗃️🌐️labels💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🌀️daemon🗃️🧠️supervisor💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🌀️daemon🗃️✉️ipc💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🎛️dashboard🗃️🖥️terminal🗃️📋️panes💻🦀️"
+        }
+      ]
     }
   ]
 }

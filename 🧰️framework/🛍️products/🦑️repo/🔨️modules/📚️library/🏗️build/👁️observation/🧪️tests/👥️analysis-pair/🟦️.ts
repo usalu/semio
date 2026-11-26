@@ -35,9 +35,9 @@ test("two exact source analyses share one physical read, preserving each provide
  const world={...fs,statSync:((path:fs.PathLike)=>{if(path===file)stats++;return fs.statSync(path);}) as typeof fs.statSync,readFileSync:((path:fs.PathOrFileDescriptor)=>{if(path===file)reads++;return fs.readFileSync(path);}) as typeof fs.readFileSync};
  const current=await withObservedWorldV1(world,()=>captureObservedSourceInputsV1(()=>pair(first,second,file),undefined,false));
  expect({stats,reads}).toEqual({stats:1,reads:1});
- expect(current.value).toEqual(fixture.expectedResults);
+ expect<unknown>(current.value).toEqual(fixture.expectedResults);
  expect(current.value).toEqual(modeled.values);
- expect(current).toEqual(original);
+ expect<unknown>(current).toEqual(original);
  const analyses=current.observations.filter(row=>row.kind==="analysis");
  expect(analyses.map(row=>row.fact.provider)).toEqual([first.id,second.id]);
  expect(analyses.map(row=>row.fact.resultSha256)).toEqual(modeled.resultSha256);
@@ -77,9 +77,9 @@ test("a missing file or failing provider keeps the same failure and its original
  expect(facts.some(row=>row.kind==="file"&&row.path===nested)).toBe(true);
 }));
 
-test("actual owner compile discovery uses one physical Source image to record the exact file and both parser facts",()=>withFiles(async file=>{
+test("actual owner compile discovery uses one physical Source image to record both parser facts with its digest",()=>withFiles(async file=>{
  const workspaceRoot=dirname(file),owner={name:"fixture",root:".",manifest:"📋️project.json",packages:[]},input=relative(workspaceRoot,file);
- const module=registerSourceAnalysisV1({id:"test:source-analysis-pair:owner-module",revision,analyze:()=>({imports:[],runtimeImports:[]})});
+ const module=registerSourceAnalysisV1({id:"test:source-analysis-pair:owner-module",revision,analyze:(_path,bytes)=>({imports:[],runtimeImports:[],length:bytes.length})});
  const references=registerSourceAnalysisV1({id:"test:source-analysis-pair:owner-references",revision,analyze:()=>({runtime:{imports:[],requires:[]}})});
  const {requirePhysicalSourceV1}=await loadProductFunctionsV1(new URL("../../../🕸️graph/📥️inference/📍️coordinates/🟨️.mjs",import.meta.url),["requirePhysicalSourceV1"],{dirname,lstatSync:observedFs.lstatSync});
  const {discoverBuildOwnerAdmissionFactsV1:execute}=await loadProductFunctionsV1(new URL("../../../🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",import.meta.url),["discoverBuildOwnerAdmissionFactsV1"],{
@@ -93,9 +93,10 @@ test("actual owner compile discovery uses one physical Source image to record th
  expect({stats,reads}).toEqual({stats:1,reads:1});
  expect(current.value.observedFiles).toEqual([input]);
  expect(current.observations.filter(row=>row.kind==="analysis").map(row=>row.fact.provider)).toEqual([module.id,references.id]);
- const exact=current.observations.find(row=>row.kind==="file"&&row.path===file);
+ const digest=createHash("sha256").update(fixture.original).digest("hex");
  expect(current.observations).toContainEqual({kind:"lstat",path:file,fact:"file"});
- expect(exact).toMatchObject({fact:{sha256:createHash("sha256").update(fixture.original).digest("hex")}});
+ expect(current.observations.some(row=>row.kind==="file"&&row.path===file),"discovery keeps the Source image in its two parser facts, not in a second exact file row").toBe(false);
+ expect(current.observations.filter(row=>row.kind==="analysis").map(row=>row.fact.source.sha256)).toEqual([digest,digest]);
  expect(await observationsHold(current.observations)).toBe(true);
  fs.writeFileSync(file,fixture.replacement);
  expect(await observationsHold(current.observations)).toBe(false);

@@ -86,14 +86,48 @@ test("parent room accounts for driver overhead and other live compilers",async()
  let second:ReturnType<typeof connect>|undefined;
  try{
   expect(await first.next()).toMatchObject({op:"verdict",admitted:false});
+  expect(broker.runningSchedulerPids()).toEqual([]);
   clock+=ADMISSION_POLICY_V1.nonRustcWindowMs+1;
   broker.observe({nonRustcBytes:0,swapOutBytesPerSecond:null});
   expect(await first.next()).toMatchObject({op:"verdict",admitted:true});
-  second=connect(broker.endpoint,unit("second"));
+  second=connect(broker.endpoint,{...unit("second"),pid:2});
   expect(await second.next()).toMatchObject({op:"verdict",admitted:false});
+  expect(broker.runningSchedulerPids()).toEqual([1]);
   first.socket.destroy();
   expect(await second.next()).toMatchObject({op:"verdict",admitted:true});
+  expect(broker.runningSchedulerPids()).toEqual([2]);
  }finally{first.socket.destroy();second?.socket.destroy();await broker.close();}
+});
+
+test("a measured serial Draw-size final needs its full paid parent and physical host room",async()=>{
+ const row=fixture.drawFinal,db=new Database(":memory:");
+ try{
+  expect(db.query("select 23*?1+20*?2>20*?3 as underpaid, 23*?1+20*?2<=20*?4 as paid, 23*?1>20*(?5-2457) as held, 23*?1<=20*(?6-2457) as physical").get(row.peakMiB,row.coordinatorMiB,row.underpaidMiB,row.paidMiB,row.shortAvailableMiB,row.availableMiB)).toEqual({underpaid:1,paid:1,held:1,physical:1});
+ }finally{db.close();}
+ for(const parentMiB of [row.underpaidMiB,row.paidMiB]){
+  let pressure:"guard"|"calm"="guard",availableMiB:number|undefined=row.availableMiB,clock=1_000_000;
+  const request={...unit("draw_final"),crateTypes:["cdylib"],target:"wasm32-wasip2"},key=unitKeyV1(request,pass.profile),observations=history({draw_final:row.peakMiB}).values().next().value!;
+  const broker=await startAdmissionBrokerV1({physicalBytes:16*1024*MiB,totalBytes:16*1024*MiB,history:new Map([[key,observations.map(row=>({...row,key}))]]),parentMemoryAllowanceBytes:parentMiB*MiB,now:()=>clock,available:()=>availableMiB===undefined?undefined:availableMiB*MiB,warden:()=>pressure,cancels:()=>[]});
+  broker.registerPass(pass);
+  const observe=()=>broker.observe({nonRustcBytes:row.coordinatorMiB*MiB,swapOutBytesPerSecond:0});
+  observe();
+  const client=connect(broker.endpoint,request);
+  try{
+   expect(await client.next()).toMatchObject({op:"verdict",admitted:false});
+   pressure="calm";
+   availableMiB=row.shortAvailableMiB;
+   clock+=ADMISSION_POLICY_V1.available.waitMilliseconds+1;
+   observe();
+   expect(broker.stats().running).toBe(0);
+   availableMiB=undefined;
+   observe();
+   expect(broker.stats().running).toBe(0);
+   availableMiB=row.availableMiB;
+   observe();
+   if(parentMiB===row.paidMiB)expect(await client.next()).toMatchObject({op:"verdict",admitted:true});
+   else expect(broker.stats()).toMatchObject({running:0,waiting:1});
+  }finally{client.socket.destroy();await broker.close();}
+ }
 });
 
 test("fleet-only pass accepts cached outputs but refuses local fallback before spawning the compiler",async()=>{

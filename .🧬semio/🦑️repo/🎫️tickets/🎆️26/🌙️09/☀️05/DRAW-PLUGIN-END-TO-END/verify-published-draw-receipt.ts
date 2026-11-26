@@ -3,9 +3,10 @@ import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { resolve } from "node:path";
 import { verifySemanticDescriptorPairBytesV1 } from "@semio-tech/plugin-registry/catalog-verification/descriptor-pair";
+import { descriptorEmitterBindingPolicyV1, descriptorEmitterPinArgumentsV1, readDescriptorEmitterBindingV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛠️emitter/📋️contract/🟦️.ts";
 import { finalizePluginDescriptor } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts";
 
-const [model, browser] = Bun.argv.slice(2);
+const [model, browser, expectedEmitter] = Bun.argv.slice(2);
 if (!model || !browser) throw Error("Expected the Draw model and materialized module directories");
 const committed = resolve("🌎️hub/🧩️compositions/🖍️draw/🧩️component");
 const load = async (root: string, name: string) => Buffer.from(await Bun.file(resolve(root, name)).bytes());
@@ -32,8 +33,18 @@ if (!modelJson.equals(await load(committed, json)) || !modelPack.equals(await lo
 const pair = verifySemanticDescriptorPairBytesV1(modelJson, modelPack);
 if (pair.pluginId !== "draw" || pair.semanticSha256 !== receipt.semanticDescriptorSha256) throw Error("Draw semantic receipt differs");
 
+let emitter;
+if (expectedEmitter) {
+  const pin = descriptorEmitterPinArgumentsV1(expectedEmitter, "prototype", process.platform);
+  const file = Bun.file(resolve(model, descriptorEmitterBindingPolicyV1.name));
+  if (!await file.exists() || file.size > descriptorEmitterBindingPolicyV1.maximumBytes) throw Error("Missing or oversized model emitter binding");
+  const binding = readDescriptorEmitterBindingV1(await file.json(), { mode: receipt.profile, componentSha256: sha, semanticSha256: pair.semanticSha256 });
+  emitter = binding.emitter;
+  if (emitter.platform !== pin.platform || emitter.binarySha256 !== pin.binarySha256 || emitter.receiptSha256 !== pin.receiptSha256 || emitter.indexSha256 !== pin.indexSha256) throw Error("Draw model was described with a different tool publication");
+}
+
 const deployed = finalizePluginDescriptor(modelPack, "draw");
 if (!Buffer.from(deployed.pack).equals(await load(browser, pack)) || !Buffer.from(deployed.json).equals(await load(browser, json))) {
   throw Error("Draw browser descriptor differs from the published semantic Pack");
 }
-console.log(JSON.stringify({ sha, wasmBytes: wasm.size, semantic: pair.semanticSha256, committedModel: true, materializedBrowser: true }));
+console.log(JSON.stringify({ sha, wasmBytes: wasm.size, semantic: pair.semanticSha256, ...(emitter ? { emitter } : {}), committedModel: true, materializedBrowser: true }));

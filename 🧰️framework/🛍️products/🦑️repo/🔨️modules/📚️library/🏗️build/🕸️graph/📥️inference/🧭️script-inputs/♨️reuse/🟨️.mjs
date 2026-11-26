@@ -26,6 +26,7 @@ export function createTypeScriptProgramReuseV1() {
         return file;
       };
     },
+    textBytes() { let sum = 0; for (const entry of parsed.values()) for (const known of entry.files.values()) sum += known.text.length; return sum; },
     oldProgram(config) { return armed ? programs.get(config) : undefined; },
     keep(config, program) { programs.set(config, program); for (const file of program.getSourceFiles()) sources.add(file.fileName); if (armed) reused.push(program.structureIsReused); },
   });
@@ -45,6 +46,7 @@ export function createSharedSourceFilesV1({ maximumFiles = 8000 } = {}) {
     keep() {},
     clear() { stores.clear(); seen.clear(); },
     size() { return seen.size; },
+    textBytes() { let sum = 0; for (const store of stores.values()) sum += store.textBytes(); return sum; },
   });
 }
 

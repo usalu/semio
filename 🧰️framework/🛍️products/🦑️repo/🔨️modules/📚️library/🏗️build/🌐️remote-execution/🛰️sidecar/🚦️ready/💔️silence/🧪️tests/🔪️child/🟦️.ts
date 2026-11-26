@@ -35,7 +35,7 @@ test("the launcher decisions equal the independent Python oracle on seeded cases
  expect(run.status,run.stderr).toBe(0);
  const expected=run.stdout.split("\n").filter(Boolean),watch=readySilenceChildWatchV1();
  expect(expected.length).toBe(cases.length);
- cases.forEach((row,index)=>expect(watch.observe(row.status,row.nowMs,row.childStartedMs),JSON.stringify(row)).toBe(expected[index]));
+ cases.forEach((row,index)=>expect<string>(watch.observe(row.status,row.nowMs,row.childStartedMs),JSON.stringify(row)).toBe(expected[index]));
  expect(new Set(expected).size).toBe(2);
 });
 

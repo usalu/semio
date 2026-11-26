@@ -49,7 +49,7 @@ test("Cargo registry input is consumed once even when readiness moves afterward"
     return "published";
    });
    if(row.settles)expect(await effect,row.change).toBe("published");else await expect(effect,row.change).rejects.toBe(churn);
-   expect({attempts,consumptions,settles:Number(row.settles)},row.change).toEqual(oracle.get(row.change));
+   expect<unknown>({attempts,consumptions,settles:Number(row.settles)},row.change).toEqual(oracle.get(row.change));
    expect({attempts,consumptions},row.change).toEqual({attempts:row.attempts,consumptions:row.consumptions});
   }
  }finally{db.close();}

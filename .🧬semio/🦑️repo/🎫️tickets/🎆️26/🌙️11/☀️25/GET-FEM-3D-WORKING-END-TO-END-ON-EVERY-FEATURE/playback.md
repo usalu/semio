@@ -21,6 +21,23 @@ Files: 3D and 2D `editor/panels/results/🦀️.rs` (`playing_toggle`), 3D panel
 ## Framework functions changed
 None.
 
+## 2D twin
+`result_animation_tick` laws in the 2D editor_app_2 target: 7 passed (a13); panel toggle ported to the 2D results panel (not yet run).
+
+## results_window laws (test-side fixes, no render/solve path edits)
+- `playback_phase_moves_the_deformed_scene` (PASS, c1): asserted lowercase `phase 0.42`; the caption is `Phase 0.42 · ▶`. Assertion corrected.
+- `results_scene_captions_name_mode_and_factor_3d`, `results_window_surfaces_solver_error_without_panicking_3d`: rendered once and saw `Analysis queued` (results solve in async jobs). Now drive the jobs with the existing `pump_results` and close them with new `drain_results` (cancel and step to bounded close) so a pending caption fails with its text instead of aborting on `original registry job retained work after its bounded close`. First run (b3) showed that abort in the modal case: the modal solve did not settle (browser: `Mode 1: 0.000 Hz`, `Computing modes`), owned by the modal agent. Re-run pending (builds blocked by other agents' framework edits).
+- `mounted_results_frames_never_invoke_synchronous_solvers`: owned by the F3 agent.
+
+## Final laws and status (native, `C:	\pk`)
+- 3D `result_animation_tick::*` existing 6 laws PASS; new `pause_over_an_inflight_tick_retires_every_alias_and_steps_still_work` PASS; new `panel_wire_play_pause_and_step_leave_no_alias_behind` PASS.
+- 2D `result_animation_tick` 7 PASS; 2D panels lib 6 PASS; 3D panels lib 9 PASS (incl. new `results_panel_play_control_is_a_pressed_toggle_that_follows_the_transport`).
+- `playback_phase_moves_the_deformed_scene` PASS (caption assertion corrected).
+- `results_scene_captions_name_mode_and_factor_3d`, `results_window_surfaces_solver_error_without_panicking_3d`: still FAIL. Pumped with `pump_until_settled` (200-round chunks, 20 min cap): both stay on `Preparing analysis` for 600 rounds, about 2.2 s per round (1423 s and 1290 s), even the empty document. Per-stage count: one stage, `Preparing analysis` x 3 chunks. Needs the F3/modal owners; no solver or render path touched.
+
+## Root cause of the F9 panic
+NOT FOUND. No native law reproduces `shared original alias must retire or transfer` (play, tick, pause over an in-flight tick, wire route with received view state, step, close all pass). Candidates on the framework side: alias owners on the tool-run entry/view path and the sealed-source handback (`arc-custody/sealed`, owned by another agent, not changed). Needs a wasm built from the current tree and a fresh browser probe (static case: Play, Pause, Step +, reload); build 3 predates the toggle and ran in Modal mode.
+
 ## Open
-- Browser panic is not reproduced by any native law; it needs a wasm rebuilt from the current tree (coordinator) and a fresh probe: Play, Pause, Step +, reload.
-- Four `results_window` laws from the coordinator's full run (mounted_results_frames_never_invoke_synchronous_solvers, playback_phase_moves_the_deformed_scene, results_scene_captions_name_mode_and_factor_3d, results_window_surfaces_solver_error_without_panicking_3d): panic text was not in the log; not yet reproduced.
+- Browser re-probe on fresh wasm.
+- The two results_window laws above.

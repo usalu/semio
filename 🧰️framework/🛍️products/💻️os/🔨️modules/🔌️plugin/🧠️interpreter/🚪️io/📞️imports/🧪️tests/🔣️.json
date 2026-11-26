@@ -9,6 +9,12 @@
       "alignment": 8
     },
     {
+      "operation": "actorExecutionClock",
+      "type": "clock-reply",
+      "bytes": 16,
+      "alignment": 8
+    },
+    {
       "operation": "wall",
       "type": "datetime",
       "bytes": 16,

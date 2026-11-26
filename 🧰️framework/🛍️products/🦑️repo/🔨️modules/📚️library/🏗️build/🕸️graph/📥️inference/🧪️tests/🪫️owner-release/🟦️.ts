@@ -6,14 +6,14 @@ import{join}from"node:path";
 import{testPythonV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import{createScriptInputCache,lookReleaseDueV1,releaseAfterTakeLookV1,releaseOwnerStateV1}from"../../🧭️script-inputs/🟨️.mjs";
 import{INFERENCE_LIMITS_V1}from"../../🧬️schema/🟨️.mjs";
-import{decideFootprintV1,footprintAtLeastManagedV1}from"../../../../🧠️memory/🦶️footprint/🟨️.mjs";
+import{decideFootprintV1,footprintAtLeastManagedV1,type FootprintDecisionV1}from"../../../../🧠️memory/🦶️footprint/🟨️.mjs";
 import fixture from"./🔣️.json";
 
 const MiB=1048576;
 const model=()=>{
  const run=Bun.spawnSync([testPythonV1()!,"-I",join(import.meta.dir,"🐍️.py")],{stdin:Buffer.from(JSON.stringify({...fixture,interval:INFERENCE_LIMITS_V1.ownersPerRelease,lookReleaseGrowthBytes:INFERENCE_LIMITS_V1.lookReleaseGrowthBytes}))});
  expect(run.exitCode,run.stderr.toString()).toBe(0);
- return JSON.parse(run.stdout.toString()) as{held:number[];peak:number;readings:{floored:number;decision:string}[];looks:boolean[]};
+ return JSON.parse(run.stdout.toString()) as{held:number[];peak:number;readings:{floored:number;decision:FootprintDecisionV1}[];looks:boolean[]};
 };
 
 test("a worker whose footprint reading stands far below what it holds still releases its owner state at the declared interval",()=>{

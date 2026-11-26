@@ -215,6 +215,9 @@ fn history_edit(app: &mut Puzzle2dApp, verb: &str, args: Value) {
     let meta = ActionMeta { view_state: Some(std::sync::Arc::new(focused_view())), ..meta("local") };
     let result = block_on(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(semio_framework_value::ToValue::to_value(&args)), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::artifact_app_laws::fixture_mounted_policy().close)).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
+    if session(app).is_some_and(|status| status.stage == HistoryTimeTravelStage::Editing) {
+        pump(app, verb, |app| !app.time_travel_ledger().has_pending_work());
+    }
 }
 
 /// 🚦️ The live session as the history wire carries it (`None`: no session).
@@ -223,12 +226,12 @@ fn session(app: &mut Puzzle2dApp) -> Option<HistoryTimeTravel> {
 }
 
 /// ⏯️ Drives the session's per-turn work until its stage satisfies `done`.
-fn pump(app: &mut Puzzle2dApp, what: &str, done: impl Fn(Option<HistoryTimeTravelStage>) -> bool) {
+fn pump(app: &mut Puzzle2dApp, what: &str, done: impl Fn(&mut Puzzle2dApp) -> bool) {
     for _ in 0..100_000 {
-        if done(session(app).map(|status| status.stage)) {
+        if done(app) {
             return;
         }
-        block_on(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
+        drive_history_turn(app, what);
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("{what} never settled: {:?}", session(app));
@@ -361,7 +364,7 @@ fn run(app: &mut Puzzle2dApp, seed: usize, step: &Value, what: &str) {
                 "rotate" => "rotateSelection",
                 _ => "scaleSelection",
             };
-            let result = dispatch(app, verb, Some(spec), None).unwrap_or_else(|fault| panic!("{what}: {verb}: {fault:?}"));
+            let result = dispatch_new_edit_rows(app, verb, Some(spec), None).unwrap_or_else(|fault| panic!("{what}: {verb}: {fault:?}"));
             assert_eq!(committed_edits(&result), 1, "{what}: {verb} is one edit");
         }
         "ingest" => block_on(app.ingest_operations_text(&<Puzzle2dMutation as OpText>::print_op(&leaf(spec)), &mut semio_plugin::artifact_app_laws::fixture_identity())).unwrap_or_else(|fault| panic!("{what}: ingest: {fault:?}")),
@@ -389,12 +392,12 @@ fn run(app: &mut Puzzle2dApp, seed: usize, step: &Value, what: &str) {
         "withdraw" => history_edit(app, "historyEditWithdraw", json!({})),
         "accept" => {
             history_edit(app, "historyEditAccept", json!({}));
-            pump(app, what, |stage| stage != Some(HistoryTimeTravelStage::Replaying));
+            pump(app, what, |app| session(app).is_none_or(|status| status.stage != HistoryTimeTravelStage::Replaying));
         }
         "finalize" => {
             history_edit(app, "historyEditFinalize", json!({}));
             history_edit(app, "historyEditCommit", json!({ "choice": spec }));
-            pump(app, what, |stage| stage.is_none());
+            pump(app, what, |app| session(app).is_none());
         }
         other => panic!("{what}: unknown corpus step {other}"),
     }

@@ -15,25 +15,44 @@ use semio_plugin_reactor_lifecycle::life_app_cell::{RuntimeAppCell, RuntimeInsta
 use semio_plugin_reactor_lifecycle::life_cleanup_pumps::{RuntimeCloseCleanupJob, RuntimeCloseCleanupPump, RuntimeLiveCleanupJob, RuntimeLiveCleanupPump, plugin_begin_instance_close, runtime_close_phase, runtime_drain_maintenance_source, runtime_close_owned_app_source};
 use semio_plugin_reactor_app::app_runtime_helpers::{debug_runtime_line, plugin_internal_fault};
 use std::mem::size_of_val;
+/// ⏱️ Real time a live pump may stay fruitless while NO other owner of the instance advances: the turn ceiling times the full pressure bursts that fit into the zero-progress count, so a stall is judged over whole turns rather than one interleaved browser frame.
+pub const RUNTIME_LIVE_STALL_CREDIT_US: u64 = RUNTIME_CLOSE_STALL_CREDIT_US * (RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT as u64 / LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN as u64);
+/// 🧮️ The live pump's structural verdict on ONE maintenance reading, priced in BOTH currencies like [`runtime_close_stall_verdict`]: `RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT` consecutive fruitless readings AND `RUNTIME_CLOSE_STALL_CREDIT_US` of real time since the pump last moved.
+///
+/// 🐛️ The count alone was the whole rule. An ingress-free reactor turn repeats the live pump up to `LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN` times while a funded document archive is runnable, so 256 fruitless readings fit into a handful of microsecond-long turns and a booting natural-file import faulted with `plugin.internal.zero-progress` reporting `elapsed 0us` against an `8000us` ceiling. The returned reading is the credit actually spent.
 #[doc(hidden)]
-pub fn runtime_live_cleanup_nonterminal_status(contended: bool, progress: Option<PluginLifecycleStep>, stalled_steps: &AtomicU32) -> RuntimeMaintenanceStatus {
+pub fn runtime_live_cleanup_nonterminal_status(contended: bool, progress: Option<PluginLifecycleStep>, stalled_steps: &AtomicU32, stall_since_us: &AtomicU64, now_us: Option<u64>, instance_epoch: u64, seen_epoch: &AtomicU64) -> (RuntimeMaintenanceStatus, u64) {
+    let clear = || {
+        stalled_steps.store(0, Ordering::SeqCst);
+        stall_since_us.store(0, Ordering::SeqCst);
+    };
+    if seen_epoch.swap(instance_epoch, Ordering::SeqCst) != instance_epoch {
+        clear();
+        return (RuntimeMaintenanceStatus::Ready, 0);
+    }
     if contended {
-        return RuntimeMaintenanceStatus::Ready;
+        return (RuntimeMaintenanceStatus::Ready, 0);
     }
     if matches!(progress, Some(PluginLifecycleStep::AwaitingInput { .. })) {
-        stalled_steps.store(0, Ordering::SeqCst);
-        return RuntimeMaintenanceStatus::Ready;
+        clear();
+        return (RuntimeMaintenanceStatus::Ready, 0);
     }
     let zero_progress = matches!(progress,Some(PluginLifecycleStep::Progress(receipt)) if receipt==RetainedCloneProgress::default())||matches!(progress,Some(PluginLifecycleStep::Blocked{..}));
     if !zero_progress {
-        stalled_steps.store(0, Ordering::SeqCst);
-        return RuntimeMaintenanceStatus::Ready;
+        clear();
+        return (RuntimeMaintenanceStatus::Ready, 0);
     }
     let stalled = stalled_steps.fetch_add(1, Ordering::SeqCst).saturating_add(1);
-    if stalled >= RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT {
-        RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress)
+    let Some(now_us) = now_us else { return (RuntimeMaintenanceStatus::Ready, 0) };
+    let since_us = match stall_since_us.compare_exchange(0, now_us.max(1), Ordering::SeqCst, Ordering::SeqCst) {
+        Ok(_) => now_us.max(1),
+        Err(previous) => previous,
+    };
+    let credit_us = now_us.saturating_sub(since_us);
+    if stalled >= RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT && credit_us >= RUNTIME_LIVE_STALL_CREDIT_US {
+        (RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress), credit_us)
     } else {
-        RuntimeMaintenanceStatus::Ready
+        (RuntimeMaintenanceStatus::Ready, credit_us)
     }
 }
 /// ⏱️ Publishes one maintenance turn: the measured wall cost is recorded next to the status so
@@ -50,7 +69,8 @@ fn runtime_live_cleanup_publish_turn<PA: PluginApp>(cell: &RuntimeAppCell<PA>, s
         }
         Ok(_) => status,
     };
-    cell.maintenance_fault_us.store(elapsed.unwrap_or(RUNTIME_CLEANUP_UNMEASURED_US), Ordering::SeqCst);
+    let quoted_us = if verdict == RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress) { cell.maintenance_stall_credit_spent_us.load(Ordering::SeqCst) } else { elapsed.unwrap_or(RUNTIME_CLEANUP_UNMEASURED_US) };
+    cell.maintenance_fault_us.store(quoted_us, Ordering::SeqCst);
     cell.maintenance_status.store(verdict.repr(), Ordering::SeqCst);
 }
 fn run_runtime_live_cleanup_turn<PA:PluginApp+'static>(cell:&std::sync::Arc<RuntimeAppCell<PA>>,generation:semio_framework_job::Generation,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
@@ -80,7 +100,12 @@ fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<
         if !session.acknowledge_outcome(cx)?{return Ok(RuntimeMaintenanceStatus::Ready);}
         pump.outcome_pending=false;
         let Some(job) = session.checked_out_job_mut() else { return Ok(RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::CheckedOutJob)) };
-        pump.pending_status = runtime_live_cleanup_nonterminal_status(job.contended, job.progress, &cell.maintenance_stalled_steps);
+        let (status, credit_us) = runtime_live_cleanup_nonterminal_status(job.contended, job.progress, &cell.maintenance_stalled_steps, &cell.maintenance_stall_since_us, semio_framework_job::default_now_us(), cell.instance_progress_epoch.load(Ordering::SeqCst), &cell.maintenance_seen_progress_epoch);
+        pump.pending_status = status;
+        if matches!(status, RuntimeMaintenanceStatus::Fault(_)) {
+            eprintln!("[DEBUG] live-cleanup stall fault progress={:?} stage={} credit_us={credit_us}", job.progress, semio_plugin_reactor_app::LAST_MAINTENANCE_STAGE.load(Ordering::Relaxed));
+            cell.maintenance_stall_credit_spent_us.store(credit_us, Ordering::SeqCst);
+        }
         #[cfg(test)]
         if matches!(job.progress, Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput { .. })) {
             cell.maintenance_probe_input_waits.fetch_add(1, Ordering::SeqCst);

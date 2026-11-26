@@ -42,7 +42,8 @@
         "slot": {
           "heartbeatMilliseconds": 2000,
           "staleMilliseconds": 20000,
-          "fallbackMilliseconds": 500
+          "fallbackMilliseconds": 500,
+          "maximumWaitMilliseconds": 600000
         },
         "key": {
           "outputRootScanVersion": "1",
@@ -146,7 +147,9 @@
           "pass": "SEMIO_BUILD_PASS",
           "recallAttempts": 20,
           "recallPauseMilliseconds": 50,
-          "timeoutMilliseconds": 5000
+          "timeoutMilliseconds": 5000,
+          "headroomPauseMilliseconds": 2000,
+          "headroomMaximumWaitMilliseconds": 60000
         },
         "evictions": {
           "file": "evictions.jsonl"

@@ -40,6 +40,20 @@ pub struct ArtifactInferencePayloadContract {
     pub commit: Option<ArtifactInferenceCommitBinding>,
 }
 
+impl ArtifactInferencePayloadContract {
+    /// 🧱️ The contract of an inference whose guest reads the artifact's canonical pack as its whole request: the caller sends no payload and names the artifact, the gateway binds it (`semio_framework::INFERENCE_ARTIFACT_PACK_BYTES`).
+    pub const fn pack_bound(payload_schema_id: &'static str, output_schema: &'static str, progress_unit: &'static str) -> Self {
+        Self {
+            payload_schema_id,
+            input_schema: include_str!("📜️pack-bound-input.json"),
+            output_schema,
+            progress_unit,
+            artifact_binding: Some(ArtifactInferenceDocumentBinding { field: "", encoding: semio_framework::INFERENCE_ARTIFACT_PACK_BYTES, required: true }),
+            commit: None,
+        }
+    }
+}
+
 /// 📌️ The `&'static str` twin of `semio_framework::InferenceCommitBinding`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ArtifactInferenceCommitBinding {
@@ -100,15 +114,15 @@ impl ArtifactInferenceExecutionError {
 
 impl semio_framework_job::OriginalDomainProjection for ArtifactInferenceExecutionError{
  fn projection_view(&self,path:&[usize])->Result<semio_framework_job::OriginalDomainView<'_>,ValueError>{
-  use semio_framework_job::OriginalDomainView as V;match path{
-   []=>Ok(V::IntrinsicObject(5)),[0]=>Ok(V::Text(self.code)),[1]=>Ok(V::Text(&self.message)),[2]=>Ok(V::IntrinsicObject(4)),
-   [2,0]=>Ok(V::UInt(self.retained_progress.copied_items as u64)),[2,1]=>Ok(V::UInt(self.retained_progress.copied_bytes as u64)),[2,2]=>Ok(V::UInt(self.retained_progress.retained_capacity_bytes as u64)),[2,3]=>Ok(V::UInt(self.retained_progress.released_bytes as u64)),
-   [3,rest @ ..]=>match &self.cause{Some(original)=>semio_framework_job::project_original_turn_failure(original,rest),None if rest.is_empty()=>Ok(V::IntrinsicNull),_=>Err(inference_execution_projection_refusal())},[4]=>Ok(V::Bool(self.terminal)),_=>Err(inference_execution_projection_refusal()),
+  use semio_framework_job::OriginalDomainView as V;use semio_framework_value::Number;match path{
+   []=>Ok(V::IntrinsicObject(5)),[0]=>Ok(V::IntrinsicText(self.code)),[1]=>Ok(V::IntrinsicText(&self.message)),[2]=>Ok(V::IntrinsicObject(4)),
+   [2,0]=>Ok(V::IntrinsicNumber(Number::UInt(self.retained_progress.copied_items as u64))),[2,1]=>Ok(V::IntrinsicNumber(Number::UInt(self.retained_progress.copied_bytes as u64))),[2,2]=>Ok(V::IntrinsicNumber(Number::UInt(self.retained_progress.retained_capacity_bytes as u64))),[2,3]=>Ok(V::IntrinsicNumber(Number::UInt(self.retained_progress.released_bytes as u64))),
+   [3,rest @ ..]=>match &self.cause{Some(original)=>semio_framework_job::project_original_turn_failure(original,rest),None if rest.is_empty()=>Ok(V::IntrinsicNull),_=>Err(inference_execution_projection_refusal())},[4]=>Ok(V::IntrinsicBool(self.terminal)),_=>Err(inference_execution_projection_refusal()),
   }
  }
  fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{match path{
   []=>["code","message","retainedProgress","cause","terminal"].get(index).copied().ok_or_else(inference_execution_projection_refusal),
-  [2]=>["items","copyBytes","capacityBytes","releaseBytes"].get(index).copied().ok_or_else(inference_execution_projection_refusal),
+  [2]=>["copiedItems","copiedBytes","retainedCapacityBytes","releasedBytes"].get(index).copied().ok_or_else(inference_execution_projection_refusal),
   [3,rest @ ..]=>self.cause.as_ref().ok_or_else(inference_execution_projection_refusal).and_then(|original|semio_framework_job::key_original_turn_failure(original,rest,index)),_=>Err(inference_execution_projection_refusal()),
  }}
 }

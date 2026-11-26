@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import corpus from "./🔣️.json";
 import { createMcpPublicationProbeV1 } from "../../🟦️.ts";
+import { evaluateGeneratedSourceV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 
 const source = readFileSync(new URL("../../🟦️.ts", import.meta.url), "utf8");
 const ast = ts.createSourceFile("mcp.ts", source, ts.ScriptTarget.Latest, true);
@@ -49,7 +50,7 @@ const launch = async (row: (typeof corpus.cases)[number]): Promise<{ trace: stri
       options.onStop();
       return 0;
     };
-    const actual = new Function("withAdmittedPublishedCargoExecutableV1", "readBuildMode", "createRequestedIssuedResourceControlV1", "serveWarmMcpGateway", "withMcpHostDriverPolicy", "MCP_MANIFEST_REL", "MCP_BINARY_NAME", "MCP_BINARY_TARGET", "MCP_STDIO_BUILD_MODE_V1", "process", "withMcpComponentEnvironmentV1", "MCP_COMPONENT_MODELS_ENV", body + ";return servePublishedMcpStdioV1;")(reader, (mode: string) => mode, (_parent: unknown, _time: number, signal: AbortSignal) => ({ signal }), gateway, (args: string[]) => args, "owner/Cargo.toml", "semio-os-mcp", "mcp:build", "prototype", { platform: "linux" }, components, "SEMIO_MCP_COMPONENT_MODELS");
+    const actual = evaluateGeneratedSourceV1(body, "servePublishedMcpStdioV1", { withAdmittedPublishedCargoExecutableV1: reader, readBuildMode: (mode: string) => mode, createRequestedIssuedResourceControlV1: (_parent: unknown, _time: number, signal: AbortSignal) => ({ signal }), serveWarmMcpGateway: gateway, withMcpHostDriverPolicy: (args: string[]) => args, MCP_MANIFEST_REL: "owner/Cargo.toml", MCP_BINARY_NAME: "semio-os-mcp", MCP_BINARY_TARGET: "mcp:build", MCP_STDIO_BUILD_MODE_V1: "prototype", process: { platform: "linux" }, withMcpComponentEnvironmentV1: components, MCP_COMPONENT_MODELS_ENV: "SEMIO_MCP_COMPONENT_MODELS" });
     const stage = async () => {
       trace.push("build");
       await new Promise(resolve => setTimeout(resolve, 10));

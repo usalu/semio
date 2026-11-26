@@ -102,7 +102,7 @@ function lacking(inner:RemoteExecutionContentV1,rule:(hash:string)=>"absent"|"co
 test("a restore that cannot complete (blob absent or corrupt) leaves nothing half-written and says why",async()=>{
  const {store}=await serve(),made=await produce("partial-producer");await publishStoreReceiptContentV1({workspaceRoot:made.root,receipt:made.file,store});
  const jsHash=sha(payload["pkg/main.js"] as string),wasmHash=sha(payload["pkg/main.wasm"] as Buffer);
- for(const [label,rule] of[["absent",(hash:string)=>hash===jsHash?"absent" as const:"ok" as const],["corrupt",(hash:string)=>hash===wasmHash?"corrupt" as const:"ok" as const]]){
+ for(const [label,rule] of[["absent",(hash:string)=>hash===jsHash?"absent" as const:"ok" as const],["corrupt",(hash:string)=>hash===wasmHash?"corrupt" as const:"ok" as const]] as const){
   const consumer=directory("partial-"+label),result=await restoreStoreReceiptContentV1({workspaceRoot:consumer,receipt:made.receipt,store:{...store,content:lacking(store.content,rule)}});
   expect(["partial","unavailable"]).toContain(result.state);expect(result.reason).toBeDefined();
   expect(existsSync(join(consumer,made.base))).toBe(false);

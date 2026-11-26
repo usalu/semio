@@ -24,7 +24,7 @@ fn numerical_page_restore_close_preserves_ungranted_backing_and_retires_one_owne
     for row in corpus["closeCases"].as_array().unwrap() {
         let operation = test_operation(490);
     let mut original=OriginalNumericalFixture::new(operation);
-        let mut job = LdltJob::new(operation, CscSym::from_paged_parts(0, PagedList::empty(), PagedList::empty(), PagedList::empty()), 1);
+        let mut job = LdltJob::new(operation, CscSym::from_paged_parts(0, PagedList::empty(), PagedList::empty(), PagedList::empty()));
         job.state.contributors.links = empty_paged_backing(4);
         job.state.columns.entries = empty_paged_backing(4);
         let next = job.state.contributors.links.next_release_allocation_bytes().unwrap();
@@ -79,7 +79,7 @@ fn numerical_page_ldlt_checkpoint_restores_a_matrix_spanning_several_owner_pages
     let operation = test_operation(489);
     let mut original=OriginalNumericalFixture::new(operation);
 
-    let mut job = LdltJob::new(operation, CscSym::from_owned_parts(n,colptr,rowind,vals), 1);
+    let mut job = LdltJob::new(operation, CscSym::from_owned_parts(n,colptr,rowind,vals));
     job.state.checkpoint_due = true;
     let mut checkpoint = None;
     let mut write_fault = false;
@@ -258,7 +258,7 @@ fn ldlt_job_checkpoint_resume_matches_reference() {
     let expected = ldlt_factor(&matrix).expect("reference factors");
     let operation = test_operation(104);
     let mut original=OriginalNumericalFixture::new(operation);
-    let mut job = LdltJob::new(operation, matrix, 3);
+    let mut job = LdltJob::new(operation, matrix).with_checkpoint_floor(1);
 
     let checkpoint = loop {
 
@@ -293,7 +293,7 @@ fn p6h_ldlt_microcursor_max_plus_one_cancel_deadline_stale_replay_and_numerical_
     let operation = test_operation(121);
     let mut original=OriginalNumericalFixture::new(operation);
     let mut drive = |fuel: u64| {
-        let mut job = LdltJob::new(operation, matrix.clone(), 1);
+        let mut job = LdltJob::new(operation, matrix.clone());
 
         loop {
 
@@ -308,33 +308,33 @@ fn p6h_ldlt_microcursor_max_plus_one_cancel_deadline_stale_replay_and_numerical_
     assert_eq!(drive(2), reference);
     assert_eq!(drive(4), reference);
 
-    let mut zero_fuel = LdltJob::new(operation, matrix.clone(), 1);
+    let mut zero_fuel = LdltJob::new(operation, matrix.clone()).with_checkpoint_floor(1);
     let before = zero_fuel.state.clone();
 
     assert_eq!(step_job(&mut original,&mut zero_fuel,0,u64::MAX), Seen::Yield);
     assert!(zero_fuel.state == before);
 
-    let mut deadline = LdltJob::new(operation, matrix.clone(), 1);
+    let mut deadline = LdltJob::new(operation, matrix.clone());
     let before = deadline.state.clone();
 
     assert_eq!(step_job(&mut original,&mut deadline,1,0), Seen::Yield);
     assert!(deadline.state == before);
 
-    let mut stale = LdltJob::new(operation, matrix.clone(), 1);
+    let mut stale = LdltJob::new(operation, matrix.clone());
     let before = stale.state.clone();
     let mut stale_original=OriginalNumericalFixture::new(Operation::new(operation.operation,operation.base_revision,semio_framework_job::Generation(operation.generation.0+1),operation.seed));
 
     assert!(matches!(step_job(&mut stale_original,&mut stale,1,u64::MAX), Seen::Fault(_)));
     assert!(stale.state == before);
 
-    let mut cancelled = LdltJob::new(operation, matrix, 1);
+    let mut cancelled = LdltJob::new(operation, matrix);
     let before = cancelled.state.clone();
     let mut cancelled_original=OriginalNumericalFixture::new(operation);cancelled_original.cancel();
 
     assert_eq!(step_job(&mut cancelled_original,&mut cancelled,1,u64::MAX), Seen::Cancelled);
     assert!(cancelled.state == before);
 
-    let mut lookup = LdltJob::new(operation, deadline.state.a.clone(), 1);
+    let mut lookup = LdltJob::new(operation, deadline.state.a.clone());
     let mut observed_lookup = false;
     for _ in 0..200_000 {
         if lookup.state.cursor.stage == LdltColumnStage::ContributorLookup && lookup.state.cursor.lookup_initialized && lookup.state.cursor.lookup_lower < lookup.state.cursor.lookup_upper {
@@ -356,11 +356,11 @@ fn p6h_ldlt_microcursor_max_plus_one_cancel_deadline_stale_replay_and_numerical_
     original.close(&mut lookup);
 
     let refused = CscSym::from_owned_parts(3, vec![0, 0], Vec::new(), Vec::new());
-    let mut maximum_plus_one = LdltJob::new(operation, refused, 1);
+    let mut maximum_plus_one = LdltJob::new(operation, refused);
 
     assert!(matches!(step_job(&mut original,&mut maximum_plus_one,1,u64::MAX), Seen::Fault(_)));
 
-    let mut publishing = LdltJob::new(operation, deadline.state.a.clone(), 1);
+    let mut publishing = LdltJob::new(operation, deadline.state.a.clone());
     for _ in 0..200_000 {
 
         let _ = step_job(&mut original,&mut publishing,1,u64::MAX);
@@ -374,8 +374,8 @@ fn p6h_ldlt_microcursor_max_plus_one_cancel_deadline_stale_replay_and_numerical_
     assert!(InteractiveJob::terminal_is_empty(&publishing));
 
     let checkpoint = loop {
-
-        if let Seen::Checkpoint(pages) = step_job(&mut original,&mut zero_fuel,1,u64::MAX) {
+        let seen = step_job(&mut original,&mut zero_fuel,1,u64::MAX);
+        if let Seen::Checkpoint(pages) = seen {
             break pages;
         }
     };
@@ -386,7 +386,7 @@ fn p6h_ldlt_microcursor_max_plus_one_cancel_deadline_stale_replay_and_numerical_
     let wrong_revision = Operation::new(operation.operation, semio_framework_job::RevisionId(operation.base_revision.0 + 1), operation.generation, operation.seed);
     let wrong_seed = Operation::new(operation.operation, operation.base_revision, operation.generation, operation.seed + 1);
     fn fresh_checkpoint(original:&mut OriginalNumericalFixture,operation:Operation)->Vec<Vec<u8>> {
-        let mut source = LdltJob::new(operation, Coo::graph_laplacian_plus_identity(6, &[(0, 1), (1, 2)]).to_csc_sym_upper(), 1);
+        let mut source = LdltJob::new(operation, Coo::graph_laplacian_plus_identity(6, &[(0, 1), (1, 2)]).to_csc_sym_upper()).with_checkpoint_floor(1);
 
         let pages = loop {
 
@@ -450,7 +450,7 @@ fn numerical_page_ldlt_checkpoint_restores_matrix_across_original_pages() {
     let operation = test_operation(489);
     let mut original=OriginalNumericalFixture::new(operation);
 
-    let mut job = LdltJob::new(operation, CscSym::from_owned_parts(n, colptr, rowind, vals), 1);
+    let mut job = LdltJob::new(operation, CscSym::from_owned_parts(n, colptr, rowind, vals));
     job.state.checkpoint_due = true;
     let mut checkpoint = None;
     let mut write_fault = false;

@@ -1,0 +1,14 @@
+{
+  "nowMs": 200000,
+  "host": {"version":1,"atMs":200000,"platform":"darwin","cores":10,"totalMegabytes":16384,"availableMegabytes":6200,"pressure":"normal","swapUsedMegabytes":4771,"swapOutMegabytesPerSecond":0,"load":8.68,"openFiles":5101,"openFilesMaximum":122880,"attachedImages":12},
+  "graph": {"id":"W14E01svLkSNsAgKaiJskA","operation":"graph-plan","jobs":1,"cpu":1,"reservedMegabytes":3870,"admittedAtMs":45000,"observedMegabytes":127,"pid":72064,"bootAtMs":1,"session":"a3fba9d52db0.d","label":"graph-plan"},
+  "quiet": {"id":"B9J9nN2UxqJAgsN79I-Bvg","operation":"run-many","jobs":1,"cpu":1,"reservedMegabytes":512,"admittedAtMs":41000,"observedMegabytes":76,"pid":72010,"bootAtMs":1,"session":"a3fba9d52db0.d","label":"build","quiet":true},
+  "exact": {"id":"exactCmdV1","operation":"command","jobs":1,"cpu":4,"reservedMegabytes":6144,"admittedAtMs":120000,"observedMegabytes":320,"pid":72011,"bootAtMs":1,"session":"a3fba9d52db0.d","retainReservation":true},
+  "cargo": {"request":{"id":"WGXLdsJ7mkI6i69OjnHlYA","operation":"cargo","priority":"interactive","minimumJobs":1,"preferredJobs":1,"fixedMegabytes":2663,"perJobMegabytes":0,"cpuPerJob":1},"arrivedAtMs":190000,"pid":72552,"session":"a3fba9d52db0.apa7chg3hy"},
+  "cases": [
+    {"name":"delayed graph slice refuses overlapping cargo","grant":"graph","unrealized":3743,"verdict":"wait"},
+    {"name":"quiet forecast by itself leaves only actual resident charge","grant":"quiet","unrealized":0,"verdict":"admit"},
+    {"name":"expired ordinary command forecast lets another job fit","grant":"forecast","unrealized":0,"verdict":"admit"},
+    {"name":"late stage of explicit exact command still holds its reserve","grant":"exact","unrealized":5824,"verdict":"wait"}
+  ]
+}

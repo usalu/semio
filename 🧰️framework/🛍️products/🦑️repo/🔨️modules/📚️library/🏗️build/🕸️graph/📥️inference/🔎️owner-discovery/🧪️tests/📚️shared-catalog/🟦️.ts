@@ -26,7 +26,7 @@ test("the catalog is computed once per registry, shared by owners and revisions,
   const after=stats();
   expect(after.computed-before.computed).toBe(1);expect(after.reused-before.reused).toBe(steps.length-1);
   for(const[index,[name,targets]]of steps.entries()){const own=await discover(registry(),name,targets);expect(answers[index]!.value).toEqual(own.value);{const facts=answers[index]!.value as {files:string[];observedFiles?:string[]};expect([...facts.files,...facts.observedFiles??[]]).toContain("catalog/plugins/c3/Cargo.toml");}}
-  const rows=(captured:{observations:{path:string}[]},path:string)=>JSON.stringify(captured.observations.filter(row=>String(row.path).endsWith(path)));
+  const rows=(captured:{observations:Iterable<{path:string}>},path:string)=>JSON.stringify([...captured.observations].filter(row=>String(row.path).endsWith(path)));
   const first=rows(answers[0]!,"catalog/plugins/c3/Cargo.toml");expect(first).not.toBe("[]");
   await writeFile(join(root,"catalog/plugins/c3/Cargo.toml"),"[package]\nname='crate3'\nversion='0.0.1'\n");
   const mark=stats().computed,again=await discover(shared,"one",["build"]);

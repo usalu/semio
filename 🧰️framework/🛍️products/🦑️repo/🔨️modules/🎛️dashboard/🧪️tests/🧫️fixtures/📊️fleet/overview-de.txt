@@ -1,0 +1,8 @@
+Flotte · Zeitraum 5 Min. · Sortierung Probleme zuerst · Spalten alle
+1-5 Zeitraum · ←/→ Zoom · s Sortierung · c Spalten · Eingabe Details · Esc zurück
+Herkunft   Bereitschaft               Takt       CPU            Speicher       Platte         CPU-Verlauf      Einheiten/Min.      Treffer L/R Auslagerung e… Name
+Σ Flotte   1/3 bereit                            ████▎╎╎ 60% ok █████▏╎ 73% ok ████▎╎╎ 60% ok ▅▅▃▃▂▄▅▆▅▃▂▂▄▅▆· ▅▄▆▄▆▅▄▅▁ 42,9/Min. 80% / 91%   6/16           ▲ 1
+Flottenwerte: Warteschlange 5 laufend / 0 wartend · eingelagert 6 · Remote-Cache 1,30k Einträge, 5,05MiB
+g1-m03     ! fehlt                    -          keine Daten    keine Daten    keine Daten    ················ ········· -         - / -       -              ok
+g1-m02     ◌ veraltet · läuft worksp… 4Min 5s    █▋░░░╎╎ 23% ok ████▊╎╎ 67% ok ████▎╎╎ 60% ok ▃▃▃············· ▃▇······· 36,8/Min. 80% / 91%   0/4            ▲ doppe…
+g1-m01     bereit                     10s        ████▎╎╎ 60% ok █████▏╎ 73% ok ████▎╎╎ 60% ok ▅▅▃▃▂▄▅▆▅▃▂▂▄▅▆· ▅▄▆▄▆▅▄▅▁ 42,9/Min. 80% / 91%   0/16           ok

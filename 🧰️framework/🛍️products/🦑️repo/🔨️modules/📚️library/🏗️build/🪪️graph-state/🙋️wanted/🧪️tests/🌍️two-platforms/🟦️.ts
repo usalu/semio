@@ -37,7 +37,7 @@ test("the request of the Linux worker is read without its platform, claimed by t
   const answer=await readServedV1({client:linux,requester:"g1-m04"});
   expect(answer?.projects).toEqual(["p1","p2","p3"]);expect(answer?.platform).toBe("linux-x64");expect(answer?.server).toBe("g1-server");
   expect(lines).toEqual([wantedTextV1("serving","en",{count:3,requester:"g1-m04"}),wantedTextV1("served","en",{count:3,requester:"g1-m04",seconds:12})]);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 const BOUND="@semio-tech/os-plugin-describe-rs";
@@ -58,7 +58,7 @@ test("the request of a Windows worker is served across classes by the macOS serv
   expect(answer?.projects).toEqual(["w1","w2"]);expect(answer?.left).toEqual([BOUND]);
   expect((await readServedV1({client:linux,requester:"g1-w2"}))?.projects??[]).toEqual([]);
   expect((await claimWantedV1({client:other,owner:"g1-w9",platform:"win32-x64",requesters:["g1-w1","g1-w2"],known:()=>false})).map(request=>[request.requester,request.projects.length,request.left??[]])).toEqual([["g1-w2",1,[]]]);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("a Linux worker names only the measured heavy projects even when its early booking is small, and with its real capacity it infers a wave of unknown projects itself",async()=>{
@@ -84,7 +84,7 @@ test("the costs the macOS server measured reach a worker of another platform and
   const read=await readOwnerCostsV1({client:linux});expect(read).toEqual(table);
   expect(estimateOwnerCostV1(mergeOwnerCostTablesV1([read]),"@semio-tech/os-kernel")).toEqual({megabytes:3900,source:"recorded"});
   expect(ownerCostPolicyV1.heavySources).toEqual(["recorded","seed"]);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("the whole path: the Linux worker (16 GB, 300 stale projects, 192 inferable) asks, the macOS server answers, the worker continues with what it can infer itself left over",async()=>{
@@ -99,7 +99,7 @@ test("the whole path: the Linux worker (16 GB, 300 stale projects, 192 inferable
   expect(reads).toEqual(["request"]);
   expect(lines[0]).toBe(wantedTextV1("plan","en",{stale:300,taken:0,local:192,wave:48,wanted:300}));
   expect(serverLines[0]).toBe(wantedTextV1("serving","en",{count:300,requester:"g1-m04"}));
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("the whole path of a Windows worker: 300 stale projects of which one is bound to its host, the macOS server serves the 299 others, the worker keeps the bound one for itself and says so",async()=>{
@@ -115,5 +115,5 @@ test("the whole path of a Windows worker: 300 stale projects of which one is bou
   expect(lines).toContain(wantedTextV1("leftHere","en",{count:1,named:BOUND}));
   expect(serverLines[0]).toBe(wantedTextV1("serving","en",{count:299,requester:"g1-w1"}));
   expect(serverLines).toContain(wantedTextV1("cross","en",{requester:"g1-w1",platform:"win32-x64",class:"windows-shared",own:"posix-shared",served:299,left:1,named:": "+BOUND}));
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);

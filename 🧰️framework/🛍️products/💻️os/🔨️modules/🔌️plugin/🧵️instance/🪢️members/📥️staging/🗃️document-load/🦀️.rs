@@ -28,7 +28,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         self.stores.store.reset(loaded_with_app_dialect::<A>(envelope)).await.map_err(|error| error.into_fault())?;
         self.pending.commit_document_window_reset(&mut self.stores, &mut self.history, &mut window_reset, self.tools.tool_cancellations.scope_generation(), cx)?;
         assert_eq!(self.stores.store.local_actor_id(), &actor, "pure head retains its opened actor");
-        self.history.cache = None;
+        self.history.invalidate_cache();
         self.history.retire_displaced_document_rows();
         self.time_travel.set_history_unavailable(true);
         Ok(false)

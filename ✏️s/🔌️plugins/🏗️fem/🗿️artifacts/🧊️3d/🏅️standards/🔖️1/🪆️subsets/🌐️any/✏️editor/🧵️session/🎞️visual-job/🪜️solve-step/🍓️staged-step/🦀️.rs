@@ -16,25 +16,38 @@ mod solve_and_recovery_stages;
 mod modal_and_publication_stages;
 
 //#region 📦️PageVisualJob
+/// 🔁️ Most staged units one interactive turn advances back to back; the turn's fuel and deadline still stop it sooner.
+const NUMERICAL_UNITS_PER_TURN: usize = 4096;
+
 impl Fem3dNumericalChild {
     pub fn step(&mut self, doc: &Fem3dSnapshot, solver: &mut Fem3dSolverView, backing: &mut Fem3dBackingCredit, freshness: Fem3dVisualFreshness, operation: semio_framework_job::Operation, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
         context.set_stage(self.stage.progress_stage());
         self.operation = Some(operation);
-        let delegated = matches!(self.stage, Fem3dNumericalStage::SolidMesh | Fem3dNumericalStage::Assembly | Fem3dNumericalStage::Pcg | Fem3dNumericalStage::Ldlt | Fem3dNumericalStage::Subspace);
-        if !delegated {
+        if self.delegated() {
+            return self.advance_one(doc, solver, backing, freshness, operation, context);
+        }
+        for _ in 0..NUMERICAL_UNITS_PER_TURN {
             if context.is_cancelled() {
                 return Err((b"fem3d.numerical-cancelled".to_vec()).into());
             }
-            if context.should_yield() {
+            if context.should_yield() || self.delegated() {
                 return Ok(false);
             }
+            let fuel = context.fuel_remaining();
+            let result = self.advance_one(doc, solver, backing, freshness, operation, context);
+            if context.fuel_remaining() == fuel {
+                context.consume_fuel(1);
+            }
+            if !matches!(result, Ok(false)) {
+                return result;
+            }
         }
-        let fuel = context.fuel_remaining();
-        let result = self.advance_one(doc, solver, backing, freshness, operation, context);
-        if !delegated && context.fuel_remaining() == fuel {
-            context.consume_fuel(1);
-        }
-        result
+        Ok(false)
+    }
+
+    /// 🧭️ Whether the current stage is driven by a child job that budgets its own turn.
+    fn delegated(&self) -> bool {
+        matches!(self.stage, Fem3dNumericalStage::SolidMesh | Fem3dNumericalStage::Assembly | Fem3dNumericalStage::Pcg | Fem3dNumericalStage::Ldlt | Fem3dNumericalStage::Subspace)
     }
 
     fn advance_one(&mut self, doc: &Fem3dSnapshot, solver: &mut Fem3dSolverView, backing: &mut Fem3dBackingCredit, freshness: Fem3dVisualFreshness, operation: semio_framework_job::Operation, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
@@ -195,6 +208,8 @@ impl Fem3dNumericalChild {
             Fem3dNumericalStage::PublishNodeScalar => return self.step_publish_node_scalar(solver, freshness),
             Fem3dNumericalStage::RecoverStressElement => return self.step_recover_stress_element(),
             Fem3dNumericalStage::PublishStressScalar => return self.step_publish_stress_scalar(solver, freshness),
+            Fem3dNumericalStage::BeginBuckling => return self.step_begin_buckling(),
+            Fem3dNumericalStage::Buckling => return self.step_buckling(context),
             Fem3dNumericalStage::BeginModal => return self.step_begin_modal(),
             Fem3dNumericalStage::PrepareModal => return self.step_prepare_modal(context),
             Fem3dNumericalStage::BeginLdlt => return self.step_begin_ldlt(operation, context),

@@ -3,6 +3,7 @@ import Ajv from "ajv";
 import { ShardCoreModules } from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
+import { evaluateGeneratedSourceV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 
 /** 🧪️ Laws of {@link ShardCoreModules}, driven by the language-agnostic fixture: one compilation per served URL for any number of activations, a seed adopted without compiling, and every entry dropped with its last holder. V8's own `WebAssembly` compiles the fixture module, and its instances prove that one compiled module serves independent memories. */
 const bytes = Uint8Array.from(fixture.module.hex.match(/../gu)!.map((pair) => Number.parseInt(pair, 16)));
@@ -53,7 +54,7 @@ describe("ShardCoreModules", () => {
   });
 
   it("is self-contained, so the generated shard worker can embed its source text", async () => {
-    const embedded = new Function(`${ShardCoreModules.toString()}; return ShardCoreModules;`)() as typeof ShardCoreModules;
+    const embedded = evaluateGeneratedSourceV1(ShardCoreModules.toString(), "ShardCoreModules") as typeof ShardCoreModules;
     const modules = new embedded((_url: string) => WebAssembly.compile(bytes));
     await Promise.all(["a#1", "b#2", "c#3"].map((holder) => modules.acquire(holder, "core.wasm")));
     expect(modules.compilations).toBe(1);

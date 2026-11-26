@@ -83,6 +83,9 @@ pub mod editor {
                 #[cfg(test)]
                 #[path = "../../../../../../../🎮️commands/📤️export-model/🧪️tests/🔬️unit/🦀️.rs"]
                 pub mod tests;
+                #[cfg(test)]
+                #[path = "../../../../../../../🎮️commands/📤️export-model/🧪️tests/🔬️unit/🌿️gbxml.rs"]
+                mod gbxml;
             }
             #[path = "."]
             pub mod export_sheets {

@@ -1,3 +1,4 @@
+import {processPidExistsV1} from "../../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import{execFile,spawn}from"node:child_process";
 import{createHash}from"node:crypto";
 import{closeSync,fstatSync,mkdirSync,mkdtempSync,openSync,readFileSync,readSync,readdirSync,renameSync,rmSync,statSync,utimesSync,writeFileSync}from"node:fs";
@@ -29,7 +30,7 @@ export function graphReadCapacityProbeV1(environment:GraphReadInputV1["environme
  });
 }
 
-const lives=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return(error as NodeJS.ErrnoException).code==="EPERM";}};
+const lives=(pid:number):boolean=>processPidExistsV1(pid);
 const filesOf=(directory:string)=>({record:join(directory,GRAPH_READ_FILES_V1.record),log:join(directory,GRAPH_READ_FILES_V1.log),watch:join(directory,GRAPH_READ_FILES_V1.watch),stop:join(directory,GRAPH_READ_FILES_V1.stop),checkpoint:join(directory,GRAPH_READ_FILES_V1.checkpoint)});
 
 /** 🗂️ Keeps the log of the read that ended: `read.log` becomes `read.<modification time>.log` and only the newest `keep` of those stay, so a new read never truncates the evidence of the previous one. */

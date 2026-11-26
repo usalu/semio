@@ -352,9 +352,12 @@ const DIST_EXTRA = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 
 const WINDOW = 32768;
 const MIN_MATCH = 3;
 const MAX_MATCH = 258;
-const MAX_CHAIN = 16;
-const NICE_MATCH = 32;
-const MAX_INSERT = 16;
+const MAX_CHAIN = 4;
+const NICE_MATCH = 8;
+const MAX_INSERT = 4;
+const SKIP_SHIFT = 6;
+/** 🧭️ The canonical matching policy of codec1 Deflate, the same numbers the shared schema pins (`maximumChain`, `niceMatch`, `maximumInsert`, `skipShift`). */
+export const DEFLATE_POLICY = { maximumChain: MAX_CHAIN, niceMatch: NICE_MATCH, maximumInsert: MAX_INSERT, skipShift: SKIP_SHIFT } as const;
 const HASH_BITS = 15;
 
 function canonicalCodes(lengths: number[]): number[] {
@@ -378,7 +381,7 @@ function tableIndex(bases: number[], value: number): number {
   return 0;
 }
 
-/** 🗜️ The pack's one deflate: a single fixed-Huffman block over a greedy hash-chain LZ77 (3..258 byte matches, 32 KiB window, at most the chain-limit probes per position, none after a match of the nice length, and only the first position of a match longer than the insert limit enters the chains). Pinned by its own specification so equal input is equal output in every language. */
+/** 🗜️ The pack's one deflate: a single fixed-Huffman block over a greedy hash-chain LZ77 (3..258 byte matches, 32 KiB window, at most the chain-limit probes per position, none after a match of the nice length, and only the first position of a match longer than the insert limit enters the chains, and after a literal run the next `misses >> SKIP_SHIFT` positions are bare literals without a search or an insert). Pinned by its own specification so equal input is equal output in every language. */
 export function deflate(raw: Uint8Array): Uint8Array {
   const out: number[] = [];
   let buffer = 0;
@@ -409,10 +412,13 @@ export function deflate(raw: Uint8Array): Uint8Array {
     }
   };
   let i = 0;
+  let misses = 0;
+  let skip = 0;
   while (i < size) {
     let bestLength = 0;
     let bestDistance = 0;
-    if (i + MIN_MATCH <= size) {
+    const skipping = skip > 0;
+    if (!skipping && i + MIN_MATCH <= size) {
       let candidate = head[slot(i)]!;
       let chain = 0;
       while (candidate !== -1 && chain < MAX_CHAIN) {
@@ -438,9 +444,16 @@ export function deflate(raw: Uint8Array): Uint8Array {
       if (DIST_EXTRA[index]! > 0) write(bestDistance - DIST_BASE[index]!, DIST_EXTRA[index]!);
       for (let at = i; at < i + (bestLength <= MAX_INSERT ? bestLength : 1); at += 1) insert(at);
       i += bestLength;
+      misses = 0;
+      skip = 0;
     } else {
       huffman(LITERAL_CODES[raw[i]!]!, LITERAL_LENGTHS[raw[i]!]!);
-      insert(i);
+      misses += 1;
+      if (skipping) skip -= 1;
+      else {
+        insert(i);
+        skip = misses >> SKIP_SHIFT;
+      }
       i += 1;
     }
   }

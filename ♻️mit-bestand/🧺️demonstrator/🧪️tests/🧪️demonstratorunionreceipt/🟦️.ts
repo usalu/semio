@@ -15,7 +15,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   describe("demonstratorActivationLanes", () => {
     it("adds a lane only for a pane plugin the primary closure cannot reach", () => {
-      expect(demonstratorActivationLanes()).toEqual(["generator", "energy", "fem3d"]);
+      expect(demonstratorActivationLanes()).toEqual(["generator", "cad", "puzzle3d", "aussuchen", "gis2d", "energy", "fem3d"]);
     });
 
     it("covers every component of the runtime union across its lanes", () => {

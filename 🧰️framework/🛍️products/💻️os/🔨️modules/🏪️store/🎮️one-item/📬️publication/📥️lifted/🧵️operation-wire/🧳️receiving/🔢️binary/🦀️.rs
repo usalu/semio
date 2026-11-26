@@ -85,10 +85,14 @@ impl<M:OpBinaryReceiving+Sync> OriginalBinaryReceiving<M>{
   })
  }
  pub fn ready(&self)->bool{!self.taking_owned&&!self.closing&&!self.faulted&&self.phase==Phase::Ready&&self.output.is_some()}
+ fn direct_owned_ready(&self) -> bool {
+  !self.closing && !self.faulted && self.phase == Phase::Authority && self.typed.is_some()
+ }
  pub fn owned_handoff_pending(&self)->bool{self.taking_owned&&!self.closing&&!self.faulted}
  pub fn take(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome<Option<(RetainedOwnedProjection<M>,RetainedCloneProgress)>>{let result=self.take_ready(g);let work=u128::from(matches!(result,Ok(Some(_))));RetainedWorkOutcome{result,work}}
  fn take_ready(&mut self,g:RetainedCloneGrant)->Result<Option<(RetainedOwnedProjection<M>,RetainedCloneProgress)>,ValueError>{if !self.ready(){return Ok(None);}let d=header::<Option<RetainedOwnedProjection<M>>>();if !retained_clone_grant_admits(g,d){return Ok(None);}let output=self.output.take().ok_or_else(||invalid("original binary receiving output already transferred"))?;self.begin_close();Ok(Some((output,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
  pub fn take_owned_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+  if self.direct_owned_ready(){return Ok(header::<Option<M>>())}
   if self.closing||self.faulted||self.phase!=Phase::Ready||(!self.taking_owned&&self.output.is_none()){return Err(invalid("original binary owned handoff requires its completed output"))}
   if !self.taking_owned{return Ok(header::<bool>())}
   if let Some(output)=self.output.as_ref(){return if output.terminal_is_empty(){Ok(header::<Option<RetainedOwnedProjection<M>>>())}else{output.close_demand(body)}}
@@ -110,6 +114,11 @@ impl<M:OpBinaryReceiving+Sync> OriginalBinaryReceiving<M>{
   if control.ledger_identity()!=self.ledger||control.retirement_recipient_identity()!=self.recipient{return Err(invalid("original binary owned handoff changed its decoder ledger"))}if output.is_some(){return Err(invalid("original binary owned handoff destination is occupied"))}
   let d=self.take_owned_demands(body)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}control.checkpoint()?;pay(effect,1)?;control.admit_turn_capacity(g.maximum_capacity_bytes)?;if d.capacity_bytes!=0{control.charge(d.capacity_bytes)?}
   let unit=||RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()});
+  if self.direct_owned_ready() {
+   *output = self.typed.take();
+   self.begin_close();
+   return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: d.copy_bytes, ..Default::default() }));
+  }
   if !self.taking_owned{self.taking_owned=true;return Ok(unit())}
   if let Some(projection)=self.output.as_mut(){if projection.terminal_is_empty(){self.output.take();return Ok(unit())}return Ok(RetainedCloneStep::Progress(polled(projection.close_step(g.maximum_copy_bytes,effect))?))}
   if let Some(source)=self.typed_source.as_mut(){
@@ -186,6 +195,7 @@ impl<M:OpBinaryReceiving+Sync+Send+'static> ArtifactOriginalOperationReceiving<M
  fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}
  fn advance(&mut self,control:&mut NativeDecodeControl<'_>,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->RetainedWorkPoll<RetainedCloneStep,NativeReceivingFailure>{self.advance(control,body,maximum_work_units,grant)}
  fn ready(&self)->bool{self.ready()}
+ fn ready_for_owned(&self)->bool{self.direct_owned_ready()||self.ready()}
  fn owned_handoff_pending(&self)->bool{self.owned_handoff_pending()}
  fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(RetainedOwnedProjection<M>,RetainedCloneProgress)>>{self.take(grant)}
  fn take_owned_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.take_owned_demands(body)}

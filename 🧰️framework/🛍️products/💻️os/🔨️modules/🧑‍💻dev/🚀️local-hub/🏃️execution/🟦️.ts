@@ -1,4 +1,5 @@
 import { terminateOwnedProcessTree } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {processPidExistsV1} from "../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 import { startToolV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 export const DEV_LOCAL_HUB_READINESS_STALL_BOUND_MS = 300_000;
@@ -114,12 +115,7 @@ export function devHubLeasePathsV1(leaseRoot: string, port: number, dataDir: str
 }
 
 export function isPidAliveV1(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
-  }
+  return processPidExistsV1(pid);
 }
 
 /** 🔐️ Parses only the exact admitted first-party lease bytes; liveness remains separate.

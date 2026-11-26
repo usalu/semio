@@ -1,0 +1,160 @@
+{
+  "cases": [
+    {
+      "name": "three runs add up, odd values count as the whole number above zero",
+      "runs": [
+        {
+          "groups": {
+            "ac": {
+              "hits": 3,
+              "misses": 1
+            }
+          }
+        },
+        {
+          "groups": {
+            "ac": {
+              "hits": 2
+            },
+            "cas": {
+              "puts": 5
+            }
+          }
+        },
+        {
+          "groups": {
+            "ac": {
+              "hits": 1.9,
+              "misses": -4
+            },
+            "peers": {
+              "bytes": 4096
+            }
+          }
+        }
+      ],
+      "total": {
+        "ac": {
+          "hits": 6,
+          "misses": 1
+        },
+        "cas": {
+          "puts": 5
+        },
+        "peers": {
+          "bytes": 4096
+        }
+      },
+      "restarts": 3
+    },
+    {
+      "name": "an idle run changes no count and still counts as a restart",
+      "runs": [
+        {
+          "groups": {
+            "scheduler": {
+              "completed": 10,
+              "retried": 2
+            }
+          }
+        },
+        {
+          "groups": {}
+        },
+        {
+          "groups": {
+            "scheduler": {
+              "completed": 1
+            }
+          }
+        }
+      ],
+      "total": {
+        "scheduler": {
+          "completed": 11,
+          "retried": 2
+        }
+      },
+      "restarts": 3
+    },
+    {
+      "name": "origins are groups of their own",
+      "runs": [
+        {
+          "groups": {
+            "g1-m01": {
+              "offloadedIn": 4
+            },
+            "g1-m02": {
+              "refused": 1
+            }
+          }
+        },
+        {
+          "groups": {
+            "g1-m01": {
+              "offloadedIn": 1,
+              "offloadedOut": 2
+            }
+          }
+        }
+      ],
+      "total": {
+        "g1-m01": {
+          "offloadedIn": 5,
+          "offloadedOut": 2
+        },
+        "g1-m02": {
+          "refused": 1
+        }
+      },
+      "restarts": 2
+    },
+    {
+      "name": "a name the schema does not allow is dropped instead of spoiling the file",
+      "runs": [
+        {
+          "groups": {
+            "ac": {
+              "hits": 2,
+              "bad name": 9
+            },
+            "bad/group": {
+              "x": 1
+            },
+            "offload.g1-m01": {
+              "offloadedIn": 3
+            }
+          }
+        },
+        {
+          "groups": {
+            "ac": {
+              "hits": 1
+            },
+            "offload.g1-m01": {
+              "offloadedIn": 1
+            }
+          }
+        }
+      ],
+      "total": {
+        "ac": {
+          "hits": 3
+        },
+        "offload.g1-m01": {
+          "offloadedIn": 4
+        }
+      },
+      "restarts": 2
+    }
+  ],
+  "temporaries": [
+    "counters.json.123.tmp",
+    "counters.json.tmp",
+    "counters.json.12a.tmp",
+    "other.json.123.tmp",
+    "counters.json.4567890.tmp",
+    "counters.json"
+  ]
+}

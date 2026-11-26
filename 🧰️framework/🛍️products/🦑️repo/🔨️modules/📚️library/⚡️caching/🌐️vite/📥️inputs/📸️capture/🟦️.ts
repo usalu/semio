@@ -1,3 +1,4 @@
+import{descriptorRefusalV1}from"../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧷️descriptor/🟦️.ts";
 import { closeSync, fstatSync, lstatSync, openSync, type BigIntStats } from "node:fs";
 import { artifactReadFlagsV1 } from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import { lstat, mkdir, utimes } from "node:fs/promises";
@@ -121,7 +122,7 @@ export async function captureViteArtifactInputsV1(options: Readonly<{
       assertCurrent(path, expected);
       const fd = openSync(path, artifactReadFlagsV1());
       try {
-        if (!identityMatches(fstatSync(fd, { bigint: true }), expected)) throw Error("Private Vite artifact descriptor changed");
+        if (!identityMatches(fstatSync(fd, { bigint: true }), expected)) throw descriptorRefusalV1("immutable",path,{en:"Private Vite artifact",de:"Privates Vite-Artefakt"});
         assertCurrent(path, expected);
         return fd;
       } catch (error) {

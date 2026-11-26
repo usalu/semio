@@ -38,7 +38,7 @@ test("a module of the Build tooling that does not load, a failure that names no 
  const unnamed=Object.assign(Error("Cannot find module './x.ts'"),{name:"ResolveMessage"});
  expect(ownerSourceFailureV1(unnamed,{...scope,implementationRoot:join(root,"tooling")}),"no importer and no absolute module").toBeUndefined();
  expect(ownerSourceFailureV1(Error("ordinary"),scope)).toBeUndefined();
- const owned=Object.assign(Error("x"),{code:"BUILD_SOURCE_UNPARSEABLE"});expect(ownerSourceFailureV1(owned,scope)).toBe(owned);
+ const owned=Object.assign(Error("x"),{code:"BUILD_SOURCE_UNPARSEABLE"});expect<unknown>(ownerSourceFailureV1(owned,scope)).toBe(owned);
 }),60_000);
 
 test("the missing module is an observation of the owner: the withheld owner holds until the module appears and is checked again then",async()=>repository.invoke(async()=>{

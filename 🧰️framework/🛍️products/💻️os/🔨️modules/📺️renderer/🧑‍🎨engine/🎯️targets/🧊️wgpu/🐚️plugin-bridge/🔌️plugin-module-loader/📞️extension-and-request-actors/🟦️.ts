@@ -2,12 +2,13 @@
  *
  * 🧱️ Child module of {@link ../🟦️.ts | loadPluginModule}: each function builds one group of the handle's closure state and helpers and returns them for the later groups. */
 import { type Effect, GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES, guestAnswerPages, type InvocationResponse, SemioFaultError } from "@semio-tech/framework";
-import { decodeFaultFromWire, decodePackValue, encodePackValue } from "@semio-tech/framework-os";
+import { decodeFaultFromWire } from "@semio-tech/framework/app-channel";
+import { decodePackValue, encodeFaultPack } from "@semio-tech/framework/packs";
 import { WGPU_TYPED_OPERATION_SETTLE_LIMIT, type WgpuPluginExtensionCompletion, type WgpuPluginHandle, type WgpuPluginInvokeContext, WgpuTypedOperationDrive } from "../../🧾️typed-operations-and-handle/🟦️.ts";
 import { admitSpawnedJob, loadedWgpuHandles, pendingTurnEffects, shellFrameAnswersACaller, wgpuHostEffect } from "../../🎛️contributions-and-effects/🟦️.ts";
 import { actorTurnChains, extensionRequestActivationReason, serializeWgpuActorCall, submitTurn } from "../../🧵️shard-and-actor-calls/🟦️.ts";
 import { yieldWgpuUi } from "../../🍽️ui-intake-and-route/🟦️.ts";
-import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET } from "../../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/📥️inbound-request/🟦️.ts";
+import { driveInboundRequest } from "../../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/📥️inbound-request/🟦️.ts";
 import { shellFrameBytes, wireTurnStatusTag, type WireVariant } from "../../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
 import { type ShardEventEnvelope } from "@semio-tech/framework-actor/shard-client/wire";
 import type { acquirePluginDescriptor, createInstanceBookkeeping } from "../🪪️descriptor-and-instance-state/🟦️.ts";
@@ -132,7 +133,7 @@ export function createRequestActor({ state, pluginId, registry, captureExtension
       submit: (events) => submitTurn(actorId, events as readonly ShardEventEnvelope[]),
     });
     if (answer.status === "cancelled") throw refuse("extension.request-cancelled", `extension request ${req} to ${pluginId} was cancelled after ${answer.turns} turn(s)`);
-    if (answer.status === "unanswered") throw refuse("extension.request-unanswered", `extension ${pluginId} did not answer ${capability} within ${answer.turns} of ${INBOUND_REQUEST_TURN_BUDGET} turns`);
+    if (answer.status === "unanswered") throw refuse("extension.request-unanswered", `extension ${pluginId} did not answer ${capability} after ${answer.turns} turns`);
     if ("fault" in answer.result) {
       const fault = decodeFaultFromWire(Array.from(answer.result.fault), decodePackValue);
       throw fault ? new SemioFaultError(fault) : refuse("extension.answer-not-a-fault", `extension ${pluginId} refused ${capability} with ${answer.result.fault.byteLength} undecodable bytes`);
@@ -160,7 +161,7 @@ export function createRequestActor({ state, pluginId, registry, captureExtension
         message: error instanceof Error ? error.message : String(error),
         scope: { pluginId: extensionId, instanceId: String(instanceId) }, retryable: false,
       };
-      outcome = { fault: encodePackValue(fault) };
+      outcome = { fault: encodeFaultPack(fault) };
     }
     return completion.complete(outcome);
   };

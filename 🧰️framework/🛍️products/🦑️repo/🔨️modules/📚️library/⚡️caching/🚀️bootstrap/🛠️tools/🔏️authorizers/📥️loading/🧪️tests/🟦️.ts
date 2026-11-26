@@ -23,7 +23,7 @@ test("authorizer receipt and Node preflight admit the compiler output ceiling",a
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original ticket artifacts required");
  const validate=new Ajv({strict:true}).compile({type:"object",additionalProperties:false,required:["bytes","accepted"],properties:{bytes:{type:"integer",minimum:1},accepted:{type:"boolean"}}});
  const source=contract.functions.map(name=>`export function ${name}(){}`).join("\n"),compiled=await build({stdin:{contents:source},bundle:false,format:"esm",platform:"node",write:false,logLevel:"silent"});
- const entry="semio-authorizers.mjs",manifest=JSON.stringify({version:1,mode:"release",entry:"entry.ts",sources:[{path:"entry.ts",sha256:"a".repeat(64)}],resolutions:[]})+"\n",sha256=async(bytes:Uint8Array)=>Buffer.from(await crypto.subtle.digest("SHA-256",bytes)).toString("hex");
+ const entry="semio-authorizers.mjs",manifest=JSON.stringify({version:1,mode:"release",entry:"entry.ts",sources:[{path:"entry.ts",sha256:"a".repeat(64)}],resolutions:[]})+"\n",sha256=async(bytes:Uint8Array<ArrayBuffer>)=>Buffer.from(await crypto.subtle.digest("SHA-256",bytes)).toString("hex");
  await withBuildTestInvocationV1(async original=>{
   for(const row of fixture.bundleSizes){
    expect(validate(row)).toBe(true);const directory=await mkdtemp(join(artifacts,"authorizer-"));

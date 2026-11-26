@@ -13,7 +13,7 @@ fn role() -> PdfAdmittedStreamRole {
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🔣️.json")).unwrap();
     let owner = ObjRef { num: fixture["role"]["identity"]["owner"]["num"].as_u64().unwrap() as u32, gen: fixture["role"]["identity"]["owner"]["gen"].as_u64().unwrap() as u16 };
     let dependency = &fixture["role"]["dependencies"][1]["owner"];
-    PdfAdmittedStreamRole { identity: PdfGraphIdentity { owner, path: vec![PdfGraphPath::Entry { key: "Contents".into() }] }, dependencies: vec![PdfGraphIdentity { owner, path: vec![PdfGraphPath::Entry { key: "Contents".into() }] }, PdfGraphIdentity { owner: ObjRef { num: dependency["num"].as_u64().unwrap() as u32, gen: dependency["gen"].as_u64().unwrap() as u16 }, path: Vec::new() }], value: PdfStreamRoleValue::Operators { content: vec![PdfOp::Save, PdfOp::Restore] } }
+    PdfAdmittedStreamRole { identity: PdfGraphIdentity { owner, path: vec![PdfGraphPath::Entry { key: "Contents".into() }] }, dependencies: vec![PdfGraphIdentity { owner, path: vec![PdfGraphPath::Entry { key: "Contents".into() }] }, PdfGraphIdentity { owner: ObjRef { num: dependency["num"].as_u64().unwrap() as u32, gen: dependency["gen"].as_u64().unwrap() as u16 }, path: Vec::new() }], value: PdfStreamRoleValue::Operators { content: vec![PdfOp::Save, PdfOp::Restore].into() } }
 }
 
 #[test]
@@ -22,7 +22,7 @@ fn pdf_stream_roles_require_exact_generation_and_explicit_replacement() {
     let stream = PdfObject::Stream { dict: Vec::new(), data: stream_bytes(b"q Q"), filters: Vec::new() };
     let mut base = vec![PdfIndirectObject { id: role.dependencies[1].owner, value: stream }, PdfIndirectObject { id: role.identity.owner, value: PdfObject::Dict(vec![crate::standards::v1_7::subsets::base::schema::snapshot::PdfDictEntry::new("Contents", PdfObject::Ref(role.dependencies[1].owner))]) }];
     assert!(resolve_identity(&base, &PdfGraphIdentity { owner: ObjRef { gen: 3, ..role.dependencies[1].owner }, path: Vec::new() }).is_none());
-    assert_eq!(page_content(std::slice::from_ref(&role), role.identity.owner), Some([PdfOp::Save, PdfOp::Restore].as_slice()));
+    assert_eq!(page_content(std::slice::from_ref(&role), role.identity.owner), Some(&vec![PdfOp::Save, PdfOp::Restore].into()));
     let mut next = base.clone();
     let PdfObject::Stream { data, .. } = &mut next[0].value else { unreachable!() }; { let mut bytes = data.to_vec_owner(); bytes.push(b'q'); *data = stream_bytes(&bytes); }
     assert!(validate_role_inputs(&base, &next, std::slice::from_ref(&role), &[]).is_err());
@@ -40,8 +40,10 @@ fn pdf_stream_roles_native_page_lift_records_semantic_operators() {
     let snapshot = decode_pdf(&encode_pdf(&text_document(&[(200.0, 300.0, "role")])).unwrap()).unwrap();
     let mut source = GraphSource::new(&snapshot.objects);
     let lifter = lift_document_with(&snapshot.trailer, &snapshot.declared_version, &mut source);
-    assert_eq!(page_content(&lifter.snapshot.admitted_stream_roles, lifter.page_refs[0]), Some(snapshot.pages[0].content.as_slice()));
-    assert!(!lifter.snapshot.admitted_stream_roles[0].dependencies.is_empty());
+    assert_eq!(page_content(&lifter.snapshot.admitted_stream_roles, lifter.page_refs[0]), Some(&snapshot.pages[0].content));
+    let role = &lifter.snapshot.admitted_stream_roles[0];
+    assert_eq!(role.dependencies.first(), Some(&role.identity), "a role stores its own identity first and derives the rest");
+    assert!(role.dependencies.len() <= 2 + lifter.snapshot.fonts.len(), "{:?}", role.dependencies);
 }
 
 #[test]
@@ -56,16 +58,17 @@ fn pdf_stream_roles_pure_projection_replaces_operators_and_preserves_inverse() {
     assert_eq!(semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_page_count(&native).unwrap(), base.pages.len());
     assert_eq!(project_graph(&base).unwrap().pages, base.pages);
     let (index, role) = base.admitted_stream_roles.iter().enumerate().find(|(_, role)| matches!(role.value, PdfStreamRoleValue::Operators { .. })).unwrap();
-    let dependency = role.dependencies.iter().find(|dependency| dependency.path.is_empty() && base.objects.iter().any(|object| object.id == dependency.owner && matches!(object.value,PdfObject::Stream { .. }))).unwrap();
+    let consumed = GraphSource::new(&base.objects).closure_of(&role.dependencies);
+    let dependency = consumed.iter().find(|dependency| dependency.path.is_empty() && base.objects.iter().any(|object| object.id == dependency.owner && matches!(object.value,PdfObject::Stream { .. }))).unwrap();
     let mut object = base.objects.iter().find(|object| object.id == dependency.owner).unwrap().value.clone();
     let PdfObject::Stream { data, .. } = &mut object else { unreachable!() }; *data = stream_bytes(b"q Q");
     let refused = PdfMutation::SetObjectValue(SetObjectValue { id: dependency.owner, value: object.clone(), index: None, admitted_stream_roles: None }).diff(&base);
     assert!(protocol::apply_diff_cold(refused.diff(), &base).is_err());
-    let mut replacement = role.clone(); replacement.value = PdfStreamRoleValue::Operators { content: vec![PdfOp::Save, PdfOp::Restore] };
+    let mut replacement = role.clone(); replacement.value = PdfStreamRoleValue::Operators { content: vec![PdfOp::Save, PdfOp::Restore].into() };
     let operation = PdfMutation::SetObjectValue(SetObjectValue { id: dependency.owner, value: object, index: None, admitted_stream_roles: Some((PdfIndexedDiff { modified: vec![PdfIndexedItem { index, value: replacement }], ..PdfIndexedDiff::default() }).into()) });
     let outcome = operation.diff(&base);
     let next = protocol::apply_diff_cold(outcome.diff(), &base).unwrap();
-    assert_eq!(next.pages[0].content, vec![PdfOp::Save, PdfOp::Restore]);
+    assert_eq!(next.pages[0].content, vec![PdfOp::Save, PdfOp::Restore].into());
     assert_eq!(protocol::apply_diff_cold(&outcome.diff().inverse(&base), &next).unwrap(), base);
 }
 
@@ -131,9 +134,9 @@ fn pdf_stream_roles_role_only_projection_and_insert_remove_preserve_replay() {
     use protocol::{ColdMutation, Mutation,ColdDiffAlgebra, DiffAlgebra};
     let base=decode_pdf(&encode_pdf(&text_document(&[(200.0,300.0,"role")])).unwrap()).unwrap();
     let (index,role)=base.admitted_stream_roles.iter().enumerate().find(|(_,role)|matches!(role.value,PdfStreamRoleValue::Operators {..})).unwrap();
-    let mut changed=role.clone();changed.value=PdfStreamRoleValue::Operators {content:vec![PdfOp::Save,PdfOp::Restore]};
+    let mut changed=role.clone();changed.value=PdfStreamRoleValue::Operators {content:vec![PdfOp::Save,PdfOp::Restore].into()};
     let diff=PdfDiff {admitted_stream_roles:Some(PdfIndexedDiff {modified:vec![PdfIndexedItem {index,value:changed}],..Default::default()}),..Default::default()};
-    let next=protocol::apply_diff_cold(&diff,&base).unwrap();assert_eq!(next.pages[0].content,vec![PdfOp::Save,PdfOp::Restore]);
+    let next=protocol::apply_diff_cold(&diff,&base).unwrap();assert_eq!(next.pages[0].content,vec![PdfOp::Save,PdfOp::Restore].into());
     let replay:serde_json::Value=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🪢️replay/🔣️.json")).unwrap();
     let expected:Vec<String>=serde_json::from_value(replay["nativeOperatorNames"].clone()).unwrap();
     let native=encode_pdf(&next).unwrap();

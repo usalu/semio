@@ -122,6 +122,9 @@ export function jobserverStdioV1(descriptors:readonly number[],capture:boolean):
  return stdio;
 }
 
+/** 🧵️ The same vector typed for `Bun.spawn`, whose declarations name only the three standard slots; the placeholders beyond them are honoured at run time. */
+export function jobserverBunStdioV1(descriptors:readonly number[],capture:boolean):["inherit","pipe"|"inherit","pipe"|"inherit"]{return jobserverStdioV1(descriptors,capture) as unknown as ["inherit","pipe"|"inherit","pipe"|"inherit"];}
+
 /** 💬️ The bilingual line that says a pool was unreachable and the command runs on one slot; empty when the pool is fine. */
 export function jobserverClosedMessageV1(plan:JobserverPlanV1):string{
  if(plan.endpoint.kind!=="closed")return"";

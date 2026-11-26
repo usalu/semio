@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 original-actor-context-testing = ["semio-plugin-guest-contract/original-actor-context-testing"]
 
 [dependencies]
+semio-plugin-actor-input = { path = "../../🌉️call/📥️input/📦️packages/🦀️rust" }
 semio-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
 semio-plugin-guest-contract = { path = "../../../../🧬️guest-contract/📦️packages/🦀️rust" }
 semio-plugin-reactor-app = { path = "../../../🔌️app/📦️packages/🦀️rust" }

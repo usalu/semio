@@ -58,6 +58,59 @@ dashboard_labels! {
     prefs_cancelled: "Preference save cancelled.", "Speichern der Einstellungen abgebrochen.";
     nav_brand: "semio", "semio";
     nav_mode: "dashboard", "Übersicht";
+    title_fleet: "Fleet", "Flotte";
+    action_show_fleet: "show fleet monitoring", "Flottenüberwachung anzeigen";
+    fleet_summary: "Fleet · range {range} · sort {sort} · columns {columns}", "Flotte · Zeitraum {range} · Sortierung {sort} · Spalten {columns}";
+    fleet_hint: "1-5 range · ←/→ zoom · s sort · c columns · Enter details · Esc back", "1-5 Zeitraum · ←/→ Zoom · s Sortierung · c Spalten · Eingabe Details · Esc zurück";
+    fleet_loading: "Waiting for the fleet snapshot from the daemon…", "Warte auf den Flottenstand vom Hintergrunddienst…";
+    fleet_store_unavailable: "The shared fleet store cannot be read. Set SEMIO_FLEET_STORE_ROOT or provision this machine.", "Der gemeinsame Flottenspeicher ist nicht lesbar. SEMIO_FLEET_STORE_ROOT setzen oder diesen Rechner einrichten.";
+    fleet_no_origins: "The store has no origin folders yet.", "Der Speicher enthält noch keine Herkunftsordner.";
+    fleet_total: "Σ fleet", "Σ Flotte";
+    fleet_total_ready: "{ready}/{total} ready", "{ready}/{total} bereit";
+    fleet_scope_fleet: "(fleet)", "(Flotte)";
+    fleet_facts: "Fleet facts: queue {running} running / {queued} queued · offloaded in {offloaded} · remote cache {entries} entries, {bytes}", "Flottenwerte: Warteschlange {running} laufend / {queued} wartend · eingelagert {offloaded} · Remote-Cache {entries} Einträge, {bytes}";
+    fleet_per_minute: "/min", "/Min.";
+    fleet_host_ok: "ok", "ok";
+    fleet_host_duplicate: "dup {count}", "doppelt {count}";
+    fleet_host_silent: "off", "aus";
+    fleet_host_unknown: "-", "-";
+    fleet_state_stale: "stale", "veraltet";
+    fleet_state_missing: "missing", "fehlt";
+    fleet_ready_ready: "ready", "bereit";
+    fleet_ready_running: "running", "läuft";
+    fleet_ready_waiting: "waiting", "wartet";
+    fleet_beat_none: "-", "-";
+    fleet_col_origin: "Origin", "Herkunft";
+    fleet_col_ready: "Readiness", "Bereitschaft";
+    fleet_col_beat: "Beat", "Takt";
+    fleet_col_cpu: "CPU", "CPU";
+    fleet_col_memory: "Memory", "Speicher";
+    fleet_col_disk: "Disk", "Platte";
+    fleet_col_cpu_trend: "CPU trend", "CPU-Verlauf";
+    fleet_col_units: "Units/min", "Einheiten/Min.";
+    fleet_col_cache: "Hit L/R", "Treffer L/R";
+    fleet_col_offload: "Offload in/out", "Auslagerung ein/aus";
+    fleet_col_host: "Name", "Name";
+    fleet_sort_origin: "origin", "Herkunft";
+    fleet_sort_problems: "problems first", "Probleme zuerst";
+    fleet_sort_cpu: "CPU", "CPU";
+    fleet_sort_memory: "memory", "Speicher";
+    fleet_sort_disk: "disk", "Platte";
+    fleet_sort_units: "units/min", "Einheiten/Min.";
+    fleet_sort_beat: "beat age", "Takt-Alter";
+    fleet_preset_full: "all", "alle";
+    fleet_preset_host: "host", "Rechner";
+    fleet_preset_build: "build", "Bauen";
+    fleet_preset_compact: "compact", "kompakt";
+    fleet_detail_title: "{origin} · {range} · {state}", "{origin} · {range} · {state}";
+    fleet_detail_missing: "The store has no folder for origin {origin}.", "Der Speicher hat keinen Ordner für die Herkunft {origin}.";
+    fleet_detail_empty: "no samples in this range", "keine Messwerte in diesem Zeitraum";
+    fleet_detail_now: "now", "jetzt";
+    fleet_na: "n/a", "n. v.";
+    fleet_detail_unsupported: "not measured on {platform}", "auf {platform} nicht gemessen";
+    fleet_stat_min: "min", "min";
+    fleet_stat_max: "max", "max";
+    fleet_stat_last: "now", "jetzt";
     source_history: "retained history", "aufbewahrter Verlauf";
     action_inspect_history: "Inspect history", "Verlauf prüfen";
     action_reconcile_history: "Reconcile history", "Verlauf abgleichen";
@@ -385,7 +438,7 @@ impl DashboardLabels {
             "create-file"=>self.action_create_file,"create-directory"=>self.action_create_directory,"rename-entry"=>self.action_rename_entry,"retain-entry"=>self.action_retain_entry,
             "show-files" => self.action_show_files, "save-document" => self.action_save_document, "reload-document" => self.action_reload_document, "discard-document" => self.action_discard_document, "cancel-source" => self.action_cancel_source,
             "new-task" => self.action_new_task, "show-tasks" => self.action_show_tasks, "show-diagnostics" => self.diagnostics_title,
-            "show-settings" => self.action_show_settings, "show-help" => self.action_show_help,
+            "show-fleet" => self.action_show_fleet, "show-settings" => self.action_show_settings, "show-help" => self.action_show_help,
             "show-hidden-tasks" => self.action_show_hidden_tasks, "refresh-commands" => self.action_refresh_commands, "cancel-discovery" => self.action_cancel_discovery,
             "search-output" => self.action_search_output, "restart-task" => self.action_restart_task, "stop-task" => self.action_stop_task, "kill-task" => self.action_kill_task, "copy-selection" => self.action_copy_selection,
             "open-ready" => self.action_open_ready, "cancel-open-ready" => self.action_cancel_open_ready,

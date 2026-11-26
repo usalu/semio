@@ -73,7 +73,7 @@ test("component jobs: workspaces of one wasm lane overlap up to the planned jobs
   const down = await spans(mkdtempSync(join(artifacts, "cj1-")), 1);
   expect(down.spans[1]!.start).toBeGreaterThanOrEqual(down.spans[0]!.end);
   const concurrent = await spans(mkdtempSync(join(artifacts, "cj3-")), 3);
-  expect(concurrent.requested[0]!.crates.sort()).toEqual(["c_0", "c_1", "c_2"]);
+  expect([...concurrent.requested[0]!.crates].sort()).toEqual(["c_0", "c_1", "c_2"]);
   expect(concurrent.spans[1]!.start).toBeLessThan(concurrent.spans[0]!.end);expect(concurrent.spans[2]!.start).toBeLessThan(concurrent.spans[0]!.end);
 }, 120_000);
 

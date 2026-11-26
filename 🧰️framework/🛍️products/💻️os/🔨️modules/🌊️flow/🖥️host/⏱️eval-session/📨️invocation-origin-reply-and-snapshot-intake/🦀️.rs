@@ -53,6 +53,11 @@ impl FlowEvalSession {
     /// 🧊️ The explicit diagnostic receiver retains its decoded response until typed result admission.
     pub fn retain_invocation_reply_cold(&mut self,window:&str,node_hash:u64,reply:String)->Result<(),(ValueError,String)>{let Some(index)=self.state.invocation_origins.iter().position(|entry|entry.origin.window_id==window&&entry.origin.node_hash==node_hash)else{return Err((ValueError::literal(ValueRefusalKind::InvalidValue,"original invocation reply ledger is absent"),reply))};self.retain_invocation_reply_step(index,reply,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1}).map(|_|())}
 
+    /// 🧠️ Borrows the session's neural cache without issuing a counted alias that a caller would have to retire.
+    pub fn neural_cache_ref(&self) -> &NeuralCache {
+        self.neural_cache.as_ref().expect("live Flow evaluation session owns its neural cache")
+    }
+
     pub fn neural_cache(&self) -> SharedOwner<NeuralCache> {
         self.neural_cache.as_ref().expect("live Flow evaluation session owns its neural cache").clone()
     }

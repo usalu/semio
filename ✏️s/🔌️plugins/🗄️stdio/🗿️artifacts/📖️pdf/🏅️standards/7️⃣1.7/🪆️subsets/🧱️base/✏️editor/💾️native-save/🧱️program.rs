@@ -144,7 +144,7 @@ impl PdfNativeSaveProgram<PdfSnapshot> for ClassicPdfSaveProgram {
                     self.appended = Some(Appender::default());
                     Route::Increment
                 }
-                _ => { eprintln!("[DEBUG] no increment: original {} document {} graft {} objects {}", self.original.is_some(), self.document.is_some(), self.graph.needs_ordinary_graft(), snapshot.objects.len()); Route::Compact }
+                _ => Route::Compact,
             };
         }
         if self.route == Route::Increment && !self.entered {
@@ -165,7 +165,7 @@ impl PdfNativeSaveProgram<PdfSnapshot> for ClassicPdfSaveProgram {
                                 retained_capacity_bytes: turn.capacity, ..Default::default() })?;
                         }
                     }
-                    Err(why) => { eprintln!("[DEBUG] increment refused: {why:?}"); self.route = Route::Compact }
+                    Err(_) => self.route = Route::Compact,
                 }
                 return Ok(PlanDecision::Pending);
             }

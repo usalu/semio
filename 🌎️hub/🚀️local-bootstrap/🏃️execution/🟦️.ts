@@ -1,4 +1,5 @@
 import {decodeCargoProvenanceV1} from "@semio-tech/process/native-receipt";
+import {processPidExistsV1} from "../../../🧰️framework/🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 import { repositoryLeaseDirectoryV1, withRepositoryDevelopmentStateTaskV1, type RepositoryDevelopmentStateV1, withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
 import {AsyncLocalStorage} from "node:async_hooks";
 import {lstat,mkdir,rm} from "node:fs/promises";
@@ -329,12 +330,7 @@ export function hubBackendLeasePath(repoRoot: string, name: HubBackendName): str
 }
 
 function processAlive(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    return (error as NodeJS.ErrnoException).code === "EPERM";
-  }
+  return processPidExistsV1(pid);
 }
 
 function takeLease(path: string): boolean {

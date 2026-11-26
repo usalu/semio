@@ -37,7 +37,7 @@ const read=(path:string):unknown=>JSON.parse(readFileSync(path,"utf8"));
 test("native compiler routes have cross-platform canonical owners",()=>{
  const build=readBuildTestTableV1(),suite=build.suites.find(row=>row.id===nativeGate.suite),caching=readCachingTestTableV1(),compiler=caching.suites.find(row=>row.id===nativeGate.compilerSuite),targets=(read(project)as{targets:Record<string,{options?:{command?:string}}>}).targets;
  const actual={suite:suite?.id,target:targets[nativeGate.target]?.options?.command===`repo ./📜️script.ts test ${nativeGate.suite}`?nativeGate.target:undefined,file:suite?.files?.[0],platforms:suite?.platforms,compilerSuite:compiler?.id,compilerTree:compiler?.trees?.[0]};
- expect(new Ajv({strict:true}).validate({const:nativeGate},actual)).toBe(true);expect(actual).toEqual(nativeGate);
+ expect(new Ajv({strict:true}).validate({const:nativeGate},actual)).toBe(true);expect<unknown>(actual).toEqual(nativeGate);
 });
 
 test("the managed interpreter query admits exactly one absolute path inside its declared environment",()=>{
@@ -52,7 +52,7 @@ test("portable preflight contracts have one cross-platform gate independent of P
  const declared=readBuildTestTableV1(),suite=declared.suites.find(row=>row.id===preflightGate.suite),targets=(read(project)as{targets:Record<string,{options?:{command?:string}}>}).targets;
  const actual={suite:suite?.id,tree:suite?.trees?.join(","),platforms:suite?.platforms,tools:suite?.tools??[],target:targets[preflightGate.target]?.options?.command===`repo ./📜️script.ts test ${preflightGate.suite}`?preflightGate.target:undefined};
  expect(new Ajv({strict:true}).validate({const:preflightGate},actual)).toBe(true);
- expect(actual).toEqual(preflightGate);
+ expect<unknown>(actual).toEqual(preflightGate);
  expect(declared.suites.filter(row=>row.trees?.includes(preflightGate.tree)).map(row=>row.id)).toEqual([preflightGate.suite]);
 });
 

@@ -64,13 +64,39 @@ fn validate_catalog(contributions: &[ArtifactContribution]) -> Result<(), Plugin
 #[derive(Clone)]
 pub struct ContributionRegistry {
     contributions: Vec<ArtifactContribution>,
+    runtime_hosts: BTreeMap<&'static str, &'static str>,
 }
 
 impl ContributionRegistry {
     /// 📥 Accepts the exact authored roster without catalog defaults.
     pub fn new(contributions: Vec<ArtifactContribution>) -> Result<Self, PluginAssemblyError> {
         validate_catalog(&contributions)?;
-        Ok(Self { contributions })
+        Ok(Self { contributions, runtime_hosts: BTreeMap::new() })
+    }
+
+    /// 🏠 Declares which composition owner hosts the complete runtime of an artifact whose definition this roster assembles alone.
+    pub fn with_runtime_hosts(mut self, hosts: &[(&'static str, &'static str)]) -> Result<Self, PluginAssemblyError> {
+        for (artifact, host) in hosts {
+            if !self.contributions.iter().any(|contribution| contribution.identity == *artifact) || host.is_empty() || self.runtime_hosts.insert(*artifact, *host).is_some() {
+                return Err(failure(format!("runtime host of {artifact} names an unselected or repeated artifact")));
+            }
+        }
+        Ok(self)
+    }
+
+    /// 🏠 The composition owner hosting one artifact's runtime, when that artifact is assembled as a definition only.
+    pub fn runtime_host_of(&self, artifact: &str) -> Option<&'static str> {
+        self.runtime_hosts.get(artifact).copied()
+    }
+
+    /// 🏠 The selected contributions whose runtime one composition owner hosts.
+    pub fn hosted_by(&self, host: &str) -> Vec<ArtifactContribution> {
+        self.contributions.iter().copied().filter(|contribution| self.runtime_hosts.get(contribution.identity).copied() == Some(host)).collect()
+    }
+
+    /// 🏠 Every distinct composition owner hosting a selected runtime, in sorted order.
+    pub fn runtime_host_ids(&self) -> Vec<&'static str> {
+        self.runtime_hosts.values().copied().collect::<BTreeSet<_>>().into_iter().collect()
     }
 
     /// 📋 Borrows the selected contributions in authored assembly order.
@@ -95,6 +121,7 @@ impl ContributionRegistry {
         }
         validate_catalog(&selected)?;
         self.contributions = selected;
+        self.runtime_hosts.remove(identity);
         Ok(true)
     }
 

@@ -4,7 +4,7 @@ use std::{cell::Cell, collections::{BTreeMap, HashSet}, sync::Arc};
 use semio_framework_value::{ByteReadSource, RetireOwned};
 use crate::standards::v1_7::subsets::base::{
     io::{export::{Moved, Reading, graft::Graft}, import::original_custody::{self, GraphDigest, RetainedOriginal}},
-    modules::{lexer::dict_get, lower::lower_info},
+    modules::{content::content_references, lexer::dict_get, lower::lower_info},
     schema::{graph_source::ObjectSource, snapshot::{ObjRef, PdfAnnotationKind, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot}},
 };
 use super::{classic_graph_quote::GraphLoan, graph::object_capacity, original_tail::{OriginalTail, TailRefusal}};
@@ -237,8 +237,13 @@ impl IncrementPlan {
         if !name_is(original, "Type", "Page") || dict_get(original, "Parent").and_then(reference) != Some(parent) { return Err(Compact::Tree); }
         let chain = ancestors(loan, parent, root)?;
         let mut seeds = BTreeMap::new();
-        seeds.insert(catalog.num, row(catalog, PdfObject::Dict(vec![
-            PdfDictEntry::new("Type", PdfObject::name("Catalog")), PdfDictEntry::new("Pages", PdfObject::Ref(root))])));
+        let mut resource_rows = HashSet::new();
+        let mut stub = vec![PdfDictEntry::new("Type", PdfObject::name("Catalog")), PdfDictEntry::new("Pages", PdfObject::Ref(root))];
+        if let Some(properties) = dictionary(loan, catalog).and_then(|entries| dict_get(entries, "OCProperties")) {
+            seed_resources(loan, properties, &mut seeds, &mut resource_rows, 0);
+            stub.push(PdfDictEntry::new("OCProperties", properties.clone()));
+        }
+        seeds.insert(catalog.num, row(catalog, PdfObject::Dict(stub)));
         let typed = &snapshot.pages[index];
         let links = typed.annotations.iter().any(|annotation| matches!(annotation.kind, PdfAnnotationKind::Link { .. } | PdfAnnotationKind::Widget { .. }));
         let at = if links { index } else { 0 };
@@ -252,7 +257,7 @@ impl IncrementPlan {
         }
         seeds.insert(page_ref.num, row(page_ref, PdfObject::Dict(original.to_vec())));
         for owner in std::iter::once(page_ref).chain(chain.iter().copied()) {
-            if let Some(resources) = dictionary(loan, owner).and_then(|owner| dict_get(owner, "Resources")) { seed_resources(loan, resources, &mut seeds, 0); }
+            if let Some(resources) = dictionary(loan, owner).and_then(|owner| dict_get(owner, "Resources")) { seed_resources(loan, resources, &mut seeds, &mut resource_rows, 0); }
         }
         let trailer = vec![PdfDictEntry::new("Root", PdfObject::Ref(catalog))];
         let version = &snapshot.declared_version;
@@ -265,12 +270,24 @@ impl IncrementPlan {
         if final_reading.lanes.pages[at] != *typed {
             let mut pages = final_reading.lanes.pages.clone();
             pages[at] = typed.clone();
-            let probe = PdfSnapshot { pages, objects: final_reading.lanes.objects.clone(), trailer: Vec::new(), admitted_stream_roles: Vec::new(), ..final_reading.lanes.clone() };
+            let mut probe = PdfSnapshot { pages, objects: final_reading.lanes.objects.clone(), trailer: Vec::new(), admitted_stream_roles: Vec::new(), ..final_reading.lanes.clone() };
+            let used = content_references(&typed.content);
+            for id in &used.fonts { if probe.font(id).is_none() { probe.fonts.extend(snapshot.font(id).cloned()); } }
+            for id in &used.x_objects {
+                if probe.image(id).is_none() { probe.images.extend(snapshot.image(id).cloned()); }
+                if probe.form(id).is_none() { probe.forms.extend(snapshot.form(id).cloned()); }
+            }
+            for id in &used.ext_g_states { if probe.ext_g_state(id).is_none() { probe.ext_g_states.extend(snapshot.ext_g_state(id).cloned()); } }
+            for id in &used.shadings { if probe.shading(id).is_none() { probe.shadings.extend(snapshot.shading(id).cloned()); } }
+            for id in &used.patterns { if probe.pattern(id).is_none() { probe.patterns.extend(snapshot.pattern(id).cloned()); } }
+            for name in &used.color_spaces { if !probe.color_spaces.iter().any(|space| &space.name == name) { probe.color_spaces.extend(snapshot.color_spaces.iter().find(|space| &space.name == name).cloned()); } }
+            for name in &used.properties { if !probe.properties.iter().any(|item| &item.name == name) { probe.properties.extend(snapshot.properties.iter().find(|item| &item.name == name).cloned()); } }
             let before = self.next;
             let mut graft = Graft::sparse(&probe, seeds.clone(), trailer.clone(), self.next);
             let original = final_reading;
             let mut moved = Moved::between(&original.lanes, &probe);
-            if moved.resources || !moved.catalog.is_empty() || moved.info || moved.regenerates() { return Err(Compact::Page); }
+            if !moved.catalog.is_empty() || moved.info || moved.regenerates() { return Err(Compact::Page); }
+            moved.resources = false;
             let mut current: Option<Reading> = None;
             let mut settled = None;
             for _ in 0..3 {
@@ -290,7 +307,7 @@ impl IncrementPlan {
             for (number, object) in &graft.graph {
                 match seeds.get(number) {
                     Some(seed) if seed == object => continue,
-                    Some(_) if *number != page_ref.num => return Err(Compact::Page),
+                    Some(_) if *number != page_ref.num && !resource_rows.contains(number) => return Err(Compact::Page),
                     None if *number < before => return Err(Compact::Page),
                     _ => {}
                 }
@@ -463,18 +480,20 @@ fn trailer_entries(loan: GraphLoan<'_>) -> Vec<PdfDictEntry> {
 }
 
 /// 📚️ Seeds the dictionaries a page's resources are made of (the resource dictionary, its sections and the font dictionaries), never a stream, so a graft can re-state them.
-fn seed_resources(loan: GraphLoan<'_>, value: &PdfObject, seeds: &mut BTreeMap<u32, PdfIndirectObject>, depth: usize) {
+fn seed_resources(loan: GraphLoan<'_>, value: &PdfObject, seeds: &mut BTreeMap<u32, PdfIndirectObject>, owned: &mut HashSet<u32>, depth: usize) {
     match value {
         PdfObject::Ref(target) if depth < 4 => {
             if let Some(object) = loan.lookup(*target).filter(|object| matches!(object.value, PdfObject::Dict(_))) {
                 if seeds.insert(target.num, object.clone()).is_none() {
+                    owned.insert(target.num);
                     if let PdfObject::Dict(entries) = &object.value {
-                        for entry in entries { seed_resources(loan, &entry.value, seeds, depth + 1); }
+                        for entry in entries { seed_resources(loan, &entry.value, seeds, owned, depth + 1); }
                     }
                 }
             }
         }
-        PdfObject::Dict(entries) if depth < 4 => for entry in entries { seed_resources(loan, &entry.value, seeds, depth + 1); },
+        PdfObject::Dict(entries) if depth < 4 => for entry in entries { seed_resources(loan, &entry.value, seeds, owned, depth + 1); },
+        PdfObject::Array(items) if depth < 4 => for item in items { seed_resources(loan, item, seeds, owned, depth + 1); },
         _ => {}
     }
 }
@@ -483,3 +502,4 @@ fn row_capacity(object: &PdfIndirectObject) -> usize { object_capacity(&object.v
 
 /// 🧾️ The digest of a retained graph the document opened with, computed in one go.
 pub fn objects_digest(objects: &[PdfIndirectObject]) -> [u8; 32] { original_custody::objects_digest(objects) }
+

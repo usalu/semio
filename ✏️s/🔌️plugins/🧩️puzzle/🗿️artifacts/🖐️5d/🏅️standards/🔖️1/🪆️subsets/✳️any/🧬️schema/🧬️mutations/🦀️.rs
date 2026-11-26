@@ -481,3 +481,11 @@ pub fn apply_puzzle5d_mutation(projection: &mut Puzzle5dSnapshot, mutation: &Puz
 }
 }
 //#endregion 🧩️ArtifactItems6
+
+#[cfg(test)]
+#[path = "🔀️splice-scene-rows/🧪️tests/🔀️middle/🦀️.rs"]
+mod middle_row_fixture;
+
+#[cfg(test)]
+#[path = "🔀️splice-scene-row-batch/🧪️tests/🚫️empty/🦀️.rs"]
+mod empty_batch_fixture;

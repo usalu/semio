@@ -28,6 +28,21 @@ pub fn register_composer_entries(entries: &'static [ComposerEntry]) -> Result<()
     register_composer_entry_refs(&entries.iter().collect::<Vec<_>>())
 }
 
+static RUNTIME_HOSTED_KINDS: std::sync::Mutex<std::collections::BTreeSet<String>> = std::sync::Mutex::new(std::collections::BTreeSet::new());
+
+/// 🏠️ Records that this guest is the only runtime of an artifact kind whose owner assembles its definition alone, so
+/// `describe` lists the kind's composer and inference rows here, where they are registered.
+pub fn register_runtime_hosted_artifact_kind(kind: &str) {
+    if let Ok(mut kinds) = RUNTIME_HOSTED_KINDS.lock() {
+        kinds.insert(kind.to_owned());
+    }
+}
+
+/// 🏠️ The artifact kinds this guest hosts as their only runtime, in sorted order.
+pub fn runtime_hosted_artifact_kinds() -> Vec<String> {
+    RUNTIME_HOSTED_KINDS.lock().map(|kinds| kinds.iter().cloned().collect()).unwrap_or_default()
+}
+
 /// 📇️ Every registered composer entry, erased to owned dialects -- the shape the WIT
 /// `list-artifact-dialects` guest export mirrors verbatim (one row per distinct `writes` entry
 /// registered locally, each carrying the full `reads` list).

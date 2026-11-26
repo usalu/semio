@@ -3,11 +3,52 @@ import { Database } from "bun:sqlite";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, existsSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import * as toml from "@iarna/toml";
+import Ajv from "ajv";
 import cases from "../🧫️fixtures/🧱️production-preparation/🔣️.json";
-import { BRIDGE_MANIFEST, CATALOG_MANIFEST, COMPONENT_MANIFEST, prepareStdioComposition } from "../../🟦️.ts";
+import mounted from "../🧫️fixtures/🧱️production-preparation/mounted-apps.json";
+import ownerSchema from "../../🧬️schema/🔣️.json";
+import { BRIDGE_MANIFEST, CATALOG_MANIFEST, COMPONENT_MANIFEST, prepareStdioComposition, readStdioCompositionInputs } from "../../🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../..");
 const owner = join(root, "🌎️hub/🧩️compositions/🗄️stdio");
+type PackagePartition = { root: string; enum: string; variants: string[] };
+type CompositionOwner = { id: string; root: string; enum: string; main: boolean; shards: PackagePartition[]; appLibraries?: PackagePartition[] };
+
+function compositionOwners(): CompositionOwner[] {
+  return JSON.parse(readFileSync(join(owner, "🧩️composition/🔣️.json"), "utf8")).owners;
+}
+
+test("the catalog owner routes every mounted surface through a library and preserves registration order", () => {
+  const authority = JSON.parse(readFileSync(join(owner, "🧩️composition/🔣️.json"), "utf8"));
+  expect(new Ajv({ strict: false }).compile(ownerSchema)(authority)).toBe(true);
+  const catalog = (authority.owners as CompositionOwner[]).find((entry) => entry.id === mounted.owner)!;
+  expect(catalog.appLibraries).toHaveLength(mounted.variants.length / 2);
+  const oracle = new Database(":memory:");
+  const variants = oracle.query<{ variant: string }, [string]>(
+    "SELECT variant.value AS variant FROM json_each(?1) AS lib, json_each(lib.value, '$.variants') AS variant",
+  ).all(JSON.stringify(catalog.appLibraries)).map((row) => row.variant);
+  oracle.close();
+  expect(variants).toEqual(mounted.variants);
+  const apps = readStdioCompositionInputs(root, owner).flatMap((input) => input.contribution.apps)
+    .filter((app) => app.owner === mounted.owner).sort((a, b) => a.order - b.order);
+  expect(apps.map((app) => app.variant)).toEqual(mounted.variants);
+  const router = readFileSync(join(owner, catalog.root), "utf8");
+  for (const application of catalog.appLibraries!) {
+    const directory = join(owner, dirname(application.root));
+    const manifest = readFileSync(join(directory, "📦️packages/🦀️rust/Cargo.toml"), "utf8");
+    const packageInfo = Bun.TOML.parse(manifest) as any;
+    expect(packageInfo).toEqual(toml.parse(manifest));
+    expect(packageInfo.lib["crate-type"]).toBeUndefined();
+    expect(existsSync(join(directory, COMPONENT_MANIFEST))).toBe(false);
+    const source = readFileSync(join(owner, application.root), "utf8");
+    expect(source).toContain(`pub enum ${application.enum}: PluginApp`);
+    for (const variant of application.variants) expect(source).toContain(`${variant}(VcsArtifactApp<`);
+    expect(router).toContain(`${packageInfo.package.name.replaceAll("-", "_")}::${application.enum}`);
+  }
+  expect([...router.matchAll(/builder = builder\.(?:editor|viewer)::<([^>]+)>/gu)].map((match) => match[1]))
+    .toEqual(apps.map((app) => app.type));
+  expect(router).not.toContain("builder.component(");
+});
 
 for (const row of cases.cases) test(`production preparation isolates examples: ${row.id}`, () => {
   const outputs = process.env.SEMIO_TEST_ARTIFACT_DIR;
@@ -15,8 +56,14 @@ for (const row of cases.cases) test(`production preparation isolates examples: $
   mkdirSync(outputs, { recursive: true });
   const scratch = mkdtempSync(join(outputs, "stdio-production-"));
   try {
-    const owners = JSON.parse(readFileSync(join(owner, "🧩️composition/🔣️.json"), "utf8")).owners;
-    const paths = ["🧩️composition/🔣️.json", "📇️publication/📜️native-catalog.json", "📇️publication/🔣️.json", CATALOG_MANIFEST, BRIDGE_MANIFEST, ...owners.flatMap((entry: { root: string; main: boolean }) => entry.main ? ["📦️packages/🦀️rust/Cargo.toml", COMPONENT_MANIFEST, "🧩️component/🦀️.rs"] : [join(dirname(entry.root), "📦️packages/🦀️rust/Cargo.toml"), join(dirname(entry.root), COMPONENT_MANIFEST), join(dirname(entry.root), "🧩️component/🦀️.rs")]), ...owners.flatMap((entry: { shards: { root: string }[] }) => entry.shards.map((shard) => join(dirname(shard.root), "📦️packages/🦀️rust/Cargo.toml")))];
+    const owners = compositionOwners();
+    const packageManifest = "📦️packages/🦀️rust/Cargo.toml";
+    const paths = ["🧩️composition/🔣️.json", "📇️publication/📜️native-catalog.json", "📇️publication/🔣️.json", CATALOG_MANIFEST, BRIDGE_MANIFEST];
+    for (const entry of owners) {
+      const base = entry.main ? "." : dirname(entry.root);
+      paths.push(join(base, packageManifest), join(base, COMPONENT_MANIFEST));
+      paths.push(...(entry.appLibraries ?? entry.shards).map((partition) => join(dirname(partition.root), packageManifest)));
+    }
     for (const path of paths) {
       const target = join(scratch, path);
       mkdirSync(dirname(target), { recursive: true });
@@ -45,7 +92,7 @@ for (const row of cases.cases) test(`production preparation isolates examples: $
     const oracle = new Database(":memory:");
     try {
       const constructor = oracle.query<{ call: string }, [string, string, string, string, string]>("select printf('%s::<%s, %s>::%s(\"%s\")', ?1, ?2, ?3, ?4, ?5) as call");
-      for (const component of owners as { id: string; enum: string; root: string }[]) {
+      for (const component of owners) {
         const expected = constructor.get(cases.builder.type, cases.builder.labelState, component.enum, cases.builder.method, component.id);
         expect(expected).not.toBeNull();
         expect(readFileSync(join(scratch, component.root), "utf8")).toContain(expected!.call);
@@ -65,7 +112,7 @@ for (const row of cases.cases) test(`production preparation isolates examples: $
 });
 
 test("every runtime shard of an owner is one deployable component: the hub registers it by its crate name in shard order and its component crate builds its own cdylib", () => {
-  const owners = JSON.parse(readFileSync(join(owner, "🧩️composition/🔣️.json"), "utf8")).owners as { id: string; root: string; shards: { root: string; variants: string[] }[] }[];
+  const owners = compositionOwners();
   const sharded = owners.filter(entry => entry.shards.length > 0);
   expect(sharded.map(entry => entry.id)).toContain("stdio-pdf");
   for (const entry of sharded) {

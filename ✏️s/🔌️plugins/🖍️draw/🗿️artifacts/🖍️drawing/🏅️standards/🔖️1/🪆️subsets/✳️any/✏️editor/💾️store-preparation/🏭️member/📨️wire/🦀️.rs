@@ -310,7 +310,7 @@ impl DrawingMemberWirePreparation{
   let progress=if self.phase==Phase::Receive{
    let r=self.receiver.as_mut().ok_or_else(||invalid("drawing original JSON owner vanished"))?;
    let witness=c.source_witness()?;
-   match r.advance(c,witness,body,work,g.retained_grant()){
+   match semio_draw_member_decode::advance(r,c,witness,body,work,g.retained_grant()){
     RetainedWorkPoll::Pending{work}=>{self.work=work_u64(work);Progress::default()},
     RetainedWorkPoll::Complete(turn)=>{
      self.work=work_u64(turn.work);

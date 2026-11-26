@@ -28,6 +28,7 @@ const fixturePath=join(import.meta.dir,"🧫️fixtures","🔣️.json");
 type Fixture={policy:Record<string,number>;target:{name:string;host:OwnerPoolHostV1;children:number;childMegabytes:number}[];limits:{total:number}[];childMegabytes:{samples:number[];live?:number[]}[];recycle:{rss:number;readyRss:number;recycleMegabytes:number}[];walk:{puller:string;n:number;draws:number}[];expect:{target:{children:number;reason:string|null}[];limit:Record<string,unknown>[];limits:{recycleMegabytes:number;hardMegabytes:number}[];childMegabytes:number[];recycle:boolean[];walk:number[][]}};
 const fixture=JSON.parse(readFileSync(fixturePath,"utf8")) as Fixture;
 
+const wavesOf=(pointer:Awaited<ReturnType<typeof readOwnerPoolPointerV1>>)=>typeof pointer==="object"?pointer.waves:undefined;
 test("sizing, limits, the child estimate and the walk of a puller equal an independent Python implementation and the authored fixture",()=>{
  for(const [key,value] of Object.entries(fixture.policy))expect((P as Record<string,unknown>)[key]).toBe(value);
  const ours={
@@ -38,7 +39,7 @@ test("sizing, limits, the child estimate and the walk of a puller equal an indep
   recycle:fixture.recycle.map(row=>ownerPoolRecycleV1(row)),
   walk:fixture.walk.map(row=>{let state=ownerPoolSeedV1(row.puller);return Array.from({length:row.draws},()=>{const next=ownerPoolRandomV1(state);state=next.state;return Math.floor(next.value*row.n);});}),
  };
- expect(ours).toEqual(fixture.expect);
+ expect<unknown>(ours).toEqual(fixture.expect);
  const python=spawnSync("python3",["-I",join(import.meta.dir,"🧫️fixtures","🐍️oracle.py"),fixturePath],{encoding:"utf8"});
  expect(python.status).toBe(0);expect(JSON.parse(python.stdout)).toEqual(ours);
 });
@@ -92,7 +93,7 @@ const memoryClaim=(table:Table,counter:{asked:number;inflight:number;widest:numb
  const held=table.get(unit.name);
  if(held==="stored")return{state:"stored"};if(held==="held")return{state:"held",by:"x"};
  table.set(unit.name,"held");
- return{state:"granted",digest:sha(unit.name),why:()=>"",deterministic:()=>false,publish:async()=>{table.set(unit.name,"stored");return true;},abandon:async()=>{table.delete(unit.name);}};
+ return{state:"granted",digest:sha(unit.name),why:()=>"",code:()=>"",deterministic:()=>false,publish:async()=>{table.set(unit.name,"stored");return true;},abandon:async()=>{table.delete(unit.name);}};
 };
 const fleetOf=async(pullers:number,units:Unit[],options:{slots?:number;burn?:number}={})=>{
  const table:Table=new Map(),counter={asked:0,inflight:0,widest:0},computed=new Map<string,number>(),started=Date.now();
@@ -188,12 +189,12 @@ test("waves accumulate in the pointer: a newer wave never replaces an open one, 
   const a=manifestOf(unitsOf(5),"a",now-3000),b=manifestOf(unitsOf(9),"b",now-2000),c=manifestOf(unitsOf(7),"c",now-1000);
   for(const manifest of[a,b,c,b])expect(await publishOwnerPoolV1({client,owner:"o",manifest})).toBe(true);
   const pointer=await readOwnerPoolPointerV1(client);
-  expect(pointer?.waves.map(wave=>wave.id)).toEqual([a.head.id,b.head.id,c.head.id]);expect(pointer?.waves.map(wave=>wave.units)).toEqual([5,9,7]);
+  expect(wavesOf(pointer)?.map(wave=>wave.id)).toEqual([a.head.id,b.head.id,c.head.id]);expect(wavesOf(pointer)?.map(wave=>wave.units)).toEqual([5,9,7]);
   const read=await readOwnerPoolV1(client,b.head.id);
   expect(read?.units.length).toBe(9);expect(Buffer.from(read!.session).toString()).toContain('"b"');
   const old=manifestOf(unitsOf(2),"old",now-P.manifestMaximumAgeMilliseconds-5000);
   await publishOwnerPoolV1({client,owner:"o",manifest:old});
-  expect((await readOwnerPoolPointerV1(client))?.waves.some(wave=>wave.id===old.head.id)).toBe(false);
+  expect(wavesOf(await readOwnerPoolPointerV1(client))?.some(wave=>wave.id===old.head.id)).toBe(false);
   const many=Array.from({length:P.wavesKept+3},(_all,index)=>({id:sha("w"+index),createdMs:now-index*10,units:1}));
   const kept=ownerPoolOpenWavesV1(many,now);
   expect(kept.length).toBe(P.wavesKept);expect(kept[kept.length-1]!.createdMs).toBe(now);
@@ -319,7 +320,7 @@ test("a record that could not be stored reports the code of its true refusal, so
 
 test.each(["waiting","pressure"] as const)("the pool drains busy children on %s and resumes when capacity returns",async(reason)=>{
  const {server,environment}=await world(),controller=new AbortController();
- let running:Promise<void>|undefined;
+ let running:Promise<unknown>|undefined;
  try{
   const root=temp("yield"),client=graphFleetClientV1(graphFleetSettingsV1(root,environment)!,{fetch:remoteCacheFetchV1(environment,{root})});
   const units=unitsOf(24).map(unit=>({...unit,expectedMilliseconds:60000})),manifest=manifestOf(units,"yield",Date.now());

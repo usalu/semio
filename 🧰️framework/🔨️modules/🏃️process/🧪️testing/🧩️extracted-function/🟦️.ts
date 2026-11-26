@@ -125,3 +125,17 @@ export function loadProductFunctionsSyncV1(moduleUrl: string | URL, names: reado
   for (const [name, row, specifier] of plan.pending) bindProductImportV1(plan, name, row, load(specifier.startsWith("file:") ? fileURLToPath(specifier) : specifier));
   return evaluateProductPlanV1(plan);
 }
+
+/** 🧾️ Evaluates generated source text (a worker body, a host shim, an embedded class) that is itself the product artifact under test, and returns the named top-level binding; only the given ports are visible besides the globals. */
+export function evaluateGeneratedSourceV1(text: string, result: string, ports: Record<string, unknown> = {}): any {
+  return new Function(...Object.keys(ports), text + ";return " + result + ";")(...Object.values(ports));
+}
+
+/** 🧬️ The transpiled declaration closure of named functions of a product module (what `loadProductFunctionsSyncV1` evaluates) without its imports, for harnesses that evaluate the text themselves with `evaluateExtractedFunctionV1`; names in `portNames` are left out so the harness supplies them. */
+export function productClosureCodeV1(moduleUrl: string | URL, names: readonly string[], portNames: readonly string[] = []): string {
+  const load = createRequire(import.meta.url);
+  const ts = load("typescript") as typeof import("typescript");
+  const { fileURLToPath, pathToFileURL } = load("node:url") as typeof import("node:url");
+  const url = productModuleUrlV1(moduleUrl, pathToFileURL);
+  return planProductFunctionsV1(ts, (load("node:fs") as typeof import("node:fs")).readFileSync(fileURLToPath(url), "utf8"), url, names, Object.fromEntries(portNames.map(name => [name, undefined]))).code;
+}

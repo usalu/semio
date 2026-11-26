@@ -411,7 +411,7 @@ enum Kind {
     Props,
 }
 
-fn visit_ops(ops: &mut [PdfOp], visit: &mut dyn FnMut(Kind, &mut String)) {
+fn visit_ops<'a>(ops: impl IntoIterator<Item = &'a mut PdfOp>, visit: &mut dyn FnMut(Kind, &mut String)) {
     for op in ops {
         match op {
             PdfOp::SetExtGState { name } => visit(Kind::GState, name),

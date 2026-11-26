@@ -18,24 +18,30 @@ fn publication_pump_counts_as_attempt(attempted: bool, moved: bool, yielded: boo
     attempted && (moved || !yielded)
 }
 
-/// 🪙️ A turn whose phase items do not exceed the receiving scope headroom cannot fund one receiving step; the pump hands such a turn back before attempting a unit, so the next turn's fresh grant funds it. See [`publication_pump_counts_as_attempt`].
-fn publication_turn_funds_receiving_step(phase_items: usize, scope_items: usize) -> bool {
-    phase_items > scope_items
+/// 🪙️ A step that receives store work needs one phase item beyond the cost of its receiving scope.
+fn publication_turn_funds_step(phase_items: usize, receiving_scope_items: Option<usize>) -> bool {
+    receiving_scope_items.is_none_or(|scope_items| phase_items > scope_items)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{publication_pump_counts_as_attempt, publication_turn_funds_receiving_step, publication_unit_advanced, RetainedCloneProgress};
+    use super::{publication_pump_counts_as_attempt, publication_turn_funds_step, publication_unit_advanced, RetainedCloneProgress};
 
     #[test]
     fn a_turn_without_items_beyond_the_scope_headroom_ends_unfunded_and_uncounted() {
         for scope in [0usize, 1, 10] {
-            assert!(!publication_turn_funds_receiving_step(0, scope));
-            assert!(!publication_turn_funds_receiving_step(scope, scope));
-            assert!(publication_turn_funds_receiving_step(scope + 1, scope));
+            assert!(!publication_turn_funds_step(0, Some(scope)));
+            assert!(!publication_turn_funds_step(scope, Some(scope)));
+            assert!(publication_turn_funds_step(scope + 1, Some(scope)));
         }
         assert!(!publication_pump_counts_as_attempt(true, false, true));
         assert!(publication_pump_counts_as_attempt(true, true, true));
+    }
+
+    #[test]
+    fn page_and_retirement_steps_can_use_items_below_receiving_scope_headroom() {
+        assert!(publication_turn_funds_step(1, None));
+        assert!(!publication_turn_funds_step(1, Some(10)));
     }
 
     #[test]
@@ -162,13 +168,39 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let mut moved = false;
         for _ in 0..TYPED_OPERATION_PUBLICATION_PUMPS {
             if cx.is_cancelled(){if let Some(lease)=mounted.cancellation_lease.as_ref(){lease.cancel();}}
-            if cx.fuel_exhausted()||(cx.should_yield()&&!mounted.page_publication_pending()&&!mounted.result_page_retirement_pending()&&!mounted.pending_artifact_publication.as_ref().is_some_and(|owner|owner.accepted_receipt().is_some())){note_publication_wait(mounted.operation.operation.0,"the turn yielded before the publication unit (fuel, deadline exceeded, retained items)",[cx.fuel_remaining(),u64::from(cx.should_yield()),cx.retained_grant().maximum_items as u64]);return Ok(attempted)}
-            if mounted.pending_artifact_publication.is_some()&&mounted.owned_child_group.is_none()&&!publication_turn_funds_receiving_step(cx.retained_grant().maximum_items,if cx.original_receiving_scope_held(){0}else{semio_framework_job::original_receiving_scope_headroom().0}){note_publication_wait(mounted.operation.operation.0,"the turn phase items cannot fund one receiving step (phase items, scope held, fuel)",[cx.retained_grant().maximum_items as u64,u64::from(cx.original_receiving_scope_held()),cx.fuel_remaining()]);return Ok(publication_pump_counts_as_attempt(attempted,moved,true))}
-            attempted = true;
-            let before=cx.retained_progress();let reserved_before=cx.reserved_return_progress();let fuel=cx.fuel_remaining();
             let acknowledged_page = mounted.result_page_retirement_pending();
-            let custody=mounted.page_publication_pending()||mounted.pending_artifact_publication.as_ref().is_some_and(|owner|owner.accepted_receipt().is_some());
-            let cancelled=mounted.cancellation_lease.as_ref().is_some_and(|lease|lease.publication_is_cancelled());
+            let pending_store = mounted.pending_artifact_publication.as_ref();
+            let custody = mounted.page_publication_pending() || pending_store.is_some_and(|owner| owner.accepted_receipt().is_some());
+            if cx.fuel_exhausted() || (cx.should_yield() && !acknowledged_page && !custody) {
+                note_publication_wait(
+                    mounted.operation.operation.0,
+                    "the turn yielded before the publication unit (fuel, deadline exceeded, retained items)",
+                    [cx.fuel_remaining(), u64::from(cx.should_yield()), cx.retained_grant().maximum_items as u64],
+                );
+                return Ok(attempted);
+            }
+            let cancelled = mounted.cancellation_lease.as_ref().is_some_and(|lease| lease.publication_is_cancelled());
+            let needs_receiving = !acknowledged_page && !custody && !cancelled
+                && mounted.owned_child_group.is_none()
+                && mounted.pending_child_publication.is_none()
+                && mounted.publication_failure.terminal_is_empty()
+                && pending_store.is_some_and(|owner| !owner.is_closing());
+            let phase_items = cx.retained_grant().maximum_items;
+            let receiving_scope_items = needs_receiving.then(|| {
+                if cx.original_receiving_scope_held() { 0 } else { semio_framework_job::original_receiving_scope_headroom().0 }
+            });
+            if !publication_turn_funds_step(phase_items, receiving_scope_items) {
+                note_publication_wait(
+                    mounted.operation.operation.0,
+                    "the turn phase items cannot fund one receiving step (phase items, scope held, fuel)",
+                    [phase_items as u64, u64::from(cx.original_receiving_scope_held()), cx.fuel_remaining()],
+                );
+                return Ok(publication_pump_counts_as_attempt(attempted, moved, true));
+            }
+            attempted = true;
+            let before = cx.retained_progress();
+            let reserved_before = cx.reserved_return_progress();
+            let fuel = cx.fuel_remaining();
             let owned_child_route = !acknowledged_page && !custody && !cancelled && mounted.owned_child_group.is_some();
             let mut staged = false;
             if owned_child_route {

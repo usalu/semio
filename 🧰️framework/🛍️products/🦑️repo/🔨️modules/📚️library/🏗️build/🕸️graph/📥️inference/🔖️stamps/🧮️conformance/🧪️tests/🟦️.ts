@@ -46,7 +46,7 @@ test("canonical digests, stamps and import lists equal the independent Python im
 });
 
 test("the input precision corpus reproduces the frozen derivations, the router fixture, minimatch and the refusals of the existing fixtures",async()=>{
- const{cases,covered}=await runInputPrecisionV1(fixtures),value=(name:string)=>(cases[name] as any)?.value??cases[name];
+ const{cases:found,covered}=await runInputPrecisionV1(fixtures),cases:Readonly<Record<string,unknown>>=found,value=(name:string)=>(cases[name] as any)?.value??cases[name];
  fixtures.main.expect.derive.forEach((expected:unknown,index:number)=>expect(value(`derive/${index}`),`derive ${index}`).toEqual(expected));
  expect(fixtures.main.expect.unselected).toEqual(fixtures.main.unselected.map((_:unknown,index:number)=>cases[`unselected/${index}`]));
  fixtures.main.globs.forEach((row:{pattern:string;path:string;match:boolean},index:number)=>{expect(cases[`glob/${index}`]).toBe(row.match);expect(minimatch(row.path,row.pattern)).toBe(row.match);});

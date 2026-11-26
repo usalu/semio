@@ -1,4 +1,5 @@
 """🧪️ Exercises the release gate with a genuine confirmed browser artifact in disposable custody."""
+from os import SEEK_END
 from pathlib import Path
 import importlib.util
 import json
@@ -11,7 +12,7 @@ GENERATED = TICKET / "🗑️generated"
 spec = importlib.util.spec_from_file_location("release_receipts", TICKET / "release-receipts.py")
 gate = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gate)
-module = "flow-extension-dictionary"
+module = "process-extension-robotic"
 modules = gate.ROOT / ".cache/b/p/m/browser/release/modules"
 source = gate.receipt_path(modules, module).parent
 receipt = GENERATED / "confirmed" / f"{module}.json"
@@ -46,12 +47,15 @@ with tempfile.TemporaryDirectory(prefix="core-law-", dir=GENERATED) as temporary
     core, = [name for name in module_files if name.endswith(".core.wasm")]
     assert (staged / core).read_bytes() == (deployed / core).read_bytes()
     for root in (staged, deployed):
-        with (root / core).open("ab") as f:
-            f.write(bytes((0, 4, 3)) + b"tag")
+        with (root / core).open("r+b") as file:
+            file.seek(-1, SEEK_END)
+            byte = file.read(1)
+            file.seek(-1, SEEK_END)
+            file.write(bytes((byte[0] ^ 1,)))
     try:
         gate.main()
     except ValueError as error:
-        assert "optimized" in str(error).lower(), error
+        assert "Browser core differs from its successful build" in str(error), error
     else:
         raise AssertionError("Release verification accepted a different optimized core in both locations with the same published receipt")
 print("Verified the real extension and refused the matching staged/site core substitution")

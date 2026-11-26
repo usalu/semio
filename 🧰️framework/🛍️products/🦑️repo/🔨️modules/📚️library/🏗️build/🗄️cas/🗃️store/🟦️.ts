@@ -3,6 +3,7 @@ import {constants} from "node:fs";
 import {chmod,copyFile,link,lstat,mkdir,open,readFile,rename,rm,unlink} from "node:fs/promises";
 import {homedir} from "node:os";
 import {dirname,join} from "node:path";
+import {countEventV1} from "../../📈️counter-ledger/🟦️.ts";
 import {appendCasAccessV1} from "../📒️ledger/🟦️.ts";
 import {createCasGuardV1,type CasGuardV1} from "../🚦️guard/🟦️.ts";
 import {leaseCasTransientV1,pinCasV1,releaseCasPinsV1,releaseCasTransientV1} from "../📌️pins/🟦️.ts";
@@ -51,13 +52,20 @@ export function casRootV1(environment:Readonly<Record<string,string|undefined>>=
 /** 📍️ The path of an object below a root: `o/<prefix>/<rest>`. */
 export const casObjectPathV1=(root:string,hash:string,fanOut:number=CAS_POLICY_V1.fanOutHexLength):string=>join(root,"v1","o",hash.slice(0,fanOut),hash.slice(fanOut));
 
+/** 📈️ The directory of the event counters of a store (`localHit`, `localMiss`: one byte per `get`, `read` or `link` that found or missed its object, so the size of the file is the count, see `📈️counter-ledger`); one root serves every process of the machine, so the counts are the machine's.
+ * @see ../../📈️counter-ledger/🟦️.ts */
+export const casCounterDirectoryV1=(root:string):string=>join(root,"v1","counters");
+
+/** 📊️ Where the census of a store lives (`bytes` and `objects` of the whole store, rewritten by every collector scan): the cheap way to read how large the store is, without walking it. */
+export const casCensusPathV1=(root:string):string=>join(root,"v1","census.json");
+
 const allocated=(info:{size:number;blocks?:number}):number=>info.size;
 
 /** 🗄️ Opens a store; no state is held beyond the throttle of access events, so any number of processes and workspaces share one root. */
 export function createCasStoreV1(options:CasStoreOptionsV1={}):CasStoreV1{
  const root=options.root??casRootV1(),policy=requireCasPolicyV1(options.policy??CAS_POLICY_V1),now=options.now??Date.now,pid=options.pid??process.pid,writer=options.writer??`${pid}-${randomUUID().slice(0,8)}`;
  const guard=options.guard??createCasGuardV1({root,policy,now,...options.refuseOverCap?{refuseOverCap:true}:{}});
- const fan=policy.fanOutHexLength,objectPath=(hash:string):string=>casObjectPathV1(root,hash,fan),shard=(hash:string):string=>hash.slice(0,fan),touched=new Map<string,number>();
+ const fan=policy.fanOutHexLength,objectPath=(hash:string):string=>casObjectPathV1(root,hash,fan),shard=(hash:string):string=>hash.slice(0,fan),touched=new Map<string,number>(),counted=casCounterDirectoryV1(root),hit=():void=>countEventV1(counted,"localHit"),miss=():void=>countEventV1(counted,"localMiss");
  const touch=async(hash:string):Promise<void>=>{
   const at=now(),last=touched.get(hash);
   if(last!==undefined&&at-last<policy.touchGranularityMs)return;
@@ -107,15 +115,15 @@ export function createCasStoreV1(options:CasStoreOptionsV1={}):CasStoreV1{
   putChecked:(source,expect,signal)=>ingest(source,expect,signal),
   async get(hash){
    sha(hash);
-   try{const info=await lstat(objectPath(hash));await touch(hash);return{path:objectPath(hash),size:allocated(info)};}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;}
+   try{const info=await lstat(objectPath(hash));await touch(hash);hit();return{path:objectPath(hash),size:allocated(info)};}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT"){miss();return undefined;}throw error;}
   },
   async read(hash){
    sha(hash);
-   try{const bytes=await readFile(objectPath(hash));await touch(hash);return bytes;}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;}
+   try{const bytes=await readFile(objectPath(hash));await touch(hash);hit();return bytes;}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT"){miss();return undefined;}throw error;}
   },
   async has(hashes){for(const hash of hashes)sha(hash);return Promise.all(hashes.map(hash=>exists(objectPath(hash))));},
   async link(hash,destination,mode="auto"){
-   sha(hash);const source=objectPath(hash);if(!await exists(source))return undefined;
+   sha(hash);const source=objectPath(hash);if(!await exists(source)){miss();return undefined;}
    await mkdir(dirname(destination),{recursive:true});await rm(destination,{force:true});
    const order:CasLinkModeV1[]=mode==="auto"?["reflink","copy"]:[mode];
    for(const attempt of order){
@@ -123,7 +131,7 @@ export function createCasStoreV1(options:CasStoreOptionsV1={}):CasStoreV1{
      if(attempt==="reflink")await copyFile(source,destination,constants.COPYFILE_FICLONE_FORCE);
      else if(attempt==="hardlink")await link(source,destination);
      else await copyFile(source,destination);
-     await touch(hash);return attempt;
+     await touch(hash);hit();return attempt;
     }catch(error){await rm(destination,{force:true}).catch(()=>undefined);if(attempt===order.at(-1))throw error;}
    }
    return undefined;

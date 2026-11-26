@@ -19,7 +19,7 @@ test("cold startup and transforms can take the last free core only with the auth
       continue;
     }
     const request = readViteServiceCompilerCapacityV1(policy,row.captured,fixture.hostCores);
-    expect(request).toEqual(row.request);
+    expect<unknown>(request).toEqual(row.request);
     const minimum = request.kind === "exact" ? request.parallelism : request.kind === "available" ? request.minimumParallelism ?? 1 : fixture.hostCores;
     expect(minimum <= fixture.freeCores).toBe(row.admitted);
   }
@@ -33,7 +33,7 @@ test("the projected service guard agrees with the real Vite resolver after plugi
       plugins: [{name: "test:resolved-custody", configResolved(config) {
         const client = config.environments.client!;
         switch (row.change) {
-          case "config-file": config.configFile = "test.config.ts"; break;
+          case "config-file": Object.assign(config, {configFile: "test.config.ts"}); break;
           case "watcher": config.server.watch = {}; break;
           case "dependency-discovery": client.optimizeDeps.noDiscovery = false; break;
           case "ssr-dependency-discovery": config.environments.ssr!.optimizeDeps.noDiscovery = false; break;

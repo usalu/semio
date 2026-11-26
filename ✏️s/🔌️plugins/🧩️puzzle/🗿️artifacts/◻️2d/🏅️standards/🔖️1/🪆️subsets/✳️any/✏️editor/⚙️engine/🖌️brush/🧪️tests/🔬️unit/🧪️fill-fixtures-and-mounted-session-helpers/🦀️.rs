@@ -2,10 +2,8 @@
 
     const FILL_TEST_PUMP_LIMIT: usize = 4_000_000;
 
-    static DEADLINE_CLOCK: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-
     fn deadline_now_us() -> Option<u64> {
-        Some(DEADLINE_CLOCK.fetch_add(8_000, std::sync::atomic::Ordering::AcqRel))
+        Some(7_000)
     }
 
     #[derive(Debug, PartialEq)]
@@ -70,6 +68,7 @@
 
     #[derive(Debug, PartialEq)]
     enum FillSeen {
+        Pending,
         Yield,
         Preview,
         Checkpoint,
@@ -148,8 +147,8 @@
 
     fn mount_fill_session(original: &mut OriginalFixture, job: BoardFillJob, config: BatchDriveConfig) -> FillSession {
         let mut pending = original.turn(FILL_TEST_GRANT, |cx| Ok(semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job, (cx.operation(), cx.generation())))).expect("same original pending source");
+        let mut output = None;
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            let mut output = None;
             if original.turn(FILL_TEST_GRANT, |cx| pending.admit_pending(config, &mut output, cx)).expect("same original mounted admission") {
                 assert!(pending.terminal_is_empty());
                 return output.expect("admitted mounted session stays in caller custody");
@@ -201,7 +200,10 @@
             Some(JobOutcomeView::Complete { state, output, .. }) => FillSeen::Complete(BoardFillCommitCandidate::from_complete(state, output)),
             Some(JobOutcomeView::Cancelled { .. }) => FillSeen::Cancelled,
             Some(JobOutcomeView::Fault { .. }) => FillSeen::Fault,
-            None => panic!("a checked-out fill outcome must carry a retained outcome"),
+            None => {
+                assert!(session.checked_out_continuation().is_none(), "fill must deliver a semantic outcome through its original descriptor");
+                FillSeen::Pending
+            }
         }
     }
 
@@ -253,11 +255,12 @@
                 }
                 WorkerJobPoll::Outcome | WorkerJobPoll::Terminal => {
                     assert!(!session.callback_verdict().is_some_and(|verdict| verdict.is_fault()), "exact fill session callback exceeded its clock authority");
-                    match seen_fill_outcome(original, &mut session) {
+                    let outcome = seen_fill_outcome(original, &mut session);
+                    acknowledge_fill_outcome(original, &mut session);
+                    match outcome {
                         FillSeen::Preview => {
                             let preview = session.checked_out_job_mut().and_then(BoardFillJob::take_preview).expect("typed fill preview");
                             previews.push(preview.sequence);
-                            acknowledge_fill_outcome(original, &mut session);
                             session.resume().expect("preview handback");
                         }
                         FillSeen::Checkpoint => {
@@ -266,7 +269,6 @@
                             placements.push(fill_placement_witness(&placement));
                             retire_fill_placement(original, placement);
                             adopt_fill_checkpoint(original, &mut session, checkpoint);
-                            acknowledge_fill_outcome(original, &mut session);
                             session.resume().expect("checkpoint resume");
                         }
                         FillSeen::Complete(candidate) => {
@@ -282,20 +284,16 @@
                                 });
                             }
                             result = Some(candidate.result);
-                            acknowledge_fill_outcome(original, &mut session);
                             break;
                         }
-                        FillSeen::Yield => {
-                            acknowledge_fill_outcome(original, &mut session);
+                        FillSeen::Pending | FillSeen::Yield => {
                             session.resume().expect("yield resume");
                         }
                         FillSeen::Cancelled => {
-                            acknowledge_fill_outcome(original, &mut session);
                             panic!("fill job unexpectedly cancelled");
                         }
                         FillSeen::Fault => {
                             let code = session.checked_out_job_mut().map(|job| (job.stage(), job.take_fault()));
-                            acknowledge_fill_outcome(original, &mut session);
                             panic!("fill job faulted: (stage, code)={code:?} previews={} placements={}", previews.len(), placements.len());
                         }
                     }
@@ -328,12 +326,12 @@
             match pump_fill_session(original, &mut session) {
                 WorkerJobPoll::Submitted | WorkerJobPoll::Rejected | WorkerJobPoll::Idle => std::thread::yield_now(),
                 WorkerJobPoll::Outcome | WorkerJobPoll::Terminal => {
-                    if seen_fill_outcome(original, &mut session) == FillSeen::Checkpoint {
+                    let outcome = seen_fill_outcome(original, &mut session);
+                    acknowledge_fill_outcome(original, &mut session);
+                    if outcome == FillSeen::Checkpoint {
                         checkpoint = session.checked_out_job_mut().and_then(BoardFillJob::take_checkpoint);
-                        acknowledge_fill_outcome(original, &mut session);
                         break;
                     }
-                    acknowledge_fill_outcome(original, &mut session);
                     session.resume().expect("checkpoint search resume");
                 }
                 WorkerJobPoll::Closing | WorkerJobPoll::TerminalEmpty => panic!("fill closed before first checkpoint"),

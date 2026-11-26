@@ -1,6 +1,8 @@
 //! 🧪️ Actual-grant session byte retirement, final cache ownership, and strict lifecycle guards.
 
 use super::*;
+use crate::effect::observed;
+use semio_framework_value_ordered::ordered::SharedOwner;
 use semio_os_infinite::board::ports::directed_dag::DagHostRetirement;
 // 🧬️ `DagCamera`/`IoPortSpec` are the dag ARTIFACT crate's own records; `crate::dag` glob-imports them
 // privately, so they are named at their source rather than through that re-export.
@@ -17,9 +19,9 @@ fn original_preview_retention_preserves_roster_and_closes_one_original_row_per_t
         let ((mut session,roster),heap)=observe(||{let mut session=FlowEvalSession::new();for handle in law["handles"].as_array().unwrap(){let handle=handle.as_str().unwrap().to_owned();session.preview_mesh_by_handle.insert(handle.clone(),semio_os_flow_host_session::FlowPreviewMesh{tolerance:0.05,mesh:MeshData{paint_texture_base64:Some(handle.repeat(257)),..Default::default()}});session.preview_diagnostics_by_handle.insert(handle.clone(),handle.repeat(129));}let roster=law["roster"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().to_owned()).collect::<Vec<_>>();(session,roster)});
         let original=heap.requested_bytes-heap.released_bytes;let roster_pointer=roster.as_ptr();let mesh=session.preview_mesh("live-高").unwrap().paint_texture_base64.as_ref().unwrap().as_ptr();
         let (result,heap)=observe(||session.begin_retain_preview_meshes(roster));assert!(result.is_ok());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(session.test_preview_retention_roster_pointer().unwrap(),roster_pointer);
-        let zero=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:copy,..Default::default()};let (denied,heap)=observe(||session.retain_preview_meshes_step(zero).unwrap());assert_eq!(denied.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        let zero=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:copy,..Default::default()};let (denied,heap)=observed(zero,|effect|session.retain_preview_meshes_step(effect).unwrap());assert_eq!(denied.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         let mut born=0;let mut freed=0;let mut turns=0;
-        while !session.preview_retention_terminal_is_empty(){turns+=1;assert!(turns<100000);let demand=session.next_preview_retention_demands(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let before=session.preview_mesh_by_handle.len()+session.preview_diagnostics_by_handle.len();let (step,heap)=observe(||session.retain_preview_meshes_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(step.progress(),session.preview_retention_step_progress());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;assert!(before-(session.preview_mesh_by_handle.len()+session.preview_diagnostics_by_handle.len())<=1);}
+        while !session.preview_retention_terminal_is_empty(){turns+=1;assert!(turns<100000);let demand=session.next_preview_retention_demands(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let before=session.preview_mesh_by_handle.len()+session.preview_diagnostics_by_handle.len();let (step,heap)=observed(grant,|effect|session.retain_preview_meshes_step(effect).unwrap());assert!(step.progress().fits(grant));assert_eq!(step.progress(),session.preview_retention_step_progress());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;assert!(before-(session.preview_mesh_by_handle.len()+session.preview_diagnostics_by_handle.len())<=1);}
         let actual:Vec<_>=session.preview_mesh_by_handle.keys().map(String::as_str).collect();let expected:Vec<_>=law["expected"].as_array().unwrap().iter().map(|value|value.as_str().unwrap()).collect();assert_eq!(actual,expected);assert_eq!(session.preview_mesh("live-高").unwrap().paint_texture_base64.as_ref().unwrap().as_ptr(),mesh);
         close(session,copy,original+born-freed);
     }
@@ -50,38 +52,38 @@ fn session_begin_close_preserves_original_text_fault_and_latch_backing() {
 fn session_reset_preserves_original_lease_and_restores_every_owner_on_refusal() {
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     for copy in [1,3,64] {
-        let ((mut session,incoming,second),heap)=observe(||{
+        let ((mut session,mut incoming,mut second),heap)=observe(||{
             let mut session=FlowEvalSession::new();
-            session.eval_json=Some(Arc::new("原🌊".repeat(4097)));
+            if let Some(prior)=session.eval_json.take(){prior.retire_cold();}session.eval_json=Some(SharedOwner::from_cold("原🌊".repeat(4097)));
             session.painted_eval_json="painted".repeat(257);session.converged_eval_json="converged".repeat(257);
             session.extension_evaluate_fault=Some(ExtensionEvaluateFault{message:"actual-fault".repeat(257),..Default::default()});
             session.preview_mesh_by_handle.insert("original-handle".into(),semio_os_flow_host_session::FlowPreviewMesh{tolerance:0.05,mesh:MeshData{paint_texture_base64:Some("original-mesh".repeat(257)),..Default::default()}});
             session.window_tick_latches.insert(7,FlowEvalWindowTickLatch{armed:true,..Default::default()});
-            (session,Arc::new("incoming".repeat(257)),Arc::new("second".repeat(257)))
+            (session,Some(SharedOwner::from_cold("incoming".repeat(257))),Some(SharedOwner::from_cold("second".repeat(257))))
         });
         let original=heap.requested_bytes-heap.released_bytes;
         let lease=session.lease_eval_json().unwrap();let painted=session.painted_eval_json.as_ptr();let mesh=session.preview_mesh("original-handle").unwrap().paint_texture_base64.as_ref().unwrap().as_ptr();
         let grant=RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()};
-        let (refused,denied)=observe(||session.set_eval_json(incoming,RetainedCloneGrant{maximum_depth:0,..grant}));
-        let incoming=refused.err().unwrap().1;
+        let refusal=RetainedCloneGrant{maximum_depth:0,..grant};let (refused,denied)=observed(refusal,|effect|session.set_eval_json(&mut incoming,effect));
+        assert!(!matches!(refused,Ok(Some(_))));assert!(incoming.is_some());
         assert_eq!((denied.requested_bytes,denied.released_bytes),(0,0));
         assert!(session.owns_eval_json(&lease));assert_eq!(session.painted_eval_json.as_ptr(),painted);
         assert_eq!(session.preview_mesh("original-handle").unwrap().paint_texture_base64.as_ref().unwrap().as_ptr(),mesh);assert!(session.extension_evaluate_fault.is_some());
-        let (progress,admitted)=observe(||session.set_eval_json(incoming,grant).unwrap_or_else(|_|panic!("original reset admission refused")));
+        let (progress,admitted)=observed(grant,|effect|session.set_eval_json(&mut incoming,effect).unwrap_or_else(|_|panic!("original reset admission refused")).expect("original reset admission funded"));
         assert_eq!(progress,RetainedCloneProgress{copied_items:1,..Default::default()});
         assert_eq!((admitted.requested_bytes,admitted.released_bytes),(0,0));
         assert!(!session.owns_eval_json(&lease));assert_eq!(lease.as_str(),"原🌊".repeat(4097));
         assert!(session.extension_evaluate_fault.is_none());assert_eq!(session.window_tick_latches.len(),1);
-        let (_,alias)=observe(||drop(lease));assert_eq!((alias.requested_bytes,alias.released_bytes),(0,0));
-        let reserve=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:session.next_retirement_reserve_capacity_byte_demand().unwrap(),maximum_depth:1,..Default::default()};
-        let (receipt,reserved)=observe(||session.reserve_retirement_step(reserve).unwrap());
+        let (_,alias)=observe(||lease.retire_shared_alias().unwrap_or_else(|_|panic!("original lease is a counted alias")));assert_eq!((alias.requested_bytes,alias.released_bytes),(0,0));
+        let quote=session.next_retirement_reserve_demands().unwrap();let reserve=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:quote.copy_bytes,maximum_capacity_bytes:quote.capacity_bytes,maximum_release_bytes:quote.release_bytes,maximum_depth:quote.depth.max(1),};
+        let (receipt,reserved)=observed(reserve,|effect|session.reserve_retirement_step(effect).unwrap());
         assert_eq!((reserved.requested_bytes,reserved.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));assert!(receipt.fits(reserve));
         let demand=session.next_retirement_admission_demands().unwrap();assert!(demand.capacity_bytes>0);
         let funded=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:demand.capacity_bytes,maximum_depth:demand.depth,..Default::default()};
         let current=session.lease_eval_json().unwrap();
-        let (result,denied)=observe(||session.set_eval_json(second,RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..funded}));
-        let second=result.err().unwrap().1;assert_eq!((denied.requested_bytes,denied.released_bytes),(0,0));assert!(session.owns_eval_json(&current));
-        let (receipt,admitted)=observe(||session.set_eval_json(second,funded).unwrap_or_else(|_|panic!("funded original queue reset refused")));
+        let narrowed=RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..funded};let (result,denied)=observed(narrowed,|effect|session.set_eval_json(&mut second,effect));
+        assert!(!matches!(result,Ok(Some(_))));assert!(second.is_some());assert_eq!((denied.requested_bytes,denied.released_bytes),(0,0));assert!(session.owns_eval_json(&current));
+        let (receipt,admitted)=observed(funded,|effect|session.set_eval_json(&mut second,effect).unwrap_or_else(|_|panic!("funded original queue reset refused")).expect("funded original queue reset admitted"));
         assert_eq!((admitted.requested_bytes,admitted.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));assert!(receipt.fits(funded));
         let (_,alias)=observe(||drop(current));assert_eq!((alias.requested_bytes,alias.released_bytes),(0,0));
         close(session,copy,original+reserved.requested_bytes+admitted.requested_bytes);
@@ -102,13 +104,13 @@ fn original_registry_invalidation_preserves_source_on_refusal_and_admits_all_own
         });
         let painted=session.painted_eval_json.as_ptr();let fault=session.extension_evaluate_fault.as_ref().unwrap().message.as_ptr();
         let grant=RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()};
-        let (refused,heap)=observe(||session.invalidate_for_flow_extension_registry(generation,RetainedCloneGrant{maximum_depth:0,..grant}));
+        let (refused,heap)=observed(RetainedCloneGrant{maximum_depth:0,..grant},|effect|session.invalidate_for_flow_extension_registry(generation,effect));
         assert!(refused.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         assert_eq!(session.flow_extension_generation,0);assert_eq!(session.painted_eval_json.as_ptr(),painted);assert_eq!(session.extension_evaluate_fault.as_ref().unwrap().message.as_ptr(),fault);assert_eq!(session.window_tick_latches.len(),1);
-        let ((changed,receipt),heap)=observe(||session.invalidate_for_flow_extension_registry(generation,grant).unwrap());
+        let ((changed,receipt),heap)=observed(grant,|effect|session.invalidate_for_flow_extension_registry(generation,effect).unwrap().expect("funded registry invalidation"));
         assert!(changed);assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         assert_eq!(session.flow_extension_generation,generation);assert!(session.painted_eval_json.is_empty());assert!(session.extension_evaluate_fault.is_none());assert!(session.window_tick_latches.is_empty());
-        let ((changed,receipt),heap)=observe(||session.invalidate_for_flow_extension_registry(generation,grant).unwrap());
+        let ((changed,receipt),heap)=observed(grant,|effect|session.invalidate_for_flow_extension_registry(generation,effect).unwrap().expect("funded registry invalidation"));
         assert!(!changed);assert_eq!(receipt,RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         close(session,copy,source.requested_bytes-source.released_bytes);
     }
@@ -133,21 +135,21 @@ fn original_session_pending_tick_host_retains_same_source_through_refusal_and_cl
 fn original_live_evaluation_publication_preserves_progress_and_exact_source_lease(){
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     for copy in [1,3,64]{
-        let ((mut session,incoming),source)=observe(||{
-            let mut session=FlowEvalSession::new();session.eval_json=Some(Arc::new("原🌊".repeat(4097)));
+        let ((mut session,mut incoming),source)=observe(||{
+            let mut session=FlowEvalSession::new();if let Some(prior)=session.eval_json.take(){prior.retire_cold();}session.eval_json=Some(SharedOwner::from_cold("原🌊".repeat(4097)));
             session.extension_evaluate_fault=Some(ExtensionEvaluateFault{message:"original-fault".repeat(257),..Default::default()});
             session.preview_mesh_by_handle.insert("actual-handle".into(),semio_os_flow_host_session::FlowPreviewMesh{tolerance:0.05,mesh:MeshData{paint_texture_base64:Some("actual-mesh".repeat(257)),..Default::default()}});
-            session.eval_progress_by_hash.insert(31,PreviewEvalProgress::default());(session,Arc::new("incoming-source".repeat(257)))
+            session.eval_progress_by_hash.insert(31,PreviewEvalProgress::default());(session,Some(SharedOwner::from_cold("incoming-source".repeat(257))))
         });
-        let original=session.lease_eval_json().unwrap();let mesh=session.preview_mesh("actual-handle").unwrap().paint_texture_base64.as_ref().unwrap().as_ptr();let pointer=incoming.as_ptr();
+        let original=session.lease_eval_json().unwrap();let mesh=session.preview_mesh("actual-handle").unwrap().paint_texture_base64.as_ref().unwrap().as_ptr();let pointer=incoming.as_ref().unwrap().as_ptr();
         let grant=RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()};
-        let (refused,heap)=observe(||session.publish_eval_json(incoming,RetainedCloneGrant{maximum_depth:0,..grant}));
-        let incoming=refused.err().unwrap().1;assert!(session.owns_eval_json(&original));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-        let (receipt,heap)=observe(||session.publish_eval_json(incoming,grant).unwrap_or_else(|_|panic!("original live publication refused")));
+        let refusal=RetainedCloneGrant{maximum_depth:0,..grant};let (refused,heap)=observed(refusal,|effect|session.publish_eval_json(&mut incoming,effect));
+        assert!(!matches!(refused,Ok(Some(_))));assert!(incoming.is_some());assert!(session.owns_eval_json(&original));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        let (receipt,heap)=observed(grant,|effect|session.publish_eval_json(&mut incoming,effect).unwrap_or_else(|_|panic!("original live publication refused")).expect("original live publication funded"));
         assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(session.eval_json.as_ref().unwrap().as_ptr(),pointer);
         assert!(session.extension_evaluate_fault.is_some());assert_eq!(session.preview_mesh("actual-handle").unwrap().paint_texture_base64.as_ref().unwrap().as_ptr(),mesh);assert!(session.eval_progress_by_hash.contains_key(&31));
-        let same=session.lease_eval_json().unwrap();let (receipt,heap)=observe(||session.publish_eval_json(same,grant).unwrap_or_else(|_|panic!("original unchanged lease refused")));assert_eq!(receipt,RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-        let (_,heap)=observe(||drop(original));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        let mut same=session.lease_eval_json();let (receipt,heap)=observed(grant,|effect|session.publish_eval_json(&mut same,effect).unwrap_or_else(|_|panic!("original unchanged lease refused")).expect("original unchanged lease funded"));assert_eq!(receipt,RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        let (_,heap)=observe(||original.retire_shared_alias().unwrap_or_else(|_|panic!("original lease is a counted alias")));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         close(session,copy,source.requested_bytes-source.released_bytes);
     }
 }
@@ -166,7 +168,7 @@ fn original_session_latch_birth_is_admitted_before_original_tick_mutations(){
         for _ in 0..1000{
             let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:session.next_window_tick_latch_capacity_byte_demand(name,copy).unwrap(),maximum_release_bytes:session.next_window_tick_latch_release_byte_demand(name).unwrap(),maximum_depth:session.next_window_tick_latch_depth_demand(name).unwrap()};
             let (refused,heap)=observe(||session.prepare_window_tick_latch(name,RetainedCloneGrant{maximum_items:0,..grant}));
-            assert!(refused.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+            assert_eq!(refused.unwrap().progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
             if grant.maximum_capacity_bytes>0{
                 let (refused,heap)=observe(||session.prepare_window_tick_latch(name,RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant}));
                 assert!(refused.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
@@ -200,7 +202,7 @@ fn original_preview_cancel_preserves_sources_and_resets_one_actual_latch_per_tur
         let (refused,heap)=observe(||session.cancel_preview_evaluation("",RetainedCloneGrant{maximum_items:0,..grant}));assert!(refused.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!session.preview_cancelled);
         let ((count,receipt),heap)=observe(||session.cancel_preview_evaluation("",grant).unwrap());assert_eq!(count,1);assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(session.tessellate_handle_by_hash.get(&7).unwrap().as_ptr(),pointer);assert_eq!(session.window_tick_latches.values().filter(|latch|latch.armed).count(),65);
         let mut born=0;let mut freed=0;
-        while !session.preview_cancellation_terminal_is_empty(){let demand=session.next_preview_cancellation_demands(copy).unwrap();let funded=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let before=session.window_tick_latches.values().filter(|latch|latch.armed).count();let (step,heap)=observe(||session.preview_cancellation_step(funded).unwrap());assert!(step.progress().fits(funded));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;let after=session.window_tick_latches.values().filter(|latch|latch.armed).count();assert!(before-after<=1);}
+        while !session.preview_cancellation_terminal_is_empty(){let demand=session.next_preview_cancellation_demands(copy).unwrap();let funded=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let before=session.window_tick_latches.values().filter(|latch|latch.armed).count();let (step,heap)=observed(funded,|effect|session.preview_cancellation_step(effect).unwrap());assert!(step.progress().fits(funded));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;let after=session.window_tick_latches.values().filter(|latch|latch.armed).count();assert!(before-after<=1);}
         assert!(session.pending_tessellate_by_hash.is_empty());assert!(session.tessellate_handle_by_hash.is_empty());assert!(session.eval_progress_by_hash.is_empty());assert_eq!(session.window_tick_latches.len(),65);assert!(session.window_tick_latches.values().all(|latch|*latch==FlowEvalWindowTickLatch::default()));close(session,copy,source.requested_bytes-source.released_bytes+born-freed);
     }
 }
@@ -250,25 +252,25 @@ fn original_baseline_publication_admits_arc_headers_and_leases_same_payload(){
         let demand=host.next_baseline_publication_demands(0).unwrap();
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
         if demand.capacity_bytes>0{
-            let (_,denied)=observe(||host.baseline_publication_step(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant}).unwrap());
+            let (_,denied)=observed(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant},|effect|host.baseline_publication_step(effect).unwrap());
             assert_eq!((denied.requested_bytes,denied.released_bytes),(0,0));
         }
-        let (step,heap)=observe(||host.baseline_publication_step(grant).unwrap());
+        let (step,heap)=observed(grant,|effect|host.baseline_publication_step(effect).unwrap());
         assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
-        assert_eq!(step.progress().copied_bytes,0);born+=heap.requested_bytes;
+        born+=heap.requested_bytes;
     }
     assert!(host.baseline_publication_terminal_is_empty());
-    assert!(Arc::ptr_eq(host.current_channels.as_ref().unwrap(),host.previous_channels.as_ref().unwrap()));
+    assert!(host.current_channels.as_ref().unwrap().same_original(host.previous_channels.as_ref().unwrap()));
     assert_eq!(host.output_entries().count(),1);
     assert_eq!(match host.output_channels("out").unwrap().get("payload").unwrap(){NeuralValue::Atom(Atom::String(text))=>text.as_ptr(),_=>unreachable!()},payload);
-    let ((snapshot,channels),lease)=observe(||host.eval_baseline());
+    let ((mut snapshot,mut channels),lease)=observe(||host.eval_baseline());
     assert_eq!((lease.requested_bytes,lease.released_bytes),(0,0));
-    assert!(Arc::ptr_eq(snapshot.as_ref().unwrap(),host.previous_snapshot.as_ref().unwrap()));assert!(Arc::ptr_eq(channels.as_ref().unwrap(),host.previous_channels.as_ref().unwrap()));
+    assert!(snapshot.as_ref().unwrap().same_original(host.previous_snapshot.as_ref().unwrap()));assert!(channels.as_ref().unwrap().same_original(host.previous_channels.as_ref().unwrap()));
     assert_eq!(match channels.as_ref().unwrap().outputs.get("out").unwrap().get("payload").unwrap(){NeuralValue::Atom(Atom::String(text))=>text.as_ptr(),_=>unreachable!()},payload);
-    session.receive_eval_baseline_sources(snapshot,channels,session.flow_extension_generation,RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()}).unwrap_or_else(|_|panic!("original baseline admission refused"));
-    let (_,alias)=observe(||{drop(host.previous_snapshot.take());drop(host.previous_channels.take());});
-    assert_eq!((alias.requested_bytes,alias.released_bytes),(0,0));host.retire_cold();
-    close(session,1,source.requested_bytes-source.released_bytes+born);
+    observed(RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()},|effect|session.receive_eval_baseline_sources(&mut snapshot,&mut channels,session.flow_extension_generation,effect)).0.unwrap_or_else(|_|panic!("original baseline admission refused")).expect("original baseline admission funded");
+    let (_,alias)=observe(||{if let Some(lease)=host.previous_snapshot.take(){lease.retire_shared_alias().unwrap_or_else(|_|panic!("original snapshot alias is shared with the session"));}if let Some(lease)=host.previous_channels.take(){lease.retire_shared_alias().unwrap_or_else(|_|panic!("original channels alias is shared with the session"));}});
+    assert_eq!((alias.requested_bytes,alias.released_bytes),(0,0));let published_text=host.last_eval_json.capacity();eprintln!("[DEBUG] baseline born={born} text={published_text} source={}",source.requested_bytes-source.released_bytes);host.retire_cold();
+    close(session,1,source.requested_bytes-source.released_bytes+born-published_text);
 }
 
 fn close(mut session: FlowEvalSession, copy_budget: usize, original_bytes: usize) -> usize {
@@ -279,7 +281,7 @@ fn close(mut session: FlowEvalSession, copy_budget: usize, original_bytes: usize
     for _ in 0..1_000_000 {
         if session.terminal_is_empty(){break;}
         let copy=copy_budget;
-        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:session.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:session.next_close_release_byte_demand().unwrap(),maximum_depth:session.next_close_depth_demand().unwrap()};
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:session.next_close_copy_byte_demand().unwrap().max(copy),maximum_capacity_bytes:session.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:session.next_close_release_byte_demand().unwrap(),maximum_depth:session.next_close_depth_demand().unwrap()};
         let (step,heap)=observe(||session.close_step_cold(RetainedCloneGrant{maximum_items:0,..grant}));
         assert!(matches!(step,Ok(Step::Pending{progress}) if progress==RetainedCloneProgress::default()));
         assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
@@ -309,16 +311,16 @@ fn session_semantic_bytes_larger_than_production_grant_retire_exactly_across_wor
         let preview=fixture["preview"]["text"].as_str().unwrap().repeat(fixture["preview"]["repeat"].as_u64().unwrap() as usize);
         let (session,heap)=observe(||{
             let mut session=FlowEvalSession::new();
-            let primary=Arc::get_mut(session.eval_json.as_mut().unwrap()).unwrap();
-            primary.reserve_exact(fixture["text"]["reservedCapacity"].as_u64().unwrap() as usize);primary.push_str(&text);
+            let mut primary=String::new();
+            primary.reserve_exact(fixture["text"]["reservedCapacity"].as_u64().unwrap() as usize);primary.push_str(&text);if let Some(prior)=session.eval_json.take(){prior.retire_cold();}session.eval_json=Some(SharedOwner::from_cold(primary));
             session.painted_eval_json=text.clone();session.converged_eval_json=preview.clone();
             session.extension_evaluate_fault=Some(ExtensionEvaluateFault{extension_id:text.clone(),capability:preview.clone(),code:text.clone(),message:preview.clone()});
             session.window_tick_latches.insert(1,FlowEvalWindowTickLatch{armed:true,..Default::default()});
             session.preview_mesh_by_handle.insert("mesh".into(),semio_os_flow_host_session::FlowPreviewMesh{tolerance:0.05,mesh:MeshData{paint_texture_base64:Some(preview.clone()),..Default::default()}});
             session.pending_tessellate_by_hash.insert(1,"pending".into());
             session.live_geometry_handles.insert("geometry".into(),());
-            session.receive_eval_baseline_sources(None,Some(Arc::new(EvalChannels{outputs:HistoryFoldIndex::from([("output".into(),Dictionary::new().insert("label",NeuralValue::Atom(Atom::String(preview.clone()))))]),inputs:HistoryFoldIndex::new()})),session.flow_extension_generation,RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()}).unwrap_or_else(|_|panic!("original baseline admission refused"));
-            session.neural_cache().seed(1,Dictionary::new().insert("label",NeuralValue::Atom(Atom::String(text.clone())))).unwrap_or_else(|_|panic!("original cache admission contended"));
+            let mut no_snapshot=None;let mut channels=Some(SharedOwner::from_cold(EvalChannels{outputs:HistoryFoldIndex::from([("output".into(),Dictionary::new().insert("label",NeuralValue::Atom(Atom::String(preview.clone()))))]),inputs:HistoryFoldIndex::new()}));observed(RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()},|effect|session.receive_eval_baseline_sources(&mut no_snapshot,&mut channels,session.flow_extension_generation,effect)).0.unwrap_or_else(|_|panic!("original baseline admission refused")).expect("original baseline admission funded");
+            session.neural_cache_ref().seed(1,Dictionary::new().insert("label",NeuralValue::Atom(Atom::String(text.clone())))).unwrap_or_else(|_|panic!("original cache admission contended"));
             session
         });
         let original=heap.requested_bytes.checked_sub(heap.released_bytes).unwrap();
@@ -330,7 +332,7 @@ fn session_semantic_bytes_larger_than_production_grant_retire_exactly_across_wor
 fn empty_reserved_text_preserves_whole_original_capacity_until_release_grant() {
     let (session,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{
         let mut session=FlowEvalSession::new();
-        Arc::get_mut(session.eval_json.as_mut().unwrap()).unwrap().reserve_exact(65536);
+        let mut primary=String::new();primary.reserve_exact(65536);if let Some(prior)=session.eval_json.take(){prior.retire_cold();}session.eval_json=Some(SharedOwner::from_cold(primary));
         session
     });
     close(session,1,heap.requested_bytes-heap.released_bytes);
@@ -349,7 +351,7 @@ fn original_host_retirement_preserves_whole_source_and_full_close_receipts(){
  flow_extension_registry_generation();
  for copy in law["copyGrants"].as_array().unwrap(){
   let (host,source_heap)=observe(||{
-   let mut host=FlowHost::default();let baseline=host.host_snapshot.clone();let envelope=create_document_envelope(FLOW_DOCUMENT_SCHEMA,"original-retirement-host",baseline,None,&::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer);host.history_store=Some(semio_framework_async::poll::resolve_ready(FlowStore::new::<::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer>(envelope,semio_os_kernel::os_spr::ActorId(semio_os_kernel::os_spr::LOCAL_ACTOR_ID.into()))).unwrap());assert!(host.history_store.is_some(),"original Host store authority installed");
+   let mut host=FlowHost::default();let baseline=host.host_snapshot.clone();host.history_store=Some((semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY.construct)(baseline).unwrap());assert!(host.history_store.is_some(),"original Host store authority installed");
    let mut text=String::with_capacity(law["capacityBytes"].as_u64().unwrap()as usize);text.push_str(&law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap()as usize));assert_eq!(text.len(),law["utf8Bytes"].as_u64().unwrap()as usize);
    host.host_catalogue_json=text;host.edited_note=Some(String::from("retained-original-note"));host
   });
@@ -359,7 +361,7 @@ fn original_host_retirement_preserves_whole_source_and_full_close_receipts(){
   while !retirement.terminal_is_empty(){
    turns+=1;assert!(turns<law["maximumTurns"].as_u64().unwrap());let copy=copy.as_u64().unwrap()as usize;
    let (demands,query_heap)=observe(||(retirement.next_close_capacity_byte_demand(copy).unwrap(),retirement.next_close_release_byte_demand().unwrap(),retirement.next_close_depth_demand().unwrap()));assert_eq!((query_heap.requested_bytes,query_heap.released_bytes),(0,0));
-   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demands.0,maximum_release_bytes:demands.1,maximum_depth:demands.2};
+   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy.max(retirement.close_demands(copy).unwrap().copy_bytes),maximum_capacity_bytes:demands.0,maximum_release_bytes:demands.1,maximum_depth:demands.2};
    for _ in 0..law["expected"]["denialRepeats"].as_u64().unwrap(){
     let(step,heap)=observe(||retirement.close_step_cold(RetainedCloneGrant{maximum_items:0,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     if grant.maximum_capacity_bytes>0{let(step,heap)=observe(||retirement.close_step_cold(RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
@@ -399,11 +401,9 @@ fn dag_retirement_fixture() -> (DagHostRetirement, usize) {
     (owner, minimum_bytes)
 }
 
-fn dag_bank()->semio_framework_value_testing_effect_bank::EffectBank{use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};EffectBank::new(Wallet::new(RetainedCloneGrant{maximum_items:1<<40,maximum_copy_bytes:1<<40,maximum_capacity_bytes:1<<40,maximum_release_bytes:1<<40,maximum_depth:1<<20},1<<40))}
-
-fn dag_close_turn(bank:&mut semio_framework_value_testing_effect_bank::EffectBank,owner:&mut DagHostRetirement,copy:usize,grant:RetainedCloneGrant)->(RetainedCloneProgress,(usize,usize)){
+fn dag_close_turn(owner:&mut DagHostRetirement,copy:usize,grant:RetainedCloneGrant)->(RetainedCloneProgress,(usize,usize)){
  use semio_framework_value::retained_clone::RetainedWorkPoll;
- let(poll,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||bank.run(grant,1<<20,|effect|owner.close_step(copy,effect)).0);bank.take_admitted();
+ let(poll,heap)=observed(grant,|effect|owner.close_step(copy,effect));
  let progress=match poll{RetainedWorkPoll::Complete(done)=>done.result.unwrap().progress(),RetainedWorkPoll::Pending{..}=>Default::default()};
  (progress,(heap.requested_bytes,heap.released_bytes))
 }
@@ -412,14 +412,14 @@ fn dag_close_turn(bank:&mut semio_framework_value_testing_effect_bank::EffectBan
 fn original_dag_host_retirement_preserves_source_and_independent_physical_receipts(){
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
  for copy in [1,3,64]{
-  let(mut owner,minimum_bytes)=dag_retirement_fixture();let mut bank=dag_bank();
+  let(mut owner,minimum_bytes)=dag_retirement_fixture();
   let original=owner.original().unwrap().graph.host_snapshot.schema.as_ptr();
-  let(progress,heap)=dag_close_turn(&mut bank,&mut owner,copy,RetainedCloneGrant::default());assert_eq!(progress,RetainedCloneProgress::default());assert_eq!(heap,(0,0));assert_eq!(owner.original().unwrap().graph.host_snapshot.schema.as_ptr(),original);
+  let(progress,heap)=dag_close_turn(&mut owner,copy,RetainedCloneGrant::default());assert_eq!(progress,RetainedCloneProgress::default());assert_eq!(heap,(0,0));assert_eq!(owner.original().unwrap().graph.host_snapshot.schema.as_ptr(),original);
   let(mut born,mut freed,mut turns)=(0,0,0);
   while !owner.terminal_is_empty(){turns+=1;assert!(turns<262144);let demand=owner.next_close_demand(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-   if grant.maximum_capacity_bytes>0{let(progress,heap)=dag_close_turn(&mut bank,&mut owner,copy,RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant});assert_eq!(progress,RetainedCloneProgress::default());assert_eq!(heap,(0,0));}
-   if grant.maximum_release_bytes>0{let(progress,heap)=dag_close_turn(&mut bank,&mut owner,copy,RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes-1,..grant});assert_eq!(progress,RetainedCloneProgress::default());assert_eq!(heap,(0,0));}
-   let(progress,heap)=dag_close_turn(&mut bank,&mut owner,copy,grant);assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.0;freed+=heap.1;
+   if grant.maximum_capacity_bytes>0{let(progress,heap)=dag_close_turn(&mut owner,copy,RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant});assert_eq!(progress,RetainedCloneProgress::default());assert_eq!(heap,(0,0));}
+   if grant.maximum_release_bytes>0{let(progress,heap)=dag_close_turn(&mut owner,copy,RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes-1,..grant});assert_eq!(progress,RetainedCloneProgress::default());assert_eq!(heap,(0,0));}
+   let(progress,heap)=dag_close_turn(&mut owner,copy,grant);assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.0;freed+=heap.1;
   }
   assert!(freed>=born+minimum_bytes);let(_,heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }

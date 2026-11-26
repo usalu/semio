@@ -50,7 +50,7 @@ async fn stateful_current_matches_full_replay_across_interleaved_commands() {
 
 
 /// 🪄️ Downcasts a registered `dyn SpaceMember` back to its concrete demo store.
-async fn demo_member<'a, Mutation: self::Mutation<DemoSnapshot> + Clone + ColdMutation<DemoSnapshot> + OpBinary + OpText + Send + 'static, M: SpaceMember + 'static>(host: &'a mut SpaceHost<M>, document_id: &str) -> &'a mut ArtifactStore<DemoSnapshot, Mutation> {
+async fn demo_member<'a, Mutation: semio_os_spr::StoreMutationFor<DemoSnapshot>, M: SpaceMember + 'static>(host: &'a mut SpaceHost<M>, document_id: &str) -> &'a mut ArtifactStore<DemoSnapshot, Mutation> {
     host.member_mut(document_id).await.expect("member registered").as_any_mut().await.downcast_mut::<ArtifactStore<DemoSnapshot, Mutation>>().expect("concrete member type matches")
 }
 
@@ -78,14 +78,7 @@ async fn register_space_documents_registers_manifest_collections_and_artifacts_t
     assert!(host.member("collection-b").await.is_some(), "collection b registered");
     assert!(host.member("artifact-a").await.is_some(), "artifact registered");
 
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
-        assert!(progress.owned_bytes <= IDENTITY_CEILING);
-        true
-    };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut observer).expect("declared fixture identity authority");
-    let space_checkpoint_id = host.commit_space_checkpoint("initial space checkpoint".into(), Vec::new(), &mut identity).await.expect("commit space checkpoint");
-    drop(identity.pause().expect("original cumulative fixture identity receipt"));
+    let space_checkpoint_id = test_support::with_original_identity(|identity| test_support::block_on_original_turn(host.commit_space_checkpoint("initial space checkpoint".into(), Vec::new(), identity))).expect("commit space checkpoint");
     let snapshot = host.meta_snapshot().await.expect("meta snapshot");
     let checkpoint = snapshot.checkpoints.iter().find(|checkpoint| checkpoint.id == space_checkpoint_id).expect("checkpoint recorded");
     assert_eq!(checkpoint.members.len(), 4, "manifest + 2 collections + 1 artifact all pinned atomically in one space checkpoint");
@@ -96,21 +89,20 @@ async fn register_space_documents_registers_manifest_collections_and_artifacts_t
 #[semio_framework_async_macros::async_test]
 async fn space_checkpoint_commits_dirty_members_and_pins_their_checkpoints() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let mut member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    member_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply a");
+    member_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, identity).await.expect("apply a");
 
     let mut member_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-b", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    member_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }, &mut identity).await.expect("apply b");
-    member_b.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b-init".into()), authors: Vec::new() }, &mut identity).await.expect("commit b upfront, so it starts clean");
+    member_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }, identity).await.expect("apply b");
+    member_b.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b-init".into()), authors: Vec::new() }, identity).await.expect("commit b upfront, so it starts clean");
     let member_b_checkpoint = member_b.current_checkpoint_id().await.expect("b checkpoint").to_string();
 
     let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
     host.register_member(member_a).await;
     host.register_member(member_b).await;
 
-    let space_checkpoint_id = host.commit_space_checkpoint("studio init".into(), vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }], &mut identity).await.expect("commit space checkpoint");
+    let space_checkpoint_id = host.commit_space_checkpoint("studio init".into(), vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }], identity).await.expect("commit space checkpoint");
 
     let snapshot = host.meta_snapshot().await.expect("meta snapshot");
     assert_eq!(snapshot.checkpoints.len(), 1);
@@ -121,14 +113,13 @@ async fn space_checkpoint_commits_dirty_members_and_pins_their_checkpoints() {
     assert_eq!(pin_b.checkpoint_id, member_b_checkpoint, "clean member reuses its existing checkpoint");
     assert!(!host.member("member-a").await.expect("member a").is_dirty().await, "dirty member-a is committed (and therefore clean) by the space checkpoint");
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn space_vcs_host_meta_document_is_backbone_attachable_and_detachable() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let (backbone_a, backbone_b) = MemoryBackbone::pair("studio-a", "studio-b").await;
     let mut host_a = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid first space host history");
     let mut host_b = SpaceHost::<ArtifactStore<DemoSnapshot, DemoMutation>>::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid second space host history");
@@ -139,90 +130,87 @@ async fn space_vcs_host_meta_document_is_backbone_attachable_and_detachable() {
     assert!(host_a.backbone_ref().await.is_some());
 
     let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply on member, so it's dirty and can be committed");
+    member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, identity).await.expect("apply on member, so it's dirty and can be committed");
     host_a.register_member(member).await;
-    host_a.commit_space_checkpoint("studio init".into(), Vec::new(), &mut identity).await.expect("commit space checkpoint on a");
+    host_a.commit_space_checkpoint("studio init".into(), Vec::new(), identity).await.expect("commit space checkpoint on a");
 
     host_b.tick().await.expect("tick b");
     assert_eq!(host_b.meta_snapshot().await.expect("meta snapshot b").checkpoints.len(), 1, "the space-wide checkpoint replicates through the meta-document's backbone");
 
     host_a.detach_backbone().await.expect("detach source host backbone");
     assert!(host_a.backbone_ref().await.is_none());
-    host_a.commit_space_checkpoint("studio offline".into(), Vec::new(), &mut identity).await.expect("meta history keeps working purely in memory once detached");
+    host_a.commit_space_checkpoint("studio offline".into(), Vec::new(), identity).await.expect("meta history keeps working purely in memory once detached");
     host_b.tick().await.expect("tick b again");
     assert_eq!(host_b.meta_snapshot().await.expect("meta snapshot b unchanged").checkpoints.len(), 1, "detached space edits never reach the peer");
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn space_checkout_checkpoint_fans_out_and_restores_pinned_member_state() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
     host.register_member(member_a).await;
 
-    demo_member::<DemoMutation, _>(&mut host, "member-a").await.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply 1");
-    let space_checkpoint_1 = host.commit_space_checkpoint("first".into(), Vec::new(), &mut identity).await.expect("commit 1");
+    demo_member::<DemoMutation, _>(&mut host, "member-a").await.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, identity).await.expect("apply 1");
+    let space_checkpoint_1 = host.commit_space_checkpoint("first".into(), Vec::new(), identity).await.expect("commit 1");
 
-    demo_member::<DemoMutation, _>(&mut host, "member-a").await.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut identity).await.expect("apply 2");
-    host.commit_space_checkpoint("second".into(), Vec::new(), &mut identity).await.expect("commit 2");
+    demo_member::<DemoMutation, _>(&mut host, "member-a").await.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, identity).await.expect("apply 2");
+    host.commit_space_checkpoint("second".into(), Vec::new(), identity).await.expect("commit 2");
     assert_eq!(demo_member::<DemoMutation, _>(&mut host, "member-a").await.snapshot().expect("snapshot").n, Some(2), "member reflects the second space checkpoint before checking out the first");
 
-    host.checkout_space_checkpoint(&space_checkpoint_1, &mut identity).await.expect("checkout space checkpoint 1");
+    host.checkout_space_checkpoint(&space_checkpoint_1, identity).await.expect("checkout space checkpoint 1");
     assert_eq!(demo_member::<DemoMutation, _>(&mut host, "member-a").await.snapshot().expect("snapshot").n, Some(1), "checking out the first space checkpoint fans out and restores member-a's pinned state");
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn space_switch_alternative_fans_out_and_restores_pinned_member_state() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
     host.register_member(member_a).await;
 
-    demo_member::<DemoMutation, _>(&mut host, "member-a").await.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply 1");
-    host.commit_space_checkpoint("root".into(), Vec::new(), &mut identity).await.expect("commit root");
+    demo_member::<DemoMutation, _>(&mut host, "member-a").await.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, identity).await.expect("apply 1");
+    host.commit_space_checkpoint("root".into(), Vec::new(), identity).await.expect("commit root");
 
-    let alt_id = host.create_space_alternative("branch-a".into(), &mut identity).await.expect("create alternative");
+    let alt_id = host.create_space_alternative("branch-a".into(), identity).await.expect("create alternative");
 
-    demo_member::<DemoMutation, _>(&mut host, "member-a").await.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut identity).await.expect("apply 2 (uncommitted at the studio level)");
+    demo_member::<DemoMutation, _>(&mut host, "member-a").await.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, identity).await.expect("apply 2 (uncommitted at the studio level)");
     assert_eq!(demo_member::<DemoMutation, _>(&mut host, "member-a").await.snapshot().expect("snapshot").n, Some(2), "uncommitted edit is live before switching");
 
-    host.switch_space_alternative(&alt_id, &mut identity).await.expect("switch alternative fans out to its pinned checkpoint");
+    host.switch_space_alternative(&alt_id, identity).await.expect("switch alternative fans out to its pinned checkpoint");
     assert_eq!(demo_member::<DemoMutation, _>(&mut host, "member-a").await.snapshot().expect("snapshot").n, Some(1), "switching alternatives restores each member to its pinned checkpoint, discarding the uncommitted edit");
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn space_undo_and_redo_target_the_member_with_the_most_recent_local_edit_by_hlt() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let mut member_early = ArtifactStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-early", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    member_early.dispatch(ArtifactCommand::Apply { mutations: vec![TimestampedMutation::SetN(TimestampedSetN { n: 1, physical_ms: 1_000 })], transaction: None }, &mut identity).await.expect("apply early");
+    member_early.dispatch(ArtifactCommand::Apply { mutations: vec![TimestampedMutation::SetN(TimestampedSetN { n: 1, physical_ms: 1_000 })], transaction: None }, identity).await.expect("apply early");
 
     let mut member_late = ArtifactStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-late", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    member_late.dispatch(ArtifactCommand::Apply { mutations: vec![TimestampedMutation::SetN(TimestampedSetN { n: 9, physical_ms: 2_000 })], transaction: None }, &mut identity).await.expect("apply late");
+    member_late.dispatch(ArtifactCommand::Apply { mutations: vec![TimestampedMutation::SetN(TimestampedSetN { n: 9, physical_ms: 2_000 })], transaction: None }, identity).await.expect("apply late");
 
     let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
     host.register_member(member_early).await;
     host.register_member(member_late).await;
 
-    host.undo(&mut identity).await.expect("space undo targets the member with the higher HLT");
+    host.undo(identity).await.expect("space undo targets the member with the higher HLT");
     assert_eq!(demo_member::<TimestampedMutation, _>(&mut host, "member-early").await.snapshot().expect("early snapshot").n, Some(1), "earlier local edit (lower HLT) is untouched");
     assert_eq!(demo_member::<TimestampedMutation, _>(&mut host, "member-late").await.snapshot().expect("late snapshot").n, Some(0), "later local edit (higher HLT) is the one undone");
 
-    host.redo(&mut identity).await.expect("studio redo targets the most recently undone edit");
+    host.redo(identity).await.expect("studio redo targets the most recently undone edit");
     assert_eq!(demo_member::<TimestampedMutation, _>(&mut host, "member-late").await.snapshot().expect("late snapshot after redo").n, Some(9), "redo restores the member's most recently undone edit");
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -231,18 +219,17 @@ async fn space_undo_and_redo_target_the_member_with_the_most_recent_local_edit_b
 // merge arbitration is now `ingest_remote`/`resolve_conflict` against first-class `Conflict`s.
 async fn snapshot_matches_materialize_and_conflicts_stay_empty_absent_remote_ingestion() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
-    let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
-    let mut identity:semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
+    test_support::with_original_identity(|identity| test_support::block_on_original_turn(async move {
     let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = ArtifactStore::new(envelope, &semio_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }, &mut identity).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }, identity).await.expect("apply");
     let replayed = materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).await.expect("replay");
     assert_eq!(replayed.n, Some(3));
     assert_eq!(store.snapshot().expect("snapshot").n, Some(3));
     assert!(store.conflicts().is_empty(), "no remote ingestion happened, so the store's conflict buffer stays empty");
     assert!(store.open_conflicts().next().is_none());
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
-    drop(identity.pause().expect("original Unit cumulative identity receipt"));
+    }));
 }
 
 #[semio_framework_async_macros::async_test]

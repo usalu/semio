@@ -1,5 +1,5 @@
 import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
-import {isOpaqueSourcePathV1} from "../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import{isOpaqueSourcePathV1}from"../../📥️inputs/👻️opaque-source/🟨️.mjs";
 import{sayBuildV1}from"../../📖️texts/🟦️.ts";
 import {type BazelImplementationV1,type BazelRuntimeV1,type BazelTaskManifestV1,bazelBirthParametersAllowedV1,bazelCapturedImplementationV1,bazelTaskBaseEnvironmentV1,fileHash,initializeBazelControlTextV1,installBazelOrchestrationV1,issueBazelTaskEnvironmentV1,readBazelBirthFileV1,requireBazelImplementationV1,restoreBazelSnapshotV1,runBazelActionEntryV1,withBazelTaskCleanupV1} from "./🎬️executor/🟦️.ts";
 import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

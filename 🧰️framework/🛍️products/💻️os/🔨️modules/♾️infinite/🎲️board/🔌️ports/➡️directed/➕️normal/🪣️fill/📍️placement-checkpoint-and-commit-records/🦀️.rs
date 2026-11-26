@@ -60,7 +60,7 @@ pub struct BoardFillCheckpoint {
         pub(super) original_source: Option<semio_framework_action_bus::OriginalToolSourceBinding>,
 pub operation: semio_framework_job::Operation,
     pub naming: &'static BoardNaming,
-    pub state: Option<BoardFillJobState>,
+    pub state: Option<Box<BoardFillJobState>>,
 }
 
 impl BoardFillCheckpoint {

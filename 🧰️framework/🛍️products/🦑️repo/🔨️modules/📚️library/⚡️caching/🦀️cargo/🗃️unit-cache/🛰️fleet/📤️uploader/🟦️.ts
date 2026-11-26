@@ -111,7 +111,7 @@ const RANK:Readonly<Record<FleetVerdictV1,number>>={stored:0,diverged:0,stale:0,
 async function sendV1(client:FleetClientV1,job:SpoolJobV1,upload:Readonly<{blobs:ReadonlyMap<string,Uint8Array>;result:Uint8Array}>):Promise<UploadOutcomeV1>{
  const renewing=job.claimed?setInterval(()=>{void client.renew(job.key,job.owner,fleet.claim.ttlMilliseconds);},fleet.claim.heartbeatMilliseconds):undefined;renewing?.unref?.();
  try{
-  let worst:FleetVerdictV1="stored";
+  let worst=("stored" as FleetVerdictV1);
   await bounded([...upload.blobs.keys()],limits.maximumUploadConcurrency,async hash=>{
    if(await client.hasBlob(hash)===true)return true;
    const verdict=await client.storeBlob(hash,upload.blobs.get(hash)!);

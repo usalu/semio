@@ -10,11 +10,18 @@ extern crate semio_os_kernel as store;
 use semio_framework_dispatch_macros::dyn_enum_close;
 
 use semio_plugin::plugin_app_close_prelude::*;
+use semio_s_artifact_stdio_binary_mutations::{BinaryEditorApp, BinaryEditorApps};
 
 dyn_enum_close! {
     pub enum BinaryApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<editor::binary::BinaryEditor>>),
+        Editor(BinaryEditorApps),
         Viewer(VcsArtifactApp<ViewerApp<viewer::binary::BinaryViewer>>),
+    }
+}
+
+impl From<BinaryEditorApp> for BinaryApps {
+    fn from(app: BinaryEditorApp) -> Self {
+        Self::Editor(app.into())
     }
 }
 

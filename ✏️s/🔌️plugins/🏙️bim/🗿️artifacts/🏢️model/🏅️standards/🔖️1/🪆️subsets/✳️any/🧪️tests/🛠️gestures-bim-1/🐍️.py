@@ -195,6 +195,50 @@ def close(left, right):
     return left == right
 
 
+def committed_cases(ctx, section):
+    """🧫️ The committed gesture cases of one section; only their inputs are read, every number answered below is recomputed."""
+    uri = next(uri for uri in ctx.step_input_uris() if uri.endswith("🛠️gestures/🔣️.json"))
+    return json.loads(ctx.input_bytes(uri).decode("utf-8"))[section]
+
+
+def answer(projection):
+    from semio_repo_test import Outcome
+
+    return Outcome(projection, raw=json.dumps(projection, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
+
+
+def typed_handler(ctx):
+    case = committed_cases(ctx, "typed")[int(ctx.row().rsplit("-", 1)[-1])]
+    return answer({"point": typed_point(case["entry"], case.get("anchor"), case.get("toward"))})
+
+
+def cursor_handler(ctx):
+    return answer({"points": [cursor_point(case["start"], case["steps"]) for case in committed_cases(ctx, "cursor")]})
+
+
+def fit_handler(ctx):
+    return answer({"fits": [dict(zip(("origin", "depth"), component_fit(case["axis"], case["thickness"], case["point"]))) for case in committed_cases(ctx, "component_fits")]})
+
+
+def frame_handler(ctx):
+    return answer({"worlds": [component_frame(case["origin"], case["yaw"], case["mirrored"], case["local"]) for case in committed_cases(ctx, "component_frames")]})
+
+
+def turns_handler(ctx):
+    return answer({"degrees": [turned(case["steps"]) for case in committed_cases(ctx, "turns")]})
+
+
+def route_handler(ctx):
+    return answer({"routes": [{"label": "%.2f m" % route_length(case["points"]), "path": [[float(value) for value in point] for point in case["points"]]} for case in committed_cases(ctx, "routes")]})
+
+
+def adapter():
+    """🧭️ Registration in the ORACLE role only, by the feature's scenario id (an outline id serves every row)."""
+    from semio_repo_test import Adapter
+
+    return Adapter("python").oracle("typed-point", typed_handler).oracle("cursor-point", cursor_handler).oracle("component-fit", fit_handler).oracle("component-frame", frame_handler).oracle("component-turns", turns_handler).oracle("route-length", route_handler)
+
+
 def main(argv):
     sys.stdout.reconfigure(encoding="utf-8")
     if len(argv) != 3 or argv[1] not in ("check", "write"):

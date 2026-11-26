@@ -18,9 +18,9 @@ use semio_s_artifact_stdio_contract::part21::Part21Value;
 use std::collections::BTreeMap;
 
 /// 🪑️ The occurrence classes a component can be.
-pub const OCCURRENCES: [&str; 7] = ["IFCFURNISHINGELEMENT", "IFCFURNITURE", "IFCFLOWTERMINAL", "IFCSANITARYTERMINAL", "IFCLIGHTFIXTURE", "IFCAIRTERMINAL", "IFCBUILDINGELEMENTPROXY"];
+pub const OCCURRENCES: [&str; 8] = ["IFCFURNISHINGELEMENT", "IFCFURNITURE", "IFCFLOWTERMINAL", "IFCSANITARYTERMINAL", "IFCLIGHTFIXTURE", "IFCAIRTERMINAL", "IFCELECTRICAPPLIANCE", "IFCBUILDINGELEMENTPROXY"];
 /// 🏷️ The type classes that can carry an authored family.
-pub const TYPES: [&str; 6] = ["IFCFURNITURETYPE", "IFCSANITARYTERMINALTYPE", "IFCLIGHTFIXTURETYPE", "IFCFLOWTERMINALTYPE", "IFCAIRTERMINALTYPE", "IFCBUILDINGELEMENTPROXYTYPE"];
+pub const TYPES: [&str; 6] = ["IFCFURNITURETYPE", "IFCSANITARYTERMINALTYPE", "IFCLIGHTFIXTURETYPE", "IFCELECTRICAPPLIANCETYPE", "IFCAIRTERMINALTYPE", "IFCBUILDINGELEMENTPROXYTYPE"];
 
 //#region 🔖️Systems
 /// 🌀️ The service a group is named after (`Supply`, `DomesticWater`, …) or, for an IFC4 distribution system, its predefined type.
@@ -140,7 +140,9 @@ fn category_of(class: &str) -> FamilyCategory {
         "IFCFURNISHINGELEMENT" | "IFCFURNITURE" => FamilyCategory::Furniture,
         "IFCSANITARYTERMINAL" => FamilyCategory::Plumbing,
         "IFCLIGHTFIXTURE" => FamilyCategory::Lighting,
-        "IFCFLOWTERMINAL" | "IFCAIRTERMINAL" => FamilyCategory::Equipment,
+        "IFCAIRTERMINAL" => FamilyCategory::Mechanical,
+        "IFCELECTRICAPPLIANCE" => FamilyCategory::Electrical,
+        "IFCFLOWTERMINAL" => FamilyCategory::Equipment,
         _ => FamilyCategory::Generic,
     }
 }

@@ -161,7 +161,7 @@ describe("the port",()=>{
   expect(byPath.get("a/one.ts")).toBe(sha("v2 changed"));expect(byPath.get("b/three.json")).toBe(sha("v1 b/three.json"));expect(byPath.get("b/four.rs")).toBe(sha("v1 b/four.rs"));
   expect(byPath.has("c/five.toml")).toBe(false);expect(byPath.get("a/two.ts")).toBe(sha("v1 a/two.ts"));
   expect(reads.map(path=>path.slice(root.length+1)).sort()).toEqual(["a/one.ts","b/four.rs","b/three.json"]);
-  if(python){const check=Bun.spawnSync([python,"-I","-c","import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())",join(root,"a/one.ts")]);expect(check.stdout.toString().trim()).toBe(byPath.get("a/one.ts"));}
+  if(python){const check=Bun.spawnSync([python,"-I","-c","import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())",join(root,"a/one.ts")]);expect<unknown>(check.stdout.toString().trim()).toBe(byPath.get("a/one.ts"));}
   const failing=await verifiedReplicaFilesV1(root,[entry("a/two.ts")].map(row=>[row[0],row[1],row[2]+1,row[3],false] as typeof row),{read:async()=>{throw Error("EACCES");}});
   const once=failing[0]![1],again=await verifiedReplicaFilesV1(root,[entry("a/two.ts")].map(row=>[row[0],row[1],row[2]+1,row[3],false] as typeof row),{read:async()=>{throw Error("EACCES");}});
   expect(once).toMatch(/^[0-9a-f]{64}$/u);expect(once).not.toBe(sha("v1 a/two.ts"));expect(again[0]![1]).not.toBe(once);

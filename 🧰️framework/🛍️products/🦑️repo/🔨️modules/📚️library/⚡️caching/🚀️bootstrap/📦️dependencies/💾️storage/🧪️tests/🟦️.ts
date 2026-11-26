@@ -296,7 +296,7 @@ test("owned workspace edge progress adds exact descriptor scopes and suppresses 
    SELECT 'dependencies:workspace-edges:'||(
     SELECT sum(entries) FROM (SELECT max(p.entries) AS entries FROM samples p WHERE p.op=s.op AND p.n<=s.n GROUP BY p.scope)
    ) AS resource,'exclusive' AS mode,0 AS elapsedMs FROM samples s ORDER BY n`).all(JSON.stringify(steps));
-  expect(seen).toEqual(expected);
+  expect<unknown>(seen).toEqual(expected);
   const concurrent=await Promise.all([Promise.resolve().then(()=>progress("b",b.plan.generation,second)),Promise.resolve().then(()=>progress("c","c".repeat(64),first))]);
   expect(concurrent).toEqual([2*second,2*second+first]);
   expect(progress("a","f".repeat(64),first)).toBe(2*second+2*first);

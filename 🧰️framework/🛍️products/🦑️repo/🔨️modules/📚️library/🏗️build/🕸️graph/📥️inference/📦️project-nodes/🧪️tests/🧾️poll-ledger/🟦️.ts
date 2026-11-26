@@ -1,7 +1,7 @@
 /** 🧾️ Contract: the ledger line of the owner stage ("N of M done: present, fetched from the fleet, inferred here, wanted from the fleet") is told again and again while the poll for the owners the fleet has not stored yet runs, and stops with the poll; the reporter of the first pass ended with that pass and the line stood at its first numbers for hours (R194: `0 fetched from the fleet` of an 8-hour read that was taking records).
  * @see ../../🟨️.mjs */
 import{expect,test}from"bun:test";
-import source from"../../🟨️.mjs"with{type:"text"};
+const source=await Bun.file(new URL("../../🟨️.mjs",import.meta.url)).text();
 import{reportWhilePollingV1}from"../../🟨️.mjs";
 
 test("the line is told at the interval while the poll runs and no more after the stop or the abort",async()=>{

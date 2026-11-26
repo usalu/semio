@@ -15,10 +15,10 @@ for(const row of fixture.cases)test(row.name,()=>{
   watch.feed(step.line.slice(0,end));
   watch.feed(step.line.slice(end)+"\n");
   expect(watch.silentMilliseconds(),step.label).toBe(step.silent);
-  expect(watch.verdict(),step.label).toBe(step.verdict);
+  expect<unknown>(watch.verdict(),step.label).toBe(step.verdict);
   resumed.feed(step.line+"\n");
   expect(resumed.silentMilliseconds(),step.label).toBe(step.silent);
-  expect(resumed.verdict(),step.label).toBe(step.verdict);
+  expect<unknown>(resumed.verdict(),step.label).toBe(step.verdict);
   resumed=createGraphReadWatchV1(wantedServerPolicyV1,()=>time,undefined,0,resumed.observation());
  }
 });
@@ -80,7 +80,7 @@ test("cold read completed source operations and exact startup completions surviv
    watch=createGraphReadWatchV1(wantedServerPolicyV1,()=>time,undefined,0,checkpoint!.observation);
    return result;
   });
-  expect(actual).toEqual(expected);
+  expect<unknown>(actual).toEqual(expected);
  }finally{sqlite.close();}
 });
 
@@ -113,7 +113,7 @@ test("an owned registry repair starts an inference epoch across watchdog handoff
    watch=createGraphReadWatchV1(wantedServerPolicyV1,()=>time,undefined,0,checkpoint!.observation);
    return result;
   });
-  expect(actual).toEqual(expected);
+  expect<unknown>(actual).toEqual(expected);
   expect(watch.counters()).toEqual({"build:graph-phase:inference":[67,4810],"owners:ledger":[66,4810]});
  }finally{sqlite.close();}
 });
@@ -142,7 +142,7 @@ test("owned workspace edge checks survive registry repair, replay and handoff",(
    watch=createGraphReadWatchV1(wantedServerPolicyV1,()=>time,undefined,0,checkpoint!.observation);
    return result;
   });
-  expect(actual).toEqual(expected);
+  expect<unknown>(actual).toEqual(expected);
  }finally{sqlite.close();}
 });
 
@@ -171,7 +171,7 @@ test("owned Store traversal advances across operations while lower producer retr
    watch=createGraphReadWatchV1(wantedServerPolicyV1,()=>time,undefined,0,checkpoint!.observation);
    return result;
   });
-  expect(actual).toEqual(expected);
+  expect<unknown>(actual).toEqual(expected);
   expect(watch.verdict()).toBe("stalled");
  }finally{sqlite.close();}
 });
@@ -201,7 +201,7 @@ test("completed preservation ownership checks carry a long detached read through
    watch=createGraphReadWatchV1(wantedServerPolicyV1,()=>time,undefined,0,checkpoint!.observation);
    return result;
   });
-  expect(actual).toEqual(expected);
+  expect<unknown>(actual).toEqual(expected);
   expect(watch.counters()).toEqual({"dependencies:preservation-ownership":[600832,600832]});
  }finally{sqlite.close();}
 });

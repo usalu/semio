@@ -66,11 +66,17 @@ test("the lean listing admits a withheld test project with its missing names",()
  expect(leanRows({version:1,lean:true,projects:{},dependencies:[],unavailable:[row]}),JSON.stringify(leanRows.errors)).toBe(true);
 });
 
-test("a withheld source that does not parse keeps its own words in both languages",()=>{
- const row={root:"a",project:"p",source:"a/📋️project.json",sha256:"ab".repeat(32),reason:"x"};
- expect(describeUnavailableProjectV1(row,"en")).toBe("graph: p is withheld: a/📋️project.json does not parse (sha256 "+"ab".repeat(6)+"); fix that file and run the command again");
- expect(describeUnavailableProjectV1(row,"de")).toBe("Graph: p wird zurückgehalten: a/📋️project.json lässt sich nicht lesen (sha256 "+"ab".repeat(6)+"); die Datei korrigieren und den Befehl erneut ausführen");
+test("a withheld owner states the reason it recorded in both languages and never calls a readable file unparseable",()=>{
+ const sha="ab".repeat(32),base={root:"a",project:"p",source:"a/📋️project.json",sha256:sha};
+ const failure={...base,reason:"Owner p failed on settled inputs: boom (after 1 round) / Eigentümer p scheiterte an gesetzten Eingaben: boom (nach 1 Runde)"};
+ const en=describeUnavailableProjectV1(failure,"en"),de=describeUnavailableProjectV1(failure,"de");
+ expect(en).toBe("graph: p is withheld: a/📋️project.json could not be inferred (sha256 "+"ab".repeat(6)+"): "+failure.reason+"; fix the cause and run the command again");
+ expect(de).toBe("Graph: p wird zurückgehalten: a/📋️project.json konnte nicht abgeleitet werden (sha256 "+"ab".repeat(6)+"): "+failure.reason+"; die Ursache beheben und den Befehl erneut ausführen");
+ expect(en).not.toContain("does not parse");expect(de).not.toContain("lässt sich nicht lesen");
+ const parse={...base,reason:"Invalid Build project metadata a/📋️project.json: Unexpected token"};
+ expect(describeUnavailableProjectV1(parse,"en")).toContain(parse.reason);
  expect(Object.keys(generationSchema.definitions.Messages.const.en)).toContain("withheldDependency");
+ expect(generationSchema.definitions.Messages.const.en.withheldSource).toBe(describeUnavailableProjectV1({...base,reason:"{reason}"},"en").replace("p is","{project} is").replace("a/📋️project.json","{source}").replace("ab".repeat(6),"{sha}"));
 });
 
 test("a graph build completes with the withheld test project, says why in the language of the caller, and the next run brings the project back",async()=>{

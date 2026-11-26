@@ -1,7 +1,7 @@
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {ROSTER_RULES_V1} from "../../🧭️roster/🟨️.mjs";
 import { createBoundedCacheV1 } from "../../../🧊️bounded/🟨️.mjs";
-import {isOpaqueSourcePathV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import{isOpaqueSourcePathV1}from"../../../📥️inputs/👻️opaque-source/🟨️.mjs";
 import{applyBuildGeneratedTaskDependenciesV1,buildInputSourceRoleV1,buildNativeSourceObservationV1}from"../../🚪️admission/🟦️.ts";
 import{ownerPoolNoProducerTextV1,ownerPoolProducersV1,ownerPoolReadFleetV1}from"./🌐️owner-pool/🤝️fleet/🟦️.ts";import{ownerPoolLookaheadV1}from"./🌐️owner-pool/🔭️lookahead/🟦️.ts";
 import managersV1 from "../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs";
@@ -50,6 +50,9 @@ import { assertNotReadParentV1, readParentObservedCountsV1, withReadParentScopeV
 import { createLookQueueV1 } from "./🔭️look-queue/🟨️.mjs";
 import { keepTakenThenReleaseV1 } from "./♻️taken-memo/🟨️.mjs";
 import { ownerSourceFailureV1, replicaUnsettledV1 } from "./🚧️source-failure/🟨️.mjs";
+/** 🧹️ Reads the compile output a generator produced for a path; made outside the function that builds a cache so the cache, which lives for the whole read, holds the workspace, contracts and context and not the scope of the read around it (its options, the observations of the wave).
+ * @see ../../../🧠️memory/🧽️settle/🔭️heap-profile/🟨️.mjs the profile that named the retention */
+function generatedOutputReaderV1(workspaceRoot, contracts, context) { return (path, origin) => readBuildProducedCompileOutputV1(path, workspaceRoot, generatorContractsInScopeV1(contracts), context.registry, origin); }
 let closureVerdictScopeV1, runClosureTakeV1, releaseAfterTakeLookV1, withClosurePassV1, primeSharedClosuresInChildV1, releaseOwnerStateV1, primeSharedClosuresV1, askHeavyQuestionV1, isHeavyQuestionV1, closureStoreDirectoryV1, bindClosureStoreV1, closureApiV1, closureHandleOfV1, closureHandleFromRecipeV1, deriveClosureFactV1, resolveClosureRefsV1, resolveClosureRefsPlanV1, adoptClosureRefsV1, inferenceCandidates,readBuildProducedCompileOutputV1,buildPath, yieldInferenceV1, catalogBuildContributionsV1, createScriptInputCache, POLICY, nativeCommandInputs, readTaxonomyProjectionV1, collectPlaygroundCatalog, PROJECT_BASENAME, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1, readToml, cargoTargets, componentBuildTargets, componentCrateRoots, projectAssemblyAuthorityV1, workspaceDataDirectory, projectWithDefaults, withNativePreparation, withReleasePipelinePreparation, printDocumentTargetNamesV1, loaded, readBunLockGraph, projectStampPathsV1;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
@@ -96,7 +99,7 @@ export function asideCensusV1(reasons, top = 3) {
   return { en: reasons.length + " owners are set aside by this read, by reason: " + rows, de: reasons.length + " Projekte werden von diesem Lauf zurückgestellt, nach Grund: " + rows };
 }
 
-/** 🪂️ Sets one owner aside that outgrew the alone cap of a worker process: it joins the owners this machine never infers (`never`, `alone`), the cost it showed is recorded under its name (`recorder`, scaled back by `factor` so the cost table reads the measured megabytes) so the offer to the fleet and the next read know what it needs, and one line in each language says why; answers whether `error` was such an overrun, any other failure is left to the caller. @param {(text: (language: string) => string) => void} say */
+/** 🪂️ Sets one owner aside that outgrew the alone cap of a worker process: it joins the owners this machine never infers (`never`, `alone`), the cost it showed is recorded under its name (`recorder`, scaled back by `factor` so the cost table reads the measured megabytes) so the offer to the fleet and the next read know what it needs, and one line in each language says why; answers whether `error` was such an overrun, any other failure is left to the caller. @param {{ error: any, never: Set<string>, alone: Set<string>, recorder?: { record(row: object): unknown }, factor: number, say: (text: (language: string) => string) => void }} aside */
 export function setAsideOverrunV1({ error, never, alone, recorder, factor, say }) {
   if (error?.code !== "graph.farm-overrun") return false;
   never.add(error.project); alone.add(error.project);
@@ -250,6 +253,7 @@ export function projectConcurrencyV1(options, environment = process.env) {
 }
 
 /** 🛣️ The projects inferred at once by one read: `explicit` when the caller names it, else the cores (at most eight), the memory the parent may grow by divided by what one owner is measured to hold (`parentMegabytes` / `ownerMegabytes`), and never fewer than the cut of the load allows (`cut`, Infinity when uncut): the cut ladder halves the lanes after a plan overrun, but the governor admits every owner by its measured footprint, so a cut load keeps the lanes its memory fits (the worker that read with 1 lane held 1.3 to 3.4 GB of a 6.5 GB plan).
+ * @param {{ cores: number, cut: number, parentMegabytes: number, ownerMegabytes: number, explicit?: number }} lanes
  * @see ./🧪️tests/🛣️lanes/🟦️.ts */
 export function inferenceLanesV1({ cores, cut, parentMegabytes, ownerMegabytes, explicit }) {
   if (explicit !== undefined) return Math.max(1, Math.min(explicit, cut));
@@ -283,7 +287,7 @@ export function createProjectInferenceEnvironmentV1(session) {
   useAnalysisStoreV1(workspaceRoot, analysisStore);
   const context = { workspaceRoot, registry, lateClosures: session.lateClosures === true, ...typeof analysisStore === "string" ? { cargoReceiptArchive: dirname(analysisStore) } : {} }, scripts = createScriptInputCache(context), commandInputs = session.commandInputs?.closureRecipe ? closureHandleFromRecipeV1(session.commandInputs.closureRecipe) : session.commandInputs;
   if (contracts === null || typeof contracts !== "object" || Array.isArray(contracts)) throw refuseBuildV1("invalid","graph.generator-contracts-required");
-  scripts.generatedOutput = (path, origin) => readBuildProducedCompileOutputV1(path, workspaceRoot, generatorContractsInScopeV1(contracts), context.registry, origin);
+  scripts.generatedOutput = generatedOutputReaderV1(workspaceRoot, contracts, context);
   return { workspaceRoot, contracts, commandInputs, scripts, projectsByRoot: new Map(projectsByRoot), componentRoots, nativeCache: new Map(), nativeClosures: new Map(), context, registryAskedFor: undefined };
 }
 
@@ -429,7 +433,7 @@ export function refsFailureV1(raised, scope) {
   return { failed: String(error?.message ?? error).replace(/\s+/gu, " ").slice(0, 300) };
 }
 
-/** 🪘️ Asks farm children for the closure references of one owner until one answers a reference or a withheld source, up to `attempts` times; undefined when no farm exists any more (the parent then resolves them, as it always did without a farm), a refusal naming the owner and the last failure when every try failed. @param {{ observe: (job: object) => Promise<object | undefined>, exists: () => boolean }} farm */
+/** 🪘️ Asks farm children for the closure references of one owner until one answers a reference or a withheld source, up to `attempts` times; undefined when no farm exists any more (the parent then resolves them, as it always did without a farm), a refusal naming the owner and the last failure when every try failed. @param {{ farm: { observe: (job: object) => Promise<object | undefined>, exists: () => boolean }, job: object, headerDigest: string, attempts?: number }} options */
 export async function askOwnerRefsV1({ farm, job, headerDigest, attempts = 3 }) {
   let last = "no answer";
   for (let attempt = 0; attempt < attempts; attempt++) {
@@ -500,7 +504,10 @@ export function withOwnerGeneratedDependenciesV1(json, generated, workspaceRoot)
   return applyBuildGeneratedTaskDependenciesV1(json, Object.fromEntries(Object.entries(generated).filter(([name]) => Object.hasOwn(json.targets ?? {}, name) || !synthesized.has(name))));
 }
 
-/** 🏷️ The job of one owner of a wave that is inferred without an admission selection, from its project JSON and the head parts the wave shares: the same fields the wave computes for the owner it infers itself (native or release preparation, the assembly authority, the head of the record key and the record file name), so a machine that pulls the owner from the fleet pool files its record under the key the machine that runs the wave looks up. `environment` is the one of {@link createProjectInferenceEnvironmentV1}. */
+/** 🏷️ The job of one owner of a wave that is inferred without an admission selection, from its project JSON and the head parts the wave shares: the same fields the wave computes for the owner it infers itself (native or release preparation, the assembly authority, the head of the record key and the record file name), so a machine that pulls the owner from the fleet pool files its record under the key the machine that runs the wave looks up. `environment` is the one of {@link createProjectInferenceEnvironmentV1}.
+ * @param {any} environment
+ * @param {any} globals
+ * @param {{ name: string, json: object, admission?: any }} owner */
 export function ownerJobV1(environment, globals, { name, json: raw, admission }) {
   const { workspaceRoot, projectsByRoot, componentRoots, nativeCache, nativeClosures } = environment, json = admission?.generated ? withOwnerGeneratedDependenciesV1(raw, admission.generated, workspaceRoot) : raw, root = json.root, nativeRoot = json.metadata?.nativeRoot ?? root;
   const { selectedTargets, selectedInputs, activeJson } = ownerAdmissionSelectionV1(admission === undefined ? undefined : { targets: { [json.name]: admission.targets }, inputs: { [json.name]: admission.inputs } }, json);
@@ -572,7 +579,9 @@ export function reportParkedOwnersV1(list, told, say, now = performance.now(), d
   }
 }
 
-/** 🧭️ The order owners start in: the owners the cost table says need a solo grant (`alone`) last, before them the ones recorded as slow (`slow`), the held requests first (`rank`) within each class, then the owners whose stored record is present (`present`, names) before those without one, so the cheap ones finish and publish first; the order inside a class is kept. */
+/** 🧭️ The order owners start in: the owners the cost table says need a solo grant (`alone`) last, before them the ones recorded as slow (`slow`), the held requests first (`rank`) within each class, then the owners whose stored record is present (`present`, names) before those without one, so the cheap ones finish and publish first; the order inside a class is kept.
+ * @param {any[]} jobs
+ * @param {{ alone?: Set<string>, slow?: Set<string>, rank?: (name: string) => number, present?: Set<string> }} [order] */
 export function orderOwnerJobsV1(jobs, { alone = new Set(), slow = new Set(), rank, present } = {}) {
   const tier = job => alone.has(job.name) ? 2 : slow.has(job.name) ? 1 : 0, cold = job => present === undefined || present.has(job.name) ? 0 : 1;
   return jobs.sort((a, b) => tier(a) - tier(b) || (rank === undefined ? 0 : rank(a.name) - rank(b.name)) || cold(a) - cold(b));
@@ -605,7 +614,12 @@ export function ownerMeasuredManagedBytesV1(bytes, factor) { return bytes === un
  * @see ../../../🧠️memory/🪜️plan-stage/🟨️.mjs */
 async function hostAvailableMegabytesV1() { try { const sampling = await import("../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts"), bytes = sampling.hostAvailableBytesV1(); return Number.isFinite(bytes) ? Math.floor(bytes / 1048576) : undefined; } catch { return undefined; } }
 
-/** 🪙️ What one project may take on this machine and where the cost of every owner is recorded: the limit is the grant of the machine for one project (`ownerGrantV1` of half its memory, never below the growth budget of the parent), none on a serving machine or with `SEMIO_GRAPH_OWNER_LIMIT=off`; a cost module that cannot be loaded enforces nothing and records nothing (a read never depends on it). A limited machine can read alone: `heavy(names)` names the owners whose recorded cost does not fit that grant, which the inference runs one at a time after the others, and `soloLimitBytes()` is the grant of one owner while nothing else runs (`soloGrantV1` of the memory available at that moment, never below the limit), taken when the solo owner starts. @param {(() => number | undefined) | undefined} availableBytes the available memory of the host in bytes */
+/** 🪙️ What one project may take on this machine and where the cost of every owner is recorded: the limit is the grant of the machine for one project (`ownerGrantV1` of half its memory, never below the growth budget of the parent), none on a serving machine or with `SEMIO_GRAPH_OWNER_LIMIT=off`; a cost module that cannot be loaded enforces nothing and records nothing (a read never depends on it). A limited machine can read alone: `heavy(names)` names the owners whose recorded cost does not fit that grant, which the inference runs one at a time after the others, and `soloLimitBytes()` is the grant of one owner while nothing else runs (`soloGrantV1` of the memory available at that moment, never below the limit), taken when the solo owner starts. @param {any} workspaceRoot
+ * @param {any} environment
+ * @param {number} budgetBytes
+ * @param {any} [rowsOf]
+ * @param {(() => number | undefined)} [availableBytes] the available memory of the host in bytes
+ * @param {() => number} [hostMegabytes] */
 export async function graphOwnerEnforcementV1(workspaceRoot, environment, budgetBytes, rowsOf, availableBytes, hostMegabytes) {
   if (environment.SEMIO_GRAPH_OWNER_LIMIT === "off") return {};
   try {
@@ -660,7 +674,7 @@ async function emojiProjectJsonNodesBodyV1(configFiles, options, parentContext, 
   const catalogContributions=setup.catalog,catalogFiles=setup.catalogFiles,nativeCache=new Map(setup.nativeCache),nativeClosures=new Map(setup.nativeClosures);configFiles=setup.files;
   const late = !options?.ownerAdmission && options?.snapshot === true && typeof options?.onOwnerObservations === "function", rootsByName = new Map(), scripts = createScriptInputCache({ ...context, lateClosures: late });
   const contracts = projectGeneratorContractsV1(workspaceRoot);
-  scripts.generatedOutput=(path,origin)=>readBuildProducedCompileOutputV1(path,workspaceRoot,generatorContractsInScopeV1(contracts),context.registry,origin);
+  scripts.generatedOutput=generatedOutputReaderV1(workspaceRoot,contracts,context);
   useGeneratorContractsV1(workspaceRoot,contracts);useAnalysisStoreV1(workspaceRoot,analysisStoreDirectoryOfV1(closureStoreDirectoryV1(workspaceRoot)));
   if(context.invocation)await advanceScriptInvocation(context.invocation,"build:commands","running");
   const commandInputs = !options?.ownerAdmission&&configFiles.some((path) => !isOpaqueSourcePathV1(path) && path.endsWith("Cargo.toml") && !path.includes(".🧬semio") && !POLICY.generatedDirectories.some((name) => path.split("/").includes(name))) ? await closureApiV1(scripts, workspaceRoot).nativeCommandInputs() : undefined;

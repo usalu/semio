@@ -5,6 +5,7 @@
 
 //#region 🔌️Adapters
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import {processPidExistsV1} from "../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts";
 import { dirname, join } from "node:path";
 import { currentAgentSessionV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 //#endregion 🔌️Adapters
@@ -79,12 +80,7 @@ export function heartbeatLease(absRunDir: string, nowIso = new Date().toISOStrin
 /** ⚙️ Whether a process is still alive. A stale heartbeat alone is never enough to reclaim a lease. */
 export function processAlive(pid: number | undefined): boolean {
   if (pid === undefined || !Number.isInteger(pid) || pid <= 0) return false;
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    return (error as NodeJS.ErrnoException).code === "EPERM";
-  }
+  return processPidExistsV1(pid);
 }
 
 /**

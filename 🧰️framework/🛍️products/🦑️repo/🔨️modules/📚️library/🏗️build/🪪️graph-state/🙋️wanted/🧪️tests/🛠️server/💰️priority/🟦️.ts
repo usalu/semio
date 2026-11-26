@@ -39,7 +39,7 @@ test("the priority file lists the projects the most requests ask for first (b, a
    infer:()=>new Promise<WantedInferV1>(resolve=>{release=()=>resolve(ok(2));}),
    sleep:async()=>{calls++;if(calls>=2){seen.push(readPriorityV1({SEMIO_GRAPH_STEER_DIRECTORY:steer})?.projects);release();}}});
   expect(seen.find(list=>list!==undefined)).toEqual(["b","d","z","c","e","a"]);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("without a table the heavy projects of the requesters still come first and the rest keeps the order of the requests",async()=>{
@@ -52,7 +52,7 @@ test("without a table the heavy projects of the requesters still come first and 
    infer:()=>new Promise<WantedInferV1>(resolve=>{release=()=>resolve(ok(2));}),
    sleep:async()=>{calls++;if(calls>=2){seen.push(readPriorityV1({SEMIO_GRAPH_STEER_DIRECTORY:steer})?.projects);release();}}});
   expect(seen.find(list=>list!==undefined)).toEqual(["workspace","a","b"]);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("the table of the server reaches the fleet, once per change and at most once per interval",async()=>{
@@ -60,10 +60,10 @@ test("the table of the server reaches the fleet, once per change and at most onc
  try{
   const serving=client("serving"),reader=client("reader");let time=1_000_000_000,table=recordOwnerCostV1(emptyOwnerCostTableV1(),sample("@semio-tech/s-dev-composition",13976)),step=0;
   const steps=[()=>{},()=>{table=recordOwnerCostV1(table,sample("workspace",3100));},()=>{time+=61_000;}];
-  await runWantedServerV1({client:serving,owner:"g1-server",platform:PLATFORM,steerDirectory:temp("steer"),language:"en",requesters:async()=>[],headroom:async()=>({freeMegabytes:100,pressure:"normal"}),costs:()=>table,quietMilliseconds:async()=>0,say:()=>{},signal:new AbortController().signal,now:()=>time,rounds:3,sleep:async()=>{steps[step++]?.();}});
+  await runWantedServerV1({client:serving,owner:"g1-server",platform:PLATFORM,steerDirectory:temp("steer"),language:"en",requesters:async()=>[],headroom:async()=>({freeMegabytes:100,pressure:"normal" as const}),infer:()=>{throw Error("no inference without a request");},costs:()=>table,quietMilliseconds:async()=>0,say:()=>{},signal:new AbortController().signal,now:()=>time,rounds:3,sleep:async()=>{steps[step++]?.();}});
   const afterFirst=await readOwnerCostsV1({client:reader});
   expect(Object.keys(afterFirst?.owners??{}).sort()).toEqual(["@semio-tech/s-dev-composition"]);
-  await runWantedServerV1({client:serving,owner:"g1-server",platform:PLATFORM,steerDirectory:temp("steer"),language:"en",requesters:async()=>[],headroom:async()=>({freeMegabytes:100,pressure:"normal"}),costs:()=>table,quietMilliseconds:async()=>0,say:()=>{},signal:new AbortController().signal,now:()=>time,rounds:1,sleep:async()=>{}});
+  await runWantedServerV1({client:serving,owner:"g1-server",platform:PLATFORM,steerDirectory:temp("steer"),language:"en",requesters:async()=>[],headroom:async()=>({freeMegabytes:100,pressure:"normal" as const}),infer:()=>{throw Error("no inference without a request");},costs:()=>table,quietMilliseconds:async()=>0,say:()=>{},signal:new AbortController().signal,now:()=>time,rounds:1,sleep:async()=>{}});
   expect(Object.keys((await readOwnerCostsV1({client:reader}))?.owners??{}).sort()).toEqual(["@semio-tech/s-dev-composition","workspace"]);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);

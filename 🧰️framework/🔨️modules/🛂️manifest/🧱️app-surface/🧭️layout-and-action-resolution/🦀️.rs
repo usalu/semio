@@ -27,6 +27,8 @@ pub fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Option<Win
 /// declared id that hasn't been staged yet acts as that field's initial value. A dialog with zero
 /// declared `defs` (a plain confirm/cancel, e.g. `deleteSpace`) passes `seed`+`staged` through
 /// wholesale — TS twin: {@link effectiveActionArgs} (`🧩️action-argument-resolution/🟦️.ts`).
+///
+/// 🔘️ A non-nullable boolean (a toggle) with neither a staged, seeded nor declared default resolves to `false`: a toggle is never unset.
 pub fn effective_action_args(defs: &[ActionArgDef], staged: &DslValue, seed: Option<&DslValue>) -> DslValue {
     let seed_pairs: Vec<(String, DslValue)> = seed.and_then(DslValue::as_object).map(<[_]>::to_vec).unwrap_or_default();
     if defs.is_empty() {
@@ -52,6 +54,8 @@ pub fn effective_action_args(defs: &[ActionArgDef], staged: &DslValue, seed: Opt
             }
         } else if effective.iter().any(|(k, _)| *k == def.id) {} else if let Some(default) = &def.default {
             effective.push((def.id.clone(), default.clone()));
+        } else if matches!(def.schema, ArgSchema::Boolean) && !def.nullable {
+            effective.push((def.id.clone(), DslValue::Bool(false)));
         }
     }
     DslValue::Object(effective)

@@ -1,0 +1,11 @@
+{
+  "hostMegabytes": 16384,
+  "initialAvailableMegabytes": 8000,
+  "laterAvailableMegabytes": 5305,
+  "desktopFloorMegabytes": 2048,
+  "planMegabytes": 3870,
+  "planObservedMegabytes": 126,
+  "contenderMegabytes": 2663,
+  "forecastRampMilliseconds": 1000,
+  "contenderDelayMilliseconds": 1200
+}

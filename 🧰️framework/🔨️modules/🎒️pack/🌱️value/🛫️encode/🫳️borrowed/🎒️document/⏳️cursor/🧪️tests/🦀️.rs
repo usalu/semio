@@ -62,7 +62,7 @@ fn borrowed_pack_document_batched_actions_match_the_canonical_oracle_in_fewer_ac
  assert!(actions*2<single_actions,"{actions} batched actions against {single_actions} single-event actions");
 }
 
-/// 🏃️ Under a grant that funds whole runs, one segment event stages a run of raw bytes and drives every compressor step it feeds, and the emitting pass lends the measured pass's kept compressed bytes a block per event without projecting or deflating again: the document is the canonical one byte for byte, and its events stay proportional to runs of raw bytes of one pass.
+/// 🏃️ Under a grant that funds whole runs, one segment event stages a run of raw bytes and drives every compressor step it feeds, and the symbol discovery hashes the text in sixty-four byte events, and the emitting pass lends the measured pass's kept compressed bytes a block per event without projecting or deflating again: the document is the canonical one byte for byte, and its events stay proportional to runs of raw bytes of one pass.
 #[test]
 fn borrowed_pack_document_segment_runs_match_the_canonical_oracle_in_events_per_run(){
  let source=Original{name:"run-based segment text ".repeat(800),enabled:true};let semio_framework_dsl_record::Shape::Record(make)=Original::shape()else{panic!("Record")};let FieldValue::Record(record)=source.to_value()else{panic!("Record")};let expected=encode_document(&(make.ordinary)(),&record,&Default::default()).unwrap();
@@ -70,7 +70,7 @@ fn borrowed_pack_document_segment_runs_match_the_canonical_oracle_in_events_per_
  for _ in 0..3000000{let first=exact(&cursor);let grant=RetainedCloneGrant{maximum_copy_bytes:first.maximum_copy_bytes+65536,..first};
   let(result,birth,free)=turn(grant,|effect|cursor.advance(&source,spec(),&mut output,effect));let step=result.unwrap();assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));assert!(step.progress.fits(grant));assert!(step.progress.copied_items<=1);events+=1;actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}
  assert!(cursor.is_complete());assert_eq!(actual,expected);close(&mut cursor);
- let raw=source.name.len();assert!(events*8<raw,"{events} events for {raw} raw body bytes: one measuring pass, then kept compressed bytes a block per event");
+ let raw=source.name.len();let fixed=64+(64*size_of::<crate::Frame>()).div_ceil(4096)+crate::BUCKET_ROWS+(crate::BUCKET_ROWS*size_of::<crate::Bucket>()).div_ceil(4096)+8;assert!(events<raw.div_ceil(8)+raw.div_ceil(64)+fixed,"{events} events for {raw} raw body bytes: an eighth of the raw bytes for the measuring pass and the kept compressed bytes, a sixty-fourth for the hashing pass over the text, and the fixed frame and bucket births");
 }
 
 #[test]

@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PackBoundInferenceRequest",
+  "description": "No caller payload: the gateway binds the artifact named by `artifactId` as the whole request body (its canonical pack bytes). Send `payload` omitted or `{}`.",
+  "type": "object",
+  "additionalProperties": false,
+  "maxProperties": 0
+}

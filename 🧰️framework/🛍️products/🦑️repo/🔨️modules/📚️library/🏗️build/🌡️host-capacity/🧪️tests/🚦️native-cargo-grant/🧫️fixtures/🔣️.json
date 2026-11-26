@@ -44,7 +44,7 @@
    }
   },
   {
-   "name": "eight asked on 14000 MB available run with five",
+   "name": "eight asked on 14000 MB available run with four beside the interactive reserve",
    "preferredJobs": 8,
    "host": {
     "totalMegabytes": 16384,
@@ -60,7 +60,28 @@
    },
    "expected": {
     "verdict": "admit",
-    "jobs": 5,
+    "jobs": 4,
+    "reason": "reduced"
+   }
+  },
+  {
+   "name": "eight asked on 9800 MB available run with three",
+   "preferredJobs": 8,
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 9800,
+    "cores": 10,
+    "load": 1,
+    "pressure": "normal",
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "openFiles": 100,
+    "openFilesMaximum": 1000000,
+    "attachedImages": 0
+   },
+   "expected": {
+    "verdict": "admit",
+    "jobs": 3,
     "reason": "reduced"
    }
   },

@@ -15,6 +15,7 @@
         "revalidateCooldownMilliseconds": 300000,
         "revalidateAttempts": 3,
         "replyRows": 4000,
+        "transientReasons": ["out of memory","heap","memory","capacity","overrun","resource","too many open","emfile","enomem","timed out","timeout","time out","cancel","abort","changed during","modified during","changed while","modified while","speicher","kapazität","ressource","zeitüberschreitung","abgebrochen","abbruch","während des lesens","während des lesens geändert"],
         "finalCodes": ["BUILD_AUTHORITY_CHANGED", "BUILD_COLLECTED_ERRORS", "BUILD_SOURCE_UNPARSEABLE", "BUILD_MEMBERSHIP_CHANGED"]
       }
     },
@@ -27,6 +28,7 @@
           "causeCharacters": "The most characters of the original failure a named owner failure carries.",
           "revalidateCooldownMilliseconds": "The time a withheld owner stays withheld before a new read infers it once more, in case its failure came from a transient cause the failure classes did not name.",
           "revalidateAttempts": "The most times one unchanged withholding is inferred again after its cool-down; a withholding that still reproduces then stays until one of its rows changes.",
+          "transientReasons": "Lower-case fragments of a recorded withholding reason (English and German) that name a transient cause: a resource, capacity or memory limit, a timeout, a cancellation or a source that changed during the read. An exhausted withholding with such a reason is inferred again after every cool-down.",
           "replyRows": "The most observed rows a farm child sends with the named failure of an owner, so the parent keeps the owner withheld exactly until one of them changes.",
           "finalCodes": "The failures that are never an owner's own: a restart is demanded, the diagnostic run is over, a source withholds the owner or the membership moved (each has its own follow-up)."
         },
@@ -37,6 +39,7 @@
           "causeCharacters": "Die meisten Zeichen des ursprünglichen Fehlers, die ein benannter Eigentümerfehler trägt.",
           "revalidateCooldownMilliseconds": "Die Zeit, die ein zurückgehaltener Eigentümer zurückgehalten bleibt, bevor ein neues Lesen ihn noch einmal ableitet, falls sein Fehler eine vorübergehende Ursache hatte, die die Fehlerklassen nicht benannten.",
           "revalidateAttempts": "Die meisten Male, die eine unveränderte Zurückhaltung nach ihrer Abkühlzeit erneut abgeleitet wird; eine Zurückhaltung, die sich dann noch wiederholt, bleibt, bis sich eine ihrer Zeilen ändert.",
+          "transientReasons": "Kleingeschriebene Bruchstücke eines aufgezeichneten Zurückhaltungsgrundes (Englisch und Deutsch), die eine vorübergehende Ursache nennen: eine Ressourcen-, Kapazitäts- oder Speichergrenze, eine Zeitüberschreitung, einen Abbruch oder eine Quelle, die sich während des Lesens geändert hat. Eine erschöpfte Zurückhaltung mit einem solchen Grund wird nach jeder Abkühlzeit erneut abgeleitet.",
           "replyRows": "Die meisten beobachteten Zeilen, die ein Farm-Kindprozess mit dem benannten Fehler eines Eigentümers sendet, damit der Elternprozess den Eigentümer genau so lange zurückhält, bis sich eine davon ändert.",
           "finalCodes": "Die Fehler, die nie der eigene eines Eigentümers sind: ein Neustart wird verlangt, der Diagnoselauf ist beendet, eine Quelle hält den Eigentümer zurück oder die Mitgliedschaft hat sich bewegt (jeder hat seine eigene Folgerunde)."
         }

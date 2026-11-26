@@ -13,9 +13,9 @@ test("the plugin component target is deliberately not guarded: the two-checkout 
 });
 
 test("the Nx projection of a guarded target keeps its local cache and adds the machine identity to its inputs",()=>{
- const target={execution:{kind:"command",command:"x"},cache:true,outputs:["{workspaceRoot}/.cache/b/p/m/x"],inputs:["default"]};
+ const target={execution:{kind:"command" as const,command:"x"},cache:true,outputs:["{workspaceRoot}/.cache/b/p/m/x"],inputs:["default"]};
  const guarded=projectBuildTargetForNxV1(target,"wasm"),plain=projectBuildTargetForNxV1(target,"build");
  expect(guarded.cache).toBe(true);
- expect(guarded.inputs.some((input:unknown)=>typeof input==="object"&&(input as {runtime?:string}).runtime?.includes("hostname"))).toBe(true);
- expect(plain.inputs.some((input:unknown)=>typeof input==="object"&&(input as {runtime?:string}).runtime?.includes("hostname"))).toBe(false);
+ expect(guarded.inputs?.some((input:unknown)=>typeof input==="object"&&(input as {runtime?:string}).runtime?.includes("hostname"))).toBe(true);
+ expect(plain.inputs?.some((input:unknown)=>typeof input==="object"&&(input as {runtime?:string}).runtime?.includes("hostname"))).toBe(false);
 });

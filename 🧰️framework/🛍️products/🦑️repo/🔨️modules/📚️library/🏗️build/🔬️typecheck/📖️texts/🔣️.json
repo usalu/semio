@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "id": "typecheck",
+  "languages": ["en", "de"],
+  "messages": {
+    "usage": {
+      "en": "Expected: repo typecheck [--json] [--dry-run] [--no-importers] [--all-errors] [--declarations] [--] <path>... (source files or folders)",
+      "de": "Erwartet: repo typecheck [--json] [--dry-run] [--no-importers] [--all-errors] [--declarations] [--] <Pfad>... (Quelldateien oder Ordner)"
+    },
+    "option.unknown": {
+      "en": "Unknown option for typecheck: {option}",
+      "de": "Unbekannte Option für typecheck: {option}"
+    },
+    "option.value": {
+      "en": "Option {option} needs a value",
+      "de": "Option {option} braucht einen Wert"
+    },
+    "language.unknown": {
+      "en": "Unknown language: {value} (en|de)",
+      "de": "Unbekannte Sprache: {value} (en|de)"
+    },
+    "files.too-many": {
+      "en": "At most {maximum} files per call, got {count}",
+      "de": "Höchstens {maximum} Dateien pro Aufruf, erhalten {count}"
+    },
+    "path.missing": {
+      "en": "No such file or folder: {path}",
+      "de": "Datei oder Ordner nicht gefunden: {path}"
+    },
+    "path.outside": {
+      "en": "Path is outside the checkout: {path}",
+      "de": "Pfad liegt außerhalb des Checkouts: {path}"
+    },
+    "path.nothing": {
+      "en": "No TypeScript or declaration source below: {path}",
+      "de": "Keine TypeScript- oder Deklarationsquelle unterhalb von: {path}"
+    },
+    "compiler.missing": {
+      "en": "The TypeScript compiler is not installed at {script}; install the dependencies first (repo tools setup all)",
+      "de": "Der TypeScript-Compiler fehlt unter {script}; zuerst die Abhängigkeiten installieren (repo tools setup all)"
+    },
+    "compiler.timeout": {
+      "en": "The type check exceeded {seconds} s and was stopped",
+      "de": "Die Typprüfung überschritt {seconds} s und wurde gestoppt"
+    },
+    "compiler.failed": {
+      "en": "The compiler could not run: {reason}",
+      "de": "Der Compiler konnte nicht laufen: {reason}"
+    },
+    "cancelled": {
+      "en": "The type check was cancelled",
+      "de": "Die Typprüfung wurde abgebrochen"
+    },
+    "result.invalid": {
+      "en": "The result does not satisfy its schema: {details}",
+      "de": "Das Ergebnis erfüllt sein Schema nicht: {details}"
+    },
+    "plan.row": {
+      "en": "{kind}  {file}",
+      "de": "{kind}  {file}"
+    },
+    "progress.index": {
+      "en": "typecheck: reading imports of {count} files",
+      "de": "typecheck: lese Importe von {count} Dateien"
+    },
+    "progress.run": {
+      "en": "typecheck: checking {files} files ({touched} touched, {importers} importers) in project {project}",
+      "de": "typecheck: prüfe {files} Dateien ({touched} geändert, {importers} Importeure) im Projekt {project}"
+    },
+    "progress.library": {
+      "en": "typecheck: checking the whole project {project}; this takes minutes",
+      "de": "typecheck: prüfe das ganze Projekt {project}; das dauert Minuten"
+    },
+    "progress.truncated": {
+      "en": "typecheck: {count} importers found, only the touched files are checked (limit {maximum})",
+      "de": "typecheck: {count} Importeure gefunden, nur die geänderten Dateien werden geprüft (Grenze {maximum})"
+    },
+    "row.error": {
+      "en": "{file}({line},{column}): error {code}: {message}",
+      "de": "{file}({line},{column}): Fehler {code}: {message}"
+    },
+    "row.drift.undeclared": {
+      "en": "{declaration}: export {name} is not declared",
+      "de": "{declaration}: Export {name} ist nicht deklariert"
+    },
+    "row.drift.phantom": {
+      "en": "{declaration}: {name} is declared but {script} does not export it",
+      "de": "{declaration}: {name} ist deklariert, aber {script} exportiert es nicht"
+    },
+    "row.drift.arity": {
+      "en": "{declaration}: {name} takes {found} parameters there but {expected} in {script}",
+      "de": "{declaration}: {name} hat dort {found} Parameter, aber {expected} in {script}"
+    },
+    "totals.passed": {
+      "en": "typecheck: passed, {files} files ({importers} importers), {elsewhere} errors elsewhere not counted, {seconds} s",
+      "de": "typecheck: bestanden, {files} Dateien ({importers} Importeure), {elsewhere} Fehler anderswo nicht gezählt, {seconds} s"
+    },
+    "totals.failed": {
+      "en": "typecheck: FAILED, {errors} errors, {drift} declaration drifts, {files} files ({importers} importers), {elsewhere} errors elsewhere not counted, {seconds} s",
+      "de": "typecheck: FEHLGESCHLAGEN, {errors} Fehler, {drift} Deklarationsabweichungen, {files} Dateien ({importers} Importeure), {elsewhere} Fehler anderswo nicht gezählt, {seconds} s"
+    }
+  }
+}

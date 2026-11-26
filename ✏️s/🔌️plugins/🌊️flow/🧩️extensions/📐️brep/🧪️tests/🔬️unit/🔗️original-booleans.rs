@@ -1019,3 +1019,73 @@ fn original_box_bores_publish_exact_blind_floors_and_closed_void_shells() {
         caller.retire(stock());
     }
 }
+
+#[test]
+fn authored_curved_booleans_publish_and_preview() {
+    use parry3d::{bounding_volume::Aabb, na::Point3};
+    use semio_s_spatial_kernel_semio_session::{read_channel_number, read_geometry};
+    let recipes = [
+        (
+            include_str!("../../../../../🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧲️sphere-box-fuse/🧪️tests/🧫️fixtures/🧩️example/🔣️.json"),
+            1.2, "brep.bool.fuse", "brep.prim3d.box", [("width", 1.5), ("depth", 1.5), ("height", 1.5)].as_slice(),
+        ),
+        (
+            include_str!("../../../../../🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍩️sphere-cut-with-torus/🧪️tests/🧫️fixtures/🧩️example/🔣️.json"),
+            2.2, "brep.bool.cut", "brep.prim3d.torus", [("major", 2.), ("minor", 0.5)].as_slice(),
+        ),
+    ];
+    for (index, (fixture, radius, operator, constructor, dimensions)) in recipes.into_iter().enumerate() {
+        let fixture: serde_json::Value = serde_json::from_str(fixture).unwrap();
+        let expected = &fixture["expect"];
+        let session = Session::new();
+        let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
+        let identity = semio_os_flow_geometry::GeometryWorkIdentity { operation: 998800 + index as u64, generation: 1 };
+        let mut caller = OriginalJobFixtureCaller::admit(OperationId(identity.operation), Generation(1), stock(), || Some(1000), 1500, 131072);
+        let (mut born, mut free) = (0, 0);
+        let a = retained_boolean_result(&registry, "brep.prim3d.sphere",
+            Dictionary::new().insert("radius", number(radius)), &mut caller, &mut born, &mut free);
+        let dimensions = dimensions.iter().fold(Dictionary::new(), |input, &(key, size)| input.insert(key, number(size)));
+        let b = retained_boolean_result(&registry, constructor, dimensions, &mut caller, &mut born, &mut free);
+        let operands = Dictionary::new().insert("a", a.get("solid").unwrap().clone()).insert("b", b.get("solid").unwrap().clone());
+        let output = retained_boolean_result(&registry, operator, operands, &mut caller, &mut born, &mut free);
+        let handle = read_geometry(&output, "solid").unwrap();
+        let gate = session.with_kernel_read(|kernel| Ok(kernel.validate_gate_sync(&handle))).unwrap();
+        assert!(gate.is_ok(), "{operator} published invalid topology: {gate:?}");
+        let tolerance = fixture["tessellationTolerance"].as_f64().unwrap();
+        let mesh = run_funded_preview_at(&session, identity, handle.as_str(), tolerance, &mut caller, &mut born, &mut free);
+        mesh.validate_component_references().unwrap();
+        let bounds_tolerance = expected["boundingBoxTolerance"].as_f64().unwrap();
+        let volume_tolerance = expected["volumeTolerance"].as_f64().unwrap();
+        let points: Vec<_> = mesh.positions.chunks_exact(3).map(|p|Point3::new(p[0], p[1], p[2])).collect();
+        let bounds = Aabb::from_points(&points);
+        let mut edges = std::collections::BTreeMap::<_, (usize, isize)>::new();
+        let welded = |index: u32| {
+            let p = points[index as usize];
+            [p.x, p.y, p.z].map(|n| (n * 100_000.).round() as i32)
+        };
+        for triangle in mesh.indices.chunks_exact(3) {
+            let [a, b, c] = [triangle[0], triangle[1], triangle[2]].map(welded);
+            for (head, tail) in [(a, b), (b, c), (c, a)] {
+                assert_ne!(head, tail, "{operator} generated a collapsed mesh edge");
+                let (key, sense) = if head < tail { ((head, tail), 1) } else { ((tail, head), -1) };
+                let (count, direction) = edges.entry(key).or_default();
+                *count += 1;
+                *direction += sense;
+            }
+        }
+        assert!(edges.values().all(|pair| *pair == (2, 0)), "{operator} preview has open or inconsistently oriented edges");
+
+        for (reported, key) in [(bounds.mins, "boundingBoxMin"), (bounds.maxs, "boundingBoxMax")] {
+            for (observed, expected) in reported.iter().zip(fixture_xyz(&expected[key])) {
+                assert!((f64::from(*observed) - expected).abs() <= bounds_tolerance, "{operator} preview bounds {key}");
+            }
+        }
+        let measure = retained_boolean_result(&registry, "brep.measure.volume",
+            Dictionary::new().insert("geometry", output.get("solid").unwrap().clone()), &mut caller, &mut born, &mut free);
+        let measured = read_channel_number(&measure, "volume").unwrap();
+        let expected = expected["volume"].as_f64().unwrap();
+        assert!((measured - expected).abs() < 1e-9, "{operator} exact volume");
+        assert!((preview_area_volume(&mesh).1 - expected).abs() <= volume_tolerance, "{operator} oriented preview volume");
+        caller.retire(stock());
+    }
+}

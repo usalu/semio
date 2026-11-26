@@ -42,7 +42,6 @@ semio-framework-value = { path = "../../../../../../../../../../../../../🧰️
 semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
-semio-s-artifact-stdio-txt = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]

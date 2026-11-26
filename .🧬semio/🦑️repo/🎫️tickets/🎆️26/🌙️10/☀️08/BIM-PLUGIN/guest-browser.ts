@@ -13,7 +13,6 @@ const wire = [
   "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts",
   "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts",
 ].map(file => resolve(file));
-const policy = JSON.parse(readFileSync(resolve("🌎️hub/🧩️compositions/🖍️draw/🧪️tests/🌐️guest/scenarios.json"), "utf8")).caller;
 const contract = JSON.parse(readFileSync(resolve("🌎️hub/🧩️compositions/🏙️bim/🧪️tests/🧫️fixtures/🛂️committed-descriptor/🔣️.json"), "utf8"));
 const server = await createServer({root,configFile:false,cacheDir:root+"/🗑️generated/vite",server:{host:"127.0.0.1",port:0,fs:{allow:[workspace]},watch:null},optimizeDeps:{noDiscovery:true,include:[]}, logLevel:"error"});
 await server.listen();
@@ -28,7 +27,7 @@ try {
     worker.onerror = event => { worker.terminate(); reject(new Error(event.message)); };
     worker.onmessage = event => { worker.terminate(); event.data.error ? reject(new Error(event.data.error)) : resolve(event.data); };
     worker.postMessage(input);
-  }),{guest,root,lifetime,policy,ids:contract.applicationIds,sequence:contract.guestReadConfigSequence,wire});
+  }),{guest,root,lifetime,policy:contract.browserCaller,ids:contract.applicationIds,sequence:contract.guestReadConfigSequence,wire});
   console.log(await browser.version(), result);
 } finally {
   await browser.close();

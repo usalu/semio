@@ -114,6 +114,8 @@ impl<P,M:Mutation<P>+Sync> OriginalReplayPublication<P,M>{
  /// 🫙️ Every actual source, result, private ledger and child frame must return before the publisher shell is released.
  pub fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.result.is_none()&&self.request.is_none()&&self.edit_ids.is_none()&&self.transitions.is_none()&&self.output.is_none()&&self.metadata.is_none()&&self.diagnostics.is_none()&&self.pending.is_none()&&self.report.is_none()&&self.overlay.terminal_is_empty()&&self.retirement.is_empty()&&self.stage.is_none()&&self.resident.terminal_is_empty()}
  /// 🏁️ Preparation has no effect on visible Store roots.
+ /// 📈️ Reports the active preparation phase while the caller drives its original publisher.
+ pub fn preparation_phase(&self)->u8{self.phase}
  pub fn prepared(&self)->bool{self.phase==10&&!self.closing&&self.receipt.is_none()}
 }
 impl<P,M> OriginalReplayPublication<P,M>where P: semio_os_spr::StoreState,M: semio_os_spr::StoreMutationFor<P>{
@@ -148,6 +150,8 @@ impl<P,M> OriginalReplayPublication<P,M>where P: semio_os_spr::StoreState,M: sem
  pub fn publish(&mut self,store:&mut ArtifactStore<P,M>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(store,cx,self.receipt.is_none())?;if self.resident.constructing(){self.resident.settle(cx)?;return Ok(self.published())}if !self.prepared(){return Err(invalid("completed replay publication is not prepared").into())}let stage=self.stage.as_mut().unwrap();let d=stage.publication_demands(store,self.diagnostics.as_deref())?;let before=self.frontier.2;let output=self.output.as_ref().unwrap();let applied=output.applies_to_head;self.resident.action(cx,d,|grant|{let p=stage.publish(store,self.result.as_mut().unwrap(),output,self.metadata.as_deref_mut(),self.diagnostics.as_deref_mut(),&mut self.report,grant)?;if p.copied_items!=0{self.receipt=Some(OriginalReplayPublicationReceipt{generation_before:before,generation_after:store.parts_ref().cursor.generation,revision:store.parts_ref().cursor.content_revision,applies_to_head:applied});}Ok(p)})?;Ok(self.published())}
  /// 🔏️ The visibility decision is complete only once its receipt exists and its resident construction has settled, so receipt custody never starts on a pending settle.
  fn published(&self)->bool{self.receipt.is_some()&&!self.resident.constructing()}
+ /// 🧾️ Once the receipt exists the published frontier is the publication's own: its caller must not demand the pre-publication frontier again.
+ pub fn owns_frontier(&self)->bool{self.receipt.is_some()}
  /// 🧾️ Receipt custody moves only under the original caller, after the actual common visibility decision.
  pub fn take_receipt(&mut self,cx:&mut StepContext<'_>,output:&mut Option<OriginalReplayPublicationReceipt>)->Result<bool,OriginalTurnFailure>{if self.resident.constructing(){return self.resident.settle(cx)}if !self.matches_caller(cx)||self.receipt_taken{return Err(invalid("completed replay receipt changed its original recipient").into())}let receipt=self.receipt.ok_or_else(||invalid("completed replay is unpublished"))?;let d=fixed(size_of::<OriginalReplayPublicationReceipt>()+size_of::<bool>());self.resident.built(cx,output,construction(d),||{self.receipt_taken=true;Ok((receipt,progress(d)))})}
  /// 🤝️ The original driver acknowledges its fixed receipt before retiring the retained publication owner.

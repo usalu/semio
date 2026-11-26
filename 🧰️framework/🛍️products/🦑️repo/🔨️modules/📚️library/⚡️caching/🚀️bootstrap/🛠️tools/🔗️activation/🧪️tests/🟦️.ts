@@ -24,7 +24,7 @@ test("actual Nx activation replaces only qualified absent or valid managed proje
 
 test("an existing installation link is owned, relocated to another root or foreign, by closed vectors",()=>{
  expect(new Ajv({strict:true}).validate({$defs:schema.$defs,$ref:"#/$defs/Corpus"},fixture)).toBe(true);
- for(const row of fixture.linkCases){const call=()=>classifyManagedNxActivationLinkV1(row.root,row.target,row.style==="windows"?"windows":"posix");if(row.verdict==="refused")expect(call,row.id).toThrow();else expect(call(),row.id).toBe(row.verdict);}
+ for(const row of fixture.linkCases){const call=()=>classifyManagedNxActivationLinkV1(row.root,row.target,row.style==="windows"?"windows":"posix");if(row.verdict==="refused")expect(call,row.id).toThrow();else expect<unknown>(call(),row.id).toBe(row.verdict);}
 });
 
 /** 🔗️ Reproduces the third cause of `repo reset` in a temporary store without the repository's test envelope: a link written under another root (a moved, copied or replicated tree) used to end the activation with `Exact canonical managed Nx generation target required` after the re-install; it is replaced by the new generation, while a link to a foreign directory is still refused. */

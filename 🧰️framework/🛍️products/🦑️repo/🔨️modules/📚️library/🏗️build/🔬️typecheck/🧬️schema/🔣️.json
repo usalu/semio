@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/build/typecheck/v1",
+  "title": "Typecheck: an incremental type check of the files a landing touched and their direct importers, without reading the project graph",
+  "definitions": {
+    "Ambient": {"type": "object", "additionalProperties": false, "required": ["id", "declaration", "projects"], "properties": {"id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"}, "declaration": {"type": "string", "pattern": "\\.d\\.ts$"}, "projects": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"}}}},
+    "Project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "roots", "tsconfig"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+        "roots": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "tsconfig": {"type": "string", "minLength": 1}
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "projects", "ambient", "fallback", "scanRoots", "skipDirectories", "checkExtensions", "declarationExtensions", "scriptExtensions", "compiler", "cache", "report", "budgetMs", "limits"],
+      "properties": {
+        "version": {"const": 1},
+        "projects": {"type": "array", "items": {"$ref": "#/definitions/Project"}}, "ambient": {"type": "array", "items": {"$ref": "#/definitions/Ambient"}},
+        "fallback": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "tsconfig"],
+          "properties": {"id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"}, "tsconfig": {"type": "string", "minLength": 1}}
+        },
+        "scanRoots": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "skipDirectories": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "checkExtensions": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^\\."}},
+        "declarationExtensions": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^\\."}},
+        "scriptExtensions": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^\\."}},
+        "compiler": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["script", "typeRoots", "heap"],
+          "properties": {
+            "script": {"type": "string", "minLength": 1},
+            "typeRoots": {"type": "string", "minLength": 1},
+            "heap": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["maximumMegabytes", "minimumMegabytes", "hostShare"],
+              "properties": {"maximumMegabytes": {"type": "integer", "minimum": 512}, "minimumMegabytes": {"type": "integer", "minimum": 512}, "hostShare": {"type": "number", "exclusiveMinimum": 0, "maximum": 1}}
+            }
+          }
+        },
+        "cache": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["directory", "variable"],
+          "properties": {"directory": {"type": "string", "minLength": 1}, "variable": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"}}
+        },
+        "report": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["file", "project", "maximumAgeSeconds", "maximumAreas", "testSegments", "areaRoots"],
+          "properties": {
+            "file": {"type": "string", "pattern": "^[a-z][a-z0-9.-]*$"},
+            "project": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+            "maximumAgeSeconds": {"type": "integer", "minimum": 60},
+            "maximumAreas": {"type": "integer", "minimum": 1},
+            "testSegments": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+            "areaRoots": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["prefix", "label"], "properties": {"prefix": {"type": "string", "minLength": 1}, "label": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"}}}}
+          }
+        },
+        "budgetMs": {"type": "integer", "minimum": 1000},
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["maximumFiles", "maximumImporters", "maximumDiagnostics", "errorCharacters"],
+          "properties": {
+            "maximumFiles": {"type": "integer", "minimum": 1},
+            "maximumImporters": {"type": "integer", "minimum": 0},
+            "maximumDiagnostics": {"type": "integer", "minimum": 1},
+            "errorCharacters": {"type": "integer", "minimum": 1}
+          }
+        }
+      }
+    },
+    "Diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "line", "column", "code", "message", "checked"],
+      "properties": {
+        "file": {"type": "string"},
+        "line": {"type": "integer", "minimum": 0},
+        "column": {"type": "integer", "minimum": 0},
+        "code": {"type": "string"},
+        "message": {"type": "string"},
+        "checked": {"type": "boolean"}
+      }
+    },
+    "Drift": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["declaration", "script", "kind", "name"],
+      "properties": {
+        "declaration": {"type": "string"},
+        "script": {"type": "string"},
+        "kind": {"enum": ["undeclared", "phantom", "arity"]},
+        "name": {"type": "string"},
+        "expected": {"type": "string"},
+        "found": {"type": "string"}
+      }
+    },
+    "Plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "touched", "importers", "truncated", "project", "files"],
+      "properties": {
+        "version": {"const": 1},
+        "touched": {"type": "array", "items": {"type": "string"}},
+        "importers": {"type": "array", "items": {"type": "string"}},
+        "truncated": {"type": "boolean"},
+        "project": {"type": "string"},
+        "files": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "LibraryReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "atMs", "seconds", "project", "errors", "product", "tests", "areas"],
+      "properties": {
+        "version": {"const": 1},
+        "atMs": {"type": "integer", "minimum": 0},
+        "seconds": {"type": "number", "minimum": 0},
+        "project": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+        "errors": {"type": "integer", "minimum": 0},
+        "product": {"type": "integer", "minimum": 0},
+        "tests": {"type": "integer", "minimum": 0},
+        "areas": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["area", "errors", "product"], "properties": {"area": {"type": "string", "minLength": 1}, "errors": {"type": "integer", "minimum": 1}, "product": {"type": "integer", "minimum": 0}}}}
+      }
+    },
+    "Result": {
+      "type": "object",
+      "additionalProperties": false,
+      "additionalProperties": false,
+      "required": ["version", "status", "seconds", "files", "importers", "truncated", "errors", "elsewhere", "drift", "diagnostics"],
+      "properties": {
+        "version": {"const": 1},
+        "status": {"enum": ["passed", "failed"]},
+        "seconds": {"type": "number", "minimum": 0},
+        "files": {"type": "integer", "minimum": 0},
+        "importers": {"type": "integer", "minimum": 0},
+        "truncated": {"type": "boolean"},
+        "errors": {"type": "integer", "minimum": 0},
+        "elsewhere": {"type": "integer", "minimum": 0},
+        "drift": {"type": "array", "items": {"$ref": "#/definitions/Drift"}},
+        "diagnostics": {"type": "array", "items": {"$ref": "#/definitions/Diagnostic"}}
+      }
+    }
+  }
+}

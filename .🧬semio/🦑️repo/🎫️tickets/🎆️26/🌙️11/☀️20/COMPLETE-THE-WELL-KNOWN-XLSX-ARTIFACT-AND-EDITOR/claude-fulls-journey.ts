@@ -1,4 +1,4 @@
-import {mkdirSync, writeFileSync} from "node:fs";
+import {mkdirSync, readFileSync, writeFileSync} from "node:fs";
 import {createRequire} from "node:module";
 import {join} from "node:path";
 import type {Download, FileChooser, Page} from "playwright";
@@ -20,6 +20,8 @@ ensureRepositoryBrowserPathV1(root, process.env);
 const {chromium} = createRequire(join(osDev, "📦️packages/🟦️typescript/package.json"))("playwright") as typeof import("playwright");
 
 type Dialect = "strict" | "transitional";
+const genuineStrict = join(root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧪️tests/🧫️fixtures/🔒️reuse-marketplaces-strict.xlsx");
+const dialectWorkbook = (dialect: Dialect, marker: string): Uint8Array => dialect === "strict" ? new Uint8Array(readFileSync(genuineStrict)) : workbook(dialect, marker);
 const spaces: Record<Dialect, {main: string; rel: string}> = {
   transitional: {main: "http://schemas.openxmlformats.org/spreadsheetml/2006/main", rel: "http://schemas.openxmlformats.org/officeDocument/2006/relationships"},
   strict: {main: "http://purl.oclc.org/ooxml/spreadsheetml/main", rel: "http://purl.oclc.org/ooxml/officeDocument/relationships"},
@@ -150,8 +152,8 @@ try {
 
   for (const dialect of ["transitional", "strict"] as Dialect[]) {
     for (const via of ["picker", "drop"] as const) {
-      const tag = `${dialect}-${via}`, name = `Quarterly-Budget-${dialect}-${via}.xlsx`, marker = `Original ${dialect} ${via}`, edited = `Edited ${dialect} ${via} ${locale}`;
-      const {opened, notes} = await (via === "picker" ? openViaPicker(workbook(dialect, marker), name, `s.stdio.xlsx@ecma-376/${dialect}#editor`) : openViaDrop(workbook(dialect, marker), name));
+      const tag = `${dialect}-${via}`, name = `Quarterly-Budget-${dialect}-${via}.xlsx`, marker = dialect === "strict" ? "ID" : `Original ${dialect} ${via}`, edited = `Edited ${dialect} ${via} ${locale}`;
+      const {opened, notes} = await (via === "picker" ? openViaPicker(dialectWorkbook(dialect, marker), name, `s.stdio.xlsx@ecma-376/${dialect}#editor`) : openViaDrop(dialectWorkbook(dialect, marker), name));
       const wanted = `s.stdio.xlsx@ecma-376/${dialect}#editor`;
       const owner = (await spawned()).filter(s => s.appId === wanted);
       record(`${tag}:open`, opened.length > 0 && owner.length > 0, `windows=${opened.length} owner=${owner.map(o => o.appId).join(",") || "none"} notes=${JSON.stringify(notes.slice(0, 2))}`);

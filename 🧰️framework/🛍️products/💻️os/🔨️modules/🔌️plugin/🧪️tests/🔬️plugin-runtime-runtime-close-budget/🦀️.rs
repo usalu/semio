@@ -141,34 +141,101 @@ pub fn zero_progress() -> Option<semio_plugin_ownership::bounded_ownership::Plug
         }
     }
 
+    fn live_stall_state() -> (AtomicU32, AtomicU64) {
+        (AtomicU32::new(0), AtomicU64::new(0))
+    }
+
     #[test]
-    fn permanently_blocked_live_cleanup_faults_without_claiming_released_ownership() {
-        let stalled = AtomicU32::new(0);
+    fn permanently_blocked_live_cleanup_faults_after_its_stall_credit_without_claiming_released_ownership() {
+        let (stalled, since) = live_stall_state();
         let blocked = Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason: "injected permanent external wait" });
-        for _ in 1..RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT {
-            assert_eq!(runtime_live_cleanup_nonterminal_status(false, blocked, &stalled), RuntimeMaintenanceStatus::Ready);
+        for step in 1..u64::from(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT) {
+            assert_eq!(runtime_live_cleanup_nonterminal_status(false, blocked, &stalled, &since, Some(1 + step), 0, &std::sync::atomic::AtomicU64::new(0)).0, RuntimeMaintenanceStatus::Ready);
         }
-        assert_eq!(runtime_live_cleanup_nonterminal_status(false, blocked, &stalled), RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress));
+        let (status, credit_us) = runtime_live_cleanup_nonterminal_status(false, blocked, &stalled, &since, Some(2 + RUNTIME_LIVE_STALL_CREDIT_US), 0, &std::sync::atomic::AtomicU64::new(0));
+        assert_eq!(status, RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress));
+        assert!(credit_us >= RUNTIME_LIVE_STALL_CREDIT_US, "a live stall verdict must quote the credit it actually spent, not 0us");
         assert_eq!(stalled.load(Ordering::SeqCst), RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT);
+    }
+
+    /// 🛑️ LAW: a cancelled live cleanup outcome carries no reading, so it clears the stall run instead of feeding it; a pump that restarts a cancelled session every turn cannot reach `ZeroProgress`.
+    #[test]
+    fn cancelled_live_cleanup_outcomes_clear_the_stall_run_and_never_fault() {
+        let (stalled, since) = live_stall_state();
+        let blocked = Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason: "injected wait" });
+        for step in 1..u64::from(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT) {
+            runtime_live_cleanup_nonterminal_status(false, blocked, &stalled, &since, Some(1 + step), 0, &std::sync::atomic::AtomicU64::new(0));
+        }
+        for turn in 0..4 * u64::from(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT) {
+            let now = 10 * RUNTIME_CLOSE_STALL_CREDIT_US * (turn + 1);
+            assert_eq!(runtime_live_cleanup_nonterminal_status(false, None, &stalled, &since, Some(now), 0, &std::sync::atomic::AtomicU64::new(0)), (RuntimeMaintenanceStatus::Ready, 0));
+            assert_eq!((stalled.load(Ordering::SeqCst), since.load(Ordering::SeqCst)), (0, 0));
+        }
+    }
+
+    /// 🛬️ LAW (boot): a live cleanup Blocked behind a whole-document load that keeps advancing its instance epoch never faults, however many turns and however much wall time pass; the same cleanup with a frozen instance epoch faults after its stall credit.
+    #[test]
+    fn live_cleanup_blocked_behind_a_progressing_load_never_faults_but_a_frozen_instance_does() {
+        let blocked = Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason: "snapshot retirement waits for its exact live media owner" });
+        let (stalled, since) = live_stall_state();
+        let seen = AtomicU64::new(0);
+        for turn in 1..=4 * u64::from(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT) {
+            let now = 1 + turn * RUNTIME_CLOSE_STALL_CREDIT_US;
+            assert_eq!(runtime_live_cleanup_nonterminal_status(false, blocked, &stalled, &since, Some(now), turn, &seen).0, RuntimeMaintenanceStatus::Ready);
+        }
+        let frozen = 4 * u64::from(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT);
+        let base = 1_000_000_000;
+        let mut verdict = RuntimeMaintenanceStatus::Ready;
+        for step in 0..2 * u64::from(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT) {
+            verdict = runtime_live_cleanup_nonterminal_status(false, blocked, &stalled, &since, Some(base + step * RUNTIME_LIVE_STALL_CREDIT_US / 64), frozen, &seen).0;
+        }
+        assert_eq!(verdict, RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress));
+    }
+
+    /// ⏱️ LAW: the live pump's zero-progress verdict is priced in BOTH currencies, like the close ladder's. An ingress-free reactor turn repeats the live pump up to 32 times while a funded document archive is runnable, so a booting natural-file import read 256 fruitless steps inside the same microsecond and faulted with `plugin.internal.zero-progress (elapsed 0us, ceiling 8000us)`. Reproduced with a virtual clock.
+    #[test]
+    fn live_zero_progress_cannot_fault_before_its_stall_credit_elapses() {
+        let zero = Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
+        let blocked = Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason: "snapshot retirement waits for its exact live media owner" });
+        for progress in [zero, blocked] {
+            let (stalled, since) = live_stall_state();
+            for _ in 0..4 * RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT {
+                assert_eq!(runtime_live_cleanup_nonterminal_status(false, progress, &stalled, &since, Some(1), 0, &std::sync::atomic::AtomicU64::new(0)).0, RuntimeMaintenanceStatus::Ready);
+            }
+            assert!(stalled.load(Ordering::SeqCst) >= RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT);
+        }
+    }
+
+    #[test]
+    fn live_zero_progress_without_a_clock_never_faults() {
+        let (stalled, since) = live_stall_state();
+        let zero = Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
+        for _ in 0..4 * RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT {
+            assert_eq!(runtime_live_cleanup_nonterminal_status(false, zero, &stalled, &since, None, 0, &std::sync::atomic::AtomicU64::new(0)), (RuntimeMaintenanceStatus::Ready, 0));
+        }
+        assert_eq!(since.load(Ordering::SeqCst), 0);
     }
 
     #[test]
     fn exact_host_input_wait_resets_structural_live_cleanup_stall_credit() {
         let stalled = AtomicU32::new(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT - 1);
+        let since = AtomicU64::new(1);
         let awaiting_input = Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" });
-        for _ in 0..1_024 {
-            assert_eq!(runtime_live_cleanup_nonterminal_status(false, awaiting_input, &stalled), RuntimeMaintenanceStatus::Ready);
+        for tick in 0..1_024 {
+            assert_eq!(runtime_live_cleanup_nonterminal_status(false, awaiting_input, &stalled, &since, Some(tick * RUNTIME_CLOSE_STALL_CREDIT_US), 0, &std::sync::atomic::AtomicU64::new(0)), (RuntimeMaintenanceStatus::Ready, 0));
         }
         assert_eq!(stalled.load(Ordering::SeqCst), 0);
+        assert_eq!(since.load(Ordering::SeqCst), 0);
     }
 
     #[test]
     fn contended_live_cleanup_does_not_consume_structural_stall_credit() {
-        let stalled = AtomicU32::new(0);
-        for _ in 0..1_024 {
-            assert_eq!(runtime_live_cleanup_nonterminal_status(true, None, &stalled), RuntimeMaintenanceStatus::Ready);
+        let (stalled, since) = live_stall_state();
+        for tick in 0..1_024 {
+            assert_eq!(runtime_live_cleanup_nonterminal_status(true, None, &stalled, &since, Some(tick), 0, &std::sync::atomic::AtomicU64::new(0)), (RuntimeMaintenanceStatus::Ready, 0));
         }
         assert_eq!(stalled.load(Ordering::SeqCst), 0);
+        assert_eq!(since.load(Ordering::SeqCst), 0);
     }
 
     #[test]
@@ -239,9 +306,10 @@ pub fn zero_progress() -> Option<semio_plugin_ownership::bounded_ownership::Plug
             assert_eq!(runtime_close_stall_verdict(false, progress, &stalled, &since, Some(1_000_000)), (RuntimeCloseStatus::Ready, 0));
             assert_eq!(stalled.load(Ordering::SeqCst), 0);
             assert_eq!(since.load(Ordering::SeqCst), 0);
-            let live = AtomicU32::new(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT);
-            assert_eq!(runtime_live_cleanup_nonterminal_status(false, progress, &live), RuntimeMaintenanceStatus::Ready);
+            let (live, live_since) = (AtomicU32::new(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT), AtomicU64::new(1));
+            assert_eq!(runtime_live_cleanup_nonterminal_status(false, progress, &live, &live_since, Some(1_000_000), 0, &std::sync::atomic::AtomicU64::new(0)), (RuntimeMaintenanceStatus::Ready, 0));
             assert_eq!(live.load(Ordering::SeqCst), 0);
+            assert_eq!(live_since.load(Ordering::SeqCst), 0);
         }
     }
 }

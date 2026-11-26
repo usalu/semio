@@ -1,3 +1,4 @@
+import {processPidExistsV1} from "../../../../../../../../🔨️modules/🏃️process/🔖️identity/🟦️.ts"
 import{toolsProgressPaths,recordToolsProgress,sampleToolsProgress,toolsGraceActive,toolsGraceDenial,currentToolsCheckpoint,type ToolsCheckpoint,type ToolsGraceDenial}from"./⏳️tools-grace/🟦️.ts";
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import{readFreeSpaceV1,type FreeSpaceOptionsV1,type FreeSpaceUnknownReasonV1}from"../../../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts";
@@ -18,6 +19,7 @@ import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬
 import{fleetHostReadingV1}from"../../../🧠️memory/🟨️.mjs";
 import{READY_SLICE_REPORT_POLICY_V1,ownedSliceReportV1,prepareOwnedSliceReportV1}from"../../../🧠️memory/📋️slice-report/🏷️owner/🟦️.ts";
 import{remoteExecutionOriginV1}from"../../🌡️load/🟦️.ts";
+import{startFleetMetricsV1}from"../📈️metrics/🟦️.ts";
 import{createReadyStageClaimPublisherV1}from"../../🌡️load/🪑️stage-claim/🟦️.ts";
 import{hostCapacityDirectoryV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/📖️status/🟦️.ts";
 import type{RemoteExecutionSidecarContextV1}from"../🧰️shared/🟦️.ts";
@@ -321,7 +323,7 @@ export function readyRefreshingPatchV1(patch:Partial<ReadyStatusV1>,stage:string
 /** 🔒️ The one lease per machine in `<worktree>/.cache/f/ready/lease.json`: created exclusively, renewed by its holder, taken over only when its wall time is older than the stale limit or its process is gone, and the takeover itself goes through an exclusive directory so two takers cannot both win. */
 export function createReadyLeaseV1(input:Readonly<{directory:string;owner:string;pid?:number;startMs?:number;now?:()=>number;alive?:(pid:number)=>boolean;startOf?:(pid:number)=>number|null|undefined}>):Readonly<{acquire():"own"|"other";renew():boolean;release():void;peek():"free"|"own"|"other";holder():Readonly<{pid:number;owner:string;ageMilliseconds:number}>|undefined}>{
  const now=input.now??Date.now,pid=input.pid??process.pid,file=join(input.directory,P.leaseName),takeover=join(input.directory,"takeover"),startMs=input.startMs??Math.round(Date.now()-process.uptime()*1000);
- const alive=input.alive??((other:number):boolean=>{try{process.kill(other,0);return true;}catch(error){return(error as NodeJS.ErrnoException).code==="EPERM";}});
+ const alive=input.alive??((other:number):boolean=>processPidExistsV1(other));
  const startOf=input.startOf??((other:number)=>readyProcessStartSyncV1(other));
  const read=():{owner:string;pid:number;startMs?:number;wallMs:number}|undefined=>{try{return JSON.parse(readFileSync(file,"utf8"));}catch{return undefined;}};
  const verdict=(lease:{pid:number;startMs?:number;wallMs:number}|undefined)=>{
@@ -415,12 +417,12 @@ export type ReadyPortsV1=Readonly<{
  digests():Promise<Readonly<{digest:string;stages:readonly Readonly<{name:string;digest:string}>[]}>>;
  state:Readonly<{read():ReadyLocalStateV1;write(state:ReadyLocalStateV1):void}>;
  marker:Readonly<{exists():boolean;write():void}>;repoPresent():boolean;human():boolean;
- lease:ReturnType<typeof createReadyLeaseV1>;inflight?():string|undefined;units?():Readonly<Record<UnitCountKindV1,number>>|null;
+ lease:ReturnType<typeof createReadyLeaseV1>;inflight?():string|null|undefined;units?():Readonly<Record<UnitCountKindV1,number>>|null;
  memory():Readonly<{availableMegabytes:number|null;ok:boolean;floorMegabytes?:number}>;disk?(stage:string):ReadyDiskShortV1|null;diskUnknown?(stage:string):readonly ReadyDiskUnknownV1[];recover?(request:Readonly<{stage:string;short:ReadyDiskShortV1;signal:AbortSignal;report(line:string):void}>):Promise<ReadyDiskRecoveryV1>;sweep?(request:Readonly<{stage:string;neededMegabytes:number;scarce?:"inodes";signal:AbortSignal;report(line:string):void}>):Promise<ReadyDiskRecoveryV1>;native?():NativeShardConsumerV1|null;relieve?(request:Readonly<{signal:AbortSignal;report(line:string):void}>):Promise<number>;freeMegabytes?():number|null;freeInodes?():number|null;compiler?():Readonly<{en:string;de:string}>|null;discardDependencies?():Readonly<{receipts:number;generations:number}>;
  run(stage:ReadyStageV1,options:Readonly<{signal:AbortSignal;jobs:number;onLine(line:string):void;onStage?(stage:string,adopted:boolean):void;onActivity?():void;mirror?:ReadyLogMirrorV1}>):Promise<ReadyRunResultV1>;
  heal?(request:Readonly<{stage:string;signal:AbortSignal;report(line:string):void}>):Promise<ReadyHealV1>;
  tree?():string|null;root?:string;
- status:Readonly<{update(patch:Partial<ReadyStatusV1>):void;heartbeat?():void}>;
+ status:Readonly<{update(patch:Partial<ReadyStatusV1>):void;heartbeat?():void;current?():ReadyStatusV1}>;
  mirror?:ReadyLogMirrorV1;timing?(run:ReadyTimingV1):void;
  say(line:string):void;busy?(busy:boolean):void;
 }>;
@@ -455,7 +457,7 @@ async function runReadyLoopV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<voi
  const stalls=new Map<string,number>(),warnedUnmeasured=new Set<string>(),swept=new Set<string>(),inodeSweptAt=new Map<string,number>(),discarded=new Set<string>();
  const unfit=new Map<string,ReadyDiskUnfitV1>(),unfitSaid=new Set<string>(),healedAt=new Map<string,number>(),healUnfit=new Map<string,Readonly<{atMs:number;availableMegabytes:number;short:ReadyDiskShortV1}>>();
  const discardDependencies=(digest:string):void=>{if(discarded.has(digest)||ports.discardDependencies===undefined)return;discarded.add(digest);try{const gone=ports.discardDependencies();ports.say(`the dependency store verified current but lacks the tooling compiler: ${gone.receipts} synchronization receipt(s) and ${gone.generations} ready marker(s) discarded, the next dependencies stage rebuilds them / der Abhängigkeitsspeicher galt als aktuell, es fehlt aber der Werkzeug-Compiler: ${gone.receipts} Synchronisationsbeleg(e) und ${gone.generations} Fertigmarkierung(en) verworfen, die nächste Stufe dependencies baut sie neu`);}catch{}};
- let memoryLowSince:number|undefined,memoryWaitSaid=false,refreshStage:string|null=null,treeSeen:Readonly<{stamp:string;changedMs:number}>|null=null;
+ let memoryLowSince:number|undefined,memoryWaitSaid=false,refreshStage:string|null=null,treeSeen=null as Readonly<{stamp:string;changedMs:number}>|null;
  const status={update:(patch:Partial<ReadyStatusV1>):void=>{ports.status.update(readyRefreshingPatchV1(patch,refreshStage));}};
  let renew:ReturnType<typeof setInterval>|undefined,stalledStage:string|undefined,stalledReason:ReadyReasonCodeV1="stalled",lastContainment:ReadyContainmentV1|null=null;
  const leave=():void=>{if(renew!==undefined)clearInterval(renew);renew=undefined;ports.lease.release();};
@@ -721,7 +723,7 @@ const readyTimingWatchdogV1=(lastActivity:ReadyOwnedActivityV1|undefined,evidenc
 const readyTerminalOutcomeV1=(result:ReadyRunResultV1,ok=readyCleanExitV1(result)):ReadyTimingV1["outcome"]=>ok?"ok":result.timedOut?"stage-timeout":result.stalled&&!result.cancelled?"stalled":result.spawnFailed?"spawn-failed":result.cancelled?"interrupted":"stage-failed";
 const readyCleanExitV1=(result:ReadyRunResultV1):boolean=>result.exit===0&&result.signal==null&&!result.detached&&!result.timedOut&&!result.spawnFailed&&!result.cancelled&&!result.stalled;
 
-const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return(error as NodeJS.ErrnoException).code==="EPERM";}};
+const alive=(pid:number):boolean=>processPidExistsV1(pid);
 
 /** 🧬️ Whether the process of a stage in flight is alive as that stage's process: its pid exists and the creation time of the process there is not another one than the stage was spawned with (a reused pid is another process and the stage is gone). */
 const stageProcessAliveV1=(directory:string,row:Readonly<{stage:string;pid:number;startedMs:number}>,read:(pid:number)=>number|null=readyProcessStartSyncV1):boolean=>alive(row.pid)&&readyStageProcessVerdictV1(row,readyReadTreeV1(directory,row.stage)?.root,read(row.pid))=="same";
@@ -1410,14 +1412,20 @@ export function createReadyPortsV1(input:Readonly<{facts?(path:string):ReadyFile
  };
 }
 
-/** 🚦️ Runs the readiness loop of this machine until the signal aborts, at a low priority, with the fleet variables of the replica daemon; the group server returns at once and writes nothing. A restart for new code waits while a stage runs (`work.busy`). */
+/** 🚦️ Runs the readiness loop of this machine until the signal aborts, at a low priority, with the fleet variables of the replica daemon; the group server writes nothing and only hosts the metrics collector until the signal aborts (a ref'd long timer keeps the idle event loop asleep: Bun 1.4.2 spins at 45 % of a core when only an awaited promise and unref'd timers are left). A restart for new code waits while a stage runs (`work.busy`). */
 export async function runReady(context:RemoteExecutionSidecarContextV1):Promise<void>{
  const origin=remoteExecutionOriginV1(context.root,context.environment);
  let group=context.environment.SEMIO_FLEET_GROUP;
  if(group===undefined||group==="")try{group=(JSON.parse(readFileSync(machinePathV1(context.root,".cache","f","machine.json"),"utf8")) as {groupId?:string}).groupId;}catch{}
  const ports=createReadyPortsV1({root:context.root,environment:context.environment,origin,group,...context.environment.HOME===undefined?{}:{home:context.environment.HOME},...context.work===undefined?{}:{work:context.work},say:context.write});
- if(ports.server){context.write("the group server is never set up by this service / der Gruppenserver wird von diesem Dienst nie eingerichtet");return;}
+ const stopMetrics=startFleetMetricsV1(context,origin);
+ if(ports.server){
+  context.write("the group server is never set up by this service / der Gruppenserver wird von diesem Dienst nie eingerichtet");
+  const hold=setInterval(()=>{},3_600_000);
+  try{await new Promise<void>(done=>{if(context.signal.aborted)done();else context.signal.addEventListener("abort",()=>done(),{once:true});});}finally{clearInterval(hold);stopMetrics();}
+  return;
+ }
  const mirror=createReadyMemoryMirrorV1({store:context.environment.SEMIO_FLEET_STORE_ROOT,origin}),timer=setInterval(()=>{mirror.tick();},P.memoryMirrorPollMilliseconds);
  timer.unref?.();mirror.tick();
- try{await runReadyV1(ports,context.signal);}finally{clearInterval(timer);}
+ try{await runReadyV1(ports,context.signal);}finally{clearInterval(timer);stopMetrics();}
 }

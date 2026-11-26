@@ -17,6 +17,7 @@ from export_bim_ifc_kernel import (
     kernel_volume,
     kernel_bounds,
     representation_items,
+    closed_shell_problems,
     record_of,
     quantities_of,
     close,
@@ -29,7 +30,7 @@ from export_bim_ifc_kernel import (
 def families_oracle():
     """🧬️ The independent family evaluator of the families inference oracle (the F1 expression interpreter, numpy and shapely), loaded by path."""
     if "families_oracle" not in sys.modules:
-        folder = next(path for path in sorted(Path(__file__).resolve().parents[1].iterdir()) if path.name.endswith("infer-bim-1-families"))
+        folder = next(path for path in sorted(Path(__file__).resolve().parents[2].iterdir()) if path.name.endswith("infer-bim-1-families"))
         spec = importlib.util.spec_from_file_location("families_oracle", next(path for path in sorted(folder.iterdir()) if path.name.endswith(".py")))
         loaded = importlib.util.module_from_spec(spec)
         sys.modules["families_oracle"] = loaded
@@ -48,7 +49,7 @@ def component_class(category, system):
 
 def component_type_class(category, entity):
     """🏷️ The type class that goes with a family category and the class of its occurrences."""
-    return {"Furniture": "IfcFurnitureType", "Plumbing": "IfcSanitaryTerminalType", "Lighting": "IfcLightFixtureType"}.get(category) or ("IfcFlowTerminalType" if entity == "IfcFlowTerminal" else "IfcBuildingElementProxyType")
+    return {"Furniture": "IfcFurnitureType", "Plumbing": "IfcSanitaryTerminalType", "Lighting": "IfcLightFixtureType"}.get(category) or ({"Mechanical": "IfcAirTerminalType", "Electrical": "IfcElectricApplianceType"}[category] if entity == "IfcFlowTerminal" else "IfcBuildingElementProxyType")
 
 
 SEGMENTS = {"Duct": ("IfcDuctSegmentType", "Qto_DuctSegmentBaseQuantities"), "Pipe": ("IfcPipeSegmentType", "Qto_PipeSegmentBaseQuantities"), "Tray": ("IfcCableCarrierSegmentType", "Qto_CableCarrierSegmentBaseQuantities")}
@@ -252,6 +253,7 @@ def component_problems(model, snapshot):
         for name, want in (("Length", length), ("CrossSectionArea", area), ("GrossVolume", area * length), ("NetVolume", area * length)):
             if name not in values or not close(values[name], want, 1e-9):
                 problems.append("%s: %s.%s is %s, the section times the centre line gives %.12g" % (tag, quantity_set, name, values.get(name), want))
+        problems.extend(closed_shell_problems(element))
         measured = kernel_volume(kernel, element)
         lowest = 0.98 if kind == "Pipe" else 1 - 1e-6
         if measured is None or measured > area * length * (1 + 1e-9) or measured < area * length * lowest:
@@ -279,7 +281,7 @@ def component_problems(model, snapshot):
     if len(model.by_type("IfcSystem", include_subtypes=False)) != len(expected):
         problems.append("IfcSystem: %d in the file, one per service (%d) expected" % (len(model.by_type("IfcSystem", include_subtypes=False)), len(expected)))
     wanted_types = len({(component["family"], component_type_class(snapshot["families"][component["family"]]["category"], component_class(snapshot["families"][component["family"]]["category"], component.get("system")))) for component in components.values()}) + len({shape_key(row["shape"]) for row in mep.values()})
-    found_types = sum(len(model.by_type(name, include_subtypes=False)) for name in ("IfcFurnitureType", "IfcFlowTerminalType", "IfcSanitaryTerminalType", "IfcLightFixtureType", "IfcDuctSegmentType", "IfcPipeSegmentType", "IfcCableCarrierSegmentType")) + len([kind for kind in model.by_type("IfcBuildingElementProxyType", include_subtypes=False) if kind.Tag in snapshot.get("families", {})])
+    found_types = sum(len(model.by_type(name, include_subtypes=False)) for name in ("IfcFurnitureType", "IfcAirTerminalType", "IfcElectricApplianceType", "IfcSanitaryTerminalType", "IfcLightFixtureType", "IfcDuctSegmentType", "IfcPipeSegmentType", "IfcCableCarrierSegmentType")) + len([kind for kind in model.by_type("IfcBuildingElementProxyType", include_subtypes=False) if kind.Tag in snapshot.get("families", {})])
     if found_types != wanted_types:
         problems.append("%d type objects of components and MEP elements in the file, %d expected" % (found_types, wanted_types))
     return problems

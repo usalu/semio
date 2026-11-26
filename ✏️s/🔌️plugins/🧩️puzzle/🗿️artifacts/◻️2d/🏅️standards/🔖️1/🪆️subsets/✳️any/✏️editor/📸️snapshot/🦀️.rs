@@ -10,6 +10,10 @@ use semio_framework_pack_json::Value as HostValue;
 mod play_snapshot_authority;
 pub use play_snapshot_authority::Puzzle2dPlaySnapshot;
 
+#[path = "🎲️board-projection/🦀️.rs"]
+mod board_projection;
+pub use board_projection::puzzle2d_board_snapshot_json;
+
 #[path = "🔖️constants-examples-and-scene/🦀️.rs"]
 mod constants_examples_and_scene;
 pub use constants_examples_and_scene::{

@@ -42,7 +42,6 @@ semio-s-fem-receiving = { path = "../../../../../../../../../../../🧩️receiv
 semio-framework-job-payload = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-s-artifact-fem-3d-engine = { workspace = true }
-semio-s-artifact-fem-3d-io = { workspace = true }
 semio-s-fem-material = { workspace = true }
 semio-s-fem-node = { workspace = true }
 serde_json = { workspace = true }

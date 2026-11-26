@@ -58,7 +58,7 @@ test("a claim held by the server outlives the clamp of the cache server: renewed
   expect(lines.filter(line=>line===wantedTextV1("serving","en",{count:2,requester:"g1-m06"}))).toHaveLength(1);
   expect(lines.filter(line=>/claim for/u.test(line))).toEqual([]);
   expect(table.claimed("main","ac",wantedClaimKeyV1(request))).toBe(true);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("a claim another machine took is told with that machine and left to it; the request is not served twice",async()=>{
@@ -72,7 +72,7 @@ test("a claim another machine took is told with that machine and left to it; the
   expect(lines.filter(line=>/claim for/u.test(line))).toEqual([wantedTextV1("lost","en",{requester:"g1-m06",by:"g1-m09"})]);
   expect(lines.filter(line=>line.includes("serving"))).toHaveLength(1);
   expect(wantedTextV1("lost","de",{requester:"g1-m06",by:"g1-m09"})).toContain("g1-m09");
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("a claim that lapsed without a thief is taken again at once and said so: the machine never claims to have lost it to another machine",async()=>{
@@ -86,5 +86,5 @@ test("a claim that lapsed without a thief is taken again at once and said so: th
   expect(lines.filter(line=>/claim for/u.test(line))).toEqual([wantedTextV1("reclaimed","en",{requester:"g1-m06"})]);
   expect(lines.filter(line=>line.includes("serving"))).toHaveLength(1);
   expect(table.claimed("main","ac",key)).toBe(true);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);

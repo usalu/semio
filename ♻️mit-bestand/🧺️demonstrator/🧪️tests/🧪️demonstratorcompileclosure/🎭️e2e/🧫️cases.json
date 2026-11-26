@@ -50,9 +50,13 @@
       "@semio-tech/mit-bestand-demonstrator:activate-lanes-prototype"
     ],
     "activate-lanes-prototype": [
+      "@semio-tech/framework-os-dev:activate-aussuchen-react-prototype",
+      "@semio-tech/framework-os-dev:activate-cad-react-prototype",
       "@semio-tech/framework-os-dev:activate-energy-react-prototype",
       "@semio-tech/framework-os-dev:activate-fem3d-react-prototype",
-      "@semio-tech/framework-os-dev:activate-generator-react-prototype"
+      "@semio-tech/framework-os-dev:activate-generator-react-prototype",
+      "@semio-tech/framework-os-dev:activate-gis2d-react-prototype",
+      "@semio-tech/framework-os-dev:activate-puzzle3d-react-prototype"
     ],
     "prepare-prototype": [
       "@semio-tech/framework-os-dev:prepare-aussuchen-react-prototype",

@@ -47,7 +47,7 @@ async fn results_panel_play_button_switches_to_pause_while_running() {
     assert!(stopped.contains(labels().play.as_str()), "{stopped}");
     let running = Fem2dResultsWindowConfig { animation: FemResultsAnimation { playing: true, ..FemResultsAnimation::default() }, ..Fem2dResultsWindowConfig::default() };
     let running = panel_json(&running);
-    assert!(running.contains(labels().pause.as_str()), "{running}");
+    assert!(running.contains("\"icon\":\"pause\""), "{running}");
 }
 
 /// 📚️ LAW: the source select offers every load case AND every combination of the live document.

@@ -123,9 +123,9 @@ export function leaseNodesV1(entries:readonly LeaseRegistryEntryV1[],own:Snapsho
 }
 
 let source:Source|undefined;
-const dirty=new Set<string>(),policies=new Map<string,LeaseOrderPolicyV1>(),written=new Set<string>(),descriptions=new Map<string,string>();
+const dirty=new Set<string>(),policies=new Map<string,LeaseOrderPolicyV1>(),written=new Set<string>(),failed=new Set<string>(),descriptions=new Map<string,string>();
 let pruneScheduled=false;
-let timer:ReturnType<typeof setTimeout>|undefined,heartbeat:ReturnType<typeof setInterval>|undefined,disabled=false,exitHooked=false;
+let timer:ReturnType<typeof setTimeout>|undefined,heartbeat:ReturnType<typeof setInterval>|undefined,exitHooked=false;
 const rootNow=():string=>leaseRegistryRootV1();
 const entryPath=(directory:string):string=>join(leaseRegistryFolderV1(rootNow(),directory),`${process.pid}-${startedAtMs}.json`);
 const command=():string=>process.argv.slice(1).join(" ").slice(0,240);
@@ -141,20 +141,22 @@ function schedulePrune(policy:LeaseOrderPolicyV1|undefined):void{
  setInterval(run,policy.registry.prune.backlogMilliseconds).unref();
 }
 function flush(directory:string):void{
- if(disabled||!source)return;
+ if(!source)return;
  const policy=policies.get(directory),snapshot=source.snapshot(),holds=snapshot.holds.filter(row=>row.directory===directory).map(row=>({resource:row.resource,mode:row.mode,sinceMs:row.atMs,task:row.task})),waits=snapshot.waits.filter(row=>row.directory===directory).map(row=>({resource:row.resource,mode:row.mode,sinceMs:row.sinceMs,task:row.task,queued:row.queued})),tasks=new Set([...holds.map(row=>row.task),...waits.map(row=>row.task)]),ancestry=Object.fromEntries(Object.entries(snapshot.ancestry??{}).filter(([task])=>tasks.has(Number(task))));
  const path=entryPath(directory);
  try{
-  if(holds.length===0&&waits.length===0){rmSync(path,{force:true});written.delete(directory);return;}
+  if(holds.length===0&&waits.length===0){rmSync(path,{force:true});written.delete(directory);failed.delete(directory);return;}
   const folder=leaseRegistryFolderV1(rootNow(),directory);mkdirSync(folder,{recursive:true,mode:0o700});
   if(!written.has(directory)){writeFileSync(join(folder,"directory.json"),JSON.stringify({version:1,directory}));schedulePrune(policy);if(!exitHooked){exitHooked=true;observeLeaseStandingV1(()=>{for(const known of written)leaseRegistryV1.changed(known,policies.get(known)!);});process.once("exit",()=>{for(const known of written)try{rmSync(entryPath(known),{force:true});}catch{}});}}
   probeLeaseActivityV1();
   const address=agentSessionAddressOfEnvironmentV1(process.env),text=JSON.stringify({version:1,pid:process.pid,startMs:ownProcessIdentityV1().startMs,startedAtMs,updatedAtMs:Date.now(),command:command(),directory,...address===undefined?{}:{session:address},...process.env[LEASE_OWNER_ENVIRONMENT_V1]?{owner:process.env[LEASE_OWNER_ENVIRONMENT_V1]}:{},standing:leaseStandingSnapshotV1(address!==undefined),holds,waits,...Object.keys(ancestry).length?{ancestry}:{}});
   if(text.length>(policy?.registry.maximumEntryBytes??65536))throw Error("Bounded lease registry entry required");
-  const temporary=`${path}.tmp`;writeFileSync(temporary,text);renameSync(temporary,path);written.add(directory);
-  if(!heartbeat){heartbeat=setInterval(()=>{for(const known of written)flush(known);},HEARTBEAT_MILLISECONDS);heartbeat.unref();}
- }catch{disabled=true;}
+  const temporary=`${path}.tmp`;writeFileSync(temporary,text);renameSync(temporary,path);written.add(directory);failed.delete(directory);
+  startHeartbeat();
+ }catch{failed.add(directory);startHeartbeat();}
 }
+function beat():void{for(const known of new Set([...written,...failed]))flush(known);}
+function startHeartbeat():void{if(!heartbeat){heartbeat=setInterval(beat,HEARTBEAT_MILLISECONDS);heartbeat.unref();}}
 function drain():void{timer=undefined;for(const directory of [...dirty]){dirty.delete(directory);flush(directory);}}
 
 /** 🛑️ Appends one finished exclusive hold to the history of its kind (resource family and command kind); the file keeps about `maximumRows` rows. */
@@ -175,6 +177,7 @@ export function readLeaseHistoryV1(root:string,directory:string,key:string):read
 /** 🗒️ The process's side of the registry: publishing, deadlock lookup and violation log. Every operation is best effort; a failing registry never fails a lease. */
 export const leaseRegistryV1=Object.freeze({
  attach(next:Source):void{source=next;},
+ heartbeat():void{beat();},
  changed(directory:string,policy:LeaseOrderPolicyV1,immediate=false):void{
   policies.set(directory,policy);
   if(immediate||policy.registry.flushMilliseconds===0){dirty.delete(directory);flush(directory);return;}
@@ -197,7 +200,7 @@ export const leaseRegistryV1=Object.freeze({
  },
  held(directory:string,resource:string,mode:LeaseModeV1,sinceMs:number):void{
   const heldMs=Date.now()-sinceMs;
-  if(mode!=="exclusive"||disabled||heldMs<standingSchema.definitions.Policy.const.history.minimumHoldMilliseconds)return;
+  if(mode!=="exclusive"||heldMs<standingSchema.definitions.Policy.const.history.minimumHoldMilliseconds)return;
   try{appendLeaseHistoryV1(rootNow(),directory,leaseHistoryKeyV1(resource,command()),heldMs);}catch{}
  },
  directories():readonly string[]{return [...written];},

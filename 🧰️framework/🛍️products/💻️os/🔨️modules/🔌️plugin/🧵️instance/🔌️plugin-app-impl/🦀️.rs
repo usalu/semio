@@ -292,7 +292,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         if self.interaction.local_interaction_query_receipt.is_some(){return Ok(())}
         if self.constructor.has_constructor_receipt() { return Ok(()); }
         if self.constructor.store_constructor_is_pending() { ({ let __a0 = semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.preparation,retained); self.stores.drive_store_constructor_unit(&mut self.constructor, cx, __a0) })?; return Ok(()); }
-        if InstanceExtensions::holds_receipt(&self.time_travel, &self.tool_runs) || (0..ARTIFACT_LIVE_OUTPUT_SLOTS).any(|index|self.tools.tool_operations.entry(index).is_some_and(|(_,owner)|owner.publication_ownership_progress.is_some()||owner.original_retirement_receipt.is_some())){return Ok(());}
+        if InstanceExtensions::holds_receipt(&self.time_travel, &self.tool_runs) || self.tools.tool_operations.entries_from(0).any(|(_, (_, owner))| owner.publication_ownership_progress.is_some() || owner.original_retirement_receipt.is_some()){return Ok(());}
         if !self.pending.reserved_commits.is_empty() && self.pending.reserved_commit_outcome.is_none() {
             self.command_ctx().step_framework_reserved_commit(cx).await?;
             return Ok(());
@@ -338,7 +338,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
                 return Ok(());
             }
         }
-        self.typed_ctx().advance_typed_operation_publication_one(identity,cx).await.map_err(Into::into)
+        self.typed_ctx().advance_typed_operation_publication_turn(identity,cx).await.map_err(Into::into)
     }
 
     fn take_typed_operation_preparation_receipt(&mut self) -> Option<(semio_framework_job::OperationId, RetainedCloneGrant, RetainedCloneProgress)> { self.tools.take_typed_operation_preparation_receipt() }
@@ -412,7 +412,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
             let (id, operation) = self.tools.tool_operations.entry(index)?;
             Some(format!("op {id} '{}' {:?} page={}/{} s={} rej={}/{} cancel={} term={} sem={} out={} res={} fc={} prod={} ref={} wait={:?}", operation.verb, operation.stage, operation.result_page.is_some(), operation.result_page_presented, operation.session.is_some(), operation.session_rejected.is_some(), operation.session_rejected.as_ref().is_some_and(|rejected| rejected.admission_pending()), operation.user_cancel_requested, operation.terminal_seen, operation.worker_semantic_pending, operation.worker_outcome_pending, operation.worker_resume_pending, operation.worker_fault_capture.is_some(), operation.producer_request.is_some(), operation.retained_structural_refusal().unwrap_or_else(|| "none".into()), semio_plugin_retained_command::typed_operation::last_publication_wait(*id)))
         }).collect::<Vec<_>>().join("; ");
-        let lw=(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|i|self.tools.latest_wins_commands.entry(i)).map(|(id,p)|format!(" lw{id}:ctx/lookup/accepted/closing/key={:?}",(p.context_phase,p.lookup_started,p.accepted,p.closing,p.key_copy.as_ref().map(|k|(k.part,k.prefix,k.offset))))).unwrap_or_default();
+        let lw=(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|i|self.tools.latest_wins_commands.entry(i)).map(|(id,p)|format!(" lw{id}:ctx/lookup/accepted/closing/key={:?}",(p.context_ready,p.lookup_started,p.accepted,p.closing,p.key_copy.as_ref().map(|k|(k.part,k.prefix,k.offset))))).unwrap_or_default();
         let command = format!("command idle={} shared pending={} route cache={} route delivery={} action delivery={} original emission={} original typed command={}", self.original_command_scope.is_idle(), self.shared_command_source_pending(), self.host_events.routes.cache_busy(), self.host_events.routes.delivering, !self.host_events.action_delivery.terminal_is_empty(), self.original_emission.pending(), self.original_typed_command.pending());
         format!("{operations}{lw} | {command} | gates resumes={} delivering={} typing={} emission_host={} emission_input={} typed_input={} typed_receipt={} typed_meta={} typed_production={} action_source={} | lw={} ob={}/{}/{}/{} pr={} fa={} q={}", self.host_events.resumes.in_flight(), self.host_events.delivering, self.original_typing.pending(), self.original_emission.host_active(), self.original_emission.input.is_some(), self.original_typed_command.input_ready(), self.original_typed_command.receipt.is_some(), self.original_typed_command.metadata.is_some(), self.original_typed_command.production_pending(), self.ingress.action_source_pending(), self.tools.latest_wins_commands.len(), self.tools.typed_effect_outbox.len(), self.tools.typed_event_outbox.len(), self.tools.typed_ui_outbox.len(), self.tools.typed_completion_outbox.len(), self.tools.operation_progress_retired, self.child_composition.derivable_follow_awaits_retirement(&self.stores), self.interaction.local_interaction_query.as_ref().is_some_and(|query| query.has_pending_work()))
     }
@@ -712,7 +712,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
             return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("transaction.undo-foreign-tail"), format!("transaction_undo: this instance's tail edit does not belong to group {group_id:?}")));
         }
         self.stores.store.undo(identity).await.map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("transaction.undo-failed"), format!("{error:?}")))?;
-        self.history.cache = None;
+        self.history.invalidate_cache();
         Ok(())
     }
 
@@ -723,7 +723,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         match self.stores.store.redo_tail().await {
             Some((_, Some(tail_group))) if tail_group == group_id => {
                 self.stores.store.redo(identity).await.map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("transaction.redo-failed"), format!("{error:?}")))?;
-                self.history.cache = None;
+                self.history.invalidate_cache();
                 Ok(())
             }
             _ => Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("transaction.redo-foreign-tail"), format!("transaction_redo: this instance's redo-tail edit does not belong to group {group_id:?}"))),
@@ -791,7 +791,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
 
     async fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: ArtifactDialect, envelope_pack: &[u8], identity: &mut EntityIdentityAuthority<'_>) -> Result<(), Fault> {
         self.child_composition.open_child(&mut self.stores, slot, child_id, dialect, envelope_pack, identity).await?;
-        self.history.cache = None;
+        self.history.invalidate_cache();
         Ok(())
     }
 
@@ -870,7 +870,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
     async fn load_config_pack(&mut self, files: &store::os_store::serialization::ArtifactPackFiles) -> Result<(), Fault> {
         let parsed: store::os_store::text_format::ParsedDocumentText<A::Config, A::ConfigMutation> = store::os_store::text_format::parse_document_pack(&files.pack, &files.spr, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| error.into_fault())?;
         self.stores.config_store.reset(parsed.into_envelope()).await.map_err(|error| error.into_fault())?;
-        self.history.cache = None;
+        self.history.invalidate_cache();
         Ok(())
     }
 
@@ -887,7 +887,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         for envelope in envelopes {
             reports.push(self.stores.store.ingest_remote(envelope).await.map_err(|error| error.into_fault())?);
         }
-        self.history.cache = None;
+        self.history.invalidate_cache();
         if self.stores.store.generation() != generation {
             self.dispatch_ctx().queue_base_moved();
         }
@@ -903,7 +903,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
             return Ok(());
         }
         self.stores.store.dispatch(ArtifactCommand::Apply { mutations, transaction: None }, identity).await.map_err(|error| error.into_fault())?;
-        self.history.cache = None;
+        self.history.invalidate_cache();
         Ok(())
     }
 
@@ -919,13 +919,13 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
     async fn attach_backbone(&mut self, backbone: store::os_store::backbone::Backbones) -> Result<(), Fault> {
         self.stores.store.attach_backbone(backbone).await.map_err(|error| error.into_fault())?;
         self.child_composition.announce_member_event_logs(&mut self.stores).await?;
-        self.history.cache = None;
+        self.history.invalidate_cache();
         Ok(())
     }
 
     async fn attach_hot_backbone(&mut self, backbone: store::os_store::backbone::Backbones) -> Result<(), Fault> {
         self.stores.store.attach_hot_backbone(backbone).await.map_err(|error| error.into_fault())?;
-        self.history.cache = None;
+        self.history.invalidate_cache();
         Ok(())
     }
 
@@ -938,7 +938,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         self.child_composition.follow_derivable_children(&mut self.stores, identity).await?;
         let folded_member_lanes = self.child_composition.fold_member_inbound(&mut self.stores, &mut self.history).await?;
         if !reports.is_empty() || folded_member_lanes != 0 {
-            self.history.cache = None;
+            self.history.invalidate_cache();
         }
         Ok(reports)
     }
@@ -951,25 +951,25 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         let report = semio_plugin_reactor_app::atomic_document::fold_atomic_inbox(&mut self.stores.store, inbox, original, binding, cx).await?;
         if self.stores.store.generation() != before {
             self.dispatch_ctx().queue_base_moved();
-            self.history.cache = None;
+            self.history.invalidate_cache();
         }
         Ok(report)
     }
 
     fn original_atomic_outbound_pending(&self) -> bool {
-        semio_plugin_reactor_app::atomic_document::original_atomic_outbox(self.stores.store.original_outbound_message())
+        self.stores.store.original_document_outbound_pending()
     }
 
     fn advance_original_atomic_outbound(
         &mut self, delivery: &mut Option<store::os_store::backbone::atomic_transport::AtomicBackboneDelivery>,
         binding: [u8; 32], cx: &mut StepContext<'_>,
     ) -> Result<(), OriginalTurnFailure> {
-        semio_plugin_reactor_app::atomic_document::drive_atomic_outbox(cx, |effect| self.stores.store.advance_bound_atomic_outbound(binding, delivery, effect))
+        semio_plugin_reactor_app::atomic_document::drive_document_outbox(cx, |effect| self.stores.store.advance_bound_document_outbound(binding, delivery, effect))
     }
 
     async fn detach_backbone(&mut self) -> Result<(), Fault> {
         self.stores.store.detach_backbone().map_err(|error| error.into_fault())?;
-        self.history.cache = None;
+        self.history.invalidate_cache();
         Ok(())
     }
 

@@ -15,6 +15,7 @@ import {createHostServiceV1} from "../../../🏡️resident/🏛️service/🌐�
 import {createGraphPlannerPortV1} from "../../../🏡️resident/🔌️ports/🧭️plan/🟨️.mjs";
 import {HostUnavailableErrorV1,PlanRefusedErrorV1,connectHostV1,requestPlanV1} from "../../../🏡️resident/🚪️client/🛰️plan/🟨️.mjs";
 import {hostEndpointsV1} from "../../../🏡️resident/📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
+import type {ConsentStateV1} from "../../../🏡️resident/🔐️consent/🟨️.mjs";
 import {HOST_POLICY_V1} from "../../../🏡️resident/📨️protocol/🎚️policy/🟨️.mjs";
 import {appendFileSync} from "node:fs";
 import {createHash} from "node:crypto";
@@ -145,7 +146,7 @@ test("a refused or unreachable plan ends the command as a localized refusal with
 
 test("a checkout macOS keeps from being read ends the command before any service is started or asked, with exit status 4 and the click to make in both languages",async()=>{
  const ajv=new Ajv({strict:true});
- for(const state of["denied","waiting"]){
+ for(const state of["denied","waiting"] as const){
   for(const language of["en","de"]){
    let asked=0,started=0;const receipts:unknown[]=[];
    const caught=await requestInvocationPlanV1({root,request:{arguments:["run","app:build","--lang="+language],tool:"nx",targets:["app:build"]},environment:{SEMIO_BUILD_TOOL:"nx"},agent:"agent-1",write:()=>undefined,ports:{probeConsentV1:async()=>({state,folder:"Documents"}),writeAccessReceiptV1:(_directory:string,receipt:unknown)=>{receipts.push(receipt);},requestPlanV1:async()=>{asked++;throw Error("must not be asked");},spawnHostServiceV1:()=>{started++;}}}).then(()=>undefined,(error:unknown)=>error);
@@ -164,7 +165,7 @@ test("a checkout macOS keeps from being read ends the command before any service
 });
 
 test("a checkout that can be read goes on to the service, a checkout that needs no consent is not even probed for a dialog",async()=>{
- for(const state of["ok","unprotected"]){
+ for(const state of["ok","unprotected"] as const){
   let asked=0;const written:unknown[]=[];
   await requestInvocationPlanV1({root,request:{arguments:["run","app:build"],tool:"nx",targets:["app:build"]},environment:{SEMIO_BUILD_TOOL:"nx"},agent:"agent-1",write:()=>undefined,ports:{probeConsentV1:async()=>({state,folder:state==="ok"?"Documents":""}),writeAccessReceiptV1:(_directory:string,receipt:unknown)=>{written.push(receipt);},requestPlanV1:async()=>{asked++;throw new HostUnavailableErrorV1("down");},spawnHostServiceV1:()=>undefined}}).then(()=>undefined,()=>undefined);
   expect(asked,state).toBe(1);expect(written.length,state).toBe(state==="ok"?1:0);
@@ -174,7 +175,7 @@ test("a checkout that can be read goes on to the service, a checkout that needs 
 test("a service that is denied after all is retired and replaced once by a service under the access of the caller, with one line; exit 4 only when the caller itself cannot read the checkout, a second denial with a readable checkout is a failure of its own",async()=>{
  const denied=(text="macOS denied the resident service access")=>new PlanRefusedErrorV1({t:"refused",code:"consent",retry:"later",message:{en:text,de:"macOS hat dem Dienst den Zugriff verweigert"}});
  const failure=new HostUnavailableErrorV1("down");
- const run=async(probes:string[],asks:(Error|"ok")[],language="en")=>{
+ const run=async(probes:ConsentStateV1[],asks:(Error|"ok")[],language="en")=>{
   const lines:string[]=[],environments:NodeJS.ProcessEnv[]=[],invalidated:string[]=[],order:string[]=[],retired:string[]=[];let asked=0;
   const caught=await requestInvocationPlanV1({root,request:{arguments:["run","app:build","--lang="+language],tool:"nx",targets:["app:build"]},environment:{SEMIO_BUILD_TOOL:"nx"},agent:"agent-1",write:line=>lines.push(line),ports:{probeConsentV1:async()=>{order.push("probe");return{state:probes.shift()??"ok",folder:"Documents"};},writeAccessReceiptV1:()=>undefined,invalidateLauncherMarkerV1:path=>{invalidated.push(path);order.push("invalidate");},retireHostServiceV1:async(options:{implementation:string})=>{retired.push(options.implementation);order.push("retire");return{pid:7,retired:true};},spawnHostServiceV1:(spawnOptions:{environment:NodeJS.ProcessEnv})=>{environments.push(spawnOptions.environment);return undefined;},requestPlanV1:async(askOptions:{spawnService:unknown})=>{void askOptions.spawnService;order.push("ask");const next=asks[asked++]!;if(next==="ok")throw failure;throw next;}}}).then(()=>undefined,(error:unknown)=>error);
   return{caught,lines,environments,invalidated,asked,order,retired};
@@ -257,7 +258,7 @@ test("only repo cache options override the outer task fast path",async()=>{
  const tag="cache-options",directory=join(base,"plans-"+tag),graph=graphOf(["app"]),document=JSON.stringify({graph}),hash=createHash("sha256").update(document).digest("hex"),skip=Error("executor reached");
  mkdirSync(directory,{recursive:true});writeFileSync(join(directory,hash+".json"),document);
  const tasks=[{id:"app:build",dependsOn:[],stale:false,key:"b".repeat(64)}];
- const ports={probeConsentV1:async()=>({state:"unprotected",folder:""}),requestPlanV1:async()=>({reply:{revision:"a".repeat(64),slice:{hash,size:Buffer.byteLength(document)},cacheHits:1},runtime:{directory:base,tag},plan:{tasks}})};
+ const ports={probeConsentV1:async()=>({state:"unprotected" as const,folder:""}),requestPlanV1:async()=>({reply:{revision:"a".repeat(64),slice:{hash,size:Buffer.byteLength(document)},cacheHits:1},runtime:{directory:base,tag},plan:{tasks}})};
  for(const {args,executes} of argumentFixture.cacheOptions){
   const outcome=await runRepoInvocationV1({root,args:["run","app:build","--lang=en",...args],environment:{SEMIO_BUILD_TOOL:"nx",[SCHEDULED_JOB_V1]:"test"},ports,write:()=>undefined,execute:async()=>{throw skip;}}).then(()=>null,(error:unknown)=>error);
   expect(outcome,args.join(" ")).toBe(executes?skip:null);
@@ -275,11 +276,11 @@ test("a verified client plan ends the supervised graph read before execution adm
    const progress:string[]=[],request={arguments:["run","app:build","--lang="+row.language],tool:"nx",targets:["app:build"]};
    const plan=requestInvocationPlanV1({root,request,environment,agent:"phase-test",write:line=>progress.push(line),ports:{requestPlanV1:async options=>{
     const answer=await requestPlanV1({...options,implementation});
-    if(!row.valid)return{...answer,reply:{...answer.reply,slice:{...answer.reply.slice,size:answer.reply.slice.size+1}}};
+    if(!row.valid)return{...answer,reply:{...answer.reply,slice:{...answer.reply.slice,size:answer.reply.slice!.size+1}}};
     return answer;
    }}});
    const expected=db.query("select case ?1 when 1 then 'executing' else 'reading' end as phase").get(row.valid?1:0) as {phase:"executing"|"reading"};
-   expect(expected.phase).toBe(row.phase);
+   expect<string>(expected.phase).toBe(row.phase);
    if(row.valid)await expect(plan).resolves.toHaveProperty("handoff");else await expect(plan).rejects.toThrow("does not match its digest");
    expect(readyStagePhaseV1(progress,"reading")).toBe(expected.phase);
   }

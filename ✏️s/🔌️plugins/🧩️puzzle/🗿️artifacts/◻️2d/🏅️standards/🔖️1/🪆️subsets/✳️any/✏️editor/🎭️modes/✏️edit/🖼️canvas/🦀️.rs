@@ -4,6 +4,7 @@
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::engine::board_host::PUZZLE_2D_BOARD_NAMING;
 use crate::editor::puzzle2d::engine::{BoardHost, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
+use crate::editor::puzzle2d::snapshot::puzzle2d_board_snapshot_json;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{snapshot::board_snapshot_edges, snapshot::board_snapshot_nodes, snapshot::puzzle2d_action, snapshot::runtime_camera, snapshot::Puzzle2dScene, config::PUZZLE2D_LOD_MODE_AUTOMATIC};
 use semio_plugin::Board2dScene;
@@ -88,13 +89,6 @@ pub fn puzzle2d_pane_camera(snapshot: &Value, runtime: &Puzzle2dPlayRuntime, pan
 //#endregion 🔖️PaneCamera
 
 //#region 🔖️Canvas
-/// 🗄️ Caches the last serialized snapshot keyed by an fnv1a hash of the raw `document_json` it came
-/// from, so the overview/detail/selection panes of the same `refreshUi` tick reuse one `String`
-/// instead of each re-serializing the whole snapshot graph.
-fn cached_snapshot_json(_document_json: &str, snapshot: &Value) -> String {
-    snapshot.to_string()
-}
-
 /// 💡️ How many placement candidates ONE handle-suggestions popup publishes. The surface doc it rides
 /// is fixed-capacity and a richly catalogued handle resolves arbitrarily many collision-free
 /// candidates, so an unbounded list would make the whole board render of that window fail closed the
@@ -145,7 +139,7 @@ fn puzzle2d_suggestion_menu_json(envelope: &Puzzle2dScene, glyph_catalogs_json: 
 
 /// 🖼️ The board-2d scene one pane publishes. Public so the laws can assert what reaches the client
 /// (hover id, suggestion popup) without decoding a rendered surface node.
-pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> Board2dScene {
+pub fn puzzle2d_board_scene(_document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> Board2dScene {
     let snapshot = &envelope.board_snapshot;
     let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(snapshot, &envelope.runtime, pane);
     let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
@@ -159,7 +153,7 @@ pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane:
     let lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).cloned().unwrap_or_else(|| PUZZLE2D_LOD_MODE_AUTOMATIC.to_string());
     let suggestion_menu_json = puzzle2d_suggestion_menu_json(envelope, &glyph_catalogs_json);
     Board2dScene {
-        snapshot_json: cached_snapshot_json(document_json, snapshot),
+        snapshot_json: puzzle2d_board_snapshot_json(snapshot),
         camera_json,
         glyph_catalogs_json,
         selection_json,

@@ -1,2 +1,2 @@
 /** 🧱️ The ticks, cache bounds, display lengths, strides and throttles of the graph inferrers: the schema document beside this module is their single source. */
-export const INFERENCE_LIMITS_V1:Readonly<{runningTickMilliseconds:number;sourceLineCharacters:number;entryOverheadBytes:number;rustSourceCacheBytes:number;advanceThrottleMilliseconds:number;closureStoreMaximumEntries:number;closureStoreMaximumLayers:number;closureStoreMaximumValues:number;closureStoreGraceMilliseconds:number;closureStoreEmergencyGraceMilliseconds:number;closureStoreCollectIntervalMilliseconds:number}>;
+export const INFERENCE_LIMITS_V1:Readonly<typeof import("./🔣️.json")["definitions"]["Limits"]["const"]>;

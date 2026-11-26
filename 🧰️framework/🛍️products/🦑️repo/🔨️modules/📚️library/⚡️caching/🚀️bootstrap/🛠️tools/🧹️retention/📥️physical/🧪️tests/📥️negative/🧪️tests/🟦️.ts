@@ -13,18 +13,16 @@ test("retention negative operations leave accepted parent frames through strict 
  }finally{db.close();}
 });
 
-import{existsSync}from"node:fs";
-import{join}from"node:path";
+import{readdirSync}from"node:fs";
 import{observeRetentionNegativePurposeV1}from"../🟦️.ts";
 import{withBuildTestInvocationV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
-import{repositoryCachePartitionRootV1}from"../../../../../../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import{privateRepositoryWorkspaceV1}from"../../../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 test("retention negative receiver retains actual strict wire and rejected request status without physical effects",async()=>withBuildTestInvocationV1(async original=>{
- const workspace=join(repositoryCachePartitionRootV1(repository.root,"products"),"tr-negative-proof");expect(existsSync(workspace)).toBe(false);for(const purpose of["queued-invalid-0","queued-invalid-1","queued-invalid-2"])await observeRetentionNegativePurposeV1(original,workspace,purpose);expect(existsSync(workspace)).toBe(false);expect(original.control.signal.aborted).toBe(false);
+ const workspace=await repository.scratch("tr-");expect(readdirSync(workspace)).toEqual([]);for(const purpose of["queued-invalid-0","queued-invalid-1","queued-invalid-2"])await observeRetentionNegativePurposeV1(original,workspace,purpose);expect(readdirSync(workspace)).toEqual([]);expect(original.control.signal.aborted).toBe(false);
 }));
 
 test("retention negative receiver closes partial readers while preserving undefined and frozen setup failures",async()=>withBuildTestInvocationV1(async original=>{
- constrouting=await import("../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),db=new Database(":memory:");
+ const routing=await import("../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),db=new Database(":memory:");
  try{for(const kind of["undefined","frozen"]){let opened=0,closed=0,caught=false,actual:unknown;const primary=kind==="undefined"?undefined:Object.freeze(Error("Frozen setup primary")),ports={requirePurpose:()=>"queued-cancel",requireWorkspace:()=>{},checkScriptInvocation:routing.checkScriptInvocation,acknowledgement:()=>({}),ackPrefix:"",failurePrefix:"",console:{log(){}},AbortController,createIssuedResourceControlV1:routing.createIssuedResourceControlV1,repositoryCacheBudgetV1:()=>({partitions:{tools:{directory:"model"}}}),openRepositoryCachePartitionV1:async()=>{opened++;return{close:async()=>{closed++;throw Error("Secondary close failure");}};},leases:Object.defineProperty({},"acquireQueuedResourceLease",{get(){throw primary;}}),physical:{queuedMaintenance:{}},owner:{},delay:()=>{throw Error("No wait entered");},repositoryLeaseDirectoryV1:()=>"model"},run=(await loadProductFunctionsV1(new URL("../🟦️.ts",import.meta.url),["runRetentionNegativePurposeV1"],ports)).runRetentionNegativePurposeV1;try{await run(original,"explicit-storage-port-model","queued-cancel");}catch(error){caught=true;actual=error;}expect(caught).toBe(true);expect(actual).toBe(primary);expect(db.query("select ?1=1 and ?2=1 closed").get(opened,closed)).toEqual({closed:1});expect(original.control.signal.aborted).toBe(false);}
  }finally{db.close();}
 }));

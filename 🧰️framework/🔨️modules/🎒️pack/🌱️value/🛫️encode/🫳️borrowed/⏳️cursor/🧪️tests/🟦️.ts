@@ -33,6 +33,24 @@ test("portable standard Map Statements Wire bytes match independent Buffer UTF8 
 test("native original key and text retain Unicode crossing an actual source page",()=>{
  const row=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🌿️native-text/🔣️.json"),"utf8"));const bytes=Buffer.concat([Buffer.alloc(row.split,row.fill),Buffer.from(row.scalar),Buffer.alloc(row.bytes-row.split-Buffer.byteLength(row.scalar),row.fill)]);expect(bytes).toHaveLength(row.bytes);const text=new TextDecoder("utf-8",{fatal:true}).decode(bytes);expect(Buffer.from(new TextEncoder().encode(text))).toEqual(bytes);expect(bytes.subarray(row.split,row.split+Buffer.byteLength(row.scalar))).toEqual(Buffer.from(row.scalar));expect(varint(BigInt(bytes.length))).toEqual(Buffer.from([130,64]));expect(Buffer.from(row.bodyHex,"hex")).toEqual(Buffer.from([1,row.recordId,16,row.mapEntries,6,0,6,0]));
 });
+test("paged UTF8 symbols and inline text match the portable Buffer oracle", () => {
+  const law = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🧩️paged-utf8/🔣️.json"), "utf8"));
+  const prefix = law.prefix.text.repeat(law.prefix.repeat);
+  const shared = prefix + law.shared.join("");
+  const unique = prefix + law.unique.join("");
+  const pool = ["", shared].sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right)));
+  const symbols = Buffer.concat([varint(BigInt(pool.length)), ...pool.flatMap(value => [varint(BigInt(Buffer.byteLength(value))), Buffer.from(value)])]);
+  expect(symbols.subarray(0, 4).toString("hex")).toBe(law.symbolPrefixHex);
+  const tag = (id: number, symbol: number) => Buffer.concat([varint(BigInt(id)), Buffer.from([6]), varint(BigInt(symbol))]);
+  const fields = Buffer.concat([varint(BigInt(law.fieldIds.length)), tag(law.fieldIds[0], pool.indexOf(shared)), tag(law.fieldIds[1], pool.indexOf(shared)), varint(BigInt(law.fieldIds[2])), Buffer.from([7]), varint(BigInt(Buffer.byteLength(unique)))]);
+  expect(fields.toString("hex")).toBe(law.fieldPrefixHex);
+  expect(tag(law.fieldIds[3], pool.indexOf("")).toString("hex")).toBe(law.fieldSuffixHex);
+  expect(Buffer.from(new TextEncoder().encode(unique))).toEqual(Buffer.from(unique));
+  const name = Buffer.concat(law.expression.chunks.map((chunk: string) => Buffer.from(chunk)));
+  expect(name.toString()).toBe(law.expression.name);
+  const body = Buffer.concat([Buffer.from([1]), varint(BigInt(name.length)), name, Buffer.from([2, 1, 6, 0, 2, 23, 6, 0])]);
+  expect(body.toString("hex")).toBe(law.expression.bodyHex);
+});
 const encode=(node:any,pool:string[]):Buffer=>{
   if(node.kind==="block")return Buffer.concat([Buffer.from([14]),...(node.items[0].kind==="record"?[Buffer.from([13])]:[]),encode(node.items[0],pool)]);
   if(node.kind==="record"){const fields=node.fields.filter((field:any)=>field.node.kind!=="absent").sort((a:any,b:any)=>a.id-b.id);return Buffer.concat([varint(BigInt(fields.length)),...fields.flatMap((field:any)=>[varint(BigInt(field.id)),...(field.node.kind==="record"?[Buffer.from([13])]:[]),encode(field.node,pool)])]);}

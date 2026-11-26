@@ -27,9 +27,25 @@ const server = createServer(async (req, res) => {
       stream.on("error", () => res.destroy()).pipe(res);
       return;
     }
-    const next = request({host, port:upstream, path:req.url, method:req.method, headers:{...req.headers, host:host+":"+upstream}}, reply => {
-      res.writeHead(reply.statusCode, reply.headers);
+    const next = request({host, port:upstream, path:req.url, method:req.method, headers:{...req.headers, host:host+":"+upstream, "accept-encoding":"identity"}}, async reply => {
       res.on("close", () => reply.destroy());
+      const headers = {...reply.headers};
+      if (req.method === "GET" && headers["content-type"]?.startsWith("text/html") && !headers["content-encoding"]) {
+        try {
+          const chunks = [];
+          for await (const chunk of reply) chunks.push(chunk);
+          const html = Buffer.concat(chunks).toString("utf8")
+            .replaceAll(`http://${host}:${upstream}/`, `http://${host}:${port}/`)
+            .replaceAll(`http://localhost:${upstream}/`, `http://${host}:${port}/`);
+          delete headers.etag;
+          delete headers["transfer-encoding"];
+          headers["content-length"] = Buffer.byteLength(html);
+          res.writeHead(reply.statusCode,headers);
+          res.end(html);
+        } catch { res.destroy(); }
+        return;
+      }
+      res.writeHead(reply.statusCode, headers);
       reply.on("error", () => res.destroy()).pipe(res);
     });
     next.on("error", () => { if (!res.headersSent) res.writeHead(502); res.end(); });

@@ -5,6 +5,7 @@
   "cases": [
     {
       "id": "nakagin-first-node-run-1-requested-5",
+      "maximumPreviewPages": 20,
       "document": {
         "example": "nakagin-capsule-tower",
         "keepNodes": 1
@@ -315,6 +316,16 @@
       "reasonId": "outside-target-region",
       "reasonVerdict": "warning"
     }
+  },
+  "singleStep": {
+    "document": {
+      "example": "nakagin-capsule-tower",
+      "keepNodes": 1
+    },
+    "run": 1,
+    "requested": 6,
+    "placementsPerStep": 1,
+    "minimumRefusalsBetweenPlacements": 2
   },
   "resume": {
     "document": {

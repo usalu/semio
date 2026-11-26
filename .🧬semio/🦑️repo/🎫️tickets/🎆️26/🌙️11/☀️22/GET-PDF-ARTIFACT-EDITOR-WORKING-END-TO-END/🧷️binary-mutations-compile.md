@@ -32,3 +32,6 @@ The binary artifact never declared the store/wire owners the history machinery r
 ## run-s10-final.sh (PDF test group)
 - Unit stage (`s10-final`, exit 0): `-p semio-s-artifact-stdio-pdf -io-export -page-editor-tests -testkit -snapshot-2 --lib`: 38, 19, 71, 2 and 66 passed, 0 failed.
 - Routes stage (`s10-routes`, exit 101): did not run; `semio-framework-dsl-record-model` fails to compile (`unresolved import semio_framework_dsl_record_ownership::retirement::retire_field`). `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛫️encode/🦀️.rs` was edited seconds before (it replaces the local `retire_field` by a re-export), but `♻️retirement/🦀️.rs` does not define it yet. This is another session's in-progress move, so it was left untouched; rerun the routes stage once it lands.
+
+## Routes stage rerun (after the `retire_field` move)
+`s10-routes` (exit 101): `semio-dsl-record-model` now compiles, but `semio-plugin-guest-contract` fails: `unresolved import crate::original_input` (`🔌️plugin/⚛️reactor/🎟️context/🌉️call/📤️turn-output/🦀️.rs:8`, 14 errors). The plugin tree (`🧬️guest-contract`, `⏯️tool-run`, `⏪️time-travel`, `🧵️retained-command`, `⚛️reactor/🎟️context`) has files modified within the last 15 minutes, i.e. another session is mid-introduction of an `original_input` module; left untouched. No route tests ran, so there are no pass counts yet. Rerun once that module lands.

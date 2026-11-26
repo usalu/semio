@@ -19,7 +19,7 @@ afterAll(() => rmSync(root, { recursive: true, force: true }));
 const options: ProjectionOptions = { root, mode: "apply", under: "✏️s", formats: new Set(["🟦️typescript"]), closing: false, replace: new Set(), restate: new Set() };
 const PARSERS = "🚪️parsers";
 
-const schemaOf = (name: string): { readonly $schema: string; readonly $id: string; readonly title: string; readonly $defs: Record<string, unknown> } => ({
+const schemaOf = (name: string): { readonly $schema: string; readonly $id: string; readonly title: string; readonly $defs: Record<string, Record<string, unknown>> } => ({
   $schema: "http://json-schema.org/draft-07/schema#",
   $id: `https://json.schemas.assets.semio-tech.com/s/oracle/${name}.json`,
   title: name,
@@ -289,8 +289,7 @@ test("a new leaf-owned schema caller moves its already projected callee without 
 }, 60_000);
 
 test("a provided local type is explicitly published without a duplicate schema projection", async () => {
-  const name = "imported-type", leaf = join(moduleOf(name), "🟦️.ts"), implementation = join(moduleOf(name), "..", "point-implementation", "🟦️.ts"), schema = schemaOf(name);
-  schema.$defs = { Point: schema.$defs.Point };
+  const name = "imported-type", leaf = join(moduleOf(name), "🟦️.ts"), implementation = join(moduleOf(name), "..", "point-implementation", "🟦️.ts"), full = schemaOf(name), schema = { ...full, $defs: { Point: full.$defs.Point! } };
   write(join(moduleOf(name), "🔣️.json"), JSON.stringify(schema));
   write(implementation, POINT);
   write(leaf, 'import type { Point } from "../point-implementation/🟦️.ts";\n');

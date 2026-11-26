@@ -37,7 +37,7 @@ import { type ShardEventEnvelope } from "@semio-tech/framework/actor/shard-clien
 import { OwnedUiInstance } from "@semio-tech/ui-contract/retained/instance";
 import { hopTrace } from "@semio-tech/framework-trace";
 import { continueOpeningTurns } from "@semio-tech/framework-actor/wire-turn/more-work-drive";
-import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, wireTurnStatusTag } from "@semio-tech/framework/actor/wire-turn";
+import { driveInboundRequest, wireTurnStatusTag } from "@semio-tech/framework/actor/wire-turn";
 import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES } from "@semio-tech/framework/wire-contracts";
 import {
   ActorDocumentBindingV1,
@@ -400,7 +400,7 @@ function createInboundInvoke(scope: PluginHandleScope, instances: ReturnType<typ
       }));
     activation.assertActive();
     if (answer.status === "cancelled") throw refuse("extension.request-cancelled", `extension request ${req} to ${pluginId} was cancelled after ${answer.turns} turn(s)`);
-    if (answer.status === "unanswered") throw refuse("extension.request-unanswered", `extension ${pluginId} did not answer ${capability} within ${answer.turns} of ${INBOUND_REQUEST_TURN_BUDGET} turns`);
+    if (answer.status === "unanswered") throw refuse("extension.request-unanswered", `extension ${pluginId} did not answer ${capability} after ${answer.turns} turns`);
     if ("fault" in answer.result) {
       const fault = decodeFaultFromWire(Array.from(answer.result.fault), decodePackValue);
       throw fault ? new SemioFaultError(fault) : refuse("extension.answer-not-a-fault", `extension ${pluginId} refused ${capability} with ${answer.result.fault.byteLength} undecodable bytes`);

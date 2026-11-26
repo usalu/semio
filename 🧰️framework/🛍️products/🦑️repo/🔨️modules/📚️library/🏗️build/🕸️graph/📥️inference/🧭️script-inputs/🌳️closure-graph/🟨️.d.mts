@@ -3,7 +3,7 @@ export const CLOSURE_GRAPH_POLICY_V1:Readonly<{version:1;fact:"closure-graph";di
 /** 🏷️ The name of the `global` row a command walk is recorded as. */
 export const CLOSURE_GRAPH_FACT_V1:"closure-graph";
 /** 🧩️ One node of the graph: a module or resource with the digest of what a walk reads of it and the keys of the nodes it imports. */
-export type ClosureGraphNodeV1=Readonly<{key:string;name:string;kind:string;digest:string;edges:readonly string[];extra?:unknown}>;
+export type ClosureGraphNodeV1=Readonly<{key:string;name:string;kind:string;digest:string;edges:readonly string[];extra?:Readonly<{witness?:Readonly<{base?:unknown}&Record<string,unknown>>|null}&Record<string,unknown>>}>;
 /** 🌳️ One module closure graph. */
 export type ClosureGraphV1=Readonly<{
  update(put?:Iterable<ClosureGraphNodeV1>,removed?:Iterable<string>):{forgotten:number};
@@ -24,7 +24,7 @@ export const closureToolDigestV1:(name:string)=>string;
 /** 🌳️ Creates a module closure graph. */
 export function createClosureGraphV1():ClosureGraphV1;
 /** 💾️ Stores a graph digest addressed under a directory. */
-export function saveClosureGraphV1(graph:ClosureGraphV1,directory:string,options?:{signal?:AbortSignal;progress?:(step:{done:number;total:number})=>unknown;policy?:typeof CLOSURE_GRAPH_POLICY_V1}):Promise<{chunks:number;written:number;bytes:number;nodes:number;edges:number;head:string}>;
+export function saveClosureGraphV1(graph:ClosureGraphV1,directory:string,options?:{signal?:AbortSignal;progress?:(step:{done:number;total:number})=>unknown;policy?:typeof CLOSURE_GRAPH_POLICY_V1}):Promise<{chunks:number;pool:string|null;written:number;bytes:number;nodes:number;edges:number;head:string}>;
 /** 📂️ Loads the graph a directory holds. */
 export function loadClosureGraphV1(directory:string,options?:{signal?:AbortSignal;progress?:(step:{done:number;total:number})=>unknown}):Promise<(ClosureGraphV1&{readonly head:string})|undefined>;
 /** 📂️ Loads the graph a directory holds without turns. */

@@ -13,11 +13,13 @@ import {cleanProtectedPrefixes,cleanRemovalProtection} from "../../../../../🧼
 import {cleanRemovePath} from "../../../../../🧼️workspace-cleanup/🗑️removal/🟦️.ts";
 import {resolve,join} from "node:path";
 import {withRepositoryCacheStoreV1} from "../📥️opening/🏪️store/🟦️.ts";
+import {repositoryCachePartitionNativeImageV1} from "../📥️opening/🟦️.ts";
 import {runProbe} from "../../../../../🏃️process/🔍️probe/🟦️.ts";
 import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
 import {lstatSync,readdirSync,readFileSync} from "node:fs";
 import{privateRepositoryHostFreeBytesV1,privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 import{nativePlatformImageBackendV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
+import{nativeImageBackingAllocatedBytesV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🪶️extent/🟦️.ts";
 import{nativeStorageBackendsV1,nativeStorageBackingFilenameV1,nativeStorageMountedAtV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📋️contract/🟦️.ts";
 import {declareLibraryBuildTestEnvelopeV1} from "../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 declareLibraryBuildTestEnvelopeV1({suite:"storage-budget"});
@@ -67,9 +69,9 @@ test("the nx cache is a declared top-level partition with a funded namespace env
 /** 🏗️ Provisions the real nx partition and proves its declared backing, mount capability and artifact charge. */
 test("the nx partition provisions its own backing and charges the artifact envelope",async()=>{
  await withBuildTestInvocationV1(async original=>withRepositoryCacheStoreV1(repository.root,"nx",original,createIssuedResourceControlV1(original,"cache:store-entry",0),async store=>{
-  const declared=policy.partitions.nx,directory=resolve(repository.root,declared.directory),backend=nativePlatformImageBackendV1(store.image),expected=fixture.imageBackends.find(row=>row.id===backend)!;
+  const declared=policy.partitions.nx,directory=resolve(repository.root,declared.directory),backend=nativePlatformImageBackendV1(repositoryCachePartitionNativeImageV1(store.image)),expected=fixture.imageBackends.find(row=>row.id===backend)!;
   expect(expected).toBeDefined();expect(store.image.image).toBe(join(directory,expected.backing));expect(store.root).toBe(join(directory,"m"));
-  const backing=lstatSync(store.image.image);expect(backing.blocks*512).toBeGreaterThanOrEqual(backing.size);expect(backing.size).toBeLessThanOrEqual(declared.capacityBytes);expect(nativeStorageMountedAtV1(directory)).toBe(expected.mounted);expect(lstatSync(store.root).dev===lstatSync(directory).dev).toBe(!expected.mounted);
+  const backing=lstatSync(store.image.image);expect(nativeImageBackingAllocatedBytesV1(backing)).toBe(backing.size);expect(backing.size).toBeLessThanOrEqual(declared.capacityBytes);expect(nativeStorageMountedAtV1(directory)).toBe(expected.mounted);expect(lstatSync(store.root).dev===lstatSync(directory).dev).toBe(!expected.mounted);
   const receipt=JSON.parse(readFileSync(join(store.root,"nx.json"),"utf8"));expect(receipt.owner).toBe("repository:nx-store");expect(receipt.bytes).toBe(declared.maximumArtifactBytes);expect(store.storage.allocation.bytes).toBe(declared.maximumArtifactBytes);
   await store.recheck();
  }));
@@ -77,7 +79,7 @@ test("the nx partition provisions its own backing and charges the artifact envel
 
 test("ordinary cleanup cannot retire the authored fixed cache backings",()=>{
  const database=new Database(":memory:"),root=repository.root,protectedPaths=cleanProtectedPrefixes(root),view={kind:()=>"missing" as const,children:()=>[],read:()=>undefined};
- try{for(const row of Object.values(policy.partitions)){const path=resolve(root,row.directory),oracle=database.query("SELECT ? || '/' || ? AS path").get(root,row.directory) as {path:string};expect(path).toBe(oracle.path);expect(protectedPaths).toContain(path);for(const candidate of fixture.cleanupSuffixes.map(suffix=>suffix?join(path,suffix):path)){expect(cleanRemovalProtection(root,candidate,view)).toContain(candidate);for(const incremental of [false,true])expect(cleanRemovePath(root,candidate,true,[],false,false,incremental)).toBe(false);}}for(const relative of [...fixture.protectedAncestors,fixture.bootstrapControlDirectory]){const path=resolve(root,relative);expect(cleanRemovalProtection(root,path,view)).toContain(path);expect(cleanRemovePath(root,path,true,[],true,true,true)).toBe(false);}}finally{database.close();}
+ try{for(const row of Object.values(policy.partitions)){const path=resolve(root,row.directory),oracle=database.query("SELECT ? || '/' || ? AS path").get(root,row.directory) as {path:string};expect(path).toBe(oracle.path);expect(protectedPaths).toContain(path);for(const candidate of fixture.cleanupSuffixes.map(suffix=>suffix?join(path,suffix):path)){expect(cleanRemovalProtection(root,candidate,view)).toContain(candidate);for(const incremental of [false,true])expect(cleanRemovePath(root,candidate,true,[],false,incremental)).toBe(false);}}for(const relative of [...fixture.protectedAncestors,fixture.bootstrapControlDirectory]){const path=resolve(root,relative);expect(cleanRemovalProtection(root,path,view)).toContain(path);expect(cleanRemovePath(root,path,true,[],true,true)).toBe(false);}}finally{database.close();}
 });
 
 /** 🪫️ Keeps the logical limit of the tiny lease image inside the bytes its filesystem can hold after APFS metadata and journals. */
@@ -370,7 +372,7 @@ test("an image the host cannot hold is refused up front, a born image or a parti
  const rust=policy.elastic.rust.floorBytes,fits=(receipt:Parameters<typeof requireImageFitsHostV1>[1],required:number,free:number|undefined)=>requireImageFitsHostV1("rust",receipt,required,free);
  expect(()=>fits("missing",rust,rust-1)).toThrow(ImageDoesNotFitHostErrorV1);
  try{fits("missing",rust,12*GiB);throw Error("not refused");}catch(error){const refusal=error as ImageDoesNotFitHostErrorV1;expect(refusal.code).toBe("image-does-not-fit-host");expect(refusal.en).toContain("16384 MiB");expect(refusal.en).toContain("12288 MiB");expect(refusal.de).toContain("16384 MiB");expect(refusal.de).toContain("12288 MiB");expect(refusal.message).toBe(refusal.en+" | "+refusal.de);expect(refusal.de).toContain("Speicherplatz");}
- expect(()=>fits("missing",rust,rust,undefined)).not.toThrow();expect(()=>fits("missing",rust,rust,rust)).not.toThrow();expect(()=>fits(4*GiB,rust,GiB)).not.toThrow();expect(()=>fits(null,rust,GiB)).not.toThrow();expect(()=>fits("missing",0,0)).not.toThrow();
+ expect(()=>fits("missing",rust,undefined)).not.toThrow();expect(()=>fits("missing",rust,rust)).not.toThrow();expect(()=>fits(4*GiB,rust,GiB)).not.toThrow();expect(()=>fits(null,rust,GiB)).not.toThrow();expect(()=>fits("missing",0,0)).not.toThrow();
  const rustRoot=pinnedRoot(),bornRoot=pinnedRoot(root=>{mkdirSync(join(root,policy.partitions.rust.directory),{recursive:true});writeFileSync(join(root,policy.partitions.rust.directory,"image.json"),JSON.stringify({maximumPhysicalBytes:4*GiB}));});
  try{
   expect(()=>withPinnedHost(12*GiB,()=>requireRepositoryPartitionFitsHostV1(rustRoot,"rust"))).toThrow(ImageDoesNotFitHostErrorV1);

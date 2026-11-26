@@ -369,7 +369,7 @@ fn history_keys_bind_undo_and_both_redo_chords() {
     assert_eq!(bound("undo"), ["mod+z"]);
     assert_eq!(bound("redo"), ["mod+shift+z", "mod+y"]);
 }
-/// 🧮️ LAW: every palette mutation's declared action args cover its command payload's required wire fields, so the action palette can always author a valid payload (language-neutral vectors in `🧮️action-args/🔣️.json`).
+/// 🧮️ LAW: every palette mutation's declared action args cover its command payload's required wire fields, each one either asked for or defaulted and every toggle starting on or off, so the action palette can always author a valid payload (language-neutral vectors in `🧮️action-args/🔣️.json`).
 #[test]
 fn every_mutation_action_declares_args_covering_its_payload() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧮️action-args/🔣️.json")).expect("language-neutral action-args fixture");
@@ -384,6 +384,12 @@ fn every_mutation_action_declares_args_covering_its_payload() {
         assert_eq!(declared, names(&vector["args"]), "action {action_id} declares exactly the payload's wire fields");
         assert_eq!(required, names(&vector["required"]), "action {action_id} marks the right args required");
         assert!(names(&vector["payloadRequired"]).is_subset(&declared), "action {action_id} covers every required payload field");
+        for arg in action.args.iter().filter(|arg| names(&vector["payloadRequired"]).contains(&arg.id)) {
+            assert!(arg.required != arg.default.is_some(), "action {action_id} arg {} is either asked for or defaulted, so Execute never waits on a field the form left blank", arg.id);
+        }
+        for arg in action.args.iter().filter(|arg| matches!(arg.schema, semio_framework::ArgSchema::Boolean)) {
+            assert!(arg.default.is_some() && !arg.required, "action {action_id} toggle {} starts on or off, never unset", arg.id);
+        }
     }
 }
 /// 🔗️ LAW: the palette's `addCombination.terms` argument is declared as JSON text with a worked example, so a form authors exactly the value the command admits.

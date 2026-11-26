@@ -467,7 +467,7 @@ impl Backbone for MemoryBackbone {
 
     async fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
         let mut inbox = self.inbox.as_ref().ok_or_else(|| VcsError::Backbone("memory backbone is closing".into()))?.lock().map_err(|_| VcsError::Backbone("lock poisoned".into()))?;
-        Ok(inbox.drain(..).collect())
+        Ok(drain_ordinary_messages(&mut inbox))
     }
 }
 
@@ -493,13 +493,6 @@ pub struct ChannelBackboneRemote {
 }
 
 impl ChannelBackbone {
-    /// 🚇️ Lends the actual actor queue to one funded original page-custody handoff.
-    pub fn send_original(&self,source:&mut original_outbox::OriginalBackboneOutbox,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(bool,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{
-        let Some(queue)=self.outbound.as_ref()else{return Ok(None)};
-        let mut queue=match queue.try_lock(){Ok(queue)=>queue,Err(std::sync::TryLockError::WouldBlock)=>return Ok(None),Err(std::sync::TryLockError::Poisoned(_))=>return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original actor queue is poisoned"))};
-        source.transfer_to_channel_step(&mut queue,grant)
-    }
-
     /// 🔗️ Creates a crossed pair sharing a URI: the store attaches the `ChannelBackbone`; the
     /// actor keeps the `ChannelBackboneRemote`.
     pub async fn pair(uri: &str) -> (ChannelBackbone, ChannelBackboneRemote) {
@@ -525,9 +518,13 @@ impl Backbone for ChannelBackbone {
 
     async fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
         let mut inbound = self.inbound.as_ref().ok_or_else(|| VcsError::Backbone("channel backbone is closing".into()))?.lock().map_err(|_| VcsError::Backbone("lock poisoned".into()))?;
-        let ordinary = inbound.iter().position(atomic_transport::atomic_message_front).unwrap_or(inbound.len());
-        Ok(inbound.drain(..ordinary).collect())
+        Ok(drain_ordinary_messages(&mut inbound))
     }
+}
+
+fn drain_ordinary_messages(queue: &mut VecDeque<BackboneMessage>) -> Vec<BackboneMessage> {
+    let ordinary = queue.iter().position(atomic_transport::atomic_message_front).unwrap_or(queue.len());
+    queue.drain(..ordinary).collect()
 }
 
 impl ChannelBackboneRemote {
@@ -574,6 +571,36 @@ pub enum Backbones {
     Port(PortBackbone),
     Memory(MemoryBackbone),
     Channel(ChannelBackbone),
+}
+
+impl Backbones {
+    /// 🚇️ Transfers an original document into the attached local queue under the caller's grant.
+    pub fn send_original(
+        &self, source: &mut original_outbox::OriginalBackboneOutbox,
+        effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,
+    ) -> Result<Option<(bool, semio_framework_value::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::retained_clone_grant_admits};
+        let queue = match self {
+            Self::Memory(memory) => memory.outbox.as_ref(),
+            Self::Channel(channel) => channel.outbound.as_ref(),
+            Self::Port(_) => None,
+        };
+        let Some(queue) = queue else { return Ok(None); };
+        let mut queue = match queue.try_lock() {
+            Ok(queue) => queue,
+            Err(std::sync::TryLockError::WouldBlock) => return Ok(None),
+            Err(std::sync::TryLockError::Poisoned(_)) => return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "original document queue is poisoned")),
+        };
+        let grant = effect.grant();
+        let Some(demand) = source.channel_demands(&queue)? else { return Ok(None); };
+        if !retained_clone_grant_admits(grant, demand) || !effect.performed(1)? { return Ok(None); }
+        let receipt = source.transfer_to_channel_step(&mut queue, grant)?;
+        drop(queue);
+        if let (Some((true, _)), Self::Channel(channel)) = (&receipt, self) {
+            if let Some(wake) = channel.outbound_wake.get() { wake(); }
+        }
+        Ok(receipt)
+    }
 }
 
 impl Backbone for Backbones {

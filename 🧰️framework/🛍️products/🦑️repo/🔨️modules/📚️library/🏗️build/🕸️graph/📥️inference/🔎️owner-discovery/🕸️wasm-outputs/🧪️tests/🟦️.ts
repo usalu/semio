@@ -1,3 +1,4 @@
+/// <reference path="./🧰️support/whatwg-url.d.ts" />
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync,existsSync} from "node:fs";
@@ -19,7 +20,7 @@ test("cold Wasm promises agree with strict schema and relational metadata withou
  try{expect(validate(producer),JSON.stringify(validate.errors)).toBe(true);expect(files.has(output)).toBe(false);
  for(const row of fixture.requests){const resource=buildImportResourceV1(entry,row.specifier),actual=wasmCompileOutputV1(index,resource.specifier)!,oracle=db.query("select json_extract(value,'$.path') output from json_each(?1,'$.compileOutputs') where json_extract(value,'$.specifier')=?2").get(JSON.stringify(producer),resource.specifier) as {output:string},query=new OracleURL(row.specifier,"https://imports.example/").searchParams;
  expect(actual.output).toBe(oracle.output);expect(actual.target).toBe(fixture.owner.name+":wasm");expect(resource.source).toBe(row.source);expect(resource.source).toBe(!query.has("raw")&&(!query.has("url")||query.has("worker")||query.has("sharedworker")));
- const host={fileExists:(path:string)=>files.has(canonical(path)),readFile:read,realpath:canonical,directoryExists:()=>true,getCurrentDirectory:()=>root},future={...host,fileExists:(path:string)=>canonical(path)===output||host.fileExists(path)},independent=ts.resolveModuleName(resource.specifier,entry,{moduleResolution:ts.ModuleResolutionKind.NodeNext,module:ts.ModuleKind.NodeNext,noDtsResolution:true},future,undefined,undefined,ts.ModuleKind.ESNext).resolvedModule;
+ const host={fileExists:(path:string)=>files.has(canonical(path)),readFile:read,realpath:canonical,directoryExists:()=>true,getDirectories:():string[]=>[],getCurrentDirectory:()=>root},future={...host,fileExists:(path:string)=>canonical(path)===output||host.fileExists(path)},independent=ts.resolveModuleName(resource.specifier,entry,{moduleResolution:ts.ModuleResolutionKind.NodeNext,module:ts.ModuleKind.NodeNext,noDtsResolution:true},future,undefined,undefined,ts.ModuleKind.ESNext).resolvedModule;
  expect(independent&&resolve(independent.resolvedFileName)).toBe(output);expect(workspacePackageModuleV1(entry,row.specifier,root,ts,host,ts.ModuleKind.ESNext,false,(request:string)=>wasmCompileOutputV1(index,request))).toBe(output);
  expect(workspacePackageModuleV1(entry,row.specifier,root,ts,host,ts.ModuleKind.ESNext,true,(request:string)=>wasmCompileOutputV1(index,request))).toBe(join(owner,"runtime.d.mts"));expect(files.has(output)).toBe(false);
  }

@@ -381,7 +381,7 @@ impl<O:WindowConfigOwner> TypedWindowConfigPackLoad<O>{
  }
  fn receive_operation(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
   if let Some(receiver)=self.receiver.as_mut(){
-   if !self.taking_operation&&!receiver.ready()&&self.sources.operation.is_none(){let d=receiver.demands(4096)?;if fits(cx,d){received(cx,|native,grant,work|match receiver.advance(native,4096,work,grant){RetainedWorkPoll::Pending{..}=>Ok(()),RetainedWorkPoll::Complete(turn)=>turn.result.map(|_|()).map_err(refused)})?;}return Ok(())}
+   if !self.taking_operation&&!receiver.ready_for_owned()&&self.sources.operation.is_none(){let d=receiver.demands(4096)?;if fits(cx,d){received(cx,|native,grant,work|match receiver.advance(native,4096,work,grant){RetainedWorkPoll::Pending{..}=>Ok(()),RetainedWorkPoll::Complete(turn)=>turn.result.map(|_|()).map_err(refused)})?;}return Ok(())}
    if self.sources.operation.is_none(){self.taking_operation=true;let d=receiver.take_owned_demands(4096)?;let output=&mut self.sources.operation;effected(cx,d,|native,effect|Ok(receiver.take_owned_into(output,native,4096,effect).result.map(|_|())?))?;return Ok(())}
    return self.close_receiver(cx)
   }

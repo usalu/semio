@@ -206,11 +206,11 @@ pub fn collect_original_history_command_receipt(app:&mut ToyApp){
  if let Some((grant,receipt))=app.take_history_command_receipt(){assert_eq!(grant,app.mounted_policy.maintenance);assert!(receipt.fits(grant));ORIGINAL_HISTORY_RECEIPTS.with(|receipts|receipts.borrow_mut().push((grant,receipt)));}
 }
 
-/// 🎟️ Reads independent original caller ceilings before any native fixture work.
+/// 🎟️ The interactive component embedding every hub composition grants per host turn, with the authored identity ceiling; it covers the history-replay preparation step the earlier one-item ceiling could never fund.
 #[doc(hidden)]
 pub fn original_time_travel_fixture_caller()->(semio_plugin_mounted_owner::MountedOwnerPolicyV1,usize){
- let law:Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();let declared=&law["native"]["grant"];let grant=semio_framework_value::RetainedCloneGrant{maximum_items:declared[0].as_u64().unwrap()as usize,maximum_copy_bytes:declared[1].as_u64().unwrap()as usize,maximum_capacity_bytes:declared[2].as_u64().unwrap()as usize,maximum_release_bytes:(declared[3].as_u64().unwrap()as usize).max(1_048_576),maximum_depth:declared[4].as_u64().unwrap()as usize};
- (semio_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:grant,maintenance:grant,close:grant}.validate().unwrap(),law["native"]["maximumIdentityBytes"].as_u64().unwrap()as usize)
+ let law:Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();
+ (artifact_app_laws::fixture_mounted_policy(),law["native"]["maximumIdentityBytes"].as_u64().unwrap()as usize)
 }
 
 #[doc(hidden)]
@@ -268,8 +268,9 @@ pub async fn verb(app: &mut ToyApp, fixture: &Value, action: &str, args: Vec<(St
     assert_eq!(app.mounted_policy,mounted_policy);
     let args=DslValue::Object(args);
     for _ in 0..semio_plugin_testing_caller::OriginalFixtureCaller::maximum_turns(){
-        match artifact_app_laws::dispatch_fixture_action(app,action,Some(args.clone()),&meta(fixture),identity,cx,mounted_policy.maintenance).await{
-            Ok(result)=>return result,
+        let acting=ActionMeta{view_state:meta(fixture).view_state,..artifact_app_laws::meta(app.stores.store.local_actor_id().0.as_str())};
+        match artifact_app_laws::dispatch_fixture_action(app,action,Some(args.clone()),&acting,identity,cx,mounted_policy.maintenance).await{
+            Ok(result)=>{if rejected(&result).is_none(){pump_until(app,"the draft preview settles",|app|app.time_travel.preview_progress().is_none()&&!app.time_travel.is_ui_dirty(),mounted_policy,identity,cx).await;}return result}
             Err(failure)if failure.primary_fault().is_some_and(|fault|fault.message.contains("must settle before another selected input"))=>{
                 pump_until(app,"the cancelled preview settles",|app|!app.time_travel.has_pending_work(),mounted_policy,identity,cx).await;
             }
@@ -296,7 +297,7 @@ pub async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> 
         collect_original_history_command_receipt(app);
         while app.take_typed_operation_ui_progress().is_some() {}
     }
-    panic!("{what} never settled; stage {:?}", app.time_travel.session().stage);
+    panic!("{what} never settled; stage {:?}, processed {:?}, replaying {}, preview live {}, queued {}, base {:?} vs store {:?}", app.time_travel.session().stage, app.time_travel.processed(), app.time_travel.replaying(), app.time_travel.preview_live(), !app.time_travel.queued.is_empty(), app.time_travel.session().base.content_revision, app.stores.store.content_revision());
 }
 
 #[doc(hidden)]
@@ -370,9 +371,7 @@ pub fn close(app: &mut ToyApp,cx:&mut semio_framework_job::StepContext<'_>) {
 
 /// 🏁️ Runs fixture scenario `id`, which ends in a commit, on `app`.
 #[doc(hidden)]
-pub async fn commit_scenario(app: &mut ToyApp, fixture: &Value, id: &str, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
-    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
-
+pub async fn commit_scenario(app: &mut ToyApp, fixture: &Value, id: &str, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) {
     let scenario = fixture["scenarios"].as_array().expect("scenarios").iter().find(|scenario| text(&scenario["id"]) == id).unwrap_or_else(|| panic!("scenario {id}"));
     for step in scenario["steps"].as_array().expect("steps") {
         if let Some(result) = run_step(app, fixture, step, mounted_policy, identity,cx).await {
@@ -380,8 +379,6 @@ pub async fn commit_scenario(app: &mut ToyApp, fixture: &Value, id: &str, mounte
         }
     }
     pump_until(app, "the finalize retires", |app| !app.time_travel.has_pending_work(), mounted_policy, identity,cx).await;
-
-    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
 }
 
 #[doc(hidden)]
@@ -391,13 +388,13 @@ pub fn head(app: &ToyApp) -> (i32, String) {
 }
 /// 🧱️ One long edit applied in batches that each fit the Store's fixed displaced-owner retirement authority, drained between batches.
 #[doc(hidden)]
-pub async fn apply_long_edit(app: &mut ToyApp, count: i32, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+pub async fn apply_long_edit(app: &mut ToyApp, count: i32, _identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     const BATCH: i32 = 128;
     let mut start = 0;
     while start < count {
         let end = (start + BATCH).min(count);
         let batch: Vec<TestMutation> = (start..end).map(|value| SetCount { value }.into()).collect();
-        app.stores.store.dispatch(ArtifactCommand::Apply { mutations: batch, transaction: None }, identity).await.expect("a long edit applies");
+        app.stores.store.dispatch(ArtifactCommand::Apply { mutations: batch, transaction: None }, &mut artifact_app_laws::fixture_identity()).await.expect("a long edit applies");
         semio_plugin_testing_laws::artifact_app_laws::drain_store_displaced_retirements(&mut app.stores.store);
         start = end;
     }

@@ -1,5 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+use semio_hub_draw_editor_app::{DrawEditorApp, DrawEditorApps};
+use semio_hub_draw_viewer_app::{DrawViewerApp, DrawViewerApps};
 use semio_plugin::__semio_dispatch_PluginApp;
 use semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_plugin::plugin_app_close_prelude::*;
@@ -18,8 +20,20 @@ pub const DRAW_MOUNTED_OWNER_POLICY: semio_plugin::MountedOwnerPolicyV1 = {
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the draw editor and viewer.
     pub enum DrawApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<semio_s_artifact_draw_drawing_editor::DrawingPlayApp>>),
-        Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_draw_drawing_viewer::DrawingViewer>>),
+        Editor(DrawEditorApps),
+        Viewer(DrawViewerApps),
+    }
+}
+
+impl From<DrawEditorApp> for DrawApps {
+    fn from(app: DrawEditorApp) -> Self {
+        Self::Editor(app.into())
+    }
+}
+
+impl From<DrawViewerApp> for DrawApps {
+    fn from(app: DrawViewerApp) -> Self {
+        Self::Viewer(app.into())
     }
 }
 //#endregion 🗃️Apps

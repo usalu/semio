@@ -107,11 +107,10 @@ fn prism(start: &[Xyz], end: &[Xyz]) -> TriMesh {
     mesh
 }
 
-/// 🌀️ The solid of an element: empty while the element is not buildable.
-pub fn mep_solid(value: &MepValue) -> ElementSolid {
-    let mut builder = SolidBuilder::new(SolidFamily::Mep);
+/// 🌀️ Visits each closed mitred prism in route order.
+pub fn visit_segment_meshes(value: &MepValue, mut visit: impl FnMut(TriMesh)) {
     if !value.buildable() {
-        return builder.build();
+        return;
     }
     let at = |point: &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3| [point.x, point.y, point.z];
     let directions: Vec<Xyz> = value.segments.iter().map(|segment| normalize3(sub3(at(&segment.to), at(&segment.from)))).collect();
@@ -133,12 +132,19 @@ pub fn mep_solid(value: &MepValue) -> ElementSolid {
         })
         .collect();
     let section = section_ring(value);
-    let mut mesh = TriMesh::new();
     for (index, segment) in value.segments.iter().enumerate() {
         let start = ring_at(at(&segment.from), &frames[index], &section, normals[index]);
         let end = ring_at(at(&segment.to), &frames[index], &section, normals[index + 1]);
-        mesh.append(&prism(&start, &end));
+        visit(prism(&start, &end));
     }
+}
+
+/// 🌀️ Builds the display mesh from the closed prisms of a route.
+pub fn mep_solid(value: &MepValue) -> ElementSolid {
+    let mut builder = SolidBuilder::new(SolidFamily::Mep);
+    if !value.buildable() { return builder.build(); }
+    let mut mesh = TriMesh::new();
+    visit_segment_meshes(value, |prism| mesh.append(&prism));
     let mesh = if value.section.kind == MepSectionKind::Pipe { mesh.crease_normals(35f64.to_radians()) } else { mesh };
     builder.add(key(value.system), "", 0, &mesh);
     builder.build()

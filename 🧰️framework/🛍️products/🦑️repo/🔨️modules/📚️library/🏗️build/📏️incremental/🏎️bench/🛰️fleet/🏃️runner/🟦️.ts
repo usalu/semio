@@ -29,8 +29,8 @@ async function unitOf(label:string,outputs:readonly (readonly [string,Uint8Array
  const key=sha("key:"+label),manifest={version:1,key,localKey:sha("local:"+label),slot:sha("slot:"+label),crate:label.replace(/[^a-z0-9]/gu,""),platform,createdMs:1,costMs:1,dependencies:[],environment:[],outputs:rows,stdout:null,stderr:null} as never;
  return {key,localKey:sha("local:"+label),slot:sha("slot:"+label),pack:packUnitV1(manifest,contents)};
 }
-const bytesOf=(index:number,size:number):Uint8Array=>{const bytes=new Uint8Array(size);bytes.fill(index%251+1);new DataView(bytes.buffer).setUint32(0,index*977+size);return bytes;};
-async function publish(client:{putBlob(hash:string,bytes:Uint8Array):Promise<boolean>;putResult(key:string,bytes:Uint8Array,slot:string):Promise<boolean|"diverged">},unit:Awaited<ReturnType<typeof unitOf>>):Promise<boolean|"diverged">{
+const bytesOf=(index:number,size:number):Uint8Array<ArrayBuffer>=>{const bytes=new Uint8Array(size);bytes.fill(index%251+1);new DataView(bytes.buffer).setUint32(0,index*977+size);return bytes;};
+async function publish(client:{putBlob(hash:string,bytes:Uint8Array):Promise<boolean>;putResult(key:string,bytes:Uint8Array,slot:string):Promise<boolean|"diverged"|"stale">},unit:Awaited<ReturnType<typeof unitOf>>):Promise<boolean|"diverged"|"stale">{
  for(const [hash,bytes] of unit.pack.blobs)if(!await client.putBlob(hash,bytes))return false;
  return client.putResult(unit.key,unit.pack.result,unit.slot);
 }
@@ -72,7 +72,7 @@ async function twinBuild(directory:string):Promise<FleetValuesV1>{
   const units=await Promise.all(roots.map(checkout=>unitOf("twin",names.map(name=>[name,read(checkout,name)] as const))));
   const answers=[await publish(first.client,units[0]!),await publish(second.client,units[1]!)];
   for(const answer of answers)if(answer===false)throw Error(both("A build of the twin unit could not be published","Eine Fassung der Zwillingseinheit konnte nicht veröffentlicht werden"));
-  return fleetTwinV1({outputs:names.map(name=>({name,left:sha(read(roots[0]!,name)),right:sha(read(roots[1]!,name))})),answers:answers as (boolean|"diverged")[]});
+  return fleetTwinV1({outputs:names.map(name=>({name,left:sha(read(roots[0]!,name)),right:sha(read(roots[1]!,name))})),answers});
  }finally{await server.stop();}
 }
 

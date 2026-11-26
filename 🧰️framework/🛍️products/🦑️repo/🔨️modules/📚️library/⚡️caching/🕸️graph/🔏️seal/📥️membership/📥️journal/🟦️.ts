@@ -1,4 +1,4 @@
-import{SOURCE_OPACITY_PROTOCOL_V1,isOpaqueSourcePathV1}from"../../../../🔍️discovery/📂️source/🟦️.ts";
+import{SOURCE_OPACITY_PROTOCOL_V1,isOpaqueSourcePathV1}from"../../../../../🏗️build/📥️inputs/👻️opaque-source/🟨️.mjs";
 import { lstat, readFile, readdir } from "node:fs/promises";
 import { isAbsolute, join, resolve } from "node:path";
 import { createLiveFilesystemJournalV1, type FilesystemJournalChangeV1, type FilesystemJournalControlV1, type FilesystemJournalScopeV1, type LiveFilesystemJournalV1 } from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🟦️.ts";

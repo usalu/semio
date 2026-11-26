@@ -26,6 +26,16 @@ export type StorageGateFactsV1 = Readonly<{ headroomBytes: number; reserveBytes:
 /** 🧾️ What the gate decides: `neededBytes` (prediction plus reserve), `chargedBytes` (what running passes still have to write), `freeBytes` (free now less the charges) and the `shortBytes` that would admit the pass. */
 export type StorageGateV1 = Readonly<{ admitted: boolean; neededBytes: number; chargedBytes: number; freeBytes: number; shortBytes: number }>;
 
+/** 🧱️ Preserves an admitted pass's measured storage requirement for its outer image owner. */
+export class NativeBuildStorageShortfallV1 extends Error {
+  readonly minimumFreeBytes: number;
+  constructor(minimumFreeBytes: number, message: string) {
+    super(message);
+    this.minimumFreeBytes = minimumFreeBytes;
+    this.name = "NativeBuildStorageShortfallV1";
+  }
+}
+
 /** ⚖️ Admits one pass when the free bytes, less what the running passes still have to write, hold its prediction and the reserve. Pure and language-agnostic.
  * @see ./🧪️tests/🐍️oracle/🐍️.py */
 export function storageGateV1(facts: StorageGateFactsV1): StorageGateV1 {
@@ -105,7 +115,7 @@ export async function admitPassStorageV1(ports: StorageGatePortsV1): Promise<Sto
       ports.log(describeStorageGateV1("growthRefused", values(gate), growth));
     }
   }
-  throw Error(describeStorageGateV1("refused", values(gate), growth));
+  throw new NativeBuildStorageShortfallV1(gate.neededBytes, describeStorageGateV1("refused", values(gate), growth));
 }
 
 /** 🔑️ The ledger key of one batch: its profile, target and sorted component names, so the same batch finds its own measured growth again. */

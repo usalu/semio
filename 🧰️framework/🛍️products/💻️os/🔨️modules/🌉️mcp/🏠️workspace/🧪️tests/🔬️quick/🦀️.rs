@@ -61,4 +61,6 @@ include!("🗂️guest-document-codec/🦀️.rs");
 
 include!("🔗️inference-artifact-binding/🦀️.rs");
 
+include!("📜️every-inference-publishes-a-contract/🦀️.rs");
+
 include!("🏁️child-heads-hub-commit-and-probe-pack/🦀️.rs");

@@ -2,7 +2,8 @@
  *
  * 🧱️ Child module of {@link ../🟦️.ts | loadPluginModule}: each function builds one group of the handle's closure state and helpers and returns them for the later groups. */
 import { appCommandIdsV1, type Effect, hostEffectInvocationV1, type InvocationResponse } from "@semio-tech/framework";
-import { decodeAppFrame, decodePackValue, faultDisplayMessage } from "@semio-tech/framework-os";
+import { decodeAppFrame, faultDisplayMessage } from "@semio-tech/framework/app-channel";
+import { decodePackValue } from "@semio-tech/framework/packs";
 import { performInvocation, WGPU_TYPED_OPERATION_SETTLE_LIMIT, WgpuTypedOperationDrive } from "../../🧾️typed-operations-and-handle/🟦️.ts";
 import { admitSpawnedJob, wgpuBuildScopedContributionsPack, wgpuContributionsIngressSize, wgpuEffectDispatchScope, wgpuEffectWindowInstances, wgpuHostEffect, wgpuSetContributionsCommand, wgpuSlimContributionsView } from "../../🎛️contributions-and-effects/🟦️.ts";
 import { serializeWgpuActorCall, submitTurn } from "../../🧵️shard-and-actor-calls/🟦️.ts";

@@ -19,6 +19,10 @@ path = "🦀️.rs"
 name = "mounted"
 path = "../../🧪️tests/🧩️mounted/🦀️.rs"
 
+[[test]]
+name = "commands"
+path = "../../🎮️commands/🧪️tests/🧩️mounted/🦀️.rs"
+
 [dependencies]
 semio-framework-geometry-primitives = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/📐️geometry/⚙️engine/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }

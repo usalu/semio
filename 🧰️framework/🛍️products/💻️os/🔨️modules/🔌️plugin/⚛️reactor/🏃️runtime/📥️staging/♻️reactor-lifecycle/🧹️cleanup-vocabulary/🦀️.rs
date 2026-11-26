@@ -120,7 +120,6 @@ impl RuntimeMaintenanceStatus {
             other => Self::Fault(RuntimeCleanupFault::from_index(other - RUNTIME_MAINTENANCE_FAULT_BASE).expect("maintenance status repr is written only by this module")),
         }
     }
-    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub const fn cause(self) -> Option<RuntimeCleanupFault> {
         match self {
             Self::Fault(cause) => Some(cause),

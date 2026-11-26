@@ -45,7 +45,6 @@ use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, MemberFactory, Mutation, SpaceMember};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use serde_json::Value;
-use semio_plugin_store_lifecycle::store_lifecycle::bounded_document_store_owners;
 use semio_framework_value::DslValue;
 use semio_framework::{FaultCode, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
 use std::future::Future;

@@ -60,7 +60,7 @@ test("startup refusal keeps the live ceiling, unknown PID, and bounded logs for 
     expect(failure.reason).toBe("timeout");
     expect(failure.startup.mode).toBe(row.mode);expect(failure.startup.pid).toBe(row.pid);expect(failure.startup.seen).toBe(row.implementationCount);
     const oracle=db.query("select 1+(?1 is not null) seen, ?1 pid").get(row.pid);
-    expect({seen:failure.startup.seen,pid:failure.startup.pid}).toEqual(oracle);
+    expect<unknown>({seen:failure.startup.seen,pid:failure.startup.pid}).toEqual(oracle);
     expect(failure.startup.candidates.map((candidate:{tag:string})=>candidate.tag)).toEqual(alive?[first.tag,moved.tag]:[first.tag]);
     expect(failure.startup.candidates[0].log).toBe("first startup marker");
     if(alive)expect(failure.startup.candidates[1].log).toContain("moved startup marker");

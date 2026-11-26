@@ -1,8 +1,8 @@
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
-import headroomSource from"../../../../🧹️retention/📏️headroom/🟦️.ts"with{type:"text"};
-import toolsSource from"../../../../🟦️.ts"with{type:"text"};
-import formulaSource from"../../🧮️formula/🟦️.ts"with{type:"text"};
+const headroomSource=await Bun.file(new URL("../../../../🧹️retention/📏️headroom/🟦️.ts",import.meta.url)).text();
+const toolsSource=await Bun.file(new URL("../../../../🟦️.ts",import.meta.url)).text();
+const formulaSource=await Bun.file(new URL("../../🧮️formula/🟦️.ts",import.meta.url)).text();
 import{isRepoErrorV1,renderRepoErrorV1}from"../../../../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts";
 import snapshotPolicy from"../../../../🔏️authorizers/📦️snapshot/🔣️policy.json"with{type:"json"};
 import derivativeSchema from"../../../📥️source/🔗️derivative/🧬️schema/🔣️.json"with{type:"json"};

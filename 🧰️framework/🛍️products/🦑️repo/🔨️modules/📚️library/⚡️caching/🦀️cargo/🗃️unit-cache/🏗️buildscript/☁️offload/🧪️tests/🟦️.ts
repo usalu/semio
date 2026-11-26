@@ -72,7 +72,7 @@ function packageOf(name:string,source:string):Package{
  if(compiled.status!==0)throw Error("rustc: "+compiled.stderr);
  return{manifest,binary};
 }
-const cargoEnvironment=(manifest:string,outDir:string,extra:Record<string,string>={})=>({PATH:process.env.PATH??"",HOME:scratch,OUT_DIR:outDir,CARGO_MANIFEST_DIR:manifest,CARGO_PKG_NAME:"tiny",CARGO_PKG_VERSION:"0.1.0",CARGO_PKG_DESCRIPTION:"a tiny\nscript",TARGET:"aarch64-apple-darwin",HOST:"aarch64-apple-darwin",PROFILE:"release",OPT_LEVEL:"3",DEBUG:"false",NUM_JOBS:"4",CARGO_CFG_TARGET_OS:"macos",CARGO_FEATURE_STD:"1",CARGO_ENCODED_RUSTFLAGS:"",RUSTC:"/x/rustc",...environment,...extra});
+const cargoEnvironment=(manifest:string,outDir:string,extra:Record<string,string>={}):Record<string,string>=>({PATH:process.env.PATH??"",HOME:scratch,OUT_DIR:outDir,CARGO_MANIFEST_DIR:manifest,CARGO_PKG_NAME:"tiny",CARGO_PKG_VERSION:"0.1.0",CARGO_PKG_DESCRIPTION:"a tiny\nscript",TARGET:"aarch64-apple-darwin",HOST:"aarch64-apple-darwin",PROFILE:"release",OPT_LEVEL:"3",DEBUG:"false",NUM_JOBS:"4",CARGO_CFG_TARGET_OS:"macos",CARGO_FEATURE_STD:"1",CARGO_ENCODED_RUSTFLAGS:"",RUSTC:"/x/rustc",...environment,...extra});
 function tree(root:string,directory=root):Map<string,string>{
  const files=new Map<string,string>();
  for(const entry of readdirSync(directory).sort()){

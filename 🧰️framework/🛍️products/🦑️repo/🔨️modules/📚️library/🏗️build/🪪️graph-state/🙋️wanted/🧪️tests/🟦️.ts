@@ -57,7 +57,7 @@ test("a request is read back by its requester alone whatever the platform of the
   await publishWantedV1({client:requester,requester:"g1-m03",platform:"darwin-arm64",graphKey:"b".repeat(64),projects:["c"],now:()=>Date.now()+5});
   const second=await readWantedV1({client:reader,requester:"g1-m03"});
   expect(second?.projects).toEqual(["c"]);expect(second?.graphKey).toBe("b".repeat(64));
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("a machine takes over a live request once; the requester itself and a request of another graph state are left alone; a held claim keeps a second server away",async()=>{
@@ -73,7 +73,7 @@ test("a machine takes over a live request once; the requester itself and a reque
   for(const request of first)owned.add(wantedClaimKeyV1(request));
   expect(await claimWantedV1({...base,client:a,owner:"g1-server"})).toEqual([]);
   expect(await claimWantedV1({...base,client:b,owner:"g1-m06",known:()=>false})).toEqual([]);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
 },60000);
 
 test("the requester takes records as they arrive, reports progress, gives up after the silence of the server and stops on cancellation",async()=>{
@@ -136,7 +136,7 @@ test("a request is idempotent: publishing it again with the creation time of the
   expect(renewed.projects).toEqual(["c"]);expect(renewed.expiresMs).toBe(1000+30*60_000+p.ttlMilliseconds);expect(wantedClaimKeyV1(renewed)).toBe(wantedClaimKeyV1(first));
   await publishWantedV1({client,requester:"g1-m03",platform:"darwin-arm64",graphKey:KEY,projects:["c"],now:()=>1000+31*60_000});
   expect(wantedClaimKeyV1((await readWantedV1({client,requester:"g1-m03",now:()=>1000+31*60_000}))!)).not.toBe(wantedClaimKeyV1(first));
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
  expect(wantedEstimateTextV1(null,"en")).toBe("unknown");expect(wantedEstimateTextV1(null,"de")).toBe("unbekannt");
  expect(wantedEstimateTextV1(0,"en")).toBe("under a minute");expect(wantedEstimateTextV1(90_000,"de")).toBe("etwa 2 min");expect(wantedEstimateTextV1(3_900_000,"en")).toBe("about 1 h 5 min");
 },60000);
@@ -152,7 +152,7 @@ test("the answer with its progress record validates against the schema with Ajv 
   await publishServedV1({client,server:"g1-server",request,projects:["a"],generation:3,now:()=>7000});
   const bare=(await readServedV1({client,requester:"g1-m03"}))!;expect(bare.progressAtMs).toBeUndefined();expect(validate(bare)).toBe(true);
   expect(validate({...row,progressAtMs:-1})).toBe(false);expect(validate({...row,remainingMilliseconds:1.5})).toBe(false);expect(validate({...row,extra:1})).toBe(false);
- }finally{await server.stop(true);}
+ }finally{await server.stop();}
  const holes=(text:string)=>[...text.matchAll(/\{(\w+)\}/gu)].map(match=>match[1]).sort();
  for(const key of Object.keys(schema.definitions.Texts.const.en) as (keyof typeof schema.definitions.Texts.const.en)[])expect(holes(schema.definitions.Texts.const.de[key])).toEqual(holes(schema.definitions.Texts.const.en[key]));
  expect(wantedTextV1("waitingServer","de",{arrived:1,wanted:2,age:3,estimate:"etwa 4 min"})).toBe("Graph: warte auf die Flotte: 1 von 2 Projekten eingetroffen; der Server kam zuletzt vor 3 s voran, geschätzte Restzeit: etwa 4 min");

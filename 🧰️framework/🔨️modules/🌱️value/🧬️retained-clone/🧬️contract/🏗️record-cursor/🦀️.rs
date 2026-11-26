@@ -1,20 +1,38 @@
 //! 🏗️ The record clone machine, once for every derived struct and enum: a derive emits only its row table, a variant selector, a constructor and two thin row dispatchers; every phase, route and close decision lives here.
 //! Row codes keep the derived layout: `4g` advance, `4g+1` take, `4g+2` begin close, `4g+3` close, `4n` done, `4n+1` output; close codes `100+2g`, `101+2g`, `200` (owner close), `201` (binding close).
 use super::*;
-use std::mem::size_of;
+use semio_framework_value_native_clone_engine::CloneBacking;
+use std::mem::{ManuallyDrop,size_of};
 
 type Reply<'r>=OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>;
 type Complete<'r>=Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>;
 
 /// 🧱️ One retained field row: its lazily born field cursor and the field value it publishes.
-pub struct RetainedRecordRow<T:RetainedClone>{cursor:RetainedFieldCursor<T>,value:Option<T>}
-impl<T:RetainedClone> Default for RetainedRecordRow<T>{fn default()->Self{Self{cursor:Default::default(),value:None}}}
-const _:()={fn send<X:Send>(){}#[allow(dead_code)]fn row<T:RetainedClone>(){send::<RetainedFieldCursor<T>>();send::<Option<T>>()}};
-/// 🧵️ Sound: the assertion above proves both fields `Send` for every `T: RetainedClone`; stating it here keeps the auto-trait walk of deeply nested records from expanding every row structurally.
+pub struct RetainedRecordRow<T:RetainedClone>{
+    cursor:ManuallyDrop<Option<Box<RetainedFieldCursor<T>>>>,
+    backing:CloneBacking<RetainedFieldCursor<T>>,
+    value:Option<T>,
+}
+impl<T:RetainedClone> Default for RetainedRecordRow<T>{
+    fn default()->Self{Self{cursor:ManuallyDrop::new(None),backing:Default::default(),value:None}}
+}
+const _:()={fn send<X:Send>(){}#[allow(dead_code)]fn row<T:RetainedClone>(){send::<Box<RetainedFieldCursor<T>>>();send::<CloneBacking<RetainedFieldCursor<T>>>();send::<Option<T>>()}};
+/// 🧵️ The assertion proves every field `Send` and keeps nested record rows out of the auto-trait walk.
 unsafe impl<T:RetainedClone> Send for RetainedRecordRow<T>{}
 impl<T:RetainedClone> RetainedRecordRow<T>{
  /// 📤️ Moves the published field value into the record constructor.
  pub fn take_value(&mut self)->Result<T,ValueError>{self.value.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained field owner is absent"))}
+
+ fn terminal(&self)->bool{self.cursor.is_none()&&!self.backing.is_reserved()}
+
+ fn cursor_release(&self)->Result<RetainedCursorRelease<RetainedFieldCursor<T>>,ValueError>{
+    self.cursor.as_deref().and_then(RetainedCloneCursor::native_terminal_release)
+        .ok_or_else(||ValueError::invariant("retained record field lacks terminal release"))
+ }
+}
+
+impl<T:RetainedClone> Drop for RetainedRecordRow<T>{
+ fn drop(&mut self){assert!(std::thread::panicking()||self.terminal(),"retained record row reached Drop before paid release");}
 }
 
 /// 🔭️ Type-erased queries of one row; the projected source is present only for the planned row of the live variant.
@@ -62,28 +80,63 @@ fn unprojected()->ValueError{ValueError::invariant("record row advance lacks its
 impl<T:RetainedClone> RetainedRecordQuery for RetainedRecordField<'_,T>{
  fn present(&self)->bool{self.row.value.is_some()}
  fn value_bytes(&self)->usize{size_of::<Option<T>>()}
- fn terminal(&self)->bool{RetainedCloneCursor::terminal_is_empty(&self.row.cursor)}
- fn closing(&self)->bool{RetainedCloneCursor::close_started(&self.row.cursor)}
- fn ready(&self)->bool{RetainedCloneCursor::output_ready(&self.row.cursor)}
- fn released(&self)->bool{RetainedCloneCursor::native_terminal_release(&self.row.cursor).is_some_and(|release|release.validates(&self.row.cursor))}
- fn advance_demand(&self,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>{RetainedCloneCursor::advance_demands(&self.row.cursor,self.source()?,body,maximum)}
- fn advance_work(&self,body:usize,maximum:u64)->Result<u64,ValueError>{RetainedCloneCursor::advance_work_demand(&self.row.cursor,self.source()?,body,maximum)}
- fn advance_selection(&self,body:usize,maximum:u64)->Result<RetainedCloneSelection,ValueError>{RetainedCloneCursor::advance_selection(&self.row.cursor,self.source()?,body,maximum)}
- fn take_demand(&self)->Result<RetirementDemand,ValueError>{RetainedCloneCursor::take_demand(&self.row.cursor)}
- fn take_work(&self)->Result<u64,ValueError>{RetainedCloneCursor::take_work_demand(&self.row.cursor)}
- fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{clone_cursor_close_demand::<T>(&self.row.cursor,body)}
- fn begin_close_work(&self)->Result<u64,ValueError>{RetainedCloneCursor::begin_close_work_demand(&self.row.cursor)}
- fn close_work(&self,body:usize)->Result<u64,ValueError>{RetainedCloneCursor::close_work_demand(&self.row.cursor,body)}
+ fn terminal(&self)->bool{self.row.terminal()}
+ fn closing(&self)->bool{self.row.backing.is_reserved()||self.row.cursor.as_deref().is_some_and(RetainedCloneCursor::close_started)}
+ fn ready(&self)->bool{self.row.cursor.as_deref().is_some_and(RetainedCloneCursor::output_ready)}
+ fn released(&self)->bool{self.terminal()}
+ fn advance_demand(&self,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>{Ok(self.advance_selection(body,maximum)?.demand())}
+ fn advance_work(&self,body:usize,maximum:u64)->Result<u64,ValueError>{Ok(self.advance_selection(body,maximum)?.work())}
+ fn advance_selection(&self,body:usize,maximum:u64)->Result<RetainedCloneSelection,ValueError>{
+    let source=self.source()?;
+    match self.row.cursor.as_deref(){
+        Some(cursor)=>cursor.advance_selection(source,body,maximum),
+        None=>Ok(RetainedCloneSelection::new(self.row.backing.birth_demand(),u64::from(maximum>0))),
+    }
+ }
+ fn take_demand(&self)->Result<RetirementDemand,ValueError>{self.row.cursor.as_deref().ok_or_else(absent)?.take_demand()}
+ fn take_work(&self)->Result<u64,ValueError>{self.row.cursor.as_deref().ok_or_else(absent)?.take_work_demand()}
+ fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
+    let Some(cursor)=self.row.cursor.as_deref() else{return Ok(self.row.backing.release_demand())};
+    if cursor.terminal_is_empty(){Ok(self.row.cursor_release()?.boxed_demand())}else{clone_cursor_close_demand::<T>(cursor,body)}
+ }
+ fn begin_close_work(&self)->Result<u64,ValueError>{self.row.cursor.as_deref().ok_or_else(absent)?.begin_close_work_demand()}
+ fn close_work(&self,body:usize)->Result<u64,ValueError>{
+    let Some(cursor)=self.row.cursor.as_deref() else{return Ok(u64::from(self.row.backing.is_reserved()))};
+    if cursor.terminal_is_empty(){Ok(self.row.cursor_release()?.inline_work())}else{cursor.close_work_demand(body)}
+ }
  fn owner_demands(&self,close:&RetainedCloneClose,body:usize)->Result<RetirementDemand,ValueError>{close.next_owner_demands::<T>(true,&None,body)}
  fn owner_work(&self,close:&RetainedCloneClose,body:usize)->Result<u64,ValueError>{close.next_owner_work::<T>(true,&None,body)}
 }
 
 impl<T:RetainedClone> RetainedRecordDrive for RetainedRecordFieldMut<'_,T>{
- fn take<'r>(&mut self,effect:&mut RetainedAllocationEffect<'_>,child:OriginalEffectReply<'r,RetainedCloneStep,ValueError>,recover:bool)->Result<(),ValueError>{let row=&mut*self.row;if recover{RetainedCloneCursor::recover_take(&mut row.cursor,&mut row.value,effect,child)?;}else{RetainedCloneCursor::take(&mut row.cursor,&mut row.value,effect,child)?;}Ok(())}
- fn advance<'r>(&mut self,body:usize,maximum:u64,effect:&mut RetainedAllocationEffect<'_>,child:Reply<'r>,recover:bool)->Result<(),ValueError>{let source=self.source.ok_or_else(unprojected)?;if recover{RetainedCloneCursor::recover_advance_into(&mut self.row.cursor,source,body,maximum,effect,child)?;}else{RetainedCloneCursor::advance_into(&mut self.row.cursor,source,body,maximum,effect,child)?;}Ok(())}
- fn begin_close<'r>(&mut self,effect:&mut RetainedAllocationEffect<'_>,child:Reply<'r>,recover:bool)->Result<(),ValueError>{if recover{RetainedCloneCursor::recover_begin_close_into(&mut self.row.cursor,effect,child)?;}else{RetainedCloneCursor::begin_close_into(&mut self.row.cursor,effect,child)?;}Ok(())}
+ fn take<'r>(&mut self,effect:&mut RetainedAllocationEffect<'_>,child:OriginalEffectReply<'r,RetainedCloneStep,ValueError>,recover:bool)->Result<(),ValueError>{let row=&mut*self.row;let cursor=row.cursor.as_deref_mut().ok_or_else(absent)?;if recover{cursor.recover_take(&mut row.value,effect,child)?;}else{cursor.take(&mut row.value,effect,child)?;}Ok(())}
+ fn advance<'r>(&mut self,body:usize,maximum:u64,effect:&mut RetainedAllocationEffect<'_>,child:Reply<'r>,recover:bool)->Result<(),ValueError>{
+    let source=self.source.ok_or_else(unprojected)?;
+    let row=&mut*self.row;
+    let Some(cursor)=row.cursor.as_deref_mut() else{
+      if recover{return Err(phase_invalid())}
+      child.complete(row.backing.birth(&mut row.cursor,RetainedFieldCursor::<T>::default,effect).map_err(Into::into));
+      return Ok(())
+    };
+    if recover{cursor.recover_advance_into(source,body,maximum,effect,child)?;}else{cursor.advance_into(source,body,maximum,effect,child)?;}Ok(())
+ }
+ fn begin_close<'r>(&mut self,effect:&mut RetainedAllocationEffect<'_>,child:Reply<'r>,recover:bool)->Result<(),ValueError>{let cursor=self.row.cursor.as_deref_mut().ok_or_else(absent)?;if recover{cursor.recover_begin_close_into(effect,child)?;}else{cursor.begin_close_into(effect,child)?;}Ok(())}
  fn close<'r>(&mut self,original:Option<&mut OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut RetainedAllocationEffect<'_>,child:Reply<'r>,recover:bool)->Result<(),ValueError>{
-  let cursor=&mut self.row.cursor;
+  let row=&mut*self.row;
+  let Some(cursor)=row.cursor.as_deref() else{
+      if recover{return Err(phase_invalid())}
+      child.complete(row.backing.release(effect).map_err(Into::into));
+      return Ok(())
+  };
+  if cursor.terminal_is_empty(){
+      if recover{return Err(phase_invalid())}
+      let release=row.cursor_release()?;
+      let mut result=None;
+      release.boxed_into(&mut row.cursor,effect,OriginalEffectReply::borrow(&mut result)?)?;
+      crate::forward_original_value_reply(&mut result,child)?;
+      return Ok(())
+  }
+  let cursor=row.cursor.as_deref_mut().ok_or_else(absent)?;
   match original{Some(original)=>if recover{RetainedCloneCursor::recover_close_original_into(cursor,original,body,effect,child)?;}else{RetainedCloneCursor::close_original_into(cursor,original,body,effect,child)?;},None=>if recover{RetainedCloneCursor::recover_close_into(cursor,body,effect,child)?;}else{RetainedCloneCursor::close_into(cursor,body,effect,child)?;}}
   Ok(())
  }

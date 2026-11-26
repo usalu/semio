@@ -1,5 +1,7 @@
 import { type Effect, GUEST_HOST_ANSWER_CEILING_BYTES, guestAnswerPages, type InvocationResponse, type PluginDispatchHintV1, type PluginManifest, SemioFaultError } from "@semio-tech/framework";
-import { AppChannelClient, type AppFrameValue, decodeAppFrame, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, type WindowConfigPackEntry } from "@semio-tech/framework-os";
+import { AppChannelClient, decodeAppFrame, decodeFaultFromWire, faultDisplayMessage } from "@semio-tech/framework/app-channel";
+import { type AppFrameValue, type WindowConfigPackEntry } from "@semio-tech/framework/wire-contracts";
+import { decodeInvocationResultPacks, decodePackValue, decodePackWire, encodePackValue } from "@semio-tech/framework/packs";
 import { leftoverShellInvocationFrames, scanTypedOperationPages, type TypedOperationAckEvent, type WireTurnResult, wireTurnStatusTag, type WireVariant } from "../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
 import { pendingTurnEffects, wgpuHostEffect } from "../🎛️contributions-and-effects/🟦️.ts";
 import type { MediaTransportPort } from "@semio-tech/framework-os/modules/renderer/engine/media/lifecycle";

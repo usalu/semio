@@ -66,3 +66,19 @@ test("a control's own cancellation stays with its request: the Original admits l
   if(row.status==="cancelled")expect(failure).toBeUndefined();else expect(failure).toBeDefined();
  }
 });
+
+/** 🛑️ An owned reason or a caller budget rethrown out of a nested body answers its caller; any other failure still closes the shared Original. */
+test("a nested body rethrowing an owned reason or a caller budget leaves the Original open, a plain failure closes it",async()=>{
+ for(const kind of["owned","budget","plain"]){
+  const stop=new AbortController(),reason=Error("owned "+kind),envelope=api.createScriptProcessEnvelope({version:1,owner:"fixture:nested-"+kind,maximumElapsedMilliseconds:0},{},Date.now());let live=false,failure:unknown;
+  try{await api.withScriptProcessEnvelope(envelope,async original=>{
+   try{await api.withScriptProcessEnvelope(envelope,async nested=>{
+    api.createRequestedIssuedResourceControlV1(api.createIssuedResourceControlV1(nested,"fixture:base",0),0,stop.signal);
+    if(kind==="owned"){stop.abort(reason);throw reason;}
+    throw kind==="budget"?new api.CallerBudgetExhaustedV1("fixture budget"):Error("plain failure");
+   });}catch(error){failure=error;}
+   try{api.createIssuedResourceControlV1(original,"fixture:after",0);live=true;}catch{}
+  });}catch{}
+  expect(failure).toBeInstanceOf(Error);expect(live).toBe(kind!=="plain");
+ }
+});

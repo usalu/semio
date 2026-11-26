@@ -6,7 +6,7 @@ import{createKeyTableV1}from"../🔑️key-table/🟨️.mjs";
 
 /** 📏️ The declared limits of the row log: the bytes buffered before a write, the rows of one batch, the gap and the length of one coalesced read. */
 export const ROW_LOG_POLICY_V1=Object.freeze({flushBytes:4194304,batchRows:2048,gapBytes:65536,spanBytes:4194304,staleSeconds:3600});
-const P=ROW_LOG_POLICY_V1,EXTENSION=".rows",NEWLINE="\n";
+const P=ROW_LOG_POLICY_V1,EXTENSION=".rows",NEWLINE="\n",liveLogsV1=new Set();
 
 /** 🌱️ A typed array grown to hold `length` entries (doubling, never shrinking). */
 const grown=(array,length)=>{if(array.length>=length)return array;const next=new array.constructor(Math.max(length,array.length*2,1024));next.set(array);return next;};
@@ -31,7 +31,7 @@ function sweepStaleLogsV1(directory){
  */
 export function createRowLogV1({path,policy=P}){
  mkdirSync(dirname(path),{recursive:true});sweepStaleLogsV1(dirname(path));
-const descriptor=openSync(path,"w+"),table=createKeyTableV1(),exit=()=>{try{rmSync(path,{force:true});}catch{}};
+const descriptor=openSync(path,"w+"),exit=()=>{try{rmSync(path,{force:true});}catch{}};let table=createKeyTableV1(),ref;
  let api,count=0,scratch=Buffer.allocUnsafe(0),offsets=new Float64Array(1024),lengths=new Uint32Array(1024),pending=[],pendingBytes=0,written=0,size=0,closed=false,reads=0,readBytes=0;
  process.once("exit",exit);
  const flush=()=>{
@@ -42,6 +42,7 @@ const descriptor=openSync(path,"w+"),table=createKeyTableV1(),exit=()=>{try{rmSy
  };
  const require=()=>{if(closed)throw Error("Open row log required");};
  const intern=row=>{
+  if(table===undefined)throw Error("Writable row log required: the log is sealed");
   const key=rowKeyV1(row),next=count,id=table.intern(key,next);
   if(id!==next)return id;
   count++;
@@ -87,6 +88,8 @@ const descriptor=openSync(path,"w+"),table=createKeyTableV1(),exit=()=>{try{rmSy
   id(row){require();return intern(row);},
   /** 🧊️ Settles the log between waves: writes the buffered lines and trims the offset and length arrays to the rows held, so a log that only waits for its owners' ids to be read at the seal keeps no slack and no unwritten text. */
   settle(){require();flush();if(offsets.length>count){offsets=offsets.slice(0,count);lengths=lengths.slice(0,count);}scratch=Buffer.allocUnsafe(0);},
+  /** 🔒️ Ends the writes of the log once its part is shaped: the key table (20 bytes for each slot of an open addressed table at half load, 40 to 80 bytes for each distinct row) that only deduplicates rows while they arrive is dropped, and the lists keep reading their rows by id; a later `id`, `append` or `add` of a row is refused. A read of many waves that keeps every wave's log until the seal therefore holds only the offsets, the lengths and the ids of a finished wave. */
+  seal(){require();api.settle();if(table!==undefined){table.clear();table=undefined;}},
   /** 🔢️ How many distinct rows the log holds, the size of the number space of its lists. */
   size:()=>count,
   /** 🧾️ Appends rows (written once per distinct row) and answers the list of them; further rows join the list of the same owner through `concat`. */
@@ -105,8 +108,16 @@ const descriptor=openSync(path,"w+"),table=createKeyTableV1(),exit=()=>{try{rmSy
   },
   list:ids=>list(Uint32Array.from(ids),[]),
   empty:list(new Uint32Array(0),[]),
-  stats:()=>({rows:count,bytes:size,reads,readBytes,pendingBytes}),
-  close(){if(closed)return;closed=true;process.removeListener("exit",exit);try{closeSync(descriptor);}catch{}if(existsSync(path))rmSync(path,{force:true});table.clear();count=0;},
+  stats:()=>({rows:count,bytes:size,reads,readBytes,pendingBytes,tableBytes:table===undefined?0:table.bytes(),indexBytes:offsets.byteLength+lengths.byteLength,sealed:table===undefined}),
+  close(){if(closed)return;closed=true;process.removeListener("exit",exit);liveLogsV1.delete(ref);try{closeSync(descriptor);}catch{}if(existsSync(path))rmSync(path,{force:true});table?.clear();table=undefined;count=0;},
  });
+ ref=new WeakRef(api);liveLogsV1.add(ref);
  return api;
+}
+
+/** 🧮️ The row logs this process holds open, for the report of retained memory: the key tables of the logs not sealed yet and the offsets, lengths and unwritten text of all of them, with the distinct rows they name. */
+export function rowLogCollectionsV1(){
+ let logs=0,sealed=0,rows=0,tableBytes=0,indexBytes=0;
+ for(const held of liveLogsV1){const log=held.deref();if(log===undefined){liveLogsV1.delete(held);continue;}const stats=log.stats();logs++;if(stats.sealed)sealed++;rows+=stats.rows;tableBytes+=stats.tableBytes;indexBytes+=stats.indexBytes+stats.pendingBytes;}
+ return[{name:"graph:rowLogs.keyTables ("+(logs-sealed)+" open of "+logs+")",entries:rows,bytes:tableBytes},{name:"graph:rowLogs.offsets ("+logs+" logs, "+sealed+" sealed)",entries:rows,bytes:indexBytes}];
 }

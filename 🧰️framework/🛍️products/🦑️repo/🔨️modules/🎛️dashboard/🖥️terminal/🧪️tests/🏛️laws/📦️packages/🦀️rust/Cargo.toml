@@ -24,6 +24,8 @@ path = "../../🦀️.rs"
 [dev-dependencies]
 dashboard_terminal = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-terminal", features = ["testkit"] }
 dashboard_source_view = { path = "../../../../../📂️workspace/🖥️view/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-source-view", features = ["testkit"] }
+dashboard_fleet = { path = "../../../../../📊️fleet/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-fleet" }
+semio-ui-tui-charts = { path = "../../../../../../../../../🔨️modules/🖱️ui/⌨️tui/📈️charts/📦️packages/🦀️rust" }
 dashboard_feedback = { path = "../../../../📣️feedback/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-feedback" }
 dashboard_keymap_editor = { path = "../../../../⚙️settings/⌨️keymap/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-keymap-editor" }
 dashboard_labels = { path = "../../../../🌐️labels/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-labels" }

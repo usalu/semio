@@ -1,4 +1,6 @@
-import { decodePackValue, faultDisplayMessage, type AppChannelClient, type AppFrameValue, type MediaExportHandle } from "../../../../../🟦️.ts";
+import { decodePackValue } from "@semio-tech/framework/packs";
+import { faultDisplayMessage, type AppChannelClient } from "@semio-tech/framework/app-channel";
+import type { AppFrameValue, MediaExportHandle } from "@semio-tech/framework/wire-contracts";
 import { assertMediaExportAuthority, type MediaTransportPort } from "../🚚️lifecycle/🟦️.ts";
 
 function reply<T>(frames: readonly AppFrameValue[], select: (frame: AppFrameValue) => T | undefined): T {

@@ -92,7 +92,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// re-published only when the event or its effects swapped the document a window shows (the committed document, the
     /// draft preview, the replayed head); any other edge — the finalize prompt opening or closing, an accepted draft
     /// starting its replay, a replay run again — re-publishes the history body and the chips alone.
-    async fn reduce_unprepared_time_travel_event(&mut self, event: TimeTravelEvent, meta: Option<&ActionMeta>, effects: &mut Vec<Effect>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:Option<&mut semio_framework_job::StepContext<'_>>) -> Result<TimeTravelActionOutcome, Fault> {
+    pub(super) async fn reduce_unprepared_time_travel_event(&mut self, event: TimeTravelEvent, meta: Option<&ActionMeta>, effects: &mut Vec<Effect>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:Option<&mut semio_framework_job::StepContext<'_>>) -> Result<TimeTravelActionOutcome, Fault> {
         let shown = self.shared().time_travel_shown_identity();
         match self.time_travel.session.apply(event) {
             Ok(session_effects) => {
@@ -118,13 +118,52 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         self.reduce_unprepared_time_travel_event(event,meta,effects, identity,receiving).await
     }
 
+    /// ⏳️ Admits the queued preview and replay effects whose live owner has closed; an effect the session's stage no longer shows is dropped. See [`TimeTravelLedger::queued`].
+    pub(super) async fn admit_queued_time_travel_effects(&mut self, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+        let stage = self.time_travel.session.stage;
+        if stage != TimeTravelStage::Editing {
+            self.time_travel.queued.preview = None;
+        }
+        if stage != TimeTravelStage::Replaying {
+            self.time_travel.queued.replay = None;
+        }
+        let mut effects = Vec::new();
+        if !self.time_travel.preview_live() {
+            effects.extend(self.time_travel.queued.preview.take().map(|(target, replacement)| TimeTravelEffect::ShowPreview { target, replacement }));
+        }
+        if !self.time_travel.replaying() {
+            effects.extend(self.time_travel.queued.replay.take().map(|(drafts, from)| TimeTravelEffect::StartReplay { drafts, from }));
+        }
+        if effects.is_empty() {
+            return Ok(());
+        }
+        let mut dialogs = Vec::new();
+        self.perform_time_travel_effects(effects, None, &mut dialogs, identity, None).await
+    }
+
     /// 🛠️ Performs the session's effects in order; a commit's own `Finalized`/`FinalizeFaulted` effects follow it.
     pub(super) async fn perform_time_travel_effects(&mut self, effects: Vec<TimeTravelEffect>, meta: Option<&ActionMeta>, kernel: &mut Vec<Effect>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,mut receiving:Option<&mut semio_framework_job::StepContext<'_>>) -> Result<(), Fault> {
         let mut queue: VecDeque<TimeTravelEffect> = effects.into();
         while let Some(effect) = queue.pop_front() {
             match effect {
-                TimeTravelEffect::ShowPreview { target, replacement } => self.show_time_travel_preview(target, replacement).await?,
-                TimeTravelEffect::StartReplay { drafts, from } => queue.extend(self.start_time_travel_replay(drafts, &from).await?),
+                TimeTravelEffect::ShowPreview { target, replacement } => {
+                    self.time_travel.queued.preview = Some((target, replacement));
+                    if self.time_travel.preview_live() {
+                        self.time_travel_run(TimeTravelStoreCommand::CancelPreview, None).await?;
+                        self.note_time_travel_changed(false, false);
+                    } else if let Some((target, replacement)) = self.time_travel.queued.preview.take() {
+                        self.show_time_travel_preview(target, replacement).await?;
+                    }
+                }
+                TimeTravelEffect::StartReplay { drafts, from } => {
+                    self.time_travel.queued.replay = Some((drafts, from));
+                    if self.time_travel.replaying() {
+                        self.time_travel_run(TimeTravelStoreCommand::CancelReplay, None).await?;
+                        self.note_time_travel_changed(false, false);
+                    } else if let Some((drafts, from)) = self.time_travel.queued.replay.take() {
+                        queue.extend(self.start_time_travel_replay(drafts, &from).await?);
+                    }
+                }
                 TimeTravelEffect::CancelReplay => {
                     self.time_travel_run(TimeTravelStoreCommand::CancelReplay,None).await?;
                 }

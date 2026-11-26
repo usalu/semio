@@ -30,8 +30,19 @@ async fn one_leaf_service_returns_its_id_bound_generic_envelope() {
     };
     let service = gltf_inference_services().into_iter().find(|service| service.metadata().inference_schema == "s.stdio.gltf.inference.overall-size.v1").unwrap();
     let execution = service.infer(&request).unwrap();
-    let envelope = semio_s_artifact_stdio_gltf_inferences::standards::v2_0::subsets::any::io::binary::inferences::decode_gltf_inference_leaf_binary(execution.execution.as_ref().unwrap().canonical_payload.as_ref().unwrap()).unwrap();
-    assert_eq!(envelope.id, "s.stdio.gltf.inference.overall-size.v1");
-    assert!(envelope.cache_key.contains(":p"));
-    assert_eq!(envelope.dependency_hashes.len(), 1);
+    let envelope: serde_json::Value = serde_json::from_slice(execution.execution.as_ref().unwrap().canonical_payload.as_ref().unwrap()).unwrap();
+    assert_eq!(envelope["id"], "s.stdio.gltf.inference.overall-size.v1");
+    assert!(envelope["cacheKey"].as_str().unwrap().contains(":p"));
+    assert_eq!(envelope["dependencyHashes"].as_array().unwrap().len(), 1);
+}
+
+#[test]
+fn every_leaf_publishes_the_pack_bound_contract() {
+    for service in gltf_inference_services() {
+        let contract = service.metadata().payload.expect("every glTF leaf publishes a payload contract");
+        assert_eq!(contract, GLTF_LEAF_INFERENCE_CONTRACT);
+        assert_eq!(contract.artifact_binding.unwrap().encoding, semio_framework::INFERENCE_ARTIFACT_PACK_BYTES);
+        serde_json::from_str::<serde_json::Value>(contract.input_schema).unwrap();
+        serde_json::from_str::<serde_json::Value>(contract.output_schema).unwrap();
+    }
 }

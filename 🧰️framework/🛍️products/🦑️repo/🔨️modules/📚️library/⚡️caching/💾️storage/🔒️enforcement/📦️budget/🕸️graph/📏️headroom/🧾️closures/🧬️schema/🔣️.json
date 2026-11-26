@@ -251,7 +251,8 @@
                   "referenced",
                   "publication-fallback",
                   "optional-release",
-                  "optional-new-reference"
+                  "optional-new-reference",
+                  "pack-unproven"
                 ]
               },
               "fundedBy": {
@@ -259,7 +260,8 @@
                   "closures",
                   "publications",
                   "fresh-closures",
-                  "refused"
+                  "refused",
+                  "optional-groups"
                 ]
               },
               "optionalCalls": {

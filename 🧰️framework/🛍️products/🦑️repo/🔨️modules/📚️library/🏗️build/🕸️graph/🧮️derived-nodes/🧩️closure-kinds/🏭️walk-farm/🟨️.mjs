@@ -34,7 +34,7 @@ const farmFailure=(code,message)=>Object.assign(new Error(message),{code});
 /**
  * 🏭️ Walks closure questions in child processes (`./👷️child`) so independent closures run on several processors: `derive(row, signal)` answers `{fact, parts:[{id, rows?}]}` (a part the child already sent to this parent comes by its id alone, so a closure of a hundred thousand rows costs the wire a few kilobytes) or rejects with code `WALK_FARM_*` so the caller walks the question itself. At most `size` children, started on demand, each fed up to `policy.batch` questions at once so it never waits for a round trip; a child that dies, stalls past the request limit or ends on memory is replaced on the next request; a child whose stdin closes ends, so none outlives the parent. Messages are lines `<marker>{json}`; anything else a child prints is ignored.
  * @see ./🧬️schema/🔣️.json
- * @param {{root:string;size:number;module?:string;spawn?:typeof nodeSpawn;policy?:typeof WALK_FARM_V1;lease?:{release():void};environment?:Record<string,string>}} options
+ * @param {{root:string;size:number;module?:string;spawn?:typeof nodeSpawn;policy?:typeof WALK_FARM_V1;lease?:{release():void};speed?:number;environment?:Record<string,string>}} options
  */
 export function createWalkFarmV1({root,size,module,spawn=nodeSpawn,policy=WALK_FARM_V1,lease,speed=localMachineSpeedFactorV1(),environment}){
  const command=[process.execPath,CHILD,root,...module===undefined?[]:[module]],marker=policy.marker;

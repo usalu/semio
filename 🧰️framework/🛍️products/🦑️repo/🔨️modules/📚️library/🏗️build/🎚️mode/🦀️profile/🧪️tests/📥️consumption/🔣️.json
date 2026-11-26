@@ -1911,6 +1911,94 @@
         "producer": "wasm-component",
         "operation": "build",
         "compositions": [
+          "semio-hub-demonstrator-component"
+        ]
+      },
+      "target": {
+        "opt-level": "s",
+        "debug": 0,
+        "codegen-units": 16,
+        "incremental": false,
+        "lto": "off",
+        "debug-assertions": false,
+        "overflow-checks": false,
+        "strip": "symbols",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "target": "wasm32-wasip2",
+        "producer": "wasm-component",
+        "operation": "build",
+        "compositions": [
+          "semio-hub-process-component"
+        ]
+      },
+      "target": {
+        "opt-level": "s",
+        "debug": 0,
+        "codegen-units": 16,
+        "incremental": false,
+        "lto": "off",
+        "debug-assertions": false,
+        "overflow-checks": false,
+        "strip": "symbols",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "target": "wasm32-wasip2",
+        "producer": "wasm-component",
+        "operation": "build",
+        "compositions": [
+          "semio-hub-demonstrator-component",
+          "semio-hub-process-component"
+        ]
+      },
+      "target": {
+        "opt-level": "s",
+        "debug": 0,
+        "codegen-units": 16,
+        "incremental": false,
+        "lto": "off",
+        "debug-assertions": false,
+        "overflow-checks": false,
+        "strip": "symbols",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "target": "wasm32-wasip2",
+        "producer": "wasm-component",
+        "operation": "build",
+        "compositions": [
           "semio-hub-gis-component"
         ]
       },
@@ -2006,6 +2094,35 @@
         "codegen-units": 16,
         "incremental": false,
         "lto": "thin",
+        "debug-assertions": false,
+        "overflow-checks": false,
+        "strip": "symbols",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "target": "wasm32-wasip2",
+        "producer": "wasm-component",
+        "operation": "build",
+        "compositions": [
+          "semio-hub-stdio-component"
+        ]
+      },
+      "target": {
+        "opt-level": "s",
+        "debug": 0,
+        "codegen-units": 16,
+        "incremental": false,
+        "lto": "off",
         "debug-assertions": false,
         "overflow-checks": false,
         "strip": "symbols",

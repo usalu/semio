@@ -1,0 +1,42 @@
+[
+ {
+  "set": "volumes.200.structure[tibia-l].sections.2.rx",
+  "was": 0.0125,
+  "value": 0.012
+ },
+ {
+  "set": "volumes.200.structure[tibia-l].sections.2.ry",
+  "was": 0.0125,
+  "value": 0.013
+ },
+ {
+  "set": "volumes.200.structure[tibia-r].sections.2.rx",
+  "was": 0.0125,
+  "value": 0.012
+ },
+ {
+  "set": "volumes.200.structure[tibia-r].sections.2.ry",
+  "was": 0.0125,
+  "value": 0.013
+ },
+ {
+  "set": "volumes.500.structure[tibia-l].sections.2.rx",
+  "was": 0.0125,
+  "value": 0.012
+ },
+ {
+  "set": "volumes.500.structure[tibia-l].sections.2.ry",
+  "was": 0.0125,
+  "value": 0.013
+ },
+ {
+  "set": "volumes.500.structure[tibia-r].sections.2.rx",
+  "was": 0.0125,
+  "value": 0.012
+ },
+ {
+  "set": "volumes.500.structure[tibia-r].sections.2.ry",
+  "was": 0.0125,
+  "value": 0.013
+ }
+]

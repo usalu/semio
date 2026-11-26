@@ -9,3 +9,6 @@ export function nxBuildDependencySourceRevisionsV1(): readonly Readonly<{path:st
 export function nxBuildDependencySourceChangesFromV1(revisions: readonly Readonly<{path:string;sha256:string}>[]): readonly string[];
 /** 🌱️ A fresh process evaluates the current projection sources and reports identity and revisions. */
 export function nxBuildDependencySourceProbeV1(options?: {execPath?:string;timeoutMilliseconds?:number;maximumBytes?:number;run?:(...args:any[])=>any;root?:string}): Readonly<{identity:string;revisions:readonly Readonly<{path:string;sha256:string}>[]}>;
+
+/** 👁️ Observes current physical dependency Source DATA before delegating to a child that loads mutable workspace modules. */
+export function nxBuildDependencySourceChangesV1(): readonly string[];

@@ -14,7 +14,7 @@ import {readHostCapacityPolicyV1} from "../../📏️decision/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json";
 import {repoPlaywrightBrowsersPath} from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
-import {HOST_WARDEN_ANCHORS_V1,HOST_WARDEN_POLICY_V1,HOST_WARDEN_TABLES_V1,buildHostWardenAlarmV1,classifyWardenSubjectsV1,decideHostWardenV1,discoverWardenWorkspacesV1,expandWardenPatternV1,headroomHostWardenV1,parseWardenSwapV1,wardenBrowsersV1,formatHostWardenAlarmV1,isHostWardenV1,triggerHostWardenV1,parseWardenElapsedV1,parseWardenProcessTableV1,planWardenSignalsV1,requireHostWardenV1,wardenSubjectIdV1,formatHostWardenCancelFailureV1,formatHostWardenCancelReasonV1,formatHostWardenHoldV1,formatHostWardenStatusV1,hostWardenHoldsV1,swapDepthHostWardenV1,topWardenOthersV1,type HostWardenHostV1,type HostWardenStateV1,type HostWardenKindV1,type HostWardenPolicyV1,type HostWardenRowV1,type HostWardenSubjectV1,type HostWardenTablesV1} from "../🟦️.ts";
+import {HOST_WARDEN_TABLE_V1,parseWardenCpuV1,HOST_WARDEN_ANCHORS_V1,HOST_WARDEN_POLICY_V1,HOST_WARDEN_TABLES_V1,buildHostWardenAlarmV1,classifyWardenSubjectsV1,decideHostWardenV1,discoverWardenWorkspacesV1,expandWardenPatternV1,headroomHostWardenV1,parseWardenSwapV1,wardenBrowsersV1,formatHostWardenAlarmV1,isHostWardenV1,triggerHostWardenV1,parseWardenElapsedV1,parseWardenProcessTableV1,planWardenSignalsV1,requireHostWardenV1,wardenSubjectIdV1,formatHostWardenCancelFailureV1,formatHostWardenCancelReasonV1,formatHostWardenHoldV1,formatHostWardenStatusV1,hostWardenHoldsV1,swapDepthHostWardenV1,topWardenOthersV1,type HostWardenHostV1,type HostWardenStateV1,type HostWardenKindV1,type HostWardenPolicyV1,type HostWardenRowV1,type HostWardenSubjectV1,type HostWardenTablesV1} from "../🟦️.ts";
 import {HostWardenCancelledErrorV1,chargeWardenRowsV1,currentHostWardenMirrorV1,defaultHostWardenPortsV1,readHostWardenCancelsBelowV1,requireNoHostWardenCancelBelowV1,readWardenSwapV1,ensureHostWardenV1,hostWardenCodeDigestV1,readHostWardenCancelV1,readHostWardenCancelsSinceV1,readHostWardenMirrorV1,readHostWardenStateV1,runHostWardenLoopV1,wardenProcessStartV1,type HostWardenPortsV1} from "../🔁️loop/🟦️.ts";
 
 const python=testPythonV1()??Bun.which("python3")??"python3",oracle=fileURLToPath(new URL("./🐍️.py",import.meta.url)),decoder=new TextDecoder();
@@ -53,6 +53,14 @@ test("the schema is closed and every kind names a pattern, a rank, actions and a
  expect(HOST_WARDEN_POLICY_V1).toMatchObject({guardBasisPoints:1000,guardMinimumMegabytes:1024,guardMaximumMegabytes:4096,dangerBasisPoints:500,dangerMinimumMegabytes:512,dangerMaximumMegabytes:2048,resumeBasisPoints:1500,swapActiveMegabytesPerSecond:16,swapDiskReserveMegabytes:4096,swapRoomMaximumBasisPoints:5000,headroomGuardBasisPoints:2500,headroomGuardMinimumMegabytes:2048,headroomGuardMaximumMegabytes:8192,headroomDangerBasisPoints:1250,headroomDangerMinimumMegabytes:1024,headroomDangerMaximumMegabytes:4096,calmTicks:3,suspendMaximumSeconds:120,maximumSuspendsPerTick:4,maximumCancelsPerTick:2,keepRunning:1,calmMilliseconds:2000,tightMilliseconds:500,idleMilliseconds:600000,codeCheckMilliseconds:60000,lastAlarms:8,alarmsMaximumBytes:1048576,cancelRecordMaximumAgeMilliseconds:3600000,stateFile:"state.json",lockFile:"lock.json",alarmsFile:"alarms.jsonl",modeFile:"mode",protectFile:"protect.json",cancelledDirectory:"cancelled",directory:"warden",logFile:"warden.log",logMaximumBytes:4194304,defaultMode:"enforce",ensureMilliseconds:15000});
  for(const pattern of[...schema.definitions.Roots.const,...schema.definitions.Never.const,...schema.definitions.Identities.const])expect(()=>new RegExp(pattern,"u")).not.toThrow();
  for(const pattern of[...schema.definitions.Identities.const,...kinds.map(kind=>kind.pattern)])expect(()=>new RegExp(expandWardenPatternV1(pattern,["/w/s"])!,"u"),pattern).not.toThrow();
+});
+
+test("a declared final link is the dearest compile unit and waits longer suspended, the danger cancel stays: the policy carries heavySuspendMaximumSeconds above suspendMaximumSeconds",()=>{
+ expect(HOST_WARDEN_POLICY_V1.heavySuspendMaximumSeconds).toBeGreaterThan(HOST_WARDEN_POLICY_V1.suspendMaximumSeconds);
+ const row=(name:string)=>fixture.decisions.find(item=>item.name.startsWith(name))!;
+ expect(row("heavy: a young declared final link is kept running").expect.actions).toEqual([{action:"suspend",id:"p102",reason:"guard"}]);
+ expect(row("heavy: the danger line still cancels").expect.actions).toEqual([{action:"cancel",id:"p101",reason:"danger"}]);
+ expect(row("heavy: a declared final link suspended 130").expect.actions).toEqual([{action:"resume",id:"p102",reason:"overdue"}]);
 });
 
 test("every decision equals the independent Python oracle and the expectation stored in the fixture",()=>{
@@ -531,7 +539,10 @@ test("MOUNTED: a pinned rustc and a cargo test binary started from a shell (no r
  const spawnAs=(path:string)=>{const child=Bun.spawn([path,"60"],{stdout:"ignore",stderr:"ignore",stdin:"ignore"});children.push(child);return child;};
  const unit=spawnAs(unitPath),binary=spawnAs(binaryPath),foreign=spawnAs(foreignPath),directory=fresh(),written:string[]=[],states:Record<number,Record<string,string>>={};
  await Bun.sleep(500);
- const ports=scripted(directory,[host(1000),host(1000),host(1000)],written,async tick=>{states[tick]={unit:stateOf(unit.pid),binary:stateOf(binary.pid),foreign:stateOf(foreign.pid)};});
+ const ports=scripted(directory,[host(1000),host(1000),host(1000)],written,async tick=>{
+  if(tick===1)for(let attempt=0;attempt<20&&!stateOf(binary.pid).startsWith("T");attempt++)await Bun.sleep(10);
+  states[tick]={unit:stateOf(unit.pid),binary:stateOf(binary.pid),foreign:stateOf(foreign.pid)};
+ });
  const result=await runHostWardenLoopV1({ports,policy:quickPolicy,tables:{...HOST_WARDEN_TABLES_V1,roots:[]},workspaces:[workspace],within:process.pid,maxTicks:3,code:"identity"});
  expect(result.reason).toBe("limit");
  expect(states[2]!.binary.startsWith("T"),"the cargo test binary is stopped although no root is among its ancestors, the non-critical subject goes first").toBe(true);
@@ -638,9 +649,27 @@ const watchdog=async(rows:readonly HostWardenRowV1[],options:Readonly<{footprint
 };
 const fakeTable=(browserMegabytes:number,renderMegabytes:number):readonly HostWardenRowV1[]=>[rowOf(1,0,1,"/sbin/launchd"),rowOf(10,1,50,"/fake/root run"),rowOf(11,10,browserMegabytes,"/fake/chromium/chrome --headless"),rowOf(12,11,renderMegabytes,"/fake/chromium/chrome --type=renderer"),rowOf(13,10,300,"/fake/probe --serve")];
 
+test("watchdog cancels an overdue stopped tree whose page-in cost and guard floor exceed available memory",async()=>{
+ const base=fresh(),directory=join(base,"warden"),signals:string[]=[];
+ const tables:HostWardenTablesV1={roots:["^/fake/root"],never:[],kinds:[{name:"slice-worker",rank:60,pattern:"^/fake/slice",actions:["suspend","cancel"],signal:"SIGKILL",scope:"tree",capMegabytes:6144,capCritical:true}]};
+ const raw=[rowOf(10,1,50,"/fake/root"),{...rowOf(11,10,3800,"/fake/slice"),stopped:true},{...rowOf(12,11,500,"/fake/helper"),stopped:true}];
+ const charge:Readonly<Record<number,number>>={11:4700,12:900};
+ const darwin={footprint:(pid:number)=>(charge[pid]??50)*1048576};
+ const linux=await chargeWardenRowsV1("linux",raw,{minimumKilobytes:0,read:async()=> "Pss: 1024 kB\nSwapPss: 4096 kB"});
+ expect(linux[1]).toMatchObject({memoryKilobytes:5120,nonresidentKilobytes:4096});
+ const rows=await chargeWardenRowsV1("darwin",raw,{darwin});
+ expect(rows[1]).toMatchObject({memoryKilobytes:4700*1024,nonresidentKilobytes:900*1024});
+ expect(rows[2]).toMatchObject({memoryKilobytes:900*1024,nonresidentKilobytes:400*1024});
+ let now=Date.now();
+ const ports:HostWardenPortsV1={directory,now:()=>now,write:()=>undefined,mode:()=>"enforce",sample:async()=>memoryCase(2863,{pressure:"warn",swapOutMegabytesPerSecond:3.75}),table:async()=>rows,signal:(pid,name)=>{signals.push(`${name}:${pid}`);},sleep:async()=>{now+=121000;}};
+ await runHostWardenLoopV1({ports,tables,maxTicks:2,code:"fake",sources:async()=>"fake",platform:"linux",workspaces:[]});
+ expect(signals).toEqual(["SIGKILL:11","SIGKILL:12"]);
+ expect(readHostWardenCancelsBelowV1(10,now-242000,base,now)).toMatchObject([{reason:"overdue",megabytes:5600}]);
+});
+
 test("watchdog: a process class over its declared cap is killed with its tree, recorded and reported, without any memory pressure",async()=>{
  const run=await watchdog(fakeTable(500,700));
- expect(run.signals).toEqual(["SIGCONT:11","SIGCONT:12","SIGKILL:11","SIGKILL:12"]);
+ expect(run.signals).toEqual(["SIGKILL:11","SIGKILL:12"]);
  expect(run.alarms).toHaveLength(1);
  expect(run.alarms[0]).toMatchObject({action:"cancel",reason:"cap",kind:"browser",pid:11,capMegabytes:1000,megabytes:1200,observed:false,level:"calm"});
  expect(run.alarms[0].text.en).toContain("its memory is over the cap of 1000 MB for browser");
@@ -664,7 +693,7 @@ test("watchdog: the footprint (what the OS compressed or swapped out of the tree
  const probed:number[]=[];
  const compressed=await watchdog(fakeTable(100,100),{footprint:async pid=>{probed.push(pid);return pid===11?5000:null;}});
  expect(probed).toEqual([11]);
- expect(compressed.signals).toEqual(["SIGCONT:11","SIGCONT:12","SIGKILL:11","SIGKILL:12"]);
+ expect(compressed.signals).toEqual(["SIGKILL:11","SIGKILL:12"]);
  expect(compressed.alarms[0]).toMatchObject({reason:"cap",megabytes:5000,capMegabytes:1000});
  const lower=await watchdog(fakeTable(500,700),{footprint:async()=>100});
  expect(lower.alarms[0],"a footprint below the resident set never lowers the measure").toMatchObject({reason:"cap",megabytes:1200});
@@ -739,7 +768,7 @@ test("ceiling: an unlisted unit above its budget is only reported on a calm host
  const repeated=await ceilingRun(unitRows(1700),{ticks:3});
  expect(repeated.alarms,"reported once however many ticks").toHaveLength(1);
  const run=await ceilingRun(unitRows(1700),{available:300});
- expect(run.signals).toEqual(["SIGCONT:11","SIGCONT:12","SIGKILL:11","SIGKILL:12"]);
+ expect(run.signals).toEqual(["SIGKILL:11","SIGKILL:12"]);
  expect(run.alarms).toHaveLength(1);
  expect(run.alarms[0]).toMatchObject({action:"cancel",reason:"ceiling",kind:"unit",pid:11,megabytes:1800,level:"danger",ceiling:{unit:"semio_plain|wasm32-wasip2",kind:"library",megabytes:1536,listed:false}});
  expect(isHostWardenV1("Alarm",run.alarms[0])).toBe(true);
@@ -757,14 +786,14 @@ test("ceiling: an unlisted unit above its budget is only reported on a calm host
 
 test("ceiling: a carving-listed unit gets its declared budget: reported above it only, with the declared and the measured megabytes in the words",async()=>{
  const sourcing=(megabytes:number)=>unitRows(megabytes,"semio_hub_sourcing");
- expect((await ceilingRun(sourcing(4300))).signals,"4400 MB in total is below the declared 4500 MB").toEqual([]);
- const run=await ceilingRun(sourcing(4500));
- expect(run.alarms[0]).toMatchObject({action:"report",reason:"ceiling",ceiling:{unit:"semio_hub_sourcing|wasm32-wasip2",megabytes:4500,listed:true,measuredMegabytes:4273}});
- expect(run.alarms[0].text.en).toContain("peaked at 4600 MB, above its declared carving budget of 4500 MB (measured 4273 MB)");
- expect(run.alarms[0].text.de).toContain("erreichte 4600 MB und liegt über ihrem erklärten Carving-Budget von 4500 MB (gemessen 4273 MB)");
- const hub=await ceilingRun(unitRows(5400,"semio_hub_sourcing_component","wasm32-wasip2","cdylib"));
- expect(hub.signals.filter(signal=>signal.startsWith("SIGKILL")),"5500 MB in total is below the declared 5600 MB of the hub final").toEqual([]);
- expect((await ceilingRun(unitRows(5600,"semio_hub_sourcing_component","wasm32-wasip2","cdylib"))).alarms[0].ceiling).toEqual({unit:"semio_hub_sourcing_component|wasm32-wasip2",kind:"final",megabytes:5600,listed:true,measuredMegabytes:5519});
+ expect((await ceilingRun(sourcing(3000))).signals,"3100 MB in total is within the declared ceiling").toEqual([]);
+ const run=await ceilingRun(sourcing(3200));
+ expect(run.alarms[0]).toMatchObject({action:"report",reason:"ceiling",ceiling:{unit:"semio_hub_sourcing|wasm32-wasip2",megabytes:3100,listed:true,measuredMegabytes:2824}});
+ expect(run.alarms[0].text.en).toContain("peaked at 3300 MB, above its declared carving budget of 3100 MB (measured 2824 MB)");
+ expect(run.alarms[0].text.de).toContain("erreichte 3300 MB und liegt über ihrem erklärten Carving-Budget von 3100 MB (gemessen 2824 MB)");
+ const hub=(megabytes:number)=>unitRows(megabytes,"semio_hub_sourcing_component","wasm32-wasip2","cdylib");
+ expect((await ceilingRun(hub(3996))).alarms,"4096 MB in total is within the default final ceiling").toEqual([]);
+ expect((await ceilingRun(hub(3997))).alarms[0].ceiling).toEqual({unit:"semio_hub_sourcing_component|wasm32-wasip2",kind:"final",megabytes:4096,listed:false});
 });
 
 test("ceiling: observe mode reports the breach once and signals nothing; at critical the unit is cancelled before any cap or shedding",async()=>{
@@ -889,4 +918,29 @@ test("on macOS the real table carries what the kernel charges this process, read
  const tool=Bun.spawnSync(["footprint","-f","bytes","--noCategories","-p",String(child.pid)]),match=/phys_footprint:\s+(\d+)\s+B/u.exec(decoder.decode(tool.stdout)),mine=rows.find(row=>row.pid===child.pid)!;
  expect(match).not.toBeNull();expect(mine.memoryKilobytes).toBe(Math.floor(Number(match![1])/1024));
  expect(rows.find(row=>row.pid===process.pid)!.memoryKilobytes).toBeGreaterThan(1000);
+});
+
+test("the CPU time column: macOS and Linux forms parse to seconds like an independent Python reading, a row without the column keeps none",()=>{
+ const texts=["339:28.28","0:00.01","1:02:03.50","00:00:03","1-02:03:04","12-00:00:00"],expected=JSON.parse(decoder.decode(Bun.spawnSync([python,"-I","-c","import json,re,sys\nout=[]\nfor t in sys.argv[1:]:\n    d=0\n    if '-' in t:\n        d,t=t.split('-');d=int(d)\n    p=t.split(':')\n    if len(p)==2:p=[0]+p\n    out.append(d*86400+int(p[0])*3600+int(p[1])*60+float(p[2]))\nprint(json.dumps(out))",...texts]).stdout)) as number[];
+ expect(texts.map(parseWardenCpuV1)).toEqual(expected);
+ expect(parseWardenCpuV1("garbage")).toBe(0);
+ const rows=parseWardenProcessTableV1(["    1     0     1   7248 Ss   01-02:10:49  12:51.90 Wed Nov 25 01:16:30 2026 /sbin/launchd","  102     1   102   3504 Ss   01-02:10:38 339:28.28 Wed Nov 25 01:16:41 2026 /usr/sbin/syslogd -x","  200     1   200   3504 Ss   10:38 Wed Nov 25 01:16:41 2026 /no/time/column"].join("\n"));
+ expect(rows.map(row=>[row.pid,row.cpuSeconds,row.elapsedSeconds,row.command])).toEqual([[1,12*60+51.9,((24+2)*60+10)*60+49,"/sbin/launchd"],[102,339*60+28.28,((24+2)*60+10)*60+38,"/usr/sbin/syslogd -x"],[200,undefined,638,"/no/time/column"]]);
+ expect(HOST_WARDEN_TABLE_V1.quickArguments.join(" ")).toContain("etime=,time=,lstart=");
+ for(const row of rows)expect(isHostWardenV1("ProcessRow",row)).toBe(true);
+});
+
+test("the loop adds the CPU a classified process gained between two ticks to a cumulative total: the first tick is a baseline, an exited child keeps its share, a young newcomer counts whole, an old newcomer does not",async()=>{
+ const process_=(pid:number,parent:number,command:string,cpu:number,elapsed:number):HostWardenRowV1=>({...rowOf(pid,parent,10,command),cpuSeconds:cpu,elapsedSeconds:elapsed});
+ const ticks:(readonly HostWardenRowV1[])[]=[
+  [rowOf(1,0,1,"/sbin/launchd"),rowOf(10,1,50,"/fake/root run"),process_(11,10,"/fake/chromium/chrome --headless",50,9000),process_(12,11,"/fake/chromium/chrome --type=renderer",20,9000)],
+  [rowOf(1,0,1,"/sbin/launchd"),rowOf(10,1,50,"/fake/root run"),process_(11,10,"/fake/chromium/chrome --headless",52,9002),process_(12,11,"/fake/chromium/chrome --type=renderer",21,9002),process_(13,11,"/fake/chromium/chrome --type=gpu",3,1)],
+  [rowOf(1,0,1,"/sbin/launchd"),rowOf(10,1,50,"/fake/root run"),process_(11,10,"/fake/chromium/chrome --headless",55,9004),process_(13,11,"/fake/chromium/chrome --type=gpu",4,3),process_(14,11,"/fake/chromium/chrome --type=utility",900,3600)],
+ ];
+ const base=fresh(),directory=join(base,"warden"),totals:(number|undefined)[]=[];let tick=0;
+ const ports:HostWardenPortsV1={directory,now:Date.now,write:()=>undefined,mode:()=>"observe",sample:async()=>memoryCase(9000),table:async()=>ticks[Math.min(tick,ticks.length-1)]!,signal:()=>undefined,sleep:async()=>{totals.push((JSON.parse(readFileSync(join(directory,"state.json"),"utf8")) as {subjects:{cpuSeconds?:number}}).subjects.cpuSeconds);tick++;}};
+ await runHostWardenLoopV1({ports,tables:watchdogTables,policy:{...quickPolicy,capMilliseconds:0},maxTicks:3,code:"cpu",platform:"linux",workspaces:[]});
+ expect(totals).toEqual([0,6,10]);
+ const none=await watchdog(fakeTable(500,200));
+ expect((JSON.parse(readFileSync(join(none.directory,"state.json"),"utf8")) as {subjects:Record<string,unknown>}).subjects).not.toHaveProperty("cpuSeconds");
 });

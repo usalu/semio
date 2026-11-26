@@ -33,9 +33,11 @@ export type MarketplaceHostApi = {
   readonly installPlugin: (pluginId: string) => void;
   readonly uninstallPlugin: (pluginId: string) => void;
   readonly reloadPlugin: (pluginId: string) => void;
-  readonly installExtensionFromUrl: (sourceUri: string) => void;
-  readonly installExtensionFromFile: (file: File) => void;
-  readonly uninstallExtension: (extensionId: string) => void;
+  readonly extensionManagement?: Readonly<{
+    installFromUrl(sourceUri: string): void;
+    installFromFile(file: File): void;
+    remove(extensionId: string): void;
+  }>;
   readonly setExtensionEnabled: (extensionId: string, enabled: boolean) => void;
 };
 
@@ -50,6 +52,7 @@ function pluginStatusLabel(status: PluginPanelStatus): UiLabel {
 }
 
 function marketplaceExtensionItem(entry: MarketplaceExtensionEntry, host: MarketplaceHostApi): TreeDataItem {
+  const { extensionManagement } = host;
   return {
     id: `framework.marketplace.plugin.${entry.extendsHost}.extension.${entry.extensionId}`,
     label: `${entry.label}${entry.version ? ` · ${entry.version}` : ""} · ${entry.enabled ? shellLabel("ui.plugins.extension.enabled") : shellLabel("ui.plugins.extension.disabled")}`,
@@ -62,12 +65,12 @@ function marketplaceExtensionItem(entry: MarketplaceExtensionEntry, host: Market
           disabled={entry.status !== "loaded" && entry.status !== "available"}
           onClick={() => host.setExtensionEnabled(entry.extensionId, !entry.enabled)}
         />
-        <Button icon="trash-2"
+        {extensionManagement && <Button icon="trash-2"
           id={`framework.marketplace.extension.${entry.extensionId}.uninstall`}
           text={shellLabel("ui.plugins.action.uninstall")}
           disabled={entry.status === "installing" || entry.status === "reloading"}
-          onClick={() => host.uninstallExtension(entry.extensionId)}
-        />
+          onClick={() => extensionManagement.remove(entry.extensionId)}
+        />}
       </SharedBorderRow>
     ),
   };
@@ -118,8 +121,9 @@ function buildMarketplaceTree(host: MarketplaceHostApi): TreePanelConfig {
     bySource.set(entry.sourceId, list);
   }
   const listedPluginIds = new Set(host.plugins.map((entry) => entry.pluginId));
+  const { extensionManagement } = host;
   const sections: TreeDataSection[] = [
-    {
+    ...(extensionManagement ? [{
       id: "framework.marketplace.extensions.install",
       label: shellLabel("ui.plugins.extension.install"),
       defaultOpen: true,
@@ -133,7 +137,7 @@ function buildMarketplaceTree(host: MarketplaceHostApi): TreePanelConfig {
               text={shellLabel("ui.plugins.extension.installFromUrl")}
               onClick={() => {
                 const sourceUri = typeof window !== "undefined" ? window.prompt(String(shellLabel("ui.plugins.extension.urlPrompt"))) : null;
-                if (sourceUri?.trim()) host.installExtensionFromUrl(sourceUri.trim());
+                if (sourceUri?.trim()) extensionManagement.installFromUrl(sourceUri.trim());
               }}
             />
           ),
@@ -150,7 +154,7 @@ function buildMarketplaceTree(host: MarketplaceHostApi): TreePanelConfig {
                 className="sr-only"
                 onChange={(event) => {
                   const file = event.target.files?.[0];
-                  if (file) host.installExtensionFromFile(file);
+                  if (file) extensionManagement.installFromFile(file);
                   event.target.value = "";
                 }}
               />
@@ -159,7 +163,7 @@ function buildMarketplaceTree(host: MarketplaceHostApi): TreePanelConfig {
           ),
         },
       ],
-    },
+    }] : []),
     ...[...bySource.entries()]
       .sort(([left], [right]) => left.localeCompare(right))
       .map(([sourceId, entries]) => ({

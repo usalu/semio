@@ -31,9 +31,9 @@ fn read_inline(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfInlineIma
     Ok(PdfInlineImage { width: integer(row, 1)?, height: integer(row, 2)?, bits_per_component: integer(row, 3)?, color_space: optional_integer(row, 4)?.map(|key| color::read_color(reader, key)).transpose()?, image_mask: boolean(row, 5)?, decode, interpolate: boolean(row, 6)?, body, extra: cos::read_dictionary(reader, row.integer(9)?)? })
 }
 
-pub fn write_ops(out: &mut Projection<'_, '_>, operations: &[PdfOp]) -> Result<i64,ValueError> {
+pub fn write_ops<'a>(out: &mut Projection<'_, '_>, operations: impl IntoIterator<Item = &'a PdfOp>) -> Result<i64,ValueError> {
     let content = out.insert("pdf_content", &[])?;
-    for (ordinal, operation) in operations.iter().enumerate() {
+    for (ordinal, operation) in operations.into_iter().enumerate() {
         let mut fields = [C::Null; WIDTH];
         let kind = match operation {
             PdfOp::SetLineWidth { width } => { fields[O::LineWidth as usize] = C::Real(*width); "setLineWidth" },
@@ -88,10 +88,10 @@ fn read_properties(reader: &mut Reader<'_, '_, '_>, row:Row<'_>) -> Result<PdfPr
     }
 }
 
-pub fn read_ops(reader: &mut Reader<'_, '_, '_>, content: i64) -> Result<Vec<PdfOp>,ValueError> {
+pub fn read_ops<Ops: Default + Extend<PdfOp>>(reader: &mut Reader<'_, '_, '_>, content: i64) -> Result<Ops,ValueError> {
     use O::*;
     reader.take("pdf_content",content,1)?;
-    let mut operations = Vec::new();
+    let mut operations = Ops::default();
     for row in reader.children("pdf_operation",1,2,content)? {
         let row = reader.take("pdf_operation",row.rowid,WIDTH+4)?; let key = row.rowid;
         let (operation,present): (PdfOp,&[O]) = match row.text(3)? {
@@ -128,7 +128,7 @@ pub fn read_ops(reader: &mut Reader<'_, '_, '_>, content: i64) -> Result<Vec<Pdf
             _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF operation kind")),
         };
         let present = present.iter().copied().map(O::column).collect::<Vec<_>>(); null_except(row,4..WIDTH+4,&present)?;
-        operations.push(operation);
+        operations.extend(std::iter::once(operation));
     }
     Ok(operations)
 }

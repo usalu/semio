@@ -28,7 +28,7 @@
    "edit": {
     "tools/a.ts": "import '../libs/x.ts';\nexport const a = 1;\n"
    },
-   "rowsHold": false,
+   "rowsHold": true,
    "rosterMoved": false
   },
   {

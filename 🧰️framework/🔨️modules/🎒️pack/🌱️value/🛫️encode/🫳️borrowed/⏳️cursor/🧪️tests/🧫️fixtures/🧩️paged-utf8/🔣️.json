@@ -1,0 +1,15 @@
+{
+  "fieldIds": [1, 2, 3, 4],
+  "prefix": { "text": "x", "repeat": 1023 },
+  "shared": ["🧩", "é", "漢"],
+  "unique": ["🧩", "é", "字"],
+  "outputWindows": [1, 7, 64],
+  "symbolPrefixHex": "02008908",
+  "fieldPrefixHex": "0401060102060103078908",
+  "fieldSuffixHex": "040600",
+  "expression": {
+    "chunks": ["", "se", "ed"],
+    "name": "seed",
+    "bodyHex": "0104736565640201060002170600"
+  }
+}

@@ -10,8 +10,12 @@ import sys
 
 ticket = Path(__file__).resolve().parent
 generated = ticket / "🗑️generated/bridge-current"
-build = generated / "b4"
-crate = "semio_hub_procedural_component"
+crate = os.environ.get("SEMIO_PINNED_LINK_CRATE", "semio_hub_procedural_component")
+lanes = {"semio_hub_procedural_component": "b4", "semio_s_plugin_flow_brep_component": "boolean-link"}
+lane = os.environ.get("SEMIO_PINNED_LINK_LANE", lanes[crate])
+if Path(lane).name != lane or lane in {"", ".", ".."}:
+    raise ValueError("link capture lane must name one ticket-local directory")
+build = generated / lane
 
 
 def write_json(path, value):
@@ -83,10 +87,19 @@ def replay_link(args):
     build_core(args, output, compiler)
 
 
+def requester_is_unoptimized(args):
+    """🚦 Cargo omits `-C opt-level` exactly when the profile is opt-level 0, so its absence names an unoptimized requester."""
+    levels = [args[index + 1] for index, arg in enumerate(args[:-1]) if arg == "-C" and args[index + 1].startswith("opt-level=")]
+    levels += [arg[2:] for arg in args if arg.startswith("-Copt-level=")]
+    return not levels or levels[-1] == "opt-level=0"
+
+
 def invoke_rustc(args):
     compiler = args[0]
     if "--crate-name" not in args or args[args.index("--crate-name") + 1] != crate:
         os.execv(generated / "retry-compiler", [str(generated / "retry-compiler"), *args])
+    if requester_is_unoptimized(args):
+        raise SystemExit("procedural requester refused: the final crate compiles at opt-level 0 (the browser core would be a ~324 MB debug build); build through compile-lean-procedural.ts so the repository profile policy applies")
     build.mkdir(parents=True, exist_ok=True)
     write_json(build / "rustc.json", args)
     os.environ["SEMIO_PROCEDURAL_REQUESTER_RUSTC"] = compiler

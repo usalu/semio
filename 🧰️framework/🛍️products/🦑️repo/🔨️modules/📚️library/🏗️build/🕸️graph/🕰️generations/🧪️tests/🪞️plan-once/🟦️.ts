@@ -58,7 +58,7 @@ test("a generation that moved after the plan is planned again before it is built
    return body();
   };
   const result=await store.refreshClosure({...base,roots:["p0"],requestedAt:Date.now(),builder} as never);
-  expect(result.current.manifest.generation).toBe(1);
+  expect(result.current.manifest!.generation).toBe(1);
   expect(counters.walks).toBe(2);
   const graph=await store.assemble(result.current,{});const{generation:_g,membership:_m,...rest}=graph;
   expect(normalized(rest)).toEqual(pythonGraph(dir));

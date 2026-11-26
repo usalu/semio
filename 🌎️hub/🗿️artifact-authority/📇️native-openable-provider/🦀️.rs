@@ -69,6 +69,9 @@ impl NativeCodecProviderSourceV1 for NativeCodecProviderSetV1 {
         } else if matches!(package.plugin_id, "gis" | "vcs") {
             semio_hub_stdio_catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).map_err(provider_error)?;
             semio_hub_stdio_catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(provider_error)?;
+        } else if semio_hub_stdio_catalog::runtime_host_plugin_ids().map_err(provider_error)?.contains(&package.plugin_id) {
+            semio_hub_stdio_catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).map_err(provider_error)?;
+            semio_hub_stdio_catalog::validate_hosted_artifact_catalog_contributions(package.plugin_id, &descriptor.manifest.topic_contributions).map_err(provider_error)?;
         }
         self.preview(package.plugin_id, package.package_id, package.version, context)
     }

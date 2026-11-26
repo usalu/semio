@@ -31,6 +31,7 @@ testkit = []
 semio-plugin-host-guest-runtime = { path = "../../../../../🎭️guest-runtime/📦️packages/🦀️rust", features = ["testkit"] }
 semio-plugin-host-process-transport = { path = "../../../../🚚️process-transport/📦️packages/🦀️rust", features = ["testkit"] }
 semio-plugin-host-shard = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-plugin-host-operation = { path = "../../../../../🚪️io/🎛️operation/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-async-macros = { path = "../../../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-effects-async): `testkit` (unions with the
